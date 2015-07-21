@@ -19,6 +19,8 @@ namespace mwg {
                 cerr << "Insert constructor but yaml entry doesn't have type == insert" << endl;
                 exit(EXIT_FAILURE);
             }
+        name = node["name"].Scalar();
+        nextName = node["next"].Scalar();
         parseMap(insertdoc, node["document"]);
     }
 

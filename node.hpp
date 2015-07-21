@@ -21,10 +21,12 @@ public:
     // Execute the node
     virtual void execute(mongocxx::client &) = 0;
     const string getName() {return name;};
+    shared_ptr<node> next {nullptr};
+
+    string name;
+    string nextName;
 
 private:
-    shared_ptr<node> next {nullptr};
-    string name;
 };
 }
 

@@ -30,6 +30,11 @@ namespace mwg {
                 cerr << "Don't know how to handle workload node with type " << yamlNode["type"] << endl;
         }
 
+        // link the things together
+        for (auto mnode : vectornodes) {
+            mnode->next = nodes[mnode->nextName];
+        }
+
     }
     
     void workload::execute(mongocxx::client &conn) {

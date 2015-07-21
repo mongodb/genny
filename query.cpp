@@ -19,6 +19,8 @@ namespace mwg {
                 cerr << "Query constructor but yaml entry doesn't have type == query" << endl;
                 exit(EXIT_FAILURE);
             }
+        name = node["name"].Scalar();
+        nextName = node["next"].Scalar();
         parseMap(querydoc, node["query"]);
     }
 
