@@ -21,7 +21,7 @@ namespace mwg {
             }
         name = node["name"].Scalar();
         nextName = node["next"].Scalar();
-        cout << "In insert constructor. Name: " << name << ", nextName: " << nextName << endl;
+        //        cout << "In insert constructor. Name: " << name << ", nextName: " << nextName << endl;
         parseMap(insertdoc, node["document"]);
     }
 

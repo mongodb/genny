@@ -22,14 +22,14 @@ namespace mwg {
                 nodes[yamlNode["name"].Scalar()] = mynode;
                 // this is an ugly hack for now
                 vectornodes.push_back(mynode);
-                cout << "In workload constructor and added query node" << endl;
+                //cout << "In workload constructor and added query node" << endl;
             }
             else if (yamlNode["type"].Scalar() == "insert") {
                 auto mynode = make_shared<insert> (yamlNode);
                 nodes[yamlNode["name"].Scalar()] = mynode;
                 // this is an ugly hack for now
                 vectornodes.push_back(mynode);
-                cout << "In workload constructor and added insert node" << endl;
+                //cout << "In workload constructor and added insert node" << endl;
             }
             else
                 cerr << "Don't know how to handle workload node with type " << yamlNode["type"] << endl;
@@ -39,10 +39,10 @@ namespace mwg {
         for (auto mnode : vectornodes) {
             mnode->nextNode = nodes[mnode->nextName];
             if (mnode->nextNode) {
-                cout << "Successfully set mnode->next for " << mnode->name << endl;
+                ;//cout << "Successfully set mnode->next for " << mnode->name << endl;
             }
             else
-                cout << "Failed to set mnode->next for " << mnode->name << endl;
+                cerr << "Failed to set mnode->next for " << mnode->name << endl;
         }
 
     }

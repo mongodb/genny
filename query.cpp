@@ -21,7 +21,7 @@ namespace mwg {
             }
         name = node["name"].Scalar();
         nextName = node["next"].Scalar();
-        cout << "In query constructor. Name: " << name << ", nextName: " << nextName << endl;
+        //cout << "In query constructor. Name: " << name << ", nextName: " << nextName << endl;
         parseMap(querydoc, node["query"]);
     }
 
@@ -31,7 +31,6 @@ namespace mwg {
         auto cursor = collection.find(querydoc.view());
         // need a way to exhaust the cursor 
         cout << "query.execute: query is " << bsoncxx::to_json(querydoc.view()) << endl;
-        cout << "Before iterating results" << endl;
        for (auto&& doc : cursor) {
             std::cout << bsoncxx::to_json(doc) << std::endl;
         }
