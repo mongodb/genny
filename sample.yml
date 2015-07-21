@@ -2,12 +2,18 @@ query : &q
       name : query
       type : query
       query : { x : a }
-      next : insert
+      next : insert2
 
-insert : &insert
-       name : insert
+insert : &insert1
+       name : insert1
        type : insert
        document : {x : a}
+       next : insert2
+
+insert : &insert2
+       name : insert2
+       type : insert
+       document : {x : b}
        next : query
 
 simple query : &sq
@@ -70,5 +76,6 @@ random query:
                next : query
  
 main : 
-- *insert
+- *insert1
+- *insert2
 - *q
