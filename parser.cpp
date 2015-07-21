@@ -18,11 +18,12 @@ using namespace mwg;
 int main() {
   YAML::Node nodes = YAML::LoadFile("sample.yml");
 
-  if (nodes["random query"])
-    cout << "I have random query" << endl;
+//cout << nodes << endl;
+  // if (nodes["random query"])
+  //   cout << "I have random query" << endl;
 
-  for (auto node : nodes)
-    cout << node.first << endl;
+  // for (auto node : nodes)
+  //   cout << node.first << endl;
 
   // Look for main. And start building from there.
   if (auto main = nodes["main"]) {
@@ -33,24 +34,15 @@ int main() {
     else
       cout << "Error -- workload defined by main doesn't exist" << endl;
     cout << nodes["query"]["query"] << endl;
+
+    bsoncxx::builder::stream::document document{};
+    for (auto node : nodes["query"]["query"]) {
+      cout << "builder " << node.first << " " << node.second << endl;
+document << node.first.Scalar() <<  node.second.Scalar();
+    }
+cout << bsoncxx::to_json(document) << endl;
     mongocxx::instance inst{};
     mongocxx::client conn{};
-string jsonstring{"{\"x\":1}\n"};
-cout << jsonstring.c_str() << endl;
-
-
-if (bson_utf8_validate(jsonstring.c_str(), jsonstring.length() ,false))
-    cout << "Validate utf8" << endl;
- else 
-     cout << "invalid utf8" << endl;
-bson_error_t bsonerror;
-auto mquery = bson_new_from_json((const unsigned char *) jsonstring.c_str(), jsonstring.length(), &bsonerror);
-//bson_t* result = bson_new_from_json(
-//reinterpret_cast<const uint8_t*>(jsonstring.data()), jsonstring.size(), &bsonerror);
-if (mquery)
-    cout << "Yeah -- we have some bson" << endl;
- else
-     cout << bsonerror.message << endl;
 
 query myquery(workload);
 myquery.execute(conn);
