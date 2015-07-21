@@ -19,9 +19,12 @@ namespace mwg {
             }
             if (yamlNode["type"].Scalar() == "query" ) {
                 nodes[yamlNode["name"].Scalar()] = make_shared<query> (yamlNode);
+                // this is an ugly hack for now
+                vectornodes.push_back(make_shared<query> (yamlNode));
             }
             else if (yamlNode["type"].Scalar() == "insert") {
                 nodes[yamlNode["name"].Scalar()] = make_shared<insert> (yamlNode);
+                vectornodes.push_back(make_shared<insert> (yamlNode));
             }
             else
                 cerr << "Don't know how to handle workload node with type " << yamlNode["type"] << endl;

@@ -7,6 +7,7 @@
 #include "parse_util.hpp"
 
 #include "node.hpp"
+#pragma once
 
 using namespace std;
 

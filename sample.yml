@@ -4,7 +4,7 @@ query : &q
       query : { x : a }
       next : query
 
-insert : 
+insert : &insert
        name : insert
        type : insert
        document : {x : a}
@@ -69,4 +69,6 @@ random query:
                             x : uniform [0 1] 
                next : query
  
-main : insert
+main : 
+- *insert
+- *q
