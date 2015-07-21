@@ -1,5 +1,8 @@
 #include <iostream>
 #include <string>
+#include <mongocxx/client.hpp>
+#include <mongocxx/instance.hpp>
+
 
 
 #pragma once
@@ -16,7 +19,7 @@ public:
     node(const node&) = default;
     node(node&&) = default;
     // Execute the node
-    void execute(mongocxx::client &);
+    virtual void execute(mongocxx::client &) = 0;
     const string getName() {return name;};
 
 private:

@@ -11,6 +11,8 @@ insert.o : insert.cpp insert.hpp
 
 parse_util.o : parse_util.cpp parse_util.hpp
 
-mwg : parser.cpp query.o insert.o parse_util.o
-	$(CPP) $<  -I.  $(CPPFLAGS) -o $@ query.o parse_util.o insert.o
+workload.o : workload.cpp workload.hpp
+
+mwg : parser.cpp query.o insert.o parse_util.o workload.o
+	$(CPP) $<  -I.  $(CPPFLAGS) -o $@ query.o parse_util.o insert.o workload.o
 

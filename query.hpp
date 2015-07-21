@@ -6,9 +6,6 @@
 #include <bson.h>
 #include "parse_util.hpp"
 
-#include <mongocxx/client.hpp>
-#include <mongocxx/instance.hpp>
-
 #include "node.hpp"
 
 using namespace std;
