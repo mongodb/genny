@@ -7,6 +7,8 @@ CPPFLAGS=-l yaml-cpp -std=c++11 -I/usr/local/include/mongocxx/v0.3 -I/usr/local/
 
 query.o : query.cpp query.hpp 
 
+insert.o : insert.cpp insert.hpp
+
 parse_util.o : parse_util.cpp parse_util.hpp
 
 mwg : parser.cpp query.o parse_util.o
