@@ -2,7 +2,8 @@
 #include <string>
 #include "yaml-cpp/yaml.h"
 #include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/stream/array_context.hpp>
+#include <bsoncxx/builder/stream/single_context.hpp>
 #include <bsoncxx/json.hpp>
 #include <bson.h>
 #include <vector>
@@ -11,6 +12,7 @@
 #include <mongocxx/instance.hpp>
 
 #include "query.hpp"
+#include "parse_util.hpp"
 
 using namespace std;
 using namespace mwg;
@@ -21,31 +23,9 @@ using bsoncxx::builder::stream::close_document;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::close_array;
 using bsoncxx::builder::stream::finalize;
+using bsoncxx::builder::stream::array_context;
+using bsoncxx::builder::stream::single_context;
 
-void parseMap(document &docbuilder, YAML::Node node) {
-  for (auto entry : node) {
-cout << "In parseMap. entry.first: " << entry.first.Scalar() << " entry.second" << entry.second.Scalar() << endl;
-    if (entry.second.IsMap()) {
-docbuilder << entry.first.Scalar() << open_document;
-      parseMap(docbuilder, entry.second);
-docbuilder << close_document;
-    } else if (entry.second.IsSequence()) {
-    } else { // scalar
-docbuilder << entry.first.Scalar() << entry.second.Scalar();
-    }
-  }
-}
-void parseSequence(bsoncxx::builder::stream::document &docbuilder,
-                   YAML::Node node) {
-  for (auto entry : node) {
-    if (entry.second.IsMap()) {
-
-    } else if (entry.second.IsSequence()) {
-    } else // scalar
-    {
-    }
-  }
-}
 int main() {
   YAML::Node nodes = YAML::LoadFile("sample.yml");
 
@@ -67,10 +47,10 @@ int main() {
     cout << nodes["query"]["query"] << endl;
 
     document document{};
-auto q = nodes["query"]["query"];
-cout << "type: " << q.Type() << endl;
-if (q.IsMap())
-    parseMap(document, nodes["query"]["query"]);
+    auto q = nodes["query"]["query"];
+    cout << "type: " << q.Type() << endl;
+    if (q.IsMap())
+      parseMap(document, nodes["query"]["query"]);
     cout << bsoncxx::to_json(document) << endl;
     mongocxx::instance inst{};
     mongocxx::client conn{};
