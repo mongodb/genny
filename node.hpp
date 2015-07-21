@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 
+
+#pragma once
 using namespace std;
 
 namespace mwg {
@@ -22,3 +24,4 @@ private:
     string name;
 };
 }
+

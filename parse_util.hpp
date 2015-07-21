@@ -25,4 +25,5 @@ using bsoncxx::builder::stream::single_context;
 namespace mwg {
 
 void parseMap(document &docbuilder, YAML::Node node);
+
 }

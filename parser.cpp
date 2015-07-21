@@ -12,6 +12,7 @@
 #include <mongocxx/instance.hpp>
 
 #include "query.hpp"
+#include "insert.hpp"
 #include "parse_util.hpp"
 
 using namespace std;
@@ -40,8 +41,10 @@ int main() {
     mongocxx::instance inst{};
     mongocxx::client conn{};
 
-    query myquery(workload);
-    myquery.execute(conn);
+    // query myquery(workload);
+    // myquery.execute(conn);
+insert myinsert(workload);
+myinsert.execute(conn);
   }
 
   else

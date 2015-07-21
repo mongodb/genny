@@ -19,7 +19,7 @@ namespace mwg {
                 cerr << "Insert constructor but yaml entry doesn't have type == insert" << endl;
                 exit(EXIT_FAILURE);
             }
-        parseMap(insertdoc, node["insert"]);
+        parseMap(insertdoc, node["document"]);
     }
 
     // Execute the node
