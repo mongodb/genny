@@ -1,7 +1,7 @@
 query : &q
       name : query
       type : query
-      query : { x : a, y: {c : d } }
+      query : { x : a }
       next : query
 
 simple query : &sq
