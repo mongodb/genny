@@ -19,9 +19,10 @@ public:
     node(const node&) = default;
     node(node&&) = default;
     // Execute the node
-    virtual void execute(mongocxx::client &) = 0;
+    virtual void executeNode(mongocxx::client &);
+    virtual void execute(mongocxx::client &) {};
     const string getName() {return name;};
-    shared_ptr<node> next {nullptr};
+    shared_ptr<node> nextNode {nullptr};
 
     string name;
     string nextName;

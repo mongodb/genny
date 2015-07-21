@@ -18,13 +18,18 @@ namespace mwg {
                 exit(EXIT_FAILURE);
             }
             if (yamlNode["type"].Scalar() == "query" ) {
-                nodes[yamlNode["name"].Scalar()] = make_shared<query> (yamlNode);
+                auto mynode = make_shared<query> (yamlNode);
+                nodes[yamlNode["name"].Scalar()] = mynode;
                 // this is an ugly hack for now
-                vectornodes.push_back(make_shared<query> (yamlNode));
+                vectornodes.push_back(mynode);
+                cout << "In workload constructor and added query node" << endl;
             }
             else if (yamlNode["type"].Scalar() == "insert") {
-                nodes[yamlNode["name"].Scalar()] = make_shared<insert> (yamlNode);
-                vectornodes.push_back(make_shared<insert> (yamlNode));
+                auto mynode = make_shared<insert> (yamlNode);
+                nodes[yamlNode["name"].Scalar()] = mynode;
+                // this is an ugly hack for now
+                vectornodes.push_back(mynode);
+                cout << "In workload constructor and added insert node" << endl;
             }
             else
                 cerr << "Don't know how to handle workload node with type " << yamlNode["type"] << endl;
@@ -32,14 +37,19 @@ namespace mwg {
 
         // link the things together
         for (auto mnode : vectornodes) {
-            mnode->next = nodes[mnode->nextName];
+            mnode->nextNode = nodes[mnode->nextName];
+            if (mnode->nextNode) {
+                cout << "Successfully set mnode->next for " << mnode->name << endl;
+            }
+            else
+                cout << "Failed to set mnode->next for " << mnode->name << endl;
         }
 
     }
     
     void workload::execute(mongocxx::client &conn) {
-        for (auto mnode : vectornodes) {
-            mnode->execute(conn);
-        }
+        //        for (auto mnode : vectornodes) {
+        //    mnode->execute(conn);}
+        vectornodes[0]->executeNode(conn);
     }
 }

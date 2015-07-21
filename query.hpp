@@ -24,10 +24,8 @@ public:
     query(query&&) = default;
     // Execute the node
     void execute(mongocxx::client &);
-    const string getName() {return name;};
 
 private:
     bsoncxx::builder::stream::document querydoc{};
-    string name;
 };
 }

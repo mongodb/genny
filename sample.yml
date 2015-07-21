@@ -2,13 +2,13 @@ query : &q
       name : query
       type : query
       query : { x : a }
-      next : query
+      next : insert
 
 insert : &insert
        name : insert
        type : insert
        document : {x : a}
-       next : insert
+       next : query
 
 simple query : &sq
        ns : test.test

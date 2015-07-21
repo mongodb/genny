@@ -21,6 +21,7 @@ namespace mwg {
             }
         name = node["name"].Scalar();
         nextName = node["next"].Scalar();
+        cout << "In insert constructor. Name: " << name << ", nextName: " << nextName << endl;
         parseMap(insertdoc, node["document"]);
     }
 
@@ -29,7 +30,7 @@ namespace mwg {
         auto collection = conn["testdb"]["testCollection"];
         auto result = collection.insert_one(insertdoc.view());
         // need a way to exhaust the cursor 
-        cout << "insert is " << bsoncxx::to_json(insertdoc.view()) << endl;
+        cout << "insert.execute: insert is " << bsoncxx::to_json(insertdoc.view()) << endl;
         // probably should do some error checking here
     }
 }
