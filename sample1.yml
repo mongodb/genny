@@ -1,0 +1,41 @@
+query : &q
+      name : query
+      type : query
+      query : { x : a }
+      next : sleep
+
+insert : &insert1
+       name : insert1
+       type : insert
+       document : {x : a}
+       next : sleep
+
+insert : &insert2
+       name : insert2
+       type : insert
+       document : {x : b}
+       next : sleep
+
+random : &random
+       name : random
+       type : random_choice
+       next : 
+            insert2 : 0.5
+            query : 0.5
+
+sleep : &sleep
+      name : sleep
+      type : sleep
+      next : random
+      sleep : 1000
+ 
+main : 
+     seed: 131415161718
+     name: main
+     nodes: 
+          - *insert1
+          - *insert2
+          - *q
+          - *random
+          - *sleep
+
