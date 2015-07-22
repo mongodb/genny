@@ -3,6 +3,7 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 #include <unordered_map>
+#include <random>
 
 
 #pragma once
@@ -19,8 +20,8 @@ public:
     node(const node&) = default;
     node(node&&) = default;
     // Execute the node
-    virtual void executeNode(mongocxx::client &);
-    virtual void execute(mongocxx::client &) {};
+    virtual void executeNode(mongocxx::client &, mt19937_64 &);
+    virtual void execute(mongocxx::client &, mt19937_64 &) {};
     const string getName() {return name;};
     shared_ptr<node> nextNode {nullptr};
 

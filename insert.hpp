@@ -25,7 +25,7 @@ public:
     insert(const insert&) = default;
     insert(insert&&) = default;
     // Execute the node
-    void execute(mongocxx::client &);
+    void execute(mongocxx::client &, mt19937_64 &) override;
 
 private:
     bsoncxx::builder::stream::document insertdoc{};

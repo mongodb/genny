@@ -75,6 +75,6 @@ namespace mwg {
     void workload::execute(mongocxx::client &conn) {
         //        for (auto mnode : vectornodes) {
         //    mnode->execute(conn);}
-        vectornodes[0]->executeNode(conn);
+        vectornodes[0]->executeNode(conn, rng);
     }
 }

@@ -26,7 +26,7 @@ namespace mwg {
     }
 
     // Execute the node
-    void insert::execute(mongocxx::client &conn) {
+    void insert::execute(mongocxx::client &conn, mt19937_64 &rng) {
         auto collection = conn["testdb"]["testCollection"];
         auto result = collection.insert_one(insertdoc.view());
         // need a way to exhaust the cursor 

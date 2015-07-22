@@ -26,7 +26,7 @@ namespace mwg {
     }
 
     // Execute the node
-    void query::execute(mongocxx::client &conn) {
+    void query::execute(mongocxx::client &conn, mt19937_64 &) {
         auto collection = conn["testdb"]["testCollection"];
         auto cursor = collection.find(querydoc.view());
         // need a way to exhaust the cursor 

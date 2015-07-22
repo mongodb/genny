@@ -49,7 +49,7 @@ namespace mwg {
     }
 
     // Execute the node
-    void random_choice::executeNode(mongocxx::client &conn) {
+    void random_choice::executeNode(mongocxx::client &conn, mt19937_64 &rng) {
         // need to pick a random number, and pick the next state based on it. 
         double random_number = 0.6; //Using 0.6 until wiring through the random number generator
         cout << "random_choice.execute. Random_number is " << random_number;
@@ -57,7 +57,7 @@ namespace mwg {
             if (nextstate.second > random_number) {
                 // execute this one
                 cout << " Next state is " << nextstate.first->name << endl;
-                return(nextstate.first->executeNode(conn));
+                return(nextstate.first->executeNode(conn,rng));
             }
         }
     }
