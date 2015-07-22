@@ -12,13 +12,13 @@ namespace mwg {
             // read out things like the seed
             yamlNodes = inputNodes["nodes"];
             if (!yamlNodes.IsSequence()) {
-                cerr << "Workload is a map, but nodes is not sequnce in workload type initializer" << endl;
+                cerr << "Workload is a map, but nodes is not sequnce in workload type initializer " << endl;
                 exit(EXIT_FAILURE);
             } 
             if (inputNodes["seed"])
-                rng.seed(strtod(yamlNodes["seed"].Scalar().c_str(), NULL));
+                rng.seed(strtod(inputNodes["seed"].Scalar().c_str(), NULL));
             name = inputNodes["name"].Scalar();
-            
+            cout << "In workload constructor, and was passed in a map. Name: " << name << " and seed: " << strtod(inputNodes["seed"].Scalar().c_str(), NULL) << endl;
         }
         else if (inputNodes.IsSequence()) {
             yamlNodes = inputNodes;
@@ -27,7 +27,11 @@ namespace mwg {
             cerr << "Not sequnce in workload type initializer" << endl;
             exit(EXIT_FAILURE);
         }
-        
+        if (!yamlNodes.IsSequence()) {
+            cerr << "Not sequnce in workload type initializer after passing through map or sequence processing. Type is " << yamlNodes.Type() << endl;
+            exit(EXIT_FAILURE);
+        }
+            
         for (auto yamlNode : yamlNodes) {
             if (!yamlNode.IsMap()) {
                 cerr << "Node in workload is not a yaml map" << endl;

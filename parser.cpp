@@ -26,13 +26,6 @@ int main(int argc, char *argv[]) {
 
   YAML::Node nodes = YAML::LoadFile(filename);
 
-  // cout << nodes << endl;
-  // if (nodes["random query"])
-  //   cout << "I have random query" << endl;
-
-  // for (auto node : nodes)
-  //   cout << node.first << endl;
-
   // Look for main. And start building from there.
   if (auto main = nodes["main"]) {
     //    cout << "Have main here: " << main << endl;

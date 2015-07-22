@@ -90,8 +90,11 @@ random query:
                next : query
  
 main : 
-- *insert1
-- *insert2
-- *q
-- *random
-- *sleep
+     seed: 131415161718
+     name: main
+     nodes: 
+          - *insert1
+          - *insert2
+          - *q
+          - *random
+          - *sleep
