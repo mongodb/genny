@@ -30,6 +30,8 @@ namespace mwg {
         // Execute the workload
         virtual void execute(mongocxx::client &);
         
+
+    private:
         // really don't want both of these long term, but they make
         // life easier for now.
         unordered_map<string,shared_ptr<node>> nodes;
