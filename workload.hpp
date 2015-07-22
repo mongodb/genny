@@ -31,7 +31,8 @@ namespace mwg {
         workload(workload&&) = default;
         // Execute the workload
         virtual void execute(mongocxx::client &);
-        
+        workload & operator= ( const workload & ) = default;
+        workload & operator= ( workload && ) = default;
 
     private:
         // really don't want both of these long term, but they make

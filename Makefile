@@ -7,7 +7,7 @@ CPPFLAGS=-MMD -l yaml-cpp -std=c++11 -I/usr/local/include/mongocxx/v0.3 -I/usr/l
 
 default : mwg
 
-OBJS = query.o parse_util.o insert.o workload.o node.o random_choice.o sleep.o 
+OBJS = query.o parse_util.o insert.o workload.o node.o random_choice.o sleep.o forN.o
 
 -include $(OBJS:.o=.d)
 
