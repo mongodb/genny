@@ -90,7 +90,7 @@ namespace mwg {
 
         // link the things together
         for (auto mnode : vectornodes) {
-            cout << "Setting next node for " << mnode->name << ". Next node name is " << mnode->nextName << endl;
+            cout << "Setting next node for " << mnode->getName() << ". Next node name is " << mnode->nextName << endl;
             mnode->setNextNode(nodes);
         }
     }
