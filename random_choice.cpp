@@ -50,8 +50,10 @@ namespace mwg {
 
     // Execute the node
     void random_choice::executeNode(mongocxx::client &conn, mt19937_64 &rng) {
-        // need to pick a random number, and pick the next state based on it. 
+        // pick a random number, and pick the next state based on it. 
         double random_number = 0.6; //Using 0.6 until wiring through the random number generator
+        uniform_real_distribution<double> distribution(0.0,1.0);
+        random_number = distribution(rng);
         cout << "random_choice.execute. Random_number is " << random_number;
         for(auto nextstate : vectornodes ) {
             if (nextstate.second > random_number) {
