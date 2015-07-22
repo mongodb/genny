@@ -1,6 +1,7 @@
 #include "node.hpp"
 #include "insert.hpp"
 #include "query.hpp"
+#include "random_choice.hpp"
 #include <iostream>
 #include <string>
 #include "yaml-cpp/yaml.h"
@@ -16,7 +17,7 @@ using namespace std;
 
 namespace mwg {
     
-    class workload : public node {
+    class workload  {
         
     public: 
         
@@ -28,7 +29,6 @@ namespace mwg {
         // Execute the workload
         virtual void execute(mongocxx::client &);
         
-    private:
         // really don't want both of these long term, but they make
         // life easier for now.
         unordered_map<string,shared_ptr<node>> nodes;

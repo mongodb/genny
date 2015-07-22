@@ -1,6 +1,13 @@
 #include "node.hpp"
 
 namespace mwg {
+
+    void node::setNextNode(unordered_map<string,shared_ptr<node>> &nodes) {
+        cout << "Setting next node for " << name << ". Next node should be " << nextName << endl;
+               nextNode = nodes[nextName];
+    }
+
+
     void node::executeNode(mongocxx::client &conn) {
         // execute this node
         execute(conn);

@@ -2,7 +2,7 @@
 #include <string>
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
-
+#include <unordered_map>
 
 
 #pragma once
@@ -23,6 +23,9 @@ public:
     virtual void execute(mongocxx::client &) {};
     const string getName() {return name;};
     shared_ptr<node> nextNode {nullptr};
+
+    // Set the next node pointer
+    virtual void setNextNode(unordered_map<string,shared_ptr<node>> &);
 
     string name;
     string nextName;

@@ -14,7 +14,14 @@ insert : &insert2
        name : insert2
        type : insert
        document : {x : b}
-       next : query
+       next : random
+
+random : &random
+       name : random
+       type : random_choice
+       next : 
+            insert2 : 0.5
+            query : 0.5
 
 simple query : &sq
        ns : test.test
@@ -79,3 +86,4 @@ main :
 - *insert1
 - *insert2
 - *q
+- *random
