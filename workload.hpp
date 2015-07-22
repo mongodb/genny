@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <random>
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
@@ -36,6 +37,9 @@ namespace mwg {
         // life easier for now.
         unordered_map<string,shared_ptr<node>> nodes;
         vector<shared_ptr<node>> vectornodes;
+        mt19937_64 rng; // random number generator
+        string name;
+
 };
 }
 

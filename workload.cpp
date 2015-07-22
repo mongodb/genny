@@ -2,12 +2,28 @@
 #include<stdlib.h>
 
 namespace mwg {
-    workload::workload(YAML::Node &yamlNodes) {
-        if (!yamlNodes) {
+    workload::workload(YAML::Node &inputNodes) {
+        if (!inputNodes) {
             cerr << "Workload constructor and !nodes" << endl;
             exit(EXIT_FAILURE);
             }
-        if (!yamlNodes.IsSequence()) {
+        YAML::Node yamlNodes;
+        if (inputNodes.IsMap()) {
+            // read out things like the seed
+            yamlNodes = inputNodes["nodes"];
+            if (!yamlNodes.IsSequence()) {
+                cerr << "Workload is a map, but nodes is not sequnce in workload type initializer" << endl;
+                exit(EXIT_FAILURE);
+            } 
+            if (inputNodes["seed"])
+                rng.seed(strtod(yamlNodes["seed"].Scalar().c_str(), NULL));
+            name = inputNodes["name"].Scalar();
+            
+        }
+        else if (inputNodes.IsSequence()) {
+            yamlNodes = inputNodes;
+        } 
+        else {
             cerr << "Not sequnce in workload type initializer" << endl;
             exit(EXIT_FAILURE);
         }
