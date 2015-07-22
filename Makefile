@@ -7,20 +7,10 @@ CPPFLAGS=-l yaml-cpp -std=c++11 -I/usr/local/include/mongocxx/v0.3 -I/usr/local/
 
 default : mwg
 
-query.o : query.cpp query.hpp 
+OBJS = query.o parse_util.o insert.o workload.o node.o random_choice.o sleep.o
 
-insert.o : insert.cpp insert.hpp
+mwg : parser.cpp $(OBJS)
+	$(CPP) $<  -I.  $(CPPFLAGS) -o $@ $(OBJS)
 
-parse_util.o : parse_util.cpp parse_util.hpp
-
-workload.o : workload.cpp workload.hpp
-
-node.o :node.cpp node.hpp
-
-random_choice.o : random_choice.cpp random_choice.hpp
-
-sleep.o : sleep.cpp sleep.hpp
-
-mwg : parser.cpp query.o insert.o parse_util.o workload.o node.o random_choice.o sleep.o
-	$(CPP) $<  -I.  $(CPPFLAGS) -o $@ query.o parse_util.o insert.o workload.o node.o random_choice.o sleep.o
-
+clean : 
+	rm -rf *.o *.d mwg
