@@ -19,8 +19,12 @@
 using namespace std;
 using namespace mwg;
 
-int main() {
-  YAML::Node nodes = YAML::LoadFile("sample.yml");
+int main(int argc, char *argv[]) {
+  string filename = "sample.yml";
+  if (argc > 1)
+    filename = argv[1];
+
+  YAML::Node nodes = YAML::LoadFile(filename);
 
   // cout << nodes << endl;
   // if (nodes["random query"])
@@ -31,15 +35,15 @@ int main() {
 
   // Look for main. And start building from there.
   if (auto main = nodes["main"]) {
-//    cout << "Have main here: " << main << endl;
+    //    cout << "Have main here: " << main << endl;
 
     mongocxx::instance inst{};
     mongocxx::client conn{};
 
     // query myquery(workload);
     // myquery.execute(conn);
-workload myworkload(main);
-myworkload.execute(conn);
+    workload myworkload(main);
+    myworkload.execute(conn);
   }
 
   else
