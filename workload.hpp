@@ -2,6 +2,7 @@
 #include "insert.hpp"
 #include "query.hpp"
 #include "random_choice.hpp"
+#include "sleep.hpp"
 #include <iostream>
 #include <string>
 #include "yaml-cpp/yaml.h"

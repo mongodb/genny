@@ -2,19 +2,19 @@ query : &q
       name : query
       type : query
       query : { x : a }
-      next : insert2
+      next : sleep
 
 insert : &insert1
        name : insert1
        type : insert
        document : {x : a}
-       next : insert2
+       next : sleep
 
 insert : &insert2
        name : insert2
        type : insert
        document : {x : b}
-       next : random
+       next : sleep
 
 random : &random
        name : random
@@ -22,6 +22,12 @@ random : &random
        next : 
             insert2 : 0.5
             query : 0.5
+
+sleep : &sleep
+      name : sleep
+      type : sleep
+      next : random
+      sleep : 1000
 
 simple query : &sq
        ns : test.test
@@ -34,6 +40,7 @@ simple query : &sq
                next : query
              - *q
  
+
 load and query : 
      ns : test.test
      nodes : 
@@ -87,3 +94,4 @@ main :
 - *insert2
 - *q
 - *random
+- *sleep

@@ -19,6 +19,8 @@ node.o :node.cpp node.hpp
 
 random_choice.o : random_choice.cpp random_choice.hpp
 
-mwg : parser.cpp query.o insert.o parse_util.o workload.o node.o random_choice.o
-	$(CPP) $<  -I.  $(CPPFLAGS) -o $@ query.o parse_util.o insert.o workload.o node.o random_choice.o
+sleep.o : sleep.cpp sleep.hpp
+
+mwg : parser.cpp query.o insert.o parse_util.o workload.o node.o random_choice.o sleep.o
+	$(CPP) $<  -I.  $(CPPFLAGS) -o $@ query.o parse_util.o insert.o workload.o node.o random_choice.o sleep.o
 

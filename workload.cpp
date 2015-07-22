@@ -38,6 +38,13 @@ namespace mwg {
                 vectornodes.push_back(mynode);
                 cout << "In workload constructor and added random_choice node" << endl;
             }
+            else if (yamlNode["type"].Scalar() == "sleep") {
+                auto mynode = make_shared<sleepNode> (yamlNode);
+                nodes[yamlNode["name"].Scalar()] = mynode;
+                // this is an ugly hack for now
+                vectornodes.push_back(mynode);
+                cout << "In workload constructor and added sleep node" << endl;
+            }
             else
                 cerr << "Don't know how to handle workload node with type " << yamlNode["type"] << endl;
         }
