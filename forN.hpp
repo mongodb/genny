@@ -1,13 +1,14 @@
+#pragma once
+
 #include "node.hpp"
 #include "workload.hpp"
 
-#pragma once
 
 using namespace std;
 
 namespace mwg {
 
-
+    class workload;
     class forN : public node {
     public : 
         forN(YAML::Node &);

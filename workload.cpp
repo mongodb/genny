@@ -1,5 +1,14 @@
 #include "workload.hpp"
 #include<stdlib.h>
+#include <iostream>
+
+#include "node.hpp"
+#include "insert.hpp"
+#include "query.hpp"
+#include "random_choice.hpp"
+#include "sleep.hpp"
+#include "finish_node.hpp"
+#include "forN.hpp"
 
 namespace mwg {
     workload::workload(YAML::Node &inputNodes) {
@@ -60,6 +69,13 @@ namespace mwg {
             }
             else if (yamlNode["type"].Scalar() == "sleep") {
                 auto mynode = make_shared<sleepNode> (yamlNode);
+                nodes[mynode->getName()] = mynode;
+                // this is an ugly hack for now
+                vectornodes.push_back(mynode);
+                cout << "In workload constructor and added sleep node" << endl;
+            }
+            else if (yamlNode["type"].Scalar() == "forN") {
+                auto mynode = make_shared<forN> (yamlNode);
                 nodes[mynode->getName()] = mynode;
                 // this is an ugly hack for now
                 vectornodes.push_back(mynode);

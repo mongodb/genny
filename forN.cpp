@@ -35,5 +35,9 @@ namespace mwg {
     // Execute the node
     void forN::execute(mongocxx::client &conn, mt19937_64 &) {
         // execute the workload N times
+        for (int i = 0; i < N; i++) {
+            cout << "In forN and executing interation " << i << endl;
+            myWorkload.execute(conn);
+        }
     }
 }

@@ -1,10 +1,5 @@
-#include "node.hpp"
-#include "insert.hpp"
-#include "query.hpp"
-#include "random_choice.hpp"
-#include "sleep.hpp"
-#include "finish_node.hpp"
-#include <iostream>
+#pragma once
+
 #include <string>
 #include "yaml-cpp/yaml.h"
 #include <unordered_map>
@@ -15,11 +10,11 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 
-#pragma once
 using namespace std;
 
 namespace mwg {
     
+    class node;
     class workload  {
         
     public: 

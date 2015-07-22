@@ -1,0 +1,24 @@
+insert : &insert1
+       name : insert1
+       type : insert
+       document : {x : a}
+       next : sleep
+
+sleep : &sleep
+      name : sleep
+      type : sleep
+      next : Finish
+      sleep : 1000
+ 
+main : 
+     seed: 131415161718
+     name: main
+     nodes: 
+          - name : repeat
+            type : forN
+            N : 5
+            next : Finish
+            workload : 
+               - *insert1
+               - *sleep
+
