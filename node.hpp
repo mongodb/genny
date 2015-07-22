@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>

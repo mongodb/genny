@@ -2,6 +2,7 @@
 #include <stdlib.h>   
 #include "sleep.hpp"
 #include <random>
+#include "parse_util.hpp"
 
 namespace mwg {
     sleepNode::sleepNode(YAML::Node &node) {

@@ -1,5 +1,8 @@
 #include "insert.hpp"
 #include<stdlib.h>
+#include "parse_util.hpp"
+#include <bsoncxx/json.hpp>
+
 
 namespace mwg {
 

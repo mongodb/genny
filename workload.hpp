@@ -6,9 +6,7 @@
 #include <memory>
 #include <vector>
 #include <random>
-
 #include <mongocxx/client.hpp>
-#include <mongocxx/instance.hpp>
 
 using namespace std;
 

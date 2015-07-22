@@ -1,15 +1,6 @@
-#include <iostream>
-#include <string>
 #include "yaml-cpp/yaml.h"
 #include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/builder/stream/array_context.hpp>
-#include <bsoncxx/builder/stream/single_context.hpp>
-#include <bsoncxx/json.hpp>
-#include <bson.h>
-#include <vector>
 
-#include <mongocxx/client.hpp>
-#include <mongocxx/instance.hpp>
 
 using namespace std;
 

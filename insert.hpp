@@ -1,11 +1,4 @@
-#include <iostream>
-#include <string>
 #include "yaml-cpp/yaml.h"
-#include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/json.hpp>
-#include <bson.h>
-#include "parse_util.hpp"
-
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 

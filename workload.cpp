@@ -1,6 +1,8 @@
 #include "workload.hpp"
-#include<stdlib.h>
+#include <stdlib.h>
 #include <iostream>
+
+#include <mongocxx/instance.hpp>
 
 #include "node.hpp"
 #include "insert.hpp"

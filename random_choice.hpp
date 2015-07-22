@@ -1,8 +1,5 @@
-#include <iostream>
 #include <string>
 #include "yaml-cpp/yaml.h"
-#include <bsoncxx/builder/stream/document.hpp>
-#include "parse_util.hpp"
 #include <unordered_map>
 
 #include "node.hpp"

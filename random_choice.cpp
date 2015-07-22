@@ -1,6 +1,7 @@
 #include <stdio.h>   
 #include <stdlib.h>   
 #include "random_choice.hpp"
+#include "parse_util.hpp"
 #include <random>
 
 namespace mwg {

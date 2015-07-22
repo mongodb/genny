@@ -1,4 +1,6 @@
 #include "query.hpp"
+#include "parse_util.hpp"
+#include <bsoncxx/json.hpp>
 #include<stdlib.h>
 
 namespace mwg {
