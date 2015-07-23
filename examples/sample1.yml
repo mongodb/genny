@@ -1,0 +1,37 @@
+# Example workload. Does insert 1, then goes to random node. Random
+#  node chooses between doing insert2 or query, and then back to the
+#  random choice. There is a sleep between every node to make it human
+#  watchable.
+
+main : 
+     seed: 131415161718
+     name: main
+     nodes: 
+          - 
+            name : insert1
+            type : insert
+            document : {x : a}
+            next : sleep
+          - 
+            name : insert2
+            type : insert
+            document : {x : b}
+            next : sleep
+          - 
+            name : query
+            type : query
+            query : { x : a }
+            next : sleep
+          - 
+            name : random
+            type : random_choice
+            next : 
+                 insert2 : 0.5
+                 query : 0.5
+          - 
+            name : sleep
+            type : sleep
+            next : random
+            sleep : 1000
+
+

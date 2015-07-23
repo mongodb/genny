@@ -1,0 +1,22 @@
+# Simple example of the forN node. Does an insert 5 times and then stops. 
+ 
+main : 
+     seed: 131415161718
+     name: main
+     nodes: 
+          - name : repeat
+            type : forN
+            N : 5
+            next : Finish
+            workload : 
+               - 
+                 name : insert1
+                 type : insert
+                 document : {x : a}
+                 next : sleep
+               - 
+                 name : sleep
+                 type : sleep
+                 next : Finish
+                 sleep : 1000
+

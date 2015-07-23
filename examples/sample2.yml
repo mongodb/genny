@@ -1,0 +1,37 @@
+# Example workload. Does insert 1, then goes to random node. Random
+#  node chooses between doing insert2, query, or Finish. Finish is an
+#  absorbing state -- the workload stops when it gets to Finish. There
+#  is a sleep between every node to make it human watchable.
+
+main : 
+     seed: 234762873642
+     name: main
+     nodes: 
+          - 
+            name : insert1
+            type : insert
+            document : {x : a}
+            next : sleep
+          - 
+            name : insert2
+            type : insert
+            document : {x : b}
+            next : sleep
+          - 
+            name : query
+            type : query
+            query : { x : a }
+            next : sleep
+          - 
+            name : random
+            type : random_choice
+            next : 
+                 insert2 : 0.45
+                 query : 0.45
+                 Finish : 0.1
+          - 
+            name : sleep
+            type : sleep
+            next : random
+            sleep : 1000
+
