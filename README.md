@@ -58,23 +58,22 @@ Dependencies
 * The [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master)
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * A compiler that supports c++11
+* [cmake](http://www.cmake.org/) for building
 
 Building
 --------
 
-There is a simple makefile included. Just call make.
+    mkdir build
+    cd build
+    cmake ..
     make
-
-The includes from the makefile may need to be updated for your
-system. The project will be moving to cmake in the near future, and
-that should improve this process. 
 
 Examples
 --------
 
 There are a collections of examples in the examples directory. To run
 the forN.yml example, simply do:
-    ./mwg examples/forN.yml
+    ./build/mwg examples/forN.yml
 
 The workloads are all specified in yaml. An example query node is:
 
