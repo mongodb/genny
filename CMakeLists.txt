@@ -21,3 +21,8 @@ include_directories(${LIBMONGOCXX_INCLUDE_DIRS})
 include_directories(${YAMLCPP_INCLUDE_DIRS})
 
 add_subdirectory(src)
+add_executable(mwg src/parser.cpp)
+target_link_libraries(mwg ${LIBMONGOCXX_LIBRARIES} ${YAMLCPP_LIBRARIES} big)
+
+install(TARGETS mwg DESTINATION bin)
+
