@@ -37,10 +37,11 @@ namespace mwg {
         struct timespec out;
         nanosleep(&t, &out);
         cout << "Slept. Calling next node" << endl;
-        if (!nextNode)
+        auto next = nextNode.lock();
+        if (!next)
             cout << "nextNode is null for some reason" << endl;
         else
-            nextNode->executeNode(conn,rng);
+            next->executeNode(conn,rng);
     }
 }
 

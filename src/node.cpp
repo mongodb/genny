@@ -13,11 +13,12 @@ namespace mwg {
         execute(conn, rng);
         // execute the next node if there is one
         //cout << "just executed " << name << ". NextName is " << nextName << endl;
-        if (!nextNode)
+        auto next = nextNode.lock();
+        if (!next)
             cout << "nextNode is null for some reason" << endl;
-        if (name != "Finish" && nextNode) {
+        if (name != "Finish" && next) {
             //cout << "About to call nextNode->executeNode" << endl;
-            nextNode->executeNode(conn, rng);
+            next->executeNode(conn, rng);
         }
     }
 

@@ -22,7 +22,6 @@ public:
     virtual void executeNode(mongocxx::client &, mt19937_64 &);
     virtual void execute(mongocxx::client &, mt19937_64 &) {};
     const string getName() {return name;};
-    shared_ptr<node> nextNode {nullptr};
 
     // Set the next node pointer
     virtual void setNextNode(unordered_map<string,shared_ptr<node>> &);
@@ -30,7 +29,8 @@ public:
     string name;
     string nextName;
 
-private:
+protected:
+    weak_ptr<node> nextNode;
 };
 }
 
