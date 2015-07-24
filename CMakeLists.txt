@@ -5,12 +5,9 @@ project (WorkloadGeneration)
 set (WorkloadGeneration_VERSION_MAJOR -1)
 set (WorkloadGeneration_VERSION_MINOR 0)
 
-add_definitions(-MMD)
 add_definitions(-Wall)
 add_definitions(-Werror)
 add_definitions(-std=c++11)
-add_definitions(-g)
-add_definitions(-O3)
 
 include_directories("${PROJECT_BINARY_DIR}")
 
