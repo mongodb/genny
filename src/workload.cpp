@@ -13,7 +13,7 @@
 #include "forN.hpp"
 
 namespace mwg {
-    workload::workload(YAML::Node &inputNodes) {
+    workload::workload(YAML::Node &inputNodes)  : stopped (false) {
         if (!inputNodes) {
             cerr << "Workload constructor and !nodes" << endl;
             exit(EXIT_FAILURE);

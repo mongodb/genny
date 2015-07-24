@@ -17,7 +17,7 @@ namespace mwg {
         
     public: 
         
-        workload() {};
+        workload() : stopped (false) {};
         workload(YAML::Node &nodes);
         virtual ~workload() = default;
         workload(const workload&) = default;
@@ -26,12 +26,13 @@ namespace mwg {
         virtual void execute(mongocxx::client &);
         workload & operator= ( const workload & ) = default;
         workload & operator= ( workload && ) = default;
+        void stop () {stopped = true;};
 
     private:
         vector<shared_ptr<node>> vectornodes;
         mt19937_64 rng; // random number generator
         string name;
-
+        bool stopped;
 };
 }
 

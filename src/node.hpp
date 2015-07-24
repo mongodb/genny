@@ -14,7 +14,7 @@ class node {
 
 public: 
 
-    node() {};
+    node() : stopped(false) {};
     virtual ~node() = default;
     node(const node&) = default;
     node(node&&) = default;
@@ -23,14 +23,16 @@ public:
     virtual void execute(mongocxx::client &, mt19937_64 &) {};
     const string getName() {return name;};
 
+    void stop () {stopped = true;};
     // Set the next node pointer
     virtual void setNextNode(unordered_map<string,shared_ptr<node>> &);
-
     string name;
     string nextName;
 
 protected:
     weak_ptr<node> nextNode;
+    bool stopped;
 };
+
 }
 
