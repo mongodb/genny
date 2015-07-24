@@ -15,6 +15,7 @@
 #include "insert.hpp"
 #include "parse_util.hpp"
 #include "workload.hpp"
+#include "main.h"
 
 using namespace std;
 using namespace mwg;
@@ -33,8 +34,6 @@ int main(int argc, char *argv[]) {
     mongocxx::instance inst{};
     mongocxx::client conn{};
 
-    // query myquery(workload);
-    // myquery.execute(conn);
     workload myworkload(main);
     myworkload.execute(conn);
   }
