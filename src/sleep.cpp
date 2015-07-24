@@ -40,7 +40,7 @@ namespace mwg {
         auto next = nextNode.lock();
         if (!next)
             cout << "nextNode is null for some reason" << endl;
-        else
+        else if (!stopped)
             next->executeNode(conn,rng);
     }
 }

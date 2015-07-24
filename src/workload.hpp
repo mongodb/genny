@@ -26,7 +26,7 @@ namespace mwg {
         virtual void execute(mongocxx::client &);
         workload & operator= ( const workload & ) = default;
         workload & operator= ( workload && ) = default;
-        void stop () {stopped = true;};
+        void stop ();
 
     private:
         vector<shared_ptr<node>> vectornodes;

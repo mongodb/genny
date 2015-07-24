@@ -59,6 +59,8 @@ namespace mwg {
         for(auto nextstate : vectornodes ) {
             if (nextstate.second > random_number) {
                 // execute this one
+                if (stopped) // short circuit and return if stopped flag set
+                    return;
                 cout << " Next state is " << nextstate.first->name << endl;
                 return(nextstate.first->executeNode(conn,rng));
             }

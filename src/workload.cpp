@@ -118,4 +118,12 @@ namespace mwg {
         //    mnode->execute(conn);}
         vectornodes[0]->executeNode(conn, rng);
     }
+
+    void workload::stop () {
+        stopped = true;
+        for (auto mnode : vectornodes)
+            mnode->stop();
+    };
+
+
 }

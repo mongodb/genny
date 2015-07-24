@@ -16,7 +16,7 @@ namespace mwg {
         auto next = nextNode.lock();
         if (!next)
             cout << "nextNode is null for some reason" << endl;
-        if (name != "Finish" && next) {
+        if (name != "Finish" && next && !stopped) {
             //cout << "About to call nextNode->executeNode" << endl;
             next->executeNode(conn, rng);
         }
