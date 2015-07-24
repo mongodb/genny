@@ -1,0 +1,108 @@
+variables : &variables
+          numdocs : 10000
+          numfields : 10
+          readratio : 0.5
+          writeration : 0.5
+          insertratio : 0
+          threadcount : 10
+          operationcount: 10000
+          maxexecutiontime: 1000
+          fieldlength: 100
+
+doc : & document
+    type : builder
+    base : 
+         _id : \#SEQ_INT # is a comment in yaml. Might want something else here. Also, ycsb yses USER as a prefix.  
+    repeat : 
+        N : {variable : fieldcount}
+        field name : \#SEQ_LET
+        field value : 
+              type : random string
+              length : {variable : fieldlength}
+              
+query : &query
+      type : document
+      document : 
+               _id : \#RAND_INT[0,{variable : numdocs}] # This needs some fixing. Need to prefix with user
+
+operations : 
+           - &insert
+           name : insert
+           type : insert
+           document : *document
+           - &read
+           name : read
+           type : read
+           query : *query
+           - &write 
+           name : write
+           type : update
+           query : *query
+           update : *doc # Need to change this to not change the _id. 
+           
+
+insert phase : &insertphase
+       name : insert phase
+       type : workload 
+       nodes : 
+             - 
+             name : repeat
+             type : forN
+             N : {variable : numdocs}
+             workload : 
+                      - *insert
+
+run phase : &runphase
+    name : run phase
+    type : workload
+    nodes : 
+          - name : timed
+          - type : RunForTime
+          - time : 
+                 variable : maxexecutiontime
+          - wait : false # Don't wait if it finishes early
+          workload : 
+                   - 
+                   name : oplimit
+                   type : forN
+                   N : 
+                     variable : operationcount
+                   workload : 
+                            - 
+                            name : choice
+                            type : random_choice
+                            next : 
+                                 insert : 
+                                            variable : insertratio
+                                 read : 
+                                      variable : readratio
+                                 write :
+                                       variable : writeratio
+                            - 
+                              name : insert 
+                              operation : *insert
+                              next : Finish
+                            - 
+                              name : read
+                              operation : *read
+                              next : Finish
+                            - 
+                              name : write
+                              operation : *write
+                              next : Finish 
+
+main : 
+     seed : 123141515
+     nodes : 
+           - 
+           type : forN
+           N : 1
+           workload : *insertphase
+           name : insert
+           next : run
+           - 
+           type : forN
+           N : 1
+           worklod : *runphase
+           name : runphase
+           next : Finish
