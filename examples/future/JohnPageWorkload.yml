@@ -1,0 +1,57 @@
+main : 
+     variables : 
+                 threads : 2
+                 duration : 300
+                 numfields : 30
+                 fieldsize : 50
+                 inserts : 100
+                 updates : 200
+                 queries : 300
+                 pnum : 20     
+     nodes : 
+           - # Start by making indexes
+             name : index1
+             type : create_index
+             doc : { f1 : 1 }
+             next : index2
+           - 
+             name : index2
+             type : create_index
+             doc : { f3 : 1 } 
+             next : index3
+           - 
+             name : index3
+             type : create_index
+             doc : { f5 : 1, f1 : 1 }
+             next : index4
+           - 
+             name : index4
+             type : create_index
+             doc : { f7 : 1, f1 : 1 }
+             next : timed
+           - 
+             name : timed
+             type : RunForTime
+             time : 
+                  variable : duration
+             workload : 
+                      name : testphase
+                      type : parallelN
+                      N : {variable : threads}
+                      workload : 
+                               variables : 
+                                         oid  : default_oid
+                                         seq : -1
+                               nodes :  
+                                     - 
+                                     name : choice
+                                     type : random_choice
+                                     next : 
+                                          insert : {variable : inserts}
+                                          query : {variable : queries}
+                                          update : {variable : update}
+                                     - *insert # Need to define these next three. 
+                                     - *query
+                                     - *update
+                         
+                                                          
