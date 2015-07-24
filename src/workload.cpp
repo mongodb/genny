@@ -18,6 +18,7 @@ namespace mwg {
             cerr << "Workload constructor and !nodes" << endl;
             exit(EXIT_FAILURE);
             }
+        unordered_map<string,shared_ptr<node>> nodes;
         YAML::Node yamlNodes;
         if (inputNodes.IsMap()) {
             // read out things like the seed
