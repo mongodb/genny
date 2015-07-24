@@ -15,7 +15,7 @@ doc : &document
          _id : \#SEQ_INT # is a comment in yaml. Might want something else here. Also, ycsb yses USER as a prefix.  
     repeat : 
         N : {variable : fieldcount}
-        field name : \#SEQ_LET
+        field name : \#SEQ_INT
         field value : 
               type : random string
               length : {variable : fieldlength}
@@ -57,11 +57,11 @@ run phase : &runphase
     type : workload
     nodes : 
           - name : timed
-          - type : RunForTime
-          - time : 
+            type : RunForTime
+            time : 
                  variable : maxexecutiontime
-          - wait : false # Don't wait if it finishes early
-          workload : 
+            wait : false # Don't wait if it finishes early
+            workload : 
                    - 
                    name : oplimit
                    type : forN
