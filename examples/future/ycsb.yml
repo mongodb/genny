@@ -9,7 +9,7 @@ variables : &variables
           maxexecutiontime: 1000
           fieldlength: 100
 
-doc : & document
+doc : &document
     type : builder
     base : 
          _id : \#SEQ_INT # is a comment in yaml. Might want something else here. Also, ycsb yses USER as a prefix.  
@@ -23,13 +23,13 @@ doc : & document
 query : &query
       type : document
       document : 
-               _id : \#RAND_INT[0,{variable : numdocs}] # This needs some fixing. Need to prefix with user
+               _id : "#RAND_INT[0,{variable : numdocs}]" # This needs some fixing. Need to prefix with user
 
 operations : 
            - &insert
-           name : insert
-           type : insert
-           document : *document
+             name : insert
+             type : insert
+             document : *document
            - &read
            name : read
            type : read
