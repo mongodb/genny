@@ -7,6 +7,7 @@
 #include <bsoncxx/json.hpp>
 #include <bson.h>
 #include <vector>
+#include <getopt.h>
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
@@ -20,10 +21,43 @@
 using namespace std;
 using namespace mwg;
 
+void print_help(const char* process_name);
+int main(int argc, char* argv[]);
+extern int optind;
+
+static struct option poptions[] = {
+    {"help",          no_argument,       0, 'h'},
+    {0,               0,                 0,  0 }
+};
+
 int main(int argc, char *argv[]) {
   string filename = "sample.yml";
-  if (argc > 1)
-    filename = argv[1];
+  int arg_count = 0;
+  int idx = 0;
+  while (1) {
+      int arg = getopt_long(argc, argv, "h",
+                            poptions, &idx);
+      arg_count++;
+      if (arg == -1) {
+          // all arguments have been processed
+          break;
+      }
+              ++arg_count;
+
+        switch(arg) {
+        case 'h':
+            print_help(argv[0]);
+            return EXIT_SUCCESS;
+        default:
+            fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
+            print_help(argv[0]);
+            return EXIT_FAILURE;
+        }
+  }
+
+  if (argc > optind)
+      filename = argv[optind];
+  cout << filename << endl;
 
   YAML::Node nodes = YAML::LoadFile(filename);
 
@@ -40,4 +74,10 @@ int main(int argc, char *argv[]) {
 
   else
     cout << "There was no main" << endl;
+}
+
+void print_help(const char* process_name) {
+    fprintf(stderr, "Usage: %s [-h] /path/to/workload \n"
+                    "Execution Options:\n"
+            "\t--help|-h         Display this help and exit\n\n", process_name);
 }
