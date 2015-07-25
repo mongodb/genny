@@ -23,7 +23,6 @@ using namespace mwg;
 
 void print_help(const char* process_name);
 int main(int argc, char* argv[]);
-extern int optind;
 
 static struct option poptions[] = {
     {"help",          no_argument,       0, 'h'},
