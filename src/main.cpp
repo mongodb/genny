@@ -21,13 +21,16 @@
 using namespace std;
 using namespace mwg;
 
-void print_help(const char* process_name);
-int main(int argc, char* argv[]);
-
 static struct option poptions[] = {
     {"help",          no_argument,       0, 'h'},
     {0,               0,                 0,  0 }
 };
+
+void print_help(const char* process_name) {
+    fprintf(stderr, "Usage: %s [-h] /path/to/workload \n"
+                    "Execution Options:\n"
+            "\t--help|-h         Display this help and exit\n\n", process_name);
+}
 
 int main(int argc, char *argv[]) {
   string filename = "sample.yml";
@@ -75,8 +78,3 @@ int main(int argc, char *argv[]) {
     cout << "There was no main" << endl;
 }
 
-void print_help(const char* process_name) {
-    fprintf(stderr, "Usage: %s [-h] /path/to/workload \n"
-                    "Execution Options:\n"
-            "\t--help|-h         Display this help and exit\n\n", process_name);
-}
