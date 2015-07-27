@@ -22,7 +22,7 @@ namespace mwg {
                 exit(EXIT_FAILURE);
             }
         name = node["name"].Scalar();
-        sleeptime = stoi(node["sleep"].Scalar());
+        sleeptime = node["sleep"].as<uint64_t>();
         cout << "In sleepNode constructor. Sleep time is " << sleeptime << endl;
         name = node["name"].Scalar();
         nextName = node["next"].Scalar();

@@ -28,9 +28,9 @@ namespace mwg {
                 exit(EXIT_FAILURE);
             } 
             if (inputNodes["seed"])
-                rng.seed(strtod(inputNodes["seed"].Scalar().c_str(), NULL));
+                rng.seed(inputNodes["seed"].as<uint64_t>());
             name = inputNodes["name"].Scalar();
-            cout << "In workload constructor, and was passed in a map. Name: " << name << " and seed: " << strtod(inputNodes["seed"].Scalar().c_str(), NULL) << endl;
+            cout << "In workload constructor, and was passed in a map. Name: " << name << " and seed: " << inputNodes["seed"].as<uint64_t>() << endl;
         }
         else if (inputNodes.IsSequence()) {
             yamlNodes = inputNodes;

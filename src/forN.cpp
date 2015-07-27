@@ -27,7 +27,7 @@ namespace mwg {
                 cerr << "ForN constructor but yaml entry doesn't have a workload entry" << endl;
                 exit(EXIT_FAILURE);
         }
-        N = stoi(node["N"].Scalar());
+        N = node["N"].as<uint64_t>();
         auto yamlWorkload = node["workload"];
         myWorkload = workload(yamlWorkload);
     }

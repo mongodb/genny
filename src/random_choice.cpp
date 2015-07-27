@@ -31,8 +31,8 @@ namespace mwg {
         cout << "In random choice constructor. About to go through next" << endl;
         for (auto entry : node["next"]){
             cout << "Next state: " << entry.first.Scalar() << " probability: " << entry.second.Scalar() << endl;
-            vectornodestring.push_back(pair<string, double>(entry.first.Scalar(), strtod(entry.second.Scalar().c_str(), NULL)));
-            total += strtod(entry.second.Scalar().c_str(), NULL);
+            vectornodestring.push_back(pair<string, double>(entry.first.Scalar(), entry.second.as<double>()));
+            total += entry.second.as<double>();
         }
         cout << "Setting nextName to first entry" << endl;
         nextName = vectornodestring[0].first;

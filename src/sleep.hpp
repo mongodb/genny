@@ -23,6 +23,6 @@ namespace mwg {
         
     private:
         // possible next states with probabilities
-        long long sleeptime;
+        uint64_t sleeptime;
 };
 }
