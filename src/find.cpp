@@ -24,7 +24,7 @@ namespace mwg {
         name = node["name"].Scalar();
         nextName = node["next"].Scalar();
         //cout << "In find constructor. Name: " << name << ", nextName: " << nextName << endl;
-        parseMap(filter, node["find"]);
+        parseMap(filter, node["filter"]);
     }
 
     // Execute the node
