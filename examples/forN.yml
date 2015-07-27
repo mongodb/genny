@@ -11,7 +11,7 @@ main :
             workload : 
                - 
                  name : insert1
-                 type : insert
+                 type : insert_one
                  document : {x : a}
                  next : sleep
                - 
