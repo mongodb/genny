@@ -8,19 +8,19 @@ using namespace std;
 
 namespace mwg {
 
-    class insert : public node {
+    class insert_one : public node {
 
 public: 
 
-    insert(YAML::Node &);
-    insert() = delete;
-    virtual ~insert() = default;
-    insert(const insert&) = default;
-    insert(insert&&) = default;
+    insert_one(YAML::Node &);
+    insert_one() = delete;
+    virtual ~insert_one() = default;
+    insert_one(const insert_one&) = default;
+    insert_one(insert_one&&) = default;
     // Execute the node
     void execute(mongocxx::client &, mt19937_64 &) override;
 
 private:
-    bsoncxx::builder::stream::document insertdoc{};
+    bsoncxx::builder::stream::document document{};
 };
 }

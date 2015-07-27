@@ -5,7 +5,7 @@
 #include <mongocxx/instance.hpp>
 
 #include "node.hpp"
-#include "insert.hpp"
+#include "insert_one.hpp"
 #include "find.hpp"
 #include "random_choice.hpp"
 #include "sleep.hpp"
@@ -56,12 +56,12 @@ namespace mwg {
                 vectornodes.push_back(mynode);
                 cout << "In workload constructor and added find node" << endl;
             }
-            else if (yamlNode["type"].Scalar() == "insert") {
-                auto mynode = make_shared<insert> (yamlNode);
+            else if (yamlNode["type"].Scalar() == "insert_one") {
+                auto mynode = make_shared<insert_one> (yamlNode);
                 nodes[mynode->getName()] = mynode;
                 // this is an ugly hack for now
                 vectornodes.push_back(mynode);
-                cout << "In workload constructor and added insert node" << endl;
+                cout << "In workload constructor and added insert_one node" << endl;
             }
             else if (yamlNode["type"].Scalar() == "random_choice") {
                 auto mynode = make_shared<random_choice> (yamlNode);
