@@ -12,9 +12,6 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 
-#include "query.hpp"
-#include "insert.hpp"
-#include "parse_util.hpp"
 #include "workload.hpp"
 #include "main.h"
 

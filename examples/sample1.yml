@@ -10,7 +10,7 @@ main :
           - 
             name : insert1
             type : insert
-            document : {x : a}
+            document : {x : !!int 1}
             next : sleep
           - 
             name : insert2
@@ -19,8 +19,8 @@ main :
             next : sleep
           - 
             name : query
-            type : query
-            query : { x : a }
+            type : find
+            filter : { x : a }
             next : sleep
           - 
             name : random

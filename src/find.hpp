@@ -8,19 +8,19 @@ using namespace std;
 
 namespace mwg {
 
-    class query : public node {
+    class find : public node {
 
 public: 
 
-    query(YAML::Node &);
-    query() = delete;
-    virtual ~query() = default;
-    query(const query&) = default;
-    query(query&&) = default;
+    find(YAML::Node &);
+    find() = delete;
+    virtual ~find() = default;
+    find(const find&) = default;
+    find(find&&) = default;
     // Execute the node
     void execute(mongocxx::client &, mt19937_64 &) override;
 
 private:
-    bsoncxx::builder::stream::document querydoc{};
+    bsoncxx::builder::stream::document filter{};
 };
 }

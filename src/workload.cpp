@@ -6,7 +6,7 @@
 
 #include "node.hpp"
 #include "insert.hpp"
-#include "query.hpp"
+#include "find.hpp"
 #include "random_choice.hpp"
 #include "sleep.hpp"
 #include "finish_node.hpp"
@@ -49,12 +49,12 @@ namespace mwg {
                 cerr << "Node in workload is not a yaml map" << endl;
                 exit(EXIT_FAILURE);
             }
-            if (yamlNode["type"].Scalar() == "query" ) {
-                auto mynode = make_shared<query> (yamlNode);
+            if (yamlNode["type"].Scalar() == "find" ) {
+                auto mynode = make_shared<find> (yamlNode);
                 nodes[mynode->getName()] = mynode;
                 // this is an ugly hack for now
                 vectornodes.push_back(mynode);
-                cout << "In workload constructor and added query node" << endl;
+                cout << "In workload constructor and added find node" << endl;
             }
             else if (yamlNode["type"].Scalar() == "insert") {
                 auto mynode = make_shared<insert> (yamlNode);

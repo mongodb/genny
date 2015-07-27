@@ -19,8 +19,8 @@ main :
             next : sleep
           - 
             name : query
-            type : query
-            query : { x : a }
+            type : find
+            filter : { x : a }
             next : sleep
           - 
             name : random
