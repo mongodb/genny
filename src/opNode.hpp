@@ -18,7 +18,7 @@ namespace mwg {
         opNode(const opNode&) = default;
         opNode(opNode&&) = default;
         // Execute the node
-        virtual void execute(mongocxx::client &, mt19937_64 &) override;
+        virtual void execute(shared_ptr<threadState>) override;
         
     private:
         unique_ptr<operation> op;

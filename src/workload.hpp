@@ -5,9 +5,9 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
-#include <random>
 #include <unordered_set>
 #include <mongocxx/client.hpp>
+#include "threadState.hpp"
 
 using namespace std;
 
@@ -15,15 +15,6 @@ namespace mwg {
     
     class node;
   
-    class threadState {
-    public: 
-        threadState() {};
-        threadState(uint64_t seed) : rng(seed) {}; // I'd like to pass more state here
-        mongocxx::client conn {};
-        mt19937_64 rng; // random number generator
-        shared_ptr<node> currentNode;
-    };
-
     class workload  {
         
     public: 
@@ -38,7 +29,9 @@ namespace mwg {
         workload & operator= ( const workload & ) = default;
         workload & operator= ( workload && ) = default;
         void stop ();
-        unordered_set<unique_ptr<threadState>> threads;
+        // Going to need to protect access to this for thread
+        // safety. Currently only done in one place
+        unordered_set<shared_ptr<threadState>> threads;
 
 
     private:

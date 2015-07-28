@@ -13,7 +13,7 @@ namespace mwg {
         finishNode(const finishNode&) = default;
         finishNode(finishNode&&) = default;
         // Execute the finishNode
-        virtual void executeNode(mongocxx::client &, mt19937_64 &) {};
+        virtual void executeNode(shared_ptr<threadState>) {};
         const string getName() {return "Finish";};
         
         // The finish node never has a next pointer

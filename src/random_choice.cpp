@@ -50,11 +50,11 @@ namespace mwg {
     }
 
     // Execute the node
-    void random_choice::executeNode(mongocxx::client &conn, mt19937_64 &rng) {
+    void random_choice::executeNode(shared_ptr<threadState> myState) {
         // pick a random number, and pick the next state based on it. 
         double random_number = 0.6; //Using 0.6 until wiring through the random number generator
         uniform_real_distribution<double> distribution(0.0,1.0);
-        random_number = distribution(rng);
+        random_number = distribution(myState->rng);
         cout << "random_choice.execute. Random_number is " << random_number;
         for(auto nextstate : vectornodes ) {
             if (nextstate.second > random_number) {
@@ -62,7 +62,9 @@ namespace mwg {
                 if (stopped) // short circuit and return if stopped flag set
                     return;
                 cout << " Next state is " << nextstate.first->name << endl;
-                return(nextstate.first->executeNode(conn,rng));
+                shared_ptr<node> me = myState->currentNode;
+                myState->currentNode = nextstate.first;
+                return(nextstate.first->executeNode(myState));
             }
         }
     }

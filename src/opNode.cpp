@@ -39,8 +39,8 @@ namespace mwg {
         }
     }
 
-    void opNode::execute(mongocxx::client &conn, mt19937_64 &rng) {
-        op->execute(conn, rng);
+    void opNode::execute(shared_ptr<threadState> myState) {
+        op->execute(myState->conn, myState->rng);
     }
 
 }

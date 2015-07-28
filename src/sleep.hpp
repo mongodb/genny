@@ -17,7 +17,7 @@ namespace mwg {
         sleepNode(const sleepNode&) = default;
         sleepNode(sleepNode&&) = default;
         // Execute the node
-        void executeNode(mongocxx::client &, mt19937_64 &) override;
+        virtual void execute(shared_ptr<threadState>) override;
         
     private:
         // possible next states with probabilities

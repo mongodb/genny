@@ -8,9 +8,9 @@ namespace mwg {
     }
 
 
-    void node::executeNode(mongocxx::client &conn, mt19937_64 &rng) {
+    void node::executeNode(shared_ptr<threadState> myState) {
         // execute this node
-        execute(conn, rng);
+        execute(myState);
         // execute the next node if there is one
         //cout << "just executed " << name << ". NextName is " << nextName << endl;
         auto next = nextNode.lock();
@@ -18,7 +18,10 @@ namespace mwg {
             cout << "nextNode is null for some reason" << endl;
         if (name != "Finish" && next && !stopped) {
             //cout << "About to call nextNode->executeNode" << endl;
-            next->executeNode(conn, rng);
+            // update currentNode in the state. Protect the reference while executing
+            shared_ptr<node> me = myState->currentNode;
+            myState->currentNode = next;
+            next->executeNode(myState);
         }
     }
 

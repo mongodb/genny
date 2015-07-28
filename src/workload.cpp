@@ -1,9 +1,10 @@
-#include "workload.hpp"
 #include <stdlib.h>
 #include <iostream>
+#include <thread>
 
 #include <mongocxx/instance.hpp>
 
+#include "workload.hpp"
 #include "node.hpp"
 #include "opNode.hpp"
 #include "random_choice.hpp"
@@ -122,23 +123,26 @@ namespace mwg {
             mnode->setNextNode(nodes);
         }
     }
+    void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
+        myState->currentNode = Node;
+        Node->executeNode(myState);
+    }
     void workload::execute(mongocxx::client &conn) {
-        // prep the threads. Should put the timer in here also. 
+        // prep the threads and start them. Should put the timer in here also. 
+        vector<thread> myThreads;
         for (int i = 0; i < numParallelThreads; i++)
             {
                 // create thread state for each
-                threads.insert(unique_ptr<threadState>(new threadState(rng())));
-            }
-        // start the threads
-        for (int i = 0; i < numParallelThreads; i++)
-            {
-                vectornodes[0]->executeNode(conn, rng);
-
+                auto newState = shared_ptr<threadState>(new threadState(rng()));
+                threads.insert(newState);
+                myThreads.push_back(thread(runThread, vectornodes[0], newState));
+                //vectornodes[0]->executeNode(conn, rng);
             }
         // wait for all the threads to finish
         for (int i = 0; i < numParallelThreads; i++)
             {
-
+                // clean up the thread state?
+                myThreads[i].join();
             }
     }
     void workload::stop () {
@@ -149,3 +153,4 @@ namespace mwg {
 
 
 }
+

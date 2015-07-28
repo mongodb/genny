@@ -3,7 +3,7 @@
 #include <mongocxx/instance.hpp>
 #include <unordered_map>
 #include <random>
-
+#include "threadState.hpp"
 
 #pragma once
 using namespace std;
@@ -19,8 +19,8 @@ public:
     node(const node&) = default;
     node(node&&) = default;
     // Execute the node
-    virtual void executeNode(mongocxx::client &, mt19937_64 &);
-    virtual void execute(mongocxx::client &, mt19937_64 &) {};
+    virtual void executeNode(shared_ptr<threadState>);
+    virtual void execute(shared_ptr<threadState>) {};
     const string getName() {return name;};
 
     void stop () {stopped = true;};

@@ -19,7 +19,7 @@ namespace mwg {
         random_choice(const random_choice&) = default;
         random_choice(random_choice&&) = default;
         // Execute the node
-        void executeNode(mongocxx::client &, mt19937_64 &) override;
+        virtual void executeNode(shared_ptr<threadState>) override;
         virtual void setNextNode(unordered_map<string,shared_ptr<node>>&) override;
         
     private:

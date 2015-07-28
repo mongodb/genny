@@ -17,7 +17,7 @@ namespace mwg {
         forN(const forN&) = default;
         forN(forN&&) = default;
         // Execute the node
-        void execute(mongocxx::client &, mt19937_64 &) override;
+        virtual void execute(shared_ptr<threadState>) override;
         
     private :
         workload myWorkload;

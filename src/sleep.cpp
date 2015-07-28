@@ -30,19 +30,14 @@ namespace mwg {
     }
     
     // Execute the node
-    void sleepNode::executeNode(mongocxx::client &conn, mt19937_64 &rng) {
+    void sleepNode::execute(shared_ptr<threadState> myState) {
         cout << "sleepNode.execute. Sleeping for " << sleeptime << " ms" << endl;
         struct timespec t;
         t.tv_sec = (int) (sleeptime/1000);
         t.tv_nsec = ( sleeptime % 1000 ) * 1000 * 1000;
         struct timespec out;
         nanosleep(&t, &out);
-        cout << "Slept. Calling next node" << endl;
-        auto next = nextNode.lock();
-        if (!next)
-            cout << "nextNode is null for some reason" << endl;
-        else if (!stopped)
-            next->executeNode(conn,rng);
+        cout << "Slept." << endl;
     }
 }
 
