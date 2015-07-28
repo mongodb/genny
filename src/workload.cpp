@@ -123,11 +123,24 @@ namespace mwg {
         }
     }
     void workload::execute(mongocxx::client &conn) {
-        //        for (auto mnode : vectornodes) {
-        //    mnode->execute(conn);}
-        vectornodes[0]->executeNode(conn, rng);
-    }
+        // prep the threads. Should put the timer in here also. 
+        for (int i = 0; i < numParallelThreads; i++)
+            {
+                // create thread state for each
+                threads.insert(unique_ptr<threadState>(new threadState(rng())));
+            }
+        // start the threads
+        for (int i = 0; i < numParallelThreads; i++)
+            {
+                vectornodes[0]->executeNode(conn, rng);
 
+            }
+        // wait for all the threads to finish
+        for (int i = 0; i < numParallelThreads; i++)
+            {
+
+            }
+    }
     void workload::stop () {
         stopped = true;
         for (auto mnode : vectornodes)

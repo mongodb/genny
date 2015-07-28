@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 #include <random>
-#include <set>
+#include <unordered_set>
 #include <mongocxx/client.hpp>
 
 using namespace std;
@@ -17,6 +17,8 @@ namespace mwg {
   
     class threadState {
     public: 
+        threadState() {};
+        threadState(uint64_t seed) : rng(seed) {}; // I'd like to pass more state here
         mongocxx::client conn {};
         mt19937_64 rng; // random number generator
         shared_ptr<node> currentNode;
@@ -36,7 +38,7 @@ namespace mwg {
         workload & operator= ( const workload & ) = default;
         workload & operator= ( workload && ) = default;
         void stop ();
-        set<threadState> threads;
+        unordered_set<unique_ptr<threadState>> threads;
 
 
     private:
