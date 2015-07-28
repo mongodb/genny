@@ -28,7 +28,7 @@ namespace mwg {
     // Execute the node
     void find::execute(mongocxx::client &conn, mt19937_64 &rng) {
         auto collection = conn["testdb"]["testCollection"];
-        auto cursor = collection.find(filter.view());
+        auto cursor = collection.find(filter.view(), options);
         // need a way to exhaust the cursor 
         cout << "find.execute: find is " << bsoncxx::to_json(filter.view()) << endl;
        for (auto&& doc : cursor) {

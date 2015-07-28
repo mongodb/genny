@@ -22,5 +22,6 @@ public:
 
 private:
     bsoncxx::builder::stream::document document{};
+    mongocxx::options::insert options{};    
 };
 }

@@ -29,7 +29,7 @@ namespace mwg {
     // Execute the node
     void insert_one::execute(mongocxx::client &conn, mt19937_64 &rng) {
         auto collection = conn["testdb"]["testCollection"];
-        auto result = collection.insert_one(document.view());
+        auto result = collection.insert_one(document.view(), options);
         // need a way to exhaust the cursor 
         cout << "insert_one.execute: insert_one is " << bsoncxx::to_json(document.view()) << endl;
         // probably should do some error checking here

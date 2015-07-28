@@ -22,5 +22,6 @@ public:
 
 private:
     bsoncxx::builder::stream::document filter{};
+    mongocxx::options::find options{};    
 };
 }
