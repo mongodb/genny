@@ -3,6 +3,7 @@
 #include "sleep.hpp"
 #include <random>
 #include "parse_util.hpp"
+#include <time.h>
 
 namespace mwg {
     sleepNode::sleepNode(YAML::Node &node) {
