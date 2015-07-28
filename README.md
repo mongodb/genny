@@ -22,20 +22,20 @@ operations.
    workload. They also supply parameters and a pseudo-random number
    generator to the nodes and ops. 
 
-Currently operations are embedded in nodes of the same name. This is
-going to be refactored soon that operations are first class objects,
-owned by a node. 
+Operations can be embedded in a node for compactness of
+representation. The tool will detect this and create an opNode,
+containing the operation. 
 
 ### Currently supported operations
 
-1. query
-2. insert
+1. find
+2. insert_one
 3. sleep: sleep for some number of milliseconds. The entry sleep
    specifies how long to sleep. 
 
 ### Currently supported nodes
 
-1. basic: This is the default node. It executes its associated
+1. opNode: This is the default node. It executes its associated
    operation, and then moves execution to its next node.
 2. forN: This node wraps a workload. It executes the workload N times
 3. randomChoice: This node has a list of other nodes and
@@ -75,11 +75,11 @@ There are a collections of examples in the examples directory. To run
 the forN.yml example, simply do:
     ./build/mwg examples/forN.yml
 
-The workloads are all specified in yaml. An example query node is:
+The workloads are all specified in yaml. An example find node is:
 
-        name : query
-        type : query
-        query : { x : a }
+        name : find
+        type : find
+        filter : { x : a }
         next : sleep
 
 The main parts of this are:
@@ -87,52 +87,52 @@ The main parts of this are:
 * type: This says what the operation should be. Basic operations
   include the operations supported by the C++11 driver. Currently only
   a limited subset is supported.
-* query: This is specific to the query operation. The argument will be
-  converted into bson, and will be used as the query document passed
-  to the C++11 driver when generating the query
+* filter: This is specific to the find operation. The argument will be
+  converted into bson, and will be used as the find document passed
+  to the C++11 driver when generating the find
 * next: This is the node to transition to when completing this
   operation.
 
-A simple workload that does an insert and a query, and randomly
+A simple workload that does an insert and a find, and randomly
 chooses between them:
 
     seed : 13141516
     name : simple_workload
     nodes :
-         - name : insert
-           type : insert
+         - name : insert_one
+           type : insert_one
            document : {x : a}
            next : choice
-         - name : query
-           type : query
-           query : {x : a}
+         - name : find
+           type : find
+           find : {x : a}
            next : choice
          - name : choice
            type : random_choice
            next :
-               query : 0.5
-               insert : 0.5
+               find : 0.5
+               insert_one : 0.5
 
 This workload will run forever, and after each operation make a random
-choice of whether to do an insert or query next. The workload can be
+choice of whether to do an insert_one or find next. The workload can be
 made finite by adding an absorbing state.
 
     seed : 13141516
     name : simple_workload
     nodes :
-         - name : insert
-           type : insert
+         - name : insert_one
+           type : insert_one
            document : {x : a}
            next : choice
-         - name : query
-           type : query
-           query : {x : a}
+         - name : find
+           type : find
+           find : {x : a}
            next : choice
          - name : choice
            type : random_choice
            next :
-               query : 0.45
-               insert : 0.45
+               find : 0.45
+               insert_one : 0.45
                Finish : 0.1
 
 The Finish state is an implicit absorbing state. The workload will
