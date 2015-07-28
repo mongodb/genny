@@ -32,6 +32,8 @@ namespace mwg {
             op = unique_ptr<operation>(new find(myop));
         else if (myop["type"].Scalar() == "insert_one")
             op = unique_ptr<operation>(new insert_one(myop));
+        else if (myop["type"].Scalar() == "insert_many")
+            op = unique_ptr<operation>(new insert_many(myop));
         else {
             cerr << "Trying to make operation of type " << myop["type"] << " is not supported yet in opNode constructor" << endl;
             exit(EXIT_FAILURE);
