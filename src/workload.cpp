@@ -30,6 +30,18 @@ namespace mwg {
                 rng.seed(inputNodes["seed"].as<uint64_t>());
             name = inputNodes["name"].Scalar();
             cout << "In workload constructor, and was passed in a map. Name: " << name << " and seed: " << inputNodes["seed"].as<uint64_t>() << endl;
+            if (inputNodes["threads"]) {
+                numParallelThreads = inputNodes["threads"].as<uint64_t>();
+                cout << "Excplicity setting number of threads in workload" << endl;
+            }
+            else
+                cout << "Using default value for number of threads" << endl;
+            if (inputNodes["runLength"]) {
+                runLength = inputNodes["runLength"].as<uint64_t>();
+                cout << "Excplicity setting runLength in workload" << endl;
+            }
+            else
+                cout << "Using default value for runLength" << endl;
         }
         else if (inputNodes.IsSequence()) {
             yamlNodes = inputNodes;

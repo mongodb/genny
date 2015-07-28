@@ -44,6 +44,8 @@ namespace mwg {
         mt19937_64 rng; // random number generator
         string name;
         bool stopped;
+        uint64_t numParallelThreads {1};
+        uint64_t runLength {0};
 };
 
 }
