@@ -21,14 +21,12 @@ namespace mwg {
                 cerr << "Find constructor but yaml entry doesn't have type == find" << endl;
                 exit(EXIT_FAILURE);
             }
-        name = node["name"].Scalar();
-        nextName = node["next"].Scalar();
-        //cout << "In find constructor. Name: " << name << ", nextName: " << nextName << endl;
         parseMap(filter, node["filter"]);
+        cout << "Added op of type find" << endl;
     }
 
     // Execute the node
-    void find::execute(mongocxx::client &conn, mt19937_64 &) {
+    void find::execute(mongocxx::client &conn, mt19937_64 &rng) {
         auto collection = conn["testdb"]["testCollection"];
         auto cursor = collection.find(filter.view());
         // need a way to exhaust the cursor 

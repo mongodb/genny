@@ -10,7 +10,7 @@ main :
           - 
             name : insert1
             type : insert_one
-            document : {x : !!int 1}
+            document : {x : a}
             next : sleep
           - 
             name : insert2

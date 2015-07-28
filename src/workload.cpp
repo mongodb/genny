@@ -5,8 +5,7 @@
 #include <mongocxx/instance.hpp>
 
 #include "node.hpp"
-#include "insert_one.hpp"
-#include "find.hpp"
+#include "opNode.hpp"
 #include "random_choice.hpp"
 #include "sleep.hpp"
 #include "finish_node.hpp"
@@ -49,19 +48,12 @@ namespace mwg {
                 cerr << "Node in workload is not a yaml map" << endl;
                 exit(EXIT_FAILURE);
             }
-            if (yamlNode["type"].Scalar() == "find" ) {
-                auto mynode = make_shared<find> (yamlNode);
+            if (yamlNode["type"].Scalar() == "opNode" ) {
+                auto mynode = make_shared<opNode> (yamlNode);
                 nodes[mynode->getName()] = mynode;
                 // this is an ugly hack for now
                 vectornodes.push_back(mynode);
-                cout << "In workload constructor and added find node" << endl;
-            }
-            else if (yamlNode["type"].Scalar() == "insert_one") {
-                auto mynode = make_shared<insert_one> (yamlNode);
-                nodes[mynode->getName()] = mynode;
-                // this is an ugly hack for now
-                vectornodes.push_back(mynode);
-                cout << "In workload constructor and added insert_one node" << endl;
+                cout << "In workload constructor and added op node" << endl;
             }
             else if (yamlNode["type"].Scalar() == "random_choice") {
                 auto mynode = make_shared<random_choice> (yamlNode);
@@ -91,10 +83,15 @@ namespace mwg {
                 vectornodes.push_back(mynode);
                 cout << "In workload constructor and added finish node" << endl;
             }
-            else
-                cerr << "Don't know how to handle workload node with type " << yamlNode["type"] << endl;
+            else {
+                cout << "In workload constructor. Defaulting to opNode" << endl;
+                auto mynode = make_shared<opNode> (yamlNode);
+                nodes[mynode->getName()] = mynode;
+                // this is an ugly hack for now
+                vectornodes.push_back(mynode);
+                cout << "In workload constructor. Added opNode" << endl;
+            }
         }
-
         cout << "Added all the nodes in yamlNode" << endl;
         // Add an implicit finish_node if it doesn't exist
         if (!nodes["Finish"])

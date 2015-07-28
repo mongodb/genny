@@ -2,13 +2,13 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 
-#include "node.hpp"
+#include "operation.hpp"
 #pragma once
 using namespace std;
 
 namespace mwg {
 
-    class insert_one : public node {
+    class insert_one : public operation {
 
 public: 
 

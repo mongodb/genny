@@ -22,10 +22,8 @@ namespace mwg {
                 cerr << "Insert_One constructor but yaml entry doesn't have type == insert_one" << endl;
                 exit(EXIT_FAILURE);
             }
-        name = node["name"].Scalar();
-        nextName = node["next"].Scalar();
-        //        cout << "In insert_one constructor. Name: " << name << ", nextName: " << nextName << endl;
         parseMap(document, node["document"]);
+        cout << "Added op of type insert_one" << endl;
     }
 
     // Execute the node
