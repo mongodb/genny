@@ -7,7 +7,10 @@ Overview
 This tool is a workload generator for testing the performance of
 mongod. The tool allows you to specify a workload in a yaml file, with
 a large degree of fleibility. The workload tool is written in C++ and
-wraps the C++11 mongo driver, which supports the mongo driver spec.
+wraps the
+[C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master),
+which supports the
+[mongo driver spec](https://github.com/mongodb/specifications/blob/master/source/crud/crud.rst).
 
 There are three basic components in a workload, enabling the
 specification of arbitrarily complex workloads in a graph of
