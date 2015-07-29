@@ -1,6 +1,6 @@
 #include "yaml-cpp/yaml.h"
 #include <bsoncxx/builder/stream/document.hpp>
-
+#include <bsoncxx/builder/stream/array.hpp>
 
 using namespace std;
 
@@ -15,6 +15,7 @@ using bsoncxx::builder::stream::single_context;
 
 namespace mwg {
 
-void parseMap(document &docbuilder, YAML::Node node);
+    void parseMap(document &, YAML::Node);
+    void parseSequence(document &, string, YAML::Node);
 
 }
