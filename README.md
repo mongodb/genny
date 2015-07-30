@@ -33,6 +33,7 @@ containing the operation.
 
 1. find
 2. insert_one
+3. insert_many
 3. sleep: sleep for some number of milliseconds. The entry sleep
    specifies how long to sleep. 
 
@@ -48,13 +49,21 @@ containing the operation.
    workload is finished when the Finish node executes. There is always
    an implicit Finish state included in the workload. 
 
+### Currently supported workload features
 
-### Current Non-Obvious limitations
+1. numThreads: Specify the number of parallel threads of the workload
+   to run.
+2. Set the random seed
 
-This tool is new, and a lot of things will be going into it, such as
-timing measurement. In addition, currently the parser does not handle
-converting YAML sequences into bson lists. Don't make a query in a
-query node, or a document in an insert node using a sequence. 
+### Currently unsupported features
+This is an incomplete list
+
+1. Setting the time limit to run the workload
+2. Stats. There are currently no client stats collected
+3. Generating or modifying documents. You can specify them in yaml,
+   but cannot change them yet.
+4. Setting "options" to the operations (e.g., write concern)
+5. Much more. 
 
 Dependencies
 ------------
