@@ -12,7 +12,16 @@ main :
                - 
                  name : insert1
                  type : insert_one
-                 document : {x : a}
+                 document : 
+                          x : a
+                          y : 
+                              c : [ 1 2 ]
+                              e : f
+                              f : { g : d }
+                          z : 
+                             - a
+                             - b 
+                             - { a : [ 1 2 ] } 
                  next : sleep
                - 
                  name : sleep
