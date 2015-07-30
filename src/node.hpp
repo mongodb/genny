@@ -11,21 +11,23 @@ using namespace std;
 namespace mwg {
 
 class node {
-
-public: 
-
-    node() : stopped(false) {};
+public:
+    node() : stopped(false){};
     virtual ~node() = default;
     node(const node&) = default;
     node(node&&) = default;
     // Execute the node
     virtual void executeNode(shared_ptr<threadState>);
-    virtual void execute(shared_ptr<threadState>) {};
-    const string getName() {return name;};
+    virtual void execute(shared_ptr<threadState>){};
+    const string getName() {
+        return name;
+    };
 
-    void stop () {stopped = true;};
+    void stop() {
+        stopped = true;
+    };
     // Set the next node pointer
-    virtual void setNextNode(unordered_map<string,shared_ptr<node>> &);
+    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&);
     string name;
     string nextName;
 
@@ -33,6 +35,4 @@ protected:
     weak_ptr<node> nextNode;
     bool stopped;
 };
-
 }
-

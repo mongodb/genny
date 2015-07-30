@@ -18,60 +18,57 @@
 using namespace std;
 using namespace mwg;
 
-static struct option poptions[] = {
-    {"help",          no_argument,       0, 'h'},
-    {0,               0,                 0,  0 }
-};
+static struct option poptions[] = {{"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
 void print_help(const char* process_name) {
-    fprintf(stderr, "Usage: %s [-h] /path/to/workload \n"
-                    "Execution Options:\n"
-            "\t--help|-h         Display this help and exit\n\n", process_name);
+    fprintf(stderr,
+            "Usage: %s [-h] /path/to/workload \n"
+            "Execution Options:\n"
+            "\t--help|-h         Display this help and exit\n\n",
+            process_name);
 }
 
-int main(int argc, char *argv[]) {
-  string filename = "sample.yml";
-  int arg_count = 0;
-  int idx = 0;
-  while (1) {
-      int arg = getopt_long(argc, argv, "h",
-                            poptions, &idx);
-      arg_count++;
-      if (arg == -1) {
-          // all arguments have been processed
-          break;
-      }
-              ++arg_count;
-
-        switch(arg) {
-        case 'h':
-            print_help(argv[0]);
-            return EXIT_SUCCESS;
-        default:
-            fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
-            print_help(argv[0]);
-            return EXIT_FAILURE;
+int main(int argc, char* argv[]) {
+    string filename = "sample.yml";
+    int arg_count = 0;
+    int idx = 0;
+    while (1) {
+        int arg = getopt_long(argc, argv, "h", poptions, &idx);
+        arg_count++;
+        if (arg == -1) {
+            // all arguments have been processed
+            break;
         }
-  }
+        ++arg_count;
 
-  if (argc > optind)
-      filename = argv[optind];
-  cout << filename << endl;
+        switch (arg) {
+            case 'h':
+                print_help(argv[0]);
+                return EXIT_SUCCESS;
+            default:
+                fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
+                print_help(argv[0]);
+                return EXIT_FAILURE;
+        }
+    }
 
-  YAML::Node nodes = YAML::LoadFile(filename);
+    if (argc > optind)
+        filename = argv[optind];
+    cout << filename << endl;
 
-  // Look for main. And start building from there.
-  if (auto main = nodes["main"]) {
-    //    cout << "Have main here: " << main << endl;
+    YAML::Node nodes = YAML::LoadFile(filename);
 
-    mongocxx::instance inst{};
-    mongocxx::client conn{};
+    // Look for main. And start building from there.
+    if (auto main = nodes["main"]) {
+        //    cout << "Have main here: " << main << endl;
 
-    workload myworkload(main);
-    myworkload.execute(conn);
-  }
+        mongocxx::instance inst{};
+        mongocxx::client conn{};
 
-  else
-    cout << "There was no main" << endl;
+        workload myworkload(main);
+        myworkload.execute(conn);
+    }
+
+    else
+        cout << "There was no main" << endl;
 }
-

@@ -6,21 +6,19 @@
 using namespace std;
 
 namespace mwg {
-    
-    class sleepNode : public node {
-        
-    public: 
-        
-        sleepNode(YAML::Node &);
-        sleepNode() = delete;
-        virtual ~sleepNode() = default;
-        sleepNode(const sleepNode&) = default;
-        sleepNode(sleepNode&&) = default;
-        // Execute the node
-        virtual void execute(shared_ptr<threadState>) override;
-        
-    private:
-        // possible next states with probabilities
-        uint64_t sleeptime;
+
+class sleepNode : public node {
+public:
+    sleepNode(YAML::Node&);
+    sleepNode() = delete;
+    virtual ~sleepNode() = default;
+    sleepNode(const sleepNode&) = default;
+    sleepNode(sleepNode&&) = default;
+    // Execute the node
+    virtual void execute(shared_ptr<threadState>) override;
+
+private:
+    // possible next states with probabilities
+    uint64_t sleeptime;
 };
 }

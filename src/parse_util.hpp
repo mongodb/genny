@@ -8,6 +8,6 @@ using bsoncxx::builder::stream::document;
 
 namespace mwg {
 
-    void parseMap(document &, YAML::Node);
-    void parseSequence(bsoncxx::v0::builder::stream::array &arraybuilder, YAML::Node node);
+void parseMap(document&, YAML::Node);
+void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node node);
 }
