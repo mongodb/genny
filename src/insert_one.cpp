@@ -22,6 +22,9 @@ insert_one::insert_one(YAML::Node& node) {
                 "insert_one" << endl;
         exit(EXIT_FAILURE);
     }
+    if (node["options"])
+        parseInsertOptions(options, node["options"]);
+
     parseMap(document, node["document"]);
     cout << "Added op of type insert_one" << endl;
 }

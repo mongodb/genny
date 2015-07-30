@@ -27,6 +27,9 @@ insert_many::insert_many(YAML::Node& node) {
                 "sequence" << endl;
         exit(EXIT_FAILURE);
     }
+    if (node["options"])
+        parseInsertOptions(options, node["options"]);
+
     for (auto doc : node["container"]) {
         bsoncxx::builder::stream::document document;
         parseMap(document, doc);
