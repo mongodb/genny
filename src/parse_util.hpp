@@ -9,6 +9,5 @@ using bsoncxx::builder::stream::document;
 namespace mwg {
 
     void parseMap(document &, YAML::Node);
-    void parseSequence(bsoncxx::v0::builder::stream::array_context<bsoncxx::v0::builder::stream::key_context<bsoncxx::v0::builder::stream::closed_context>> &, YAML::Node);
     void parseSequence(bsoncxx::v0::builder::stream::array &arraybuilder, YAML::Node node);
 }
