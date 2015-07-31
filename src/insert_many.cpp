@@ -5,32 +5,32 @@
 
 namespace mwg {
 
-insert_many::insert_many(YAML::Node& node) {
+insert_many::insert_many(YAML::Node& ynode) {
     // need to set the name
     // these should be made into exceptions
     // should be a map, with type = insert_many
-    if (!node) {
-        cerr << "Insert_Many constructor and !node" << endl;
+    if (!ynode) {
+        cerr << "Insert_Many constructor and !ynode" << endl;
         exit(EXIT_FAILURE);
     }
-    if (!node.IsMap()) {
+    if (!ynode.IsMap()) {
         cerr << "Not map in insert_many type initializer" << endl;
         exit(EXIT_FAILURE);
     }
-    if (node["type"].Scalar() != "insert_many") {
+    if (ynode["type"].Scalar() != "insert_many") {
         cerr << "Insert_Many constructor but yaml entry doesn't have type == "
                 "insert_many" << endl;
         exit(EXIT_FAILURE);
     }
-    if (!node["container"].IsSequence()) {
+    if (!ynode["container"].IsSequence()) {
         cerr << "Insert_Many constructor but yaml entry for container isn't a "
                 "sequence" << endl;
         exit(EXIT_FAILURE);
     }
-    if (node["options"])
-        parseInsertOptions(options, node["options"]);
+    if (ynode["options"])
+        parseInsertOptions(options, ynode["options"]);
 
-    for (auto doc : node["container"]) {
+    for (auto doc : ynode["container"]) {
         bsoncxx::builder::stream::document document;
         parseMap(document, doc);
         collection.push_back(move(document));

@@ -6,27 +6,27 @@
 #include <time.h>
 
 namespace mwg {
-sleepNode::sleepNode(YAML::Node& node) {
+sleepNode::sleepNode(YAML::Node& ynode) {
     // need to set the name
     // these should be made into exceptions
     // should be a map, with type = sleep
-    if (!node) {
-        cerr << "SleepNode constructor and !node" << endl;
+    if (!ynode) {
+        cerr << "SleepNode constructor and !ynode" << endl;
         exit(EXIT_FAILURE);
     }
-    if (!node.IsMap()) {
+    if (!ynode.IsMap()) {
         cerr << "Not map in sleepNode type initializer" << endl;
         exit(EXIT_FAILURE);
     }
-    if (node["type"].Scalar() != "sleep") {
+    if (ynode["type"].Scalar() != "sleep") {
         cerr << "SleepNode constructor but yaml entry doesn't have type == sleep" << endl;
         exit(EXIT_FAILURE);
     }
-    name = node["name"].Scalar();
-    sleeptime = node["sleep"].as<uint64_t>();
+    name = ynode["name"].Scalar();
+    sleeptime = ynode["sleep"].as<uint64_t>();
     cout << "In sleepNode constructor. Sleep time is " << sleeptime << endl;
-    name = node["name"].Scalar();
-    nextName = node["next"].Scalar();
+    name = ynode["name"].Scalar();
+    nextName = ynode["next"].Scalar();
 }
 
 // Execute the node

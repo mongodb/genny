@@ -2,28 +2,28 @@
 #include "operations.hpp"
 
 namespace mwg {
-opNode::opNode(YAML::Node& node) {
+opNode::opNode(YAML::Node& ynode) : node(ynode) {
     // need to set the name
     // these should be made into exceptions
     // should be a map, with type = find
-    if (!node) {
-        cerr << "Find constructor and !node" << endl;
+    if (!ynode) {
+        cerr << "Find constructor and !ynode" << endl;
         exit(EXIT_FAILURE);
     }
-    if (!node.IsMap()) {
+    if (!ynode.IsMap()) {
         cerr << "Not map in find type initializer" << endl;
         exit(EXIT_FAILURE);
     }
-    name = node["name"].Scalar();
-    nextName = node["next"].Scalar();
+    name = ynode["name"].Scalar();
+    nextName = ynode["next"].Scalar();
     cout << "In opNode constructor. Name: " << name << ", nextName: " << nextName << endl;
 
     // Need to parse the operation next.
-    auto myop = node["op"];
+    auto myop = ynode["op"];
     // would be nice to templatize this whole next part
     // if the operation is embedded in the node, pass that to the op
     if (!myop.IsDefined()) {
-        myop = node;
+        myop = ynode;
         cout << "No myop. Using inline defintion" << endl;
     } else
         cout << "Explicit op entry in opNode constructor" << endl;

@@ -3,33 +3,33 @@
 
 namespace mwg {
 
-forN::forN(YAML::Node& node) {
+forN::forN(YAML::Node& ynode) {
     // need to set the name
     // these should be made into exceptions
     // should be a map, with type = forN
-    if (!node) {
-        cerr << "ForN constructor and !node" << endl;
+    if (!ynode) {
+        cerr << "ForN constructor and !ynode" << endl;
         exit(EXIT_FAILURE);
     }
-    if (!node.IsMap()) {
+    if (!ynode.IsMap()) {
         cerr << "Not map in forN type initializer" << endl;
         exit(EXIT_FAILURE);
     }
-    if (node["type"].Scalar() != "forN") {
+    if (ynode["type"].Scalar() != "forN") {
         cerr << "ForN constructor but yaml entry doesn't have type == forN" << endl;
         exit(EXIT_FAILURE);
     }
-    name = node["name"].Scalar();
-    nextName = node["next"].Scalar();
+    name = ynode["name"].Scalar();
+    nextName = ynode["next"].Scalar();
     // cout << "In forN constructor. Name: " << name << ", nextName: " << nextName
     // << endl;
     // Need to read in the workload, or implicitly make one.
-    if (!node["workload"]) {
+    if (!ynode["workload"]) {
         cerr << "ForN constructor but yaml entry doesn't have a workload entry" << endl;
         exit(EXIT_FAILURE);
     }
-    N = node["N"].as<uint64_t>();
-    auto yamlWorkload = node["workload"];
+    N = ynode["N"].as<uint64_t>();
+    auto yamlWorkload = ynode["workload"];
     myWorkload = workload(yamlWorkload);
 }
 

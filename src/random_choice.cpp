@@ -5,32 +5,32 @@
 #include <random>
 
 namespace mwg {
-random_choice::random_choice(YAML::Node& node) {
+random_choice::random_choice(YAML::Node& ynode) {
     // need to set the name
     // these should be made into exceptions
     // should be a map, with type = random_choice
-    if (!node) {
-        cerr << "Random_Choice constructor and !node" << endl;
+    if (!ynode) {
+        cerr << "Random_Choice constructor and !ynode" << endl;
         exit(EXIT_FAILURE);
     }
-    if (!node.IsMap()) {
+    if (!ynode.IsMap()) {
         cerr << "Not map in random_choice type initializer" << endl;
         exit(EXIT_FAILURE);
     }
-    if (node["type"].Scalar() != "random_choice") {
+    if (ynode["type"].Scalar() != "random_choice") {
         cerr << "Random_Choice constructor but yaml entry doesn't have type == "
                 "random_choice" << endl;
         exit(EXIT_FAILURE);
     }
-    name = node["name"].Scalar();
-    if (!node["next"].IsMap()) {
+    name = ynode["name"].Scalar();
+    if (!ynode["next"].IsMap()) {
         cerr << "Random_Choice constructor but next isn't a map" << endl;
         exit(EXIT_FAILURE);
     }
 
     total = 0;  // figure out how much the next state rates add up to
     cout << "In random choice constructor. About to go through next" << endl;
-    for (auto entry : node["next"]) {
+    for (auto entry : ynode["next"]) {
         cout << "Next state: " << entry.first.Scalar() << " probability: " << entry.second.Scalar()
              << endl;
         vectornodestring.push_back(

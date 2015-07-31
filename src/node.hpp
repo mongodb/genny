@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <random>
 #include "threadState.hpp"
+#include "yaml-cpp/yaml.h"
 
 #pragma once
 using namespace std;
@@ -13,6 +14,7 @@ namespace mwg {
 class node {
 public:
     node() : stopped(false){};
+    node(YAML::Node& ynode) {};
     virtual ~node() = default;
     node(const node&) = default;
     node(node&&) = default;
