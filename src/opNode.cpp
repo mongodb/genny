@@ -3,21 +3,6 @@
 
 namespace mwg {
 opNode::opNode(YAML::Node& ynode) : node(ynode) {
-    // need to set the name
-    // these should be made into exceptions
-    // should be a map, with type = find
-    if (!ynode) {
-        cerr << "Find constructor and !ynode" << endl;
-        exit(EXIT_FAILURE);
-    }
-    if (!ynode.IsMap()) {
-        cerr << "Not map in find type initializer" << endl;
-        exit(EXIT_FAILURE);
-    }
-    name = ynode["name"].Scalar();
-    nextName = ynode["next"].Scalar();
-    cout << "In opNode constructor. Name: " << name << ", nextName: " << nextName << endl;
-
     // Need to parse the operation next.
     auto myop = ynode["op"];
     // would be nice to templatize this whole next part

@@ -14,7 +14,7 @@ namespace mwg {
 class node {
 public:
     node() : stopped(false){};
-    node(YAML::Node& ynode) {};
+    node(YAML::Node&);
     virtual ~node() = default;
     node(const node&) = default;
     node(node&&) = default;

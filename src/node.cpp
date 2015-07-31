@@ -2,6 +2,23 @@
 
 namespace mwg {
 
+node::node(YAML::Node& ynode) {
+    // need to set the name
+    // these should be made into exceptions
+    // should be a map, with type = find
+    if (!ynode) {
+        cerr << "Find constructor and !ynode" << endl;
+        exit(EXIT_FAILURE);
+    }
+    if (!ynode.IsMap()) {
+        cerr << "Not map in find type initializer" << endl;
+        exit(EXIT_FAILURE);
+    }
+    name = ynode["name"].Scalar();
+    nextName = ynode["next"].Scalar();
+    cout << "In node constructor. Name: " << name << ", nextName: " << nextName << endl;
+}
+
 void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes) {
     cout << "Setting next node for " << name << ". Next node should be " << nextName << endl;
     nextNode = nodes[nextName];
