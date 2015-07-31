@@ -57,24 +57,29 @@ void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node
 }
 
 void parseInsertOptions(mongocxx::options::insert& options, YAML::Node optionsNode) {
+    cout << "In parseInsertOptions" << endl;
     if (optionsNode["write_concern"]) {
+        auto node = optionsNode["write_concern"];
+        cout << "In parseInsertOptions and have write_concern" << endl;
         write_concern wc {};
         // Need to set the options of the write concern
-        if (optionsNode["fsync"])
-            wc.fsync(optionsNode["fsync"].as<bool>());
-        if (optionsNode["journal"])
-            wc.journal(optionsNode["journal"].as<bool>());
-        if (optionsNode["nodes"])
-            wc.nodes(optionsNode["nodes"].as<int32_t>());
+        if (node["fsync"])
+            wc.fsync(node["fsync"].as<bool>());
+        if (node["journal"])
+            wc.journal(node["journal"].as<bool>());
+        if (node["nodes"]) {
+            wc.nodes(node["nodes"].as<int32_t>());
+            cout << "Setting nodes to " << node["nodes"].as<int32_t>() << endl;
+        }
         // not sure how to handle this one. The parameter is different
         // than the option. Need to review the crud spec. Need more
         // error checking here also
-        if (optionsNode["majority"])
-            wc.majority(chrono::milliseconds(optionsNode["majority"]["timeout"].as<int64_t>()));
-        if (optionsNode["tag"])
-            wc.tag(optionsNode["tag"].Scalar());
-        if (optionsNode["timeout"])
-            wc.majority(chrono::milliseconds(optionsNode["timeout"].as<int64_t>()));
+        if (node["majority"])
+            wc.majority(chrono::milliseconds(node["majority"]["timeout"].as<int64_t>()));
+        if (node["tag"])
+            wc.tag(node["tag"].Scalar());
+        if (node["timeout"])
+            wc.majority(chrono::milliseconds(node["timeout"].as<int64_t>()));
         options.write_concern(wc);
     }
 }

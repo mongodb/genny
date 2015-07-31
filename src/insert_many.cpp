@@ -35,7 +35,7 @@ insert_many::insert_many(YAML::Node& node) {
         parseMap(document, doc);
         collection.push_back(move(document));
     }
-    cout << "Added op of type insert_many" << endl;
+    cout << "Added op of type insert_many. WC.nodes is " << options.write_concern()->nodes() << endl;
 }
 
 // Execute the node

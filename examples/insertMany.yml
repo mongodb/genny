@@ -13,5 +13,8 @@ main :
                         - {x : c}
                         - {y : a}
                         - {y : b}
+              options : 
+                      write_concern : 
+                                    nodes : 1
               next : Finish
 
