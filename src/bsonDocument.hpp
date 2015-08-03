@@ -7,7 +7,7 @@
 namespace mwg {
 class bsonDocument : public mdocument {
 public:
-    bsonDocument() {};
+    bsonDocument(){};
     bsonDocument(YAML::Node&);
     virtual ~bsonDocument() = default;
     bsonDocument(const bsonDocument&) = default;

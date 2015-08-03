@@ -21,11 +21,9 @@ overrideDocument::overrideDocument(YAML::Node& node) {
     }
     auto docnode = node["doc"];
     doc = move(bsonDocument(docnode));
-
 }
 
 bsoncxx::document::view overrideDocument::get() {
     return doc.get();
 }
 }
-
