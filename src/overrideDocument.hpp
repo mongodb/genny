@@ -1,6 +1,6 @@
 #include "document.hpp"
 #include "bsonDocument.hpp"
-#include <memory>
+#include <unordered_map>
 
 #pragma once
 
@@ -14,6 +14,8 @@ public:
     virtual ~overrideDocument() = default;
     overrideDocument(const overrideDocument&) = default;
     overrideDocument(overrideDocument&&) = default;
+    overrideDocument& operator=(const overrideDocument&) = default;
+    overrideDocument& operator=(overrideDocument&&) = default;
 
     virtual bsoncxx::document::view get();
 
@@ -22,6 +24,6 @@ private:
     bsonDocument doc;
     // The list of things to override. 
     // These are strings for now. Need to be generalized to a value type. 
-    //    vector<string, string> overide;
+    unordered_map<string, string> override;
 };
 }
