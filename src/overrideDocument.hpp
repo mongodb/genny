@@ -20,6 +20,8 @@ public:
     virtual bsoncxx::document::view get();
 
 private:
+    // apply the overides, one level at a time
+    void applyOverrideLevel(bsoncxx::builder::stream::document &, bsoncxx::document::view, string);
     // The document to override
     bsonDocument doc;
     // The list of things to override. 

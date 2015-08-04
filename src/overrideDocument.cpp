@@ -29,8 +29,44 @@ overrideDocument::overrideDocument(YAML::Node& node) {
         override[entry.first.Scalar()] = entry.second.Scalar();
 }
 
+void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document &output,
+                                          bsoncxx::document::view doc,
+                                          string prefix) {
+    // Going to need variants of this for arrays
+
+    // iterate through keys. if key matches exactly, replace in output.
+    // if key doesn't match, copy element to output
+    // if key prefix matches, descend a level.
+    
+    // process override for elements at this level
+    unordered_map<string, string> thislevel;
+    // process override for elements at lower level
+    unordered_map<string, string> lowerlevel;
+
+    for (auto elem : doc) {
+        auto iter = thislevel.find(elem.key().to_string());
+        auto iter2 = lowerlevel.find(elem.key().to_string());
+        if (iter != thislevel.end())
+            {
+                // replace this entry
+                output << elem.key().to_string() << iter->second;
+            }
+        else if (iter2 != lowerlevel.end())
+            {
+                //applyOverrideLevel(output, elem.value(), prefix + elem.key().to_string());
+            }
+        else {
+            //doc << prefix + elem.key() << elem.value();
+        }
+    }
+}
 
 bsoncxx::document::view overrideDocument::get() {
-    return doc.get();
+    // Need to iterate through the doc, and for any field see if it
+    // matches. Override the value if it does.
+    // bson output
+    bsoncxx::builder::stream::document output{};
+    applyOverrideLevel(output, doc.get(), "");
+    return output.view();
 }
 }
