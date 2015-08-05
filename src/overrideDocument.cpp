@@ -1,6 +1,15 @@
 #include "overrideDocument.hpp"
+#include <bsoncxx/document/value.hpp>
+#include <bsoncxx/types.hpp>
+#include <bsoncxx/document/view.hpp>
+#include <bsoncxx/types/value.hpp>
 #include <stdlib.h>
-
+#include <bsoncxx/document/value.hpp>
+#include <bsoncxx/document/view.hpp>
+#include <bsoncxx/json.hpp>
+#include <bsoncxx/stdx/string_view.hpp>
+#include <bsoncxx/types.hpp>
+#include <bsoncxx/types/value.hpp>
 using namespace std;
 
 
@@ -56,7 +65,8 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document &ou
                 //applyOverrideLevel(output, elem.value(), prefix + elem.key().to_string());
             }
         else {
-            //doc << prefix + elem.key() << elem.value();
+            bsoncxx::types::value ele_val{elem.get_value()};
+            //output << elem.key().to_string() << ele_val.view();
         }
     }
 }
