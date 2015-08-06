@@ -7,7 +7,7 @@
 using namespace std;
 
 namespace mwg {
-class overrideDocument : public mdocument {
+class overrideDocument : public document {
 public:
     overrideDocument() {};
     overrideDocument(YAML::Node&);

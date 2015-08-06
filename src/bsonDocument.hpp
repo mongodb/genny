@@ -5,7 +5,7 @@
 #pragma once
 
 namespace mwg {
-class bsonDocument : public mdocument {
+class bsonDocument : public document {
 public:
     bsonDocument(){};
     bsonDocument(YAML::Node);

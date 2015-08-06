@@ -10,13 +10,13 @@ using mongocxx::write_concern;
 
 namespace mwg {
 
-void parseMap(document& docbuilder, YAML::Node node) {
+void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
     for (auto entry : node) {
         cout << "In parseMap. entry.first: " << entry.first.Scalar() << " entry.second "
              << entry.second.Scalar() << endl;
         // can I just use basic document builder. Open, append, concatenate, etc?
         if (entry.second.IsMap()) {
-            document mydoc{};
+            bsoncxx::builder::stream::document mydoc{};
             parseMap(mydoc, entry.second);
             bsoncxx::builder::stream::concatenate doc;
             doc.view = mydoc.view();
@@ -37,7 +37,7 @@ void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node
     for (auto entry : node) {
         if (entry.IsMap()) {
             cout << "Entry isMap" << endl;
-            document mydoc{};
+            bsoncxx::builder::stream::document mydoc{};
             parseMap(mydoc, entry);
             bsoncxx::builder::stream::concatenate doc;
             doc.view = mydoc.view();

@@ -6,11 +6,11 @@
 using namespace std;
 namespace mwg {
 
-class mdocument {
+class document {
 public:
     virtual bsoncxx::document::view view() = 0;
 };
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<mdocument> makeDoc(YAML::Node);
+unique_ptr<document> makeDoc(YAML::Node);
 }
