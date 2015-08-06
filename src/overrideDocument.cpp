@@ -66,8 +66,16 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
             output << elem.key().to_string() << iter->second;
         } else if (iter2 != lowerlevel.end()) {
             // need to check if child is document, array, or other. 
-            if (elem.type() == bsoncxx::type::k_document)
+            switch (elem.type()) {
+            case bsoncxx::type::k_document:
                 applyOverrideLevel(output, elem.get_document().value, prefix + elem.key().to_string());
+                break;
+            case bsoncxx::type::k_array:
+                cerr << "Trying to descend a level of bson in overrides. Array not supported yet." << endl;
+            default:
+                cerr << "Trying to descend a level of bson in overrides but not a map or array" << endl;
+                exit(EXIT_FAILURE);
+            }
         } else {
             bsoncxx::types::value ele_val{elem.get_value()};
             output << elem.key().to_string() << ele_val;
