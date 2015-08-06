@@ -27,7 +27,7 @@ insert_one::insert_one(YAML::Node& node) {
         parseInsertOptions(options, node["options"]);
 
     //    parseMap(document, node["document"]);
-    document = unique_ptr<mdocument> {new bsonDocument(node["document"])};
+    document = makeDoc(node["document"]);
     cout << "Added op of type insert_one" << endl;
 }
 

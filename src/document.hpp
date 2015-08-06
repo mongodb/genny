@@ -12,5 +12,5 @@ public:
 };
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<mdocument> makeDoc(YAML::Node&);
+unique_ptr<mdocument> makeDoc(YAML::Node);
 }
