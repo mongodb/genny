@@ -61,13 +61,16 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
 
     for (auto elem : doc) {
         //    for (auto elem = begin; elem != end; elem++) {
+        cout << "Looking at key " << elem.key().to_string() << endl;
         auto iter = thislevel.find(elem.key().to_string());
         auto iter2 = lowerlevel.find(elem.key().to_string());
         if (iter != thislevel.end()) {
             // replace this entry
+            cout << "Matched on this level. Replacing " << endl;
             output << elem.key().to_string() << iter->second;
         } else if (iter2 != lowerlevel.end()) {
             // need to check if child is document, array, or other.
+            cout << "Partial match. Need to descend" << endl;
             switch (elem.type()) {
                 case bsoncxx::type::k_document:
                     applyOverrideLevel(
@@ -82,9 +85,12 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                     exit(EXIT_FAILURE);
             }
         } else {
+            cout << "No match, just pass through" << endl;
             bsoncxx::types::value ele_val{elem.get_value()};
             output << elem.key().to_string() << ele_val;
+            cout << "No match, just passed through" << endl;
         }
+        cout << "After if, elseif, else" << endl;
     }
 }
 
@@ -92,8 +98,12 @@ bsoncxx::document::view overrideDocument::view() {
     // Need to iterate through the doc, and for any field see if it
     // matches. Override the value if it does.
     // bson output
+
+    // scope problem -- output is going out of scope here
+    // to be thread safe this has to be on the stack or in the per thread data. 
     bsoncxx::builder::stream::document output{};
     applyOverrideLevel(output, doc.view(), "");
+    cout << "About to give view" << endl; 
     return output.view();
 }
 }
