@@ -38,7 +38,7 @@ overrideDocument::overrideDocument(YAML::Node& node) {
         override[entry.first.Scalar()] = entry.second.Scalar();
 }
 
-void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document &output,
+void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& output,
                                           bsoncxx::document::view doc,
                                           string prefix) {
     // Going to need variants of this for arrays
@@ -46,7 +46,7 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document &ou
     // iterate through keys. if key matches exactly, replace in output.
     // if key doesn't match, copy element to output
     // if key prefix matches, descend a level.
-    
+
     // process override for elements at this level
     unordered_map<string, string> thislevel;
     // process override for elements at lower level
@@ -55,18 +55,15 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document &ou
     for (auto elem : doc) {
         auto iter = thislevel.find(elem.key().to_string());
         auto iter2 = lowerlevel.find(elem.key().to_string());
-        if (iter != thislevel.end())
-            {
-                // replace this entry
-                output << elem.key().to_string() << iter->second;
-            }
-        else if (iter2 != lowerlevel.end())
-            {
-                //applyOverrideLevel(output, elem.value(), prefix + elem.key().to_string());
-            }
-        else {
+        if (iter != thislevel.end()) {
+            // replace this entry
+            output << elem.key().to_string() << iter->second;
+        } else if (iter2 != lowerlevel.end()) {
+            // bsoncxx::types::value ele_val{elem.get_value()};
+            // applyOverrideLevel(output, ele_val, prefix + elem.key().to_string());
+        } else {
             bsoncxx::types::value ele_val{elem.get_value()};
-            //output << elem.key().to_string() << ele_val.view();
+            output << elem.key().to_string() << ele_val;
         }
     }
 }
