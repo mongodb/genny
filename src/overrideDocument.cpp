@@ -41,10 +41,12 @@ overrideDocument::overrideDocument(YAML::Node& node) {
 void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& output,
                                           bsoncxx::document::view doc,
                                           string prefix) {
-//     applyOverrideLevel(output, doc.begin(), doc.end(), prefix);
-// }
+    //     applyOverrideLevel(output, doc.begin(), doc.end(), prefix);
+    // }
 
-//     void applyOverrideLevel(bsoncxx::builder::stream::document& output, bsoncxx::document::view::iterator begin, bsoncxx::document::view::iterator end, string prefix) {
+    //     void applyOverrideLevel(bsoncxx::builder::stream::document& output,
+    //     bsoncxx::document::view::iterator begin, bsoncxx::document::view::iterator end, string
+    //     prefix) {
 
     // Going to need variants of this for arrays
 
@@ -56,7 +58,7 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     unordered_map<string, string> thislevel;
     // process override for elements at lower level
     unordered_map<string, string> lowerlevel;
-    
+
     for (auto elem : doc) {
         //    for (auto elem = begin; elem != end; elem++) {
         auto iter = thislevel.find(elem.key().to_string());
@@ -65,16 +67,19 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
             // replace this entry
             output << elem.key().to_string() << iter->second;
         } else if (iter2 != lowerlevel.end()) {
-            // need to check if child is document, array, or other. 
+            // need to check if child is document, array, or other.
             switch (elem.type()) {
-            case bsoncxx::type::k_document:
-                applyOverrideLevel(output, elem.get_document().value, prefix + elem.key().to_string());
-                break;
-            case bsoncxx::type::k_array:
-                cerr << "Trying to descend a level of bson in overrides. Array not supported yet." << endl;
-            default:
-                cerr << "Trying to descend a level of bson in overrides but not a map or array" << endl;
-                exit(EXIT_FAILURE);
+                case bsoncxx::type::k_document:
+                    applyOverrideLevel(
+                        output, elem.get_document().value, prefix + elem.key().to_string());
+                    break;
+                case bsoncxx::type::k_array:
+                    cerr << "Trying to descend a level of bson in overrides. Array not supported "
+                            "yet." << endl;
+                default:
+                    cerr << "Trying to descend a level of bson in overrides but not a map or array"
+                         << endl;
+                    exit(EXIT_FAILURE);
             }
         } else {
             bsoncxx::types::value ele_val{elem.get_value()};
