@@ -41,6 +41,11 @@ overrideDocument::overrideDocument(YAML::Node& node) {
 void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& output,
                                           bsoncxx::document::view doc,
                                           string prefix) {
+//     applyOverrideLevel(output, doc.begin(), doc.end(), prefix);
+// }
+
+//     void applyOverrideLevel(bsoncxx::builder::stream::document& output, bsoncxx::document::view::iterator begin, bsoncxx::document::view::iterator end, string prefix) {
+
     // Going to need variants of this for arrays
 
     // iterate through keys. if key matches exactly, replace in output.
@@ -51,16 +56,18 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     unordered_map<string, string> thislevel;
     // process override for elements at lower level
     unordered_map<string, string> lowerlevel;
-
+    
     for (auto elem : doc) {
+        //    for (auto elem = begin; elem != end; elem++) {
         auto iter = thislevel.find(elem.key().to_string());
         auto iter2 = lowerlevel.find(elem.key().to_string());
         if (iter != thislevel.end()) {
             // replace this entry
             output << elem.key().to_string() << iter->second;
         } else if (iter2 != lowerlevel.end()) {
-            // bsoncxx::types::value ele_val{elem.get_value()};
-            // applyOverrideLevel(output, ele_val, prefix + elem.key().to_string());
+            // need to check if child is document, array, or other. 
+            if (elem.type() == bsoncxx::type::k_document)
+                applyOverrideLevel(output, elem.get_document().value, prefix + elem.key().to_string());
         } else {
             bsoncxx::types::value ele_val{elem.get_value()};
             output << elem.key().to_string() << ele_val;
