@@ -8,11 +8,9 @@ namespace mwg {
 
 class mdocument {
 public:
-    virtual bsoncxx::document::view get() = 0;
+    virtual bsoncxx::document::view view() = 0;
 };
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<mdocument> makeDoc(YAML::Node&) {
-    return nullptr;
-};
+unique_ptr<mdocument> makeDoc(YAML::Node&);
 }

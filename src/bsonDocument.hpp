@@ -8,14 +8,14 @@ namespace mwg {
 class bsonDocument : public mdocument {
 public:
     bsonDocument(){};
-    bsonDocument(YAML::Node&);
+    bsonDocument(YAML::Node);
     virtual ~bsonDocument() = default;
     bsonDocument(const bsonDocument&) = default;
     bsonDocument(bsonDocument&&) = default;
     bsonDocument& operator=(const bsonDocument&) = default;
     bsonDocument& operator=(bsonDocument&&) = default;
 
-    virtual bsoncxx::document::view get();
+    virtual bsoncxx::document::view view() override;
 
 private:
     bsoncxx::builder::stream::document doc{};

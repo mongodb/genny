@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "parse_util.hpp"
 #include <bsoncxx/json.hpp>
+#include "bsonDocument.hpp"
 
 namespace mwg {
 
@@ -25,16 +26,17 @@ insert_one::insert_one(YAML::Node& node) {
     if (node["options"])
         parseInsertOptions(options, node["options"]);
 
-    parseMap(document, node["document"]);
+    //    parseMap(document, node["document"]);
+    document = unique_ptr<mdocument> {new bsonDocument(node["document"])};
     cout << "Added op of type insert_one" << endl;
 }
 
 // Execute the node
 void insert_one::execute(mongocxx::client& conn, mt19937_64& rng) {
     auto collection = conn["testdb"]["testCollection"];
-    auto result = collection.insert_one(document.view(), options);
+    auto result = collection.insert_one(document->view(), options);
     // need a way to exhaust the cursor
-    cout << "insert_one.execute: insert_one is " << bsoncxx::to_json(document.view()) << endl;
+    cout << "insert_one.execute: insert_one is " << bsoncxx::to_json(document->view()) << endl;
     // probably should do some error checking here
 }
 }

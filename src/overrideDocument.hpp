@@ -17,7 +17,7 @@ public:
     overrideDocument& operator=(const overrideDocument&) = default;
     overrideDocument& operator=(overrideDocument&&) = default;
 
-    virtual bsoncxx::document::view get();
+    virtual bsoncxx::document::view view() override;
 
 private:
     // apply the overides, one level at a time

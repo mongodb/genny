@@ -88,12 +88,12 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     }
 }
 
-bsoncxx::document::view overrideDocument::get() {
+bsoncxx::document::view overrideDocument::view() {
     // Need to iterate through the doc, and for any field see if it
     // matches. Override the value if it does.
     // bson output
     bsoncxx::builder::stream::document output{};
-    applyOverrideLevel(output, doc.get(), "");
+    applyOverrideLevel(output, doc.view(), "");
     return output.view();
 }
 }

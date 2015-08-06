@@ -8,7 +8,7 @@ using namespace std;
 
 namespace mwg {
 
-bsonDocument::bsonDocument(YAML::Node& node) {
+bsonDocument::bsonDocument(YAML::Node node) {
     if (!node) {
         cerr << "bsonDocument constructor and !node" << endl;
         exit(EXIT_FAILURE);
@@ -17,10 +17,12 @@ bsonDocument::bsonDocument(YAML::Node& node) {
         cerr << "Not map in bsonDocument constructor" << endl;
         exit(EXIT_FAILURE);
     }
+    cout << "In bsonDocument constructor" << endl;
     parseMap(doc, node);
+    cout << "Parsed map in bsonDocument constructor" << endl;
 }
 
-bsoncxx::document::view bsonDocument::get() {
+bsoncxx::document::view bsonDocument::view() {
     return doc.view();
 }
 }
