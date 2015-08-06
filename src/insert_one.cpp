@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "parse_util.hpp"
 #include <bsoncxx/json.hpp>
-#include "bsonDocument.hpp"
 
 namespace mwg {
 

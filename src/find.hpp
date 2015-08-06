@@ -1,5 +1,6 @@
 #include "yaml-cpp/yaml.h"
 #include <bsoncxx/builder/stream/document.hpp>
+#include "document.hpp"
 
 #include "operation.hpp"
 #pragma once
@@ -19,7 +20,7 @@ public:
     virtual void execute(mongocxx::client&, mt19937_64&) override;
 
 private:
-    bsoncxx::builder::stream::document filter{};
+    unique_ptr<document> filter{};
     mongocxx::options::find options{};
 };
 }

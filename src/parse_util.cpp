@@ -61,7 +61,7 @@ void parseInsertOptions(mongocxx::options::insert& options, YAML::Node optionsNo
     if (optionsNode["write_concern"]) {
         auto node = optionsNode["write_concern"];
         cout << "In parseInsertOptions and have write_concern" << endl;
-        write_concern wc {};
+        write_concern wc{};
         // Need to set the options of the write concern
         if (node["fsync"])
             wc.fsync(node["fsync"].as<bool>());
@@ -83,6 +83,4 @@ void parseInsertOptions(mongocxx::options::insert& options, YAML::Node optionsNo
         options.write_concern(wc);
     }
 }
-
-
 }

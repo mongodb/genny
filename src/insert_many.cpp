@@ -1,7 +1,7 @@
 #include "insert_many.hpp"
 #include <stdlib.h>
-#include "parse_util.hpp"
 #include <bsoncxx/json.hpp>
+#include "parse_util.hpp"
 
 namespace mwg {
 
@@ -34,13 +34,16 @@ insert_many::insert_many(YAML::Node& ynode) {
         bsoncxx::builder::stream::document document;
         parseMap(document, doc);
         collection.push_back(move(document));
+        // collection.push_back(makeDoc(doc));  need to update execute to work with this
     }
-    cout << "Added op of type insert_many. WC.nodes is " << options.write_concern()->nodes() << endl;
+    cout << "Added op of type insert_many. WC.nodes is " << options.write_concern()->nodes()
+         << endl;
 }
 
 // Execute the node
 void insert_many::execute(mongocxx::client& conn, mt19937_64& rng) {
     auto coll = conn["testdb"]["testCollection"];
+    // need to transform this into a vector of bson documents for switch over to document class
     auto result = coll.insert_many(collection, options);
     cout << "insert_many.execute" << endl;
     // probably should do some error checking here
