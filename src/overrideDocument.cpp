@@ -94,16 +94,18 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     }
 }
 
-bsoncxx::document::view overrideDocument::view() {
+bsoncxx::document::view overrideDocument::view(bsoncxx::builder::stream::document& output) {
     // Need to iterate through the doc, and for any field see if it
     // matches. Override the value if it does.
     // bson output
 
     // scope problem -- output is going out of scope here
-    // to be thread safe this has to be on the stack or in the per thread data. 
-    bsoncxx::builder::stream::document output{};
-    applyOverrideLevel(output, doc.view(), "");
-    cout << "About to give view" << endl; 
+    // to be thread safe this has to be on the stack or in the per thread data.
+
+    // Not sure I need the tempdoc in addition to output
+    bsoncxx::builder::stream::document tempdoc{};
+    applyOverrideLevel(output, doc.view(tempdoc), "");
+    cout << "About to give view" << endl;
     return output.view();
 }
 }

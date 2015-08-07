@@ -22,7 +22,7 @@ bsonDocument::bsonDocument(YAML::Node node) {
     cout << "Parsed map in bsonDocument constructor" << endl;
 }
 
-bsoncxx::document::view bsonDocument::view() {
+bsoncxx::document::view bsonDocument::view(bsoncxx::builder::stream::document&) {
     return doc.view();
 }
 }

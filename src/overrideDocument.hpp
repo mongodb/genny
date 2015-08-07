@@ -17,7 +17,7 @@ public:
     overrideDocument& operator=(const overrideDocument&) = default;
     overrideDocument& operator=(overrideDocument&&) = default;
 
-    virtual bsoncxx::document::view view() override;
+    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&) override;
 
 private:
     // apply the overides, one level at a time
@@ -29,6 +29,5 @@ private:
     // The list of things to override.
     // These are strings for now. Need to be generalized to a value type.
     unordered_map<string, string> override;
-
 };
 }

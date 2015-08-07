@@ -28,9 +28,10 @@ find::find(YAML::Node& node) {
 // Execute the node
 void find::execute(mongocxx::client& conn, mt19937_64& rng) {
     auto collection = conn["testdb"]["testCollection"];
-    auto cursor = collection.find(filter->view(), options);
+    bsoncxx::builder::stream::document mydoc{};
+    auto cursor = collection.find(filter->view(mydoc), options);
     // need a way to exhaust the cursor
-    cout << "find.execute: find is " << bsoncxx::to_json(filter->view()) << endl;
+    cout << "find.execute: find is " << bsoncxx::to_json(filter->view(mydoc)) << endl;
     for (auto&& doc : cursor) {
         std::cout << bsoncxx::to_json(doc) << std::endl;
     }

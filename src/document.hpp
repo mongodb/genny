@@ -8,7 +8,7 @@ namespace mwg {
 
 class document {
 public:
-    virtual bsoncxx::document::view view() = 0;
+    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&) = 0;
 };
 
 // parse a YAML Node and make a document of the correct type
