@@ -12,6 +12,10 @@
 #include <bsoncxx/types/value.hpp>
 using namespace std;
 
+using bsoncxx::builder::stream::open_document;
+using bsoncxx::builder::stream::close_document;
+using bsoncxx::builder::stream::open_array;
+using bsoncxx::builder::stream::close_array;
 
 namespace mwg {
 
@@ -62,19 +66,24 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     for (auto elem : override) {
         string key = elem.first;
         cout << "Going through overrides key: " << key << " value is " << elem.second << endl;
-        if (prefix == "" or key.compare(0, prefix.length(), prefix)) {
+        if (prefix == "" || key.compare(0, prefix.length() - 1, prefix)) {
             // prefix match. Need what comes after
             // grab everything after prefix
             cout << "Key matched with prefix" << endl;
-            auto suffix = key.substr(prefix.length(),key.length() - prefix.length());
+            auto suffix = key.substr(prefix.length(), key.length() - prefix.length());
             // check for a period. If no period, put in thislevel
             auto find = suffix.find('.');
             // no match
             if (find == std::string::npos) {
-                thislevel[suffix] =  elem.second;
+                thislevel[suffix] = elem.second;
                 cout << "Putting thislevel[" << suffix << "]=" << elem.second << endl;
+            } else {
+                // if period, grab from suffix to period and put in lowerlevel
+                // We won't actually use the second element here
+                lowerlevel[suffix.substr(0, find)] = elem.second;
             }
-            // if period, grab from suffix to period and put in lowerlevel
+        } else {
+            cout << "No prefix match" << endl;
         }
     }
 
@@ -91,10 +100,14 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
             // need to check if child is document, array, or other.
             cout << "Partial match. Need to descend" << endl;
             switch (elem.type()) {
-                case bsoncxx::type::k_document:
+                case bsoncxx::type::k_document: {
+                    bsoncxx::builder::stream::document mydoc{};
                     applyOverrideLevel(
-                        output, elem.get_document().value, prefix + elem.key().to_string() + '.');
-                    break;
+                        mydoc, elem.get_document().value, prefix + elem.key().to_string() + '.');
+                    bsoncxx::builder::stream::concatenate cdoc;
+                    cdoc.view = mydoc.view();
+                    output << elem.key().to_string() << open_document << cdoc << close_document;
+                } break;
                 case bsoncxx::type::k_array:
                     cerr << "Trying to descend a level of bson in overrides. Array not supported "
                             "yet." << endl;
