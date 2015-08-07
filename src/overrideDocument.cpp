@@ -58,13 +58,23 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     unordered_map<string, string> thislevel;
     // process override for elements at lower level
     unordered_map<string, string> lowerlevel;
-
+    cout << "prefix is " << prefix << endl;
     for (auto elem : override) {
         string key = elem.first;
-        if (key.compare(0, prefix.length(), prefix)) {
+        cout << "Going through overrides key: " << key << " value is " << elem.second << endl;
+        if (prefix == "" or key.compare(0, prefix.length(), prefix)) {
             // prefix match. Need what comes after
             // grab everything after prefix
+            cout << "Key matched with prefix" << endl;
             auto suffix = key.substr(prefix.length(),key.length() - prefix.length());
+            // check for a period. If no period, put in thislevel
+            auto find = suffix.find('.');
+            // no match
+            if (find == std::string::npos) {
+                thislevel[suffix] =  elem.second;
+                cout << "Putting thislevel[" << suffix << "]=" << elem.second << endl;
+            }
+            // if period, grab from suffix to period and put in lowerlevel
         }
     }
 
