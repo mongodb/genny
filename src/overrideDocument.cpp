@@ -59,6 +59,15 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     // process override for elements at lower level
     unordered_map<string, string> lowerlevel;
 
+    for (auto elem : override) {
+        string key = elem.first;
+        if (key.compare(0, prefix.length(), prefix)) {
+            // prefix match. Need what comes after
+            // grab everything after prefix
+            auto suffix = key.substr(prefix.length(),key.length() - prefix.length());
+        }
+    }
+
     for (auto elem : doc) {
         //    for (auto elem = begin; elem != end; elem++) {
         cout << "Looking at key " << elem.key().to_string() << endl;
@@ -74,7 +83,7 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
             switch (elem.type()) {
                 case bsoncxx::type::k_document:
                     applyOverrideLevel(
-                        output, elem.get_document().value, prefix + elem.key().to_string());
+                        output, elem.get_document().value, prefix + elem.key().to_string() + '.');
                     break;
                 case bsoncxx::type::k_array:
                     cerr << "Trying to descend a level of bson in overrides. Array not supported "
