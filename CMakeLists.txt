@@ -45,7 +45,7 @@ configure_file (
 
 add_subdirectory(src)
 add_executable(mwg src/main.cpp)
-target_link_libraries(mwg big ${LIBMONGOCXX_LIBRARIES} ${YAMLCPP_LIBRARIES})
+target_link_libraries(mwg big docs ${LIBMONGOCXX_LIBRARIES} ${YAMLCPP_LIBRARIES})
 
 install(TARGETS mwg DESTINATION bin)
 

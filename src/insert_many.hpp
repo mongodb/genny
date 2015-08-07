@@ -1,6 +1,7 @@
 #include "yaml-cpp/yaml.h"
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
+#include "document.hpp"
 
 #include "operation.hpp"
 #pragma once
@@ -19,6 +20,7 @@ public:
     void execute(mongocxx::client&, mt19937_64&) override;
 
 private:
+    //    vector<unique_ptr<document>> collection;
     vector<bsoncxx::builder::stream::document> collection;
     mongocxx::options::insert options{};
 };

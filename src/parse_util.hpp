@@ -5,11 +5,9 @@
 
 using namespace std;
 
-using bsoncxx::builder::stream::document;
-
 namespace mwg {
 
-void parseMap(document&, YAML::Node);
+void parseMap(bsoncxx::builder::stream::document&, YAML::Node);
 void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node node);
 void parseInsertOptions(mongocxx::options::insert&, YAML::Node);
 }

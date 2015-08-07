@@ -1,0 +1,21 @@
+# Simple example of insert many
+ 
+main : 
+     seed: 131415161718
+     name: main
+     nodes: 
+            - 
+              name : insert1
+              type : insert_one
+              document : 
+                       type : override 
+                       doc : 
+                           x : 
+                             y : a
+                       overrides : 
+                                 x.y : b
+              options : 
+                      write_concern : 
+                                    nodes : 1
+              next : Finish
+

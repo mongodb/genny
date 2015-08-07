@@ -1,7 +1,7 @@
 #include "yaml-cpp/yaml.h"
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
-
+#include "document.hpp"
 #include "operation.hpp"
 #pragma once
 using namespace std;
@@ -19,7 +19,7 @@ public:
     void execute(mongocxx::client&, mt19937_64&) override;
 
 private:
-    bsoncxx::builder::stream::document document{};
+    unique_ptr<document> document{};
     mongocxx::options::insert options{};
 };
 }
