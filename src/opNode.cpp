@@ -1,5 +1,6 @@
 #include "opNode.hpp"
 #include "operations.hpp"
+#include <boost/log/trivial.hpp>
 
 namespace mwg {
 opNode::opNode(YAML::Node& ynode) : node(ynode) {
@@ -9,9 +10,9 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
     // if the operation is embedded in the node, pass that to the op
     if (!myop.IsDefined()) {
         myop = ynode;
-        // cout << "No myop. Using inline defintion" << endl;
+        BOOST_LOG_TRIVIAL(debug) << "No myop. Using inline defintion";
     } else
-        cout << "Explicit op entry in opNode constructor" << endl;
+        cout << "Explicit op entry in opNode constructor";
     if (myop["type"].Scalar() == "find")
         op = unique_ptr<operation>(new find(myop));
     else if (myop["type"].Scalar() == "insert_one")
@@ -19,8 +20,8 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
     else if (myop["type"].Scalar() == "insert_many")
         op = unique_ptr<operation>(new insert_many(myop));
     else {
-        cerr << "Trying to make operation of type " << myop["type"]
-             << " is not supported yet in opNode constructor" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Trying to make operation of type " << myop["type"]
+                                 << " is not supported yet in opNode constructor";
         exit(EXIT_FAILURE);
     }
 }

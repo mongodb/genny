@@ -10,6 +10,8 @@
 #include <bsoncxx/stdx/string_view.hpp>
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
+#include <boost/log/trivial.hpp>
+
 using namespace std;
 
 using bsoncxx::builder::stream::open_document;
@@ -21,21 +23,21 @@ namespace mwg {
 
 overrideDocument::overrideDocument(YAML::Node& node) {
     if (!node) {
-        cerr << "overrideDocument constructor and !node" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "overrideDocument constructor and !node";
         exit(EXIT_FAILURE);
     }
     if (!node.IsMap()) {
-        cerr << "Not map in overrideDocument constructor" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Not map in overrideDocument constructor";
         exit(EXIT_FAILURE);
     }
     if (!node["doc"]) {
-        cerr << "No doc entry in yaml in overrideDocument constructor" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "No doc entry in yaml in overrideDocument constructor";
         exit(EXIT_FAILURE);
     }
     auto docnode = node["doc"];
     doc = move(bsonDocument(docnode));
     if (!node["overrides"]) {
-        cerr << "No override entry in yaml in overrideDocument constructor" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "No override entry in yaml in overrideDocument constructor";
         exit(EXIT_FAILURE);
     }
     // just save the whole document that is second for now
@@ -47,13 +49,6 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                                           bsoncxx::document::view doc,
                                           string prefix,
                                           threadState& state) {
-    //     applyOverrideLevel(output, doc.begin(), doc.end(), prefix);
-    // }
-
-    //     void applyOverrideLevel(bsoncxx::builder::stream::document& output,
-    //     bsoncxx::document::view::iterator begin, bsoncxx::document::view::iterator end, string
-    //     prefix) {
-
     // Going to need variants of this for arrays
 
     // iterate through keys. if key matches exactly, replace in output.
@@ -64,46 +59,46 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     unordered_map<string, YAML::Node> thislevel;
     // process override for elements at lower level
     set<string> lowerlevel;
-    //    cout << "prefix is " << prefix << endl;
+    //    cout << "prefix is " << prefix ;
     for (auto elem : override) {
         string key = elem.first;
-        // cout << "Going through overrides key: " << key << " value is " << elem.second
-        //      << " prefix.length() = " << prefix.length() << endl;
+        BOOST_LOG_TRIVIAL(trace) << "Going through overrides key: " << key << " value is "
+                                 << elem.second << " prefix.length() = " << prefix.length();
         if (prefix == "" || key.compare(0, prefix.length(), prefix) == 0) {
             // prefix match. Need what comes after
             // grab everything after prefix
-            // cout << "Key matched with prefix" << endl;
+            BOOST_LOG_TRIVIAL(trace) << "Key matched with prefix";
             auto suffix = key.substr(prefix.length(), key.length() - prefix.length());
             // check for a period. If no period, put in thislevel
             auto find = suffix.find('.');
             // no match
             if (find == std::string::npos) {
                 thislevel[suffix] = elem.second;
-                // cout << "Putting thislevel[" << suffix << "]=" << elem.second << endl;
+                BOOST_LOG_TRIVIAL(trace) << "Putting thislevel[" << suffix << "]=" << elem.second;
             } else {
                 // if period, grab from suffix to period and put in lowerlevel
                 // We won't actually use the second element here
-                // cout << "Putting lowerlevel[" << suffix << "]=" << elem.second << endl;
+                BOOST_LOG_TRIVIAL(trace) << "Putting lowerlevel[" << suffix << "]=" << elem.second;
                 lowerlevel.insert(suffix.substr(0, find));
             }
         } else {
-            // cout << "No prefix match" << endl;
+            BOOST_LOG_TRIVIAL(trace) << "No prefix match";
         }
     }
 
     for (auto elem : doc) {
-        // cout << "Looking at key " << elem.key().to_string() << endl;
+        BOOST_LOG_TRIVIAL(trace) << "Looking at key " << elem.key().to_string();
         auto iter = thislevel.find(elem.key().to_string());
         auto iter2 = lowerlevel.find(elem.key().to_string());
         if (iter != thislevel.end()) {
             // replace this entry
-            // cout << "Matched on this level. Replacing " << endl;
+            BOOST_LOG_TRIVIAL(trace) << "Matched on this level. Replacing ";
             // this should all be replaced with a value class and polymorphism
             if (iter->second.IsScalar()) {
                 output << elem.key().to_string() << iter->second.Scalar();
             }
             if (iter->second.IsMap()) {
-                // cout << "Second is map" << endl;
+                BOOST_LOG_TRIVIAL(trace) << "Second is map";
                 if (iter->second["type"].Scalar() == "randomint") {
                     int min = 0;
                     int max = 100;
@@ -116,26 +111,25 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                     uniform_int_distribution<int> distribution(min, max);
                     output << elem.key().to_string() << distribution(state.rng);
                 } else if (iter->second["type"].Scalar() == "increment") {
-                    // cout << "Override document and want to set field  " << iter->first
-                    //      << " with incremented value of " << iter->second["variable"].Scalar()
-                    //      << endl;
+                    BOOST_LOG_TRIVIAL(trace) << "Override document and want to set field  "
+                                             << iter->first << " with incremented value of "
+                                             << iter->second["variable"].Scalar();
                     // if in tvariables use that
                     if (state.tvariables.count(iter->second["variable"].Scalar()) > 0) {
-                        // cout << "In tvariables" << endl;
+                        BOOST_LOG_TRIVIAL(trace) << "In tvariables";
                         output << elem.key().to_string()
                                << state.tvariables[iter->second["variable"].Scalar()]++;
                     } else {  // in wvariables
-                        // cout << "In wvariables" << endl;
+                        BOOST_LOG_TRIVIAL(trace) << "In wvariables";
                         output << elem.key().to_string()
                                << state.wvariables[iter->second["variable"].Scalar()]++;
-                        // cout << "After wvariables" << endl;
                     }
                 }
             }
 
         } else if (iter2 != lowerlevel.end()) {
             // need to check if child is document, array, or other.
-            // cout << "Partial match. Need to descend" << endl;
+            BOOST_LOG_TRIVIAL(trace) << "Partial match. Need to descend";
             switch (elem.type()) {
                 case bsoncxx::type::k_document: {
                     bsoncxx::builder::stream::document mydoc{};
@@ -148,23 +142,22 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                     output << elem.key().to_string() << open_document << cdoc << close_document;
                 } break;
                 case bsoncxx::type::k_array:
-                    cerr << "Trying to descend a level of bson in overrides. Array not "
-                            "supported "
-                            "yet." << endl;
+                    BOOST_LOG_TRIVIAL(fatal)
+                        << "Trying to descend a level of bson in overrides. Array not "
+                           "supported "
+                           "yet.";
                 default:
-                    cerr << "Trying to descend a level of bson in overrides but not a map or "
-                            "array" << endl;
+                    BOOST_LOG_TRIVIAL(fatal)
+                        << "Trying to descend a level of bson in overrides but not a map or "
+                           "array";
                     exit(EXIT_FAILURE);
             }
         } else {
-            // cout << "No match, just pass through" << endl;
+            BOOST_LOG_TRIVIAL(trace) << "No match, just pass through";
             bsoncxx::types::value ele_val{elem.get_value()};
             output << elem.key().to_string() << ele_val;
-            //  cout << "No match, just passed through" << endl;
         }
-        // cout << "After if, elseif, else" << endl;
     }
-    // cout << "After for loop" << endl;
 }
 
 bsoncxx::document::view overrideDocument::view(bsoncxx::builder::stream::document& output,
@@ -179,7 +172,6 @@ bsoncxx::document::view overrideDocument::view(bsoncxx::builder::stream::documen
     // Not sure I need the tempdoc in addition to output
     bsoncxx::builder::stream::document tempdoc{};
     applyOverrideLevel(output, doc.view(tempdoc, state), "", state);
-    // cout << "About to give view" << endl;
     return output.view();
 }
 }

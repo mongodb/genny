@@ -11,12 +11,16 @@
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 
 #include "workload.hpp"
 #include "main.h"
 
 using namespace std;
 using namespace mwg;
+namespace logging = boost::log;
 
 static struct option poptions[] = {{"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
 
@@ -52,16 +56,17 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::info);
+
     if (argc > optind)
         filename = argv[optind];
-    // cout << filename << endl;
+    BOOST_LOG_TRIVIAL(info) << filename;
 
+    // put try catch here with error message
     YAML::Node nodes = YAML::LoadFile(filename);
 
     // Look for main. And start building from there.
     if (auto main = nodes["main"]) {
-        //    cout << "Have main here: " << main << endl;
-
         mongocxx::instance inst{};
         mongocxx::client conn{};
 
@@ -70,5 +75,5 @@ int main(int argc, char* argv[]) {
     }
 
     else
-        cerr << "There was no main" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "There was no main";
 }

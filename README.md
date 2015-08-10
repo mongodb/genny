@@ -91,6 +91,7 @@ Dependencies
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * A compiler that supports c++11
 * [cmake](http://www.cmake.org/) for building
+* [Boost](http://www.boost.org/) for logging. Version 1.48 or later
 
 Building
 --------

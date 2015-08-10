@@ -38,14 +38,20 @@ if(GIT_FOUND)
   )
 endif()
 
+find_package(Boost REQUIRED COMPONENTS log)
+include_directories(${Boost_INCLUDE_DIRS})
+
 configure_file (
  "${PROJECT_SOURCE_DIR}/src/main.h.in"
   "${PROJECT_BINARY_DIR}/main.h"
 )
 
+ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 add_subdirectory(src)
 add_executable(mwg src/main.cpp)
-target_link_libraries(mwg big docs ${LIBMONGOCXX_LIBRARIES} ${YAMLCPP_LIBRARIES})
+target_link_libraries(mwg ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES}
+${YAMLCPP_LIBRARIES}  ${Boost_LOG_SETUP_LIBRARY} ${Boost_LOG_LIBRARY}
+${Boost_FILESYSTEM_LIBRARY}    ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY} big docs)
 
 install(TARGETS mwg DESTINATION bin)
 

@@ -2,6 +2,7 @@
 #include "parse_util.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
+#include <boost/log/trivial.hpp>
 
 using namespace std;
 
@@ -10,16 +11,16 @@ namespace mwg {
 
 bsonDocument::bsonDocument(YAML::Node node) {
     if (!node) {
-        cerr << "bsonDocument constructor and !node" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "bsonDocument constructor and !node";
         exit(EXIT_FAILURE);
     }
     if (!node.IsMap()) {
-        cerr << "Not map in bsonDocument constructor" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Not map in bsonDocument constructor";
         exit(EXIT_FAILURE);
     }
-    // cout << "In bsonDocument constructor" << endl;
+    BOOST_LOG_TRIVIAL(trace) << "In bsonDocument constructor";
     parseMap(doc, node);
-    // cout << "Parsed map in bsonDocument constructor" << endl;
+    BOOST_LOG_TRIVIAL(trace) << "Parsed map in bsonDocument constructor";
 }
 
 bsoncxx::document::view bsonDocument::view(bsoncxx::builder::stream::document&, threadState&) {

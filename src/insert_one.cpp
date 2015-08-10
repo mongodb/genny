@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "parse_util.hpp"
 #include <bsoncxx/json.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace mwg {
 
@@ -10,16 +11,16 @@ insert_one::insert_one(YAML::Node& node) {
     // these should be made into exceptions
     // should be a map, with type = insert_one
     if (!node) {
-        cerr << "Insert_One constructor and !node" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Insert_One constructor and !node";
         exit(EXIT_FAILURE);
     }
     if (!node.IsMap()) {
-        cerr << "Not map in insert_one type initializer" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Not map in insert_one type initializer";
         exit(EXIT_FAILURE);
     }
     if (node["type"].Scalar() != "insert_one") {
-        cerr << "Insert_One constructor but yaml entry doesn't have type == "
-                "insert_one" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Insert_One constructor but yaml entry doesn't have type == "
+                                    "insert_one";
         exit(EXIT_FAILURE);
     }
     if (node["options"])
@@ -27,19 +28,19 @@ insert_one::insert_one(YAML::Node& node) {
 
     //    parseMap(document, node["document"]);
     document = makeDoc(node["document"]);
-    // cout << "Added op of type insert_one" << endl;
+    BOOST_LOG_TRIVIAL(debug) << "Added op of type insert_one";
 }
 
 // Execute the node
 void insert_one::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
     bsoncxx::builder::stream::document mydoc{};
-    // cout << "insert_one.execute before call" << endl;
-    auto result = collection.insert_one(document->view(mydoc, state), options);
+    BOOST_LOG_TRIVIAL(trace) << "insert_one.execute before call";
+    // need to save the view to ensure we print out the same thing we insert
+    auto view = document->view(mydoc, state);
+    auto result = collection.insert_one(view, options);
     // need a way to exhaust the cursor
-    //    cout << "insert_one.execute: insert_one is " << bsoncxx::to_json(document->view(mydoc,
-    //    state))
-    //     << endl;
+    BOOST_LOG_TRIVIAL(debug) << "insert_one.execute: insert_one is " << bsoncxx::to_json(view);
     // probably should do some error checking here
 }
 }

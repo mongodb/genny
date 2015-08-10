@@ -12,6 +12,7 @@ main :
         - 
           name : insert1
           type : insert_one
+          print : Inserted Document
           document : 
             x : a
             y : 

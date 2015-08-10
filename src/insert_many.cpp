@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <bsoncxx/json.hpp>
 #include "parse_util.hpp"
+#include <boost/log/trivial.hpp>
 
 namespace mwg {
 
@@ -10,21 +11,21 @@ insert_many::insert_many(YAML::Node& ynode) {
     // these should be made into exceptions
     // should be a map, with type = insert_many
     if (!ynode) {
-        cerr << "Insert_Many constructor and !ynode" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Insert_Many constructor and !ynode";
         exit(EXIT_FAILURE);
     }
     if (!ynode.IsMap()) {
-        cerr << "Not map in insert_many type initializer" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Not map in insert_many type initializer";
         exit(EXIT_FAILURE);
     }
     if (ynode["type"].Scalar() != "insert_many") {
-        cerr << "Insert_Many constructor but yaml entry doesn't have type == "
-                "insert_many" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Insert_Many constructor but yaml entry doesn't have type == "
+                                    "insert_many";
         exit(EXIT_FAILURE);
     }
     if (!ynode["container"].IsSequence()) {
-        cerr << "Insert_Many constructor but yaml entry for container isn't a "
-                "sequence" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "Insert_Many constructor but yaml entry for container isn't a "
+                                    "sequence";
         exit(EXIT_FAILURE);
     }
     if (ynode["options"])
@@ -36,8 +37,8 @@ insert_many::insert_many(YAML::Node& ynode) {
         collection.push_back(move(document));
         // collection.push_back(makeDoc(doc));  need to update execute to work with this
     }
-    // cout << "Added op of type insert_many. WC.nodes is " << options.write_concern()->nodes()
-    //<< endl;
+    BOOST_LOG_TRIVIAL(debug) << "Added op of type insert_many. WC.nodes is "
+                             << options.write_concern()->nodes();
 }
 
 // Execute the node
@@ -45,7 +46,7 @@ void insert_many::execute(mongocxx::client& conn, threadState& state) {
     auto coll = conn["testdb"]["testCollection"];
     // need to transform this into a vector of bson documents for switch over to document class
     auto result = coll.insert_many(collection, options);
-    // cout << "insert_many.execute" << endl;
+    BOOST_LOG_TRIVIAL(debug) << "insert_many.execute";
     // probably should do some error checking here
 }
 }

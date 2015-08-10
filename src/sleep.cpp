@@ -4,28 +4,30 @@
 #include <random>
 #include "parse_util.hpp"
 #include <time.h>
+#include <boost/log/trivial.hpp>
 
 namespace mwg {
 sleepNode::sleepNode(YAML::Node& ynode) : node(ynode) {
     if (ynode["type"].Scalar() != "sleep") {
-        cerr << "SleepNode constructor but yaml entry doesn't have type == sleep" << endl;
+        BOOST_LOG_TRIVIAL(fatal)
+            << "SleepNode constructor but yaml entry doesn't have type == sleep";
         exit(EXIT_FAILURE);
     }
     name = ynode["name"].Scalar();
     sleeptime = ynode["sleep"].as<uint64_t>();
-    // cout << "In sleepNode constructor. Sleep time is " << sleeptime << endl;
+    BOOST_LOG_TRIVIAL(debug) << "In sleepNode constructor. Sleep time is " << sleeptime;
     name = ynode["name"].Scalar();
     nextName = ynode["next"].Scalar();
 }
 
 // Execute the node
 void sleepNode::execute(shared_ptr<threadState> myState) {
-    // cout << "sleepNode.execute. Sleeping for " << sleeptime << " ms" << endl;
+    BOOST_LOG_TRIVIAL(debug) << "sleepNode.execute. Sleeping for " << sleeptime << " ms";
     struct timespec t;
     t.tv_sec = (int)(sleeptime / 1000);
     t.tv_nsec = (sleeptime % 1000) * 1000 * 1000;
     struct timespec out;
     nanosleep(&t, &out);
-    // cout << "Slept." << endl;
+    BOOST_LOG_TRIVIAL(debug) << "Slept.";
 }
 }

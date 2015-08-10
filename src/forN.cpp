@@ -1,15 +1,16 @@
 #include "forN.hpp"
 #include <stdlib.h>
+#include <boost/log/trivial.hpp>
 
 namespace mwg {
 
 forN::forN(YAML::Node& ynode) : node(ynode) {
     if (ynode["type"].Scalar() != "forN") {
-        cerr << "ForN constructor but yaml entry doesn't have type == forN" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "ForN constructor but yaml entry doesn't have type == forN";
         exit(EXIT_FAILURE);
     }
     if (!ynode["workload"]) {
-        cerr << "ForN constructor but yaml entry doesn't have a workload entry" << endl;
+        BOOST_LOG_TRIVIAL(fatal) << "ForN constructor but yaml entry doesn't have a workload entry";
         exit(EXIT_FAILURE);
     }
     N = ynode["N"].as<uint64_t>();
@@ -21,7 +22,7 @@ forN::forN(YAML::Node& ynode) : node(ynode) {
 void forN::execute(shared_ptr<threadState> myState) {
     // execute the workload N times
     for (int i = 0; i < N; i++) {
-        // cout << "In forN and executing interation " << i << endl;
+        BOOST_LOG_TRIVIAL(debug) << "In forN and executing interation " << i;
         myWorkload.execute(myState->conn);
     }
 }
