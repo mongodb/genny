@@ -7,12 +7,11 @@ main :
             - 
               name : insert1
               type : insert_one
-              documenr :
+              document :
                        type : override 
-                       document : 
-                                - {y : 1}
+                       doc : {y : 1}
                        overrides : 
                                  y : 
-                                   { random_int : [0,100] } # set y to a random int with uniform distribution from 0 to 100
+                                   { randomint : [0,100] } # set y to a random int with uniform distribution from 0 to 100
               next : Finish
 
