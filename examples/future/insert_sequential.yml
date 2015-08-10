@@ -1,0 +1,20 @@
+# Simple example of insert many
+ 
+main : 
+     seed: 131415161718
+     name: main
+     variables : 
+               count : 0
+     nodes: 
+            - 
+              name : insert1
+              type : insert_one
+              documenr :
+                       type : override 
+                       document : 
+                                - {y : 1}
+                       overrides : 
+                                 y : 
+                                   { increment : count } # increment count and set y to count
+              next : Finish
+
