@@ -12,8 +12,8 @@ namespace mwg {
 
 void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
     for (auto entry : node) {
-        cout << "In parseMap. entry.first: " << entry.first.Scalar() << " entry.second "
-             << entry.second.Scalar() << endl;
+        // cout << "In parseMap. entry.first: " << entry.first.Scalar() << " entry.second "
+        //<< entry.second.Scalar() << endl;
         // can I just use basic document builder. Open, append, concatenate, etc?
         if (entry.second.IsMap()) {
             bsoncxx::builder::stream::document mydoc{};
@@ -36,7 +36,7 @@ void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
 void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node node) {
     for (auto entry : node) {
         if (entry.IsMap()) {
-            cout << "Entry isMap" << endl;
+            // cout << "Entry isMap" << endl;
             bsoncxx::builder::stream::document mydoc{};
             parseMap(mydoc, entry);
             bsoncxx::builder::stream::concatenate doc;
@@ -50,17 +50,17 @@ void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node
             arraybuilder << open_array << doc << close_array;
         } else  // scalar
         {
-            cout << "Trying to put entry into array builder " << entry.Scalar() << endl;
+            // cout << "Trying to put entry into array builder " << entry.Scalar() << endl;
             arraybuilder << entry.Scalar();
         }
     }
 }
 
 void parseInsertOptions(mongocxx::options::insert& options, YAML::Node optionsNode) {
-    cout << "In parseInsertOptions" << endl;
+    // cout << "In parseInsertOptions" << endl;
     if (optionsNode["write_concern"]) {
         auto node = optionsNode["write_concern"];
-        cout << "In parseInsertOptions and have write_concern" << endl;
+        // cout << "In parseInsertOptions and have write_concern" << endl;
         write_concern wc{};
         // Need to set the options of the write concern
         if (node["fsync"])
@@ -69,7 +69,7 @@ void parseInsertOptions(mongocxx::options::insert& options, YAML::Node optionsNo
             wc.journal(node["journal"].as<bool>());
         if (node["nodes"]) {
             wc.nodes(node["nodes"].as<int32_t>());
-            cout << "Setting nodes to " << node["nodes"].as<int32_t>() << endl;
+            // cout << "Setting nodes to " << node["nodes"].as<int32_t>() << endl;
         }
         // not sure how to handle this one. The parameter is different
         // than the option. Need to review the crud spec. Need more

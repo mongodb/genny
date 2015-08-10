@@ -17,9 +17,9 @@ bsonDocument::bsonDocument(YAML::Node node) {
         cerr << "Not map in bsonDocument constructor" << endl;
         exit(EXIT_FAILURE);
     }
-    cout << "In bsonDocument constructor" << endl;
+    // cout << "In bsonDocument constructor" << endl;
     parseMap(doc, node);
-    cout << "Parsed map in bsonDocument constructor" << endl;
+    // cout << "Parsed map in bsonDocument constructor" << endl;
 }
 
 bsoncxx::document::view bsonDocument::view(bsoncxx::builder::stream::document&) {

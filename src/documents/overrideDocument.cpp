@@ -62,43 +62,43 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     unordered_map<string, string> thislevel;
     // process override for elements at lower level
     unordered_map<string, string> lowerlevel;
-    cout << "prefix is " << prefix << endl;
+    // cout << "prefix is " << prefix << endl;
     for (auto elem : override) {
         string key = elem.first;
-        cout << "Going through overrides key: " << key << " value is " << elem.second << endl;
+        // cout << "Going through overrides key: " << key << " value is " << elem.second << endl;
         if (prefix == "" || key.compare(0, prefix.length() - 1, prefix)) {
             // prefix match. Need what comes after
             // grab everything after prefix
-            cout << "Key matched with prefix" << endl;
+            // cout << "Key matched with prefix" << endl;
             auto suffix = key.substr(prefix.length(), key.length() - prefix.length());
             // check for a period. If no period, put in thislevel
             auto find = suffix.find('.');
             // no match
             if (find == std::string::npos) {
                 thislevel[suffix] = elem.second;
-                cout << "Putting thislevel[" << suffix << "]=" << elem.second << endl;
+                // cout << "Putting thislevel[" << suffix << "]=" << elem.second << endl;
             } else {
                 // if period, grab from suffix to period and put in lowerlevel
                 // We won't actually use the second element here
                 lowerlevel[suffix.substr(0, find)] = elem.second;
             }
         } else {
-            cout << "No prefix match" << endl;
+            // cout << "No prefix match" << endl;
         }
     }
 
     for (auto elem : doc) {
         //    for (auto elem = begin; elem != end; elem++) {
-        cout << "Looking at key " << elem.key().to_string() << endl;
+        // cout << "Looking at key " << elem.key().to_string() << endl;
         auto iter = thislevel.find(elem.key().to_string());
         auto iter2 = lowerlevel.find(elem.key().to_string());
         if (iter != thislevel.end()) {
             // replace this entry
-            cout << "Matched on this level. Replacing " << endl;
+            // cout << "Matched on this level. Replacing " << endl;
             output << elem.key().to_string() << iter->second;
         } else if (iter2 != lowerlevel.end()) {
             // need to check if child is document, array, or other.
-            cout << "Partial match. Need to descend" << endl;
+            // cout << "Partial match. Need to descend" << endl;
             switch (elem.type()) {
                 case bsoncxx::type::k_document: {
                     bsoncxx::builder::stream::document mydoc{};
@@ -117,12 +117,12 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                     exit(EXIT_FAILURE);
             }
         } else {
-            cout << "No match, just pass through" << endl;
+            // cout << "No match, just pass through" << endl;
             bsoncxx::types::value ele_val{elem.get_value()};
             output << elem.key().to_string() << ele_val;
-            cout << "No match, just passed through" << endl;
+            // cout << "No match, just passed through" << endl;
         }
-        cout << "After if, elseif, else" << endl;
+        // cout << "After if, elseif, else" << endl;
     }
 }
 
@@ -137,7 +137,7 @@ bsoncxx::document::view overrideDocument::view(bsoncxx::builder::stream::documen
     // Not sure I need the tempdoc in addition to output
     bsoncxx::builder::stream::document tempdoc{};
     applyOverrideLevel(output, doc.view(tempdoc), "");
-    cout << "About to give view" << endl;
+    // cout << "About to give view" << endl;
     return output.view();
 }
 }

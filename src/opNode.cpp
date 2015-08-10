@@ -9,7 +9,7 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
     // if the operation is embedded in the node, pass that to the op
     if (!myop.IsDefined()) {
         myop = ynode;
-        cout << "No myop. Using inline defintion" << endl;
+        // cout << "No myop. Using inline defintion" << endl;
     } else
         cout << "Explicit op entry in opNode constructor" << endl;
     if (myop["type"].Scalar() == "find")

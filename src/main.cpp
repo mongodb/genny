@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
 
     if (argc > optind)
         filename = argv[optind];
-    cout << filename << endl;
+    // cout << filename << endl;
 
     YAML::Node nodes = YAML::LoadFile(filename);
 
@@ -70,5 +70,5 @@ int main(int argc, char* argv[]) {
     }
 
     else
-        cout << "There was no main" << endl;
+        cerr << "There was no main" << endl;
 }

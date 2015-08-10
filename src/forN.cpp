@@ -21,7 +21,7 @@ forN::forN(YAML::Node& ynode) : node(ynode) {
 void forN::execute(shared_ptr<threadState> myState) {
     // execute the workload N times
     for (int i = 0; i < N; i++) {
-        cout << "In forN and executing interation " << i << endl;
+        // cout << "In forN and executing interation " << i << endl;
         myWorkload.execute(myState->conn);
     }
 }
