@@ -12,8 +12,11 @@ main :
                        doc : 
                            x : 
                              y : a
+                           z : 1
                        overrides : 
                                  x.y : b
+                                 z   : 
+                                     type : RANDINT
               options : 
                       write_concern : 
                                     nodes : 1

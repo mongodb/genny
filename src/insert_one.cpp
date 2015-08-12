@@ -31,10 +31,10 @@ insert_one::insert_one(YAML::Node& node) {
 }
 
 // Execute the node
-void insert_one::execute(mongocxx::client& conn, mt19937_64& rng) {
+void insert_one::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
     bsoncxx::builder::stream::document mydoc{};
-    auto result = collection.insert_one(document->view(mydoc), options);
+    auto result = collection.insert_one(document->view(mydoc, state), options);
     // need a way to exhaust the cursor
     // cout << "insert_one.execute: insert_one is " << bsoncxx::to_json(document->view(mydoc)) <<
     // endl;

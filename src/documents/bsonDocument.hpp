@@ -15,7 +15,8 @@ public:
     bsonDocument& operator=(const bsonDocument&) = default;
     bsonDocument& operator=(bsonDocument&&) = default;
 
-    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&) override;
+    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&,
+                                         threadState&) override;
 
 private:
     bsoncxx::builder::stream::document doc{};

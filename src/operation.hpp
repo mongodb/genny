@@ -1,7 +1,7 @@
 #include "yaml-cpp/yaml.h"
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
-#include <random>
+#include "../threadState.hpp"
 
 #pragma once
 using namespace std;
@@ -15,6 +15,6 @@ public:
     operation(const operation&) = default;
     operation(operation&&) = default;
     // Execute the node
-    virtual void execute(mongocxx::client&, mt19937_64&) = 0;
+    virtual void execute(mongocxx::client&, threadState&) = 0;
 };
 }

@@ -17,7 +17,7 @@ public:
     insert_many(const insert_many&) = default;
     insert_many(insert_many&&) = default;
     // Execute the node
-    void execute(mongocxx::client&, mt19937_64&) override;
+    void execute(mongocxx::client&, threadState&) override;
 
 private:
     //    vector<unique_ptr<document>> collection;

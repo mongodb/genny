@@ -41,7 +41,7 @@ insert_many::insert_many(YAML::Node& ynode) {
 }
 
 // Execute the node
-void insert_many::execute(mongocxx::client& conn, mt19937_64& rng) {
+void insert_many::execute(mongocxx::client& conn, threadState& state) {
     auto coll = conn["testdb"]["testCollection"];
     // need to transform this into a vector of bson documents for switch over to document class
     auto result = coll.insert_many(collection, options);

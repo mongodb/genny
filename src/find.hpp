@@ -17,7 +17,7 @@ public:
     find(const find&) = default;
     find(find&&) = default;
     // Execute the node
-    virtual void execute(mongocxx::client&, mt19937_64&) override;
+    virtual void execute(mongocxx::client&, threadState&) override;
 
 private:
     unique_ptr<document> filter{};

@@ -16,7 +16,7 @@ public:
     insert_one(const insert_one&) = default;
     insert_one(insert_one&&) = default;
     // Execute the node
-    void execute(mongocxx::client&, mt19937_64&) override;
+    void execute(mongocxx::client&, threadState&) override;
 
 private:
     unique_ptr<document> document{};

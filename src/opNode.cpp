@@ -26,6 +26,6 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
 }
 
 void opNode::execute(shared_ptr<threadState> myState) {
-    op->execute(myState->conn, myState->rng);
+    op->execute(myState->conn, *myState);
 }
 }
