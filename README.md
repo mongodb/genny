@@ -12,7 +12,7 @@ wraps the
 which supports the
 [mongo driver spec](https://github.com/mongodb/specifications/blob/master/source/crud/crud.rst).
 
-There are three basic components in a workload, enabling the
+There are five basic components in a workload, enabling the
 specification of arbitrarily complex workloads in a graph of
 operations. 
 1. Operations: These are basic operations, such as a find_one. These
@@ -24,6 +24,10 @@ operations.
    workload. They specify the node that should execute first in the
    workload. They also supply parameters and a pseudo-random number
    generator to the nodes and ops. 
+4. Documents: These are objects that can be used anywhere a bson
+   Object is needed.
+5. Variables: A workload has a list of variables that be used and
+   set. Variables can be thread local, or shared across the workload. 
 
 Operations can be embedded in a node for compactness of
 representation. The tool will detect this and create an opNode,
@@ -49,11 +53,29 @@ containing the operation.
    workload is finished when the Finish node executes. There is always
    an implicit Finish state included in the workload. 
 
+### Currently supported Documents
+
+1. bsonDocument: This is a default document specified using json and
+   converted into bson.
+2. overrideDocument: This is a document that wraps another document,
+   and can change arbitrary fields in a subdocument. Can currently
+   update nested fields except for fields nested in an array. There
+   are currently two kinds of overrides:
+   1. randomint: Generate a random integer. Accepts min and max
+      values.
+   2. increment: Takes a variable and uses it's value and does a post
+     increment.
+
 ### Currently supported workload features
 
 1. numThreads: Specify the number of parallel threads of the workload
    to run.
 2. Set the random seed
+3. Specify integer variables:
+   1. Thread specific variables
+   2. Workload wide variables -- NOTE: this is not thread safe and
+      currently must be used with a single thread of execution in the
+      workload. 
 
 ### Currently unsupported features
 This is an incomplete list

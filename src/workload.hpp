@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 #include <mongocxx/client.hpp>
 #include "threadState.hpp"
 
@@ -33,7 +34,10 @@ public:
 
 private:
     vector<shared_ptr<node>> vectornodes;
-    mt19937_64 rng;  // random number generator
+    // needs to be generalized from int to a generic value
+    unordered_map<string, int64_t> wvariables;  // workload variables
+    unordered_map<string, int64_t> tvariables;  // thread variables
+    mt19937_64 rng;                             // random number generator
     string name;
     bool stopped;
     uint64_t numParallelThreads{1};

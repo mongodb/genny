@@ -1,0 +1,35 @@
+# Simple example of insert many
+ 
+main : 
+  seed: 131415161718
+  name: main
+  nodes: 
+    - name : repeat
+      type : forN
+      N : 5
+      next : Finish
+      workload : 
+        wvariables : 
+          count : 0
+        nodes :             
+          - name : insert1
+            type : insert_one
+            next : insert2
+            document :
+              type : override 
+              doc : {y : 1}
+              overrides : 
+                y :  # increment count and set y to count
+                  type : increment
+                  variable : count 
+          - name : insert2
+            type : insert_one
+            next : Finish
+            document :
+              type : override 
+              doc : {y : 1}
+              overrides : 
+                y :  # increment count and set y to count
+                  type : increment
+                  variable : count 
+

@@ -30,6 +30,22 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
         }
         if (inputNodes["seed"])
             rng.seed(inputNodes["seed"].as<uint64_t>());
+        if (inputNodes["wvariables"]) {
+            // read in any variables
+            for (auto var : inputNodes["wvariables"]) {
+                cout << "Reading in workload variable " << var.first.Scalar() << " with value "
+                     << var.second.Scalar() << endl;
+                wvariables[var.first.Scalar()] = var.second.as<int64_t>();
+            }
+        }
+        if (inputNodes["tvariables"]) {
+            // read in any variables
+            for (auto var : inputNodes["tvariables"]) {
+                cout << "Reading in thread variable " << var.first.Scalar() << " with value "
+                     << var.second.Scalar() << endl;
+                tvariables[var.first.Scalar()] = var.second.as<int64_t>();
+            }
+        }
         name = inputNodes["name"].Scalar();
         // cout << "In workload constructor, and was passed in a map. Name: " << name
         //<< " and seed: " << inputNodes["seed"].as<uint64_t>() << endl;
@@ -125,7 +141,7 @@ void workload::execute(mongocxx::client& conn) {
     vector<thread> myThreads;
     for (int i = 0; i < numParallelThreads; i++) {
         // create thread state for each
-        auto newState = shared_ptr<threadState>(new threadState(rng()));
+        auto newState = shared_ptr<threadState>(new threadState(rng(), tvariables, &wvariables));
         threads.insert(newState);
         myThreads.push_back(thread(runThread, vectornodes[0], newState));
         // vectornodes[0]->executeNode(conn, rng);
