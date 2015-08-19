@@ -126,8 +126,6 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                                << state.tvariables[iter->second["variable"].Scalar()]++;
                     } else {  // in wvariables
                         // cout << "In wvariables" << endl;
-                        cout << "NOT THREAD SAFE -- BETTER BE SINGLE THREADED. Using a workload "
-                                "variable in overrideDocument increment." << endl;
                         output << elem.key().to_string()
                                << state.wvariables[iter->second["variable"].Scalar()]++;
                         // cout << "After wvariables" << endl;

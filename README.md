@@ -73,9 +73,7 @@ containing the operation.
 2. Set the random seed
 3. Specify integer variables:
    1. Thread specific variables
-   2. Workload wide variables -- NOTE: this is not thread safe and
-      currently must be used with a single thread of execution in the
-      workload. 
+   2. Workload wide variables
 
 ### Currently unsupported features
 This is an incomplete list
