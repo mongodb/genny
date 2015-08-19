@@ -1,20 +1,20 @@
 # Simple example of insert many
  
 main : 
-     seed: 131415161718
-     name: main
-     nodes: 
-            - 
-              name : insert1
-              type : insert_many
-              container :
-                        - {x : a}
-                        - {x : b}
-                        - {x : c}
-                        - {y : a}
-                        - {y : b}
-              options : 
-                      write_concern : 
-                                    nodes : 1
-              next : Finish
+  seed: 131415161718
+  name: main
+  nodes: 
+    - 
+      name : insert1
+      type : insert_many
+      container :
+        - {x : a}
+        - {x : b}
+        - {x : c}
+        - {y : a}
+        - {y : b}
+      options : 
+        write_concern : 
+          nodes : 1
+      next : Finish
 

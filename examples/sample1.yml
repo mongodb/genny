@@ -4,34 +4,34 @@
 #  watchable.
 
 main : 
-     seed: 131415161718
-     name: main
-     nodes: 
-          - 
-            name : insert1
-            type : insert_one
-            document : {x : a}
-            next : sleep
-          - 
-            name : insert2
-            type : insert_one
-            document : {x : b}
-            next : sleep
-          - 
-            name : query
-            type : find
-            filter : { x : a }
-            next : sleep
-          - 
-            name : random
-            type : random_choice
-            next : 
-                 insert2 : 0.5
-                 query : 0.5
-          - 
-            name : sleep
-            type : sleep
-            next : random
-            sleep : 1000
+  seed: 131415161718
+  name: main
+  nodes: 
+    - 
+      name : insert1
+      type : insert_one
+      document : {x : a}
+      next : sleep
+    - 
+      name : insert2
+      type : insert_one
+      document : {x : b}
+      next : sleep
+    - 
+      name : query
+      type : find
+      filter : { x : a }
+      next : sleep
+    - 
+      name : random
+      type : random_choice
+      next : 
+        insert2 : 0.5
+        query : 0.5
+    - 
+      name : sleep
+      type : sleep
+      next : random
+      sleep : 1000
 
 

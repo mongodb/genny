@@ -7,18 +7,13 @@ main :
     - 
       name : insert1
       type : insert_one
-      document : 
+      document :
         type : override 
-        doc : 
-          x : 
-            y : a
-          z : 1
+        doc : {y : 1}
         overrides : 
-          x.y : b
-          z   : 
+          y :  # set y to a random int with uniform distribution from 0 to 100
             type : randomint
-      options : 
-        write_concern : 
-          nodes : 1
+            min : 54
+            max : 55
       next : Finish
 
