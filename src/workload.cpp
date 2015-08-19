@@ -141,7 +141,7 @@ void workload::execute(mongocxx::client& conn) {
     vector<thread> myThreads;
     for (int i = 0; i < numParallelThreads; i++) {
         // create thread state for each
-        auto newState = shared_ptr<threadState>(new threadState(rng(), tvariables, &wvariables));
+        auto newState = shared_ptr<threadState>(new threadState(rng(), tvariables, wvariables));
         threads.insert(newState);
         myThreads.push_back(thread(runThread, vectornodes[0], newState));
         // vectornodes[0]->executeNode(conn, rng);

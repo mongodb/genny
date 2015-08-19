@@ -129,9 +129,7 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                         cout << "NOT THREAD SAFE -- BETTER BE SINGLE THREADED. Using a workload "
                                 "variable in overrideDocument increment." << endl;
                         output << elem.key().to_string()
-                               << (*state.wvariables)[iter->second["variable"]
-                                                          .Scalar()]++;  // FIXME: ugly hack on the
-                                                                         // pointer.
+                               << state.wvariables[iter->second["variable"].Scalar()]++;
                         // cout << "After wvariables" << endl;
                     }
                 }
