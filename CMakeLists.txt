@@ -51,7 +51,8 @@ add_subdirectory(src)
 add_executable(mwg src/main.cpp)
 target_link_libraries(mwg ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES}
 ${YAMLCPP_LIBRARIES}  ${Boost_LOG_SETUP_LIBRARY} ${Boost_LOG_LIBRARY}
-${Boost_FILESYSTEM_LIBRARY}    ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY} big docs)
+${Boost_FILESYSTEM_LIBRARY}    ${Boost_THREAD_LIBRARY}
+${Boost_SYSTEM_LIBRARY} workload docs operations nodes)
 
 install(TARGETS mwg DESTINATION bin)
 

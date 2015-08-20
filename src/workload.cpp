@@ -35,8 +35,8 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
         if (inputNodes["wvariables"]) {
             // read in any variables
             for (auto var : inputNodes["wvariables"]) {
-                cout << "Reading in workload variable " << var.first.Scalar() << " with value "
-                     << var.second.Scalar();
+                BOOST_LOG_TRIVIAL(debug) << "Reading in workload variable " << var.first.Scalar()
+                                         << " with value " << var.second.Scalar();
                 wvariables[var.first.Scalar()] = var.second.as<int64_t>();
             }
         }

@@ -17,7 +17,7 @@ public:
     finishNode(const finishNode&) = default;
     finishNode(finishNode&&) = default;
     // Execute the finishNode
-    virtual void executeNode(shared_ptr<threadState>){};
+    virtual void executeNode(shared_ptr<threadState>);
     const string getName() {
         return "Finish";
     };
