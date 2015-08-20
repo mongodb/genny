@@ -110,6 +110,27 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                     }
                     uniform_int_distribution<int> distribution(min, max);
                     output << elem.key().to_string() << distribution(state.rng);
+                } else if (iter->second["type"].Scalar() == "randomstring") {
+                    int length = 10;
+                    // Taking code from bson_template_evaluator to
+                    // start. Ideally we could specify the
+                    // alphabet in the YAML and default to the
+                    // following
+                    static const char alphanum[] =
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                        "abcdefghijklmnopqrstuvwxyz"
+                        "0123456789+/";
+                    static const size_t alphaNumLength = sizeof(alphanum) - 1;
+                    static_assert(alphaNumLength == 64, "alphaNumLength == 64");
+                    if (iter->second["length"]) {
+                        length = iter->second["length"].as<int>();
+                    }
+                    std::string str;
+                    for (int i = 0; i < length; i++) {
+                        uniform_int_distribution<int> distribution(0, alphaNumLength);
+                        str.push_back(alphanum[distribution(state.rng)]);
+                    }
+                    output << elem.key().to_string() << str;
                 } else if (iter->second["type"].Scalar() == "increment") {
                     BOOST_LOG_TRIVIAL(trace) << "Override document and want to set field  "
                                              << iter->first << " with incremented value of "

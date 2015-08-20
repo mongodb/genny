@@ -5,7 +5,7 @@ main :
   name: main
   nodes: 
     - 
-      name : insert1
+      name : insertRandInt
       type : insert_one
       document :
         type : override 
@@ -15,5 +15,16 @@ main :
             type : randomint
             min : 54
             max : 55
+      next : insertRandString
+    - 
+      name : insertRandString
+      type : insert_one
+      document :
+        type : override 
+        doc : {y : 1}
+        overrides : 
+          y :  # set y to a random int with uniform distribution from 0 to 100
+            type : randomstring
+            length : 20
       next : Finish
 

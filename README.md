@@ -63,7 +63,9 @@ containing the operation.
    are currently two kinds of overrides:
    1. randomint: Generate a random integer. Accepts min and max
       values.
-   2. increment: Takes a variable and uses it's value and does a post
+   2. randomstring: Generate a random string. Accepts a length value
+      (default of 10). Will support an alphabet option in the future
+   3. increment: Takes a variable and uses it's value and does a post
      increment.
 
 ### Currently supported workload features
