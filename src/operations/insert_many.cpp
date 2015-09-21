@@ -23,20 +23,20 @@ insert_many::insert_many(YAML::Node& ynode) {
                                     "insert_many";
         exit(EXIT_FAILURE);
     }
-    if (!ynode["container"].IsSequence()) {
-        BOOST_LOG_TRIVIAL(fatal) << "Insert_Many constructor but yaml entry for container isn't a "
-                                    "sequence";
-        exit(EXIT_FAILURE);
-    }
     if (ynode["options"])
         parseInsertOptions(options, ynode["options"]);
 
-    for (auto doc : ynode["container"]) {
-        bsoncxx::builder::stream::document document;
-        parseMap(document, doc);
-        collection.push_back(move(document));
-        // collection.push_back(makeDoc(doc));  need to update execute to work with this
-    }
+    if (ynode["container"]) {
+        for (auto doc : ynode["container"]) {
+            collection.push_back(makeDoc(doc));  // need to update execute to work with this
+            use_collection = true;
+        }
+    } else if (ynode["doc"] && ynode["times"]) {
+        document = makeDoc(ynode["doc"]);
+        times = ynode["times"].as<uint64_t>();
+        use_collection = false;
+    } else
+        BOOST_LOG_TRIVIAL(fatal) << "In insert_many and don't have container or doc and times";
     BOOST_LOG_TRIVIAL(debug) << "Added op of type insert_many. WC.nodes is "
                              << options.write_concern()->nodes();
 }
@@ -45,7 +45,30 @@ insert_many::insert_many(YAML::Node& ynode) {
 void insert_many::execute(mongocxx::client& conn, threadState& state) {
     auto coll = conn["testdb"]["testCollection"];
     // need to transform this into a vector of bson documents for switch over to document class
-    auto result = coll.insert_many(collection, options);
+    // make a vector of views and pass that in
+    // The vector of documents is to save the state needed for the view if the collection of
+    // documents is repeated calls to view of the same document
+    uint64_t size;
+    if (use_collection)
+        size = collection.size();
+    else
+        size = times;
+    vector<bsoncxx::builder::stream::document> docs(size);
+    vector<bsoncxx::document::view> views;
+    // copy over the documents into bsoncxx documents
+    auto newDoc = docs.begin();
+    if (use_collection) {
+        for (auto doc = collection.begin(); doc != collection.end(); doc++) {
+            views.push_back((*doc)->view(*newDoc, state));
+            newDoc++;
+        }
+    } else {
+        for (uint64_t i = 0; i < times; i++) {
+            views.push_back(document->view(*newDoc, state));
+            newDoc++;
+        }
+    }
+    auto result = coll.insert_many(views, options);
     BOOST_LOG_TRIVIAL(debug) << "insert_many.execute";
     // probably should do some error checking here
 }

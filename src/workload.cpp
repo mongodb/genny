@@ -30,8 +30,10 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
                    "initializer ";
             exit(EXIT_FAILURE);
         }
-        if (inputNodes["seed"])
+        if (inputNodes["seed"]) {
             rng.seed(inputNodes["seed"].as<uint64_t>());
+            BOOST_LOG_TRIVIAL(debug) << " Random seed: " << inputNodes["seed"].as<uint64_t>();
+        }
         if (inputNodes["wvariables"]) {
             // read in any variables
             for (auto var : inputNodes["wvariables"]) {
@@ -50,7 +52,7 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
         }
         name = inputNodes["name"].Scalar();
         BOOST_LOG_TRIVIAL(debug) << "In workload constructor, and was passed in a map. Name: "
-                                 << name << " and seed: " << inputNodes["seed"].as<uint64_t>();
+                                 << name;
         if (inputNodes["threads"]) {
             numParallelThreads = inputNodes["threads"].as<uint64_t>();
             BOOST_LOG_TRIVIAL(debug) << "Excplicity setting number of threads in workload";

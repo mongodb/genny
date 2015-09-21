@@ -20,8 +20,12 @@ public:
     void execute(mongocxx::client&, threadState&) override;
 
 private:
-    //    vector<unique_ptr<document>> collection;
-    vector<bsoncxx::builder::stream::document> collection;
+    // This collection and the alternate doc and times should be abstracted
+    vector<unique_ptr<document>> collection;
+    unique_ptr<document> document{};
+    uint64_t times;
+    bool use_collection;
+    // vector<bsoncxx::builder::stream::document> collection;
     mongocxx::options::insert options{};
 };
 }
