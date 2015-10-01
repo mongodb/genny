@@ -16,5 +16,21 @@ main :
       options : 
         write_concern : 
           nodes : 1
+      next : insert2
+    - 
+      name : insert2
+      type : insert_many
+      times : 10
+      doc :
+        type : override 
+        doc : {y : 1}
+        overrides : 
+          y :  # set y to a random int with uniform distribution from 0 to 100
+            type : randomint
+            min : 0
+            max : 100
+      options : 
+        write_concern : 
+          nodes : 1
       next : Finish
 

@@ -57,6 +57,7 @@ int main(int argc, char* argv[]) {
     }
 
     logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::info);
+    logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::trace);
 
     if (argc > optind)
         filename = argv[optind];

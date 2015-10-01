@@ -15,10 +15,18 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
         cout << "Explicit op entry in opNode constructor";
     if (myop["type"].Scalar() == "find")
         op = unique_ptr<operation>(new find(myop));
+    else if (myop["type"].Scalar() == "count")
+        op = unique_ptr<operation>(new count(myop));
     else if (myop["type"].Scalar() == "insert_one")
         op = unique_ptr<operation>(new insert_one(myop));
     else if (myop["type"].Scalar() == "insert_many")
         op = unique_ptr<operation>(new insert_many(myop));
+    else if (myop["type"].Scalar() == "delete_many")
+        op = unique_ptr<operation>(new delete_many(myop));
+    else if (myop["type"].Scalar() == "delete_one")
+        op = unique_ptr<operation>(new delete_one(myop));
+    else if (myop["type"].Scalar() == "create_index")
+        op = unique_ptr<operation>(new create_index(myop));
     else {
         BOOST_LOG_TRIVIAL(fatal) << "Trying to make operation of type " << myop["type"]
                                  << " is not supported yet in opNode constructor";

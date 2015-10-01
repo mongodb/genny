@@ -1,3 +1,7 @@
 #include "find.hpp"
 #include "insert_one.hpp"
 #include "insert_many.hpp"
+#include "count.hpp"
+#include "delete_many.hpp"
+#include "delete_one.hpp"
+#include "create_index.hpp"

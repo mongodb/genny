@@ -1,0 +1,47 @@
+# Simple example of different operation types
+ 
+main : 
+  seed: 131415161718
+  name: main
+  nodes: 
+    - 
+      name : insert
+      type : insert_many
+      container :
+        - {x : a}
+        - {x : b}
+        - {x : c}
+        - {y : a}
+        - {y : b}
+        - {y : b}
+      options : 
+        write_concern : 
+          nodes : 1
+      next : count
+    - 
+      name : count
+      type : count
+      filter : { y : b } 
+      next : find
+    - 
+      name : find
+      type : find
+      filter : { x : a } 
+      next : delete_one
+    - 
+      name : delete_one
+      type : delete_one
+      filter : {x : a}
+      next : delete_many
+    - 
+      name : delete_many
+      type : delete_many
+      filter : { y : b}
+      next : Finish
+    # - # Create_index currently doesn't work because of the yaml processing makes the 1 a string in the example below
+    #   name : create_index
+    #   type : create_index
+    #   keys : { x : 1 } 
+    #   next : Finish
+      
+      
