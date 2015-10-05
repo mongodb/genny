@@ -33,7 +33,8 @@ delete_many::delete_many(YAML::Node& node) {
 void delete_many::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
     bsoncxx::builder::stream::document mydoc{};
-    auto result = collection.delete_many(filter->view(mydoc, state), options);
+    auto view = filter->view(mydoc, state);
+    auto result = collection.delete_many(view, options);
     BOOST_LOG_TRIVIAL(debug) << "delete_many.execute: delete_many is "
                              << bsoncxx::to_json(filter->view(mydoc, state));
 }

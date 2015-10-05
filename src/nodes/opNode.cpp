@@ -27,6 +27,36 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
         op = unique_ptr<operation>(new delete_one(myop));
     else if (myop["type"].Scalar() == "create_index")
         op = unique_ptr<operation>(new create_index(myop));
+    else if (myop["type"].Scalar() == "distinct")
+        op = unique_ptr<operation>(new distinct(myop));
+    else if (myop["type"].Scalar() == "drop")
+        op = unique_ptr<operation>(new drop(myop));
+    else if (myop["type"].Scalar() == "find_one")
+        op = unique_ptr<operation>(new find_one(myop));
+    else if (myop["type"].Scalar() == "find_one_and_update")
+        op = unique_ptr<operation>(new find_one_and_update(myop));
+    else if (myop["type"].Scalar() == "find_one_and_replace")
+        op = unique_ptr<operation>(new find_one_and_replace(myop));
+    else if (myop["type"].Scalar() == "find_one_and_delete")
+        op = unique_ptr<operation>(new find_one_and_delete(myop));
+    else if (myop["type"].Scalar() == "replace_one")
+        op = unique_ptr<operation>(new replace_one(myop));
+    else if (myop["type"].Scalar() == "list_indexes")
+        op = unique_ptr<operation>(new list_indexes(myop));
+    else if (myop["type"].Scalar() == "read_preference")
+        op = unique_ptr<operation>(new read_preference(myop));
+    else if (myop["type"].Scalar() == "write_concern")
+        op = unique_ptr<operation>(new write_concern(myop));
+    else if (myop["type"].Scalar() == "name")
+        op = unique_ptr<operation>(new class name(myop));
+    else if (myop["type"].Scalar() == "update_one")
+        op = unique_ptr<operation>(new update_one(myop));
+    else if (myop["type"].Scalar() == "update_many")
+        op = unique_ptr<operation>(new update_many(myop));
+    // else if (myop["type"].Scalar() == "create_collection") // c++ driver not supporting this yet
+    //     op = unique_ptr<operation>(new create_collection(myop));
+    else if (myop["type"].Scalar() == "command")
+        op = unique_ptr<operation>(new run_command(myop));
     else {
         BOOST_LOG_TRIVIAL(fatal) << "Trying to make operation of type " << myop["type"]
                                  << " is not supported yet in opNode constructor";

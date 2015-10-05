@@ -29,6 +29,7 @@ void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
             doc.view = myArray.view();
             docbuilder << entry.first.Scalar() << open_array << doc << close_array;
         } else {  // scalar
+            BOOST_LOG_TRIVIAL(debug) << "Tag is " << entry.Tag();
             docbuilder << entry.first.Scalar() << entry.second.Scalar();
         }
     }
