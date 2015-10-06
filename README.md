@@ -35,9 +35,11 @@ containing the operation.
 
 ### Currently supported operations
 
-1. find
-2. insert_one
-3. insert_many
+1. Most collection based operations except for aggregation. Although
+   operations without examples have not been tested. This includes
+   almost all options and write concerns that go with those
+   operations. 
+2. Database.command (run_command) (not tested)
 3. sleep: sleep for some number of milliseconds. The entry sleep
    specifies how long to sleep. 
 
@@ -82,9 +84,6 @@ This is an incomplete list
 
 1. Setting the time limit to run the workload
 2. Stats. There are currently no client stats collected
-3. Generating or modifying documents. You can specify them in yaml,
-   but cannot change them yet.
-4. Setting "options" to the operations (e.g., write concern)
 5. Much more. 
 
 Dependencies
