@@ -9,9 +9,9 @@ main :
       type : insert_many
       container :
         - {x : a}
-        - {x : b}
-        - {x : c}
-        - {y : a}
+        - {x : 1}
+        - {x : 2}
+        - {y : 3}
         - {y : b}
         - {y : b}
       options : 

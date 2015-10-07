@@ -1,6 +1,7 @@
 #include "parse_util.hpp"
 #include <mongocxx/write_concern.hpp>
 #include <chrono>
+#include <regex>
 #include <boost/log/trivial.hpp>
 
 using bsoncxx::builder::stream::open_document;
@@ -10,6 +11,16 @@ using bsoncxx::builder::stream::close_array;
 using mongocxx::write_concern;
 
 namespace mwg {
+
+// This could be made much cleaner. Ideally check for all the various valid regex and return a value
+// that can be directly dropped into the builder.
+bool isNumber(string value) {
+    regex re("[0-9]+");
+    if (regex_match(value, re))
+        return true;
+    else
+        return false;
+}
 
 void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
     for (auto entry : node) {
@@ -29,8 +40,11 @@ void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
             doc.view = myArray.view();
             docbuilder << entry.first.Scalar() << open_array << doc << close_array;
         } else {  // scalar
-            BOOST_LOG_TRIVIAL(debug) << "Tag is " << entry.second.Tag();
-            docbuilder << entry.first.Scalar() << entry.second.Scalar();
+            if (isNumber(entry.second.Scalar())) {
+                BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
+                docbuilder << entry.first.Scalar() << entry.second.as<int64_t>();
+            } else
+                docbuilder << entry.first.Scalar() << entry.second.Scalar();
         }
     }
 }
@@ -53,7 +67,11 @@ void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node
         } else  // scalar
         {
             BOOST_LOG_TRIVIAL(debug) << "Trying to put entry into array builder " << entry.Scalar();
-            arraybuilder << entry.Scalar();
+            if (isNumber(entry.Scalar())) {
+                BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
+                arraybuilder << entry.as<int64_t>();
+            } else
+                arraybuilder << entry.Scalar();
         }
     }
 }
