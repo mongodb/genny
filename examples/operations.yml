@@ -37,17 +37,17 @@ main :
       name : delete_many
       type : delete_many
       filter : { y : b}
-      next : Finish
+      next : create_index
     # - 
     #   name : distinct
     #   type : distinct
     #   distinct_name : distinct
     #   filter : { x : 1 }
     #   next : Finish
-    # - # Create_index currently doesn't work because of the yaml processing makes the 1 a string in the example below
-    #   name : create_index
-    #   type : create_index
-    #   keys : { x : 1 } 
-    #   next : Finish
+    - # Create_index currently doesn't work because of the yaml processing makes the 1 a string in the example below
+      name : create_index
+      type : create_index
+      keys : { x : 1 } 
+      next : Finish
       
       
