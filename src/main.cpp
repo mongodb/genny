@@ -22,13 +22,16 @@ using namespace std;
 using namespace mwg;
 namespace logging = boost::log;
 
-static struct option poptions[] = {{"help", no_argument, 0, 'h'}, {0, 0, 0, 0}};
+static struct option poptions[] = {
+    {"help", no_argument, 0, 'h'}, {"loglevel", required_argument, 0, 'l'}, {0, 0, 0, 0}};
 
 void print_help(const char* process_name) {
     fprintf(stderr,
             "Usage: %s [-h] /path/to/workload \n"
             "Execution Options:\n"
-            "\t--help|-h         Display this help and exit\n\n",
+            "\t--help|-h             Display this help and exit\n"
+            "\t--loglevel|-l LEVEL   Set the logging level. Valid options are trace,\n"
+            "\t                      debug, info, warning, error, and fatal.\n\n",
             process_name);
 }
 
@@ -37,7 +40,7 @@ int main(int argc, char* argv[]) {
     int arg_count = 0;
     int idx = 0;
     while (1) {
-        int arg = getopt_long(argc, argv, "h", poptions, &idx);
+        int arg = getopt_long(argc, argv, "hl:", poptions, &idx);
         arg_count++;
         if (arg == -1) {
             // all arguments have been processed
@@ -49,15 +52,32 @@ int main(int argc, char* argv[]) {
             case 'h':
                 print_help(argv[0]);
                 return EXIT_SUCCESS;
+            case 'l':
+                if (strcmp("info", optarg) == 0)
+                    logging::core::get()->set_filter(logging::trivial::severity >=
+                                                     logging::trivial::info);
+                else if (strcmp("trace", optarg) == 0)
+                    logging::core::get()->set_filter(logging::trivial::severity >=
+                                                     logging::trivial::trace);
+                else if (strcmp("debug", optarg) == 0)
+                    logging::core::get()->set_filter(logging::trivial::severity >=
+                                                     logging::trivial::debug);
+                else if (strcmp("warning", optarg) == 0)
+                    logging::core::get()->set_filter(logging::trivial::severity >=
+                                                     logging::trivial::warning);
+                else if (strcmp("error", optarg) == 0)
+                    logging::core::get()->set_filter(logging::trivial::severity >=
+                                                     logging::trivial::error);
+                else if (strcmp("fatal", optarg) == 0)
+                    logging::core::get()->set_filter(logging::trivial::severity >=
+                                                     logging::trivial::fatal);
+                break;
             default:
                 fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
                 print_help(argv[0]);
                 return EXIT_FAILURE;
         }
     }
-
-    logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::info);
-    logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::trace);
 
     if (argc > optind)
         filename = argv[optind];
