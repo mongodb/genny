@@ -3,6 +3,8 @@
 #include <bsoncxx/json.hpp>
 #include "parse_util.hpp"
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
+#include <tuple>
 
 namespace mwg {
 
@@ -32,13 +34,15 @@ insert_many::insert_many(YAML::Node& ynode) {
             use_collection = true;
         }
     } else if (ynode["doc"] && ynode["times"]) {
+        BOOST_LOG_TRIVIAL(debug) << "In insert_many and have a doc and times";
         doc = makeDoc(ynode["doc"]);
+        BOOST_LOG_TRIVIAL(debug) << "In insert_many and parsed doc";
         times = ynode["times"].as<uint64_t>();
+        BOOST_LOG_TRIVIAL(debug) << "In insert_many and have times";
         use_collection = false;
     } else
         BOOST_LOG_TRIVIAL(fatal) << "In insert_many and don't have container or doc and times";
-    BOOST_LOG_TRIVIAL(debug) << "Added op of type insert_many. WC.nodes is "
-                             << options.write_concern()->nodes();
+    BOOST_LOG_TRIVIAL(debug) << "Added op of type insert_many. ";
 }
 
 // Execute the node
@@ -68,7 +72,17 @@ void insert_many::execute(mongocxx::client& conn, threadState& state) {
             newDoc++;
         }
     }
-    auto result = coll.insert_many(views, options);
+    try {
+        auto result = coll.insert_many(views, options);
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in insert_many: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value());
+    }
     BOOST_LOG_TRIVIAL(debug) << "insert_many.execute";
     // probably should do some error checking here
 }

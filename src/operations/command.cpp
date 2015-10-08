@@ -4,6 +4,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -33,7 +34,14 @@ void command::execute(mongocxx::client& conn, threadState& state) {
     auto db = conn["testdb"];
     bsoncxx::builder::stream::document mydoc{};
     auto view = myCommand->view(mydoc, state);
-    db.command(view);
+    try {
+        db.command(view);
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in command: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+    }
     // need a way to exhaust the cursor
     BOOST_LOG_TRIVIAL(debug) << "command.execute: command with command " << bsoncxx::to_json(view);
 }

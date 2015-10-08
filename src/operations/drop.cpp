@@ -3,6 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -28,8 +29,14 @@ drop::drop(YAML::Node& node) {
 // Execute the node
 void drop::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
-    collection.drop();
-    // need a way to exhaust the cursor
+    try {
+        collection.drop();
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in drop collection: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+    }
     BOOST_LOG_TRIVIAL(debug) << "drop.execute";
 }
 }
