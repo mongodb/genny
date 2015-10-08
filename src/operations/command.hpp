@@ -9,18 +9,18 @@ using namespace std;
 
 namespace mwg {
 
-class run_command : public operation {
+class command : public operation {
 public:
-    run_command(YAML::Node&);
-    run_command() = delete;
-    virtual ~run_command() = default;
-    run_command(const run_command&) = default;
-    run_command(run_command&&) = default;
+    command(YAML::Node&);
+    command() = delete;
+    virtual ~command() = default;
+    command(const command&) = default;
+    command(command&&) = default;
     // Execute the node
     virtual void execute(mongocxx::client&, threadState&) override;
 
 private:
-    unique_ptr<document> command{};
+    unique_ptr<document> myCommand{};
     string collection_name;
 };
 }

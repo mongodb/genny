@@ -56,7 +56,7 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
     // else if (myop["type"].Scalar() == "create_collection") // c++ driver not supporting this yet
     //     op = unique_ptr<operation>(new create_collection(myop));
     else if (myop["type"].Scalar() == "command")
-        op = unique_ptr<operation>(new run_command(myop));
+        op = unique_ptr<operation>(new command(myop));
     else {
         BOOST_LOG_TRIVIAL(fatal) << "Trying to make operation of type " << myop["type"]
                                  << " is not supported yet in opNode constructor";
