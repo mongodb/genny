@@ -15,7 +15,7 @@ namespace mwg {
 // This could be made much cleaner. Ideally check for all the various valid regex and return a value
 // that can be directly dropped into the builder.
 bool isNumber(string value) {
-    regex re("[0-9]+");
+    regex re("-?[0-9]+");
     if (regex_match(value, re))
         return true;
     else
