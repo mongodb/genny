@@ -11,6 +11,7 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 #include <boost/log/trivial.hpp>
+#include <ctime>
 
 using namespace std;
 
@@ -145,9 +146,16 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                         output << elem.key().to_string()
                                << state.wvariables[iter->second["variable"].Scalar()]++;
                     }
+                } else if (iter->second["type"].Scalar() == "date") {
+                    BOOST_LOG_TRIVIAL(trace)
+                        << "Override document setting a date field to current time";
+                    // put in the currnet time.
+                    auto currentTime = time(nullptr);
+                    bsoncxx::types::b_date date;
+                    date.value = currentTime * 1000;
+                    output << elem.key().to_string() << date;
                 }
             }
-
         } else if (iter2 != lowerlevel.end()) {
             // need to check if child is document, array, or other.
             BOOST_LOG_TRIVIAL(trace) << "Partial match. Need to descend";
@@ -168,9 +176,9 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                            "supported "
                            "yet.";
                 default:
-                    BOOST_LOG_TRIVIAL(fatal)
-                        << "Trying to descend a level of bson in overrides but not a map or "
-                           "array";
+                    BOOST_LOG_TRIVIAL(fatal) << "Trying to descend a level of bson in "
+                                                "overrides but not a map or "
+                                                "array";
                     exit(EXIT_FAILURE);
             }
         } else {

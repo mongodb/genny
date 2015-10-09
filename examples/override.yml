@@ -3,6 +3,8 @@
 main : 
   seed: 131415161718
   name: main
+  wvariables : 
+    count : 0
   nodes: 
     - 
       name : insert1
@@ -17,6 +19,50 @@ main :
           x.y : b
           z   : 
             type : randomint
+      options : 
+        write_concern : 
+          nodes : 1
+      next : insert2
+    - 
+      name : insert2
+      type : insert_one
+      document : 
+        type : override 
+        doc : 
+          string : a
+        overrides : 
+          string : 
+            type : randomstring
+            length : 15
+      options : 
+        write_concern : 
+          nodes : 1
+      next : insert3
+    - 
+      name : insert3
+      type : insert_one
+      document : 
+        type : override 
+        doc : 
+          date : 1 
+        overrides : 
+          date : 
+            type : date
+      options : 
+        write_concern : 
+          nodes : 1
+      next : insert4
+    - 
+      name : insert4
+      type : insert_one
+      document : 
+        type : override 
+        doc : 
+          x : 1
+        overrides : 
+          x : 
+            type : increment
+            variable : count
       options : 
         write_concern : 
           nodes : 1
