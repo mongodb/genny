@@ -9,7 +9,9 @@ namespace mwg {
 
 class document {
 public:
-    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&, threadState&) = 0;
+    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document& doc, threadState&) {
+        return doc.view();
+    };
 };
 
 // parse a YAML Node and make a document of the correct type

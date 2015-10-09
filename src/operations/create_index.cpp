@@ -25,6 +25,8 @@ create_index::create_index(YAML::Node& node) {
     }
     if (node["options"])
         options = makeDoc(node["options"]);
+    else
+        options = unique_ptr<document>(new document());
     keys = makeDoc(node["keys"]);
     BOOST_LOG_TRIVIAL(debug) << "Added op of type create_index";
 }
@@ -34,16 +36,11 @@ void create_index::execute(mongocxx::client& conn, threadState& state) {
     BOOST_LOG_TRIVIAL(debug) << "Enter create_index execute";
     auto collection = conn["testdb"]["testCollection"];
     bsoncxx::builder::stream::document mydoc{};
+    bsoncxx::builder::stream::document myoptions{};
     auto view = keys->view(mydoc, state);
-    BOOST_LOG_TRIVIAL(debug) << "View of keys";
-    bsoncxx::document::view opview{};  // default blank options
-                                       // if (options != nullptr) {
-                                       //     bsoncxx::builder::stream::document myoptions{};
-                                       //     opview = options->view(myoptions, state);
-                                       //     BOOST_LOG_TRIVIAL(debug) << "View of options";
-                                       //     auto result = collection.create_index(view, opview);
-                                       // } else
-    auto result = collection.create_index(view);
-    BOOST_LOG_TRIVIAL(debug) << "create_index.execute: create_index is " << bsoncxx::to_json(view);
+    auto opview = options->view(myoptions, state);
+    auto result = collection.create_index(view, opview);
+    BOOST_LOG_TRIVIAL(debug) << "create_index.execute: create_index is " << bsoncxx::to_json(view)
+                             << " with options " << bsoncxx::to_json(opview);
 }
 }
