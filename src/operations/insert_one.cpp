@@ -27,7 +27,7 @@ insert_one::insert_one(YAML::Node& node) {
         parseInsertOptions(options, node["options"]);
 
     //    parseMap(document, node["document"]);
-    document = makeDoc(node["document"]);
+    doc = makeDoc(node["document"]);
     BOOST_LOG_TRIVIAL(debug) << "Added op of type insert_one";
 }
 
@@ -37,7 +37,7 @@ void insert_one::execute(mongocxx::client& conn, threadState& state) {
     bsoncxx::builder::stream::document mydoc{};
     BOOST_LOG_TRIVIAL(trace) << "insert_one.execute before call";
     // need to save the view to ensure we print out the same thing we insert
-    auto view = document->view(mydoc, state);
+    auto view = doc->view(mydoc, state);
     auto result = collection.insert_one(view, options);
     // need a way to exhaust the cursor
     BOOST_LOG_TRIVIAL(debug) << "insert_one.execute: insert_one is " << bsoncxx::to_json(view);

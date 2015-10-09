@@ -1,5 +1,5 @@
-set(src_files parse_util.cpp workload.cpp) 
-add_library(workload ${src_files})
+add_library(parse parse_util.cpp)
+add_library(workload workload.cpp)
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 include_directories(documents nodes operations .)
 set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR})

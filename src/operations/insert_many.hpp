@@ -22,7 +22,7 @@ public:
 private:
     // This collection and the alternate doc and times should be abstracted
     vector<unique_ptr<document>> collection;
-    unique_ptr<document> document{};
+    unique_ptr<document> doc{};
     uint64_t times;
     bool use_collection;
     // vector<bsoncxx::builder::stream::document> collection;

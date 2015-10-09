@@ -18,6 +18,8 @@ pkg_check_modules(YAMLCPP  yaml-cpp)
 include_directories(${LIBMONGOCXX_INCLUDE_DIRS})
 include_directories(${YAMLCPP_INCLUDE_DIRS})
 
+find_package(Threads)
+
 find_package(Git)
 if(GIT_FOUND)
         
@@ -38,7 +40,7 @@ if(GIT_FOUND)
   )
 endif()
 
-find_package(Boost REQUIRED COMPONENTS log)
+find_package(Boost REQUIRED COMPONENTS log thread filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
 configure_file (
@@ -49,10 +51,11 @@ configure_file (
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 add_subdirectory(src)
 add_executable(mwg src/main.cpp)
-target_link_libraries(mwg ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES}
+target_link_libraries(mwg workload nodes operations
+docs parse ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES}
 ${YAMLCPP_LIBRARIES}  ${Boost_LOG_SETUP_LIBRARY} ${Boost_LOG_LIBRARY}
 ${Boost_FILESYSTEM_LIBRARY}    ${Boost_THREAD_LIBRARY}
-${Boost_SYSTEM_LIBRARY} workload docs operations nodes)
+${Boost_SYSTEM_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS mwg DESTINATION bin)
 

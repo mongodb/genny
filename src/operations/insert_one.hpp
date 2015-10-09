@@ -19,7 +19,7 @@ public:
     void execute(mongocxx::client&, threadState&) override;
 
 private:
-    unique_ptr<document> document{};
+    unique_ptr<document> doc{};
     mongocxx::options::insert options{};
 };
 }

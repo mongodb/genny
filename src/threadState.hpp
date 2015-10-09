@@ -2,6 +2,7 @@
 #include <mongocxx/client.hpp>
 #include <memory>
 #include <unordered_map>
+#include <atomic>
 
 #pragma once
 using namespace std;

@@ -151,8 +151,8 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                         << "Override document setting a date field to current time";
                     // put in the currnet time.
                     auto currentTime = time(nullptr);
-                    bsoncxx::types::b_date date;
-                    date.value = currentTime * 1000;
+                    bsoncxx::types::b_date date = bsoncxx::types::b_date(currentTime * 1000);
+                    //date.value = currentTime * 1000;
                     output << elem.key().to_string() << date;
                 }
             }

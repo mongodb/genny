@@ -32,7 +32,7 @@ insert_many::insert_many(YAML::Node& ynode) {
             use_collection = true;
         }
     } else if (ynode["doc"] && ynode["times"]) {
-        document = makeDoc(ynode["doc"]);
+        doc = makeDoc(ynode["doc"]);
         times = ynode["times"].as<uint64_t>();
         use_collection = false;
     } else
@@ -64,7 +64,7 @@ void insert_many::execute(mongocxx::client& conn, threadState& state) {
         }
     } else {
         for (uint64_t i = 0; i < times; i++) {
-            views.push_back(document->view(*newDoc, state));
+            views.push_back(doc->view(*newDoc, state));
             newDoc++;
         }
     }

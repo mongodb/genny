@@ -143,14 +143,14 @@ void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
 void workload::execute(mongocxx::client& conn) {
     // prep the threads and start them. Should put the timer in here also.
     vector<thread> myThreads;
-    for (int i = 0; i < numParallelThreads; i++) {
+    for (uint64_t i = 0; i < numParallelThreads; i++) {
         // create thread state for each
         auto newState = shared_ptr<threadState>(new threadState(rng(), tvariables, wvariables));
         threads.insert(newState);
         myThreads.push_back(thread(runThread, vectornodes[0], newState));
     }
     // wait for all the threads to finish
-    for (int i = 0; i < numParallelThreads; i++) {
+    for (uint64_t i = 0; i < numParallelThreads; i++) {
         // clean up the thread state?
         myThreads[i].join();
     }
