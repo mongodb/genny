@@ -2,6 +2,7 @@
 #include <iostream>
 #include <thread>
 #include <boost/log/trivial.hpp>
+#include <chrono>
 
 #include <mongocxx/instance.hpp>
 
@@ -143,6 +144,8 @@ void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
 void workload::execute(mongocxx::client& conn) {
     // prep the threads and start them. Should put the timer in here also.
     vector<thread> myThreads;
+    chrono::high_resolution_clock::time_point start, stop;
+    start = chrono::high_resolution_clock::now();
     for (uint64_t i = 0; i < numParallelThreads; i++) {
         // create thread state for each
         auto newState = shared_ptr<threadState>(new threadState(rng(), tvariables, wvariables));
@@ -154,6 +157,10 @@ void workload::execute(mongocxx::client& conn) {
         // clean up the thread state?
         myThreads[i].join();
     }
+    stop = chrono::high_resolution_clock::now();
+    BOOST_LOG_TRIVIAL(debug) << "Workload " << name << " took "
+                             << std::chrono::duration_cast<chrono::milliseconds>(stop - start)
+                                    .count() << " milliseconds";
 }
 void workload::stop() {
     stopped = true;
