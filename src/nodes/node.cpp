@@ -31,7 +31,13 @@ void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes) {
 
 void node::executeNode(shared_ptr<threadState> myState) {
     // execute this node
+    chrono::high_resolution_clock::time_point start, stop;
+    start = chrono::high_resolution_clock::now();
     execute(myState);
+    stop = chrono::high_resolution_clock::now();
+    BOOST_LOG_TRIVIAL(debug) << "Node " << name << " took "
+                             << std::chrono::duration_cast<chrono::microseconds>(stop - start)
+                                    .count() << " microseconds";
     if (!text.empty()) {
         BOOST_LOG_TRIVIAL(info) << text;
     }
