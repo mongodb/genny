@@ -20,6 +20,7 @@ public:
     node(node&&) = default;
     // Execute the node
     virtual void executeNode(shared_ptr<threadState>);
+    virtual void executeNextNode(shared_ptr<threadState>);
     virtual void execute(shared_ptr<threadState>){};
     const string getName() {
         return name;
@@ -38,4 +39,6 @@ protected:
     bool stopped;
     string text;
 };
+
+void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState);
 }

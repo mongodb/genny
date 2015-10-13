@@ -29,6 +29,21 @@ void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes) {
     nextNode = nodes[nextName];
 }
 
+void node::executeNextNode(shared_ptr<threadState> myState) {
+    // execute the next node if there is one
+    BOOST_LOG_TRIVIAL(debug) << "just executed " << name << ". NextName is " << nextName;
+    auto next = nextNode.lock();
+    if (!next)
+        BOOST_LOG_TRIVIAL(error) << "nextNode is null for some reason";
+    if (name != "Finish" && next && !stopped) {
+        BOOST_LOG_TRIVIAL(debug) << "About to call nextNode->executeNode";
+        // update currentNode in the state. Protect the reference while executing
+        shared_ptr<node> me = myState->currentNode;
+        myState->currentNode = next;
+        next->executeNode(myState);
+    }
+}
+
 void node::executeNode(shared_ptr<threadState> myState) {
     // execute this node
     chrono::high_resolution_clock::time_point start, stop;
@@ -42,16 +57,11 @@ void node::executeNode(shared_ptr<threadState> myState) {
         BOOST_LOG_TRIVIAL(info) << text;
     }
     // execute the next node if there is one
-    BOOST_LOG_TRIVIAL(debug) << "just executed " << name << ". NextName is " << nextName;
-    auto next = nextNode.lock();
-    if (!next)
-        BOOST_LOG_TRIVIAL(error) << "nextNode is null for some reason";
-    if (name != "Finish" && next && !stopped) {
-        BOOST_LOG_TRIVIAL(debug) << "About to call nextNode->executeNode";
-        // update currentNode in the state. Protect the reference while executing
-        shared_ptr<node> me = myState->currentNode;
-        myState->currentNode = next;
-        next->executeNode(myState);
-    }
+    executeNextNode(myState);
+}
+
+void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
+    myState->currentNode = Node;
+    Node->executeNode(myState);
 }
 }

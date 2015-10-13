@@ -1,4 +1,5 @@
 #include <random>
+#include <thread>
 #include <mongocxx/client.hpp>
 #include <memory>
 #include <unordered_map>
@@ -22,5 +23,9 @@ public:
     shared_ptr<node> currentNode;
     unordered_map<string, int64_t> tvariables;
     unordered_map<string, atomic_int_least64_t>& wvariables;  // FIXME: Not threadsafe
+    vector<shared_ptr<threadState>> childThreadStates;
+    vector<shared_ptr<thread>> childThreads;
+    shared_ptr<threadState> parentThread;
+    shared_ptr<thread> myThread;
 };
 }

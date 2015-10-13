@@ -39,7 +39,7 @@ containing the operation.
    operations without examples have not been tested. This includes
    almost all options and write concerns that go with those
    operations. 
-2. Database.command (run_command) (not tested)
+2. Database.command (run_command) 
 3. sleep: sleep for some number of milliseconds. The entry sleep
    specifies how long to sleep. 
 
@@ -54,6 +54,10 @@ containing the operation.
 4. Finish: This represents an absorbing state in the graph. The
    workload is finished when the Finish node executes. There is always
    an implicit Finish state included in the workload. 
+5. doAll/join: These give fork/join semantics. The doAll executes all
+   of it's children nodes, and parent and child nodes continue until a
+   join node. The parent waits for all children to complete at the
+   join node. 
 
 ### Currently supported Documents
 
@@ -69,6 +73,7 @@ containing the operation.
       (default of 10). Will support an alphabet option in the future
    3. increment: Takes a variable and uses it's value and does a post
      increment.
+   4. date: The current date
 
 ### Currently supported workload features
 

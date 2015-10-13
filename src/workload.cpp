@@ -13,6 +13,8 @@
 #include "sleep.hpp"
 #include "finish_node.hpp"
 #include "forN.hpp"
+#include "doAll.hpp"
+#include "join.hpp"
 
 namespace mwg {
 workload::workload(YAML::Node& inputNodes) : stopped(false) {
@@ -112,6 +114,18 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
             // this is an ugly hack for now
             vectornodes.push_back(mynode);
             BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added finish node";
+        } else if (yamlNode["type"].Scalar() == "doAll") {
+            auto mynode = make_shared<doAll>(yamlNode);
+            nodes[mynode->getName()] = mynode;
+            // this is an ugly hack for now
+            vectornodes.push_back(mynode);
+            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added doAll node";
+        } else if (yamlNode["type"].Scalar() == "join") {
+            auto mynode = make_shared<join>(yamlNode);
+            nodes[mynode->getName()] = mynode;
+            // this is an ugly hack for now
+            vectornodes.push_back(mynode);
+            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added join node";
         } else {
             BOOST_LOG_TRIVIAL(debug) << "In workload constructor. Defaulting to opNode";
             auto mynode = make_shared<opNode>(yamlNode);
@@ -136,10 +150,6 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
                                  << ". Next node name is " << mnode->nextName;
         mnode->setNextNode(nodes);
     }
-}
-void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
-    myState->currentNode = Node;
-    Node->executeNode(myState);
 }
 void workload::execute(mongocxx::client& conn) {
     // prep the threads and start them. Should put the timer in here also.
