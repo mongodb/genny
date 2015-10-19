@@ -81,7 +81,8 @@ void insert_many::execute(mongocxx::client& conn, threadState& state) {
             BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
         auto errorandcode = e.error_and_code();
         if (errorandcode)
-            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value());
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
     }
     BOOST_LOG_TRIVIAL(debug) << "insert_many.execute";
     // probably should do some error checking here
