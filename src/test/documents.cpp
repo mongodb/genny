@@ -25,7 +25,7 @@ void viewable_eq_viewable(const T& stream, const bsoncxx::document::view& test) 
     auto tested = to_json(test);
     INFO("expected = " << expect);
     INFO("basic = " << tested);
-    REQUIRE(expect == tested);
+    REQUIRE((expect == tested));
 }
 
 TEST_CASE("Documents are created", "[documents]") {
@@ -105,6 +105,7 @@ TEST_CASE("Documents are created", "[documents]") {
         auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 
+	REQUIRE(view.length() == 19);
         // The random number generator is deterministic, so we should get the same string each time
         refdoc << "date"
                << "YOTBP1XwXID";
