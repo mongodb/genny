@@ -3,18 +3,12 @@
 #include <thread>
 #include <boost/log/trivial.hpp>
 #include <chrono>
+#include "finish_node.hpp"
 
 #include <mongocxx/instance.hpp>
 
 #include "workload.hpp"
 #include "node.hpp"
-#include "opNode.hpp"
-#include "random_choice.hpp"
-#include "sleep.hpp"
-#include "finish_node.hpp"
-#include "forN.hpp"
-#include "doAll.hpp"
-#include "join.hpp"
 
 namespace mwg {
 workload::workload(YAML::Node& inputNodes) : stopped(false) {
@@ -84,55 +78,11 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
             BOOST_LOG_TRIVIAL(fatal) << "Node in workload is not a yaml map";
             exit(EXIT_FAILURE);
         }
-        if (yamlNode["type"].Scalar() == "opNode") {
-            auto mynode = make_shared<opNode>(yamlNode);
-            nodes[mynode->getName()] = mynode;
-            // this is an ugly hack for now
-            vectornodes.push_back(mynode);
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added op node";
-        } else if (yamlNode["type"].Scalar() == "random_choice") {
-            auto mynode = make_shared<random_choice>(yamlNode);
-            nodes[mynode->getName()] = mynode;
-            // this is an ugly hack for now
-            vectornodes.push_back(mynode);
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added random_choice node";
-        } else if (yamlNode["type"].Scalar() == "sleep") {
-            auto mynode = make_shared<sleepNode>(yamlNode);
-            nodes[mynode->getName()] = mynode;
-            // this is an ugly hack for now
-            vectornodes.push_back(mynode);
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added sleep node";
-        } else if (yamlNode["type"].Scalar() == "forN") {
-            auto mynode = make_shared<forN>(yamlNode);
-            nodes[mynode->getName()] = mynode;
-            // this is an ugly hack for now
-            vectornodes.push_back(mynode);
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added sleep node";
-        } else if (yamlNode["type"].Scalar() == "finish") {
-            auto mynode = make_shared<finishNode>(yamlNode);
-            nodes[mynode->getName()] = mynode;
-            // this is an ugly hack for now
-            vectornodes.push_back(mynode);
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added finish node";
-        } else if (yamlNode["type"].Scalar() == "doAll") {
-            auto mynode = make_shared<doAll>(yamlNode);
-            nodes[mynode->getName()] = mynode;
-            // this is an ugly hack for now
-            vectornodes.push_back(mynode);
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added doAll node";
-        } else if (yamlNode["type"].Scalar() == "join") {
-            auto mynode = make_shared<join>(yamlNode);
-            nodes[mynode->getName()] = mynode;
-            // this is an ugly hack for now
-            vectornodes.push_back(mynode);
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added join node";
-        } else {
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor. Defaulting to opNode";
-            auto mynode = make_shared<opNode>(yamlNode);
-            nodes[mynode->getName()] = mynode;
-            vectornodes.push_back(mynode);
-            BOOST_LOG_TRIVIAL(debug) << "In workload constructor. Added opNode";
-        }
+        auto mynode = makeSharedNode(yamlNode);
+        nodes[mynode->getName()] = mynode;
+        // this is an ugly hack for now
+        vectornodes.push_back(mynode);
+        BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added node";
     }
     BOOST_LOG_TRIVIAL(debug) << "Added all the nodes in yamlNode";
     // Add an implicit finish_node if it doesn't exist

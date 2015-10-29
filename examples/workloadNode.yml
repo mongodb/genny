@@ -1,0 +1,16 @@
+# Use the workload Node functionality
+
+main : 
+  seed: 131415161718
+  name: main
+  nodes: 
+    - name : workload
+      type : workloadNode
+      next : Finish
+      workload : 
+        nodes : 
+          - name : sleep
+            type : sleep
+            sleep : 1
+            next : Finish
+            print : In sleep

@@ -27,23 +27,27 @@ main :
         i : 1
       next : fill_ttl
     - name : fill_ttl
-      type : forN
-      N : 1000
+      type : workloadNode
       next : Finish
       workload : 
         threads : 4
-        nodes:   
+        nodes : 
           - 
-            name : insert
-            type : insert_many
-            times : 10
+            type : forN
+            name : fill_ttl_inner
+            N : 1000
             next : Finish
-            doc : 
-              type : override
-              doc : { ttl : 1, i : 1 }
-              overrides : 
-                ttl : 
-                  type : date
-                i : 
-                  type : randomint
+            node : 
+              name : insert
+              type : insert_many
+              times : 10
+              next : Finish
+              doc : 
+                type : override
+                doc : { ttl : 1, i : 1 }
+                overrides : 
+                  ttl : 
+                    type : date
+                  i : 
+                    type : randomint
                   

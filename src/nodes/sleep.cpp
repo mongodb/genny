@@ -13,11 +13,8 @@ sleepNode::sleepNode(YAML::Node& ynode) : node(ynode) {
             << "SleepNode constructor but yaml entry doesn't have type == sleep";
         exit(EXIT_FAILURE);
     }
-    name = ynode["name"].Scalar();
     sleeptime = ynode["sleep"].as<uint64_t>();
     BOOST_LOG_TRIVIAL(debug) << "In sleepNode constructor. Sleep time is " << sleeptime;
-    name = ynode["name"].Scalar();
-    nextName = ynode["next"].Scalar();
 }
 
 // Execute the node

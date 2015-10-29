@@ -5,6 +5,7 @@
 #include <random>
 #include "threadState.hpp"
 #include "yaml-cpp/yaml.h"
+#include <memory>
 
 #pragma once
 using namespace std;
@@ -41,4 +42,6 @@ protected:
 };
 
 void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState);
+unique_ptr<node> makeUniqeNode(YAML::Node);
+shared_ptr<node> makeSharedNode(YAML::Node);
 }

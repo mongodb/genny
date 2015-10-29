@@ -1,6 +1,15 @@
 #include "node.hpp"
 #include <boost/log/trivial.hpp>
 
+#include "opNode.hpp"
+#include "random_choice.hpp"
+#include "sleep.hpp"
+#include "finish_node.hpp"
+#include "forN.hpp"
+#include "doAll.hpp"
+#include "join.hpp"
+#include "workloadNode.hpp"
+
 namespace mwg {
 
 node::node(YAML::Node& ynode) {
@@ -19,6 +28,7 @@ node::node(YAML::Node& ynode) {
     nextName = ynode["next"].Scalar();
     BOOST_LOG_TRIVIAL(debug) << "In node constructor. Name: " << name << ", nextName: " << nextName;
     if (ynode["print"]) {
+        BOOST_LOG_TRIVIAL(debug) << "In node constructor and print";
         text = ynode["print"].Scalar();
     }
 }
@@ -63,5 +73,37 @@ void node::executeNode(shared_ptr<threadState> myState) {
 void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
     myState->currentNode = Node;
     Node->executeNode(myState);
+}
+node* makeNode(YAML::Node yamlNode) {
+    if (!yamlNode.IsMap()) {
+        BOOST_LOG_TRIVIAL(fatal) << "Node in makeNode is not a yaml map";
+        exit(EXIT_FAILURE);
+    }
+    if (yamlNode["type"].Scalar() == "opNode") {
+        return new opNode(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "random_choice") {
+        return new random_choice(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "sleep") {
+        return new sleepNode(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "forN") {
+        return new forN(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "finish") {
+        return new finishNode(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "doAll") {
+        return new doAll(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "join") {
+        return new join(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "workloadNode") {
+        return new workloadNode(yamlNode);
+    } else {
+        BOOST_LOG_TRIVIAL(debug) << "In workload constructor. Defaulting to opNode";
+        return new opNode(yamlNode);
+    }
+}
+unique_ptr<node> makeUniqeNode(YAML::Node yamlNode) {
+    return unique_ptr<node>(makeNode(yamlNode));
+}
+shared_ptr<node> makeSharedNode(YAML::Node yamlNode) {
+    return shared_ptr<node>(makeNode(yamlNode));
 }
 }

@@ -19,7 +19,7 @@ public:
     virtual void execute(shared_ptr<threadState>) override;
 
 private:
-    workload myWorkload;
+    unique_ptr<node> myNode;
     uint64_t N;
 };
 }

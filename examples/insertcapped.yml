@@ -20,22 +20,24 @@ main :
         size : 20000000000
       next : fill_capped
     - name : fill_capped
-      type : forN
-      N : 100
+      type : workloadNode
       next : fill_rolled
       workload : &bulkinsert
+        name : bulk_insert
         wvariables : 
           count : 0
-        threads : 24
-        nodes:   
+          threads : 24
+        nodes : 
           - 
-            name : insert
-            type : insert_many
-            times : 1024
-            doc : { x : *s }
-            next : Finish
+            type : forN
+            N : 100
+            node:   
+              name : insert
+              type : insert_many
+              times : 1024
+              doc : { x : *s }
+              next : Finish
     - name : fill_rolled
-      type : forN
-      N : 100
+      type : workloadNode
       next : Finish
       workload : *bulkinsert
