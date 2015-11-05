@@ -3,6 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -30,7 +31,18 @@ write_concern::write_concern(YAML::Node& node) {
 // Execute the node
 void write_concern::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
-    collection.write_concern(write_conc);
+    try {
+        collection.write_concern(write_conc);
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in write_concern: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
+    }
     // need a way to exhaust the cursor
     BOOST_LOG_TRIVIAL(debug) << "write_concern.execute";
 }

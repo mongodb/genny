@@ -3,6 +3,7 @@
 #include "parse_util.hpp"
 #include <bsoncxx/json.hpp>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -38,7 +39,18 @@ void insert_one::execute(mongocxx::client& conn, threadState& state) {
     BOOST_LOG_TRIVIAL(trace) << "insert_one.execute before call";
     // need to save the view to ensure we print out the same thing we insert
     auto view = doc->view(mydoc, state);
-    auto result = collection.insert_one(view, options);
+    try {
+        auto result = collection.insert_one(view, options);
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in insert_one: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
+    }
     // need a way to exhaust the cursor
     BOOST_LOG_TRIVIAL(debug) << "insert_one.execute: insert_one is " << bsoncxx::to_json(view);
     // probably should do some error checking here

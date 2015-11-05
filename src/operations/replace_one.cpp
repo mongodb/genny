@@ -3,6 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -37,7 +38,18 @@ void replace_one::execute(mongocxx::client& conn, threadState& state) {
     bsoncxx::builder::stream::document myreplacement{};
     auto view = filter->view(mydoc, state);
     auto replacementview = replacement->view(mydoc, state);
-    auto result = collection.replace_one(view, replacementview, options);
+    try {
+        auto result = collection.replace_one(view, replacementview, options);
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in replace_one: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
+    }
     BOOST_LOG_TRIVIAL(debug) << "replace_one.execute: replace_one is " << bsoncxx::to_json(view);
 }
 }

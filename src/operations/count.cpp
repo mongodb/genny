@@ -3,6 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -33,8 +34,19 @@ void count::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
     bsoncxx::builder::stream::document mydoc{};
     auto view = filter->view(mydoc, state);
-    auto returnCount = collection.count(view, options);
-    BOOST_LOG_TRIVIAL(debug) << "count.execute: filter is " << bsoncxx::to_json(view)
-                             << " and count is " << returnCount << endl;
+    try {
+        auto returnCount = collection.count(view, options);
+        BOOST_LOG_TRIVIAL(debug) << "count.execute: filter is " << bsoncxx::to_json(view)
+                                 << " and count is " << returnCount << endl;
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in count: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
+    }
 }
 }

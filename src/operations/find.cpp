@@ -3,6 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -33,13 +34,25 @@ void find::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
     bsoncxx::builder::stream::document mydoc{};
     auto view = filter->view(mydoc, state);
-    auto cursor = collection.find(view, options);
-    // need a way to exhaust the cursor
-    BOOST_LOG_TRIVIAL(debug) << "find.execute: find is " << bsoncxx::to_json(view);
-    for (auto&& doc : cursor) {
-        // std::cout << bsoncxx::to_json(doc) << std::endl;
-        bsoncxx::to_json(doc);
+    try {
+        auto cursor = collection.find(view, options);
+        // need a way to exhaust the cursor
+        BOOST_LOG_TRIVIAL(debug) << "find.execute: find is " << bsoncxx::to_json(view);
+        for (auto&& doc : cursor) {
+            // std::cout << bsoncxx::to_json(doc) << std::endl;
+            bsoncxx::to_json(doc);
+        }
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in find: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
     }
+
     BOOST_LOG_TRIVIAL(debug) << "After iterating results";
 }
 }

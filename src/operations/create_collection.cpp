@@ -4,6 +4,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -37,7 +38,18 @@ void create_collection::execute(mongocxx::client& conn, threadState& state) {
     auto db = conn["testdb"];
     bsoncxx::builder::stream::document mydoc{};
     auto view = options->view(mydoc, state);
-    db.create_collection(collection_name, view);
+    try {
+        db.create_collection(collection_name, view);
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in create_collection: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
+    }
     // need a way to exhaust the cursor
     BOOST_LOG_TRIVIAL(debug) << "create_collection.execute: create_collection with name "
                              << collection_name << " and options " << bsoncxx::to_json(view);

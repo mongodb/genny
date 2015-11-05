@@ -3,6 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -37,7 +38,18 @@ void update_many::execute(mongocxx::client& conn, threadState& state) {
     bsoncxx::builder::stream::document myupdate{};
     auto view = filter->view(mydoc, state);
     auto updateview = update->view(mydoc, state);
-    auto result = collection.update_many(view, updateview, options);
+    try {
+        auto result = collection.update_many(view, updateview, options);
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in update_many: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
+    }
     BOOST_LOG_TRIVIAL(debug) << "update_many.execute: update_many is " << bsoncxx::to_json(view);
 }
 }

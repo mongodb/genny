@@ -3,6 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <mongocxx/exception/base.hpp>
 
 namespace mwg {
 
@@ -28,8 +29,18 @@ name::name(YAML::Node& node) {
 // Execute the node
 void name::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
-    auto name = collection.name();
-    // need a way to exhaust the cursor
-    BOOST_LOG_TRIVIAL(debug) << "name.execute: name is " << name;
+    try {
+        auto name = collection.name();
+        BOOST_LOG_TRIVIAL(debug) << "name.execute: name is " << name;
+    } catch (mongocxx::exception::base e) {
+        BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in name: " << e.what();
+        auto error = e.raw_server_error();
+        if (error)
+            BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
+        auto errorandcode = e.error_and_code();
+        if (errorandcode)
+            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
+                                     << get<0>(errorandcode.value());
+    }
 }
 }
