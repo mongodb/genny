@@ -5,6 +5,10 @@ main :
   name: main
   nodes: 
     - 
+      name : drop
+      type : drop
+      next : insert
+    -
       name : insert
       type : insert_many
       container :
