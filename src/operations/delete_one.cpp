@@ -34,7 +34,7 @@ void delete_one::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn["testdb"]["testCollection"];
     bsoncxx::builder::stream::document mydoc{};
     auto view = filter->view(mydoc, state);
-    auto result = collection.delete_many(view, options);
+    auto result = collection.delete_one(view, options);
     BOOST_LOG_TRIVIAL(debug) << "delete_one.execute: delete_one is "
                              << bsoncxx::to_json(filter->view(mydoc, state));
 }
