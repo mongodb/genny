@@ -1,7 +1,7 @@
 #include <random>
 #include <thread>
 #include <mongocxx/client.hpp>
-#include <memory>
+#include <bsoncxx/types/value.hpp>
 #include <unordered_map>
 #include <atomic>
 
@@ -11,21 +11,33 @@ using namespace std;
 namespace mwg {
 
 class node;
+class workload;
 
 class threadState {
 public:
     threadState(uint64_t seed,
-                unordered_map<string, int64_t> tvars,
-                unordered_map<string, atomic_int_least64_t>& wvars)
-        : rng(seed), tvariables(tvars), wvariables(wvars){};
+                unordered_map<string, bsoncxx::types::value> tvars,
+                unordered_map<string, bsoncxx::types::value>& wvars,
+                workload& parentWorkload,
+                string dbname,
+                string collectionname)
+        : rng(seed),
+          tvariables(tvars),
+          wvariables(wvars),
+          myWorkload(parentWorkload),
+          DBName(dbname),
+          CollectionName(collectionname){};
     mongocxx::client conn{mongocxx::uri{}};
     mt19937_64 rng;  // random number generator
     shared_ptr<node> currentNode;
-    unordered_map<string, int64_t> tvariables;
-    unordered_map<string, atomic_int_least64_t>& wvariables;  // FIXME: Not threadsafe
+    unordered_map<string, bsoncxx::types::value> tvariables;
+    unordered_map<string, bsoncxx::types::value>& wvariables;
     vector<shared_ptr<threadState>> childThreadStates;
     vector<shared_ptr<thread>> childThreads;
     shared_ptr<threadState> parentThread;
     shared_ptr<thread> myThread;
+    workload& myWorkload;
+    string DBName;
+    string CollectionName;
 };
 }

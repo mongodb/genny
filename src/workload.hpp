@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <mongocxx/client.hpp>
 #include "threadState.hpp"
+#include <mutex>
 
 using namespace std;
 
@@ -33,12 +34,16 @@ public:
     // safety. Currently only done in one place
     unordered_set<shared_ptr<threadState>> threads;
 
+    std::mutex mut;
+    string DBName = "testdb";
+    string CollectionName = "testCollection";
+
 private:
     vector<shared_ptr<node>> vectornodes;
     // needs to be generalized from int to a generic value
-    unordered_map<string, atomic_int_least64_t> wvariables;  // workload variables
-    unordered_map<string, int64_t> tvariables;               // thread variables
-    mt19937_64 rng;                                          // random number generator
+    unordered_map<string, bsoncxx::types::value> wvariables;  // workload variables
+    unordered_map<string, bsoncxx::types::value> tvariables;  // thread variables
+    mt19937_64 rng;                                           // random number generator
     string name;
     bool stopped;
     uint64_t numParallelThreads{1};

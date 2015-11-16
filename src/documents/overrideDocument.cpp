@@ -12,6 +12,7 @@
 #include <bsoncxx/types/value.hpp>
 #include <boost/log/trivial.hpp>
 #include <ctime>
+#include "workload.hpp"
 
 using namespace std;
 
@@ -138,13 +139,28 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                                              << iter->second["variable"].Scalar();
                     // if in tvariables use that
                     if (state.tvariables.count(iter->second["variable"].Scalar()) > 0) {
+                        // FIXME: This needs to be generalized to also handle other numeric types
+                        // and throw an error of not a numeric
                         BOOST_LOG_TRIVIAL(trace) << "In tvariables";
-                        output << elem.key().to_string()
-                               << state.tvariables[iter->second["variable"].Scalar()]++;
+                        // increment the value and save it
+                        string varname = iter->second["variable"].Scalar();
+                        auto var = state.tvariables.find(varname);
+                        bsoncxx::types::b_int64 value = var->second.get_int64();
+                        output << elem.key().to_string() << value;
+                        // update the variable
+                        value.value++;
+                        var->second = bsoncxx::types::value(value);
                     } else {  // in wvariables
+                        // Grab lock. Could be kinder hear and wait on condition variable
+                        std::lock_guard<std::mutex> lk(state.myWorkload.mut);
                         BOOST_LOG_TRIVIAL(trace) << "In wvariables";
-                        output << elem.key().to_string()
-                               << state.wvariables[iter->second["variable"].Scalar()]++;
+                        string varname = iter->second["variable"].Scalar();
+                        auto var = state.wvariables.find(varname);
+                        bsoncxx::types::b_int64 value = var->second.get_int64();
+                        output << elem.key().to_string() << value;
+                        // update the variable
+                        value.value++;
+                        var->second = bsoncxx::types::value(value);
                     }
                 } else if (iter->second["type"].Scalar() == "date") {
                     BOOST_LOG_TRIVIAL(trace)
@@ -152,7 +168,7 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                     // put in the currnet time.
                     auto currentTime = time(nullptr);
                     bsoncxx::types::b_date date = bsoncxx::types::b_date(currentTime * 1000);
-                    //date.value = currentTime * 1000;
+                    // date.value = currentTime * 1000;
                     output << elem.key().to_string() << date;
                 }
             }

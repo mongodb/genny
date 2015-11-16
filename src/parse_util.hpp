@@ -6,9 +6,10 @@
 using namespace std;
 
 namespace mwg {
-
+bool isNumber(string);
 void parseMap(bsoncxx::builder::stream::document&, YAML::Node);
 void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node node);
+bsoncxx::types::value yamlToValue(YAML::Node);
 void parseCreateCollectionOptions(mongocxx::options::create_collection&, YAML::Node);
 void parseIndexOptions(mongocxx::options::index&, YAML::Node);
 void parseInsertOptions(mongocxx::options::insert&, YAML::Node);

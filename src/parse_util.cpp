@@ -76,6 +76,20 @@ void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node
     }
 }
 
+bsoncxx::types::value yamlToValue(YAML::Node node) {
+    if (!node.IsScalar()) {
+        BOOST_LOG_TRIVIAL(fatal) << "yamlToValue and passed in non-scalar";
+    }
+    if (isNumber(node.Scalar())) {
+        bsoncxx::types::b_int64 value;
+        value.value = node.as<int64_t>();
+        return (bsoncxx::types::value(value));
+    } else {  // string
+        bsoncxx::types::b_utf8 value(node.Scalar());
+        return (bsoncxx::types::value(value));
+    }
+}
+
 write_concern parseWriteConcern(YAML::Node node) {
     write_concern wc{};
     // Need to set the options of the write concern

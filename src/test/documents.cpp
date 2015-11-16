@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "document.hpp"
+#include "workload.hpp"
 
 #include <bson.h>
 #include <bsoncxx/builder/basic/array.hpp>
@@ -29,10 +30,11 @@ void viewable_eq_viewable(const T& stream, const bsoncxx::document::view& test) 
 }
 
 TEST_CASE("Documents are created", "[documents]") {
-    unordered_map<string, atomic_int_least64_t> wvariables;  // workload variables
-    unordered_map<string, int64_t> tvariables;               // thread variables
+    unordered_map<string, bsoncxx::types::value> wvariables;  // workload variables
+    unordered_map<string, bsoncxx::types::value> tvariables;  // thread variables
 
-    threadState state(12234, tvariables, wvariables);
+    workload myWorkload;
+    threadState state(12234, tvariables, wvariables, myWorkload, "t", "c");
     bsoncxx::builder::stream::document mydoc{};
 
     SECTION("Simple bson") {
@@ -105,7 +107,7 @@ TEST_CASE("Documents are created", "[documents]") {
         auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 
-	REQUIRE(view.length() == 19);
+        REQUIRE(view.length() == 19);
         // The random number generator is deterministic, so we should get the same string each time
         refdoc << "date"
                << "YOTBP1XwXID";
@@ -113,7 +115,7 @@ TEST_CASE("Documents are created", "[documents]") {
         // also.
         //        viewable_eq_viewable(refdoc, view);
     }
-    SECTION("Increment") {
+    SECTION("Increment Thread Local") {
         auto doc = makeDoc(YAML::Load(R"yaml(
            type : override
            doc :
@@ -122,8 +124,33 @@ TEST_CASE("Documents are created", "[documents]") {
               x :
                 type : increment
                 variable : count)yaml"));
-        // Test that we get random strings. Should be reproducible
-        state.tvariables["count"] = 5;
+        bsoncxx::types::b_int64 value;
+        value.value = 5;
+        state.tvariables.insert({"count", bsoncxx::types::value(value)});
+        auto view = doc->view(mydoc, state);
+        bsoncxx::builder::stream::document refdoc{};
+
+        // The random number generator is deterministic, so we should get the same string each time
+        refdoc << "x" << 5;
+        viewable_eq_viewable(refdoc, view);
+        bsoncxx::builder::stream::document mydoc2{};
+        auto view2 = doc->view(mydoc2, state);
+        bsoncxx::builder::stream::document refdoc2{};
+        refdoc2 << "x" << 6;
+        viewable_eq_viewable(refdoc2, view2);
+    }
+    SECTION("Increment Workload Var") {
+        auto doc = makeDoc(YAML::Load(R"yaml(
+           type : override
+           doc :
+              x : 1
+           overrides :
+              x :
+                type : increment
+                variable : count)yaml"));
+        bsoncxx::types::b_int64 value;
+        value.value = 5;
+        state.wvariables.insert({"count", bsoncxx::types::value(value)});
         auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 

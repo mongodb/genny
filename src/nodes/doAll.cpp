@@ -36,8 +36,12 @@ void doAll::execute(shared_ptr<threadState> myState) {
     // setup a vector of threads (in the workload)
     for (auto node : vectornodes) {
         // setup a new thread state for this node
-        auto newState = shared_ptr<threadState>(
-            new threadState(myState->rng(), myState->tvariables, myState->wvariables));
+        auto newState = shared_ptr<threadState>(new threadState(myState->rng(),
+                                                                myState->tvariables,
+                                                                myState->wvariables,
+                                                                myState->myWorkload,
+                                                                myState->DBName,
+                                                                myState->CollectionName));
         newState->parentThread = myState;
         myState->childThreadStates.push_back(newState);
         newState->myThread = shared_ptr<thread>(new thread(runThread, node, newState));

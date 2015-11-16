@@ -1,7 +1,7 @@
 #pragma once
 
 #include "node.hpp"
-#include "workload.hpp"
+#include <memory>
 
 using namespace std;
 
@@ -19,6 +19,6 @@ public:
     virtual void execute(shared_ptr<threadState>) override;
 
 private:
-    workload myWorkload;
+    unique_ptr<workload> myWorkload;
 };
 }

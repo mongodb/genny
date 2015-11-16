@@ -4,6 +4,7 @@
 #include <boost/log/trivial.hpp>
 #include <chrono>
 #include "finish_node.hpp"
+#include "parse_util.hpp"
 
 #include <mongocxx/instance.hpp>
 
@@ -36,7 +37,7 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
             for (auto var : inputNodes["wvariables"]) {
                 BOOST_LOG_TRIVIAL(debug) << "Reading in workload variable " << var.first.Scalar()
                                          << " with value " << var.second.Scalar();
-                wvariables[var.first.Scalar()] = var.second.as<int64_t>();
+                wvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
             }
         }
         if (inputNodes["tvariables"]) {
@@ -44,12 +45,21 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
             for (auto var : inputNodes["tvariables"]) {
                 cout << "Reading in thread variable " << var.first.Scalar() << " with value "
                      << var.second.Scalar();
-                tvariables[var.first.Scalar()] = var.second.as<int64_t>();
+                tvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
             }
         }
         name = inputNodes["name"].Scalar();
         BOOST_LOG_TRIVIAL(debug) << "In workload constructor, and was passed in a map. Name: "
                                  << name;
+        if (inputNodes["database"]) {
+            DBName = inputNodes["database"].Scalar();
+            BOOST_LOG_TRIVIAL(debug) << "In Workload constructor and database name is " << DBName;
+        }
+        if (inputNodes["collection"]) {
+            CollectionName = inputNodes["collection"].Scalar();
+            BOOST_LOG_TRIVIAL(debug) << "In Workload constructor and collection name is "
+                                     << CollectionName;
+        }
         if (inputNodes["threads"]) {
             numParallelThreads = inputNodes["threads"].as<uint64_t>();
             BOOST_LOG_TRIVIAL(debug) << "Excplicity setting number of threads in workload";
@@ -110,7 +120,8 @@ void workload::execute(mongocxx::client& conn) {
     for (uint64_t i = 0; i < numParallelThreads; i++) {
         BOOST_LOG_TRIVIAL(trace) << "Starting thread in workload";
         // create thread state for each
-        auto newState = shared_ptr<threadState>(new threadState(rng(), tvariables, wvariables));
+        auto newState = shared_ptr<threadState>(
+            new threadState(rng(), tvariables, wvariables, *this, DBName, CollectionName));
         BOOST_LOG_TRIVIAL(trace) << "Created thread state";
         threads.insert(newState);
         myThreads.push_back(thread(runThread, vectornodes[0], newState));
