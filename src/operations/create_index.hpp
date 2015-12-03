@@ -21,6 +21,8 @@ public:
 
 private:
     unique_ptr<document> keys{};
+    // only one of these is really needed, but the view version is broken
     unique_ptr<document> options{};
+    mongocxx::options::index indexOptions{};
 };
 }

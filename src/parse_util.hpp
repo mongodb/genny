@@ -9,6 +9,8 @@ namespace mwg {
 
 void parseMap(bsoncxx::builder::stream::document&, YAML::Node);
 void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node node);
+void parseCreateCollectionOptions(mongocxx::options::create_collection&, YAML::Node);
+void parseIndexOptions(mongocxx::options::index&, YAML::Node);
 void parseInsertOptions(mongocxx::options::insert&, YAML::Node);
 void parseFindOptions(mongocxx::options::find&, YAML::Node);
 void parseCountOptions(mongocxx::options::count&, YAML::Node);

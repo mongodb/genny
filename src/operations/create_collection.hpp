@@ -20,7 +20,9 @@ public:
     virtual void execute(mongocxx::client&, threadState&) override;
 
 private:
+    // only use one of the following two
     unique_ptr<document> options{};
+    mongocxx::options::create_collection collectionOptions{};
     string collection_name;
 };
 }

@@ -25,7 +25,8 @@ create_index::create_index(YAML::Node& node) {
         exit(EXIT_FAILURE);
     }
     if (node["options"])
-        options = makeDoc(node["options"]);
+        // options = makeDoc(node["options"]);
+        parseIndexOptions(indexOptions, node["options"]);
     else
         options = unique_ptr<document>(new document());
     keys = makeDoc(node["keys"]);
@@ -39,16 +40,16 @@ void create_index::execute(mongocxx::client& conn, threadState& state) {
     bsoncxx::builder::stream::document mydoc{};
     bsoncxx::builder::stream::document myoptions{};
     auto view = keys->view(mydoc, state);
-    auto opview = options->view(myoptions, state);
+    // auto opview = options->view(myoptions, state);
     try {
-        auto result = collection.create_index(view, opview);
+        auto result = collection.create_index(view, indexOptions);
     } catch (mongocxx::exception::base e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in create_index: " << e.what();
         auto error = e.raw_server_error();
         if (error)
             BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
     }
-    BOOST_LOG_TRIVIAL(debug) << "create_index.execute: create_index is " << bsoncxx::to_json(view)
-                             << " with options " << bsoncxx::to_json(opview);
+    BOOST_LOG_TRIVIAL(debug) << "create_index.execute: create_index is " << bsoncxx::to_json(view);
+    //                             << " with options " << bsoncxx::to_json(opview);
 }
 }

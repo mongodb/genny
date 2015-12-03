@@ -26,9 +26,10 @@ create_collection::create_collection(YAML::Node& node) {
         exit(EXIT_FAILURE);
     }
     if (node["options"])
-        options = makeDoc(node["options"]);
-    else
-        options = unique_ptr<document>{new bsonDocument()};
+        parseCreateCollectionOptions(collectionOptions, node["options"]);
+    //     options = makeDoc(node["options"]);
+    // else
+    //     options = unique_ptr<document>{new bsonDocument()};
     collection_name = node["collection_name"].Scalar();
     BOOST_LOG_TRIVIAL(debug) << "Added op of type create_collection";
 }
@@ -37,9 +38,10 @@ create_collection::create_collection(YAML::Node& node) {
 void create_collection::execute(mongocxx::client& conn, threadState& state) {
     auto db = conn["testdb"];
     bsoncxx::builder::stream::document mydoc{};
-    auto view = options->view(mydoc, state);
+    //    auto view = options->view(mydoc, state);
     try {
-        db.create_collection(collection_name, view);
+        //        db.create_collection(collection_name, view);
+        db.create_collection(collection_name, collectionOptions);
     } catch (mongocxx::exception::base e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in create_collection: " << e.what();
         auto error = e.raw_server_error();
@@ -52,6 +54,6 @@ void create_collection::execute(mongocxx::client& conn, threadState& state) {
     }
     // need a way to exhaust the cursor
     BOOST_LOG_TRIVIAL(debug) << "create_collection.execute: create_collection with name "
-                             << collection_name << " and options " << bsoncxx::to_json(view);
+                             << collection_name;  // << " and options " << bsoncxx::to_json(view);
 }
 }

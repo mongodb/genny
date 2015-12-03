@@ -99,6 +99,61 @@ write_concern parseWriteConcern(YAML::Node node) {
     return wc;
 }
 
+void parseCreateCollectionOptions(mongocxx::options::create_collection& options, YAML::Node node) {
+    if (node["capped"])
+        options.capped(node["capped"].as<bool>());
+    if (node["auto_index_id"])
+        options.auto_index_id(node["auto_index_id"].as<bool>());
+    if (node["size"])
+        options.size(node["size"].as<int>());
+    if (node["max"])
+        options.max(node["max"].as<int>());
+    // skipping storage engine options
+    if (node["no_padding"])
+        options.no_padding(node["no_padding"].as<bool>());
+}
+
+void parseIndexOptions(mongocxx::options::index& options, YAML::Node node) {
+    if (node["background"])
+        options.background(node["background"].as<bool>());
+    if (node["unique"])
+        options.unique(node["unique"].as<bool>());
+    if (node["name"])
+        options.name(node["name"].Scalar());
+    if (node["sparse"])
+        options.sparse(node["sparse"].as<bool>());
+    // Skipping storage options
+    if (node["expire_after_seconds"])
+        options.expire_after_seconds(node["expire_after_seconds"].as<std::int32_t>());
+    if (node["version"])
+        options.version(node["version"].as<std::int32_t>());
+    if (node["weights"]) {
+        bsoncxx::builder::stream::document doc{};
+        parseMap(doc, node["weights"]);
+        options.weights(doc.view());
+    }
+    if (node["default_language"])
+        options.default_language(node["default_language"].Scalar());
+    if (node["language_override"])
+        options.language_override(node["language_override"].Scalar());
+    if (node["partial_filter_expression"]) {
+        bsoncxx::builder::stream::document doc{};
+        parseMap(doc, node["partial_filter_expression"]);
+        options.partial_filter_expression(doc.view());
+    }
+    if (node["twod_sphere_version"])
+        options.twod_sphere_version(node["twod_sphere_version"].as<std::uint8_t>());
+    if (node["twod_bits_precision"])
+        options.twod_bits_precision(node["twod_bits_precision"].as<std::uint8_t>());
+    if (node["twod_location_min"])
+        options.twod_location_min(node["twod_location_min"].as<double>());
+    if (node["twod_location_max"])
+        options.twod_location_max(node["twod_location_max"].as<double>());
+    if (node["haystack_bucket_size"])
+        options.haystack_bucket_size(node["haystack_bucket_size"].as<double>());
+}
+
+
 void parseInsertOptions(mongocxx::options::insert& options, YAML::Node node) {
     if (node["write_concern"])
         options.write_concern(parseWriteConcern(node["write_concern"]));
@@ -109,7 +164,7 @@ void parseCountOptions(mongocxx::options::count& options, YAML::Node node) {
     if (node["hint"]) {
         bsoncxx::builder::stream::document doc{};
         parseMap(doc, node["hint"]);
-        options.hint(doc.view());
+        options.hint(mongocxx::hint(doc.view()));
     }
     if (node["limit"])
         options.limit(node["limit"].as<int32_t>());

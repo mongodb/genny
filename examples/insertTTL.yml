@@ -19,7 +19,7 @@ main :
       keys : 
         ttl : 1
       options : 
-        expireAfterSeconds : 30
+        expire_after_seconds : 30
       next : other_index
     - name : other_index
       type : create_index
