@@ -36,7 +36,7 @@ void command::execute(mongocxx::client& conn, threadState& state) {
     bsoncxx::builder::stream::document mydoc{};
     auto view = myCommand->view(mydoc, state);
     try {
-        db.command(view);
+        db.run_command(view);
     } catch (mongocxx::exception::base e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in command: " << e.what();
         auto error = e.raw_server_error();
