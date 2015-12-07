@@ -89,9 +89,10 @@ int main(int argc, char* argv[]) {
     // Look for main. And start building from there.
     if (auto main = nodes["main"]) {
         mongocxx::instance inst{};
-        mongocxx::client conn{};
+        mongocxx::client conn{mongocxx::uri{}};
 
         workload myworkload(main);
+        BOOST_LOG_TRIVIAL(trace) << "After workload constructor. Before execute";
         myworkload.execute(conn);
     }
 

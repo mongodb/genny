@@ -103,15 +103,20 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
 }
 void workload::execute(mongocxx::client& conn) {
     // prep the threads and start them. Should put the timer in here also.
+    BOOST_LOG_TRIVIAL(trace) << "In workload::execute";
     vector<thread> myThreads;
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
     for (uint64_t i = 0; i < numParallelThreads; i++) {
+        BOOST_LOG_TRIVIAL(trace) << "Starting thread in workload";
         // create thread state for each
         auto newState = shared_ptr<threadState>(new threadState(rng(), tvariables, wvariables));
+        BOOST_LOG_TRIVIAL(trace) << "Created thread state";
         threads.insert(newState);
         myThreads.push_back(thread(runThread, vectornodes[0], newState));
+        BOOST_LOG_TRIVIAL(trace) << "Called run on thread";
     }
+    BOOST_LOG_TRIVIAL(trace) << "Started all threads in workload";
     // wait for all the threads to finish
     for (uint64_t i = 0; i < numParallelThreads; i++) {
         // clean up the thread state?

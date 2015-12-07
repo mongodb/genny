@@ -34,6 +34,7 @@ insert_one::insert_one(YAML::Node& node) {
 
 // Execute the node
 void insert_one::execute(mongocxx::client& conn, threadState& state) {
+    BOOST_LOG_TRIVIAL(trace) << "insert_one.execute before call";
     auto collection = conn["testdb"]["testCollection"];
     bsoncxx::builder::stream::document mydoc{};
     BOOST_LOG_TRIVIAL(trace) << "insert_one.execute before call";

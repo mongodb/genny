@@ -18,7 +18,7 @@ public:
                 unordered_map<string, int64_t> tvars,
                 unordered_map<string, atomic_int_least64_t>& wvars)
         : rng(seed), tvariables(tvars), wvariables(wvars){};
-    mongocxx::client conn{};
+    mongocxx::client conn{mongocxx::uri{}};
     mt19937_64 rng;  // random number generator
     shared_ptr<node> currentNode;
     unordered_map<string, int64_t> tvariables;

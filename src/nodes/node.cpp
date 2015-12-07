@@ -56,6 +56,7 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
 
 void node::executeNode(shared_ptr<threadState> myState) {
     // execute this node
+    BOOST_LOG_TRIVIAL(trace) << "node::executeNode. Name is " << name;
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
     execute(myState);
@@ -71,7 +72,9 @@ void node::executeNode(shared_ptr<threadState> myState) {
 }
 
 void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
+    BOOST_LOG_TRIVIAL(trace) << "Node runThread";
     myState->currentNode = Node;
+    BOOST_LOG_TRIVIAL(trace) << "Set node. Name is " << Node->name;
     Node->executeNode(myState);
 }
 node* makeNode(YAML::Node yamlNode) {
