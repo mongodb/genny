@@ -3,6 +3,10 @@
 main : 
   seed: 131415161718
   name: main
+  tvariables: 
+    threadVar : 1
+  wvariables : 
+    workloadVar : 1
   nodes: 
     - type : drop
     - 
@@ -85,3 +89,19 @@ main :
       type : update_many
       filter : {x : a} 
       update : { $inc : { i : 1 }}
+    - 
+      type : set_variable
+      targetVariable : workloadVar
+      value : 2
+    - type : set_variable
+      targetVariable : threadVar
+      value : 2
+    - type : set_variable
+      targetVariable : NewVariable
+      value : 3
+    - type : set_variable # This changes the database name used by operations
+      targetVariable : DBName
+      value : NewDBName
+    - type : set_variable # This changes the collection name used by operations
+      targetVariable : CollectionName
+      value : NewCollectionName

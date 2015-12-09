@@ -88,6 +88,8 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
         shared_ptr<node> me = myState->currentNode;
         myState->currentNode = next;
         next->executeNode(myState);
+    } else {
+        BOOST_LOG_TRIVIAL(debug) << "Next node is not null, but didn't execute it";
     }
 }
 

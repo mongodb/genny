@@ -20,3 +20,4 @@
 #include "update_many.cpp"
 #include "create_collection.hpp"
 #include "command.hpp"
+#include "set_variable.hpp"
