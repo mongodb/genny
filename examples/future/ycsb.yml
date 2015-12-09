@@ -10,20 +10,27 @@ variables : &variables
           fieldlength: 100
 
 doc : &document
-    type : builder
-    base : 
+    type : override
+    doc : 
          _id : \#SEQ_INT # is a comment in yaml. Might want something else here. Also, ycsb yses USER as a prefix.  
     repeat : 
-        N : {variable : fieldcount}
+        N : {variable : fieldcount} # Need functionality for variable fieldcount
         field name : \#SEQ_INT
         field value : 
               type : random string
               length : {variable : fieldlength}
               
 query : &query
-      type : document
-      document : 
-               _id : "#RAND_INT[0,{variable : numdocs}]" # This needs some fixing. Need to prefix with user
+      type : override
+      doc : 
+        _id : 1
+      overrides :
+        _id :  # This needs some fixing. Need to prefix with user. 
+          type : randomint 
+          min : 0
+          max : 
+            variable : numdocs
+          distribution : zipfian # Not currently supported
 
 operations : 
            - &insert
@@ -95,14 +102,12 @@ main :
      seed : 123141515
      nodes : 
            - 
-           type : forN
-           N : 1
-           workload : *insertphase
-           name : insert
-           next : run
+             type : workloadNode
+             workload : *insertphase
+             name : insert
+             next : run
            - 
-           type : forN
-           N : 1
-           worklod : *runphase
-           name : runphase
-           next : Finish
+             type : workloadNode
+             worklod : *runphase
+             name : runphase
+             next : Finish

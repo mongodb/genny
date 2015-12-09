@@ -1,4 +1,4 @@
-# Simple example of insert many
+# Inserting with random fields
  
 main : 
   seed: 131415161718

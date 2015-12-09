@@ -12,22 +12,22 @@ main :
            - # Start by making indexes
              name : index1
              type : create_index
-             doc : { f1 : 1 }
+             keys : { f1 : 1 }
              next : index2
            - 
              name : index2
              type : create_index
-             doc : { f3 : 1 } 
+             keys : { f3 : 1 } 
              next : index3
            - 
              name : index3
              type : create_index
-             doc : { f5 : 1, f1 : 1 }
+             keys : { f5 : 1, f1 : 1 }
              next : index4
            - 
              name : index4
              type : create_index
-             doc : { f7 : 1, f1 : 1 }
+             keys : { f7 : 1, f1 : 1 }
              next : timed
            - 
              name : timed

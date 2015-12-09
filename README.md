@@ -14,7 +14,8 @@ which supports the
 
 There are five basic components in a workload, enabling the
 specification of arbitrarily complex workloads in a graph of
-operations. 
+operations.
+
 1. Operations: These are basic operations, such as a find_one. These
    operations *do* something
 2. Nodes: These are nodes in the workload graph. They often have an
@@ -31,7 +32,10 @@ operations.
 
 Operations can be embedded in a node for compactness of
 representation. The tool will detect this and create an opNode,
-containing the operation. 
+containing the operation.
+
+There are a number of [examples](examples/README.md) that demonstrate
+the basic ideas. All the examples work. 
 
 ### Currently supported operations
 

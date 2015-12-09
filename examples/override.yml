@@ -19,6 +19,8 @@ main :
           x.y : b
           z   : 
             type : randomint
+            min : 0 
+            max : 100
       options : 
         write_concern : 
           nodes : 1
@@ -54,6 +56,21 @@ main :
       next : insert4
     - 
       name : insert4
+      type : insert_one
+      document : 
+        type : override 
+        doc : 
+          x : 1
+        overrides : 
+          x : 
+            type : increment
+            variable : count
+      options : 
+        write_concern : 
+          nodes : 1
+      next : insert5
+    - 
+      name : insert5
       type : insert_one
       document : 
         type : override 
