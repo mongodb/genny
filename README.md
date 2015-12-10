@@ -5,8 +5,8 @@ Overview
 --------
 
 This tool is a workload generator for testing the performance of
-mongod. The tool allows you to specify a workload in a yaml file, with
-a large degree of fleibility. The workload tool is written in C++ and
+a mongo cluster. The tool allows you to specify a workload in a yaml file, with
+a large degree of flexibility. The workload tool is written in C++ and
 wraps the
 [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master),
 which supports the
@@ -87,13 +87,15 @@ the basic ideas. All the examples work.
 3. Specify integer variables:
    1. Thread specific variables
    2. Workload wide variables
+4. Logging with timestamps on node execution start and stop
 
 ### Currently unsupported features
 This is an incomplete list
 
 1. Setting the time limit to run the workload
-2. Stats. There are currently no client stats collected
-5. Much more. 
+2. Stats: There are currently no client stats collected beyond the
+   timestamps in the logging output
+3. Much more. 
 
 Dependencies
 ------------
@@ -106,7 +108,6 @@ Dependencies
 Building
 --------
 
-    mkdir build
     cd build
     cmake ..
     make
@@ -114,8 +115,8 @@ Building
 Examples
 --------
 
-There are a collections of examples in the examples directory. To run
-the forN.yml example, simply do:
+There are a collections of examples in the [examples directory](examples/). To run
+the [forN.yml](examples/forN.yml) example, simply do:
     ./build/mwg examples/forN.yml
 
 The workloads are all specified in yaml. An example find node is:
@@ -126,7 +127,8 @@ The workloads are all specified in yaml. An example find node is:
         next : sleep
 
 The main parts of this are:
-* name: This is a label used to refer to the node or operation
+* name: This is a label used to refer to the node or operation. If not
+  specified, a default name will be provided.
 * type: This says what the operation should be. Basic operations
   include the operations supported by the C++11 driver. Currently only
   a limited subset is supported.
@@ -134,7 +136,8 @@ The main parts of this are:
   converted into bson, and will be used as the find document passed
   to the C++11 driver when generating the find
 * next: This is the node to transition to when completing this
-  operation.
+  operation. If not specified, the immediately following node in the
+  definition will be set as the next node.
 
 A simple workload that does an insert and a find, and randomly
 chooses between them:
