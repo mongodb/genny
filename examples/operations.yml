@@ -4,18 +4,12 @@ main :
   seed: 131415161718
   name: main
   nodes: 
+    - type : drop
     - 
-      name : drop
-      type : drop
-      next : command
-    - 
-      name  : command
       type : command
       command : 
         create : testCollection
-      next : insert
     -
-      name : insert
       type : insert_many
       container :
         - {x : a}
@@ -33,94 +27,61 @@ main :
       options : 
         write_concern : 
           nodes : 1
-      next : insert_one
     -
-      name : insert_one
       type : insert_one
       document : {x : a}
       options : 
         write_concern : 
           nodes : 1
-      next : count
     - 
-      name : count
       type : count
       filter : { y : b } 
-      next : find
     - 
-      name : find
       type : find
       filter : { x : a } 
       options : 
         batch_size : 10
         limit : 2
-      next : find_one
     - 
-      name : find_one
       type : find_one
       filter : { x : a } 
-      next : find_one_and_delete
     - 
-      name : find_one_and_delete
       type : find_one_and_delete
       filter : { x : a } 
-      next : find_one_and_replace
     - 
-      name : find_one_and_replace
       type : find_one_and_replace
       filter : { x : a } 
       replace : { z : a }
-      next : find_one_and_update
     - 
-      name : find_one_and_update
       type : find_one_and_update
       filter : { x : a } 
       update : { $set : {z : a}}
-      next : delete_one
     - 
-      name : delete_one
       type : delete_one
       filter : {y : -3}
-      next : delete_many
     - 
-      name : delete_many
       type : delete_many
       filter : { y : b}
-      next : distinct
     - 
-      name : distinct
       type : distinct
       distinct_name : distinct
       filter : { x : 1 }
-      next : create_index
     - 
-      name : create_index
       type : create_index
       keys : { x : 1 } 
-      next : list_indexes
     - 
-      name : list_indexes
       type : list_indexes
-      next : name
     - 
-      name : name
       type : name
-      next : replace_one
     - 
-      name : replace_one
       type : replace_one
       filter : { x : 1 } 
       replacement : { z1 : b }
-      next : update_one
     - 
-      name : update_one
       type : update_one
       filter : {x : a} 
       update : { $inc : { i : 1 }}
-      next : update_many
     - 
-      name : update_many
       type : update_many
       filter : {x : a} 
       update : { $inc : { i : 1 }}
-      next : Finish

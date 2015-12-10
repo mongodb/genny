@@ -5,15 +5,12 @@ main :
   name: main
   nodes: 
     -
-      name : drop
       type : drop
-      next : create
     - 
       name : create
       type : command
       command : 
         create : testCollection
-      next : ttl_index
     - name : ttl_index
       type : create_index
       keys : 

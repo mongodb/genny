@@ -12,6 +12,8 @@
 
 namespace mwg {
 
+static int count = 0;
+
 node::node(YAML::Node& ynode) {
     // need to set the name
     // these should be made into exceptions
@@ -24,8 +26,12 @@ node::node(YAML::Node& ynode) {
         BOOST_LOG_TRIVIAL(fatal) << "Not map in find type initializer";
         exit(EXIT_FAILURE);
     }
-    name = ynode["name"].Scalar();
-    nextName = ynode["next"].Scalar();
+    if (ynode["name"])
+        name = ynode["name"].Scalar();
+    else
+        name = ynode["type"].Scalar() + std::to_string(count++);  // default name
+    if (ynode["next"])
+        nextName = ynode["next"].Scalar();
     BOOST_LOG_TRIVIAL(debug) << "In node constructor. Name: " << name << ", nextName: " << nextName;
     if (ynode["print"]) {
         BOOST_LOG_TRIVIAL(debug) << "In node constructor and print";
@@ -33,10 +39,35 @@ node::node(YAML::Node& ynode) {
     }
 }
 
-void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes) {
-    BOOST_LOG_TRIVIAL(debug) << "Setting next node for " << name << ". Next node should be "
-                             << nextName;
-    nextNode = nodes[nextName];
+void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
+                       vector<shared_ptr<node>>& vectornodes) {
+    if (nextName.empty()) {
+        // Need default next node.
+        // Check if there's a next in the vectornodes. Use that if there is
+        // Otherwise use finish node
+        BOOST_LOG_TRIVIAL(trace) << "nextName is empty. Using default values";
+        // FIXME: The following code is a hack to find the next node in the list
+        for (int i = 0; i < vectornodes.size(); i++)
+            if (vectornodes[i].get() == this) {
+                BOOST_LOG_TRIVIAL(trace) << "Found node";
+                if (i < vectornodes.size() - 1) {
+                    BOOST_LOG_TRIVIAL(trace) << "Setting next node to next node in list";
+                    auto next = vectornodes[i + 1];
+                    nextName = next->name;
+                    nextNode = next;
+                } else {
+                    BOOST_LOG_TRIVIAL(trace)
+                        << "Node was last in vector. Setting next node to Finish";
+                    nextName = "Finish";
+                    nextNode = nodes["Finish"];
+                }
+                return;
+            }
+        BOOST_LOG_TRIVIAL(fatal) << "In setNextNode and fell through default value";
+        exit(0);
+    } else {
+        nextNode = nodes[nextName];
+    }
 }
 
 void node::executeNextNode(shared_ptr<threadState> myState) {

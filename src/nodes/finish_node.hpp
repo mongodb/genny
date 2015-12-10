@@ -17,12 +17,13 @@ public:
     finishNode(const finishNode&) = default;
     finishNode(finishNode&&) = default;
     // Execute the finishNode
-    virtual void executeNode(shared_ptr<threadState>);
+    virtual void executeNode(shared_ptr<threadState>) override;
     const string getName() {
         return "Finish";
     };
 
     // The finish node never has a next pointer
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&){};
+    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
+                             vector<shared_ptr<node>>&) override{};
 };
 }

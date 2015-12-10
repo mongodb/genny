@@ -42,7 +42,8 @@ random_choice::random_choice(YAML::Node& ynode) {
     BOOST_LOG_TRIVIAL(debug) << "Setting nextName to first entry. NextName: " << nextName;
 }
 
-void random_choice::setNextNode(unordered_map<string, shared_ptr<node>>& nodes) {
+void random_choice::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
+                                vector<shared_ptr<node>>& vectornodesin) {
     double partial = 0;  // put in distribution
     BOOST_LOG_TRIVIAL(debug) << "Setting next nodes in random choice";
     for (auto nextstate : vectornodestring) {

@@ -17,7 +17,8 @@ public:
     doAll(doAll&&) = default;
     // Execute the node
     virtual void execute(shared_ptr<threadState>) override;
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&) override;
+    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
+                             vector<shared_ptr<node>>&) override;
 
 private:
     vector<shared_ptr<node>> vectornodes;

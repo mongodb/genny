@@ -18,7 +18,8 @@ public:
     random_choice(random_choice&&) = default;
     // Execute the node
     virtual void executeNode(shared_ptr<threadState>) override;
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&) override;
+    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
+                             vector<shared_ptr<node>>&) override;
 
 private:
     // possible next states with probabilities

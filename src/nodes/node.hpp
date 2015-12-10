@@ -31,7 +31,7 @@ public:
         stopped = true;
     };
     // Set the next node pointer
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&);
+    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&, vector<shared_ptr<node>>&);
     string name;
     string nextName;
 

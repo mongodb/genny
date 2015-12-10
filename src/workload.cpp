@@ -98,7 +98,7 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
     for (auto mnode : vectornodes) {
         BOOST_LOG_TRIVIAL(debug) << "Setting next node for " << mnode->getName()
                                  << ". Next node name is " << mnode->nextName;
-        mnode->setNextNode(nodes);
+        mnode->setNextNode(nodes, vectornodes);
     }
 }
 void workload::execute(mongocxx::client& conn) {
