@@ -16,9 +16,9 @@ There are five basic components in a workload, enabling the
 specification of arbitrarily complex workloads in a graph of
 operations.
 
-1. Operations: These are basic operations, such as a find_one. These
+1. [Operations](Operations.md): These are basic operations, such as a find_one. These
    operations *do* something
-2. Nodes: These are nodes in the workload graph. They often have an
+2. [Nodes](Nodes.md): These are nodes in the workload graph. They often have an
    associated operation. Nodes control the order of execution of the
    operations.
 3. Workloads: These are collection of nodes and represent an actual
@@ -30,38 +30,11 @@ operations.
 5. Variables: A workload has a list of variables that be used and
    set. Variables can be thread local, or shared across the workload. 
 
-Operations can be embedded in a node for compactness of
-representation. The tool will detect this and create an opNode,
-containing the operation.
-
 There are a number of [examples](examples/README.md) that demonstrate
 the basic ideas. All the examples work. 
 
-### Currently supported operations
-
-1. Most collection based operations except for aggregation. Although
-   operations without examples have not been tested. This includes
-   almost all options and write concerns that go with those
-   operations. 
-2. Database.command (run_command) 
-3. sleep: sleep for some number of milliseconds. The entry sleep
-   specifies how long to sleep. 
-
-### Currently supported nodes
-
-1. opNode: This is the default node. It executes its associated
-   operation, and then moves execution to its next node.
-2. forN: This node wraps a workload. It executes the workload N times
-3. randomChoice: This node has a list of other nodes and
-   probabilities. It uses the pseudo-random number generator to select
-   the next node to execute.
-4. Finish: This represents an absorbing state in the graph. The
-   workload is finished when the Finish node executes. There is always
-   an implicit Finish state included in the workload. 
-5. doAll/join: These give fork/join semantics. The doAll executes all
-   of it's children nodes, and parent and child nodes continue until a
-   join node. The parent waits for all children to complete at the
-   join node. 
+See [Operations](Operations.md) and [Nodes](Nodes.md) for more on
+operations and nodes. 
 
 ### Currently supported Documents
 
@@ -84,7 +57,7 @@ the basic ideas. All the examples work.
 1. numThreads: Specify the number of parallel threads of the workload
    to run.
 2. Set the random seed
-3. Specify integer variables:
+3. Specify variables:
    1. Thread specific variables
    2. Workload wide variables
 4. Logging with timestamps on node execution start and stop
@@ -95,7 +68,13 @@ This is an incomplete list
 1. Setting the time limit to run the workload
 2. Stats: There are currently no client stats collected beyond the
    timestamps in the logging output
-3. Much more. 
+3. More types of transformation of values and tools for building
+   documents (hashing, concatenate, adding fields to an existing document)
+4. Use of variable in any field (currently only in overrideDocument). 
+5. Access state from an embedded workload (e.g., give 5 copies of an
+   embedded workload unique sequence ids by incrementing a field)
+5. See [Operations](Operations.md) and [Nodes](Nodes.md) for future
+   operations and nodes. 
 
 Dependencies
 ------------
