@@ -12,9 +12,9 @@ A Tour
   supported operations, in a list. It executes each operation once
 - [sample1.yml](sample1.yml): Four node example. Inserts a document of one form, and
   then randomly chooses between inserting a document of a different
-  form, or doing a query.
+  form, or doing a query. Here's an [image of the sample1 graph](images/sample1.png).
 - [sample2.yml](sample2.yml): Extension of sample1 with the addition of an absorbing
-  state. 
+  state. Here's an [image of the sample2 graph](images/sample2.png)
 - [sample1+threads.yml](sample1+threads.yml): An extension to sample1.yml to run 10 threads
   of execution instead of 1. 
 - [workloadNode.yml](workloadNode.yml): This is a simple example showing that a workload
