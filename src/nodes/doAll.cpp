@@ -48,4 +48,13 @@ void doAll::execute(shared_ptr<threadState> myState) {
         myState->childThreads.push_back(newState->myThread);
     }
 }
+
+std::pair<std::string, std::string> doAll::generateDotGraph() {
+    string graph;
+    for (string nextNodeN : nodeNames) {
+        graph += name + " -> " + nextNodeN + ";\n";
+    }
+    graph += name + " -> " + nextName + ";\n";
+    return (std::pair<std::string, std::string>{graph, ""});
+}
 }

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include "yaml-cpp/yaml.h"
 #include <bsoncxx/builder/stream/document.hpp>
@@ -31,16 +32,20 @@ void print_help(const char* process_name) {
             "Execution Options:\n"
             "\t--help|-h             Display this help and exit\n"
             "\t--loglevel|-l LEVEL   Set the logging level. Valid options are trace,\n"
-            "\t                      debug, info, warning, error, and fatal.\n\n",
+            "\t                      debug, info, warning, error, and fatal.\n"
+            "\t-d DOTFILE            Generate dotfile to DOTFILE from workload and exit.\n"
+            "\t                      WARNING: names with spaces or other special characters\n"
+            "\t                      will break the dot file\n\n",
             process_name);
 }
 
 int main(int argc, char* argv[]) {
     string filename = "sample.yml";
+    string dotoutput;
     int arg_count = 0;
     int idx = 0;
     while (1) {
-        int arg = getopt_long(argc, argv, "hl:", poptions, &idx);
+        int arg = getopt_long(argc, argv, "hl:d:", poptions, &idx);
         arg_count++;
         if (arg == -1) {
             // all arguments have been processed
@@ -72,6 +77,9 @@ int main(int argc, char* argv[]) {
                     logging::core::get()->set_filter(logging::trivial::severity >=
                                                      logging::trivial::fatal);
                 break;
+            case 'd':
+                dotoutput = optarg;
+                break;
             default:
                 fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
                 print_help(argv[0]);
@@ -92,6 +100,15 @@ int main(int argc, char* argv[]) {
         mongocxx::client conn{mongocxx::uri{}};
 
         workload myworkload(main);
+        if (dotoutput.length() > 0) {
+            // save the dotgraph
+            ofstream dotfile;
+            dotfile.open(dotoutput);
+            dotfile << myworkload.generateDotGraph();
+            dotfile.close();
+            return EXIT_SUCCESS;
+        }
+
         BOOST_LOG_TRIVIAL(trace) << "After workload constructor. Before execute";
         myworkload.execute(conn);
     }

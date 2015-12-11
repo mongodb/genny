@@ -142,5 +142,17 @@ void workload::stop() {
     stopped = true;
     for (auto mnode : vectornodes)
         mnode->stop();
-};
+}
+
+std::string workload::generateDotGraph() {
+    string extra;
+    string nodes = "digraph " + name + " {\n";
+    for (auto node : vectornodes) {
+        auto graph = node->generateDotGraph();
+        nodes += graph.first;
+        extra += graph.second;
+    }
+    nodes += "}\n";
+    return (nodes + extra);
+}
 }

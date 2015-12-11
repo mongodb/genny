@@ -31,4 +31,8 @@ void workloadNode::execute(shared_ptr<threadState> myState) {
                              << std::chrono::duration_cast<chrono::microseconds>(stop - start)
                                     .count() << " microseconds";
 }
+std::pair<std::string, std::string> workloadNode::generateDotGraph() {
+    return (std::pair<std::string, std::string>{name + " -> " + nextName + ";\n",
+                                                myWorkload->generateDotGraph()});
+}
 }

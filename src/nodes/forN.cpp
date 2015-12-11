@@ -32,4 +32,10 @@ void forN::execute(shared_ptr<threadState> myState) {
                                         .count() << " microseconds";
     }
 }
+std::pair<std::string, std::string> forN::generateDotGraph() {
+    // Do default, and get any extra from the child node.
+    // Don't use the graph from the child node itself since it's next node isn't used.
+    return (std::pair<std::string, std::string>{name + " -> " + nextName + "\n",
+                                                myNode->generateDotGraph().second});
+}
 }

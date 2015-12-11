@@ -17,6 +17,7 @@ public:
     forN(forN&&) = default;
     // Execute the node
     virtual void execute(shared_ptr<threadState>) override;
+    virtual std::pair<std::string, std::string> generateDotGraph() override;
 
 private:
     unique_ptr<node> myNode;

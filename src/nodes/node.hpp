@@ -34,6 +34,8 @@ public:
     virtual void setNextNode(unordered_map<string, shared_ptr<node>>&, vector<shared_ptr<node>>&);
     string name;
     string nextName;
+    // Generate a dot file for generating a graph.
+    virtual std::pair<std::string, std::string> generateDotGraph();
 
 protected:
     weak_ptr<node> nextNode;

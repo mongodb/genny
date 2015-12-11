@@ -73,4 +73,12 @@ void random_choice::executeNode(shared_ptr<threadState> myState) {
         }
     }
 }
+std::pair<std::string, std::string> random_choice::generateDotGraph() {
+    string graph;
+    for (auto nextNodeN : vectornodestring) {
+        graph += name + " -> " + nextNodeN.first + "[label=\"" + std::to_string(nextNodeN.second) +
+            "\"];\n";
+    }
+    return (std::pair<std::string, std::string>{graph, ""});
+}
 }

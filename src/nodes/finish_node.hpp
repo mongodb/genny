@@ -25,5 +25,6 @@ public:
     // The finish node never has a next pointer
     virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
                              vector<shared_ptr<node>>&) override{};
+    virtual std::pair<std::string, std::string> generateDotGraph() override;
 };
 }

@@ -108,6 +108,10 @@ void node::executeNode(shared_ptr<threadState> myState) {
     executeNextNode(myState);
 }
 
+std::pair<std::string, std::string> node::generateDotGraph() {
+    return (std::pair<std::string, std::string>{name + " -> " + nextName + ";\n", ""});
+}
+
 void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
     BOOST_LOG_TRIVIAL(trace) << "Node runThread";
     myState->currentNode = Node;

@@ -34,6 +34,9 @@ public:
     // safety. Currently only done in one place
     unordered_set<shared_ptr<threadState>> threads;
 
+    // Generate a dot file for generating a graph.
+    std::string generateDotGraph();
+
     std::mutex mut;
     string DBName = "testdb";
     string CollectionName = "testCollection";

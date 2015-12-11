@@ -6,4 +6,7 @@ void finishNode::executeNode(shared_ptr<threadState> myState) {
     shared_ptr<node> me = myState->currentNode;
     myState->currentNode = nullptr;
 }
+std::pair<std::string, std::string> finishNode::generateDotGraph() {
+    return (std::pair<std::string, std::string>{"", ""});
+}
 }

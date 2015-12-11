@@ -1,10 +1,10 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/third_party/catch/include
 )
-include_directories(${CMAKE_SOURCE_DIR}/src/documents ${CMAKE_SOURCE_DIR}/src/values)
+include_directories(${CMAKE_SOURCE_DIR}/src/documents ${CMAKE_SOURCE_DIR}/src/values ${CMAKE_SOURCE_DIR}/src/nodes)
 
 add_executable(test_driver
-${CMAKE_SOURCE_DIR}/src/third_party/catch/main.cpp documents.cpp)
+${CMAKE_SOURCE_DIR}/src/third_party/catch/main.cpp documents.cpp dot.cpp)
 
 target_link_libraries(test_driver workload nodes operations docs parse ${Boost_LIBRARIES}
 ${LIBMONGOCXX_LIBRARIES} ${YAMLCPP_LIBRARIES}
