@@ -37,7 +37,7 @@ public:
 
 protected:
     weak_ptr<node> nextNode;
-    bool stopped;
+    bool stopped = false;
     string text;
 };
 

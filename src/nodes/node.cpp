@@ -74,9 +74,15 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
     // execute the next node if there is one
     BOOST_LOG_TRIVIAL(debug) << "just executed " << name << ". NextName is " << nextName;
     auto next = nextNode.lock();
-    if (!next)
-        BOOST_LOG_TRIVIAL(error) << "nextNode is null for some reason";
-    if (name != "Finish" && next && !stopped) {
+    if (!next) {
+        BOOST_LOG_TRIVIAL(fatal) << "nextNode is null for some reason";
+        exit(0);
+    }
+    if (stopped) {
+        BOOST_LOG_TRIVIAL(error) << "Stopped set";
+        return;
+    }
+    if (name != "Finish" && next) {
         BOOST_LOG_TRIVIAL(debug) << "About to call nextNode->executeNode";
         // update currentNode in the state. Protect the reference while executing
         shared_ptr<node> me = myState->currentNode;

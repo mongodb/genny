@@ -56,6 +56,7 @@ void random_choice::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
 // Execute the node
 void random_choice::executeNode(shared_ptr<threadState> myState) {
     // pick a random number, and pick the next state based on it.
+    BOOST_LOG_TRIVIAL(debug) << "random_choice.execute.";
     double random_number = 0.6;  // Using 0.6 until wiring through the random number generator
     uniform_real_distribution<double> distribution(0.0, 1.0);
     random_number = distribution(myState->rng);
