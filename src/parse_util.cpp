@@ -3,6 +3,7 @@
 #include <chrono>
 #include <regex>
 #include <boost/log/trivial.hpp>
+#include <chrono>
 
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
@@ -182,8 +183,8 @@ void parseCountOptions(mongocxx::options::count& options, YAML::Node node) {
     }
     if (node["limit"])
         options.limit(node["limit"].as<int32_t>());
-    if (node["max_time_ms"])
-        options.max_time_ms(node["max_time_ms"].as<int32_t>());
+    if (node["max_time"])
+        options.max_time(std::chrono::milliseconds(node["max_time"].as<int64_t>()));
     if (node["read_preference"]) {
         options.read_preference(parseReadPreference(node["read_preference"]));
     }
@@ -195,8 +196,8 @@ void parseAggregateOptions(mongocxx::options::aggregate& options, YAML::Node nod
         options.allow_disk_use(node["allow_disk_use"].as<bool>());
     if (node["batch_size"])
         options.batch_size(node["batch_size"].as<int32_t>());
-    if (node["max_time_ms"])
-        options.max_time_ms(node["max_time_ms"].as<int32_t>());
+    if (node["max_time"])
+        options.max_time(std::chrono::milliseconds(node["max_time"].as<int64_t>()));
     if (node["use_cursor"])
         options.use_cursor(node["use_cursor"].as<bool>());
     if (node["read_preference"]) {
@@ -214,8 +215,8 @@ void parseDeleteOptions(mongocxx::options::delete_options& options, YAML::Node n
         options.write_concern(parseWriteConcern(node["write_concern"]));
 }
 void parseDistinctOptions(mongocxx::options::distinct& options, YAML::Node node) {
-    if (node["max_time_ms"])
-        options.max_time_ms(node["max_time_ms"].as<int32_t>());
+    if (node["max_time"])
+        options.max_time(std::chrono::milliseconds(node["max_time"].as<int64_t>()));
     if (node["read_preference"]) {
         options.read_preference(parseReadPreference(node["read_preference"]));
     }
@@ -231,8 +232,8 @@ void parseFindOptions(mongocxx::options::find& options, YAML::Node node) {
     // skipping cursor type for now. It's just an enum. Just need to match them.
     if (node["limit"])
         options.limit(node["limit"].as<int32_t>());
-    if (node["max_time_ms"])
-        options.max_time_ms(node["max_time_ms"].as<int32_t>());
+    if (node["max_time"])
+        options.max_time(std::chrono::milliseconds(node["max_time"].as<int64_t>()));
     if (node["modifiers"]) {
         bsoncxx::builder::stream::document doc{};
         parseMap(doc, node["modifiers"]);
