@@ -1,0 +1,46 @@
+# Small example with workloads being included and overriden. The
+# overrides in the workloadNode are applied to the variables in the
+# contained workload. Variables can be arbitrary bson values.
+
+base: &base
+  name : base_workload
+  tvariables : 
+    N : 1
+    doc : { x : 1 }
+  nodes : 
+    - type : forN
+      next : Finish
+      node : 
+        type : insert_one
+        document : 
+          type : override
+          doc : {}
+          overrides : 
+            wholeDoc : 
+              variable : doc
+
+main : 
+  name : main
+  nodes : 
+    - type : doAll
+      childNodes : 
+        - workA
+        - workB
+      next : join
+    - name : workA
+      type : workload
+      workload : *base
+      overrides : 
+        doc : { y : 1 }
+      next : join
+    - name : workB
+      type : workload
+      workload : *base
+      overrides : 
+        doc : { z : 1 }
+      next : join
+    - name : join
+      type : join
+      next : Finish
+    
+  
