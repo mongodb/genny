@@ -47,7 +47,7 @@ void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
         // Otherwise use finish node
         BOOST_LOG_TRIVIAL(trace) << "nextName is empty. Using default values";
         // FIXME: The following code is a hack to find the next node in the list
-        for (int i = 0; i < vectornodes.size(); i++)
+        for (uint i = 0; i < vectornodes.size(); i++)
             if (vectornodes[i].get() == this) {
                 BOOST_LOG_TRIVIAL(trace) << "Found node";
                 if (i < vectornodes.size() - 1) {
