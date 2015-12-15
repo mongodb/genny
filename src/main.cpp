@@ -44,6 +44,10 @@ int main(int argc, char* argv[]) {
     string dotoutput;
     int arg_count = 0;
     int idx = 0;
+
+    // default logging level to info
+    logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::info);
+
     while (1) {
         int arg = getopt_long(argc, argv, "hl:d:", poptions, &idx);
         arg_count++;
