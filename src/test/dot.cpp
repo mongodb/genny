@@ -39,12 +39,16 @@ TEST_CASE("Generate Dot Files", "[dot]") {
       next : join)yaml");
 
         auto node = doAll(yaml);
+        // The ordering is not guaranteed. Really should split the
+        // thing up and test that each line is in there.
         string expected = "doAll -> thingA;\ndoAll -> thingB;\ndoAll -> join;\n";
+        string expected2 = "doAll -> thingB;\ndoAll -> thingA;\ndoAll -> join;\n";
         string expectedExtra;
         auto graph = node.generateDotGraph();
         INFO("Expected = \"" << expected << "\"");
         INFO("Got      = \"" << graph.first << "\"");
-        REQUIRE(expected.compare(graph.first) == 0);
+        auto result = (expected.compare(graph.first) == 0 || expected2.compare(graph.first) == 0);
+        REQUIRE(result == true);
         INFO("Expected = \"" << expectedExtra << "\"");
         INFO("Got      = \"" << graph.second << "\"");
         REQUIRE(expectedExtra.compare(graph.second) == 0);
@@ -69,13 +73,18 @@ TEST_CASE("Generate Dot Files", "[dot]") {
         query : 0.5)yaml");
 
         auto node = random_choice(yaml);
+        // The ordering is not guaranteed. Really should split the
+        // thing up and test that each line is in there.
         string expected =
             "random -> insert2[label=\"0.500000\"];\nrandom -> query[label=\"0.500000\"];\n";
+        string expected2 =
+            "random -> query[label=\"0.500000\"];\nrandom -> insert2[label=\"0.500000\"];\n";
         string expectedExtra;
         auto graph = node.generateDotGraph();
         INFO("Expected = \"" << expected << "\"");
         INFO("Got      = \"" << graph.first << "\"");
-        REQUIRE(expected.compare(graph.first) == 0);
+        auto result = (expected.compare(graph.first) == 0 || expected2.compare(graph.first) == 0);
+        REQUIRE(result == true);
         INFO("Expected = \"" << expectedExtra << "\"");
         INFO("Got      = \"" << graph.second << "\"");
         REQUIRE(expectedExtra.compare(graph.second) == 0);
