@@ -28,5 +28,5 @@ A workload has the following fields:
 
 ### Future Work
 
-* Enabnle _runLength_ to actually control the maximum execution time
+* Enable _runLength_ to actually control the maximum execution time
   for a workload. 
