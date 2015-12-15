@@ -21,60 +21,45 @@ operations.
 2. [Nodes](Nodes.md): These are nodes in the workload graph. They often have an
    associated operation. Nodes control the order of execution of the
    operations.
-3. Workloads: These are collection of nodes and represent an actual
+3. [Workloads](Workloads.md): These are collection of nodes and represent an actual
    workload. They specify the node that should execute first in the
    workload. They also supply parameters and a pseudo-random number
    generator to the nodes and ops. 
-4. Documents: These are objects that can be used anywhere a bson
+4. [Documents](Documents.md): These are objects that can be used anywhere a bson
    Object is needed.
 5. Variables: A workload has a list of variables that be used and
-   set. Variables can be thread local, or shared across the workload. 
+   set. Variables can be thread local, or shared across the
+   workload. Variables are described in [Workloads](Workloads.md)
 
 There are a number of [examples](examples/README.md) that demonstrate
 the basic ideas. All the examples work. 
 
-See [Operations](Operations.md) and [Nodes](Nodes.md) for more on
-operations and nodes. 
+### Stats
 
-### Currently supported Documents
+Currently stats are limited to logging node and workload durations
+during test execution. 
 
-1. bsonDocument: This is a default document specified using json and
-   converted into bson.
-2. overrideDocument: This is a document that wraps another document,
-   and can change arbitrary fields in a subdocument. Can currently
-   update nested fields except for fields nested in an array. There
-   are currently two kinds of overrides:
-   1. randomint: Generate a random integer. Accepts min and max
-      values.
-   2. randomstring: Generate a random string. Accepts a length value
-      (default of 10). Will support an alphabet option in the future
-   3. increment: Takes a variable and uses it's value and does a post
-     increment.
-   4. date: The current date
+The next step is to collect those durations and collect the simple
+accumulated stats per node and workload:
+1. Numer of operations
+2. Min, max, average, and variance of latency.
 
-### Currently supported workload features
+Longer term we should add more advanced statistics, histograms, and an
+ability to collect stats by time period (e.g., once a minute).
 
-1. numThreads: Specify the number of parallel threads of the workload
-   to run.
-2. Set the random seed
-3. Specify variables:
-   1. Thread specific variables
-   2. Workload wide variables
-4. Logging with timestamps on node execution start and stop
+### Future features
+This is an incomplete list. 
 
-### Currently unsupported features
-This is an incomplete list
-
-1. Setting the time limit to run the workload
-2. Stats: There are currently no client stats collected beyond the
+1. Stats: There are currently no client stats collected beyond the
    timestamps in the logging output
-3. More types of transformation of values and tools for building
+2. More types of transformation of values and tools for building
    documents (hashing, concatenate, adding fields to an existing document)
-4. Use of variable in any field (currently only in overrideDocument). 
-5. Access state from an embedded workload (e.g., give 5 copies of an
+3. Use of variable in any field (currently only in overrideDocument). 
+4. Access state from an embedded workload (e.g., give 5 copies of an
    embedded workload unique sequence ids by incrementing a field)
-5. See [Operations](Operations.md) and [Nodes](Nodes.md) for future
-   operations and nodes. 
+5. See [Operations](Operations.md), [Nodes](Nodes.md),
+   [Workloads](Workloads.md), and [Documents](Documents.md) for
+   additional future features.
 
 Dependencies
 ------------

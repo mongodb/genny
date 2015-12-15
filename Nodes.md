@@ -60,4 +60,14 @@ executes.
    external trigger. External software could track when all the
    clients have finished their warmups, and then indicate for all of
    the clients to continue. 
-
+5. Extension to workloadNode: Add a field _overrides_ that is a
+   sequence of settings in the underlying workload that should be
+   overriden. Things that can be overridden include:
+   1. variables
+   2. Database name
+   3. Collection name
+   4. runLength
+   5. number of threads
+   6. workload name
+   Additionally, the workload should have it's random seed initialized
+   by the node. 
