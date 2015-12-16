@@ -45,7 +45,17 @@ goal is to support all CRUD spec operations.
   * command (needs to be renamed run\_command). Takes an arbitrary document _command_ and executes it
   * create\_collection: Create collection with string name
     _collection\_name_ and create collection options _options_
-
+* Helper operations
+  * set\_variable: Set a workload or thread variable. If an existing
+  thread or workload variable exists, it will udpate that value. If
+  there is no existing variable, it will be added to the thread
+  variables (tvariables). The variable can be set from a _value_ or
+  from another variable (_donorVariable_), but not both. Can also set
+  DBName and CollectionName. 
+  * _target_: string value name of the variable to update
+  * _value_: A json/yaml value to set the variable to
+  * _donorVariable_: A variable to copy a value from.
+  
 #### Future Operations
 
 * Aggregation

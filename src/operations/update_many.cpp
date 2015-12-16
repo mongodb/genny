@@ -33,7 +33,7 @@ update_many::update_many(YAML::Node& node) {
 
 // Execute the node
 void update_many::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     bsoncxx::builder::stream::document mydoc{};
     bsoncxx::builder::stream::document myupdate{};
     auto view = filter->view(mydoc, state);

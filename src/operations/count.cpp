@@ -31,7 +31,7 @@ count::count(YAML::Node& node) {
 
 // Execute the node
 void count::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     bsoncxx::builder::stream::document mydoc{};
     auto view = filter->view(mydoc, state);
     try {

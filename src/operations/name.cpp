@@ -28,7 +28,7 @@ name::name(YAML::Node& node) {
 
 // Execute the node
 void name::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     try {
         auto name = collection.name();
         BOOST_LOG_TRIVIAL(debug) << "name.execute: name is " << name;

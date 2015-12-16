@@ -36,7 +36,7 @@ create_index::create_index(YAML::Node& node) {
 // Execute the node
 void create_index::execute(mongocxx::client& conn, threadState& state) {
     BOOST_LOG_TRIVIAL(debug) << "Enter create_index execute";
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     bsoncxx::builder::stream::document mydoc{};
     bsoncxx::builder::stream::document myoptions{};
     auto view = keys->view(mydoc, state);

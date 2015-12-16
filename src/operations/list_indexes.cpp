@@ -29,7 +29,7 @@ list_indexes::list_indexes(YAML::Node& node) {
 
 // Execute the node
 void list_indexes::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     try {
         auto cursor = collection.list_indexes();
     } catch (mongocxx::exception::base e) {

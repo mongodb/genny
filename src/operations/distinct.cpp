@@ -42,7 +42,7 @@ distinct::distinct(YAML::Node& node) {
 
 // Execute the node
 void distinct::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     bsoncxx::builder::stream::document mydoc{};
     auto view = filter->view(mydoc, state);
     try {

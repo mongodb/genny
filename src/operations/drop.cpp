@@ -28,7 +28,7 @@ drop::drop(YAML::Node& node) {
 
 // Execute the node
 void drop::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     try {
         collection.drop();
     } catch (mongocxx::exception::base e) {

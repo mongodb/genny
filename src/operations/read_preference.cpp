@@ -30,7 +30,7 @@ read_preference::read_preference(YAML::Node& node) {
 
 // Execute the node
 void read_preference::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     try {
         collection.read_preference(read_pref);
     } catch (mongocxx::exception::base e) {

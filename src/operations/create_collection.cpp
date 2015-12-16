@@ -36,7 +36,7 @@ create_collection::create_collection(YAML::Node& node) {
 
 // Execute the node
 void create_collection::execute(mongocxx::client& conn, threadState& state) {
-    auto db = conn["testdb"];
+    auto db = conn[state.DBName];
     bsoncxx::builder::stream::document mydoc{};
     //    auto view = options->view(mydoc, state);
     try {

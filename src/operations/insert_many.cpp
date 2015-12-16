@@ -47,7 +47,7 @@ insert_many::insert_many(YAML::Node& ynode) {
 
 // Execute the node
 void insert_many::execute(mongocxx::client& conn, threadState& state) {
-    auto coll = conn["testdb"]["testCollection"];
+    auto coll = conn[state.DBName][state.CollectionName];
     // need to transform this into a vector of bson documents for switch over to document class
     // make a vector of views and pass that in
     // The vector of documents is to save the state needed for the view if the collection of

@@ -33,7 +33,7 @@ update_one::update_one(YAML::Node& node) {
 
 // Execute the node
 void update_one::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     bsoncxx::builder::stream::document mydoc{};
     bsoncxx::builder::stream::document myupdate{};
     auto view = filter->view(mydoc, state);

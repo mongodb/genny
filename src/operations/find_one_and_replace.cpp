@@ -33,7 +33,7 @@ find_one_and_replace::find_one_and_replace(YAML::Node& node) {
 
 // Execute the node
 void find_one_and_replace::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     bsoncxx::builder::stream::document mydoc{};
     bsoncxx::builder::stream::document myreplace{};
     auto view = filter->view(mydoc, state);

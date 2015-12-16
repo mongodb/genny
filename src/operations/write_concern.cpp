@@ -30,7 +30,7 @@ write_concern::write_concern(YAML::Node& node) {
 
 // Execute the node
 void write_concern::execute(mongocxx::client& conn, threadState& state) {
-    auto collection = conn["testdb"]["testCollection"];
+    auto collection = conn[state.DBName][state.CollectionName];
     try {
         collection.write_concern(write_conc);
     } catch (mongocxx::exception::base e) {
