@@ -22,9 +22,8 @@ A workload has the following fields:
 * _collection_ : Optional string value defining the default collection
   name to use (does not include database name). 
 * _threads_ : Number of parallel threads to use
-* _runLength_: (Currently unsupported) Maximum execution time for the
-  workload. The execution time can be shorter based on the sequence of
-  exeution.
+* _runLength_: Maximum execution time for the workload in seconds. The
+  execution time can be shorter based on the sequence of exeution.
 
 ### Future Work
 

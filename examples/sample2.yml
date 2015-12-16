@@ -6,6 +6,7 @@
 main : 
   seed: 234762873642
   name: main
+  runLength : 100
   nodes: 
     - 
       name : insert1

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <thread>
 #include <boost/log/trivial.hpp>
+#include <time.h>
 #include <chrono>
 #include "finish_node.hpp"
 #include "parse_util.hpp"
@@ -111,10 +112,39 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
         mnode->setNextNode(nodes, vectornodes);
     }
 }
+
+class timerState {
+public:
+    timerState(workload& work) : myWork(work), done(false){};
+    workload& myWork;
+    std::mutex mut;
+    bool done;
+};
+
+// Function to start a timer.
+void runTimer(shared_ptr<timerState> state, uint64_t runLength) {
+    if (runLength == 0)
+        return;
+    std::this_thread::sleep_for(std::chrono::seconds(runLength));
+    {
+        // grab lock before checking state
+        std::lock_guard<std::mutex> lk(state->mut);
+        if (!state->done) {
+            state->myWork.stop();
+        }
+    }
+}
+
 void workload::execute(mongocxx::client& conn) {
     // prep the threads and start them. Should put the timer in here also.
     BOOST_LOG_TRIVIAL(trace) << "In workload::execute";
     vector<thread> myThreads;
+
+    // setup timeout
+    BOOST_LOG_TRIVIAL(trace) << "RunLength is " << runLength << ". About to setup timer";
+    auto ts = shared_ptr<timerState>(new timerState(*this));
+    std::thread timer(runTimer, ts, runLength);
+
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
     for (uint64_t i = 0; i < numParallelThreads; i++) {
@@ -134,6 +164,15 @@ void workload::execute(mongocxx::client& conn) {
         myThreads[i].join();
     }
     stop = chrono::high_resolution_clock::now();
+    BOOST_LOG_TRIVIAL(trace) << "All threads finished. About to stop timer";
+
+    // clean up the timer stuff
+    {
+        std::lock_guard<std::mutex> lk(ts->mut);
+        ts->done = true;
+        timer.detach();
+    }
+
     BOOST_LOG_TRIVIAL(debug) << "Workload " << name << " took "
                              << std::chrono::duration_cast<chrono::milliseconds>(stop - start)
                                     .count() << " milliseconds";

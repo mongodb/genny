@@ -79,7 +79,7 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
         exit(0);
     }
     if (stopped) {
-        BOOST_LOG_TRIVIAL(error) << "Stopped set";
+        BOOST_LOG_TRIVIAL(info) << "Stopped set";
         return;
     }
     if (name != "Finish" && next) {
