@@ -11,15 +11,21 @@ add_definitions(-std=c++11)
 
 include_directories("${PROJECT_BINARY_DIR}")
 
-find_package(PkgConfig)
+find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBMONGOCXX  libmongocxx)
+if (!${LIBMONGOCXX_FOUND}) 
+   message(FARAL_ERROR "libmongocxx not found")
+endif()
 pkg_check_modules(YAMLCPP  yaml-cpp)
+if (!${YAMLCPP_FOUND}) 
+   message(FARAL_ERROR "yaml-cpp not found")
+endif()
 
 include_directories(${LIBMONGOCXX_INCLUDE_DIRS})
 include_directories(${YAMLCPP_INCLUDE_DIRS})
 link_directories(${LIBMONGOCXX_LIBRARY_DIRS} ${YAMLCPP_LIBRARY_DIRS})
 
-find_package(Threads)
+find_package(Threads REQUIRED)
 
 find_package(Git)
 if(GIT_FOUND)
@@ -41,7 +47,7 @@ if(GIT_FOUND)
   )
 endif()
 
-find_package(Boost REQUIRED COMPONENTS log thread filesystem)
+find_package(Boost 1.59 REQUIRED COMPONENTS log thread filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
 configure_file (
