@@ -20,14 +20,16 @@ public:
                 unordered_map<string, bsoncxx::types::value>& wvars,
                 workload& parentWorkload,
                 string dbname,
-                string collectionname)
-        : rng(seed),
+                string collectionname,
+                string uri = mongocxx::uri::k_default_uri)
+        : conn(mongocxx::uri(uri)),
+          rng(seed),
           tvariables(tvars),
           wvariables(wvars),
           myWorkload(parentWorkload),
           DBName(dbname),
           CollectionName(collectionname){};
-    mongocxx::client conn{mongocxx::uri{}};
+    mongocxx::client conn;
     mt19937_64 rng;  // random number generator
     shared_ptr<node> currentNode;
     unordered_map<string, bsoncxx::types::value> tvariables;

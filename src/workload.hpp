@@ -40,6 +40,7 @@ public:
     std::mutex mut;
     string DBName = "testdb";
     string CollectionName = "testCollection";
+    string uri = mongocxx::uri::k_default_uri;
 
 private:
     vector<shared_ptr<node>> vectornodes;

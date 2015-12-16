@@ -41,7 +41,8 @@ void doAll::execute(shared_ptr<threadState> myState) {
                                                                 myState->wvariables,
                                                                 myState->myWorkload,
                                                                 myState->DBName,
-                                                                myState->CollectionName));
+                                                                myState->CollectionName,
+                                                                myState->myWorkload.uri));
         newState->parentThread = myState;
         myState->childThreadStates.push_back(newState);
         newState->myThread = shared_ptr<thread>(new thread(runThread, node, newState));

@@ -21,7 +21,7 @@ workloadNode::workloadNode(YAML::Node& ynode) : node(ynode) {
 
 // Execute the node
 void workloadNode::execute(shared_ptr<threadState> myState) {
-    // execute the workload N times
+    myWorkload->uri = myState->myWorkload.uri;
     chrono::high_resolution_clock::time_point start, stop;
     BOOST_LOG_TRIVIAL(debug) << "In workloadNode and executing";
     start = chrono::high_resolution_clock::now();

@@ -23,14 +23,19 @@ using namespace std;
 using namespace mwg;
 namespace logging = boost::log;
 
-static struct option poptions[] = {
-    {"help", no_argument, 0, 'h'}, {"loglevel", required_argument, 0, 'l'}, {0, 0, 0, 0}};
+static struct option poptions[] = {{"help", no_argument, 0, 'h'},
+                                   {"loglevel", required_argument, 0, 'l'},
+                                   {"dotfile", required_argument, 0, 'd'},
+                                   {"host", required_argument, 0, 0},
+                                   {0, 0, 0, 0}};
 
 void print_help(const char* process_name) {
     fprintf(stderr,
             "Usage: %s [-h] /path/to/workload \n"
             "Execution Options:\n"
             "\t--help|-h             Display this help and exit\n"
+            "\t--host Host           Host/Connection string for mongo server to test--must be a\n"
+            "\t                      full URI,\n"
             "\t--loglevel|-l LEVEL   Set the logging level. Valid options are trace,\n"
             "\t                      debug, info, warning, error, and fatal.\n"
             "\t-d DOTFILE            Generate dotfile to DOTFILE from workload and exit.\n"
@@ -42,6 +47,7 @@ void print_help(const char* process_name) {
 int main(int argc, char* argv[]) {
     string filename = "sample.yml";
     string dotoutput;
+    string uri = mongocxx::uri::k_default_uri;
     int arg_count = 0;
     int idx = 0;
 
@@ -58,6 +64,16 @@ int main(int argc, char* argv[]) {
         ++arg_count;
 
         switch (arg) {
+            case 0:
+                switch (idx) {
+                    case 3:
+                        uri = optarg;
+                        break;
+                    default:
+                        fprintf(stderr, "unknown command line option with optarg index %d\n", idx);
+                        return EXIT_FAILURE;
+                }
+                break;
             case 'h':
                 print_help(argv[0]);
                 return EXIT_SUCCESS;
@@ -114,6 +130,8 @@ int main(int argc, char* argv[]) {
         }
 
         BOOST_LOG_TRIVIAL(trace) << "After workload constructor. Before execute";
+        // set the uri
+        myworkload.uri = uri;
         myworkload.execute(conn);
     }
 

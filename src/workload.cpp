@@ -151,7 +151,7 @@ void workload::execute(mongocxx::client& conn) {
         BOOST_LOG_TRIVIAL(trace) << "Starting thread in workload";
         // create thread state for each
         auto newState = shared_ptr<threadState>(
-            new threadState(rng(), tvariables, wvariables, *this, DBName, CollectionName));
+            new threadState(rng(), tvariables, wvariables, *this, DBName, CollectionName, uri));
         BOOST_LOG_TRIVIAL(trace) << "Created thread state";
         threads.insert(newState);
         myThreads.push_back(thread(runThread, vectornodes[0], newState));
