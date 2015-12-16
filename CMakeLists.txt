@@ -17,6 +17,7 @@ pkg_check_modules(YAMLCPP  yaml-cpp)
 
 include_directories(${LIBMONGOCXX_INCLUDE_DIRS})
 include_directories(${YAMLCPP_INCLUDE_DIRS})
+link_directories(${LIBMONGOCXX_LIBRARY_DIRS}, ${YAMLCPP_LIBRARY_DIRS})
 
 find_package(Threads)
 
