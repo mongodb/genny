@@ -47,36 +47,46 @@ esac
 workgenDir=$(pwd)
 
 # Install required packages
+echo "Install packages: $pkgmgr_install $pkgs"
 $pkgmgr_install $pkgs
+
 # cmake install
+echo "Install cmake"
 if [ -z "$cmake_install" ]; then
     CMAKE310=cmake-3.1.0-Linux-x86_64
     wget -qO- https://cmake.org/files/v3.1/${CMAKE}.tar.gz | tar -xzv
     sudo cp ${CMAKE}/bin/* /usr/local/bin/
     sudo cp -r ${CMAKE}/share/* /usr/local/share/
+    sudo rm -fr $CMAKE310
 else
     $($cmake_install)
 fi
 
 # boost install (need boost 1.59)
+echo "Install boost"
 if [ -z "$boost_install" ]; then
-    wget -qO- http://sourceforge.net/projects/boost/files/boost/1.59.0/boost_1_59_0.tar.gz | tar -xzv
-    pushd boost_1_59_0
+    BOOST159=boost_1_59_0
+    wget -qO- http://sourceforge.net/projects/boost/files/boost/1.59.0/${BOOST159}.tar.gz | tar -xzv
+    pushd ${BOOST159}
     sudo ./bootstrap.sh --with-libraries=log,regex
     sudo ./b2 install
     popd
+    sudo rm -fr ${BOOST159}
 else
     $($boost_install)
 fi
 
 # yaml-cpp install
+echo "Install yaml-cpp"
 if [ -z "$yaml_cpp_install" ]; then
-    wget -qO- https://yaml-cpp.googlecode.com/files/yaml-cpp-0.5.1.tar.gz | tar -xzv
-    pushd yaml-cpp-0.5.1
+    YAMLCPP051=yaml-cpp-0.5.1
+    wget -qO- https://yaml-cpp.googlecode.com/files/${YAMLCPP051}.tar.gz | tar -xzv
+    pushd ${YAMLCPP051}
     mkdir build && pushd build
     cmake ..
     sudo make
     sudo make install
+    sudo rm -fr ${YAMLCPP051}
     popd
     popd
 else
@@ -117,4 +127,4 @@ popd
 echo "Running the test_driver"
 $workgenDir/build/src/test/test_driver
 echo "Running sample1"
-$workgenDir/build/mwg $WLG_ROOT/examples/sample1.yml
+$workgenDir/build/mwg $workgenDir/examples/sample1.yml
