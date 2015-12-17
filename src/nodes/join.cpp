@@ -35,6 +35,7 @@ void join::executeNode(shared_ptr<threadState> myState) {
             child->join();
         }
         stop = chrono::high_resolution_clock::now();
+        myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
         BOOST_LOG_TRIVIAL(debug) << "Join node " << name << " took "
                                  << std::chrono::duration_cast<chrono::milliseconds>(stop - start)
                                         .count() << " milliseconds";

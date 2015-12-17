@@ -6,6 +6,7 @@
 #include "threadState.hpp"
 #include "yaml-cpp/yaml.h"
 #include <memory>
+#include "stats.hpp"
 
 #pragma once
 using namespace std;
@@ -36,11 +37,13 @@ public:
     string nextName;
     // Generate a dot file for generating a graph.
     virtual std::pair<std::string, std::string> generateDotGraph();
+    virtual void logStats();  // print out the stats
 
 protected:
     weak_ptr<node> nextNode;
     bool stopped = false;
     string text;
+    stats myStats;
 };
 
 void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState);

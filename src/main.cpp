@@ -133,6 +133,7 @@ int main(int argc, char* argv[]) {
         // set the uri
         myworkload.uri = uri;
         myworkload.execute(conn);
+        myworkload.logStats();
     }
 
     else

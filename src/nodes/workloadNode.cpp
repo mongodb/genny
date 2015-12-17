@@ -22,17 +22,15 @@ workloadNode::workloadNode(YAML::Node& ynode) : node(ynode) {
 // Execute the node
 void workloadNode::execute(shared_ptr<threadState> myState) {
     myWorkload->uri = myState->myWorkload.uri;
-    chrono::high_resolution_clock::time_point start, stop;
     BOOST_LOG_TRIVIAL(debug) << "In workloadNode and executing";
-    start = chrono::high_resolution_clock::now();
     myWorkload->execute(myState->conn);
-    stop = chrono::high_resolution_clock::now();
-    BOOST_LOG_TRIVIAL(debug) << "Node " << name << " took "
-                             << std::chrono::duration_cast<chrono::microseconds>(stop - start)
-                                    .count() << " microseconds";
 }
 std::pair<std::string, std::string> workloadNode::generateDotGraph() {
     return (std::pair<std::string, std::string>{name + " -> " + nextName + ";\n",
                                                 myWorkload->generateDotGraph()});
+}
+void workloadNode::logStats() {
+    myWorkload->logStats();
+    node::logStats();
 }
 }

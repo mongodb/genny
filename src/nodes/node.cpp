@@ -100,6 +100,7 @@ void node::executeNode(shared_ptr<threadState> myState) {
     start = chrono::high_resolution_clock::now();
     execute(myState);
     stop = chrono::high_resolution_clock::now();
+    myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
     BOOST_LOG_TRIVIAL(debug) << "Node " << name << " took "
                              << std::chrono::duration_cast<chrono::microseconds>(stop - start)
                                     .count() << " microseconds";
@@ -112,6 +113,14 @@ void node::executeNode(shared_ptr<threadState> myState) {
 
 std::pair<std::string, std::string> node::generateDotGraph() {
     return (std::pair<std::string, std::string>{name + " -> " + nextName + ";\n", ""});
+}
+
+void node::logStats() {
+    if (myStats.getCount() > 0)
+        BOOST_LOG_TRIVIAL(info) << "Node: " << name << ", Count=" << myStats.getCount()
+                                << ", Avg=" << myStats.getAvg().count()
+                                << "us, Min=" << myStats.getMin().count()
+                                << "us, Max = " << myStats.getMax().count() << "us";
 }
 
 void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {

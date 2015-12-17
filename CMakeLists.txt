@@ -57,9 +57,10 @@ configure_file (
 
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 add_subdirectory(src)
+include_directories(src/stats)
 add_executable(mwg src/main.cpp)
 target_link_libraries(mwg workload nodes operations
-docs parse ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES}
+docs parse stats ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES}
 ${YAMLCPP_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 enable_testing()

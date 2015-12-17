@@ -164,6 +164,7 @@ void workload::execute(mongocxx::client& conn) {
         myThreads[i].join();
     }
     stop = chrono::high_resolution_clock::now();
+    myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
     BOOST_LOG_TRIVIAL(trace) << "All threads finished. About to stop timer";
 
     // clean up the timer stuff
@@ -181,6 +182,15 @@ void workload::stop() {
     stopped = true;
     for (auto mnode : vectornodes)
         mnode->stop();
+}
+
+void workload::logStats() {
+    BOOST_LOG_TRIVIAL(info) << "Workload: " << name << ", Count=" << myStats.getCount()
+                            << ", Avg=" << myStats.getAvg().count()
+                            << "us, Min=" << myStats.getMin().count()
+                            << "us, Max = " << myStats.getMax().count() << "us";
+    for (auto mnode : vectornodes)
+        mnode->logStats();
 }
 
 std::string workload::generateDotGraph() {

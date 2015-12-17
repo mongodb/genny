@@ -1,16 +1,13 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/src/third_party/catch/include
 )
-include_directories(${CMAKE_SOURCE_DIR}/src/documents ${CMAKE_SOURCE_DIR}/src/values ${CMAKE_SOURCE_DIR}/src/nodes)
+include_directories(${CMAKE_SOURCE_DIR}/src/documents ${CMAKE_SOURCE_DIR}/src/values ${CMAKE_SOURCE_DIR}/src/nodes ${CMAKE_SOURCE_DIR}/src/stats)
 
 add_executable(test_driver
 ${CMAKE_SOURCE_DIR}/src/third_party/catch/main.cpp documents.cpp
-operations.cpp dot.cpp)
+operations.cpp dot.cpp stats.cpp)
 
-target_link_libraries(test_driver workload nodes operations docs parse ${Boost_LIBRARIES}
-${LIBMONGOCXX_LIBRARIES} ${YAMLCPP_LIBRARIES}
-${Boost_LOG_SETUP_LIBRARY} ${Boost_LOG_LIBRARY}
-${Boost_FILESYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY}
-${Boost_SYSTEM_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(test_driver stats workload nodes operations docs
+parse ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES} ${YAMLCPP_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 add_test(driver test_driver)

@@ -11,6 +11,7 @@
 #include <mongocxx/client.hpp>
 #include "threadState.hpp"
 #include <mutex>
+#include "stats.hpp"
 
 using namespace std;
 
@@ -41,6 +42,7 @@ public:
     string DBName = "testdb";
     string CollectionName = "testCollection";
     string uri = mongocxx::uri::k_default_uri;
+    void logStats();
 
 private:
     vector<shared_ptr<node>> vectornodes;
@@ -52,5 +54,6 @@ private:
     bool stopped;
     uint64_t numParallelThreads{1};
     uint64_t runLength{0};
+    stats myStats;
 };
 }
