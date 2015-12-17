@@ -24,9 +24,7 @@ main :
       next : fill_rolled
       workload : &bulkinsert
         name : bulk_insert
-        wvariables : 
-          count : 0
-          threads : 24
+        threads : 24
         nodes : 
           - 
             type : forN
