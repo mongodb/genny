@@ -32,9 +32,7 @@ public:
         return name;
     };
 
-    void stop() {
-        stopped = true;
-    };
+    virtual void stop();
     // Set the next node pointer
     virtual void setNextNode(unordered_map<string, shared_ptr<node>>&, vector<shared_ptr<node>>&);
     string name;

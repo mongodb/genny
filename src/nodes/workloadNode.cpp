@@ -33,4 +33,8 @@ void workloadNode::logStats() {
     myWorkload->logStats();
     node::logStats();
 }
+void workloadNode::stop() {
+    stopped = true;
+    myWorkload->stop();
+}
 }

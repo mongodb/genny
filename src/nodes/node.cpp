@@ -140,7 +140,9 @@ bsoncxx::document::value node::getStats() {
     document << name << open_document << doc << close_document;
     return (document << bsoncxx::builder::stream::finalize);
 }
-
+void node::stop() {
+    stopped = true;
+}
 
 void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
     BOOST_LOG_TRIVIAL(trace) << "Node runThread";
