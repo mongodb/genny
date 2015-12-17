@@ -135,7 +135,7 @@ void runTimer(shared_ptr<timerState> state, uint64_t runLength) {
     }
 }
 
-void workload::execute(mongocxx::client& conn) {
+void workload::execute() {
     // prep the threads and start them. Should put the timer in here also.
     BOOST_LOG_TRIVIAL(trace) << "In workload::execute";
     vector<thread> myThreads;

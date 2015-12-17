@@ -27,7 +27,7 @@ public:
     workload(const workload&) = default;
     workload(workload&&) = default;
     // Execute the workload
-    virtual void execute(mongocxx::client&);
+    virtual void execute();
     workload& operator=(const workload&) = default;
     workload& operator=(workload&&) = default;
     void stop();

@@ -23,7 +23,7 @@ workloadNode::workloadNode(YAML::Node& ynode) : node(ynode) {
 void workloadNode::execute(shared_ptr<threadState> myState) {
     myWorkload->uri = myState->myWorkload.uri;
     BOOST_LOG_TRIVIAL(debug) << "In workloadNode and executing";
-    myWorkload->execute(myState->conn);
+    myWorkload->execute();
 }
 std::pair<std::string, std::string> workloadNode::generateDotGraph() {
     return (std::pair<std::string, std::string>{name + " -> " + nextName + ";\n",

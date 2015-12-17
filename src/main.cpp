@@ -122,9 +122,6 @@ int main(int argc, char* argv[]) {
 
     // Look for main. And start building from there.
     if (auto main = nodes["main"]) {
-        mongocxx::instance inst{};
-        mongocxx::client conn{mongocxx::uri{}};
-
         workload myworkload(main);
         if (dotFile.length() > 0) {
             // save the dotgraph
@@ -138,7 +135,7 @@ int main(int argc, char* argv[]) {
         BOOST_LOG_TRIVIAL(trace) << "After workload constructor. Before execute";
         // set the uri
         myworkload.uri = uri;
-        myworkload.execute(conn);
+        myworkload.execute();
         myworkload.logStats();
         if (resultsFile.length() > 0) {
             // save the results
