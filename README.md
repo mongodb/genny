@@ -43,6 +43,7 @@ workload):
 1. Count of executions
 2. Average execution time in microseconds
 3. Min and Max exection time in microseconds
+4. Std. Deviation of execution time in microseconds
 
 Those results are reported to a configurable results json file
 (default results.json), and to the logging output at the info level.
@@ -50,7 +51,6 @@ Those results are reported to a configurable results json file
 #### Future stats
 
 The following stats and stat features are not implemented yet.
-1. Std. Deviation and variance (this is a very small change).
 2. Histogram data
 3. Percentile data (95th, 99th percentile)
 4. Periodic dumping of stats
