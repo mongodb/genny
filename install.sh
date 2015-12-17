@@ -53,11 +53,11 @@ $pkgmgr_install $pkgs
 # cmake install
 echo "Install cmake"
 if [ -z "$cmake_install" ]; then
-    CMAKE310=cmake-3.1.0-Linux-x86_64
+    CMAKE=cmake-3.1.0-Linux-x86_64
     wget -qO- https://cmake.org/files/v3.1/${CMAKE}.tar.gz | tar -xzv
     sudo cp ${CMAKE}/bin/* /usr/local/bin/
     sudo cp -r ${CMAKE}/share/* /usr/local/share/
-    sudo rm -fr $CMAKE310
+    sudo rm -fr $CMAKE
 else
     $($cmake_install)
 fi
@@ -65,13 +65,13 @@ fi
 # boost install (need boost 1.59)
 echo "Install boost"
 if [ -z "$boost_install" ]; then
-    BOOST159=boost_1_59_0
-    wget -qO- http://sourceforge.net/projects/boost/files/boost/1.59.0/${BOOST159}.tar.gz | tar -xzv
-    pushd ${BOOST159}
+    BOOST=boost_1_59_0
+    wget -qO- http://sourceforge.net/projects/boost/files/boost/1.59.0/${BOOST}.tar.gz | tar -xzv
+    pushd $BOOST
     sudo ./bootstrap.sh --with-libraries=log,regex
     sudo ./b2 install
     popd
-    sudo rm -fr ${BOOST159}
+    sudo rm -fr $BOOST
 else
     $($boost_install)
 fi
@@ -79,14 +79,14 @@ fi
 # yaml-cpp install
 echo "Install yaml-cpp"
 if [ -z "$yaml_cpp_install" ]; then
-    YAMLCPP051=yaml-cpp-0.5.1
-    wget -qO- https://yaml-cpp.googlecode.com/files/${YAMLCPP051}.tar.gz | tar -xzv
-    pushd ${YAMLCPP051}
+    YAMLCPP=yaml-cpp-0.5.1
+    wget -qO- https://yaml-cpp.googlecode.com/files/${YAMLCPP}.tar.gz | tar -xzv
+    pushd $YAMLCPP
     mkdir build && pushd build
     cmake ..
     sudo make
     sudo make install
-    sudo rm -fr ${YAMLCPP051}
+    sudo rm -fr $YAMLCPP
     popd
     popd
 else
