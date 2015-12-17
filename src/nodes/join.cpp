@@ -22,6 +22,7 @@ void join::executeNode(shared_ptr<threadState> myState) {
         // Child should end here. Return and end the thread. Will it return all the way up? I think
         // so
         BOOST_LOG_TRIVIAL(debug) << "Join node " << name << " for child thread. Returning";
+        myState->currentNode = nullptr;
         return;
     } else {
         // I'm the parent

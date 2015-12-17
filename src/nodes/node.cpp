@@ -71,7 +71,8 @@ void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
 }
 
 void node::executeNextNode(shared_ptr<threadState> myState) {
-    // execute the next node if there is one
+    // execute the next node if there is one. Actually only set it up for the runner to call the
+    // next node
     BOOST_LOG_TRIVIAL(debug) << "just executed " << name << ". NextName is " << nextName;
     auto next = nextNode.lock();
     if (!next) {
@@ -79,6 +80,7 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
         exit(0);
     }
     if (stopped) {
+        myState->currentNode = nullptr;
         BOOST_LOG_TRIVIAL(info) << "Stopped set";
         return;
     }
@@ -87,7 +89,6 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
         // update currentNode in the state. Protect the reference while executing
         shared_ptr<node> me = myState->currentNode;
         myState->currentNode = next;
-        next->executeNode(myState);
     } else {
         BOOST_LOG_TRIVIAL(debug) << "Next node is not null, but didn't execute it";
     }
@@ -143,7 +144,8 @@ void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
     BOOST_LOG_TRIVIAL(trace) << "Node runThread";
     myState->currentNode = Node;
     BOOST_LOG_TRIVIAL(trace) << "Set node. Name is " << Node->name;
-    Node->executeNode(myState);
+    while (myState->currentNode != nullptr)
+        myState->currentNode->executeNode(myState);
 }
 node* makeNode(YAML::Node yamlNode) {
     if (!yamlNode.IsMap()) {
