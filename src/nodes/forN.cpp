@@ -22,7 +22,7 @@ forN::forN(YAML::Node& ynode) : node(ynode) {
 void forN::execute(shared_ptr<threadState> myState) {
     // execute the workload N times
     chrono::high_resolution_clock::time_point start, stop;
-    for (uint64_t i = 0; i < N; i++) {
+    for (uint64_t i = 0; i < N && !stopped; i++) {
         BOOST_LOG_TRIVIAL(debug) << "In forN and executing interation " << i;
         start = chrono::high_resolution_clock::now();
         myNode->execute(myState);

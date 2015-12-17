@@ -52,7 +52,7 @@ private:
     unordered_map<string, bsoncxx::types::value> tvariables;  // thread variables
     mt19937_64 rng;                                           // random number generator
     string name;
-    bool stopped;
+    std::atomic<bool> stopped;
     uint64_t numParallelThreads{1};
     uint64_t runLength{0};
     stats myStats;

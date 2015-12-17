@@ -7,6 +7,7 @@
 #include "yaml-cpp/yaml.h"
 #include <memory>
 #include "stats.hpp"
+#include <atomic>
 
 #pragma once
 using namespace std;
@@ -18,7 +19,10 @@ public:
     node() : stopped(false){};
     node(YAML::Node&);
     virtual ~node() = default;
-    node(const node&) = default;
+    // do we use the copy constructor at all?
+    node(const node& other) : nextNode(other.nextNode), stopped(false), text(other.text) {
+        myStats.reset();
+    };
     node(node&&) = default;
     // Execute the node
     virtual void executeNode(shared_ptr<threadState>);
@@ -43,7 +47,7 @@ public:
 
 protected:
     weak_ptr<node> nextNode;
-    bool stopped = false;
+    std::atomic<bool> stopped;
     string text;
     stats myStats;
 };
