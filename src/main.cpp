@@ -26,6 +26,7 @@ namespace logging = boost::log;
 static struct option poptions[] = {{"help", no_argument, 0, 'h'},
                                    {"loglevel", required_argument, 0, 'l'},
                                    {"dotfile", required_argument, 0, 'd'},
+                                   {"resultsfile", required_argument, 0, 'r'},
                                    {"host", required_argument, 0, 0},
                                    {0, 0, 0, 0}};
 
@@ -38,15 +39,17 @@ void print_help(const char* process_name) {
             "\t                      full URI,\n"
             "\t--loglevel|-l LEVEL   Set the logging level. Valid options are trace,\n"
             "\t                      debug, info, warning, error, and fatal.\n"
-            "\t-d DOTFILE            Generate dotfile to DOTFILE from workload and exit.\n"
+            "\t--dotfile|-d FILE     Generate dotfile to FILE from workload and exit.\n"
             "\t                      WARNING: names with spaces or other special characters\n"
-            "\t                      will break the dot file\n\n",
+            "\t                      will break the dot file\n\n"
+            "\t--resultfile|-r FILE  FILE to store results to. defaults to results.json\n",
             process_name);
 }
 
 int main(int argc, char* argv[]) {
     string filename = "sample.yml";
-    string dotoutput;
+    string dotFile;
+    string resultsFile = "results.json";
     string uri = mongocxx::uri::k_default_uri;
     int arg_count = 0;
     int idx = 0;
@@ -98,7 +101,10 @@ int main(int argc, char* argv[]) {
                                                      logging::trivial::fatal);
                 break;
             case 'd':
-                dotoutput = optarg;
+                dotFile = optarg;
+                break;
+            case 'r':
+                resultsFile = optarg;
                 break;
             default:
                 fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
@@ -120,12 +126,12 @@ int main(int argc, char* argv[]) {
         mongocxx::client conn{mongocxx::uri{}};
 
         workload myworkload(main);
-        if (dotoutput.length() > 0) {
+        if (dotFile.length() > 0) {
             // save the dotgraph
-            ofstream dotfile;
-            dotfile.open(dotoutput);
-            dotfile << myworkload.generateDotGraph();
-            dotfile.close();
+            ofstream dotout;
+            dotout.open(dotFile);
+            dotout << myworkload.generateDotGraph();
+            dotout.close();
             return EXIT_SUCCESS;
         }
 
@@ -134,6 +140,13 @@ int main(int argc, char* argv[]) {
         myworkload.uri = uri;
         myworkload.execute(conn);
         myworkload.logStats();
+        if (resultsFile.length() > 0) {
+            // save the results
+            ofstream out;
+            out.open(resultsFile);
+            out << bsoncxx::to_json(myworkload.getStats());
+            out.close();
+        }
     }
 
     else

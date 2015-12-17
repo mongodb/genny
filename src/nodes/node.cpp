@@ -123,6 +123,22 @@ void node::logStats() {
                                 << "us, Max = " << myStats.getMax().count() << "us";
 }
 
+bsoncxx::document::value node::getStats() {
+    using bsoncxx::builder::stream::open_document;
+    using bsoncxx::builder::stream::close_document;
+    bsoncxx::builder::stream::document document{};
+
+    // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that could be
+    // moved into document
+    auto stats = myStats.getStats();
+    bsoncxx::builder::stream::concatenate doc;
+    doc.view = stats.view();
+
+    document << name << open_document << doc << close_document;
+    return (document << bsoncxx::builder::stream::finalize);
+}
+
+
 void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
     BOOST_LOG_TRIVIAL(trace) << "Node runThread";
     myState->currentNode = Node;

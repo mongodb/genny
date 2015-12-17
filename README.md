@@ -24,7 +24,7 @@ operations.
 3. [Workloads](Workloads.md): These are collection of nodes and represent an actual
    workload. They specify the node that should execute first in the
    workload. They also supply parameters and a pseudo-random number
-   generator to the nodes and ops. 
+   generator to the nodes and ops.
 4. [Documents](Documents.md): These are objects that can be used anywhere a bson
    Object is needed.
 5. Variables: A workload has a list of variables that be used and
@@ -32,29 +32,35 @@ operations.
    workload. Variables are described in [Workloads](Workloads.md)
 
 There are a number of [examples](examples/README.md) that demonstrate
-the basic ideas. All the examples work. 
+the basic ideas. All the examples work.
 
 ### Stats
 
-Currently stats are limited to logging node and workload durations
-during test execution. 
+The duration of every node execution is measured and recorded. At the
+end of the run, the following stats are reported per node (and nested
+workload):
 
-The next step is to collect those durations and collect the simple
-accumulated stats per node and workload:
-1. Numer of operations
-2. Min, max, average, and variance of latency.
+1. Count of executions
+2. Average execution time in microseconds
+3. Min and Max exection time in microseconds
 
-Longer term we should add more advanced statistics, histograms, and an
-ability to collect stats by time period (e.g., once a minute).
+Those results are reported to a configurable results json file
+(default results.json), and to the logging output at the info level.
+
+#### Future stats
+
+The following stats and stat features are not implemented yet.
+1. Std. Deviation and variance (this is a very small change).
+2. Histogram data
+3. Percentile data (95th, 99th percentile)
+4. Periodic dumping of stats
 
 ### Future features
-This is an incomplete list. 
+This is an incomplete list.
 
-1. Stats: There are currently no client stats collected beyond the
-   timestamps in the logging output
 2. More types of transformation of values and tools for building
    documents (hashing, concatenate, adding fields to an existing document)
-3. Use of variable in any field (currently only in overrideDocument). 
+3. Use of variable in any field (currently only in overrideDocument).
 4. Access state from an embedded workload (e.g., give 5 copies of an
    embedded workload unique sequence ids by incrementing a field)
 5. See [Operations](Operations.md), [Nodes](Nodes.md),
@@ -146,4 +152,4 @@ made finite by adding an absorbing state.
                Finish : 0.1
 
 The Finish state is an implicit absorbing state. The workload will
-stop when it reaches the Finish state. 
+stop when it reaches the Finish state.

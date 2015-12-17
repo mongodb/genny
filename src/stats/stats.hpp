@@ -1,5 +1,6 @@
 #pragma once
 #include <mutex>
+#include <bsoncxx/document/value.hpp>
 
 namespace mwg {
 
@@ -26,12 +27,14 @@ public:
             return total / count;
         return std::chrono::microseconds(0);
     }
-    uint64_t getCount() {
+    int64_t getCount() {
         return count;
     }
 
+    bsoncxx::document::value getStats();
+
 private:
-    uint64_t count;
+    int64_t count;
     std::chrono::microseconds min;
     std::chrono::microseconds max;
     // These next two should be replace with more solid algorithms for accumulation mean and
