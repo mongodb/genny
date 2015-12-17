@@ -186,7 +186,7 @@ void workload::stop() {
 
 void workload::logStats() {
     BOOST_LOG_TRIVIAL(info) << "Workload: " << name << ", Count=" << myStats.getCount()
-                            << ", Avg=" << myStats.getAvg().count()
+                            << ", Avg=" << myStats.getMean().count()
                             << "us, Min=" << myStats.getMin().count()
                             << "us, Max = " << myStats.getMax().count() << "us";
     for (auto mnode : vectornodes)

@@ -120,7 +120,7 @@ std::pair<std::string, std::string> node::generateDotGraph() {
 void node::logStats() {
     if (myStats.getCount() > 0)
         BOOST_LOG_TRIVIAL(info) << "Node: " << name << ", Count=" << myStats.getCount()
-                                << ", Avg=" << myStats.getAvg().count()
+                                << ", Avg=" << myStats.getMean().count()
                                 << "us, Min=" << myStats.getMin().count()
                                 << "us, Max = " << myStats.getMax().count() << "us";
 }

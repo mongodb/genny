@@ -13,8 +13,8 @@ void stats::reset() {
     count = 0;
     min = std::chrono::microseconds::max();
     max = std::chrono::microseconds::min();
-    total = std::chrono::microseconds(0);
-    total2 = std::chrono::microseconds(0);
+    mean = fpmicros(0);
+    m2 = fpmicros(0);
 }
 
 void stats::accumulate(const stats& addStats) {
@@ -29,8 +29,14 @@ void stats::record(std::chrono::microseconds dur) {
         min = dur;
     if (dur > max)
         max = dur;
-    total += dur;
-    // total2 += dur * dur;
+
+    // This is an implementation of the following algorithm:
+    // http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
+    // and largely copied from src/mongo/db/pipeline/accumulator_std_dev.cpp
+    const auto delta = dur - mean;
+    mean += delta / count;
+    m2 += delta.count() * (dur - mean);  // I don't know why this isn't delta*delta
+                                         // the delta.count is to make the templates work.
 }
 
 bsoncxx::document::value stats::getStats() {
@@ -40,8 +46,11 @@ bsoncxx::document::value stats::getStats() {
         if (count > 1) {
             document << "min" << getMin().count();
             document << "max" << getMax().count();
+            if (count > 2) {
+                document << "popvar" << getPopVariance().count();
+            }
         }
-        document << "average" << getAvg().count();
+        document << "mean" << getMean().count();
     }
     return (document << bsoncxx::builder::stream::finalize);
 }
