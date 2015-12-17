@@ -44,7 +44,7 @@ TEST_CASE("Stats collection", "[stats]") {
         refdoc << "count" << 3;
         refdoc << "min" << 3000;
         refdoc << "max" << 7000;
-        refdoc << "popvar" << 2666666;
+        refdoc << "popStdDev" << 1632;
         refdoc << "mean" << 5000;
         viewable_eq_viewable(refdoc, testStats.getStats());
     }

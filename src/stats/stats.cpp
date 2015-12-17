@@ -47,7 +47,7 @@ bsoncxx::document::value stats::getStats() {
             document << "min" << getMin().count();
             document << "max" << getMax().count();
             if (count > 2) {
-                document << "popvar" << getPopVariance().count();
+                document << "popStdDev" << getPopStdDev().count();
             }
         }
         document << "mean" << getMean().count();

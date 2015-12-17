@@ -82,7 +82,7 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
     }
     if (stopped) {
         myState->currentNode = nullptr;
-        BOOST_LOG_TRIVIAL(info) << "Stopped set";
+        BOOST_LOG_TRIVIAL(debug) << "Stopped set";
         return;
     }
     if (name != "Finish" && next) {
@@ -122,7 +122,8 @@ void node::logStats() {
         BOOST_LOG_TRIVIAL(info) << "Node: " << name << ", Count=" << myStats.getCount()
                                 << ", Avg=" << myStats.getMean().count()
                                 << "us, Min=" << myStats.getMin().count()
-                                << "us, Max = " << myStats.getMax().count() << "us";
+                                << "us, Max = " << myStats.getMax().count()
+                                << "us, stddev=" << myStats.getPopStdDev().count();
 }
 
 bsoncxx::document::value node::getStats() {

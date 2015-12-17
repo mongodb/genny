@@ -1,6 +1,7 @@
 #pragma once
 #include <mutex>
 #include <bsoncxx/document/value.hpp>
+#include <math.h>
 
 namespace mwg {
 
@@ -43,6 +44,22 @@ public:
     std::chrono::microseconds getSampleVariance() {
         if (count > 2)
             return (std::chrono::duration_cast<std::chrono::microseconds>(m2 / (count - 1)));
+        else
+            return std::chrono::microseconds(0);
+    }
+    std::chrono::microseconds getPopStdDev() {
+        if (count > 2)
+            // This is ugly. Probably a cleaner way to do it.
+            return (std::chrono::duration_cast<std::chrono::microseconds>(
+                fpmicros(sqrt((m2 / count).count()))));
+        else
+            return std::chrono::microseconds(0);
+    }
+
+    std::chrono::microseconds getSampleStdDev() {
+        if (count > 2)
+            return (std::chrono::duration_cast<std::chrono::microseconds>(
+                fpmicros(sqrt((m2 / (count - 1)).count()))));
         else
             return std::chrono::microseconds(0);
     }
