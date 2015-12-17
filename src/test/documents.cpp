@@ -65,7 +65,7 @@ TEST_CASE("Documents are created", "[documents]") {
             type : randomint
     )yaml"));
         // Test that the document is an override document, and gives the right values.
-        auto view = doc->view(mydoc, state);
+        //auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 
         // The random number generator is deterministic. We should get 24 each time unless we change
@@ -87,7 +87,7 @@ TEST_CASE("Documents are created", "[documents]") {
     )yaml"));
 
         // Test that we get random strings. Should be reproducible
-        auto view = doc->view(mydoc, state);
+        //auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 
         // The random number generator is deterministic, so we should get the same string each time
