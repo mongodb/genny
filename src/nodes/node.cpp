@@ -18,6 +18,7 @@ node::node(YAML::Node& ynode) {
     // need to set the name
     // these should be made into exceptions
     // should be a map, with type = find
+    stopped = false;
     if (!ynode) {
         BOOST_LOG_TRIVIAL(fatal) << "Find constructor and !ynode";
         exit(EXIT_FAILURE);
