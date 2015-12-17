@@ -43,7 +43,7 @@ public:
     string CollectionName = "testCollection";
     string uri = mongocxx::uri::k_default_uri;
     void logStats();
-    virtual bsoncxx::document::value getStats();  // bson object with stats
+    virtual bsoncxx::document::value getStats(bool withReset);  // bson object with stats
 
 private:
     vector<shared_ptr<node>> vectornodes;

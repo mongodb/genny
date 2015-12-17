@@ -39,8 +39,8 @@ public:
     string nextName;
     // Generate a dot file for generating a graph.
     virtual std::pair<std::string, std::string> generateDotGraph();
-    virtual void logStats();                      // print out the stats
-    virtual bsoncxx::document::value getStats();  // bson object with stats
+    virtual void logStats();                                    // print out the stats
+    virtual bsoncxx::document::value getStats(bool withReset);  // bson object with stats
 
 
 protected:

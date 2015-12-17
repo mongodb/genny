@@ -68,7 +68,7 @@ public:
         return count;
     }
 
-    bsoncxx::document::value getStats();
+    bsoncxx::document::value getStats(bool withReset);
 
 private:
     int64_t count;

@@ -126,14 +126,14 @@ void node::logStats() {
                                 << "us, stddev=" << myStats.getPopStdDev().count();
 }
 
-bsoncxx::document::value node::getStats() {
+bsoncxx::document::value node::getStats(bool withReset) {
     using bsoncxx::builder::stream::open_document;
     using bsoncxx::builder::stream::close_document;
     bsoncxx::builder::stream::document document{};
 
     // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that could be
     // moved into document
-    auto stats = myStats.getStats();
+    auto stats = myStats.getStats(withReset);
     bsoncxx::builder::stream::concatenate doc;
     doc.view = stats.view();
 

@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
             // save the results
             ofstream out;
             out.open(resultsFile);
-            out << bsoncxx::to_json(myworkload.getStats());
+            out << bsoncxx::to_json(myworkload.getStats(false));
             out.close();
         }
     }

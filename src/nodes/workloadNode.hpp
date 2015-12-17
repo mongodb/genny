@@ -18,7 +18,9 @@ public:
     // Execute the node
     virtual void execute(shared_ptr<threadState>) override;
     virtual std::pair<std::string, std::string> generateDotGraph() override;
+
     virtual void logStats() override;  // print out the stats
+    virtual bsoncxx::document::value getStats(bool withReset) override;
     virtual void stop() override;
 
 

@@ -10,6 +10,7 @@ stats::stats() {
 }
 
 void stats::reset() {
+    std::lock_guard<std::mutex> lk(mut);
     count = 0;
     min = std::chrono::microseconds::max();
     max = std::chrono::microseconds::min();
@@ -35,11 +36,11 @@ void stats::record(std::chrono::microseconds dur) {
     // and largely copied from src/mongo/db/pipeline/accumulator_std_dev.cpp
     const auto delta = dur - mean;
     mean += delta / count;
-    m2 += delta.count() * (dur - mean);  // I don't know why this isn't delta*delta
-                                         // the delta.count is to make the templates work.
+    // note that delta was computed with mean before it was updated.
+    m2 += delta.count() * (dur - mean);
 }
 
-bsoncxx::document::value stats::getStats() {
+bsoncxx::document::value stats::getStats(bool withReset) {
     bsoncxx::builder::stream::document document{};
     if (count > 0) {
         document << "count" << getCount();
@@ -52,6 +53,8 @@ bsoncxx::document::value stats::getStats() {
         }
         document << "mean" << getMean().count();
     }
+    if (withReset)
+        reset();
     return (document << bsoncxx::builder::stream::finalize);
 }
 }

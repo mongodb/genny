@@ -46,6 +46,9 @@ TEST_CASE("Stats collection", "[stats]") {
         refdoc << "max" << 7000;
         refdoc << "popStdDev" << 1632;
         refdoc << "mean" << 5000;
-        viewable_eq_viewable(refdoc, testStats.getStats());
+        viewable_eq_viewable(refdoc, testStats.getStats(false));
+        viewable_eq_viewable(refdoc, testStats.getStats(true));
+        bsoncxx::builder::stream::document refdoc2{};
+        viewable_eq_viewable(refdoc2, testStats.getStats(false));
     }
 }
