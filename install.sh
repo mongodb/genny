@@ -17,12 +17,12 @@ case "$os" in
     Ubuntu)
         echo "Platform is $os"
         pkgmgr_install="sudo apt-get install -y"
-        pkgs="libtool openssl autoconf build-essential"
+        pkgs="libtool openssl libssl-dev autoconf build-essential"
         ;;
     CentOS)
         echo "Platform is $os"
         pkgmgr_install="sudo yum install -y"
-        pkgs="libtool openssl autoconf make gcc g++"
+        pkgs="libtool openssl openssl-devel autoconf make gcc g++"
         ;;
     Darwin)
         echo "Platform is $os"
@@ -86,9 +86,9 @@ if [ -z "$yaml_cpp_install" ]; then
     cmake ..
     sudo make
     sudo make install
+    popd
+    popd
     sudo rm -fr $YAMLCPP
-    popd
-    popd
 else
     $($yaml_cpp_install)
 fi
@@ -100,6 +100,8 @@ echo "Installing Mongo C Driver"
 git clone -b master https://github.com/mongodb/mongo-c-driver
 pushd mongo-c-driver/
 git submodule update
+# This should be changed to a tag once the the code is stable
+git checkout 160ce921a7020e2384035a8609e0435607eb0b51
 ./autogen.sh --with-libbson=bundled
 make $c_flags && sudo make install
 popd
