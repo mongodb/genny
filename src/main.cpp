@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
         switch (arg) {
             case 0:
                 switch (idx) {
-                    case 3:
+                    case 4:
                         uri = optarg;
                         break;
                     default:
