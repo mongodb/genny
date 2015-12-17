@@ -1,7 +1,7 @@
 #include "parse_util.hpp"
 #include <mongocxx/write_concern.hpp>
 #include <chrono>
-#include <regex>
+#include <boost/regex.hpp>  // STDLIB regex failed on Ubuntu 14.04 & CentOS 7
 #include <boost/log/trivial.hpp>
 #include <chrono>
 
@@ -16,8 +16,8 @@ namespace mwg {
 // This could be made much cleaner. Ideally check for all the various valid regex and return a value
 // that can be directly dropped into the builder.
 bool isNumber(string value) {
-    regex re("-?[0-9]+");
-    if (regex_match(value, re))
+    boost::regex re("-?[0-9]+");
+    if (boost::regex_match(value, re))
         return true;
     else
         return false;

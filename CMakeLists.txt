@@ -47,7 +47,7 @@ if(GIT_FOUND)
   )
 endif()
 
-find_package(Boost 1.59 REQUIRED COMPONENTS log thread filesystem)
+find_package(Boost 1.59 REQUIRED COMPONENTS log thread filesystem regex)
 include_directories(${Boost_INCLUDE_DIRS})
 
 configure_file (
