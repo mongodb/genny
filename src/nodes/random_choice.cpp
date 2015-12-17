@@ -69,7 +69,7 @@ void random_choice::executeNode(shared_ptr<threadState> myState) {
             BOOST_LOG_TRIVIAL(debug) << " Next state is " << nextstate.first->name;
             shared_ptr<node> me = myState->currentNode;
             myState->currentNode = nextstate.first;
-            return (nextstate.first->executeNode(myState));
+            return;
         }
     }
 }
