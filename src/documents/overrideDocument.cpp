@@ -122,14 +122,13 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                         "abcdefghijklmnopqrstuvwxyz"
                         "0123456789+/";
-                    static const size_t alphaNumLength = sizeof(alphanum) - 1;
-                    static_assert(alphaNumLength == 64, "alphaNumLength == 64");
+                    static const uint alphaNumLength = 64;
                     if (iter->second["length"]) {
                         length = iter->second["length"].as<int>();
                     }
                     std::string str;
                     for (int i = 0; i < length; i++) {
-                        uniform_int_distribution<int> distribution(0, alphaNumLength);
+                        uniform_int_distribution<int> distribution(0, alphaNumLength - 1);
                         str.push_back(alphanum[distribution(state.rng)]);
                     }
                     output << elem.key().to_string() << str;
