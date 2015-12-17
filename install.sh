@@ -17,12 +17,12 @@ case "$os" in
     Ubuntu)
         echo "Platform is $os"
         pkgmgr_install="sudo apt-get install -y"
-#        pkgs="libtool openssl autoconf libboost-all-dev libyaml-cpp-dev"
+        pkgs="libtool openssl autoconf build-essential"
         ;;
     CentOS)
         echo "Platform is $os"
         pkgmgr_install="sudo yum install -y"
-        pkgs="libtool openssl autoconf"
+        pkgs="libtool openssl autoconf make gcc g++"
         ;;
     Darwin)
         echo "Platform is $os"
