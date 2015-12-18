@@ -44,6 +44,9 @@ public:
     string uri = mongocxx::uri::k_default_uri;
     void logStats();
     virtual bsoncxx::document::value getStats(bool withReset);  // bson object with stats
+    void setRandomSeed(uint64_t seed) {
+        rng.seed(seed);
+    };
 
 private:
     vector<shared_ptr<node>> vectornodes;
