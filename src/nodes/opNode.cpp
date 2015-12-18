@@ -59,6 +59,8 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
         op = unique_ptr<operation>(new command(myop));
     else if (myop["type"].Scalar() == "set_variable")
         op = unique_ptr<operation>(new set_variable(myop));
+    else if (myop["type"].Scalar() == "noop")
+        op = unique_ptr<operation>(new noop(myop));
     else {
         BOOST_LOG_TRIVIAL(fatal) << "Trying to make operation of type " << myop["type"]
                                  << " is not supported yet in opNode constructor";

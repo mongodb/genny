@@ -21,3 +21,4 @@
 #include "create_collection.hpp"
 #include "command.hpp"
 #include "set_variable.hpp"
+#include "noop.hpp"
