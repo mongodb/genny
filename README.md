@@ -51,6 +51,7 @@ Those results are reported to a configurable results json file
 #### Future stats
 
 The following stats and stat features are not implemented yet.
+
 2. Histogram data
 3. Percentile data (95th, 99th percentile)
 4. Periodic dumping of stats
