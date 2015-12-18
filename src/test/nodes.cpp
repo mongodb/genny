@@ -45,9 +45,8 @@ TEST_CASE("Nodes", "[nodes]") {
         auto thing1Y = YAML::Load(R"yaml(
           name : thingA
           print : Thing A running
-          type : sleep
+          type : noop
           next : join # Child thread continues until it gets to the join
-          sleep : 1000
             )yaml");
         auto thing1Node = makeSharedNode(thing1Y);
         nodes[thing1Node->getName()] = thing1Node;
@@ -55,9 +54,8 @@ TEST_CASE("Nodes", "[nodes]") {
         auto thing2Y = YAML::Load(R"yaml(
           name : thingB
           print : Thing B running
-          type : sleep
+          type : noop
           next : join # Child thread continues until it gets to the join
-          sleep : 1000
             )yaml");
         auto thing2Node = makeSharedNode(thing2Y);
         nodes[thing2Node->getName()] = thing2Node;
@@ -86,5 +84,48 @@ TEST_CASE("Nodes", "[nodes]") {
         REQUIRE(thing1Node->getCount() == 1);
         REQUIRE(thing2Node->getCount() == 1);
         REQUIRE(joinNode->getCount() == 1);
+    }
+    SECTION("Random") {
+        auto randomYaml = YAML::Load(R"yaml(
+          name : random
+          type : random_choice
+          next :
+            thingA : 0.5
+            thingB : 0.5
+        )yaml");
+        auto randomNode = makeSharedNode(randomYaml);
+        nodes[randomNode->getName()] = randomNode;
+        vectornodes.push_back(randomNode);
+
+        auto thing1Y = YAML::Load(R"yaml(
+          name : thingA
+          print : Thing A running
+          type : noop
+          next : Finish
+            )yaml");
+        auto thing1Node = makeSharedNode(thing1Y);
+        nodes[thing1Node->getName()] = thing1Node;
+        vectornodes.push_back(thing1Node);
+        auto thing2Y = YAML::Load(R"yaml(
+          name : thingB
+          print : Thing B running
+          type : noop
+          next : Finish
+            )yaml");
+        auto thing2Node = makeSharedNode(thing2Y);
+        nodes[thing2Node->getName()] = thing2Node;
+        vectornodes.push_back(thing2Node);
+        auto mynode = make_shared<finishNode>();
+        nodes[mynode->getName()] = mynode;
+        vectornodes.push_back(mynode);
+        // connect the nodes
+        for (auto mnode : vectornodes) {
+            mnode->setNextNode(nodes, vectornodes);
+        }
+        // execute
+        state->currentNode = randomNode;
+        while (state->currentNode != nullptr)
+            state->currentNode->executeNode(state);
+        REQUIRE((thing1Node->getCount() + thing2Node->getCount()) == 1);
     }
 }
