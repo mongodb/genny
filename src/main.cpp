@@ -18,6 +18,7 @@
 
 #include "workload.hpp"
 #include "main.h"
+#include <chrono>
 
 using namespace std;
 using namespace mwg;
@@ -28,28 +29,59 @@ static struct option poptions[] = {{"help", no_argument, 0, 'h'},
                                    {"dotfile", required_argument, 0, 'd'},
                                    {"resultsfile", required_argument, 0, 'r'},
                                    {"host", required_argument, 0, 0},
+                                   {"resultsperiod", required_argument, 0, 'p'},
                                    {0, 0, 0, 0}};
 
 void print_help(const char* process_name) {
     fprintf(stderr,
             "Usage: %s [-h] /path/to/workload \n"
             "Execution Options:\n"
-            "\t--help|-h             Display this help and exit\n"
-            "\t--host Host           Host/Connection string for mongo server to test--must be a\n"
-            "\t                      full URI,\n"
-            "\t--loglevel|-l LEVEL   Set the logging level. Valid options are trace,\n"
-            "\t                      debug, info, warning, error, and fatal.\n"
-            "\t--dotfile|-d FILE     Generate dotfile to FILE from workload and exit.\n"
-            "\t                      WARNING: names with spaces or other special characters\n"
-            "\t                      will break the dot file\n\n"
-            "\t--resultfile|-r FILE  FILE to store results to. defaults to results.json\n",
+            "\t--help|-h              Display this help and exit\n"
+            "\t--host Host            Host/Connection string for mongo server to test--must be a\n"
+            "\t                       full URI,\n"
+            "\t--loglevel|-l LEVEL    Set the logging level. Valid options are trace,\n"
+            "\t                       debug, info, warning, error, and fatal.\n"
+            "\t--dotfile|-d FILE      Generate dotfile to FILE from workload and exit.\n"
+            "\t                       WARNING: names with spaces or other special characters\n"
+            "\t                       will break the dot file\n\n"
+            "\t--resultfile|-r FILE   FILE to store results to. defaults to results.json\n"
+            "\t--resultsperiod|-p SEC Record results every SEC seconds\n",
             process_name);
+}
+
+class statsState {
+public:
+    statsState(workload& work) : myWorkload(work), done(false){};
+    workload& myWorkload;
+    std::atomic<bool> done;
+};
+
+void runPeriodicStats(shared_ptr<statsState> state, std::chrono::seconds period, string outFile) {
+    // check if we should be doing something.
+    if (period == std::chrono::seconds(0)) {
+        return;
+    }
+    ofstream out;
+    bool haveFile = false;
+    if (outFile.length() > 0) {
+        out.open(outFile);
+        haveFile = true;  // should error check here
+    }
+
+    while (!state->done) {
+        std::this_thread::sleep_for(period);
+        state->myWorkload.logStats();
+        if (haveFile) {
+            out << bsoncxx::to_json(state->myWorkload.getStats(true));
+        }
+    }
 }
 
 int main(int argc, char* argv[]) {
     string filename = "sample.yml";
     string dotFile;
     string resultsFile = "results.json";
+    std::chrono::seconds resultPeriod(0);
     string uri = mongocxx::uri::k_default_uri;
     int arg_count = 0;
     int idx = 0;
@@ -58,7 +90,7 @@ int main(int argc, char* argv[]) {
     logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::info);
 
     while (1) {
-        int arg = getopt_long(argc, argv, "hl:d:", poptions, &idx);
+        int arg = getopt_long(argc, argv, "hl:d:p:", poptions, &idx);
         arg_count++;
         if (arg == -1) {
             // all arguments have been processed
@@ -106,6 +138,9 @@ int main(int argc, char* argv[]) {
             case 'r':
                 resultsFile = optarg;
                 break;
+            case 'p':
+                resultPeriod = std::chrono::seconds(atoi(optarg));
+                break;
             default:
                 fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
                 print_help(argv[0]);
@@ -135,9 +170,17 @@ int main(int argc, char* argv[]) {
         BOOST_LOG_TRIVIAL(trace) << "After workload constructor. Before execute";
         // set the uri
         myworkload.uri = uri;
+        std::atomic<bool> done(false);
+        //        std::thread stats(runPeriodicStats, &myworkload, resultPeriod, &done,
+        //        resultsFile);
+
+        auto ss = shared_ptr<statsState>(new statsState(myworkload));
+        std::thread stats(runPeriodicStats, ss, resultPeriod, resultsFile);
         myworkload.execute();
+        ss->done = true;
+        stats.join();
         myworkload.logStats();
-        if (resultsFile.length() > 0) {
+        if (resultPeriod == std::chrono::seconds::zero() && resultsFile.length() > 0) {
             // save the results
             ofstream out;
             out.open(resultsFile);
