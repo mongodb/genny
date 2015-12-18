@@ -28,18 +28,22 @@ public:
           wvariables(wvars),
           myWorkload(parentWorkload),
           DBName(dbname),
-          CollectionName(collectionname){};
+          CollectionName(collectionname),
+          stopped(false){};
     mongocxx::client conn;
     mt19937_64 rng;  // random number generator
     shared_ptr<node> currentNode;
     unordered_map<string, bsoncxx::types::value> tvariables;
     unordered_map<string, bsoncxx::types::value>& wvariables;
     vector<shared_ptr<threadState>> childThreadStates;
+    vector<shared_ptr<threadState>> backgroundThreadStates;
     vector<shared_ptr<thread>> childThreads;
+    vector<shared_ptr<thread>> backgroundThreads;
     shared_ptr<threadState> parentThread;
     shared_ptr<thread> myThread;
     workload& myWorkload;
     string DBName;
     string CollectionName;
+    std::atomic<bool> stopped;
 };
 }

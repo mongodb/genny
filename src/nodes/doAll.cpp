@@ -16,6 +16,15 @@ doAll::doAll(YAML::Node& ynode) : node(ynode) {
     for (auto nnode : ynode["childNodes"]) {
         nodeNames.push_back(nnode.Scalar());
     }
+    if (ynode["backgroundNodes"]) {
+        if (ynode["backgroundNodes"].IsSequence()) {
+            for (auto nnode : ynode["backgroundNodes"]) {
+                backgroundNodeNames.push_back(nnode.Scalar());
+            }
+        } else
+            BOOST_LOG_TRIVIAL(fatal)
+                << "doAll constructor and have backgroundNodes but not a sequence";
+    }
 }
 
 void doAll::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
@@ -26,14 +35,14 @@ void doAll::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
     for (auto name : nodeNames) {
         vectornodes.push_back(nodes[name]);
     }
+    for (auto name : backgroundNodeNames) {
+        vectorbackground.push_back(nodes[name]);
+    }
 }
 
 // Execute the node
 void doAll::execute(shared_ptr<threadState> myState) {
-    // execute the workload N times
-    // Execute all the child nodes in their own threads. And wait in the join node. Move to the join
-    // node.
-    // setup a vector of threads (in the workload)
+    // Execute all the child nodes in their own threads. And wait in the join node.
     for (auto node : vectornodes) {
         // setup a new thread state for this node
         auto newState = shared_ptr<threadState>(new threadState(myState->rng(),
@@ -47,6 +56,20 @@ void doAll::execute(shared_ptr<threadState> myState) {
         myState->childThreadStates.push_back(newState);
         newState->myThread = shared_ptr<thread>(new thread(runThread, node, newState));
         myState->childThreads.push_back(newState->myThread);
+    }
+    for (auto node : vectorbackground) {
+        // setup a new thread state for this node
+        auto newState = shared_ptr<threadState>(new threadState(myState->rng(),
+                                                                myState->tvariables,
+                                                                myState->wvariables,
+                                                                myState->myWorkload,
+                                                                myState->DBName,
+                                                                myState->CollectionName,
+                                                                myState->myWorkload.uri));
+        newState->parentThread = myState;
+        myState->backgroundThreadStates.push_back(newState);
+        newState->myThread = shared_ptr<thread>(new thread(runThread, node, newState));
+        myState->backgroundThreads.push_back(newState->myThread);
     }
 }
 

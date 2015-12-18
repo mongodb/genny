@@ -7,29 +7,30 @@ main :
   seed: 131415161718
   name: main
   nodes: 
-    - 
-      name : doAll
+    - name : doAll
       type : doAll
       childNodes : 
         - thingA
         - thingB
+      backgroundNodes : # Background nodes are stopped once childNodes have finished. 
+        - thingC
       next : join # Next state of the doAll should be a join.
-    - 
-      name : join
+    - name : join
       print : In Join
       type : join
       next : Finish
-    - 
-      name : thingA
+    - name : thingA
       print : Thing A running
       type : sleep
       next : join # Child thread continues until it gets to the join
       sleep : 1000
-    - 
-      name : thingB
+    - name : thingB
       print : Thing B running
       type : sleep
       next : join # Child thread continues until it gets to the join
       sleep : 1000
-
-
+    - name : thingC # Background thread runs until killed by the join. This self loops until killed
+      type : sleep
+      next : thingC
+      print : Thing C running
+      sleep : 100

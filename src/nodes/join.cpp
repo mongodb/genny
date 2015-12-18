@@ -35,6 +35,15 @@ void join::executeNode(shared_ptr<threadState> myState) {
         for (auto child : myState->childThreads) {
             child->join();
         }
+        // now stop the background children
+        // mark all of them to stop, then join on their threads
+        for (auto child : myState->backgroundThreadStates) {
+            child->stopped = true;
+        }
+        for (auto child : myState->backgroundThreads) {
+            child->join();
+        }
+
         stop = chrono::high_resolution_clock::now();
         myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
         BOOST_LOG_TRIVIAL(debug) << "Join node " << name << " took "

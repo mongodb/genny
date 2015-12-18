@@ -80,7 +80,7 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
         BOOST_LOG_TRIVIAL(fatal) << "nextNode is null for some reason";
         exit(0);
     }
-    if (stopped) {
+    if (stopped || myState->stopped) {
         myState->currentNode = nullptr;
         BOOST_LOG_TRIVIAL(debug) << "Stopped set";
         return;

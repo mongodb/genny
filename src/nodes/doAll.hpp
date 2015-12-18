@@ -23,7 +23,9 @@ public:
 
 private:
     vector<shared_ptr<node>> vectornodes;
+    vector<shared_ptr<node>> vectorbackground;
     vector<string> nodeNames;
+    vector<string> backgroundNodeNames;
     string joinName;
 };
 }

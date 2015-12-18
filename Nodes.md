@@ -34,7 +34,11 @@ executes.
    and it should point to a join node. Parent and child threads
    (nodes) continue until reaching a
    join node. The parent waits for all children threads to complete at the
-   join node, before continuing to the join nodes _next_ node.
+   join node, before continuing to the join node's _next_
+   node. Optionally you may also define a sequence of
+   _backgroundNodes_. They behave similarly to _childNodes_, except
+   the join node does not wait for them. Instead the _backgroundNodes_
+   are stopped once all _childNodes_ have finished. 
 6. workloadNode: This node wraps a _workload_. When it is executed,
    the wrapped workload is executed. When the workload finishes, the
    node continues on to its _next_ node.
@@ -69,5 +73,4 @@ executes.
    4. runLength
    5. number of threads
    6. workload name
-   Additionally, the workload should have it's random seed initialized
-   by the node. 
+

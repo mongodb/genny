@@ -64,7 +64,7 @@ void random_choice::executeNode(shared_ptr<threadState> myState) {
     for (auto nextstate : vectornodes) {
         if (nextstate.second > random_number) {
             // execute this one
-            if (stopped)  // short circuit and return if stopped flag set
+            if (stopped || myState->stopped)  // short circuit and return if stopped flag set
                 return;
             BOOST_LOG_TRIVIAL(debug) << " Next state is " << nextstate.first->name;
             shared_ptr<node> me = myState->currentNode;
