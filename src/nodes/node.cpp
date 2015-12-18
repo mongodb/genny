@@ -97,15 +97,11 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
 
 void node::executeNode(shared_ptr<threadState> myState) {
     // execute this node
-    BOOST_LOG_TRIVIAL(trace) << "node::executeNode. Name is " << name;
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
     execute(myState);
     stop = chrono::high_resolution_clock::now();
     myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
-    BOOST_LOG_TRIVIAL(debug) << "Node " << name << " took "
-                             << std::chrono::duration_cast<chrono::microseconds>(stop - start)
-                                    .count() << " microseconds";
     if (!text.empty()) {
         BOOST_LOG_TRIVIAL(info) << text;
     }
