@@ -66,15 +66,19 @@ void runPeriodicStats(shared_ptr<statsState> state, std::chrono::seconds period,
     if (outFile.length() > 0) {
         out.open(outFile);
         haveFile = true;  // should error check here
+        out << "[";
     }
 
+    std::this_thread::sleep_for(period);
     while (!state->done) {
-        std::this_thread::sleep_for(period);
         state->myWorkload.logStats();
         if (haveFile) {
-            out << bsoncxx::to_json(state->myWorkload.getStats(true));
+            out << bsoncxx::to_json(state->myWorkload.getStats(true)) << ",\n";
         }
+        std::this_thread::sleep_for(period);
     }
+    if (haveFile)
+        out << bsoncxx::to_json(state->myWorkload.getStats(true)) << "]\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -170,10 +174,6 @@ int main(int argc, char* argv[]) {
         BOOST_LOG_TRIVIAL(trace) << "After workload constructor. Before execute";
         // set the uri
         myworkload.uri = uri;
-        std::atomic<bool> done(false);
-        //        std::thread stats(runPeriodicStats, &myworkload, resultPeriod, &done,
-        //        resultsFile);
-
         auto ss = shared_ptr<statsState>(new statsState(myworkload));
         std::thread stats(runPeriodicStats, ss, resultPeriod, resultsFile);
         myworkload.execute();
