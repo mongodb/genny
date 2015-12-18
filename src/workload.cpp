@@ -211,7 +211,7 @@ bsoncxx::document::value workload::getStats(bool withReset) {
         ndoc.view = nstats.view();
         document << ndoc;
     }
-
+    document << "Date" << bsoncxx::types::b_date(std::chrono::system_clock::now());
     document << close_document;
     return (document << bsoncxx::builder::stream::finalize);
 }
