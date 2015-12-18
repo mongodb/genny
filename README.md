@@ -46,7 +46,8 @@ workload):
 4. Std. Deviation of execution time in microseconds
 
 Those results are reported to a configurable results json file
-(default results.json), and to the logging output at the info level.
+(default results.json), and to the logging output at the info
+level. They can also be printed out periodically using the -p option. 
 
 #### Future stats
 
@@ -54,7 +55,6 @@ The following stats and stat features are not implemented yet.
 
 2. Histogram data
 3. Percentile data (95th, 99th percentile)
-4. Periodic dumping of stats
 
 ### Future features
 This is an incomplete list.
