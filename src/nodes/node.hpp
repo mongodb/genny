@@ -41,7 +41,10 @@ public:
     virtual std::pair<std::string, std::string> generateDotGraph();
     virtual void logStats();                                    // print out the stats
     virtual bsoncxx::document::value getStats(bool withReset);  // bson object with stats
-
+    // convenience for testing
+    int getCount() {
+        return (myStats.getCount());
+    }
 
 protected:
     weak_ptr<node> nextNode;

@@ -10,6 +10,9 @@
 #include <bsoncxx/types/value.hpp>
 #include "node.hpp"
 #include "doAll.hpp"
+#include "sleep.hpp"
+#include "join.hpp"
+#include "finish_node.hpp"
 #include "workload.hpp"
 
 using namespace mwg;
@@ -21,25 +24,67 @@ TEST_CASE("Nodes", "[nodes]") {
     unordered_map<string, bsoncxx::types::value> tvariables;  // thread variables
 
     workload myWorkload;
-    threadState state(12234, tvariables, wvariables, myWorkload, "t", "c");
+    auto state = shared_ptr<threadState>(
+        new threadState(12234, tvariables, wvariables, myWorkload, "t", "c"));
+    vector<shared_ptr<node>> vectornodes;
+    unordered_map<string, shared_ptr<node>> nodes;
 
     SECTION("doAll") {
-        auto doAllNode = doAll(YAML::Load(R"yaml(
-      name : doAll
-      type : doAll
-      childNodes : 
-        - thingA
-        - thingB
-      next : join # Next state of the doAll should be a join.
-    })yaml"));
+        auto doAllYaml = YAML::Load(R"yaml(
+          name : doAll
+          type : doAll
+          childNodes :
+            - thingA
+            - thingB
+          next : join # Next state of the doAll should be a join.
+        )yaml");
+        auto doAllNode = makeSharedNode(doAllYaml);
+        nodes[doAllNode->getName()] = doAllNode;
+        vectornodes.push_back(doAllNode);
 
-        auto thing1 = YAML::Load(R"yaml(
-      name : doAll
-      type : doAll
-      childNodes : 
-        - thingA
-        - thingB
-      next : join # Next state of the doAll should be a join.
-    })yaml";
+        auto thing1Y = YAML::Load(R"yaml(
+          name : thingA
+          print : Thing A running
+          type : sleep
+          next : join # Child thread continues until it gets to the join
+          sleep : 1000
+            )yaml");
+        auto thing1Node = makeSharedNode(thing1Y);
+        nodes[thing1Node->getName()] = thing1Node;
+        vectornodes.push_back(thing1Node);
+        auto thing2Y = YAML::Load(R"yaml(
+          name : thingB
+          print : Thing B running
+          type : sleep
+          next : join # Child thread continues until it gets to the join
+          sleep : 1000
+            )yaml");
+        auto thing2Node = makeSharedNode(thing2Y);
+        nodes[thing2Node->getName()] = thing2Node;
+        vectornodes.push_back(thing2Node);
+        auto joinY = YAML::Load(R"yaml(
+          name : join
+          print : In Join
+          type : join
+          next : Finish
+            )yaml");
+        auto joinNode = makeSharedNode(joinY);
+        nodes[joinNode->getName()] = joinNode;
+        vectornodes.push_back(joinNode);
+        auto mynode = make_shared<finishNode>();
+        nodes[mynode->getName()] = mynode;
+        vectornodes.push_back(mynode);
+        // connect the nodes
+        for (auto mnode : vectornodes) {
+            mnode->setNextNode(nodes, vectornodes);
+        }
+        // execute
+        state->currentNode = doAllNode;
+        while (state->currentNode != nullptr)
+            state->currentNode->executeNode(state);
+        REQUIRE(doAllNode->getCount() == 1);
+        REQUIRE(thing1Node->getCount() == 1);
+        REQUIRE(thing2Node->getCount() == 1);
+        REQUIRE(joinNode->getCount() == 1);
     }
 }
