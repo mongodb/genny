@@ -8,11 +8,12 @@ namespace mwg {
 workloadNode::workloadNode(YAML::Node& ynode) : node(ynode) {
     if (ynode["type"].Scalar() != "workloadNode") {
         BOOST_LOG_TRIVIAL(fatal)
-            << "ForN constructor but yaml entry doesn't have type == workloadNode";
+            << "workloadNode constructor but yaml entry doesn't have type == workloadNode";
         exit(EXIT_FAILURE);
     }
     if (!ynode["workload"]) {
-        BOOST_LOG_TRIVIAL(fatal) << "ForN constructor but yaml entry doesn't have a workload entry";
+        BOOST_LOG_TRIVIAL(fatal)
+            << "workloadNode constructor but yaml entry doesn't have a workload entry";
         exit(EXIT_FAILURE);
     }
     auto yamlWorkload = ynode["workload"];
