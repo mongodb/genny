@@ -77,6 +77,7 @@ void runPeriodicStats(shared_ptr<statsState> state, std::chrono::seconds period,
         }
         std::this_thread::sleep_for(period);
     }
+    state->myWorkload.logStats();
     if (haveFile)
         out << bsoncxx::to_json(state->myWorkload.getStats(true)) << "]\n";
 }

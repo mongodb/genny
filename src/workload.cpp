@@ -185,10 +185,11 @@ void workload::stop() {
 }
 
 void workload::logStats() {
-    BOOST_LOG_TRIVIAL(info) << "Workload: " << name << ", Count=" << myStats.getCount()
-                            << ", Avg=" << myStats.getMean().count()
-                            << "us, Min=" << myStats.getMin().count()
-                            << "us, Max = " << myStats.getMax().count() << "us";
+    if (myStats.getCount() > 0)
+        BOOST_LOG_TRIVIAL(info) << "Workload: " << name << ", Count=" << myStats.getCount()
+                                << ", Avg=" << myStats.getMean().count()
+                                << "us, Min=" << myStats.getMin().count()
+                                << "us, Max = " << myStats.getMax().count() << "us";
     for (auto mnode : vectornodes)
         mnode->logStats();
 }
