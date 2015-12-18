@@ -71,10 +71,16 @@ void runPeriodicStats(shared_ptr<statsState> state, std::chrono::seconds period,
 
     std::this_thread::sleep_for(period);
     while (!state->done) {
+        chrono::high_resolution_clock::time_point start, stop;
+        start = chrono::high_resolution_clock::now();
         state->myWorkload.logStats();
         if (haveFile) {
             out << bsoncxx::to_json(state->myWorkload.getStats(true)) << ",\n";
         }
+        stop = chrono::high_resolution_clock::now();
+        BOOST_LOG_TRIVIAL(debug) << "Periodic stats collection took "
+                                 << std::chrono::duration_cast<std::chrono::microseconds>(
+                                        stop - start).count() << " us";
         std::this_thread::sleep_for(period);
     }
     state->myWorkload.logStats();
