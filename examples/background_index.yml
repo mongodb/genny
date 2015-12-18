@@ -1,5 +1,6 @@
 # Example workload. Create an index in the background while performing CRUD
 # operations at the same time.
+# This is based off the FSM workload: jstests/concurrency/fsm_workloads/create_index_background.js
 
 const: &docValMin 0
 const: &docValMax 1000
