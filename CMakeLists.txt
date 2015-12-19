@@ -9,6 +9,10 @@ add_definitions(-Wall)
 add_definitions(-Werror)
 add_definitions(-std=c++11)
 
+if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE "Release")
+endif()
+
 include_directories("${PROJECT_BINARY_DIR}")
 
 find_package(PkgConfig REQUIRED)
