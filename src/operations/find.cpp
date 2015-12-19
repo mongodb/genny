@@ -40,7 +40,7 @@ void find::execute(mongocxx::client& conn, threadState& state) {
         BOOST_LOG_TRIVIAL(debug) << "find.execute: find is " << bsoncxx::to_json(view);
         for (auto&& doc : cursor) {
             // std::cout << bsoncxx::to_json(doc) << std::endl;
-            bsoncxx::to_json(doc);
+            doc.length();
         }
     } catch (mongocxx::exception::base e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in find: " << e.what();

@@ -32,6 +32,9 @@ void list_indexes::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn[state.DBName][state.CollectionName];
     try {
         auto cursor = collection.list_indexes();
+        for (auto&& doc : cursor) {
+            doc.length();
+        }
     } catch (mongocxx::exception::base e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in list_indexes: " << e.what();
         auto error = e.raw_server_error();
@@ -42,7 +45,6 @@ void list_indexes::execute(mongocxx::client& conn, threadState& state) {
             BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
                                      << get<0>(errorandcode.value());
     }
-    // need a way to exhaust the cursor
     BOOST_LOG_TRIVIAL(debug) << "list_indexes.execute";
 }
 }

@@ -51,7 +51,7 @@ void distinct::execute(mongocxx::client& conn, threadState& state) {
         BOOST_LOG_TRIVIAL(debug) << "distinct.execute: distinct is " << bsoncxx::to_json(view);
         for (auto&& doc : cursor) {
             // std::cout << bsoncxx::to_json(doc) << std::endl;
-            bsoncxx::to_json(doc);
+            doc.length();
         }
         BOOST_LOG_TRIVIAL(debug) << "After iterating results";
     } catch (mongocxx::exception::base e) {
