@@ -6,22 +6,106 @@ const: &docValMin 0
 const: &docValMax 1000
 const: &numInitDocs 1000000
 
-main: 
+# Workload: Create background index
+# - Wait 20 seconds for the CRUD operations to run
+# - Create the background index
+create_bg : &create_bg_index
+  name: create_bg_index_wl
+  threads: 1
+  nodes:
+    - name: sleep
+      type: sleep
+      sleep: 20000
+      next: background_index
+    - name: background_index
+      print: Creating background index
+      type: create_index
+      keys: {x: 1}
+      options: {background: true}
+      next: Finish
+
+# Workload: CRUD operations
+# - Create (insert_many)
+# - Read (find)
+# - Update (update_many)
+# - Delete (delete_many)
+crud: &crud
+    name: crud_wl
+    threads: 10
+    runLength: 60
+    nodes:
+      - name: crud
+        type: random_choice
+        next:
+          create: 0.30
+          read: 0.50
+          update: 0.10
+          delete: 0.10
+      - name: create
+        print: Running create
+        type: insert_many
+        times: 10000
+        doc:
+          type: override
+          doc: {x: i}
+          overrides:
+            x:
+              type: randomint
+              min: *docValMin
+              max: *docValMax
+              next: crud
+      - name: read
+        print: Running read
+        type: find
+        filter:
+          type: override
+          doc: {x: i}
+          overrides:
+            x:
+              type: randomint
+              min: *docValMin
+              max: *docValMax
+        next: crud
+      - name: update
+        print: Running update
+        type: update_many
+        filter:
+          type: override
+          doc: {x: i}
+          overrides:
+            x:
+              type: randomint
+              min: *docValMin
+              max: *docValMax
+        update: {$inc: {crud: 1}}
+        next: crud
+      - name: delete
+        print: Running delete
+        type: delete_many
+        filter:
+          type: override
+          doc: {x: i}
+          overrides:
+            x:
+              type: randomint
+              min: *docValMin
+              max: *docValMax
+        next: crud
+
+main:
   seed: 131415161718
   name: main
   threads: 1
   nodes:
-    -
-      # Drop the collection
+    - # Drop the collection
       name: dropCollection
       type: drop
       next: initCollection
-    -
-      # Initialize the collection with numInitDocs docs
+    - # Initialize the collection with numInitDocs docs
       name: initCollection
       type: insert_many
       times: *numInitDocs
-      doc: 
+      doc:
         type: override
         doc: {x: i}
         overrides:
@@ -30,8 +114,7 @@ main:
             min: *docValMin
             max: *docValMax
       next: doOps
-    -
-      # run 2 child workloads:
+    - # run 2 child workloads:
       # - CRUD operations
       # - Create background index
       name: doOps
@@ -40,118 +123,21 @@ main:
         - crud
         - create_bg_index
       next: join
-    - 
-      name: join
+    - name: create_bg_index
+      type: workloadNode
+      next: join
+      workload: *create_bg_index
+    - name: crud
+      type: workloadNode
+      print: Running CRUD operations
+      next: join
+      workload: *crud
+    - name: join
       print: In Join
       type: join
       next: teardown
-    -
-      # Teardown: drop the collection
+    - # Teardown: drop the collection
       name: teardown
       print: teardown
       type: drop
       next: Finish
-
-    # Workload: Create background index
-    # - Wait 20 seconds for the CRUD operations to run
-    # - Create the background index
-    -
-      name: create_bg_index
-      type: workloadNode
-      next: join
-      workload: 
-        name: create_bg_index_wl
-        threads: 1
-        nodes:
-          -
-            name: sleep
-            type: sleep
-            sleep: 20000
-            next: background_index
-          - 
-            name: background_index
-            print: Creating background index
-            type: create_index
-            keys: {x: 1}
-            options: {background: true}
-            next: Finish
-
-    # Workload: CRUD operations
-    # - Create (insert_many)
-    # - Read (find)
-    # - Update (update_many)
-    # - Delete (delete_many)
-    -
-      name: crud
-      type: workloadNode
-      print: Running CRUD operations
-      next: join
-      workload: 
-        name: crud_wl
-        threads: 10
-        runLength: 60
-        nodes:
-          - 
-            name: create
-            print: Running create
-            type: insert_many
-            times: 10000
-            doc: 
-              type: override
-              doc: {x: i}
-              overrides:
-                x:
-                  type: randomint
-                  min: *docValMin
-                  max: *docValMax
-            next: crud
-          - 
-            name: read
-            print: Running read
-            type: find
-            filter:
-            document: 
-              type: override
-              doc: {x: i}
-              overrides:
-                x:
-                  type: randomint
-                  min: *docValMin
-                  max: *docValMax
-            next: crud
-          - 
-            name: update
-            print: Running update
-            type: update_many
-            filter:
-              overrides:
-                x:
-                  type: randomint
-                  min: *docValMin
-                  max: *docValMax
-              type: override
-              doc: {x: i}
-            update: {$inc: {crud: 1}}
-            next: crud
-          - 
-            name: delete
-            print: Running delete
-            type: delete_many
-            filter:
-              type: override
-              doc: {x: i}
-              overrides:
-                x:
-                  type: randomint
-                  min: *docValMin
-                  max: *docValMax
-            limit: 5
-            next: crud
-          - 
-            name: crud
-            type: random_choice
-            next:
-              create: 0.30
-              read: 0.50
-              update: 0.10
-              delete: 0.10
