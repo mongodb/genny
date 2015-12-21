@@ -30,11 +30,12 @@ static struct option poptions[] = {{"help", no_argument, 0, 'h'},
                                    {"resultsfile", required_argument, 0, 'r'},
                                    {"host", required_argument, 0, 0},
                                    {"resultsperiod", required_argument, 0, 'p'},
+                                   {"version", no_argument, 0, 'v'},
                                    {0, 0, 0, 0}};
 
 void print_help(const char* process_name) {
     fprintf(stderr,
-            "Usage: %s [-h] /path/to/workload \n"
+            "Usage: %s [-hldrpv] /path/to/workload \n"
             "Execution Options:\n"
             "\t--help|-h              Display this help and exit\n"
             "\t--host Host            Host/Connection string for mongo server to test--must be a\n"
@@ -45,7 +46,8 @@ void print_help(const char* process_name) {
             "\t                       WARNING: names with spaces or other special characters\n"
             "\t                       will break the dot file\n\n"
             "\t--resultfile|-r FILE   FILE to store results to. defaults to results.json\n"
-            "\t--resultsperiod|-p SEC Record results every SEC seconds\n",
+            "\t--resultsperiod|-p SEC Record results every SEC seconds\n"
+            "\t--version|-v           Return version information\n",
             process_name);
 }
 
@@ -152,6 +154,12 @@ int main(int argc, char* argv[]) {
             case 'p':
                 resultPeriod = std::chrono::seconds(atoi(optarg));
                 break;
+            case 'v':
+                fprintf(stdout,
+                        "mwg version %d.%d\n",
+                        WorkloadGen_VERSION_MAJOR,
+                        WorkloadGen_VERSION_MINOR);
+                return EXIT_SUCCESS;
             default:
                 fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
                 print_help(argv[0]);
@@ -161,6 +169,10 @@ int main(int argc, char* argv[]) {
 
     if (argc > optind)
         filename = argv[optind];
+    else {
+        print_help(argv[0]);
+        return EXIT_SUCCESS;
+    }
     BOOST_LOG_TRIVIAL(info) << filename;
 
     // put try catch here with error message

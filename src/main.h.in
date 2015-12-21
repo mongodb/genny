@@ -1,5 +1,5 @@
 // Set version information for the tool
-#define WorkloadGen_VERSION_MAJOR @WorkloadGeneration_VERSION_MAJOR @
-#define WorkloadGen_VERSION_MINOR @WorkloadGeneration_VERSION_MINOR @
-#define GitHASH @GIT_COMMIT_HASH @
-#define GitBranch @GIT_BRANCH @
+#define WorkloadGen_VERSION_MAJOR @WorkloadGeneration_VERSION_MAJOR@
+#define WorkloadGen_VERSION_MINOR @WorkloadGeneration_VERSION_MINOR@
+#define GitHASH @GIT_COMMIT_HASH@
+#define GitBranch @GIT_BRANCH@

@@ -2,8 +2,8 @@ cmake_minimum_required (VERSION 2.6)
 project (WorkloadGeneration)
 
 # The version number.
-set (WorkloadGeneration_VERSION_MAJOR -1)
-set (WorkloadGeneration_VERSION_MINOR 0)
+set (WorkloadGeneration_VERSION_MAJOR 0)
+set (WorkloadGeneration_VERSION_MINOR 2)
 
 add_definitions(-Wall)
 add_definitions(-Werror)
