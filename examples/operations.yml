@@ -40,6 +40,7 @@ main :
     - 
       type : count
       filter : { y : b } 
+      assertEquals : 2
     - 
       type : find
       filter : { x : a } 
@@ -105,3 +106,28 @@ main :
     - type : set_variable # This changes the collection name used by operations
       targetVariable : CollectionName
       value : NewCollectionName
+    #Check that we have the right number of documents of each type
+    - type : count
+      filter: { x : a}
+      assertEquals : 6
+    - type : count
+      filter : {x: a, i : 2}
+      assertEquals : 1
+    - type : count
+      filter : {x: a, i : 1}
+      assertEquals : 5
+    - type : count 
+      filter : {z : a}
+      assertEquals : 2
+    - type : count 
+      filter : {x : a, z : a}
+      assertEquals : 1
+    - type : count
+      filter : {z1 : b}
+      assertEquals : 1
+    - type : count
+      filter : {x : 2}
+      assertEquals : 1
+    - type : count
+      filter : {y : b}
+      assertEquals : 0

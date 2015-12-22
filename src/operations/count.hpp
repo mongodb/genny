@@ -22,5 +22,6 @@ public:
 private:
     unique_ptr<document> filter{};
     mongocxx::options::count options{};
+    int64_t assertEquals = -1;
 };
 }

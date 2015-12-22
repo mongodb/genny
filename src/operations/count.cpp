@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
 #include <mongocxx/exception/base.hpp>
+#include "node.hpp"
 
 namespace mwg {
 
@@ -27,6 +28,8 @@ count::count(YAML::Node& node) {
     BOOST_LOG_TRIVIAL(debug) << "Added op of type count";
     if (node["options"])
         parseCountOptions(options, node["options"]);
+    if (node["assertEquals"])
+        assertEquals = node["assertEquals"].as<int64_t>();
 }
 
 // Execute the node
@@ -36,8 +39,9 @@ void count::execute(mongocxx::client& conn, threadState& state) {
     auto view = filter->view(mydoc, state);
     try {
         auto returnCount = collection.count(view, options);
-        BOOST_LOG_TRIVIAL(debug) << "count.execute: filter is " << bsoncxx::to_json(view)
-                                 << " and count is " << returnCount << endl;
+        if (assertEquals >= 0 && assertEquals != returnCount)
+            BOOST_LOG_TRIVIAL(error) << "Count assertion error in node " << state.currentNode->name
+                                     << ".Expected " << assertEquals << " but got " << returnCount;
     } catch (mongocxx::exception::base e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in count: " << e.what();
         auto error = e.raw_server_error();
