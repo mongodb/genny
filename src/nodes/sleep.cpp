@@ -3,7 +3,7 @@
 #include "sleep.hpp"
 #include <random>
 #include "parse_util.hpp"
-#include <time.h>
+#include <thread>
 #include <boost/log/trivial.hpp>
 
 namespace mwg {
@@ -13,18 +13,14 @@ sleepNode::sleepNode(YAML::Node& ynode) : node(ynode) {
             << "SleepNode constructor but yaml entry doesn't have type == sleep";
         exit(EXIT_FAILURE);
     }
-    sleeptime = ynode["sleep"].as<uint64_t>();
-    BOOST_LOG_TRIVIAL(debug) << "In sleepNode constructor. Sleep time is " << sleeptime;
+    sleeptime = std::chrono::milliseconds(ynode["sleep"].as<uint64_t>());
+    BOOST_LOG_TRIVIAL(debug) << "In sleepNode constructor. Sleep time is " << sleeptime.count();
 }
 
 // Execute the node
 void sleepNode::execute(shared_ptr<threadState> myState) {
-    BOOST_LOG_TRIVIAL(debug) << "sleepNode.execute. Sleeping for " << sleeptime << " ms";
-    struct timespec t;
-    t.tv_sec = (int)(sleeptime / 1000);
-    t.tv_nsec = (sleeptime % 1000) * 1000 * 1000;
-    struct timespec out;
-    nanosleep(&t, &out);
+    BOOST_LOG_TRIVIAL(debug) << "sleepNode.execute. Sleeping for " << sleeptime.count() << " ms";
+    std::this_thread::sleep_for(sleeptime);
     BOOST_LOG_TRIVIAL(debug) << "Slept.";
 }
 }

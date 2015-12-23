@@ -1,5 +1,5 @@
 #include "yaml-cpp/yaml.h"
-
+#include <chrono>
 #include "node.hpp"
 #pragma once
 
@@ -19,6 +19,6 @@ public:
 
 private:
     // possible next states with probabilities
-    uint64_t sleeptime;
+    std::chrono::milliseconds sleeptime;
 };
 }
