@@ -4,14 +4,13 @@ main :
   seed: 131415161718
   name: main
   nodes: 
+    - type : drop
     - name : repeat
       type : forN
       N : 5
-      next : Finish
       node : 
         type : workloadNode
         name : inserts
-        next : Finish 
         workload : 
           wvariables : 
             count : 0
@@ -28,7 +27,6 @@ main :
                     variable : count 
             - name : insert2
               type : insert_one
-              next : Finish
               document :
                 type : override 
                 doc : {y : 1}
@@ -36,4 +34,15 @@ main :
                   y :  # increment count and set y to count
                     type : increment
                     variable : count 
-
+    - name : check1
+      type : count
+      filter : {y : 0}
+      assertEquals : 1
+    - name : check2
+      type : count
+      filter : {y : 9}
+      assertEquals : 1
+    - name : check3
+      type : count
+      filter : {y : {$exists : 1}}
+      assertEquals : 10

@@ -6,8 +6,8 @@ main :
   wvariables : 
     count : 0
   nodes: 
-    - 
-      name : insert1
+    - type : drop
+    - name : insert1
       type : insert_one
       document : 
         type : override 
@@ -24,9 +24,7 @@ main :
       options : 
         write_concern : 
           nodes : 1
-      next : insert2
-    - 
-      name : insert2
+    - name : insert2
       type : insert_one
       document : 
         type : override 
@@ -40,8 +38,7 @@ main :
         write_concern : 
           nodes : 1
       next : insert3
-    - 
-      name : insert3
+    - name : insert3
       type : insert_one
       document : 
         type : override 
@@ -53,9 +50,7 @@ main :
       options : 
         write_concern : 
           nodes : 1
-      next : insert4
-    - 
-      name : insert4
+    - name : insert4
       type : insert_one
       document : 
         type : override 
@@ -68,9 +63,7 @@ main :
       options : 
         write_concern : 
           nodes : 1
-      next : insert5
-    - 
-      name : insert5
+    - name : insert5
       type : insert_one
       document : 
         type : override 
@@ -83,5 +76,18 @@ main :
       options : 
         write_concern : 
           nodes : 1
-      next : Finish
+    - name : check1
+      type : count
+      filter: {}
+      assertEquals : 5
+    - name : check2
+      type : count
+      filter : {x.y : b}
+      assertEquals : 1
+    - name : check3
+      type : count
+      filter : {x.y : a}
+      assertEquals : 0
+
+
 
