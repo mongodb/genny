@@ -27,9 +27,7 @@ void forN::execute(shared_ptr<threadState> myState) {
         start = chrono::high_resolution_clock::now();
         myNode->execute(myState);
         stop = chrono::high_resolution_clock::now();
-        BOOST_LOG_TRIVIAL(debug) << "Node " << name << " took "
-                                 << std::chrono::duration_cast<chrono::microseconds>(stop - start)
-                                        .count() << " microseconds";
+        myNode->record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
     }
 }
 std::pair<std::string, std::string> forN::generateDotGraph() {
@@ -37,5 +35,29 @@ std::pair<std::string, std::string> forN::generateDotGraph() {
     // Don't use the graph from the child node itself since it's next node isn't used.
     return (std::pair<std::string, std::string>{name + " -> " + nextName + "\n",
                                                 myNode->generateDotGraph().second});
+}
+
+void forN::logStats() {
+    node::logStats();
+    myNode->logStats();
+}
+
+bsoncxx::document::value forN::getStats(bool withReset) {
+    using bsoncxx::builder::stream::open_document;
+    using bsoncxx::builder::stream::close_document;
+    bsoncxx::builder::stream::document document{};
+
+    // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that could be
+    // moved into document
+    auto stats = myStats.getStats(withReset);
+    bsoncxx::builder::stream::concatenate doc;
+    doc.view = stats.view();
+    bsoncxx::builder::stream::document forNdocument{};
+    auto forNStats = myNode->getStats(withReset);
+    bsoncxx::builder::stream::concatenate forNDoc;
+    forNDoc.view = forNStats.view();
+
+    document << name << open_document << doc << forNDoc << close_document;
+    return (document << bsoncxx::builder::stream::finalize);
 }
 }
