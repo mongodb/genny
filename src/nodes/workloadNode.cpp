@@ -35,23 +35,9 @@ std::pair<std::string, std::string> workloadNode::generateDotGraph() {
 }
 void workloadNode::logStats() {
     myWorkload->logStats();
-    node::logStats();
 }
 bsoncxx::document::value workloadNode::getStats(bool withReset) {
-    using bsoncxx::builder::stream::open_document;
-    using bsoncxx::builder::stream::close_document;
-    bsoncxx::builder::stream::document document{};
-
-    auto stats = myStats.getStats(withReset);
-    bsoncxx::builder::stream::concatenate doc;
-    doc.view = stats.view();
-    bsoncxx::builder::stream::document workdocument{};
-    auto workStats = myWorkload->getStats(withReset);
-    bsoncxx::builder::stream::concatenate workDoc;
-    workDoc.view = workStats.view();
-
-    document << name << open_document << doc << workDoc << close_document;
-    return (document << bsoncxx::builder::stream::finalize);
+    return (myWorkload->getStats(withReset));
 }
 
 void workloadNode::stop() {
