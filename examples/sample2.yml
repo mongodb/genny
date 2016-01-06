@@ -8,35 +8,30 @@ main :
   name: main
   runLength : 100
   nodes: 
-    - 
-      name : insert1
+    - name : insert1
       print : Running insert1
       type : insert_one
       document : {x : a}
       next : sleep
-    - 
-      name : insert2
-      print : Running insert2
-      type : insert_one
-      document : {x : b}
-      next : sleep
-    - 
-      name : query
-      print : Running query
-      type : find
-      filter : { x : a }
-      next : sleep
-    - 
-      name : random
+    - name : sleep
+      type : sleep
+      next : random
+      sleep : 1000
+    - name : random
       print : In Random Choice
       type : random_choice
       next : 
         insert2 : 0.45
         query : 0.45
         Finish : 0.1
-    - 
-      name : sleep
-      type : sleep
-      next : random
-      sleep : 1000
+    - name : insert2
+      print : Running insert2
+      type : insert_one
+      document : {x : b}
+      next : sleep
+    - name : query
+      print : Running query
+      type : find
+      filter : { x : a }
+      next : sleep
 
