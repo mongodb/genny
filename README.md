@@ -76,12 +76,20 @@ Dependencies
 * [cmake](http://www.cmake.org/) for building
 * [Boost](http://www.boost.org/) for logging. Version 1.48 or later
 
+Install Script
+--------------
+
+Jonathan Abrahams has added an [install script](install.sh) that
+should install all the dependencies and build the tool for CentOS,
+Ubuntu, Darwin, and Windows_NT. 
+
 Building
 --------
 
     cd build
     cmake ..
     make
+    make test # optional
 
 Examples
 --------
