@@ -52,9 +52,9 @@ goal is to support all CRUD spec operations.
   variables (tvariables). The variable can be set from a _value_ or
   from another variable (_donorVariable_), but not both. Can also set
   DBName and CollectionName. 
-  * _target_: string value name of the variable to update
-  * _value_: A json/yaml value to set the variable to
-  * _donorVariable_: A variable to copy a value from.
+      * _target_: string value name of the variable to update
+      * _value_: A json/yaml value to set the variable to
+      * _donorVariable_: A variable to copy a value from.
   
 #### Future Operations
 
