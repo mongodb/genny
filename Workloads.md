@@ -25,7 +25,3 @@ A workload has the following fields:
 * _runLength_: Maximum execution time for the workload in seconds. The
   execution time can be shorter based on the sequence of exeution.
 
-### Future Work
-
-* Enable _runLength_ to actually control the maximum execution time
-  for a workload. 
