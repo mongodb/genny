@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
     logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::info);
 
     while (1) {
-        int arg = getopt_long(argc, argv, "hl:d:p:", poptions, &idx);
+        int arg = getopt_long(argc, argv, "hl:d:p:v", poptions, &idx);
         arg_count++;
         if (arg == -1) {
             // all arguments have been processed
