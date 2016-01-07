@@ -156,9 +156,10 @@ int main(int argc, char* argv[]) {
                 break;
             case 'v':
                 fprintf(stdout,
-                        "mwg version %d.%d\n",
+                        "mwg version %d.%d. Githash %s\n",
                         WorkloadGen_VERSION_MAJOR,
-                        WorkloadGen_VERSION_MINOR);
+                        WorkloadGen_VERSION_MINOR,
+                        GitHASH);
                 return EXIT_SUCCESS;
             default:
                 fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
