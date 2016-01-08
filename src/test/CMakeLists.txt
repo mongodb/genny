@@ -8,6 +8,6 @@ ${CMAKE_SOURCE_DIR}/src/third_party/catch/main.cpp documents.cpp
 operations.cpp dot.cpp stats.cpp nodes.cpp)
 
 target_link_libraries(test_driver stats workload nodes operations docs
-parse ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES} ${YAMLCPP_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+parse ${Boost_LIBRARIES} ${LIBRARIES} ${YAMLCPP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
 add_test(driver test_driver)

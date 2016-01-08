@@ -1,6 +1,5 @@
 add_library(parse parse_util.cpp)
 add_library(workload workload.cpp)
-ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 include_directories(stats documents nodes operations thirdparty .)
 set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR})
 add_subdirectory(documents)

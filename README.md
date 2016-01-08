@@ -4,10 +4,10 @@ Workload Generation
 Overview
 --------
 
-This tool is a workload generator for testing the performance of
-a mongo cluster. The tool allows you to specify a workload in a yaml file, with
-a large degree of flexibility. The workload tool is written in C++ and
-wraps the
+This tool is a workload generator for testing the performance of a
+mongo cluster. The tool allows you to specify a workload in a yaml
+file, with a large degree of flexibility. The workload tool is written
+in C++ and wraps the
 [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master),
 which in turn supports the
 [mongo driver spec](https://github.com/mongodb/specifications/blob/master/source/crud/crud.rst). It
@@ -21,10 +21,10 @@ is the intention that:
   server, not the workload tool.
 * The tool scales to large thread counts up to hardware constraints.
 * The tool generates reproducible workload executions (seeded pseudo-random number
-generator per thread).
- * Note: The workload generation tool cannot control if the server
-under test responds differently because of factors not under the tools
-control.
+  generator per thread).
+  * Note: The workload generation tool cannot control if the server
+    under test responds differently because of factors not under the tools
+    control.
 
 There are five basic components in a workload, enabling the
 specification of arbitrarily complex workloads in a graph of
@@ -71,6 +71,7 @@ The following stats and stat features are not implemented yet.
 3. Percentile data (95th, 99th percentile)
 
 ### Future features
+
 This is an incomplete list.
 
 2. More types of transformation of values and tools for building
@@ -84,9 +85,12 @@ This is an incomplete list.
 
 Dependencies
 ------------
+
 * The
   [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master). Currently
-  tested against r3.0.0. If compiling on OS X, see [CXX-836](https://jira.mongodb.org/browse/CXX-836)
+  tested against r3.0.0. If compiling on OS X, see
+  [CXX-836](https://jira.mongodb.org/browse/CXX-836). The C++11 driver
+  in turn requires the c driver.
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * A compiler that supports c++11
 * [cmake](http://www.cmake.org/) for building
@@ -105,7 +109,18 @@ Building
     cd build
     cmake ..
     make
-    make test # optional
+    make test # optional. Expects a mongod running on port 27017
+
+Build Notes:
+
+* The build will use static boost by default, and static mongo c++
+  driver libraries if they exist. If boost static libraries don't
+  exist on your system, add "-DBoost\_NON\_STATIC=true" to the end of your
+  cmake line.
+* On some systems I've had trouble linking against the mongo c
+  driver. In those cases, editing libmongo-c-1.0.pc (usually in
+  /usr/local/lib/pkgconfig/) can fix this. On the Libs: line, move the
+  non mongoc libraries after "-lmongoc-1.0".
 
 Running
 -------

@@ -6,6 +6,5 @@ read_preference.cpp write_concern.cpp name.cpp
 update_one.cpp update_many.cpp create_collection.cpp command.cpp
 set_variable.cpp noop.cpp)
 add_library(operations ${src_files})
-ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 include_directories(documents nodes operations)
 set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR})
