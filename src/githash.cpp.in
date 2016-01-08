@@ -1,0 +1,3 @@
+// Set version information for the tool
+#define GitHASH "@GIT_COMMIT_HASH@"
+extern const char g_GIT_SHA1[] = GitHASH;

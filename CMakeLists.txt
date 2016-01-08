@@ -1,6 +1,11 @@
 cmake_minimum_required (VERSION 2.6)
 project (WorkloadGeneration)
 
+# Use git cmake module from rpavlik
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/rpavlik/cmake")
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+
 # The version number.
 set (WorkloadGeneration_VERSION_MAJOR 0)
 set (WorkloadGeneration_VERSION_MINOR 2)
@@ -70,11 +75,16 @@ configure_file (
   "${PROJECT_BINARY_DIR}/main.h"
 )
 
+configure_file (
+ "${PROJECT_SOURCE_DIR}/src/githash.cpp.in"
+  "${PROJECT_BINARY_DIR}/githash.cpp"
+)
+
 ADD_DEFINITIONS(-DBOOST_LOG_DYN_LINK)
 enable_testing()
 add_subdirectory(src)
 include_directories(src/stats)
-add_executable(mwg src/main.cpp)
+add_executable(mwg src/main.cpp githash.cpp)
 target_link_libraries(mwg workload nodes operations
 docs parse stats ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES}
 ${YAMLCPP_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})

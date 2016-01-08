@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
                         "mwg version %d.%d. Githash %s\n",
                         WorkloadGen_VERSION_MAJOR,
                         WorkloadGen_VERSION_MINOR,
-                        GitHASH);
+                        g_GIT_SHA1);
                 return EXIT_SUCCESS;
             default:
                 fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
