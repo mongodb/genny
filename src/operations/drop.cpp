@@ -3,7 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
-#include <mongocxx/exception/base.hpp>
+#include <mongocxx/exception/operation_exception.hpp>
 
 namespace mwg {
 
@@ -31,7 +31,7 @@ void drop::execute(mongocxx::client& conn, threadState& state) {
     auto collection = conn[state.DBName][state.CollectionName];
     try {
         collection.drop();
-    } catch (mongocxx::exception::base e) {
+    } catch (mongocxx::operation_exception e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in drop collection: " << e.what();
         auto error = e.raw_server_error();
         if (error)

@@ -1,5 +1,7 @@
 #include "parse_util.hpp"
 #include <mongocxx/write_concern.hpp>
+#include <bsoncxx/builder/concatenate.hpp>
+
 #include <chrono>
 #include <boost/regex.hpp>  // STDLIB regex failed on Ubuntu 14.04 & CentOS 7
 #include <boost/log/trivial.hpp>
@@ -31,15 +33,13 @@ void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
         if (entry.second.IsMap()) {
             bsoncxx::builder::stream::document mydoc{};
             parseMap(mydoc, entry.second);
-            bsoncxx::builder::stream::concatenate doc;
-            doc.view = mydoc.view();
-            docbuilder << entry.first.Scalar() << open_document << doc << close_document;
+            docbuilder << entry.first.Scalar() << open_document
+                       << bsoncxx::builder::concatenate(mydoc.view()) << close_document;
         } else if (entry.second.IsSequence()) {
-            bsoncxx::v0::builder::stream::array myArray{};
+            bsoncxx::builder::stream::array myArray{};
             parseSequence(myArray, entry.second);
-            bsoncxx::builder::stream::concatenate doc;
-            doc.view = myArray.view();
-            docbuilder << entry.first.Scalar() << open_array << doc << close_array;
+            docbuilder << entry.first.Scalar() << open_array
+                       << bsoncxx::builder::concatenate(myArray.view()) << close_array;
         } else {  // scalar
             if (isNumber(entry.second.Scalar())) {
                 BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
@@ -50,21 +50,19 @@ void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
     }
 }
 
-void parseSequence(bsoncxx::v0::builder::stream::array& arraybuilder, YAML::Node node) {
+void parseSequence(bsoncxx::builder::stream::array& arraybuilder, YAML::Node node) {
     for (auto entry : node) {
         if (entry.IsMap()) {
             BOOST_LOG_TRIVIAL(debug) << "Entry isMap";
             bsoncxx::builder::stream::document mydoc{};
             parseMap(mydoc, entry);
-            bsoncxx::builder::stream::concatenate doc;
-            doc.view = mydoc.view();
-            arraybuilder << open_document << doc << close_document;
+            arraybuilder << open_document << bsoncxx::builder::concatenate(mydoc.view())
+                         << close_document;
         } else if (entry.IsSequence()) {
-            bsoncxx::v0::builder::stream::array myArray{};
+            bsoncxx::builder::stream::array myArray{};
             parseSequence(myArray, entry);
-            bsoncxx::builder::stream::concatenate doc;
-            doc.view = myArray.view();
-            arraybuilder << open_array << doc << close_array;
+            arraybuilder << open_array << bsoncxx::builder::concatenate(myArray.view())
+                         << close_array;
         } else  // scalar
         {
             BOOST_LOG_TRIVIAL(debug) << "Trying to put entry into array builder " << entry.Scalar();

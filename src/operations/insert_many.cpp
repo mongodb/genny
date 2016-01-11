@@ -3,7 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include "parse_util.hpp"
 #include <boost/log/trivial.hpp>
-#include <mongocxx/exception/base.hpp>
+#include <mongocxx/exception/operation_exception.hpp>
 #include <tuple>
 
 namespace mwg {
@@ -74,15 +74,11 @@ void insert_many::execute(mongocxx::client& conn, threadState& state) {
     }
     try {
         auto result = coll.insert_many(views, options);
-    } catch (mongocxx::exception::base e) {
+    } catch (mongocxx::operation_exception e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in insert_many: " << e.what();
         auto error = e.raw_server_error();
         if (error)
             BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
-        auto errorandcode = e.error_and_code();
-        if (errorandcode)
-            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
-                                     << get<0>(errorandcode.value());
     }
     BOOST_LOG_TRIVIAL(debug) << "insert_many.execute";
     // probably should do some error checking here

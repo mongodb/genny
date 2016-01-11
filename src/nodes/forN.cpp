@@ -50,14 +50,10 @@ bsoncxx::document::value forN::getStats(bool withReset) {
     // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that could be
     // moved into document
     auto stats = myStats.getStats(withReset);
-    bsoncxx::builder::stream::concatenate doc;
-    doc.view = stats.view();
     bsoncxx::builder::stream::document forNdocument{};
     auto forNStats = myNode->getStats(withReset);
-    bsoncxx::builder::stream::concatenate forNDoc;
-    forNDoc.view = forNStats.view();
-
-    document << name << open_document << doc << forNDoc << close_document;
+    document << name << open_document << bsoncxx::builder::concatenate(stats.view())
+             << bsoncxx::builder::concatenate(forNStats.view()) << close_document;
     return (document << bsoncxx::builder::stream::finalize);
 }
 }

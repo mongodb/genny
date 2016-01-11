@@ -3,7 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
-#include <mongocxx/exception/base.hpp>
+#include <mongocxx/exception/operation_exception.hpp>
 
 namespace mwg {
 
@@ -43,7 +43,7 @@ void create_index::execute(mongocxx::client& conn, threadState& state) {
     // auto opview = options->view(myoptions, state);
     try {
         auto result = collection.create_index(view, indexOptions);
-    } catch (mongocxx::exception::base e) {
+    } catch (mongocxx::operation_exception e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in create_index: " << e.what();
         auto error = e.raw_server_error();
         if (error)

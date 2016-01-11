@@ -130,10 +130,8 @@ bsoncxx::document::value node::getStats(bool withReset) {
     // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that could be
     // moved into document
     auto stats = myStats.getStats(withReset);
-    bsoncxx::builder::stream::concatenate doc;
-    doc.view = stats.view();
-
-    document << name << open_document << doc << close_document;
+    document << name << open_document << bsoncxx::builder::concatenate(stats.view())
+             << close_document;
     return (document << bsoncxx::builder::stream::finalize);
 }
 void node::stop() {

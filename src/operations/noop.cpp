@@ -3,7 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
-#include <mongocxx/exception/base.hpp>
+#include <mongocxx/exception/operation_exception.hpp>
 
 namespace mwg {
 

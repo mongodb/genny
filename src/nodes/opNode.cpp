@@ -12,7 +12,7 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
         myop = ynode;
         BOOST_LOG_TRIVIAL(debug) << "No myop. Using inline defintion";
     } else
-        cout << "Explicit op entry in opNode constructor";
+        BOOST_LOG_TRIVIAL(debug) << "Explicit op entry in opNode constructor";
     if (myop["type"].Scalar() == "find")
         op = unique_ptr<operation>(new find(myop));
     else if (myop["type"].Scalar() == "count")

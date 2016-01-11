@@ -202,15 +202,10 @@ bsoncxx::document::value workload::getStats(bool withReset) {
     // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that could be
     // moved into document
     auto stats = myStats.getStats(withReset);
-    bsoncxx::builder::stream::concatenate doc;
-    doc.view = stats.view();
-
-    document << name << open_document << doc;
+    document << name << open_document << bsoncxx::builder::concatenate(stats.view());
     for (auto mnode : vectornodes) {
-        bsoncxx::builder::stream::concatenate ndoc;
         auto nstats = mnode->getStats(withReset);
-        ndoc.view = nstats.view();
-        document << ndoc;
+        document << bsoncxx::builder::concatenate(nstats.view());
     }
     document << "Date" << bsoncxx::types::b_date(std::chrono::system_clock::now());
     document << close_document;

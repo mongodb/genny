@@ -3,7 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
-#include <mongocxx/exception/base.hpp>
+#include <mongocxx/exception/operation_exception.hpp>
 
 namespace mwg {
 
@@ -41,15 +41,11 @@ void find_one_and_replace::execute(mongocxx::client& conn, threadState& state) {
     try {
         auto value = collection.find_one_and_replace(view, replaceview, options);
         // need a way to exhaust the cursor
-    } catch (mongocxx::exception::base e) {
+    } catch (mongocxx::operation_exception e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in find_one_and_replace: " << e.what();
         auto error = e.raw_server_error();
         if (error)
             BOOST_LOG_TRIVIAL(error) << bsoncxx::to_json(error->view());
-        auto errorandcode = e.error_and_code();
-        if (errorandcode)
-            BOOST_LOG_TRIVIAL(error) << "Error code is " << get<1>(errorandcode.value()) << " and "
-                                     << get<0>(errorandcode.value());
     }
     BOOST_LOG_TRIVIAL(debug) << "find_one_and_replace.execute: find_one_and_replace is "
                              << bsoncxx::to_json(view);

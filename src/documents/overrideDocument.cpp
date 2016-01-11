@@ -183,9 +183,8 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                                        elem.get_document().value,
                                        prefix + elem.key().to_string() + '.',
                                        state);
-                    bsoncxx::builder::stream::concatenate cdoc;
-                    cdoc.view = mydoc.view();
-                    output << elem.key().to_string() << open_document << cdoc << close_document;
+                    output << elem.key().to_string() << open_document
+                           << bsoncxx::builder::concatenate(mydoc.view()) << close_document;
                 } break;
                 case bsoncxx::type::k_array:
                     BOOST_LOG_TRIVIAL(fatal)
