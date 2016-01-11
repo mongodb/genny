@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
 project (WorkloadGeneration)
 
+include(CPack)
+
 # The version number.
 set (WorkloadGeneration_VERSION_MAJOR 0)
 set (WorkloadGeneration_VERSION_MINOR 2)
