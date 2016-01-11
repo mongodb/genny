@@ -111,7 +111,7 @@ echo "Installing Mongo C++ Driver"
 git clone  -b master https://github.com/mongodb/mongo-cxx-driver.git
 pushd mongo-cxx-driver/build
 # This should be changed to a tag once the the code is stable
-git checkout 9ae6f4d76c99a25f015f94cd8ac6b5f42d4e76d5
+git checkout c34c3a9b69e2869daa8c99cd6234c8e749b9eca7
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
 sudo make && sudo make install
 popd
