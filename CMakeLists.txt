@@ -1,11 +1,20 @@
 cmake_minimum_required (VERSION 2.6)
 project (WorkloadGeneration)
 
-include(CPack)
-
 # The version number.
 set (WorkloadGeneration_VERSION_MAJOR 0)
 set (WorkloadGeneration_VERSION_MINOR 2)
+set (WorkloadGeneration_VERSION_PATCH 0)
+
+
+# CPack stuff
+SET(CPACK_PACKAGE_VERSION_MAJOR ${WorkloadGeneration_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${WorkloadGeneration_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${WorkloadGeneration_VERSION_PATCH})
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Workload Generator for MongoDB")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE
+"${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+include(CPack)
 
 add_definitions(-Wall)
 add_definitions(-Werror)
@@ -70,7 +79,9 @@ target_link_libraries(mwg workload nodes operations
 docs parse stats ${Boost_LIBRARIES} ${LIBMONGOCXX_LIBRARIES}
 ${YAMLCPP_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
+add_subdirectory(examples)
+
 
 install(TARGETS mwg DESTINATION bin)
-add_subdirectory(examples)
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/examples/" DESTINATION "example")
 
