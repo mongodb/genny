@@ -9,6 +9,7 @@
 #include "doAll.hpp"
 #include "join.hpp"
 #include "workloadNode.hpp"
+#include "ifNode.hpp"
 
 namespace mwg {
 
@@ -166,8 +167,11 @@ node* makeNode(YAML::Node yamlNode) {
         return new join(yamlNode);
     } else if (yamlNode["type"].Scalar() == "workloadNode") {
         return new workloadNode(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "ifNode") {
+        return new ifNode(yamlNode);
     } else {
-        BOOST_LOG_TRIVIAL(debug) << "In workload constructor. Defaulting to opNode";
+        BOOST_LOG_TRIVIAL(debug) << "In makeNode. Type was " << yamlNode["type"].Scalar()
+                                 << ". Defaulting to opNode";
         return new opNode(yamlNode);
     }
 }

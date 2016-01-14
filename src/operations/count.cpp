@@ -3,6 +3,7 @@
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <bsoncxx/types/value.hpp>
 #include <mongocxx/exception/operation_exception.hpp>
 #include "node.hpp"
 
@@ -42,6 +43,9 @@ void count::execute(mongocxx::client& conn, threadState& state) {
         if (assertEquals >= 0 && assertEquals != returnCount)
             BOOST_LOG_TRIVIAL(error) << "Count assertion error in node " << state.currentNode->name
                                      << ".Expected " << assertEquals << " but got " << returnCount;
+        // save return count in state->return
+        state.result = bsoncxx::builder::stream::array() << returnCount
+                                                         << bsoncxx::builder::stream::finalize;
     } catch (mongocxx::operation_exception e) {
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in count: " << e.what();
         auto error = e.raw_server_error();

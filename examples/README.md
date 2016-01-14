@@ -26,5 +26,8 @@ A Tour
 - [doAll.yml](doAll.yml): Demonstrates simple fork join behavior. A thread is
   started for each childNode, and they execute in parallel until they
   get to the join node. 
+- [ifNode.yml](ifNode.yml): Demonstrates simple ifNode behavior. It
+  contains two ifNodes. The first evaluates true, and the second
+  false. Here's an [image of the ifNode graph](images/ifNode.png)
 - [override.yml](override.yml): We can change values in documents. Increment, random
   int, random string, date. 

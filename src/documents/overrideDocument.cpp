@@ -5,11 +5,8 @@
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/types/value.hpp>
 #include <stdlib.h>
-#include <bsoncxx/document/value.hpp>
-#include <bsoncxx/document/view.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/stdx/string_view.hpp>
-#include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 #include <boost/log/trivial.hpp>
 #include <ctime>

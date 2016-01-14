@@ -128,4 +128,253 @@ TEST_CASE("Nodes", "[nodes]") {
             state->currentNode->executeNode(state);
         REQUIRE((thing1Node->getCount() + thing2Node->getCount()) == 1);
     }
+    SECTION("ifNode") {
+        auto thing1Y = YAML::Load(R"yaml(
+          name : thingA
+          print : Thing A running
+          type : noop
+          next : Finish
+            )yaml");
+        auto thing1Node = makeSharedNode(thing1Y);
+        nodes[thing1Node->getName()] = thing1Node;
+        vectornodes.push_back(thing1Node);
+        auto thing2Y = YAML::Load(R"yaml(
+          name : thingB
+          print : Thing B running
+          type : noop
+          next : Finish
+            )yaml");
+        auto thing2Node = makeSharedNode(thing2Y);
+        nodes[thing2Node->getName()] = thing2Node;
+        vectornodes.push_back(thing2Node);
+        auto mynode = make_shared<finishNode>();
+        nodes[mynode->getName()] = mynode;
+        vectornodes.push_back(mynode);
+        bsoncxx::types::b_int64 value;
+        SECTION("equality") {
+            auto ifNodeYaml = YAML::Load(R"yaml(
+          name : ifNode
+          type : ifNode
+          ifNode : thingA
+          elseNode : thingB
+          comparison : 
+              value : 1
+              test : equals
+        )yaml");
+            auto ifNodeNode = makeSharedNode(ifNodeYaml);
+            nodes[ifNodeNode->getName()] = ifNodeNode;
+            vectornodes.push_back(ifNodeNode);
+
+            // connect the nodes
+            for (auto mnode : vectornodes) {
+                mnode->setNextNode(nodes, vectornodes);
+            }
+
+            SECTION("true") {
+                value.value = 1;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                // execute -- if should evaluate true and take the ifnode
+                state->currentNode = ifNodeNode;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 1);
+                REQUIRE(thing2Node->getCount() == 0);
+            }
+            SECTION("false") {
+                value.value = 5;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                // execute -- if should evaluate false and take the elsenode
+                state->currentNode = ifNodeNode;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 0);
+                REQUIRE(thing2Node->getCount() == 1);
+            }
+        }
+
+        SECTION("Greater") {
+            auto ifNodeYaml = YAML::Load(R"yaml(
+          name : ifNode
+          type : ifNode
+          ifNode : thingA
+          elseNode : thingB
+          comparison : 
+              value : 1
+              test : greater
+        )yaml");
+            auto ifNodeNode = makeSharedNode(ifNodeYaml);
+            nodes[ifNodeNode->getName()] = ifNodeNode;
+            vectornodes.push_back(ifNodeNode);
+
+            // connect the nodes
+            for (auto mnode : vectornodes) {
+                mnode->setNextNode(nodes, vectornodes);
+            }
+
+            bsoncxx::types::b_int64 value;
+            // execute -- if should evaluate false and take the ifnode
+            state->currentNode = ifNodeNode;
+            SECTION("true") {
+                value.value = 5;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 1);
+                REQUIRE(thing2Node->getCount() == 0);
+            }
+            SECTION("false") {
+                value.value = 1;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                // execute -- if should evaluate false and take the elsenode
+                state->currentNode = ifNodeNode;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 0);
+                REQUIRE(thing2Node->getCount() == 1);
+            }
+        }
+        SECTION("Less Than") {
+            auto ifNodeYaml = YAML::Load(R"yaml(
+          name : ifNode
+          type : ifNode
+          ifNode : thingA
+          elseNode : thingB
+          comparison : 
+              value : 1
+              test : less
+        )yaml");
+            auto ifNodeNode = makeSharedNode(ifNodeYaml);
+            nodes[ifNodeNode->getName()] = ifNodeNode;
+            vectornodes.push_back(ifNodeNode);
+
+            // connect the nodes
+            for (auto mnode : vectornodes) {
+                mnode->setNextNode(nodes, vectornodes);
+            }
+
+            bsoncxx::types::b_int64 value;
+            // execute -- if should evaluate false and take the ifnode
+            state->currentNode = ifNodeNode;
+            SECTION("true") {
+                value.value = 0;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 1);
+                REQUIRE(thing2Node->getCount() == 0);
+            }
+            SECTION("false") {
+                value.value = 1;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                // execute -- if should evaluate false and take the elsenode
+                state->currentNode = ifNodeNode;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 0);
+                REQUIRE(thing2Node->getCount() == 1);
+            }
+        }
+        SECTION("Greater or Equal") {
+            auto ifNodeYaml = YAML::Load(R"yaml(
+          name : ifNode
+          type : ifNode
+          ifNode : thingA
+          elseNode : thingB
+          comparison : 
+              value : 1
+              test : greater_or_equal
+        )yaml");
+            auto ifNodeNode = makeSharedNode(ifNodeYaml);
+            nodes[ifNodeNode->getName()] = ifNodeNode;
+            vectornodes.push_back(ifNodeNode);
+
+            // connect the nodes
+            for (auto mnode : vectornodes) {
+                mnode->setNextNode(nodes, vectornodes);
+            }
+
+            bsoncxx::types::b_int64 value;
+            // execute -- if should evaluate false and take the ifnode
+            state->currentNode = ifNodeNode;
+            SECTION("true") {
+                value.value = 1;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 1);
+                REQUIRE(thing2Node->getCount() == 0);
+            }
+            SECTION("false") {
+                value.value = 0;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                // execute -- if should evaluate false and take the elsenode
+                state->currentNode = ifNodeNode;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 0);
+                REQUIRE(thing2Node->getCount() == 1);
+            }
+        }
+        SECTION("Less or Equal") {
+            auto ifNodeYaml = YAML::Load(R"yaml(
+          name : ifNode
+          type : ifNode
+          ifNode : thingA
+          elseNode : thingB
+          comparison : 
+              value : 1
+              test : less_or_equal
+        )yaml");
+            auto ifNodeNode = makeSharedNode(ifNodeYaml);
+            nodes[ifNodeNode->getName()] = ifNodeNode;
+            vectornodes.push_back(ifNodeNode);
+
+            // connect the nodes
+            for (auto mnode : vectornodes) {
+                mnode->setNextNode(nodes, vectornodes);
+            }
+
+            bsoncxx::types::b_int64 value;
+            // execute -- if should evaluate false and take the ifnode
+            state->currentNode = ifNodeNode;
+            SECTION("true") {
+                value.value = 1;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 1);
+                REQUIRE(thing2Node->getCount() == 0);
+            }
+            SECTION("false") {
+                value.value = 2;
+                state->result = bsoncxx::builder::stream::array()
+                    << value << bsoncxx::builder::stream::finalize;
+                // execute -- if should evaluate false and take the elsenode
+                state->currentNode = ifNodeNode;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 0);
+                REQUIRE(thing2Node->getCount() == 1);
+            }
+        }
+    }
 }

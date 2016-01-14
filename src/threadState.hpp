@@ -4,6 +4,7 @@
 #include <bsoncxx/types/value.hpp>
 #include <unordered_map>
 #include <atomic>
+#include <bsoncxx/stdx/optional.hpp>
 
 #pragma once
 using namespace std;
@@ -35,6 +36,7 @@ public:
     shared_ptr<node> currentNode;
     unordered_map<string, bsoncxx::array::value> tvariables;
     unordered_map<string, bsoncxx::array::value>& wvariables;
+    bsoncxx::stdx::optional<bsoncxx::array::value> result;
     vector<shared_ptr<threadState>> childThreadStates;
     vector<shared_ptr<threadState>> backgroundThreadStates;
     vector<shared_ptr<thread>> childThreads;

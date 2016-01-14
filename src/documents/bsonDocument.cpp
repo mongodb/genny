@@ -11,7 +11,7 @@ namespace mwg {
 
 bsonDocument::bsonDocument(YAML::Node node) {
     if (!node) {
-        BOOST_LOG_TRIVIAL(error) << "bsonDocument constructor using empty document";
+        BOOST_LOG_TRIVIAL(info) << "bsonDocument constructor using empty document";
     } else if (!node.IsMap()) {
         BOOST_LOG_TRIVIAL(fatal) << "Not map in bsonDocument constructor";
         exit(EXIT_FAILURE);

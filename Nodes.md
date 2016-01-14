@@ -44,6 +44,21 @@ executes.
    node continues on to its _next_ node.
 7. sleep: This node just introduces a delay into the execution of the
    graph. _sleep_ specifies the sleep time in milliseconds.
+8. ifNode: This node represents a logical choice. It performs a
+   logical comparison on the result from the previous node. Currently
+   only the count operation saves a result, and it saves its
+   count. This will be expanded. The ifNode has the following fields (note:
+   fields and tests subject to change)
+       * _comparison_ : The comparison test to use. This is a map and
+         contains sub fields:
+         * _value_ : This is a bson value to compare to the result.
+         * _test_ : the test to use. Options are equals, greater,
+           less, greater\_or\_equal, and less\_or\_equal. If not
+           present, defaults to equals. 
+       * _ifNode_ : Execute this node next if the comparison evaluates
+         to true
+       * _elseNode_ : Execute this node next if the comparison evaluates to false. 
+   
 
 ### Future Nodes
 
@@ -53,7 +68,6 @@ executes.
    continue until they reach a finish node. We may also want to allow
    capping the total number of threads in the system from a given
    arrival node, or cummulative.
-2. if: Make a choice of next node based on thread state.
 3. Phase Marker: Make a transition externally visible. For instance,
    to mark the end of the warmup phsae of a workload.
 4. External trigger: A node that waits for an external trigger before
