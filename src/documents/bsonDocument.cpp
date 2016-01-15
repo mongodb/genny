@@ -17,12 +17,12 @@ bsonDocument::bsonDocument(YAML::Node node) {
         exit(EXIT_FAILURE);
     } else {
         BOOST_LOG_TRIVIAL(trace) << "In bsonDocument constructor";
-        parseMap(doc, node);
+        doc = parseMap(node);
         BOOST_LOG_TRIVIAL(trace) << "Parsed map in bsonDocument constructor";
     }
 }
 
 bsoncxx::document::view bsonDocument::view(bsoncxx::builder::stream::document&, threadState&) {
-    return doc.view();
+    return doc->view();
 }
 }

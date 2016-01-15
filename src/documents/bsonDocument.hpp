@@ -19,6 +19,6 @@ public:
                                          threadState&) override;
 
 private:
-    bsoncxx::builder::stream::document doc{};
+    bsoncxx::stdx::optional<bsoncxx::document::value> doc;
 };
 }

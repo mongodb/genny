@@ -11,6 +11,8 @@ using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::close_array;
+using bsoncxx::builder::concatenate;
+using bsoncxx::builder::stream::finalize;
 using mongocxx::write_concern;
 
 namespace mwg {
@@ -25,21 +27,15 @@ bool isNumber(string value) {
         return false;
 }
 
-void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
+bsoncxx::document::value parseMap(YAML::Node node) {
+    bsoncxx::builder::stream::document docbuilder{};
     for (auto entry : node) {
-        BOOST_LOG_TRIVIAL(debug) << "In parseMap. entry.first: " << entry.first.Scalar()
-                                 << " entry.second " << entry.second.Scalar();
-        // can I just use basic document builder. Open, append, concatenate, etc?
         if (entry.second.IsMap()) {
-            bsoncxx::builder::stream::document mydoc{};
-            parseMap(mydoc, entry.second);
             docbuilder << entry.first.Scalar() << open_document
-                       << bsoncxx::builder::concatenate(mydoc.view()) << close_document;
+                       << concatenate(parseMap(entry.second)) << close_document;
         } else if (entry.second.IsSequence()) {
-            bsoncxx::builder::stream::array myArray{};
-            parseSequence(myArray, entry.second);
             docbuilder << entry.first.Scalar() << open_array
-                       << bsoncxx::builder::concatenate(myArray.view()) << close_array;
+                       << concatenate(parseSequence(entry.second)) << close_array;
         } else {  // scalar
             if (isNumber(entry.second.Scalar())) {
                 BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
@@ -48,24 +44,18 @@ void parseMap(bsoncxx::builder::stream::document& docbuilder, YAML::Node node) {
                 docbuilder << entry.first.Scalar() << entry.second.Scalar();
         }
     }
+    return docbuilder << finalize;
 }
 
-void parseSequence(bsoncxx::builder::stream::array& arraybuilder, YAML::Node node) {
+bsoncxx::array::value parseSequence(YAML::Node node) {
+    bsoncxx::builder::stream::array arraybuilder{};
     for (auto entry : node) {
         if (entry.IsMap()) {
-            BOOST_LOG_TRIVIAL(debug) << "Entry isMap";
-            bsoncxx::builder::stream::document mydoc{};
-            parseMap(mydoc, entry);
-            arraybuilder << open_document << bsoncxx::builder::concatenate(mydoc.view())
-                         << close_document;
+            arraybuilder << open_document << concatenate(parseMap(entry)) << close_document;
         } else if (entry.IsSequence()) {
-            bsoncxx::builder::stream::array myArray{};
-            parseSequence(myArray, entry);
-            arraybuilder << open_array << bsoncxx::builder::concatenate(myArray.view())
-                         << close_array;
+            arraybuilder << open_array << concatenate(parseSequence(entry)) << close_array;
         } else  // scalar
         {
-            BOOST_LOG_TRIVIAL(debug) << "Trying to put entry into array builder " << entry.Scalar();
             if (isNumber(entry.Scalar())) {
                 BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
                 arraybuilder << entry.as<int64_t>();
@@ -73,6 +63,7 @@ void parseSequence(bsoncxx::builder::stream::array& arraybuilder, YAML::Node nod
                 arraybuilder << entry.Scalar();
         }
     }
+    return arraybuilder << finalize;
 }
 
 bsoncxx::array::value yamlToValue(YAML::Node node) {
@@ -140,18 +131,14 @@ void parseIndexOptions(mongocxx::options::index& options, YAML::Node node) {
     if (node["version"])
         options.version(node["version"].as<std::int32_t>());
     if (node["weights"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["weights"]);
-        options.weights(doc.view());
+        options.weights(parseMap(node["weights"]));
     }
     if (node["default_language"])
         options.default_language(node["default_language"].Scalar());
     if (node["language_override"])
         options.language_override(node["language_override"].Scalar());
     if (node["partial_filter_expression"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["partial_filter_expression"]);
-        options.partial_filter_expression(doc.view());
+        options.partial_filter_expression(parseMap(node["partial_filter_expression"]));
     }
     if (node["twod_sphere_version"])
         options.twod_sphere_version(node["twod_sphere_version"].as<std::uint8_t>());
@@ -174,9 +161,7 @@ void parseInsertOptions(mongocxx::options::insert& options, YAML::Node node) {
 
 void parseCountOptions(mongocxx::options::count& options, YAML::Node node) {
     if (node["hint"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["hint"]);
-        options.hint(mongocxx::hint(doc.view()));
+        options.hint(mongocxx::hint(parseMap(node["hint"])));
     }
     if (node["limit"])
         options.limit(node["limit"].as<int32_t>());
@@ -232,16 +217,12 @@ void parseFindOptions(mongocxx::options::find& options, YAML::Node node) {
     if (node["max_time"])
         options.max_time(std::chrono::milliseconds(node["max_time"].as<int64_t>()));
     if (node["modifiers"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["modifiers"]);
-        options.modifiers(doc.view());
+        options.modifiers(parseMap(node["modifiers"]));
     }
     if (node["no_cursor_timeout"])
         options.no_cursor_timeout(node["no_cursor_timeout"].as<bool>());
     if (node["projection"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["projection"]);
-        options.projection(doc.view());
+        options.projection(parseMap(node["projection"]));
     }
     if (node["read_preference"]) {
         options.read_preference(parseReadPreference(node["read_preference"]));
@@ -249,9 +230,7 @@ void parseFindOptions(mongocxx::options::find& options, YAML::Node node) {
     if (node["skip"])
         options.skip(node["skip"].as<int32_t>());
     if (node["sort"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["sort"]);
-        options.sort(doc.view());
+        options.sort(parseMap(node["sort"]));
     }
 }
 void parseFindOneAndDeleteOptions(mongocxx::options::find_one_and_delete& options,
@@ -259,14 +238,10 @@ void parseFindOneAndDeleteOptions(mongocxx::options::find_one_and_delete& option
     // if (node["max_time_ms"])
     //     options.max_time_ms(node["max_time_ms"].as<int64_t>());
     if (node["projection"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["projection"]);
-        options.projection(doc.view());
+        options.projection(parseMap(node["projection"]));
     }
     if (node["sort"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["sort"]);
-        options.sort(doc.view());
+        options.sort(parseMap(node["sort"]));
     }
 }
 void parseFindOneAndReplaceOptions(mongocxx::options::find_one_and_replace& options,
@@ -274,14 +249,10 @@ void parseFindOneAndReplaceOptions(mongocxx::options::find_one_and_replace& opti
     // if (node["max_time_ms"])
     //     options.max_time_ms(node["max_time_ms"].as<int64_t>());
     if (node["projection"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["projection"]);
-        options.projection(doc.view());
+        options.projection(parseMap(node["projection"]));
     }
     if (node["sort"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["sort"]);
-        options.sort(doc.view());
+        options.sort(parseMap(node["sort"]));
     }
     // if (node["return_document"})
     //     {}// Need to fill this one in
@@ -290,17 +261,11 @@ void parseFindOneAndReplaceOptions(mongocxx::options::find_one_and_replace& opti
 }
 void parseFindOneAndUpdateOptions(mongocxx::options::find_one_and_update& options,
                                   YAML::Node node) {
-    // if (node["max_time_ms"])
-    //     options.max_time_ms(node["max_time_ms"].as<int64_t>());
     if (node["projection"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["projection"]);
-        options.projection(doc.view());
+        options.projection(parseMap(node["projection"]));
     }
     if (node["sort"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["sort"]);
-        options.sort(doc.view());
+        options.sort(parseMap(node["sort"]));
     }
     // if (node["return_document"})
     //     {}// Need to fill this one in
@@ -329,10 +294,7 @@ mongocxx::read_preference parseReadPreference(YAML::Node node) {
             pref.mode(mongocxx::read_preference::read_mode::k_nearest);
     }
     if (node["tags"]) {
-        bsoncxx::builder::stream::document doc{};
-        parseMap(doc, node["tags"]);
-        auto val = bsoncxx::document::value(doc.view());
-        pref.tags(doc.view());
+        pref.tags(parseMap(node["tags"]));
     }
 
     return pref;

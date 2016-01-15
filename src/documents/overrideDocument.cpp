@@ -203,19 +203,18 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                     //                          << iter->first << " with incremented value of "
                     //                          << iter->second["variable"].Scalar();
                     // if in tvariables use that
-                    if (state.tvariables.count(iter->second["variable"].Scalar()) > 0) {
+                    string varname = iter->second["variable"].Scalar();
+                    if (state.tvariables.count(varname) > 0) {
                         // FIXME: This needs to be generalized to also handle other numeric types
                         // and throw an error of not a numeric
                         //                        BOOST_LOG_TRIVIAL(trace) << "In tvariables";
                         // increment the value and save it
-                        string varname = iter->second["variable"].Scalar();
                         auto var = state.tvariables.find(varname);
                         incrementVar(var, elem.key().to_string(), output);
                     } else {  // in wvariables
                         // Grab lock. Could be kinder hear and wait on condition variable
                         std::lock_guard<std::mutex> lk(state.myWorkload.mut);
                         // BOOST_LOG_TRIVIAL(trace) << "In wvariables";
-                        string varname = iter->second["variable"].Scalar();
                         auto var = state.wvariables.find(varname);
                         incrementVar(var, elem.key().to_string(), output);
                     }
