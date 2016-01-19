@@ -1,5 +1,6 @@
 #include "overrideDocument.hpp"
 #include <bsoncxx/document/value.hpp>
+#include <bsoncxx/builder/stream/array.hpp>
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/document/view.hpp>
 #include <bsoncxx/types/value.hpp>
@@ -45,6 +46,69 @@ overrideDocument::overrideDocument(YAML::Node& node) {
     // just save the whole document that is second for now
     for (auto entry : node["overrides"])
         override[entry.first.Scalar()] = entry.second;
+}
+
+void incrementVar(std::unordered_map<string, bsoncxx::array::value>::iterator var,
+                  string target,
+                  bsoncxx::builder::stream::document& output) {
+    auto varview = var->second.view();
+    auto elem = varview[0];
+    bsoncxx::builder::stream::array myArray{};
+    switch (elem.type()) {
+        case bsoncxx::type::k_int64:
+            BOOST_LOG_TRIVIAL(trace) << "incrementVar with type int64";
+            {
+                bsoncxx::types::b_int64 value = elem.get_int64();
+                output << target << value;
+                // update the variable
+                value.value++;
+                var->second = (myArray << value << bsoncxx::builder::stream::finalize);
+
+                break;
+            }
+        case bsoncxx::type::k_int32:
+            BOOST_LOG_TRIVIAL(trace) << "incrementVar with type int32";
+            {
+                bsoncxx::types::b_int32 value = elem.get_int32();
+                output << target << value;
+                // update the variable
+                value.value++;
+                var->second = (myArray << value << bsoncxx::builder::stream::finalize);
+
+                break;
+            }
+        case bsoncxx::type::k_double:
+            BOOST_LOG_TRIVIAL(trace) << "incrementVar with type float";
+            {
+                bsoncxx::types::b_double value = elem.get_double();
+                output << target << value;
+                // update the variable
+                value.value++;
+                var->second = (myArray << value << bsoncxx::builder::stream::finalize);
+
+                break;
+            }
+        case bsoncxx::type::k_utf8:
+        case bsoncxx::type::k_document:
+        case bsoncxx::type::k_array:
+        case bsoncxx::type::k_binary:
+        case bsoncxx::type::k_undefined:
+        case bsoncxx::type::k_oid:
+        case bsoncxx::type::k_bool:
+        case bsoncxx::type::k_date:
+        case bsoncxx::type::k_null:
+        case bsoncxx::type::k_regex:
+        case bsoncxx::type::k_dbpointer:
+        case bsoncxx::type::k_code:
+        case bsoncxx::type::k_symbol:
+        case bsoncxx::type::k_timestamp:
+
+            BOOST_LOG_TRIVIAL(fatal) << "incrementVar with type unsuported type in list";
+
+            break;
+        default:
+            BOOST_LOG_TRIVIAL(fatal) << "incrementVar with type unsuported type not in list";
+    }
 }
 
 void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& output,
@@ -146,22 +210,14 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                         // increment the value and save it
                         string varname = iter->second["variable"].Scalar();
                         auto var = state.tvariables.find(varname);
-                        bsoncxx::types::b_int64 value = var->second.get_int64();
-                        output << elem.key().to_string() << value;
-                        // update the variable
-                        value.value++;
-                        var->second = bsoncxx::types::value(value);
+                        incrementVar(var, elem.key().to_string(), output);
                     } else {  // in wvariables
                         // Grab lock. Could be kinder hear and wait on condition variable
                         std::lock_guard<std::mutex> lk(state.myWorkload.mut);
                         // BOOST_LOG_TRIVIAL(trace) << "In wvariables";
                         string varname = iter->second["variable"].Scalar();
                         auto var = state.wvariables.find(varname);
-                        bsoncxx::types::b_int64 value = var->second.get_int64();
-                        output << elem.key().to_string() << value;
-                        // update the variable
-                        value.value++;
-                        var->second = bsoncxx::types::value(value);
+                        incrementVar(var, elem.key().to_string(), output);
                     }
                 } else if (iter->second["type"].Scalar() == "date") {
                     // BOOST_LOG_TRIVIAL(trace)

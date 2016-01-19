@@ -15,6 +15,7 @@
 using namespace mwg;
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
+using bsoncxx::builder::stream::finalize;
 
 template <typename T>
 void viewable_eq_viewable(const T& stream, const bsoncxx::document::view& test) {
@@ -30,8 +31,8 @@ void viewable_eq_viewable(const T& stream, const bsoncxx::document::view& test) 
 }
 
 TEST_CASE("Documents are created", "[documents]") {
-    unordered_map<string, bsoncxx::types::value> wvariables;  // workload variables
-    unordered_map<string, bsoncxx::types::value> tvariables;  // thread variables
+    unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
+    unordered_map<string, bsoncxx::array::value> tvariables;  // thread variables
 
     workload myWorkload;
     threadState state(12234, tvariables, wvariables, myWorkload, "t", "c");
@@ -65,7 +66,7 @@ TEST_CASE("Documents are created", "[documents]") {
             type : randomint
     )yaml"));
         // Test that the document is an override document, and gives the right values.
-        //auto view = doc->view(mydoc, state);
+        // auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 
         // The random number generator is deterministic. We should get 24 each time unless we change
@@ -87,7 +88,7 @@ TEST_CASE("Documents are created", "[documents]") {
     )yaml"));
 
         // Test that we get random strings. Should be reproducible
-        //auto view = doc->view(mydoc, state);
+        // auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 
         // The random number generator is deterministic, so we should get the same string each time
@@ -126,9 +127,7 @@ TEST_CASE("Documents are created", "[documents]") {
               x :
                 type : increment
                 variable : count)yaml"));
-        bsoncxx::types::b_int64 value;
-        value.value = 5;
-        state.tvariables.insert({"count", bsoncxx::types::value(value)});
+        state.tvariables.insert({"count", bsoncxx::builder::stream::array() << 5 << finalize});
         auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 
@@ -150,9 +149,7 @@ TEST_CASE("Documents are created", "[documents]") {
               x :
                 type : increment
                 variable : count)yaml"));
-        bsoncxx::types::b_int64 value;
-        value.value = 5;
-        state.wvariables.insert({"count", bsoncxx::types::value(value)});
+        state.wvariables.insert({"count", bsoncxx::builder::stream::array() << 5 << finalize});
         auto view = doc->view(mydoc, state);
         bsoncxx::builder::stream::document refdoc{};
 

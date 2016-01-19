@@ -20,8 +20,8 @@ using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
 
 TEST_CASE("Nodes", "[nodes]") {
-    unordered_map<string, bsoncxx::types::value> wvariables;  // workload variables
-    unordered_map<string, bsoncxx::types::value> tvariables;  // thread variables
+    unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
+    unordered_map<string, bsoncxx::array::value> tvariables;  // thread variables
 
     workload myWorkload;
     auto state = shared_ptr<threadState>(

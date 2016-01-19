@@ -51,8 +51,8 @@ public:
 private:
     vector<shared_ptr<node>> vectornodes;
     // needs to be generalized from int to a generic value
-    unordered_map<string, bsoncxx::types::value> wvariables;  // workload variables
-    unordered_map<string, bsoncxx::types::value> tvariables;  // thread variables
+    unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
+    unordered_map<string, bsoncxx::array::value> tvariables;  // thread variables
     mt19937_64 rng;                                           // random number generator
     string name;
     std::atomic<bool> stopped;

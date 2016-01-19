@@ -15,23 +15,22 @@
 using namespace mwg;
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
+using bsoncxx::builder::stream::finalize;
 
 TEST_CASE("Set Variables", "[variables]") {
-    unordered_map<string, bsoncxx::types::value> wvariables;  // workload variables
-    unordered_map<string, bsoncxx::types::value> tvariables;  // thread variables
-    bsoncxx::types::b_int64 value;
-    value.value = 1;
-    wvariables.insert({"workloadVar", bsoncxx::types::value(value)});
-    value.value = 2;
-    tvariables.insert({"threadVar", bsoncxx::types::value(value)});
+    unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
+    unordered_map<string, bsoncxx::array::value> tvariables;  // thread variables
+
+    wvariables.insert({"workloadVar", bsoncxx::builder::stream::array() << 1 << finalize});
+    tvariables.insert({"threadVar", bsoncxx::builder::stream::array() << 2 << finalize});
     mongocxx::client conn{mongocxx::uri{}};
 
     workload myWorkload;
     threadState state(12234, tvariables, wvariables, myWorkload, "t", "c");
 
     SECTION("Sanity check setup") {
-        REQUIRE(state.wvariables.find("workloadVar")->second.get_int64().value == 1);
-        REQUIRE(state.tvariables.find("threadVar")->second.get_int64().value == 2);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 1);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 2);
     }
 
     SECTION("Set existing thread variable") {
@@ -42,7 +41,7 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.tvariables.find("threadVar")->second.get_int64().value == 3);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int64().value == 3);
         REQUIRE(state.wvariables.count("threadVar") ==
                 0);  // make sure it didn't show up in the wrong place
     }
@@ -54,7 +53,7 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.wvariables.find("workloadVar")->second.get_int64().value == 3);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int64().value == 3);
         REQUIRE(state.tvariables.count("workloadVar") ==
                 0);  // make sure it didn't show up in the wrong place
     }
@@ -66,7 +65,7 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.tvariables.find("newVar")->second.get_int64().value == 4);
+        REQUIRE(state.tvariables.find("newVar")->second.view()[0].get_int64().value == 4);
         REQUIRE(state.wvariables.count("newVar") ==
                 0);  // make sure it didn't show up in the wrong place
     }
@@ -79,7 +78,7 @@ TEST_CASE("Set Variables", "[variables]") {
         auto testSet = set_variable(yaml);
         string expected = "test_string";
         testSet.execute(conn, state);
-        auto actual = state.tvariables.find("newStringVar")->second.get_utf8().value;
+        auto actual = state.tvariables.find("newStringVar")->second.view()[0].get_utf8().value;
         INFO("Expected = \"" << expected << "\"");
         INFO("Got      = \"" << actual << "\"");
         REQUIRE(actual.compare(expected) == 0);
@@ -95,7 +94,7 @@ TEST_CASE("Set Variables", "[variables]") {
         auto testSet = set_variable(yaml);
         string expected = "test_string";
         testSet.execute(conn, state);
-        auto actual = state.tvariables.find("threadVar")->second;
+        auto actual = state.tvariables.find("threadVar")->second.view()[0];
         REQUIRE(actual.type() == bsoncxx::type::k_utf8);
         auto actualval = actual.get_utf8().value;
         INFO("Expected = \"" << expected << "\"");
@@ -153,8 +152,8 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.wvariables.find("workloadVar")->second.get_int64().value == 2);
-        REQUIRE(state.tvariables.find("threadVar")->second.get_int64().value == 2);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 2);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 2);
     }
     SECTION("Set from wvariable") {
         auto yaml = YAML::Load(R"yaml(
@@ -164,7 +163,7 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.tvariables.find("threadVar")->second.get_int64().value == 1);
-        REQUIRE(state.wvariables.find("workloadVar")->second.get_int64().value == 1);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 1);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 1);
     }
 }

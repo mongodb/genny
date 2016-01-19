@@ -16,8 +16,8 @@ class workload;
 class threadState {
 public:
     threadState(uint64_t seed,
-                unordered_map<string, bsoncxx::types::value> tvars,
-                unordered_map<string, bsoncxx::types::value>& wvars,
+                unordered_map<string, bsoncxx::array::value> tvars,
+                unordered_map<string, bsoncxx::array::value>& wvars,
                 workload& parentWorkload,
                 string dbname,
                 string collectionname,
@@ -33,8 +33,8 @@ public:
     mongocxx::client conn;
     mt19937_64 rng;  // random number generator
     shared_ptr<node> currentNode;
-    unordered_map<string, bsoncxx::types::value> tvariables;
-    unordered_map<string, bsoncxx::types::value>& wvariables;
+    unordered_map<string, bsoncxx::array::value> tvariables;
+    unordered_map<string, bsoncxx::array::value>& wvariables;
     vector<shared_ptr<threadState>> childThreadStates;
     vector<shared_ptr<threadState>> backgroundThreadStates;
     vector<shared_ptr<thread>> childThreads;

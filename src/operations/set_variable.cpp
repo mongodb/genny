@@ -77,21 +77,23 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
     // Special cases first: Database and collection name
     if (targetVariable.compare("DBName") == 0) {
         // check that the value is a string
-        if (myValue.type() != bsoncxx::type::k_utf8) {
+        auto val = myValue.view()[0];
+        if (val.type() != bsoncxx::type::k_utf8) {
             BOOST_LOG_TRIVIAL(fatal)
                 << "Trying to set the database name to something other than a string";
             exit(0);
         }
-        state.DBName = myValue.get_utf8().value.to_string();
+        state.DBName = val.get_utf8().value.to_string();
 
     } else if (targetVariable.compare("CollectionName") == 0) {
         // check that the value is a string
-        if (myValue.type() != bsoncxx::type::k_utf8) {
+        auto val = myValue.view()[0];
+        if (val.type() != bsoncxx::type::k_utf8) {
             BOOST_LOG_TRIVIAL(fatal)
                 << "Trying to set the collection name to something other than a string";
             exit(0);
         }
-        state.CollectionName = myValue.get_utf8().value.to_string();
+        state.CollectionName = val.get_utf8().value.to_string();
 
     } else {
         // is targetVariable in tvariables or wvariables?

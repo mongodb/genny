@@ -9,12 +9,6 @@ using namespace std;
 
 namespace mwg {
 
-inline bsoncxx::types::value defaultValue() {
-    bsoncxx::types::b_int64 value;
-    value.value = 0;
-    return (bsoncxx::types::value(value));
-}
-
 class set_variable : public operation {
 public:
     set_variable(YAML::Node&);
@@ -29,7 +23,9 @@ private:
     string targetVariable;
     bool useVariable;
     string donorVariable;
-    bsoncxx::types::value myValue{defaultValue()};
+    // move to optional
+    bsoncxx::array::value myValue{bsoncxx::builder::stream::array()
+                                  << 0 << bsoncxx::builder::stream::finalize};
     // Really should have a transform of some sort here, possibly built on a value
 };
 }
