@@ -218,6 +218,26 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                         auto var = state.wvariables.find(varname);
                         incrementVar(var, elem.key().to_string(), output);
                     }
+                } else if (iter->second["type"].Scalar() == "usevar") {
+                    // BOOST_LOG_TRIVIAL(trace) << "Override document and want to set field  "
+                    //                          << iter->first << " with incremented value of "
+                    //                          << iter->second["variable"].Scalar();
+                    // if in tvariables use that
+                    string varname = iter->second["variable"].Scalar();
+                    if (state.tvariables.count(varname) > 0) {
+                        // FIXME: This needs to be generalized to also handle other numeric types
+                        // and throw an error of not a numeric
+                        //                        BOOST_LOG_TRIVIAL(trace) << "In tvariables";
+                        // increment the value and save it
+                        auto var = state.tvariables.find(varname);
+                        output << elem.key().to_string() << var->second.view()[0].get_value();
+                    } else {  // in wvariables
+                        // Grab lock. Could be kinder hear and wait on condition variable
+                        std::lock_guard<std::mutex> lk(state.myWorkload.mut);
+                        // BOOST_LOG_TRIVIAL(trace) << "In wvariables";
+                        auto var = state.wvariables.find(varname);
+                        output << elem.key().to_string() << var->second.view()[0].get_value();
+                    }
                 } else if (iter->second["type"].Scalar() == "date") {
                     // BOOST_LOG_TRIVIAL(trace)
                     //<< "Override document setting a date field to current time";

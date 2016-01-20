@@ -1,85 +1,99 @@
 # Simple example of insert many
- 
-main : 
+
+main :
   seed: 131415161718
   name: main
-  wvariables : 
+  wvariables :
     count : 0
-  nodes: 
+    string: test
+  nodes:
     - type : drop
     - name : insert1
       type : insert_one
-      document : 
-        type : override 
-        doc : 
-          x : 
+      document :
+        type : override
+        doc :
+          x :
             y : a
           z : 1
-        overrides : 
+        overrides :
           x.y : b
-          z   : 
+          z   :
             type : randomint
-            min : 0 
+            min : 0
             max : 100
-      options : 
-        write_concern : 
+      options :
+        write_concern :
           nodes : 1
     - name : insert2
       type : insert_one
-      document : 
-        type : override 
-        doc : 
+      document :
+        type : override
+        doc :
           string : a
-        overrides : 
-          string : 
+        overrides :
+          string :
             type : randomstring
             length : 15
-      options : 
-        write_concern : 
+      options :
+        write_concern :
           nodes : 1
       next : insert3
     - name : insert3
       type : insert_one
-      document : 
-        type : override 
-        doc : 
-          date : 1 
-        overrides : 
-          date : 
+      document :
+        type : override
+        doc :
+          date : 1
+        overrides :
+          date :
             type : date
-      options : 
-        write_concern : 
+      options :
+        write_concern :
           nodes : 1
     - name : insert4
       type : insert_one
-      document : 
-        type : override 
-        doc : 
+      document :
+        type : override
+        doc :
           x : 1
-        overrides : 
-          x : 
+        overrides :
+          x :
             type : increment
             variable : count
-      options : 
-        write_concern : 
+      options :
+        write_concern :
           nodes : 1
     - name : insert5
       type : insert_one
-      document : 
-        type : override 
-        doc : 
+      document :
+        type : override
+        doc :
           x : 1
-        overrides : 
-          x : 
-            type : increment
+        overrides :
+          x :
+            type : usevar
             variable : count
-      options : 
-        write_concern : 
+      options :
+        write_concern :
+          nodes : 1
+    - name : insert6
+      type : insert_one
+      document :
+        type : override
+        doc :
+          x : 1
+        overrides :
+          x :
+            type : usevar
+            variable : string
+      options :
+        write_concern :
           nodes : 1
     - name : check1
       type : count
       filter: {}
-      assertEquals : 5
+      assertEquals : 6
     - name : check2
       type : count
       filter : {x.y : b}
@@ -88,6 +102,7 @@ main :
       type : count
       filter : {x.y : a}
       assertEquals : 0
-
-
-
+    - name : check4
+      type : count
+      filter : {x : test}
+      assertEquals : 1
