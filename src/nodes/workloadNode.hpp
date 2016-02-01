@@ -23,10 +23,10 @@ public:
 
 protected:
     unique_ptr<workload> myWorkload;
-    optional<string> dbName;
-    optional<string> collectionName;
-    optional<string> workloadName;
-    optional<int64_t> numThreads;
-    optional<int64_t> runLength;
+    optional<YAML::Node> dbName;
+    optional<YAML::Node> collectionName;
+    optional<YAML::Node> workloadName;
+    optional<YAML::Node> numThreads;
+    optional<YAML::Node> runLength;
 };
 }

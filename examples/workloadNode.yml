@@ -1,5 +1,5 @@
 # Use the workload Node functionality
-# Runs the same embedded workload twice. Once with default settings, and once with overriden settings. 
+# Runs the same embedded workload twice. Once with default settings, and once with overriden settings.
 
 # Base workload
 workload : &work
@@ -16,15 +16,23 @@ workload : &work
 main :
   seed: 131415161718
   name: main
+  tvariables :
+    threads : 6
+    dbname : vardbname
   nodes:
-    - type : workloadNode # Run the workload as is. 
+    - type : workloadNode # Run the workload as is.
       workload : *work
-    - type : workloadNode # Run the workload while changing settings of the embedded workload. 
+    - &workOverrides
+      type : workloadNode # Run the workload while changing settings of the embedded workload.
       overrides : # These setting override what is set in the embedded workload
-        threads : 4
-        database : testDB2
+        threads :
+          type : increment
+          variable : threads
+        database :
+          type : usevar
+          variable : dbname
         collection : testCollection2
         runLength : 10
         name : NewName
-      next : Finish
       workload : *work
+    - *workOverrides
