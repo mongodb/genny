@@ -14,10 +14,22 @@
 #include "join.hpp"
 #include "finish_node.hpp"
 #include "workload.hpp"
+#include "workloadNode.hpp"
 
 using namespace mwg;
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
+
+
+// Class with extra accessors for test purposes
+class TestWorkloadNode : public workloadNode {
+public:
+    TestWorkloadNode(YAML::Node& ynode) : workloadNode(ynode) {}
+    workload& getWorkload() {
+        return *myWorkload;
+    };  // read only access to embedded workload
+};
+
 
 TEST_CASE("Nodes", "[nodes]") {
     unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
@@ -85,6 +97,50 @@ TEST_CASE("Nodes", "[nodes]") {
         REQUIRE(thing2Node->getCount() == 1);
         REQUIRE(joinNode->getCount() == 1);
     }
+
+    SECTION("WorkloadNode") {
+        auto workloadNodeYAML = YAML::Load(R"yaml(
+      type : workloadNode
+      overrides : # These setting override what is set in the embedded workload
+        threads : 4
+        database : testDB2
+        collection : testCollection2
+        runLength : 10
+        name : NewName
+      workload :
+        name : embeddedWorkload
+        database : testDB1
+        collection : testCollection1
+        runLength : 5
+        threads : 5
+        nodes :
+          - type : sleep
+            sleep : 1
+            print : In sleep
+        )yaml");
+        auto workNode = make_shared<TestWorkloadNode>(workloadNodeYAML);
+        nodes[workNode->getName()] = workNode;
+        vectornodes.push_back(workNode);
+        auto mynode = make_shared<finishNode>();
+        nodes[mynode->getName()] = mynode;
+        vectornodes.push_back(mynode);
+        // connect the nodes
+        for (auto mnode : vectornodes) {
+            mnode->setNextNode(nodes, vectornodes);
+        }
+
+        // test that workload has embedded values.
+        REQUIRE(workNode->getWorkload().getState().DBName == "testDB1");
+        REQUIRE(workNode->getWorkload().getState().CollectionName == "testCollection1");
+        REQUIRE(workNode->getWorkload().runLength == 5);
+        REQUIRE(workNode->getWorkload().name == "embeddedWorkload");
+        workNode->executeNode(state);
+        REQUIRE(workNode->getWorkload().getState().DBName == "testDB2");
+        REQUIRE(workNode->getWorkload().getState().CollectionName == "testCollection2");
+        REQUIRE(workNode->getWorkload().runLength == 10);
+        REQUIRE(workNode->getWorkload().name == "NewName");
+    }
+
     SECTION("Random") {
         auto randomYaml = YAML::Load(R"yaml(
           name : random

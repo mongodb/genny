@@ -18,20 +18,20 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
         BOOST_LOG_TRIVIAL(fatal) << "Workload constructor and !nodes";
         exit(EXIT_FAILURE);
     }
+    unordered_map<string, bsoncxx::array::value> tvariables;  // thread variables
     unordered_map<string, shared_ptr<node>> nodes;
     YAML::Node yamlNodes;
     if (inputNodes.IsMap()) {
         // read out things like the seed
         yamlNodes = inputNodes["nodes"];
+        name = inputNodes["name"].Scalar();
+        BOOST_LOG_TRIVIAL(debug) << "In workload constructor, and was passed in a map. Name: "
+                                 << name;
         if (!yamlNodes.IsSequence()) {
             BOOST_LOG_TRIVIAL(fatal)
                 << "Workload is a map, but nodes is not sequnce in workload type "
                    "initializer ";
             exit(EXIT_FAILURE);
-        }
-        if (inputNodes["seed"]) {
-            rng.seed(inputNodes["seed"].as<uint64_t>());
-            BOOST_LOG_TRIVIAL(debug) << " Random seed: " << inputNodes["seed"].as<uint64_t>();
         }
         if (inputNodes["wvariables"]) {
             // read in any variables
@@ -49,26 +49,33 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
                 tvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
             }
         }
-        name = inputNodes["name"].Scalar();
-        BOOST_LOG_TRIVIAL(debug) << "In workload constructor, and was passed in a map. Name: "
-                                 << name;
+        myState = unique_ptr<threadState>(
+            new threadState(0, tvariables, wvariables, *this, "testDB", "testCollection"));
+        if (inputNodes["seed"]) {
+            myState->rng.seed(inputNodes["seed"].as<uint64_t>());
+            BOOST_LOG_TRIVIAL(debug) << " Random seed: " << inputNodes["seed"].as<uint64_t>();
+        }
         if (inputNodes["database"]) {
-            DBName = inputNodes["database"].Scalar();
-            BOOST_LOG_TRIVIAL(debug) << "In Workload constructor and database name is " << DBName;
+            myState->DBName = inputNodes["database"].Scalar();
+            BOOST_LOG_TRIVIAL(debug) << "In Workload constructor and database name is "
+                                     << myState->DBName;
         }
         if (inputNodes["collection"]) {
-            CollectionName = inputNodes["collection"].Scalar();
+            myState->CollectionName = inputNodes["collection"].Scalar();
             BOOST_LOG_TRIVIAL(debug) << "In Workload constructor and collection name is "
-                                     << CollectionName;
+                                     << myState->CollectionName;
         }
         if (inputNodes["threads"]) {
-            numParallelThreads = inputNodes["threads"].as<uint64_t>();
-            BOOST_LOG_TRIVIAL(debug) << "Excplicity setting number of threads in workload";
-        } else
+            numParallelThreads = inputNodes["threads"].as<int64_t>();
+            BOOST_LOG_TRIVIAL(debug) << "Explicitly setting number of threads in workload to "
+                                     << numParallelThreads;
+        } else {
+            numParallelThreads = 1;
             BOOST_LOG_TRIVIAL(debug) << "Using default value for number of threads";
+        }
         if (inputNodes["runLength"]) {
             runLength = inputNodes["runLength"].as<uint64_t>();
-            BOOST_LOG_TRIVIAL(debug) << "Excplicity setting runLength in workload";
+            BOOST_LOG_TRIVIAL(debug) << "Explicitly setting runLength in workload";
         } else
             BOOST_LOG_TRIVIAL(debug) << "Using default value for runLength";
     } else if (inputNodes.IsSequence()) {
@@ -147,11 +154,17 @@ void workload::execute() {
 
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
+    BOOST_LOG_TRIVIAL(debug) << "Starting " << numParallelThreads << " threads";
     for (uint64_t i = 0; i < numParallelThreads; i++) {
         BOOST_LOG_TRIVIAL(trace) << "Starting thread in workload";
         // create thread state for each
-        auto newState = shared_ptr<threadState>(
-            new threadState(rng(), tvariables, wvariables, *this, DBName, CollectionName, uri));
+        auto newState = shared_ptr<threadState>(new threadState(myState->rng(),
+                                                                myState->tvariables,
+                                                                myState->wvariables,
+                                                                *this,
+                                                                myState->DBName,
+                                                                myState->CollectionName,
+                                                                uri));
         BOOST_LOG_TRIVIAL(trace) << "Created thread state";
         threads.insert(newState);
         myThreads.push_back(thread(runThread, vectornodes[0], newState));

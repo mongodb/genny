@@ -2,19 +2,17 @@
 
 #include "node.hpp"
 #include <memory>
+#include <bsoncxx/stdx/optional.hpp>
 
 using namespace std;
+using bsoncxx::stdx::optional;
 
 namespace mwg {
-
 class workload;
 class workloadNode : public node {
 public:
     workloadNode(YAML::Node&);
     workloadNode() = delete;
-    virtual ~workloadNode() = default;
-    workloadNode(const workloadNode&) = default;
-    workloadNode(workloadNode&&) = default;
     // Execute the node
     virtual void execute(shared_ptr<threadState>) override;
     virtual std::pair<std::string, std::string> generateDotGraph() override;
@@ -23,8 +21,12 @@ public:
     virtual bsoncxx::document::value getStats(bool withReset) override;
     virtual void stop() override;
 
-
-private:
+protected:
     unique_ptr<workload> myWorkload;
+    optional<string> dbName;
+    optional<string> collectionName;
+    optional<string> workloadName;
+    optional<int64_t> numThreads;
+    optional<int64_t> runLength;
 };
 }

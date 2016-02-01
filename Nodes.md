@@ -5,7 +5,7 @@ These are nodes in a transition graph and define the order of
 execution of operations. Unless otherwise noted, every node has
 
 * A _name_
-* A _next_ node 
+* A _next_ node
 * Optional text field _print_ which is printed out when the node
 executes.
 
@@ -15,19 +15,19 @@ executes.
    [operation](Operations.yml), and then moves execution to its next
    node.
    * _op_ : the operation. Or if not set will look for operation
-     fields at the top level of the node definition. 
+     fields at the top level of the node definition.
 2. forN: This node wraps a node. It executes the underlying node N
    times. It ignores the child nodes next node, and does not execute
    it.
    * _N_: number of times to execute the node
    * _node_: The node to execute multiple times. Note this can be a
-      workload node. 
+      workload node.
 3. randomChoice: This node has a map of other nodes and weights
    (converted to probabilities) in the _next_ subdocument. It uses the
    pseudo-random number generator to select the next node to execute.
 4. Finish: This represents an absorbing state in the graph. The
    workload is finished when the Finish node executes. There is always
-   an implicit Finish state included in the workload. 
+   an implicit Finish state included in the workload.
 5. doAll/join: These give fork/join semantics. The doAll executes all
    of it's children nodes from the sequence _childNodes_, spawning a
    thread for each child node. The doAll also uses the _next_ field
@@ -38,10 +38,16 @@ executes.
    node. Optionally you may also define a sequence of
    _backgroundNodes_. They behave similarly to _childNodes_, except
    the join node does not wait for them. Instead the _backgroundNodes_
-   are stopped once all _childNodes_ have finished. 
+   are stopped once all _childNodes_ have finished.
 6. workloadNode: This node wraps a _workload_. When it is executed,
    the wrapped workload is executed. When the workload finishes, the
-   node continues on to its _next_ node.
+   node continues on to its _next_ node. Parameters of the embedded
+   workload can be changed using _overrides_. The _overrides_ is an optional map
+   with optional fields (_threads_, _database_, _collection_,
+   _runLength_, _name_) that match their definition in the
+   workload. The value in the override will be used in place of the
+   matching value in the workload definition. For now they must be a
+   string or number as appropriate.
 7. sleep: This node just introduces a delay into the execution of the
    graph. _sleep_ specifies the sleep time in milliseconds.
 8. ifNode: This node represents a logical choice. It performs a
@@ -54,11 +60,11 @@ executes.
          * _value_ : This is a bson value to compare to the result.
          * _test_ : the test to use. Options are equals, greater,
            less, greater\_or\_equal, and less\_or\_equal. If not
-           present, defaults to equals. 
+           present, defaults to equals.
        * _ifNode_ : Execute this node next if the comparison evaluates
          to true
-       * _elseNode_ : Execute this node next if the comparison evaluates to false. 
-   
+       * _elseNode_ : Execute this node next if the comparison evaluates to false.
+
 
 ### Future Nodes
 
@@ -77,14 +83,6 @@ executes.
    to indicate the end of warmup, and then immediately wait on an
    external trigger. External software could track when all the
    clients have finished their warmups, and then indicate for all of
-   the clients to continue. 
-5. Extension to workloadNode: Add a field _overrides_ that is a
-   sequence of settings in the underlying workload that should be
-   overriden. Things that can be overridden include:
-   1. variables
-   2. Database name
-   3. Collection name
-   4. runLength
-   5. number of threads
-   6. workload name
-
+   the clients to continue.
+5. Extend the _overrides_ in workloadNode: Add a field _overrides_ to
+   use variables, and value generation functionality.
