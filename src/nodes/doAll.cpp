@@ -78,6 +78,9 @@ std::pair<std::string, std::string> doAll::generateDotGraph() {
     for (string nextNodeN : nodeNames) {
         graph += name + " -> " + nextNodeN + ";\n";
     }
+    for (string nextNodeN : backgroundNodeNames) {
+        graph += name + " -> " + nextNodeN + ";\n";
+    }
     graph += name + " -> " + nextName + ";\n";
     return (std::pair<std::string, std::string>{graph, ""});
 }
