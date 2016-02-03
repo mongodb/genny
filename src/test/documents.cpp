@@ -64,17 +64,14 @@ TEST_CASE("Documents are created", "[documents]") {
         x.y : b
         z   :
             type : randomint
+            min : 50
+            max : 60
     )yaml"));
         // Test that the document is an override document, and gives the right values.
-        // auto view = doc->view(mydoc, state);
-        bsoncxx::builder::stream::document refdoc{};
-
-        // The random number generator is deterministic. We should get 24 each time unless we change
-        // the seed
-        refdoc << "x" << open_document << "y"
-               << "b" << close_document << "z" << 24;
-        //        viewable_eq_viewable(refdoc, view); // The random libraries provide different
-        //        answers on different machines
+        auto elem = doc->view(mydoc, state)["z"];
+        REQUIRE(elem.type() == bsoncxx::type::k_int64);
+        REQUIRE(elem.get_int64().value >= 50);
+        REQUIRE(elem.get_int64().value < 60);
     }
     SECTION("Random string") {
         auto doc = makeDoc(YAML::Load(R"yaml(
@@ -87,15 +84,9 @@ TEST_CASE("Documents are created", "[documents]") {
         length : 15
     )yaml"));
 
-        // Test that we get random strings. Should be reproducible
-        // auto view = doc->view(mydoc, state);
-        bsoncxx::builder::stream::document refdoc{};
-
-        // The random number generator is deterministic, so we should get the same string each time
-        refdoc << "string"
-               << "YyqO3V4TBH+ZPQJ";
-        //        viewable_eq_viewable(refdoc, view); // The random libraries provide different
-        //        answers on different machines
+        auto elem = doc->view(mydoc, state)["string"];
+        REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+        REQUIRE(elem.get_utf8().value.length() == 15);
     }
     SECTION("Date overrides") {
         auto doc = makeDoc(YAML::Load(R"yaml(
@@ -105,18 +96,8 @@ TEST_CASE("Documents are created", "[documents]") {
             overrides :
               date :
                 type : date)yaml"));
-        // Test that we get a date string. Can't force this one right now
-        // Test that we get random strings. Should be reproducible
-        auto view = doc->view(mydoc, state);
-        bsoncxx::builder::stream::document refdoc{};
-
-        REQUIRE(view.length() == 19);
-        // The random number generator is deterministic, so we should get the same string each time
-        refdoc << "date"
-               << "YOTBP1XwXID";
-        // should just check that we get a valid date object. Could check that it's current time
-        // also.
-        //        viewable_eq_viewable(refdoc, view);
+        auto elem = doc->view(mydoc, state)["date"];
+        REQUIRE(elem.type() == bsoncxx::type::k_date);
     }
     SECTION("Increment Thread Local") {
         auto doc = makeDoc(YAML::Load(R"yaml(

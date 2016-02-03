@@ -8,7 +8,7 @@
 main : 
   seed: 131415161718
   name: main
-  runLength : 10
+  runLength : 100
   nodes: 
     - name : doAll
       type : doAll
@@ -17,17 +17,14 @@ main :
         - thingB
       next : join # Next state of the doAll should be a join.
     - name : join
-      print : In Join
       type : join
       next : Finish
     - name : thingA
-      print : Thing A running
       type : sleep
       next : thingA # Child thread continues until it gets to the join
       sleep : 1000
     - name : thingB
-      print : Thing B running
       type : sleep
       next : doAll # Child thread continues until it gets to the join
-      sleep : 1000
+      sleep : 20
  

@@ -86,5 +86,3 @@ executes.
    external trigger. External software could track when all the
    clients have finished their warmups, and then indicate for all of
    the clients to continue.
-5. Extend the _overrides_ in workloadNode: Add a field _overrides_ to
-   use variables, and value generation functionality.

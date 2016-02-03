@@ -50,11 +50,32 @@ goal is to support all CRUD spec operations.
   thread or workload variable exists, it will udpate that value. If
   there is no existing variable, it will be added to the thread
   variables (tvariables). The variable can be set from a _value_ or
-  from another variable (_donorVariable_), but not both. Can also set
-  DBName and CollectionName. 
-      * _target_: string value name of the variable to update
+  an explicit _operation_. Database name and collection name can also be set.
+  Fields: 
+      * _target_: string value name of the variable to update (or
+        database or collection)
       * _value_: A json/yaml value to set the variable to
-      * _donorVariable_: A variable to copy a value from.
+      * _operation_: A map specifying how to generate the
+        value. Always has a field _type_ and other fields depend on
+        the type. The types largely match those in overrideDocument. 
+        * usevar: Creates a copy of another variable
+          * _variable_ : The variable to copy from
+        * increment: Copy another variable, and post-increment the
+          other variable. 
+          * variable: The variable to copy and increment. Must be a
+            number type. 
+        * randomint: Generate a random integer value with uniform distribution
+          * _min_ (optional): Min value to generate. Default 0
+          * _max_ (optional): Maximum value to generate (not
+            inclusive). Default 100
+        * randomstring: Generate a random string
+          * _length_ (optional): Length of string to
+            generate. Default 10. 
+        * date: Generate the current date
+        * multiply: Multiply another variable by a factor. The other
+          variable is not updated.
+          * _variable_: the variable to multiply. Must be a number
+          * _factor_: The factor to multiply it by.
   
 #### Future Operations
 

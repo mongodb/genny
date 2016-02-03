@@ -166,4 +166,105 @@ TEST_CASE("Set Variables", "[variables]") {
         REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 1);
         REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 1);
     }
+    SECTION("Use direct value in operation") {
+        auto yaml = YAML::Load(R"yaml(
+    type : set_variable
+    target : workloadVar
+    operation : 3
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int64().value == 3);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 2);
+    }
+    SECTION("UseVar in operation") {
+        auto yaml = YAML::Load(R"yaml(
+    type : set_variable
+    target : workloadVar
+    operation : 
+      type : usevar
+      variable : threadVar
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 2);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 2);
+    }
+    SECTION("Increment in operation") {
+        auto yaml = YAML::Load(R"yaml(
+    type : set_variable
+    target : workloadVar
+    operation : 
+      type : increment
+      variable : threadVar
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 2);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 3);
+    }
+    SECTION("Date in operation") {
+        auto yaml = YAML::Load(R"yaml(
+    type : set_variable
+    target : workloadVar
+    operation : 
+      type : date
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].type() ==
+                bsoncxx::type::k_date);
+    }
+    SECTION("Random Int in operation") {
+        auto yaml = YAML::Load(R"yaml(
+    type : set_variable
+    target : workloadVar
+    operation : 
+      type : randomint
+      min : 50
+      max : 60
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].type() ==
+                bsoncxx::type::k_int64);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int64().value >= 50);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int64().value < 60);
+    }
+    SECTION("Random String in operation") {
+        auto yaml = YAML::Load(R"yaml(
+    type : set_variable
+    target : workloadVar
+    operation : 
+      type : randomstring
+      length : 11
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].type() ==
+                bsoncxx::type::k_utf8);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_utf8().value.length() ==
+                11);
+    }
+    SECTION("Multiply operation") {
+        auto yaml = YAML::Load(R"yaml(
+    type : set_variable
+    target : workloadVar
+    operation : 
+      type : multiply
+      variable : threadVar
+      factor : 10
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 20);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 2);
+    }
 }

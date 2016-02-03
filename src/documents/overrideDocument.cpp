@@ -165,15 +165,15 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
             if (iter->second.IsMap()) {
                 //  BOOST_LOG_TRIVIAL(trace) << "Second is map";
                 if (iter->second["type"].Scalar() == "randomint") {
-                    int min = 0;
-                    int max = 100;
+                    int64_t min = 0;
+                    int64_t max = 100;
                     if (iter->second["min"]) {
-                        min = iter->second["min"].as<int>();
+                        min = iter->second["min"].as<int64_t>();
                     }
                     if (iter->second["max"]) {
-                        max = iter->second["max"].as<int>();
+                        max = iter->second["max"].as<int64_t>();
                     }
-                    uniform_int_distribution<int> distribution(min, max);
+                    uniform_int_distribution<int64_t> distribution(min, max);
                     output << elem.key().to_string() << distribution(state.rng);
                 } else if (iter->second["type"].Scalar() == "randomstring") {
                     int length = 10;

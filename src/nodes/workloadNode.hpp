@@ -1,10 +1,10 @@
 #pragma once
 
-#include "node.hpp"
 #include <memory>
 #include <bsoncxx/stdx/optional.hpp>
 
-using namespace std;
+#include "node.hpp"
+
 using bsoncxx::stdx::optional;
 
 namespace mwg {
