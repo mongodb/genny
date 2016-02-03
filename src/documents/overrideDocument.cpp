@@ -210,7 +210,7 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                         incrementVar(var, elem.key().to_string(), output);
                     } else {  // in wvariables
                         // Grab lock. Could be kinder hear and wait on condition variable
-                        std::lock_guard<std::mutex> lk(state.myWorkload.mut);
+                        std::lock_guard<std::mutex> lk(state.workloadState.mut);
                         // BOOST_LOG_TRIVIAL(trace) << "In wvariables";
                         auto var = state.wvariables.find(varname);
                         incrementVar(var, elem.key().to_string(), output);
@@ -230,7 +230,7 @@ void overrideDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                         output << elem.key().to_string() << var->second.view()[0].get_value();
                     } else {  // in wvariables
                         // Grab lock. Could be kinder hear and wait on condition variable
-                        std::lock_guard<std::mutex> lk(state.myWorkload.mut);
+                        std::lock_guard<std::mutex> lk(state.workloadState.mut);
                         // BOOST_LOG_TRIVIAL(trace) << "In wvariables";
                         auto var = state.wvariables.find(varname);
                         output << elem.key().to_string() << var->second.view()[0].get_value();

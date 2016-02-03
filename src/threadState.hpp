@@ -13,13 +13,14 @@ namespace mwg {
 
 class node;
 class workload;
+class WorkloadExecutionState;
 
 class threadState {
 public:
     threadState(uint64_t seed,
                 unordered_map<string, bsoncxx::array::value> tvars,
                 unordered_map<string, bsoncxx::array::value>& wvars,
-                workload& parentWorkload,
+                WorkloadExecutionState& parentWorkload,
                 string dbname,
                 string collectionname,
                 string uri = mongocxx::uri::k_default_uri)
@@ -27,7 +28,7 @@ public:
           rng(seed),
           tvariables(tvars),
           wvariables(wvars),
-          myWorkload(parentWorkload),
+          workloadState(parentWorkload),
           DBName(dbname),
           CollectionName(collectionname),
           stopped(false){};
@@ -37,13 +38,11 @@ public:
     unordered_map<string, bsoncxx::array::value> tvariables;
     unordered_map<string, bsoncxx::array::value>& wvariables;
     bsoncxx::stdx::optional<bsoncxx::array::value> result;
-    vector<shared_ptr<threadState>> childThreadStates;
     vector<shared_ptr<threadState>> backgroundThreadStates;
     vector<shared_ptr<thread>> childThreads;
     vector<shared_ptr<thread>> backgroundThreads;
     shared_ptr<threadState> parentThread;
-    shared_ptr<thread> myThread;
-    workload& myWorkload;
+    WorkloadExecutionState& workloadState;
     string DBName;
     string CollectionName;
     std::atomic<bool> stopped;

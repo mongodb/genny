@@ -56,7 +56,7 @@ string overrideString(optional<YAML::Node> node, shared_ptr<threadState> myState
                 return (var->second.view()[0].get_value().get_utf8().value.to_string());
             } else if (myState->wvariables.count(varname) > 0) {  // in wvariables
                 // Grab lock. Could be kinder hear and wait on condition variable
-                std::lock_guard<std::mutex> lk(myState->myWorkload.mut);
+                std::lock_guard<std::mutex> lk(myState->workloadState.mut);
                 auto var = myState->wvariables.find(varname);
                 return (var->second.view()[0].get_value().get_utf8().value.to_string());
             } else {
@@ -165,7 +165,7 @@ int64_t overrideInt(optional<YAML::Node> node, shared_ptr<threadState> myState) 
             return (accessVar(var, increment));
         } else if (myState->wvariables.count(varname) > 0) {  // in wvariables
             // Grab lock. Could be kinder hear and wait on condition variable
-            std::lock_guard<std::mutex> lk(myState->myWorkload.mut);
+            std::lock_guard<std::mutex> lk(myState->workloadState.mut);
             auto var = myState->wvariables.find(varname);
             return (accessVar(var, increment));
         } else {
@@ -183,27 +183,28 @@ int64_t overrideInt(optional<YAML::Node> node, shared_ptr<threadState> myState) 
 
 // Execute the node
 void workloadNode::execute(shared_ptr<threadState> myState) {
-    myWorkload->uri = myState->myWorkload.uri;
+    WorkloadExecutionState myWorkloadState = myWorkload->newWorkloadState();
+    myWorkloadState.uri = myState->workloadState.uri;
     BOOST_LOG_TRIVIAL(debug) << "In workloadNode and executing";
     // set random seed based on current random seed.
     // should it be set in constructor? Is that safe?
-    myWorkload->setRandomSeed(myState->rng());
+    myWorkload->setRandomSeed(myState->rng(), myWorkloadState);
     if (dbName) {
-        myWorkload->getState().DBName = overrideString(dbName, myState);
+        myWorkloadState.DBName = overrideString(dbName, myState);
     }
     if (collectionName) {
-        myWorkload->getState().CollectionName = overrideString(collectionName, myState);
+        myWorkloadState.CollectionName = overrideString(collectionName, myState);
     }
     if (workloadName) {
         myWorkload->name = overrideString(workloadName, myState);
     }
     if (numThreads) {
-        myWorkload->numParallelThreads = overrideInt(numThreads, myState);
+        myWorkloadState.numParallelThreads = overrideInt(numThreads, myState);
     }
     if (runLength) {
-        myWorkload->runLength = overrideInt(runLength, myState);
+        myWorkloadState.runLength = overrideInt(runLength, myState);
     }
-    myWorkload->execute();
+    myWorkload->execute(myWorkloadState);
 }
 std::pair<std::string, std::string> workloadNode::generateDotGraph() {
     return (std::pair<std::string, std::string>{name + " -> " + nextName + ";\n",

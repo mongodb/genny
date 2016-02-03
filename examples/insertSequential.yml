@@ -3,37 +3,23 @@
 main : 
   seed: 131415161718
   name: main
+  wvariables : 
+    count : 0
   nodes: 
     - type : drop
     - name : repeat
       type : forN
-      N : 5
+      N : 10
       node : 
-        type : workloadNode
-        name : inserts
-        workload : 
-          wvariables : 
-            count : 0
-          nodes :             
-            - name : insert1
-              type : insert_one
-              next : insert2
-              document :
-                type : override 
-                doc : {y : 1}
-                overrides : 
-                  y :  # increment count and set y to count
-                    type : increment
-                    variable : count 
-            - name : insert2
-              type : insert_one
-              document :
-                type : override 
-                doc : {y : 1}
-                overrides : 
-                  y :  # increment count and set y to count
-                    type : increment
-                    variable : count 
+        name : insert1
+        type : insert_one
+        document :
+          type : override 
+          doc : {y : 1}
+          overrides : 
+            y :  # increment count and set y to count
+              type : increment
+              variable : count 
     - name : check1
       type : count
       filter : {y : 0}

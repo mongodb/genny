@@ -187,7 +187,7 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
                             bsoncxx::array::value(state.tvariables.find(varname)->second.view());
                     } else if (state.wvariables.count(varname) > 0) {  // in wvariables
                         // Grab lock. Could be kinder hear and wait on condition variable
-                        std::lock_guard<std::mutex> lk(state.myWorkload.mut);
+                        std::lock_guard<std::mutex> lk(state.workloadState.mut);
                         // FIXME: how do we keep this from changing after we get the view and leave
                         // this section?
                         localValue =
@@ -205,7 +205,7 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
                         localValue = incrementVar(var);
                     } else if (state.wvariables.count(varname) > 0) {  // in wvariables
                         // Grab lock. Could be kinder hear and wait on condition variable
-                        std::lock_guard<std::mutex> lk(state.myWorkload.mut);
+                        std::lock_guard<std::mutex> lk(state.workloadState.mut);
                         auto var = state.wvariables.find(varname);
                         localValue = incrementVar(var);
                     } else {
@@ -260,7 +260,7 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
                         localValue = multiplyVar(var, factor);
                     } else if (state.wvariables.count(varname) > 0) {  // in wvariables
                         // Grab lock. Could be kinder hear and wait on condition variable
-                        std::lock_guard<std::mutex> lk(state.myWorkload.mut);
+                        std::lock_guard<std::mutex> lk(state.workloadState.mut);
                         auto var = state.wvariables.find(varname);
                         localValue = multiplyVar(var, factor);
                     } else {

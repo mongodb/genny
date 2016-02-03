@@ -185,30 +185,31 @@ int main(int argc, char* argv[]) {
 
     // Look for main. And start building from there.
     if (auto main = nodes[workloadName]) {
-        workload myworkload(main);
+        workload myWorkload(main);
         if (dotFile.length() > 0) {
             // save the dotgraph
             ofstream dotout;
             dotout.open(dotFile);
-            dotout << myworkload.generateDotGraph();
+            dotout << myWorkload.generateDotGraph();
             dotout.close();
             return EXIT_SUCCESS;
         }
 
         BOOST_LOG_TRIVIAL(trace) << "After workload constructor. Before execute";
         // set the uri
-        myworkload.uri = uri;
-        auto ss = shared_ptr<statsState>(new statsState(myworkload));
+        WorkloadExecutionState myWorkloadState = myWorkload.newWorkloadState();
+        myWorkloadState.uri = uri;
+        auto ss = shared_ptr<statsState>(new statsState(myWorkload));
         std::thread stats(runPeriodicStats, ss, resultPeriod, resultsFile);
-        myworkload.execute();
+        myWorkload.execute(myWorkloadState);
         ss->done = true;
         stats.join();
-        myworkload.logStats();
+        myWorkload.logStats();
         if (resultPeriod == std::chrono::seconds::zero() && resultsFile.length() > 0) {
             // save the results
             ofstream out;
             out.open(resultsFile);
-            out << bsoncxx::to_json(myworkload.getStats(false));
+            out << bsoncxx::to_json(myWorkload.getStats(false));
             out.close();
         }
     }

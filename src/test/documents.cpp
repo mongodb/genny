@@ -35,7 +35,8 @@ TEST_CASE("Documents are created", "[documents]") {
     unordered_map<string, bsoncxx::array::value> tvariables;  // thread variables
 
     workload myWorkload;
-    threadState state(12234, tvariables, wvariables, myWorkload, "t", "c");
+    auto workloadState = myWorkload.newWorkloadState();
+    threadState state(12234, tvariables, wvariables, workloadState, "t", "c");
     bsoncxx::builder::stream::document mydoc{};
 
     SECTION("Simple bson") {

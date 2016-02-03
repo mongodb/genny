@@ -13,12 +13,69 @@
 #include "node.hpp"
 
 namespace mwg {
-workload::workload(YAML::Node& inputNodes) : stopped(false) {
+
+void WorkloadExecutionState::increaseThreads() {
+    uint64_t numThreads;
+    {
+        // Get lock
+        std::lock_guard<std::mutex> lk(threadMut);
+        // increase numActiveThreads
+        numActiveThreads++;
+        numThreads = numActiveThreads;
+    }
+    BOOST_LOG_TRIVIAL(trace)
+        << "In WorkloadExecutionState::increaseThreads and increased threads to " << numThreads;
+}
+
+void WorkloadExecutionState::decreaseThreads() {
+    uint64_t numThreads;
+    {
+        // Get lock
+        std::lock_guard<std::mutex> lk(threadMut);
+        if (numActiveThreads == 0) {
+            BOOST_LOG_TRIVIAL(fatal) << "In WorkloadExecutionState::decreaseThreads but "
+                                        "numActiveThreads is already zero";
+            exit(EXIT_FAILURE);
+        }
+        // decrease numActiveThreads
+        numActiveThreads--;
+        numThreads = numActiveThreads;
+    }
+    BOOST_LOG_TRIVIAL(trace)
+        << "In WorkloadExecutionState::decreaseThreads and decreased threads to " << numThreads;
+    // notify
+    if (numThreads == 0)
+        threadsDoneCV.notify_one();
+}
+
+uint64_t WorkloadExecutionState::getActiveThreads() {
+    std::lock_guard<std::mutex> lk(threadMut);
+    return (numActiveThreads);
+}
+
+bool WorkloadExecutionState::anyThreadsActive() {
+    std::lock_guard<std::mutex> lk(threadMut);
+    return (numActiveThreads > 0);
+}
+
+void WorkloadExecutionState::waitThreadsDone() {
+    BOOST_LOG_TRIVIAL(trace) << "In WorkloadExecutionState::waitThreadsDone()";
+    std::unique_lock<std::mutex> lk(threadMut);
+    while (numActiveThreads > 0) {
+        BOOST_LOG_TRIVIAL(trace)
+            << "In WorkloadExecutionState::waitThreadsDone() while loop -- threads > 0: "
+            << numActiveThreads;
+        threadsDoneCV.wait(lk);
+    }
+    return;
+}
+
+
+workload::workload(YAML::Node& inputNodes) : baseWorkloadState(*this), stopped(false) {
     if (!inputNodes) {
         BOOST_LOG_TRIVIAL(fatal) << "Workload constructor and !nodes";
         exit(EXIT_FAILURE);
     }
-    unordered_map<string, bsoncxx::array::value> tvariables;  // thread variables
     unordered_map<string, shared_ptr<node>> nodes;
     YAML::Node yamlNodes;
     if (inputNodes.IsMap()) {
@@ -38,7 +95,7 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
             for (auto var : inputNodes["wvariables"]) {
                 BOOST_LOG_TRIVIAL(debug) << "Reading in workload variable " << var.first.Scalar()
                                          << " with value " << var.second.Scalar();
-                wvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
+                baseWorkloadState.wvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
             }
         }
         if (inputNodes["tvariables"]) {
@@ -49,32 +106,30 @@ workload::workload(YAML::Node& inputNodes) : stopped(false) {
                 tvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
             }
         }
-        myState = unique_ptr<threadState>(
-            new threadState(0, tvariables, wvariables, *this, "testDB", "testCollection"));
         if (inputNodes["seed"]) {
-            myState->rng.seed(inputNodes["seed"].as<uint64_t>());
+            baseWorkloadState.rng.seed(inputNodes["seed"].as<uint64_t>());
             BOOST_LOG_TRIVIAL(debug) << " Random seed: " << inputNodes["seed"].as<uint64_t>();
         }
         if (inputNodes["database"]) {
-            myState->DBName = inputNodes["database"].Scalar();
+            baseWorkloadState.DBName = inputNodes["database"].Scalar();
             BOOST_LOG_TRIVIAL(debug) << "In Workload constructor and database name is "
-                                     << myState->DBName;
+                                     << baseWorkloadState.DBName;
         }
         if (inputNodes["collection"]) {
-            myState->CollectionName = inputNodes["collection"].Scalar();
+            baseWorkloadState.CollectionName = inputNodes["collection"].Scalar();
             BOOST_LOG_TRIVIAL(debug) << "In Workload constructor and collection name is "
-                                     << myState->CollectionName;
+                                     << baseWorkloadState.CollectionName;
         }
         if (inputNodes["threads"]) {
-            numParallelThreads = inputNodes["threads"].as<int64_t>();
+            baseWorkloadState.numParallelThreads = inputNodes["threads"].as<int64_t>();
             BOOST_LOG_TRIVIAL(debug) << "Explicitly setting number of threads in workload to "
-                                     << numParallelThreads;
+                                     << baseWorkloadState.numParallelThreads;
         } else {
-            numParallelThreads = 1;
+            baseWorkloadState.numParallelThreads = 1;
             BOOST_LOG_TRIVIAL(debug) << "Using default value for number of threads";
         }
         if (inputNodes["runLength"]) {
-            runLength = inputNodes["runLength"].as<uint64_t>();
+            baseWorkloadState.runLength = inputNodes["runLength"].as<uint64_t>();
             BOOST_LOG_TRIVIAL(debug) << "Explicitly setting runLength in workload";
         } else
             BOOST_LOG_TRIVIAL(debug) << "Using default value for runLength";
@@ -142,43 +197,58 @@ void runTimer(shared_ptr<timerState> state, uint64_t runLength) {
     }
 }
 
-void workload::execute() {
+// wrapper to start a new thread
+void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
+    BOOST_LOG_TRIVIAL(trace) << "Node runThread";
+    myState->currentNode = Node;
+    BOOST_LOG_TRIVIAL(trace) << "Set node. Name is " << Node->name;
+    while (myState->currentNode != nullptr)
+        myState->currentNode->executeNode(myState);
+    // I'm done. Decrease the count of threads
+    myState->workloadState.decreaseThreads();
+}
+
+// Start a new thread with thread state and initial state
+shared_ptr<thread> startThread(shared_ptr<node> startNode, shared_ptr<threadState> ts) {
+    // increase the count of threads
+    ts->workloadState.increaseThreads();
+    return (shared_ptr<thread>(new thread(runThread, startNode, ts)));
+}
+
+
+void workload::execute(WorkloadExecutionState& work) {
     // prep the threads and start them. Should put the timer in here also.
     BOOST_LOG_TRIVIAL(trace) << "In workload::execute";
-    vector<thread> myThreads;
 
     // setup timeout
-    BOOST_LOG_TRIVIAL(trace) << "RunLength is " << runLength << ". About to setup timer";
+    BOOST_LOG_TRIVIAL(trace) << "RunLength is " << work.runLength << ". About to setup timer";
     auto ts = shared_ptr<timerState>(new timerState(*this));
-    std::thread timer(runTimer, ts, runLength);
+    std::thread timer(runTimer, ts, work.runLength);
 
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
-    // local copy in case it changes from multiple calls
-    int64_t numThreads = numParallelThreads;
-    BOOST_LOG_TRIVIAL(debug) << "Starting " << numThreads << " threads";
-    for (int64_t i = 0; i < numParallelThreads; i++) {
+    auto numParallelThreads = work.numParallelThreads;
+    BOOST_LOG_TRIVIAL(debug) << "Starting " << numParallelThreads << " threads";
+    for (uint64_t i = 0; i < numParallelThreads; i++) {
         BOOST_LOG_TRIVIAL(trace) << "Starting thread in workload";
         // create thread state for each
-        auto newState = shared_ptr<threadState>(new threadState(myState->rng(),
-                                                                myState->tvariables,
-                                                                myState->wvariables,
-                                                                *this,
-                                                                myState->DBName,
-                                                                myState->CollectionName,
-                                                                uri));
+        auto newState = shared_ptr<threadState>(new threadState(work.rng(),
+                                                                tvariables,
+                                                                work.wvariables,
+                                                                work,
+                                                                work.DBName,
+                                                                work.CollectionName,
+                                                                work.uri));
         BOOST_LOG_TRIVIAL(trace) << "Created thread state";
-        threads.insert(newState);
-        myThreads.push_back(thread(runThread, vectornodes[0], newState));
+        // Start the thread
+        startThread(vectornodes[0], newState)->detach();
         BOOST_LOG_TRIVIAL(trace) << "Called run on thread";
     }
     BOOST_LOG_TRIVIAL(trace) << "Started all threads in workload";
     // wait for all the threads to finish
-    for (int64_t i = 0; i < numThreads; i++) {
-        // clean up the thread state?
-        myThreads[i].join();
-    }
+    work.waitThreadsDone();
     stop = chrono::high_resolution_clock::now();
+    // need to put a lock around this
     myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
     BOOST_LOG_TRIVIAL(trace) << "All threads finished. About to stop timer";
 
@@ -214,7 +284,8 @@ bsoncxx::document::value workload::getStats(bool withReset) {
     using bsoncxx::builder::stream::close_document;
     bsoncxx::builder::stream::document document{};
 
-    // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that could be
+    // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that
+    // could be
     // moved into document
     auto stats = myStats.getStats(withReset);
     document << name << open_document << bsoncxx::builder::concatenate(stats.view());

@@ -26,7 +26,8 @@ TEST_CASE("Set Variables", "[variables]") {
     mongocxx::client conn{mongocxx::uri{}};
 
     workload myWorkload;
-    threadState state(12234, tvariables, wvariables, myWorkload, "t", "c");
+    auto workloadState = myWorkload.newWorkloadState();
+    threadState state(12234, tvariables, wvariables, workloadState, "t", "c");
 
     SECTION("Sanity check setup") {
         REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 1);

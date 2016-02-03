@@ -59,7 +59,6 @@ protected:
     stats myStats;
 };
 
-void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState);
 unique_ptr<node> makeUniqeNode(YAML::Node);
 shared_ptr<node> makeSharedNode(YAML::Node);
 }

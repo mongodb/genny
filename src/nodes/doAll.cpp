@@ -1,7 +1,10 @@
 #include "doAll.hpp"
+
 #include <thread>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
+
+#include "workload.hpp"
 
 namespace mwg {
 
@@ -48,28 +51,25 @@ void doAll::execute(shared_ptr<threadState> myState) {
         auto newState = shared_ptr<threadState>(new threadState(myState->rng(),
                                                                 myState->tvariables,
                                                                 myState->wvariables,
-                                                                myState->myWorkload,
+                                                                myState->workloadState,
                                                                 myState->DBName,
                                                                 myState->CollectionName,
-                                                                myState->myWorkload.uri));
+                                                                myState->workloadState.uri));
         newState->parentThread = myState;
-        myState->childThreadStates.push_back(newState);
-        newState->myThread = shared_ptr<thread>(new thread(runThread, node, newState));
-        myState->childThreads.push_back(newState->myThread);
+        myState->childThreads.push_back(startThread(node, newState));
     }
     for (auto node : vectorbackground) {
         // setup a new thread state for this node
         auto newState = shared_ptr<threadState>(new threadState(myState->rng(),
                                                                 myState->tvariables,
                                                                 myState->wvariables,
-                                                                myState->myWorkload,
+                                                                myState->workloadState,
                                                                 myState->DBName,
                                                                 myState->CollectionName,
-                                                                myState->myWorkload.uri));
+                                                                myState->workloadState.uri));
         newState->parentThread = myState;
         myState->backgroundThreadStates.push_back(newState);
-        newState->myThread = shared_ptr<thread>(new thread(runThread, node, newState));
-        myState->backgroundThreads.push_back(newState->myThread);
+        myState->backgroundThreads.push_back(startThread(node, newState));
     }
 }
 

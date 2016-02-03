@@ -51,7 +51,8 @@ void join::executeNode(shared_ptr<threadState> myState) {
                                         .count() << " milliseconds";
         // clean up
         myState->childThreads.clear();
-        myState->childThreadStates.clear();
+        myState->backgroundThreads.clear();
+        myState->backgroundThreadStates.clear();
         executeNextNode(myState);
     }
 }

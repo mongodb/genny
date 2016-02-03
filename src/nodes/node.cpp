@@ -139,13 +139,6 @@ void node::stop() {
     stopped = true;
 }
 
-void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
-    BOOST_LOG_TRIVIAL(trace) << "Node runThread";
-    myState->currentNode = Node;
-    BOOST_LOG_TRIVIAL(trace) << "Set node. Name is " << Node->name;
-    while (myState->currentNode != nullptr)
-        myState->currentNode->executeNode(myState);
-}
 node* makeNode(YAML::Node yamlNode) {
     if (!yamlNode.IsMap()) {
         BOOST_LOG_TRIVIAL(fatal) << "Node in makeNode is not a yaml map";
