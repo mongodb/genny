@@ -35,7 +35,7 @@ static struct option poptions[] = {{"help", no_argument, 0, 'h'},
 
 void print_help(const char* process_name) {
     fprintf(stderr,
-            "Usage: %s [-hldrpv] /path/to/workload \n"
+            "Usage: %s [-hldrpv] /path/to/workload [workload to run]\n"
             "Execution Options:\n"
             "\t--help|-h              Display this help and exit\n"
             "\t--host Host            Host/Connection string for mongo server to test--must be a\n"
@@ -91,7 +91,8 @@ void runPeriodicStats(shared_ptr<statsState> state, std::chrono::seconds period,
 }
 
 int main(int argc, char* argv[]) {
-    string filename = "sample.yml";
+    string fileName = "sample.yml";
+    string workloadName = "main";
     string dotFile;
     string resultsFile = "results.json";
     std::chrono::seconds resultPeriod(0);
@@ -168,19 +169,22 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    if (argc > optind)
-        filename = argv[optind];
-    else {
+    if (argc > optind) {
+        fileName = argv[optind];
+        if (argc > optind + 1) {
+            workloadName = argv[optind + 1];
+        }
+    } else {
         print_help(argv[0]);
         return EXIT_SUCCESS;
     }
-    BOOST_LOG_TRIVIAL(info) << filename;
+    BOOST_LOG_TRIVIAL(info) << fileName;
 
     // put try catch here with error message
-    YAML::Node nodes = YAML::LoadFile(filename);
+    YAML::Node nodes = YAML::LoadFile(fileName);
 
     // Look for main. And start building from there.
-    if (auto main = nodes["main"]) {
+    if (auto main = nodes[workloadName]) {
         workload myworkload(main);
         if (dotFile.length() > 0) {
             // save the dotgraph
