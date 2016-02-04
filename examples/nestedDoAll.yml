@@ -1,0 +1,33 @@
+# Example workload using doAll to spawn new threads. The doAll has two
+# children. The first runs a self loop and runs forever. The second
+# sleeps and loops back to the doAll to spawn another thread
+
+# This will be replaced in the future with a dedicated arrival or
+# spawn node type.
+
+main : 
+  seed: 131415161718
+  name: main
+  runLength : 10
+  nodes: 
+    - name : doAll
+      type : doAll
+      childNodes : 
+        - thingA
+        - thingB
+      next : join # Next state of the doAll should be a join.
+    - name : join
+      print : In Join
+      type : join
+      next : Finish
+    - name : thingA
+      print : Thing A running
+      type : sleep
+      next : thingA # Child thread continues until it gets to the join
+      sleep : 1000
+    - name : thingB
+      print : Thing B running
+      type : sleep
+      next : doAll # Child thread continues until it gets to the join
+      sleep : 1000
+ 
