@@ -277,7 +277,6 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
                 BOOST_LOG_TRIVIAL(fatal) << "Operation is a list in set_variable";
                 exit(EXIT_FAILURE);
             }
-            BOOST_LOG_TRIVIAL(error) << "Operation not supported yet in set_variable";
     }
     // Special cases first: Database and collection name
     if (targetVariable.compare("DBName") == 0) {

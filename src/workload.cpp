@@ -154,8 +154,10 @@ void workload::execute() {
 
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
-    BOOST_LOG_TRIVIAL(debug) << "Starting " << numParallelThreads << " threads";
-    for (uint64_t i = 0; i < numParallelThreads; i++) {
+    // local copy in case it changes from multiple calls
+    int64_t numThreads = numParallelThreads;
+    BOOST_LOG_TRIVIAL(debug) << "Starting " << numThreads << " threads";
+    for (int64_t i = 0; i < numParallelThreads; i++) {
         BOOST_LOG_TRIVIAL(trace) << "Starting thread in workload";
         // create thread state for each
         auto newState = shared_ptr<threadState>(new threadState(myState->rng(),
@@ -172,7 +174,7 @@ void workload::execute() {
     }
     BOOST_LOG_TRIVIAL(trace) << "Started all threads in workload";
     // wait for all the threads to finish
-    for (uint64_t i = 0; i < numParallelThreads; i++) {
+    for (int64_t i = 0; i < numThreads; i++) {
         // clean up the thread state?
         myThreads[i].join();
     }
