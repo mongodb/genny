@@ -70,7 +70,9 @@ This is an incomplete list.
 
 Dependencies
 ------------
-* The [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master)
+* The
+  [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master). Currently
+  tested against r3.0.0. If compiling on OS X, see [CXX-836](https://jira.mongodb.org/browse/CXX-836)
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * A compiler that supports c++11
 * [cmake](http://www.cmake.org/) for building

@@ -82,8 +82,6 @@ bsoncxx::array::value yamlToValue(YAML::Node node) {
 write_concern parseWriteConcern(YAML::Node node) {
     write_concern wc{};
     // Need to set the options of the write concern
-    if (node["fsync"])
-        wc.fsync(node["fsync"].as<bool>());
     if (node["journal"])
         wc.journal(node["journal"].as<bool>());
     if (node["nodes"]) {

@@ -99,9 +99,9 @@ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 echo "Installing Mongo C Driver"
 git clone -b master https://github.com/mongodb/mongo-c-driver
 pushd mongo-c-driver/
-git submodule update
 # This should be changed to a tag once the the code is stable
-git checkout 160ce921a7020e2384035a8609e0435607eb0b51
+git checkout r1.3
+git submodule update
 ./autogen.sh --with-libbson=bundled
 make $c_flags && sudo make install
 popd
@@ -111,7 +111,7 @@ echo "Installing Mongo C++ Driver"
 git clone  -b master https://github.com/mongodb/mongo-cxx-driver.git
 pushd mongo-cxx-driver/build
 # This should be changed to a tag once the the code is stable
-git checkout c34c3a9b69e2869daa8c99cd6234c8e749b9eca7
+git checkout r3.0.0
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
 sudo make && sudo make install
 popd
