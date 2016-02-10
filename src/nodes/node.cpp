@@ -10,6 +10,7 @@
 #include "join.hpp"
 #include "workloadNode.hpp"
 #include "ifNode.hpp"
+#include "spawn.hpp"
 
 namespace mwg {
 
@@ -162,6 +163,8 @@ node* makeNode(YAML::Node yamlNode) {
         return new workloadNode(yamlNode);
     } else if (yamlNode["type"].Scalar() == "ifNode") {
         return new ifNode(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "spawn") {
+        return new Spawn(yamlNode);
     } else {
         BOOST_LOG_TRIVIAL(debug) << "In makeNode. Type was " << yamlNode["type"].Scalar()
                                  << ". Defaulting to opNode";

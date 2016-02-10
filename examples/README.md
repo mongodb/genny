@@ -31,6 +31,9 @@ supported by the tool.
 - [forN.yml](forN.yml): This demonstrates a simple loop that executes an
   insert_one operation 5 times. Note that a workload node can be the
   embedded node using the workloadNode from the previous example.
+- [spawn.yml](spawn.yml): Demonstrates spawning new threads of
+  execution. A thread is started for each node in spawn, and the
+  current thread continues to its next state. 
 - [doAll.yml](doAll.yml): Demonstrates simple fork join behavior. A thread is
   started for each childNode, and they execute in parallel until they
   get to the join node. Here's an [image of the doAll.yml graph](images/doAll.png)

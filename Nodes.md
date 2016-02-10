@@ -66,16 +66,19 @@ executes.
        * _ifNode_ : Execute this node next if the comparison evaluates
          to true
        * _elseNode_ : Execute this node next if the comparison evaluates to false.
-
+9. spawn: This node spawns a (or multiple) new thread of execution
+   that continues on independently of the existing thread of
+   operation. It differs from the doAll, in that there is no
+   expectation of joining back together. The parent thread continues
+   on to its next node as normal after spawning the other
+   thread(s). The spawn node can be used to model an arrival process
+   by combining it in a loop with a sleep of the appropriate length.
+       * _spawn_: This is either the name of one node to execute with
+         a new thread, or a list of nodes. If it is a list, a new
+         thread is created for each node name in the list.
 
 ### Future Nodes
 
-1. arrival: This represents an arrival process. Will take parameters
-   for various arrival processes (deterministic, random -- poisson,
-   etc...). Each arrival represents a new thread of execution. Threads
-   continue until they reach a finish node. We may also want to allow
-   capping the total number of threads in the system from a given
-   arrival node, or cummulative.
 3. Phase Marker: Make a transition externally visible. For instance,
    to mark the end of the warmup phsae of a workload.
 4. External trigger: A node that waits for an external trigger before
@@ -86,3 +89,11 @@ executes.
    external trigger. External software could track when all the
    clients have finished their warmups, and then indicate for all of
    the clients to continue.
+
+### Future Extensions
+
+1. The sleep node currently sleeps for a constant amount of time. In
+   the future it will have an option to sleep for a random period of
+   time, and the distribution and parameters will be specifiable. An
+   exponential sleep, combined wiht the spawn node would allow
+   modeling a Poisson arrival process.

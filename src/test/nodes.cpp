@@ -20,6 +20,7 @@
 #include "finish_node.hpp"
 #include "workload.hpp"
 #include "workloadNode.hpp"
+#include "spawn.hpp"
 
 using namespace mwg;
 using bsoncxx::builder::stream::open_document;
@@ -106,6 +107,53 @@ TEST_CASE("Nodes", "[nodes]") {
         REQUIRE(thing1Node->getCount() == 1);
         REQUIRE(thing2Node->getCount() == 1);
         REQUIRE(joinNode->getCount() == 1);
+    }
+
+    SECTION("spawn") {
+        auto spawnYaml = YAML::Load(R"yaml(
+          name : spawn
+          type : spawn
+          spawn :
+            - thingA
+            - thingB
+          next : Finish # Next state of the spawn should be a join.
+        )yaml");
+        auto spawnNode = makeSharedNode(spawnYaml);
+        nodes[spawnNode->getName()] = spawnNode;
+        vectornodes.push_back(spawnNode);
+
+        auto thing1Y = YAML::Load(R"yaml(
+          name : thingA
+          print : Thing A running
+          type : noop
+          next : Finish # Child thread continues until it gets to the join
+            )yaml");
+        auto thing1Node = makeSharedNode(thing1Y);
+        nodes[thing1Node->getName()] = thing1Node;
+        vectornodes.push_back(thing1Node);
+        auto thing2Y = YAML::Load(R"yaml(
+          name : thingB
+          print : Thing B running
+          type : noop
+          next : Finish # Child thread continues until it gets to the join
+            )yaml");
+        auto thing2Node = makeSharedNode(thing2Y);
+        nodes[thing2Node->getName()] = thing2Node;
+        vectornodes.push_back(thing2Node);
+        auto mynode = make_shared<finishNode>();
+        nodes[mynode->getName()] = mynode;
+        vectornodes.push_back(mynode);
+        // connect the nodes
+        for (auto mnode : vectornodes) {
+            mnode->setNextNode(nodes, vectornodes);
+        }
+        // execute
+        state->currentNode = spawnNode;
+        while (state->currentNode != nullptr)
+            state->currentNode->executeNode(state);
+        REQUIRE(spawnNode->getCount() == 1);
+        REQUIRE(thing1Node->getCount() == 1);
+        REQUIRE(thing2Node->getCount() == 1);
     }
 
     SECTION("WorkloadNode") {
