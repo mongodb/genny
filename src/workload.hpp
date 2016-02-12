@@ -34,7 +34,7 @@ public:
           DBName(other.DBName),
           CollectionName(other.CollectionName){};
     mutex mut;
-    int64_t numParallelThreads = 1;
+    uint64_t numParallelThreads = 1;
     uint64_t runLength{0};
     string uri = mongocxx::uri::k_default_uri;
     unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
