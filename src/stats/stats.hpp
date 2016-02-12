@@ -1,4 +1,5 @@
 #pragma once
+
 #include <mutex>
 #include <bsoncxx/document/value.hpp>
 #include <math.h>
@@ -8,50 +9,50 @@ namespace mwg {
 using fpmicros = std::chrono::duration<double, std::ratio<1, 1000000>>;
 
 
-class stats {
+class Stats {
 public:
-    stats();
-    stats(const stats& other)
+    Stats();
+    Stats(const Stats& other)
         : count(other.count),
           countExceptions(other.countExceptions),
-          min(other.min),
-          max(other.max),
-          mean(other.mean),
-          m2(other.m2){};
-    stats(stats&&) = default;
-    virtual ~stats() = default;
+          minimumMicros(other.minimumMicros),
+          maximumMicros(other.maximumMicros),
+          meanMicros(other.meanMicros),
+          secondMomentMicros(other.secondMomentMicros){};
     void reset();
 
-    void accumulate(const stats&);  // add up stats
+    void accumulate(const Stats&);  // add up Stats
     // this can be moved into an RAII accumulator
-    void record(std::chrono::microseconds);  // record one event of given duration
+    void recordMicros(std::chrono::microseconds);  // record one event of given duration
     void recordException() {
         countExceptions++;
     }
-    std::chrono::microseconds getMin() {
-        return min;
+    std::chrono::microseconds getMinimumMicros() {
+        return minimumMicros;
     }
-    std::chrono::microseconds getMax() {
-        return max;
+    std::chrono::microseconds getMaximumMicros() {
+        return maximumMicros;
     }
-    std::chrono::microseconds getMean() {
-        return std::chrono::duration_cast<std::chrono::microseconds>(mean);
+    std::chrono::microseconds getMeanMicros() {
+        return std::chrono::duration_cast<std::chrono::microseconds>(meanMicros);
     }
 
-    std::chrono::microseconds getM2() {
-        return std::chrono::duration_cast<std::chrono::microseconds>(m2);
+    std::chrono::microseconds getSecondMomentMicros() {
+        return std::chrono::duration_cast<std::chrono::microseconds>(secondMomentMicros);
     }
 
     std::chrono::microseconds getPopVariance() {
         if (count > 2)
-            return (std::chrono::duration_cast<std::chrono::microseconds>(m2 / count));
+            return (
+                std::chrono::duration_cast<std::chrono::microseconds>(secondMomentMicros / count));
         else
             return std::chrono::microseconds(0);
     }
 
     std::chrono::microseconds getSampleVariance() {
         if (count > 2)
-            return (std::chrono::duration_cast<std::chrono::microseconds>(m2 / (count - 1)));
+            return (std::chrono::duration_cast<std::chrono::microseconds>(secondMomentMicros /
+                                                                          (count - 1)));
         else
             return std::chrono::microseconds(0);
     }
@@ -59,7 +60,7 @@ public:
         if (count > 2)
             // This is ugly. Probably a cleaner way to do it.
             return (std::chrono::duration_cast<std::chrono::microseconds>(
-                fpmicros(sqrt((m2 / count).count()))));
+                fpmicros(sqrt((secondMomentMicros / count).count()))));
         else
             return std::chrono::microseconds(0);
     }
@@ -67,7 +68,7 @@ public:
     std::chrono::microseconds getSampleStdDev() {
         if (count > 2)
             return (std::chrono::duration_cast<std::chrono::microseconds>(
-                fpmicros(sqrt((m2 / (count - 1)).count()))));
+                fpmicros(sqrt((secondMomentMicros / (count - 1)).count()))));
         else
             return std::chrono::microseconds(0);
     }
@@ -85,12 +86,12 @@ public:
 private:
     int64_t count;
     int64_t countExceptions;
-    std::chrono::microseconds min;
-    std::chrono::microseconds max;
+    std::chrono::microseconds minimumMicros;
+    std::chrono::microseconds maximumMicros;
     // These next two should be replace with more solid algorithms for accumulation mean and
     // variance
-    fpmicros mean;
-    fpmicros m2;  // for second moment
+    fpmicros meanMicros;
+    fpmicros secondMomentMicros;  // for second moment
     std::mutex mut;
 };
 }

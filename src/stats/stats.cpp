@@ -1,58 +1,59 @@
 #include "stats.hpp"
+
 #include <boost/log/trivial.hpp>
 #include <chrono>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/document/value.hpp>
 
 namespace mwg {
-stats::stats() {
+Stats::Stats() {
     reset();
 }
 
-void stats::reset() {
+void Stats::reset() {
     std::lock_guard<std::mutex> lk(mut);
     count = 0;
     countExceptions = 0;
-    min = std::chrono::microseconds::max();
-    max = std::chrono::microseconds::min();
-    mean = fpmicros(0);
-    m2 = fpmicros(0);
+    minimumMicros = std::chrono::microseconds::max();
+    maximumMicros = std::chrono::microseconds::min();
+    meanMicros = fpmicros(0);
+    secondMomentMicros = fpmicros(0);
 }
 
-void stats::accumulate(const stats& addStats) {
-    BOOST_LOG_TRIVIAL(fatal) << "stats::accumulate not implemented";
+void Stats::accumulate(const Stats& addStats) {
+    BOOST_LOG_TRIVIAL(fatal) << "Stats::accumulate not implemented";
     exit(0);
 }
 
-void stats::record(std::chrono::microseconds dur) {
+void Stats::recordMicros(std::chrono::microseconds duration) {
     std::lock_guard<std::mutex> lk(mut);
     count++;
-    if (dur < min)
-        min = dur;
-    if (dur > max)
-        max = dur;
+    if (duration < minimumMicros)
+        minimumMicros = duration;
+    if (duration > maximumMicros)
+        maximumMicros = duration;
 
     // This is an implementation of the following algorithm:
     // http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Online_algorithm
     // and largely copied from src/mongo/db/pipeline/accumulator_std_dev.cpp
-    const auto delta = dur - mean;
-    mean += delta / count;
+    const auto delta = duration - meanMicros;
+    meanMicros += delta / count;
     // note that delta was computed with mean before it was updated.
-    m2 += delta.count() * (dur - mean);
+    secondMomentMicros += delta.count() * (duration - meanMicros);
 }
 
-bsoncxx::document::value stats::getStats(bool withReset) {
+bsoncxx::document::value Stats::getStats(bool withReset) {
     bsoncxx::builder::stream::document document{};
     if (count > 0) {
         document << "count" << getCount();
         if (count > 1) {
-            document << "min" << getMin().count();
-            document << "max" << getMax().count();
+            document << "minimumMicros" << getMinimumMicros().count();
+            document << "maximumMicros" << getMaximumMicros().count();
             if (count > 2) {
-                document << "popStdDev" << getPopStdDev().count();
+                document << "populationStdDev" << getPopStdDev().count();
             }
         }
-        document << "mean" << getMean().count();
+        document << "meanMicros" << getMeanMicros().count();
     }
     if (countExceptions > 0) {
         document << "countExceptions" << getCountExceptions();

@@ -6,11 +6,11 @@ workload : &work
   name : embeddedWorkload
   database : testDB1
   collection : testCollection1
-  runLength : 5
+  runLengthMs : 5000
   threads : 5
   nodes :
     - type : sleep
-      sleep : 1
+      sleepMs : 1
       print : In sleep
 
 main :
@@ -32,7 +32,7 @@ main :
           type : usevar
           variable : dbname
         collection : testCollection2
-        runLength : 10
+        runLengthMs : 10000
         name : NewName
       workload : *work
     - *workOverrides

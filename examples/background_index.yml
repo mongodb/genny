@@ -15,7 +15,7 @@ create_bg : &create_bg_index
   nodes:
     - name: sleep
       type: sleep
-      sleep: 20000
+      sleepMs: 20000
       next: background_index
     - name: background_index
       print: Creating background index
@@ -32,7 +32,7 @@ create_bg : &create_bg_index
 crud: &crud
     name: crud_wl
     threads: 10
-    runLength: 60
+    runLengthMs: 60000
     nodes:
       - name: crud
         type: random_choice

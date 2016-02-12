@@ -1,7 +1,9 @@
-#include <bsoncxx/builder/stream/array.hpp>
 #include "workloadNode.hpp"
-#include <stdlib.h>
+
 #include <boost/log/trivial.hpp>
+#include <bsoncxx/builder/stream/array.hpp>
+#include <stdlib.h>
+
 #include "workload.hpp"
 
 namespace mwg {
@@ -33,8 +35,8 @@ workloadNode::workloadNode(YAML::Node& ynode) : node(ynode) {
             if (auto threadsNode = override["threads"]) {
                 numThreads = threadsNode;
             }
-            if (auto runLengthNode = override["runLength"]) {
-                runLength = runLengthNode;
+            if (auto runLengthMsNode = override["runLengthMs"]) {
+                runLengthMs = runLengthMsNode;
             }
         } else {
             BOOST_LOG_TRIVIAL(fatal) << "Workload node overrides aren't a map";
@@ -201,8 +203,8 @@ void workloadNode::execute(shared_ptr<threadState> myState) {
     if (numThreads) {
         myWorkloadState.numParallelThreads = overrideInt(numThreads, myState);
     }
-    if (runLength) {
-        myWorkloadState.runLength = overrideInt(runLength, myState);
+    if (runLengthMs) {
+        myWorkloadState.runLengthMs = overrideInt(runLengthMs, myState);
     }
     myWorkload->execute(myWorkloadState);
 }

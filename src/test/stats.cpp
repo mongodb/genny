@@ -1,8 +1,9 @@
 #include "catch.hpp"
-#include "stats.hpp"
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/document/value.hpp>
 #include <bsoncxx/json.hpp>
+
+#include "stats.hpp"
 
 using namespace mwg;
 
@@ -20,21 +21,21 @@ void viewable_eq_viewable(const T& stream, const bsoncxx::document::view& test) 
 }
 
 TEST_CASE("Stats collection", "[stats]") {
-    stats testStats;
-    testStats.record(std::chrono::microseconds(5000));
-    testStats.record(std::chrono::microseconds(3000));
-    testStats.record(std::chrono::microseconds(7000));
+    Stats testStats;
+    testStats.recordMicros(std::chrono::microseconds(5000));
+    testStats.recordMicros(std::chrono::microseconds(3000));
+    testStats.recordMicros(std::chrono::microseconds(7000));
 
 
     SECTION("Basic") {
-        INFO("Min is " << testStats.getMin().count());
-        INFO("Max is " << testStats.getMax().count());
+        INFO("Min is " << testStats.getMinimumMicros().count());
+        INFO("Max is " << testStats.getMaximumMicros().count());
         INFO("Count is " << testStats.getCount());
         REQUIRE(testStats.getCount() == 3);
-        REQUIRE(testStats.getMin().count() == 3000);
-        REQUIRE(testStats.getMax().count() == 7000);
-        REQUIRE(testStats.getMean().count() == 5000);
-        REQUIRE(testStats.getM2().count() == 8000000);
+        REQUIRE(testStats.getMinimumMicros().count() == 3000);
+        REQUIRE(testStats.getMaximumMicros().count() == 7000);
+        REQUIRE(testStats.getMeanMicros().count() == 5000);
+        REQUIRE(testStats.getSecondMomentMicros().count() == 8000000);
         REQUIRE(testStats.getSampleVariance().count() == 4000000);
         REQUIRE(testStats.getPopVariance().count() == 2666666);
     }
@@ -42,10 +43,10 @@ TEST_CASE("Stats collection", "[stats]") {
     SECTION("BSON") {
         bsoncxx::builder::stream::document refdoc{};
         refdoc << "count" << 3;
-        refdoc << "min" << 3000;
-        refdoc << "max" << 7000;
-        refdoc << "popStdDev" << 1632;
-        refdoc << "mean" << 5000;
+        refdoc << "minimumMicros" << 3000;
+        refdoc << "maximumMicros" << 7000;
+        refdoc << "populationStdDev" << 1632;
+        refdoc << "meanMicros" << 5000;
         viewable_eq_viewable(refdoc, testStats.getStats(false));
         viewable_eq_viewable(refdoc, testStats.getStats(true));
         bsoncxx::builder::stream::document refdoc2{};

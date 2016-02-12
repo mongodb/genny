@@ -44,14 +44,14 @@ executes.
    node continues on to its _next_ node. Parameters of the embedded
    workload can be changed using _overrides_. The _overrides_ is an optional map
    with optional fields (_threads_, _database_, _collection_,
-   _runLength_, _name_) that match their definition in the
+   _runLengthMs_, _name_) that match their definition in the
    workload. The value in the override will be used in place of the
    matching value in the workload definition. Overrides may be a value
    (string or number as appropriate), a variable, or may increment a
-   variable (for _threads_ and _runLength). For now, a workloadNode
+   variable (for _threads_ and _runLengthMs_). For now, a workloadNode
    should only be called once at a time.
 7. sleep: This node just introduces a delay into the execution of the
-   graph. _sleep_ specifies the sleep time in milliseconds.
+   graph. _sleepMs_ specifies the sleep time in milliseconds.
 8. ifNode: This node represents a logical choice. It performs a
    logical comparison on the result from the previous node. Currently
    only the count operation saves a result, and it saves its

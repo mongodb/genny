@@ -8,7 +8,7 @@
 main : 
   seed: 131415161718
   name: main
-  runLength : 100
+  runLengthMs : 100000
   nodes: 
     - name : doAll
       type : doAll
@@ -22,9 +22,9 @@ main :
     - name : thingA
       type : sleep
       next : thingA # Child thread continues until it gets to the join
-      sleep : 1000
+      sleepMs : 1000
     - name : thingB
       type : sleep
       next : doAll # Child thread continues until it gets to the join
-      sleep : 20
+      sleepMs : 20
  

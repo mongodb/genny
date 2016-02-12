@@ -23,14 +23,14 @@ main :
       print : Thing A running
       type : sleep
       next : join # Child thread continues until it gets to the join
-      sleep : 1000
+      sleepMs : 1000
     - name : thingB
       print : Thing B running
       type : sleep
       next : join # Child thread continues until it gets to the join
-      sleep : 1000
+      sleepMs : 1000
     - name : thingC # Background thread runs until killed by the join. This self loops until killed
       type : sleep
       next : thingC
       print : Thing C running
-      sleep : 100
+      sleepMs : 100

@@ -7,7 +7,7 @@ main :
   seed: 131415161718
   name: main
   threads : 10
-  runLength : 10
+  runLengthMs : 10000
   nodes: 
     - name : insert1
       print : Running insert1
@@ -23,7 +23,7 @@ main :
     - name : sleep
       type : sleep
       next : random
-      sleep : 1000
+      sleepMs : 1000
     - name : insert2
       print : Running insert2
       type : insert_one

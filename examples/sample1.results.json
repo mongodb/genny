@@ -1,40 +1,40 @@
 {
     "main" : {
         "count" : 1, 
-        "mean" : 10186524, 
+        "meanMicros" : 10041559, 
         "insert1" : {
             "count" : 1, 
-            "mean" : 1841
+            "meanMicros" : 1731
         }, 
         "sleep" : {
             "count" : 10, 
-            "min" : 1000830, 
-            "max" : 1004471, 
-            "popStdDev" : 1113, 
-            "mean" : 1002842
+            "minimumMicros" : 1002007, 
+            "maximumMicros" : 1005072, 
+            "populationStdDev" : 913, 
+            "meanMicros" : 1003490
         }, 
         "random" : {
 
         }, 
         "insert2" : {
-            "count" : 4, 
-            "min" : 406, 
-            "max" : 534, 
-            "popStdDev" : 47, 
-            "mean" : 456
+            "count" : 6, 
+            "minimumMicros" : 311, 
+            "maximumMicros" : 686, 
+            "populationStdDev" : 115, 
+            "meanMicros" : 461
         }, 
         "query" : {
-            "count" : 5, 
-            "min" : 28524, 
-            "max" : 33430, 
-            "popStdDev" : 1659, 
-            "mean" : 30565
+            "count" : 3, 
+            "minimumMicros" : 448, 
+            "maximumMicros" : 653, 
+            "populationStdDev" : 89, 
+            "meanMicros" : 529
         }, 
         "Finish" : {
 
         }, 
         "Date" : {
-            "$date" : 1454534806231
+            "$date" : 1456157436708
         }
     }
 }

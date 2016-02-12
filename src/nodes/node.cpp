@@ -1,16 +1,17 @@
 #include "node.hpp"
+
 #include <boost/log/trivial.hpp>
 
+#include "doAll.hpp"
+#include "finish_node.hpp"
+#include "forN.hpp"
+#include "ifNode.hpp"
+#include "join.hpp"
 #include "opNode.hpp"
 #include "random_choice.hpp"
 #include "sleep.hpp"
-#include "finish_node.hpp"
-#include "forN.hpp"
-#include "doAll.hpp"
-#include "join.hpp"
-#include "workloadNode.hpp"
-#include "ifNode.hpp"
 #include "spawn.hpp"
+#include "workloadNode.hpp"
 
 namespace mwg {
 
@@ -103,7 +104,7 @@ void node::executeNode(shared_ptr<threadState> myState) {
     start = chrono::high_resolution_clock::now();
     execute(myState);
     stop = chrono::high_resolution_clock::now();
-    myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
+    myStats.recordMicros(std::chrono::duration_cast<chrono::microseconds>(stop - start));
     if (!text.empty()) {
         BOOST_LOG_TRIVIAL(info) << text;
     }
@@ -119,9 +120,9 @@ void node::logStats() {
     if (myStats.getCount() > 0)
         BOOST_LOG_TRIVIAL(info) << "Node: " << name << ", Count=" << myStats.getCount()
                                 << ", CountExceptions=" << myStats.getCountExceptions()
-                                << ", Avg=" << myStats.getMean().count()
-                                << "us, Min=" << myStats.getMin().count()
-                                << "us, Max = " << myStats.getMax().count()
+                                << ", Avg=" << myStats.getMeanMicros().count()
+                                << "us, Min=" << myStats.getMinimumMicros().count()
+                                << "us, Max = " << myStats.getMaximumMicros().count()
                                 << "us, stddev=" << myStats.getPopStdDev().count();
 }
 

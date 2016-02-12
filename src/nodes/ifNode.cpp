@@ -232,7 +232,7 @@ void ifNode::executeNode(shared_ptr<threadState> myState) {
     else
         myState->currentNode = elseNode;
     stop = chrono::high_resolution_clock::now();
-    myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
+    myStats.recordMicros(std::chrono::duration_cast<chrono::microseconds>(stop - start));
     return;
 }
 std::pair<std::string, std::string> ifNode::generateDotGraph() {

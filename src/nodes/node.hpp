@@ -1,13 +1,14 @@
-#include <string>
+#include <atomic>
+#include <memory>
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
-#include <unordered_map>
 #include <random>
-#include "threadState.hpp"
-#include "yaml-cpp/yaml.h"
-#include <memory>
+#include <string>
+#include <unordered_map>
+#include <yaml-cpp/yaml.h>
+
 #include "stats.hpp"
-#include <atomic>
+#include "threadState.hpp"
 
 #pragma once
 using namespace std;
@@ -44,8 +45,8 @@ public:
     virtual void resetStats() {
         myStats.reset();
     };
-    virtual void record(std::chrono::microseconds time) {
-        myStats.record(time);
+    virtual void recordMicros(std::chrono::microseconds time) {
+        myStats.recordMicros(time);
     }
     virtual void recordException() {
         myStats.recordException();
@@ -59,7 +60,7 @@ protected:
     weak_ptr<node> nextNode;
     std::atomic<bool> stopped;
     string text;
-    stats myStats;
+    Stats myStats;
 };
 
 unique_ptr<node> makeUniqeNode(YAML::Node);

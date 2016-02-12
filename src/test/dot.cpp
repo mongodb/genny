@@ -1,10 +1,11 @@
 #include "catch.hpp"
-#include "document.hpp"
-#include "workload.hpp"
-#include "sleep.hpp"
+
 #include "doAll.hpp"
+#include "document.hpp"
 #include "finish_node.hpp"
 #include "random_choice.hpp"
+#include "sleep.hpp"
+#include "workload.hpp"
 #include "workloadNode.hpp"
 
 using namespace mwg;
@@ -15,7 +16,7 @@ TEST_CASE("Generate Dot Files", "[dot]") {
     type : sleep
     name : sleep
     next : nextNode
-    sleep : 1000)yaml");
+    sleepMs : 1000)yaml");
 
         auto node = sleepNode(yaml);
         string expected = "sleep -> nextNode;\n";
@@ -95,7 +96,7 @@ TEST_CASE("Generate Dot Files", "[dot]") {
         nodes : 
           - name : sleep
             type : sleep
-            sleep : 1
+            sleepMs : 1
             next : Finish
             print : In sleep)yaml");
 
@@ -116,7 +117,7 @@ TEST_CASE("Generate Dot Files", "[dot]") {
         nodes :
           - name : sleep
             type : sleep
-            sleep : 1
+            sleepMs : 1
             next : Finish
             print : In sleep)yaml");
         auto node = workloadNode(yaml);

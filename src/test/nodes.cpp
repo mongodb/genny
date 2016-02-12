@@ -1,4 +1,5 @@
 #include "catch.hpp"
+
 #include <bson.h>
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -9,18 +10,18 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 #include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
+#include <boost/log/trivial.hpp>
 
 
-#include "node.hpp"
 #include "doAll.hpp"
-#include "sleep.hpp"
-#include "join.hpp"
 #include "finish_node.hpp"
+#include "join.hpp"
+#include "node.hpp"
+#include "sleep.hpp"
+#include "spawn.hpp"
 #include "workload.hpp"
 #include "workloadNode.hpp"
-#include "spawn.hpp"
 
 using namespace mwg;
 using bsoncxx::builder::stream::open_document;
@@ -151,6 +152,7 @@ TEST_CASE("Nodes", "[nodes]") {
         state->currentNode = spawnNode;
         while (state->currentNode != nullptr)
             state->currentNode->executeNode(state);
+        state->workloadState.waitThreadsDone();
         REQUIRE(spawnNode->getCount() == 1);
         REQUIRE(thing1Node->getCount() == 1);
         REQUIRE(thing2Node->getCount() == 1);
@@ -164,17 +166,17 @@ TEST_CASE("Nodes", "[nodes]") {
         threads : 4
         database : testDB2
         collection : testCollection2
-        runLength : 10
+        runLengthMs : 10
         name : NewName
       workload :
         name : embeddedWorkload
         database : testDB1
         collection : testCollection1
-        runLength : 5
+        runLengthMs : 5
         threads : 5
         nodes :
           - type : sleep
-            sleep : 1
+            sleepMs : 1
             print : In sleep
         )yaml");
         auto workNode = make_shared<TestWorkloadNode>(workloadNodeYAML);
@@ -194,13 +196,13 @@ TEST_CASE("Nodes", "[nodes]") {
         // test that workload has embedded values.
         // REQUIRE(workNode->getWorkload().getState().DBName == "testDB1");
         // REQUIRE(workNode->getWorkload().getState().CollectionName == "testCollection1");
-        // REQUIRE(workNode->getWorkload().runLength == 5);
+        // REQUIRE(workNode->getWorkload().runLengthMs == 5);
         // REQUIRE(workNode->getWorkload().name == "embeddedWorkload");
         // REQUIRE(workNode->getWorkload().numParallelThreads == 5);
         workNode->executeNode(state);
         // REQUIRE(workNode->getWorkload().getState().DBName == "testDB2");
         // REQUIRE(workNode->getWorkload().getState().CollectionName == "testCollection2");
-        // REQUIRE(workNode->getWorkload().runLength == 10);
+        // REQUIRE(workNode->getWorkload().runLengthMs == 10);
         // REQUIRE(workNode->getWorkload().name == "NewName");
         // REQUIRE(workNode->getWorkload().numParallelThreads == 4);
     }
@@ -216,7 +218,7 @@ TEST_CASE("Nodes", "[nodes]") {
         collection : 
           type : usevar
           variable : collectionname
-        runLength : 
+        runLengthMs : 
           type : usevar
           variable : runlength
         name : NewName
@@ -227,11 +229,11 @@ TEST_CASE("Nodes", "[nodes]") {
         name : embeddedWorkload
         database : testDB1
         collection : testCollection1
-        runLength : 5
+        runLengthMs : 5
         threads : 5
         nodes :
           - type : sleep
-            sleep : 1
+            sleepMs : 1
             print : In sleep
         )yaml");
         auto workNode = make_shared<TestWorkloadNode>(workloadNodeYAML);
@@ -255,19 +257,19 @@ TEST_CASE("Nodes", "[nodes]") {
         // test that workload has embedded values.
         // REQUIRE(workNode->getWorkload().getState().DBName == "testDB1");
         // REQUIRE(workNode->getWorkload().getState().CollectionName == "testCollection1");
-        // REQUIRE(workNode->getWorkload().runLength == 5);
+        // REQUIRE(workNode->getWorkload().runLengthMs == 5);
         // REQUIRE(workNode->getWorkload().name == "embeddedWorkload");
         // REQUIRE(workNode->getWorkload().numParallelThreads == 5);
         workNode->executeNode(state);
         // REQUIRE(workNode->getWorkload().getState().DBName == "vardbname");
         // REQUIRE(workNode->getWorkload().getState().CollectionName == "varcollectionname");
-        // REQUIRE(workNode->getWorkload().runLength == 6);
+        // REQUIRE(workNode->getWorkload().runLengthMs == 6);
         // REQUIRE(workNode->getWorkload().name == "NewName");
         // REQUIRE(workNode->getWorkload().numParallelThreads == 7);
         // workNode->executeNode(state);
         // REQUIRE(workNode->getWorkload().getState().DBName == "vardbname");
         // REQUIRE(workNode->getWorkload().getState().CollectionName == "varcollectionname");
-        // REQUIRE(workNode->getWorkload().runLength == 6);
+        // REQUIRE(workNode->getWorkload().runLengthMs == 6);
         // REQUIRE(workNode->getWorkload().name == "NewName");
         // REQUIRE(workNode->getWorkload().numParallelThreads == 8);
     }

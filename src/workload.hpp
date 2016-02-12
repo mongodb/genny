@@ -1,19 +1,18 @@
 #pragma once
 
-#include <string>
-#include <memory>
-#include <vector>
 #include <atomic>
-#include <unordered_set>
-#include <unordered_map>
-#include <mutex>
 #include <condition_variable>
-
-#include "yaml-cpp/yaml.h"
+#include <memory>
 #include <mongocxx/client.hpp>
+#include <mutex>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <yaml-cpp/yaml.h>
 
-#include "threadState.hpp"
 #include "stats.hpp"
+#include "threadState.hpp"
 
 using namespace std;
 
@@ -27,7 +26,7 @@ public:
     WorkloadExecutionState(workload& work) : myWorkload(work){};
     WorkloadExecutionState(const WorkloadExecutionState& other)
         : numParallelThreads(other.numParallelThreads),
-          runLength(other.runLength),
+          runLengthMs(other.runLengthMs),
           uri(other.uri),
           wvariables(other.wvariables),
           myWorkload(other.myWorkload),
@@ -35,7 +34,7 @@ public:
           CollectionName(other.CollectionName){};
     mutex mut;
     uint64_t numParallelThreads = 1;
-    uint64_t runLength{0};
+    uint64_t runLengthMs{0};
     string uri = mongocxx::uri::k_default_uri;
     unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
     workload& myWorkload;
@@ -92,6 +91,6 @@ protected:
     WorkloadExecutionState baseWorkloadState;
     unordered_map<string, bsoncxx::array::value> tvariables;
     atomic<bool> stopped;
-    stats myStats;
+    Stats myStats;
 };
 }

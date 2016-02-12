@@ -14,7 +14,7 @@
 delay: &delay 100
 
 spawn: &spawn 
-  runLength: 1
+  runLengthMs: 1000
   nodes: 
     - name: spawn1
       type: spawn
@@ -32,34 +32,34 @@ spawn: &spawn
       next: keepspawning # keepspawning loops back to this spawn
     - name: keepspawning
       type: sleep
-      sleep: *delay
+      sleepMs: *delay
       print: Going to spawn again
       next: spawn3
     - name: sleep1
       type: sleep
       print: sleep1
-      sleep: *delay
+      sleepMs: *delay
     - type: insert_one
       document: {x : 1}
       next: Finish
     - name: sleep2
       type: sleep
       print: sleep2
-      sleep: *delay
+      sleepMs: *delay
     - type: insert_one
       document: {x : 2}
       next: Finish
     - name: sleep3
       type: sleep
       print: sleep3
-      sleep: *delay
+      sleepMs: *delay
     - type: insert_one
       document: {x : 3}
       next: sleep3
     - name: sleep4
       type: sleep
       print: sleep4
-      sleep: *delay
+      sleepMs: *delay
     - type: insert_one
       document: {x : 4}
       next: sleep4 # Two node loop

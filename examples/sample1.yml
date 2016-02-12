@@ -6,7 +6,7 @@
 main : 
   seed: 131415161718
   name: main
-  runLength : 10
+  runLengthMs : 10000
   nodes: 
     - name : insert1
       print : Running insert1
@@ -16,7 +16,7 @@ main :
     - name : sleep
       type : sleep
       next : random
-      sleep : 1000
+      sleepMs : 1000
     - name : random
       print : In Random Choice
       type : random_choice

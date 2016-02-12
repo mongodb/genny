@@ -5,10 +5,10 @@ workload : &work
   name : embeddedWorkload
   nodes :
     - type : sleep
-      sleep : 500
+      sleepMs : 500
       print : sleep 1
     - type : sleep
-      sleep : 500
+      sleepMs : 500
       print : sleep 2
 
 main :

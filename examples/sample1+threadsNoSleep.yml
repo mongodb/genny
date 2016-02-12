@@ -7,7 +7,7 @@ main :
   seed: 131415161718
   name: main
   threads : 10
-  runLength : 10
+  runLengthMs : 10000
   nodes: 
     - name : insert1
       type : insert_one

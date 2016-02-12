@@ -7,7 +7,7 @@ main :
       type : workloadNode
       workload : 
         name : simpleNoop
-        runLength : 1
+        runLengthMs : 1000
         threads : 1
         nodes : 
           - name : snoop
@@ -18,7 +18,7 @@ main :
       type : workloadNode
       workload : 
         name : intNoop
-        runLength : 1
+        runLengthMs : 1000
         threads : 1
         nodes : 
           - name : inoop
@@ -34,7 +34,7 @@ main :
       type : workloadNode
       workload : 
         name : docNoop
-        runLength : 1
+        runLengthMs : 1000
         threads : 1
         nodes : 
           - name : dnoop
@@ -51,7 +51,7 @@ main :
       type : workloadNode
       workload : 
         name : ping
-        runLength : 1
+        runLengthMs : 1000
         threads : 1
         nodes : 
           - name : ping

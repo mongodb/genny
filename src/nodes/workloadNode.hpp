@@ -1,7 +1,7 @@
 #pragma once
 
-#include <memory>
 #include <bsoncxx/stdx/optional.hpp>
+#include <memory>
 
 #include "node.hpp"
 
@@ -27,6 +27,6 @@ protected:
     optional<YAML::Node> collectionName;
     optional<YAML::Node> workloadName;
     optional<YAML::Node> numThreads;
-    optional<YAML::Node> runLength;
+    optional<YAML::Node> runLengthMs;
 };
 }

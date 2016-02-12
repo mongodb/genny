@@ -1,16 +1,16 @@
-#include <stdlib.h>
-#include <iostream>
-#include <thread>
 #include <boost/log/trivial.hpp>
-#include <time.h>
 #include <chrono>
-#include "finish_node.hpp"
-#include "parse_util.hpp"
-
+#include <iostream>
 #include <mongocxx/instance.hpp>
+#include <stdlib.h>
+#include <time.h>
+#include <thread>
 
-#include "workload.hpp"
+
+#include "finish_node.hpp"
 #include "node.hpp"
+#include "parse_util.hpp"
+#include "workload.hpp"
 
 namespace mwg {
 
@@ -128,8 +128,8 @@ workload::workload(YAML::Node& inputNodes) : baseWorkloadState(*this), stopped(f
             baseWorkloadState.numParallelThreads = 1;
             BOOST_LOG_TRIVIAL(debug) << "Using default value for number of threads";
         }
-        if (inputNodes["runLength"]) {
-            baseWorkloadState.runLength = inputNodes["runLength"].as<uint64_t>();
+        if (inputNodes["runLengthMs"]) {
+            baseWorkloadState.runLengthMs = inputNodes["runLengthMs"].as<uint64_t>();
             BOOST_LOG_TRIVIAL(debug) << "Explicitly setting runLength in workload";
         } else
             BOOST_LOG_TRIVIAL(debug) << "Using default value for runLength";
@@ -184,10 +184,10 @@ public:
 };
 
 // Function to start a timer.
-void runTimer(shared_ptr<timerState> state, uint64_t runLength) {
-    if (runLength == 0)
+void runTimer(shared_ptr<timerState> state, uint64_t runLengthMs) {
+    if (runLengthMs == 0)
         return;
-    std::this_thread::sleep_for(std::chrono::seconds(runLength));
+    std::this_thread::sleep_for(std::chrono::milliseconds(runLengthMs));
     {
         // grab lock before checking state
         std::lock_guard<std::mutex> lk(state->mut);
@@ -221,9 +221,9 @@ void workload::execute(WorkloadExecutionState& work) {
     BOOST_LOG_TRIVIAL(trace) << "In workload::execute";
 
     // setup timeout
-    BOOST_LOG_TRIVIAL(trace) << "RunLength is " << work.runLength << ". About to setup timer";
+    BOOST_LOG_TRIVIAL(trace) << "RunLength is " << work.runLengthMs << ". About to setup timer";
     auto ts = shared_ptr<timerState>(new timerState(*this));
-    std::thread timer(runTimer, ts, work.runLength);
+    std::thread timer(runTimer, ts, work.runLengthMs);
 
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
@@ -249,7 +249,7 @@ void workload::execute(WorkloadExecutionState& work) {
     work.waitThreadsDone();
     stop = chrono::high_resolution_clock::now();
     // need to put a lock around this
-    myStats.record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
+    myStats.recordMicros(std::chrono::duration_cast<chrono::microseconds>(stop - start));
     BOOST_LOG_TRIVIAL(trace) << "All threads finished. About to stop timer";
 
     // clean up the timer stuff
@@ -272,9 +272,9 @@ void workload::stop() {
 void workload::logStats() {
     if (myStats.getCount() > 0)
         BOOST_LOG_TRIVIAL(info) << "Workload: " << name << ", Count=" << myStats.getCount()
-                                << ", Avg=" << myStats.getMean().count()
-                                << "us, Min=" << myStats.getMin().count()
-                                << "us, Max = " << myStats.getMax().count() << "us";
+                                << ", Avg=" << myStats.getMeanMicros().count()
+                                << "us, Min=" << myStats.getMinimumMicros().count()
+                                << "us, Max = " << myStats.getMaximumMicros().count() << "us";
     for (auto mnode : vectornodes)
         mnode->logStats();
 }

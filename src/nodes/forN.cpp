@@ -27,7 +27,7 @@ void forN::execute(shared_ptr<threadState> myState) {
         start = chrono::high_resolution_clock::now();
         myNode->execute(myState);
         stop = chrono::high_resolution_clock::now();
-        myNode->record(std::chrono::duration_cast<chrono::microseconds>(stop - start));
+        myNode->recordMicros(std::chrono::duration_cast<chrono::microseconds>(stop - start));
     }
 }
 std::pair<std::string, std::string> forN::generateDotGraph() {

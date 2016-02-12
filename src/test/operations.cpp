@@ -149,8 +149,9 @@ TEST_CASE("Set Variables", "[variables]") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable
     target : workloadVar
-    donorVariable : threadVar)yaml");
-
+    operation:
+        type: usevar
+        variable: threadVar)yaml");
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
         REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 2);
@@ -160,7 +161,9 @@ TEST_CASE("Set Variables", "[variables]") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable
     target : threadVar
-    donorVariable : workloadVar)yaml");
+    operation:
+        type: usevar
+        variable: workloadVar)yaml");
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
@@ -183,7 +186,7 @@ TEST_CASE("Set Variables", "[variables]") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable
     target : workloadVar
-    operation : 
+    operation :
       type : usevar
       variable : threadVar
 )yaml");
@@ -197,7 +200,7 @@ TEST_CASE("Set Variables", "[variables]") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable
     target : workloadVar
-    operation : 
+    operation :
       type : increment
       variable : threadVar
 )yaml");
@@ -211,7 +214,7 @@ TEST_CASE("Set Variables", "[variables]") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable
     target : workloadVar
-    operation : 
+    operation :
       type : date
 )yaml");
 
@@ -224,7 +227,7 @@ TEST_CASE("Set Variables", "[variables]") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable
     target : workloadVar
-    operation : 
+    operation :
       type : randomint
       min : 50
       max : 60
@@ -241,7 +244,7 @@ TEST_CASE("Set Variables", "[variables]") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable
     target : workloadVar
-    operation : 
+    operation :
       type : randomstring
       length : 11
 )yaml");
@@ -257,7 +260,7 @@ TEST_CASE("Set Variables", "[variables]") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable
     target : workloadVar
-    operation : 
+    operation :
       type : multiply
       variable : threadVar
       factor : 10

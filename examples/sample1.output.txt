@@ -1,16 +1,16 @@
-[2016-02-03 16:26:36.043000] [0x00007fff79f17000] [info]    ../examples/sample1.yml
-[2016-02-03 16:26:36.046486] [0x0000700000187000] [info]    Running insert1
-[2016-02-03 16:26:37.080825] [0x0000700000187000] [info]    Running query
-[2016-02-03 16:26:38.116268] [0x0000700000187000] [info]    Running query
-[2016-02-03 16:26:39.119617] [0x0000700000187000] [info]    Running insert2
-[2016-02-03 16:26:40.154137] [0x0000700000187000] [info]    Running query
-[2016-02-03 16:26:41.158126] [0x0000700000187000] [info]    Running insert2
-[2016-02-03 16:26:42.189845] [0x0000700000187000] [info]    Running query
-[2016-02-03 16:26:43.219714] [0x0000700000187000] [info]    Running query
-[2016-02-03 16:26:44.222750] [0x0000700000187000] [info]    Running insert2
-[2016-02-03 16:26:45.227128] [0x0000700000187000] [info]    Running insert2
-[2016-02-03 16:26:46.231483] [0x00007fff79f17000] [info]    Workload: main, Count=1, Avg=10186524us, Min=10186524us, Max = 10186524us
-[2016-02-03 16:26:46.231502] [0x00007fff79f17000] [info]    Node: insert1, Count=1, Avg=1841us, Min=1841us, Max = 1841us, stddev=0
-[2016-02-03 16:26:46.231512] [0x00007fff79f17000] [info]    Node: sleep, Count=10, Avg=1002842us, Min=1000830us, Max = 1004471us, stddev=1113
-[2016-02-03 16:26:46.231520] [0x00007fff79f17000] [info]    Node: insert2, Count=4, Avg=456us, Min=406us, Max = 534us, stddev=47
-[2016-02-03 16:26:46.231527] [0x00007fff79f17000] [info]    Node: query, Count=5, Avg=30565us, Min=28524us, Max = 33430us, stddev=1659
+[2016-02-22 11:10:26.664902] [0x00007fff79f17000] [info]    ../examples/sample1.yml
+[2016-02-22 11:10:26.668049] [0x0000700000187000] [info]    Running insert1
+[2016-02-22 11:10:27.673815] [0x0000700000187000] [info]    Running query
+[2016-02-22 11:10:28.676958] [0x0000700000187000] [info]    Running insert2
+[2016-02-22 11:10:29.680291] [0x0000700000187000] [info]    Running insert2
+[2016-02-22 11:10:30.683950] [0x0000700000187000] [info]    Running query
+[2016-02-22 11:10:31.687101] [0x0000700000187000] [info]    Running insert2
+[2016-02-22 11:10:32.689637] [0x0000700000187000] [info]    Running query
+[2016-02-22 11:10:33.694751] [0x0000700000187000] [info]    Running insert2
+[2016-02-22 11:10:34.699579] [0x0000700000187000] [info]    Running insert2
+[2016-02-22 11:10:35.704076] [0x0000700000187000] [info]    Running insert2
+[2016-02-22 11:10:36.708143] [0x00007fff79f17000] [info]    Workload: main, Count=1, Avg=10041559us, Min=10041559us, Max = 10041559us
+[2016-02-22 11:10:36.708171] [0x00007fff79f17000] [info]    Node: insert1, Count=1, CountExceptions=0, Avg=1731us, Min=1731us, Max = 1731us, stddev=0
+[2016-02-22 11:10:36.708188] [0x00007fff79f17000] [info]    Node: sleep, Count=10, CountExceptions=0, Avg=1003490us, Min=1002007us, Max = 1005072us, stddev=913
+[2016-02-22 11:10:36.708204] [0x00007fff79f17000] [info]    Node: insert2, Count=6, CountExceptions=0, Avg=461us, Min=311us, Max = 686us, stddev=115
+[2016-02-22 11:10:36.708221] [0x00007fff79f17000] [info]    Node: query, Count=3, CountExceptions=0, Avg=529us, Min=448us, Max = 653us, stddev=89
