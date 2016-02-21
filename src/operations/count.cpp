@@ -47,6 +47,7 @@ void count::execute(mongocxx::client& conn, threadState& state) {
         state.result = bsoncxx::builder::stream::array() << returnCount
                                                          << bsoncxx::builder::stream::finalize;
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in count: " << e.what();
         auto error = e.raw_server_error();
         if (error)

@@ -1,5 +1,6 @@
 #include "create_index.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -44,6 +45,7 @@ void create_index::execute(mongocxx::client& conn, threadState& state) {
     try {
         auto result = collection.create_index(view, indexOptions);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in create_index: " << e.what();
         auto error = e.raw_server_error();
         if (error)

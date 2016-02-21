@@ -1,5 +1,6 @@
 #include "replace_one.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -41,6 +42,7 @@ void replace_one::execute(mongocxx::client& conn, threadState& state) {
     try {
         auto result = collection.replace_one(view, replacementview, options);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in replace_one: " << e.what();
         auto error = e.raw_server_error();
         if (error)

@@ -5,6 +5,7 @@
 #include <boost/log/trivial.hpp>
 #include <mongocxx/exception/operation_exception.hpp>
 #include <tuple>
+#include "node.hpp"
 
 namespace mwg {
 
@@ -75,6 +76,7 @@ void insert_many::execute(mongocxx::client& conn, threadState& state) {
     try {
         auto result = coll.insert_many(views, options);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in insert_many: " << e.what();
         auto error = e.raw_server_error();
         if (error)

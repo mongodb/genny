@@ -1,5 +1,6 @@
 #include "drop.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -32,6 +33,7 @@ void drop::execute(mongocxx::client& conn, threadState& state) {
     try {
         collection.drop();
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in drop collection: " << e.what();
         auto error = e.raw_server_error();
         if (error)

@@ -12,7 +12,12 @@ class stats {
 public:
     stats();
     stats(const stats& other)
-        : count(other.count), min(other.min), max(other.max), mean(other.mean), m2(other.m2){};
+        : count(other.count),
+          countExceptions(other.countExceptions),
+          min(other.min),
+          max(other.max),
+          mean(other.mean),
+          m2(other.m2){};
     stats(stats&&) = default;
     virtual ~stats() = default;
     void reset();
@@ -20,6 +25,9 @@ public:
     void accumulate(const stats&);  // add up stats
     // this can be moved into an RAII accumulator
     void record(std::chrono::microseconds);  // record one event of given duration
+    void recordException() {
+        countExceptions++;
+    }
     std::chrono::microseconds getMin() {
         return min;
     }
@@ -68,10 +76,15 @@ public:
         return count;
     }
 
+    int64_t getCountExceptions() {
+        return countExceptions;
+    }
+
     bsoncxx::document::value getStats(bool withReset);
 
 private:
     int64_t count;
+    int64_t countExceptions;
     std::chrono::microseconds min;
     std::chrono::microseconds max;
     // These next two should be replace with more solid algorithms for accumulation mean and

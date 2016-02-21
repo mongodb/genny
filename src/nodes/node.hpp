@@ -47,6 +47,9 @@ public:
     virtual void record(std::chrono::microseconds time) {
         myStats.record(time);
     }
+    virtual void recordException() {
+        myStats.recordException();
+    }
     // convenience for testing
     int getCount() {
         return (myStats.getCount());

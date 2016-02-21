@@ -1,6 +1,8 @@
 #include "create_collection.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include "../documents/bsonDocument.hpp"
+#include "../nodes/node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -43,6 +45,7 @@ void create_collection::execute(mongocxx::client& conn, threadState& state) {
         //        db.create_collection(collection_name, view);
         db.create_collection(collection_name, collectionOptions);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in create_collection: " << e.what();
         auto error = e.raw_server_error();
         if (error)

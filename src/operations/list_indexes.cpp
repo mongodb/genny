@@ -1,5 +1,6 @@
 #include "list_indexes.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -36,6 +37,7 @@ void list_indexes::execute(mongocxx::client& conn, threadState& state) {
             doc.length();
         }
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in list_indexes: " << e.what();
         auto error = e.raw_server_error();
         if (error)

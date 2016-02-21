@@ -1,6 +1,7 @@
 #include "insert_one.hpp"
 #include <stdlib.h>
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <boost/log/trivial.hpp>
 #include <mongocxx/exception/operation_exception.hpp>
@@ -43,6 +44,7 @@ void insert_one::execute(mongocxx::client& conn, threadState& state) {
     try {
         auto result = collection.insert_one(view, options);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in insert_one: " << e.what();
         auto error = e.raw_server_error();
         if (error)

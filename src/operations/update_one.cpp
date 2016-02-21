@@ -1,5 +1,6 @@
 #include "update_one.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -41,6 +42,7 @@ void update_one::execute(mongocxx::client& conn, threadState& state) {
     try {
         auto result = collection.update_one(view, updateview, options);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in update_one: " << e.what();
         auto error = e.raw_server_error();
         if (error)

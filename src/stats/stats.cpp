@@ -12,6 +12,7 @@ stats::stats() {
 void stats::reset() {
     std::lock_guard<std::mutex> lk(mut);
     count = 0;
+    countExceptions = 0;
     min = std::chrono::microseconds::max();
     max = std::chrono::microseconds::min();
     mean = fpmicros(0);
@@ -52,6 +53,9 @@ bsoncxx::document::value stats::getStats(bool withReset) {
             }
         }
         document << "mean" << getMean().count();
+    }
+    if (countExceptions > 0) {
+        document << "countExceptions" << getCountExceptions();
     }
     if (withReset)
         reset();

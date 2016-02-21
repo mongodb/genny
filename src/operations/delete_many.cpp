@@ -1,5 +1,6 @@
 #include "delete_many.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -38,6 +39,7 @@ void delete_many::execute(mongocxx::client& conn, threadState& state) {
     try {
         auto result = collection.delete_many(view, options);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in delete_many: " << e.what();
         auto error = e.raw_server_error();
         if (error)

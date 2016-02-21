@@ -1,5 +1,6 @@
 #include "distinct.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -55,6 +56,7 @@ void distinct::execute(mongocxx::client& conn, threadState& state) {
         }
         BOOST_LOG_TRIVIAL(debug) << "After iterating results";
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in insert_many: " << e.what();
         auto error = e.raw_server_error();
         if (error)

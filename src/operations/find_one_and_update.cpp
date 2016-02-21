@@ -1,5 +1,6 @@
 #include "find_one_and_update.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -41,6 +42,7 @@ void find_one_and_update::execute(mongocxx::client& conn, threadState& state) {
     try {
         auto value = collection.find_one_and_update(view, updateview, options);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in find_one_and_update: " << e.what();
         auto error = e.raw_server_error();
         if (error)

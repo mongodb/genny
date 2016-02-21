@@ -1,7 +1,8 @@
 
 #include "command.hpp"
 #include "parse_util.hpp"
-#include "../documents/bsonDocument.hpp"
+#include "bsonDocument.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -38,6 +39,7 @@ void command::execute(mongocxx::client& conn, threadState& state) {
     try {
         db.run_command(view);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in command: " << e.what();
         auto error = e.raw_server_error();
         if (error)

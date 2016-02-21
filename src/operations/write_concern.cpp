@@ -1,4 +1,5 @@
 #include "write_concern.hpp"
+#include "node.hpp"
 #include "parse_util.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
@@ -34,6 +35,7 @@ void write_concern::execute(mongocxx::client& conn, threadState& state) {
     try {
         collection.write_concern(write_conc);
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in write_concern: " << e.what();
         auto error = e.raw_server_error();
         if (error)

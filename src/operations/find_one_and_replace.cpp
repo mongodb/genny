@@ -1,5 +1,6 @@
 #include "find_one_and_replace.hpp"
 #include "parse_util.hpp"
+#include "node.hpp"
 #include <bsoncxx/json.hpp>
 #include <stdlib.h>
 #include <boost/log/trivial.hpp>
@@ -42,6 +43,7 @@ void find_one_and_replace::execute(mongocxx::client& conn, threadState& state) {
         auto value = collection.find_one_and_replace(view, replaceview, options);
         // need a way to exhaust the cursor
     } catch (mongocxx::operation_exception e) {
+        state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in find_one_and_replace: " << e.what();
         auto error = e.raw_server_error();
         if (error)
