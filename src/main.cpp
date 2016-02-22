@@ -24,31 +24,42 @@ using namespace std;
 using namespace mwg;
 namespace logging = boost::log;
 
-static struct option poptions[] = {{"help", no_argument, 0, 'h'},
-                                   {"loglevel", required_argument, 0, 'l'},
+static struct option poptions[] = {{"collection", required_argument, 0, 0},
+                                   {"database", required_argument, 0, 0},
                                    {"dotfile", required_argument, 0, 'd'},
-                                   {"resultsfile", required_argument, 0, 'r'},
+                                   {"help", no_argument, 0, 'h'},
                                    {"host", required_argument, 0, 0},
+                                   {"loglevel", required_argument, 0, 'l'},
+                                   {"numThreads", required_argument, 0, 0},
+                                   {"resultsfile", required_argument, 0, 'r'},
                                    {"resultsperiod", required_argument, 0, 'p'},
+                                   {"runLengthMS", required_argument, 0, 0},
                                    {"version", no_argument, 0, 'v'},
                                    {0, 0, 0, 0}};
 
 void print_help(const char* process_name) {
-    fprintf(stderr,
-            "Usage: %s [-hldrpv] /path/to/workload [workload to run]\n"
-            "Execution Options:\n"
-            "\t--help|-h              Display this help and exit\n"
-            "\t--host Host            Host/Connection string for mongo server to test--must be a\n"
-            "\t                       full URI,\n"
-            "\t--loglevel|-l LEVEL    Set the logging level. Valid options are trace,\n"
-            "\t                       debug, info, warning, error, and fatal.\n"
-            "\t--dotfile|-d FILE      Generate dotfile to FILE from workload and exit.\n"
-            "\t                       WARNING: names with spaces or other special characters\n"
-            "\t                       will break the dot file\n\n"
-            "\t--resultfile|-r FILE   FILE to store results to. defaults to results.json\n"
-            "\t--resultsperiod|-p SEC Record results every SEC seconds\n"
-            "\t--version|-v           Return version information\n",
-            process_name);
+    fprintf(
+        stderr,
+        "Usage: %s [-hldrpv] /path/to/workload [workload to run]\n"
+        "Execution Options:\n"
+        "\t--collection COLL      Use Collection name COLL by default\n"
+        "\t--database DB          Use Database name DB by default\n"
+        "\t--dotfile|-d FILE      Generate dotfile to FILE from workload and exit.\n"
+        "\t                       WARNING: names with spaces or other special characters\n"
+        "\t                       will break the dot file\n\n"
+        "\t--help|-h              Display this help and exit\n"
+        "\t--host Host            Host/Connection string for mongo server to test--must be a\n"
+        "\t                       full URI,\n"
+        "\t--loglevel|-l LEVEL    Set the logging level. Valid options are trace,\n"
+        "\t                       debug, info, warning, error, and fatal.\n"
+        "\t--numThreads NUM       Run the workload with NUM threads instead of number\n"
+        "\t                       specified in yaml file\n"
+        "\t--resultfile|-r FILE   FILE to store results to. defaults to results.json\n"
+        "\t--resultsperiod|-p SEC Record results every SEC seconds\n"
+        "\t--runLengthMS NUM        Run the workload for up to NUM milliseconds instead of length\n"
+        "\t                       specified in yaml file\n"
+        "\t--version|-v           Return version information\n",
+        process_name);
 }
 
 class statsState {
@@ -93,10 +104,14 @@ void runPeriodicStats(shared_ptr<statsState> state, std::chrono::seconds period,
 int main(int argc, char* argv[]) {
     string fileName = "sample.yml";
     string workloadName = "main";
+    string databaseName = "";
+    string collectionName = "";
     string dotFile;
     string resultsFile = "results.json";
     std::chrono::seconds resultPeriod(0);
     string uri = mongocxx::uri::k_default_uri;
+    int64_t numThreads = -1;  // default not used
+    int64_t runLengthMS = -1;
     int arg_count = 0;
     int idx = 0;
 
@@ -115,8 +130,20 @@ int main(int argc, char* argv[]) {
         switch (arg) {
             case 0:
                 switch (idx) {
+                    case 0:
+                        collectionName = optarg;
+                        break;
+                    case 1:
+                        databaseName = optarg;
+                        break;
                     case 4:
                         uri = optarg;
+                        break;
+                    case 6:
+                        numThreads = atoi(optarg);
+                        break;
+                    case 9:
+                        runLengthMS = atoi(optarg);
                         break;
                     default:
                         fprintf(stderr, "unknown command line option with optarg index %d\n", idx);
@@ -198,6 +225,14 @@ int main(int argc, char* argv[]) {
         BOOST_LOG_TRIVIAL(trace) << "After workload constructor. Before execute";
         // set the uri
         WorkloadExecutionState myWorkloadState = myWorkload.newWorkloadState();
+        if (numThreads > 0)
+            myWorkloadState.numParallelThreads = numThreads;
+        if (runLengthMS > 0)
+            myWorkloadState.runLengthMs = runLengthMS;
+        if (collectionName != "")
+            myWorkloadState.CollectionName = collectionName;
+        if (databaseName != "")
+            myWorkloadState.DBName = databaseName;
         myWorkloadState.uri = uri;
         auto ss = shared_ptr<statsState>(new statsState(myWorkload));
         std::thread stats(runPeriodicStats, ss, resultPeriod, resultsFile);
