@@ -3,39 +3,36 @@
 long_string:
  &s "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 
-main : 
+bulkinsert: &bulkinsert
+  name: bulk_insert
+  threads: 24
+  nodes:
+    - type: ForN
+      N: 100
+      node: insert
+      next: Finish
+    - name: insert
+      type: insert_many
+      times: 1024
+      doc: { x: *s }
+      next: Finish
+
+main:
   seed: 131415161718
   name: main
-  nodes: 
-    -
-      name : drop
-      type : drop
-      next : create_capped
-    - 
-      name : create_capped
-      type : command
-      command : 
-        create : testCollection
-        capped : true
-        size : 20000000000
-      next : fill_capped
-    - name : fill_capped
-      type : workloadNode
-      next : fill_rolled
-      workload : &bulkinsert
-        name : bulk_insert
-        threads : 24
-        nodes : 
-          - 
-            type : forN
-            N : 100
-            node:   
-              name : insert
-              type : insert_many
-              times : 1024
-              doc : { x : *s }
-              next : Finish
-    - name : fill_rolled
-      type : workloadNode
-      next : Finish
-      workload : *bulkinsert
+  nodes:
+    - type: drop
+    - name: create_capped
+      type: command
+      command:
+        create: testCollection
+        capped: true
+        size: 20000000000
+    - name: fill_capped
+      type: workloadNode
+      next: fill_rolled
+      workload: *bulkinsert
+    - name: fill_rolled
+      type: workloadNode
+      next: Finish
+      workload: *bulkinsert

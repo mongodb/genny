@@ -1,50 +1,45 @@
 # Recreation of insert with TTL workload
 
-main : 
+fillttl: &fillttl
+  threads: 4
+  nodes:
+    - type: ForN
+      N: 1000
+      next: Finish
+      node: insert
+    - name: insert
+      type: insert_many
+      times: 10
+      next: Finish
+      doc:
+        type: override
+        doc: { ttl: 1, i: 1 }
+        overrides:
+          ttl:
+            type: date
+          i:
+            type: randomint
+
+main:
   seed: 131415161718
   name: main
-  nodes: 
-    -
-      type : drop
-    - 
-      name : create
-      type : command
-      command : 
-        create : testCollection
-    - name : ttl_index
-      type : create_index
-      keys : 
-        ttl : 1
-      options : 
-        expire_after_seconds : 30
-      next : other_index
-    - name : other_index
-      type : create_index
-      keys : 
-        i : 1
-      next : fill_ttl
-    - name : fill_ttl
-      type : workloadNode
-      next : Finish
-      workload : 
-        threads : 4
-        nodes : 
-          - 
-            type : forN
-            name : fill_ttl_inner
-            N : 1000
-            next : Finish
-            node : 
-              name : insert
-              type : insert_many
-              times : 10
-              next : Finish
-              doc : 
-                type : override
-                doc : { ttl : 1, i : 1 }
-                overrides : 
-                  ttl : 
-                    type : date
-                  i : 
-                    type : randomint
-                  
+  nodes:
+    - type: drop
+    - name: create
+      type: command
+      command:
+        create: testCollection
+    - name: ttl_index
+      type: create_index
+      keys:
+        ttl: 1
+      options:
+        expire_after_seconds: 30
+    - name: other_index
+      type: create_index
+      keys:
+        i: 1
+    - name: fill_ttl
+      type: workloadNode
+      next: Finish
+      workload: *fillttl

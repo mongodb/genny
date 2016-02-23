@@ -153,8 +153,8 @@ node* makeNode(YAML::Node yamlNode) {
         return new random_choice(yamlNode);
     } else if (yamlNode["type"].Scalar() == "sleep") {
         return new sleepNode(yamlNode);
-    } else if (yamlNode["type"].Scalar() == "forN") {
-        return new forN(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "ForN") {
+        return new ForN(yamlNode);
     } else if (yamlNode["type"].Scalar() == "finish") {
         return new finishNode(yamlNode);
     } else if (yamlNode["type"].Scalar() == "doAll") {

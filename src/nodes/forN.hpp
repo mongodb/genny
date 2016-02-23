@@ -8,21 +8,19 @@ using namespace std;
 namespace mwg {
 
 class workload;
-class forN : public node {
+class ForN : public node {
 public:
-    forN(YAML::Node&);
-    forN() = delete;
-    virtual ~forN() = default;
-    forN(const forN&) = default;
-    forN(forN&&) = default;
-    // Execute the node
+    ForN(YAML::Node&);
+    ForN() = delete;
     virtual void execute(shared_ptr<threadState>) override;
     virtual std::pair<std::string, std::string> generateDotGraph() override;
-    virtual void logStats() override;
     virtual bsoncxx::document::value getStats(bool withReset) override;
+    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
+                             vector<shared_ptr<node>>&) override;
 
-private:
-    unique_ptr<node> myNode;
+protected:
+    shared_ptr<node> myNode;
+    string myNodeName;
     uint64_t N;
 };
 }

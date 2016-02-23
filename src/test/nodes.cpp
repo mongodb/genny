@@ -110,6 +110,42 @@ TEST_CASE("Nodes", "[nodes]") {
         REQUIRE(joinNode->getCount() == 1);
     }
 
+    SECTION("ForN") {
+        auto ForNYaml = YAML::Load(R"yaml(
+          name: ForN
+          type: ForN
+          N: 5
+          node: thingA
+          next: Finish
+        )yaml");
+        auto forNNode = makeSharedNode(ForNYaml);
+        nodes[forNNode->getName()] = forNNode;
+        vectornodes.push_back(forNNode);
+
+        auto thing1Y = YAML::Load(R"yaml(
+          name: thingA
+          print: Thing A running
+          type: noop
+          next: Finish
+            )yaml");
+        auto thing1Node = makeSharedNode(thing1Y);
+        nodes[thing1Node->getName()] = thing1Node;
+        vectornodes.push_back(thing1Node);
+        auto mynode = make_shared<finishNode>();
+        nodes[mynode->getName()] = mynode;
+        vectornodes.push_back(mynode);
+        // connect the nodes
+        for (auto mnode : vectornodes) {
+            mnode->setNextNode(nodes, vectornodes);
+        }
+        // execute
+        state->currentNode = forNNode;
+        while (state->currentNode != nullptr)
+            state->currentNode->executeNode(state);
+        REQUIRE(forNNode->getCount() == 1);
+        REQUIRE(thing1Node->getCount() == 5);
+    }
+
     SECTION("spawn") {
         auto spawnYaml = YAML::Load(R"yaml(
           name : spawn

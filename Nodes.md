@@ -16,11 +16,11 @@ executes.
    node.
    * _op_ : the operation. Or if not set will look for operation
      fields at the top level of the node definition.
-2. forN: This node wraps a node. It executes the underlying node N
-   times. It ignores the child nodes next node, and does not execute
-   it.
+2. ForN: This node wraps a node. It executes the underlying node N
+   times and continues through it's child nodes until it reaches a
+   Finish node.
    * _N_: number of times to execute the node
-   * _node_: The node to execute multiple times. Note this can be a
+   * _node_: The name of the node to execute multiple times. Note this can be a
       workload node.
 3. randomChoice: This node has a map of other nodes and weights
    (converted to probabilities) in the _next_ subdocument. It uses the

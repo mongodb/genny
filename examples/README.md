@@ -28,12 +28,12 @@ supported by the tool.
 - [workloadNode.yml](workloadNode.yml): This is a simple example showing that a workload
   can be embedded within another workload. The example has a trivial
   workload, but any workload could be embedded.
-- [forN.yml](forN.yml): This demonstrates a simple loop that executes an
-  insert_one operation 5 times. Note that a workload node can be the
-  embedded node using the workloadNode from the previous example.
+- [forN.yml](forN.yml): This demonstrates a simple loop that executes
+  a sequence of two insert_one operations 5 times. Note that a
+  workload node could be used and called multiple times also.
 - [spawn.yml](spawn.yml): Demonstrates spawning new threads of
   execution. A thread is started for each node in spawn, and the
-  current thread continues to its next state. 
+  current thread continues to its next state.
 - [doAll.yml](doAll.yml): Demonstrates simple fork join behavior. A thread is
   started for each childNode, and they execute in parallel until they
   get to the join node. Here's an [image of the doAll.yml graph](images/doAll.png)

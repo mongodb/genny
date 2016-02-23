@@ -14,16 +14,17 @@ workload : &work
 main :
   seed: 131415161718
   name: main
-  wvariables :
-    threads : 1
+  wvariables:
+    threads: 1
   nodes:
-    - type : forN
-      N : 10
-      node :
-        # Run the workload while changing settings of the embedded workload.
-        type : workloadNode
-        overrides : # These setting override what is set in the embedded workload
-          threads :
-            type : increment
-            variable : threads
-        workload : *work
+    - type: ForN
+      N: 10
+      node: runLoad
+      next: Finish
+    - name: runLoad # Run the workload while changing settings of the embedded workload.
+      type : workloadNode
+      overrides : # These setting override what is set in the embedded workload
+        threads :
+          type : increment
+          variable : threads
+      workload : *work
