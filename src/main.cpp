@@ -1,24 +1,24 @@
-#include <iostream>
-#include <fstream>
-#include <string>
-#include "yaml-cpp/yaml.h"
-#include <bsoncxx/builder/stream/document.hpp>
+#include "main.h"
+
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/trivial.hpp>
+#include <bson.h>
 #include <bsoncxx/builder/stream/array_context.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/builder/stream/single_context.hpp>
 #include <bsoncxx/json.hpp>
-#include <bson.h>
-#include <vector>
+#include <chrono>
+#include <fstream>
 #include <getopt.h>
-
+#include <iostream>
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
+#include <string>
+#include <yaml-cpp/yaml.h>
+#include <vector>
 
 #include "workload.hpp"
-#include "main.h"
-#include <chrono>
 
 using namespace std;
 using namespace mwg;
@@ -37,7 +37,7 @@ static struct option poptions[] = {{"collection", required_argument, 0, 0},
                                    {"version", no_argument, 0, 'v'},
                                    {0, 0, 0, 0}};
 
-void print_help(const char* process_name) {
+void printHelp(const char* processName) {
     fprintf(
         stderr,
         "Usage: %s [-hldrpv] /path/to/workload [workload to run]\n"
@@ -59,17 +59,17 @@ void print_help(const char* process_name) {
         "\t--runLengthMS NUM        Run the workload for up to NUM milliseconds instead of length\n"
         "\t                       specified in yaml file\n"
         "\t--version|-v           Return version information\n",
-        process_name);
+        processName);
 }
 
-class statsState {
+class StatsState {
 public:
-    statsState(workload& work) : myWorkload(work), done(false){};
+    StatsState(workload& work) : myWorkload(work), done(false){};
     workload& myWorkload;
     std::atomic<bool> done;
 };
 
-void runPeriodicStats(shared_ptr<statsState> state, std::chrono::seconds period, string outFile) {
+void runPeriodicStats(shared_ptr<StatsState> state, std::chrono::seconds period, string outFile) {
     // check if we should be doing something.
     if (period == std::chrono::seconds(0)) {
         return;
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     string uri = mongocxx::uri::k_default_uri;
     int64_t numThreads = -1;  // default not used
     int64_t runLengthMS = -1;
-    int arg_count = 0;
+    int argCount = 0;
     int idx = 0;
 
     // default logging level to info
@@ -120,12 +120,12 @@ int main(int argc, char* argv[]) {
 
     while (1) {
         int arg = getopt_long(argc, argv, "hl:d:p:v", poptions, &idx);
-        arg_count++;
+        argCount++;
         if (arg == -1) {
             // all arguments have been processed
             break;
         }
-        ++arg_count;
+        ++argCount;
 
         switch (arg) {
             case 0:
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
                 }
                 break;
             case 'h':
-                print_help(argv[0]);
+                printHelp(argv[0]);
                 return EXIT_SUCCESS;
             case 'l':
                 if (strcmp("info", optarg) == 0)
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
                 return EXIT_SUCCESS;
             default:
                 fprintf(stderr, "unknown command line option: %s\n", poptions[idx].name);
-                print_help(argv[0]);
+                printHelp(argv[0]);
                 return EXIT_FAILURE;
         }
     }
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
             workloadName = argv[optind + 1];
         }
     } else {
-        print_help(argv[0]);
+        printHelp(argv[0]);
         return EXIT_SUCCESS;
     }
     BOOST_LOG_TRIVIAL(info) << fileName;
@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
         if (databaseName != "")
             myWorkloadState.DBName = databaseName;
         myWorkloadState.uri = uri;
-        auto ss = shared_ptr<statsState>(new statsState(myWorkload));
+        auto ss = shared_ptr<StatsState>(new StatsState(myWorkload));
         std::thread stats(runPeriodicStats, ss, resultPeriod, resultsFile);
         myWorkload.execute(myWorkloadState);
         ss->done = true;
