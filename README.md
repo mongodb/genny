@@ -9,8 +9,22 @@ a mongo cluster. The tool allows you to specify a workload in a yaml file, with
 a large degree of flexibility. The workload tool is written in C++ and
 wraps the
 [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master),
-which supports the
-[mongo driver spec](https://github.com/mongodb/specifications/blob/master/source/crud/crud.rst).
+which in turn supports the
+[mongo driver spec](https://github.com/mongodb/specifications/blob/master/source/crud/crud.rst). It
+is the intention that: 
+
+* Workloads are completely described in YAML (no C or other code
+  needed).
+* It is easy and fast to define new workloads or change an existing workload.
+* Workloads can be composed and defined hierarchically.
+* Workloads run consistently fast (the underlying engine is C++), so they test the
+  server, not the workload tool.
+* The tool scales to large thread counts up to hardware constraints.
+* The tool generates reproducible workload executions (seeded pseudo-random number
+generator per thread).
+ * Note: The workload generation tool cannot control if the server
+under test responds differently because of factors not under the tools
+control. 
 
 There are five basic components in a workload, enabling the
 specification of arbitrarily complex workloads in a graph of
