@@ -3,10 +3,12 @@
 #  random choice. There is a sleep between every node to make it human
 #  watchable.
 
+runLengthMs: &run 10000
+
 main : 
   seed: 131415161718
   name: main
-  runLengthMs : 10000
+  runLengthMs : *run
   nodes: 
     - name : insert1
       print : Running insert1

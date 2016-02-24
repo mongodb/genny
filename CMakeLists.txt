@@ -8,7 +8,7 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
 # The version number.
 set (WorkloadGeneration_VERSION_MAJOR 0)
-set (WorkloadGeneration_VERSION_MINOR 2)
+set (WorkloadGeneration_VERSION_MINOR 3)
 set (WorkloadGeneration_VERSION_PATCH 0)
 
 

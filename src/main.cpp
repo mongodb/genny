@@ -33,7 +33,8 @@ static struct option poptions[] = {{"collection", required_argument, 0, 0},
                                    {"numThreads", required_argument, 0, 0},
                                    {"resultsfile", required_argument, 0, 'r'},
                                    {"resultsperiod", required_argument, 0, 'p'},
-                                   {"runLengthMS", required_argument, 0, 0},
+                                   {"runLengthMs", required_argument, 0, 0},
+                                   {"variable", required_argument, 0, 0},
                                    {"version", no_argument, 0, 'v'},
                                    {0, 0, 0, 0}};
 
@@ -46,7 +47,7 @@ void printHelp(const char* processName) {
         "\t--database DB          Use Database name DB by default\n"
         "\t--dotfile|-d FILE      Generate dotfile to FILE from workload and exit.\n"
         "\t                       WARNING: names with spaces or other special characters\n"
-        "\t                       will break the dot file\n\n"
+        "\t                       will break the dot file\n"
         "\t--help|-h              Display this help and exit\n"
         "\t--host Host            Host/Connection string for mongo server to test--must be a\n"
         "\t                       full URI,\n"
@@ -56,8 +57,11 @@ void printHelp(const char* processName) {
         "\t                       specified in yaml file\n"
         "\t--resultfile|-r FILE   FILE to store results to. defaults to results.json\n"
         "\t--resultsperiod|-p SEC Record results every SEC seconds\n"
-        "\t--runLengthMS NUM        Run the workload for up to NUM milliseconds instead of length\n"
+        "\t--runLengthMs NUM      Run the workload for up to NUM milliseconds instead of length\n"
         "\t                       specified in yaml file\n"
+        "\t--variable VAR=VALUE   Override the value of yaml node VAR with VALUE. May be called\n"
+        "\t                       multiple times. If you override a node that defines a YAML\n"
+        "\t                       anchor, all aliases to that anchor will get the new value\n"
         "\t--version|-v           Return version information\n",
         processName);
 }
@@ -114,6 +118,7 @@ int main(int argc, char* argv[]) {
     int64_t runLengthMS = -1;
     int argCount = 0;
     int idx = 0;
+    vector<pair<string, string>> variableOverrides;
 
     // default logging level to info
     logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::info);
@@ -126,6 +131,10 @@ int main(int argc, char* argv[]) {
             break;
         }
         ++argCount;
+
+        // variables for override
+        string myString, variable, value;
+        int indexOfEquals;
 
         switch (arg) {
             case 0:
@@ -144,6 +153,17 @@ int main(int argc, char* argv[]) {
                         break;
                     case 9:
                         runLengthMS = atoi(optarg);
+                        break;
+                    case 10:
+                        myString = string(optarg);
+                        indexOfEquals = myString.find('=');
+                        if (indexOfEquals == string::npos) {
+                            fprintf(stderr, "Variable override does not contain '=': %s", optarg);
+                            return EXIT_FAILURE;
+                        }
+                        variable = myString.substr(0, indexOfEquals);
+                        value = myString.substr(indexOfEquals + 1, myString.length());
+                        variableOverrides.push_back(pair<string, string>(variable, value));
                         break;
                     default:
                         fprintf(stderr, "unknown command line option with optarg index %d\n", idx);
@@ -209,6 +229,17 @@ int main(int argc, char* argv[]) {
 
     // put try catch here with error message
     YAML::Node nodes = YAML::LoadFile(fileName);
+
+    // put in overrides
+    for (auto override : variableOverrides) {
+        BOOST_LOG_TRIVIAL(info) << "Changing yaml node " << override.first << " to "
+                                << override.second << " based on command line";
+        if (!nodes[override.first]) {
+            BOOST_LOG_TRIVIAL(fatal) << override.first << " does not exist in the YAML file\n";
+            return EXIT_FAILURE;
+        }
+        nodes[override.first] = override.second;
+    }
 
     // Look for main. And start building from there.
     if (auto main = nodes[workloadName]) {
