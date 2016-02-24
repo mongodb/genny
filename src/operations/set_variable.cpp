@@ -161,6 +161,45 @@ value multiplyVar(std::unordered_map<string, bsoncxx::array::value>::iterator va
     return (myArray << 0 << bsoncxx::builder::stream::finalize);
 }
 
+// Check type cases and get a string out of it. Assumes it is getting a bson array of length 1.
+string valAsString(bsoncxx::array::value& val) {
+    auto elem = val.view()[0];
+    switch (elem.type()) {
+        case bsoncxx::type::k_int64:
+            return (to_string(elem.get_int64().value));
+            break;
+        case bsoncxx::type::k_int32:
+            return (to_string(elem.get_int32().value));
+            break;
+        case bsoncxx::type::k_double:
+            return (to_string(elem.get_double().value));
+            break;
+        case bsoncxx::type::k_utf8:
+            return (elem.get_utf8().value.to_string());
+            break;
+        case bsoncxx::type::k_document:
+        case bsoncxx::type::k_array:
+        case bsoncxx::type::k_binary:
+        case bsoncxx::type::k_undefined:
+        case bsoncxx::type::k_oid:
+        case bsoncxx::type::k_bool:
+        case bsoncxx::type::k_date:
+        case bsoncxx::type::k_null:
+        case bsoncxx::type::k_regex:
+        case bsoncxx::type::k_dbpointer:
+        case bsoncxx::type::k_code:
+        case bsoncxx::type::k_symbol:
+        case bsoncxx::type::k_timestamp:
+
+            BOOST_LOG_TRIVIAL(fatal) << "valAsString with type unsuported type in list";
+            exit(EXIT_FAILURE);
+            break;
+        default:
+            BOOST_LOG_TRIVIAL(fatal) << "valAsString with type unsuported type not in list";
+            exit(EXIT_FAILURE);
+    }
+    return ("");
+}
 
 // Execute the node
 void set_variable::execute(mongocxx::client& conn, threadState& state) {
@@ -281,26 +320,15 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
     // Special cases first: Database and collection name
     if (targetVariable.compare("DBName") == 0) {
         // check that the value is a string
-        auto val = localValue->view()[0];
-        if (val.type() != bsoncxx::type::k_utf8) {
-            BOOST_LOG_TRIVIAL(fatal)
-                << "Trying to set the database name to something other than a string";
-            exit(0);
-        }
-        state.DBName = val.get_utf8().value.to_string();
+        BOOST_LOG_TRIVIAL(trace) << "Setting DBName in set_variable";
+        state.DBName = valAsString(*localValue);
     } else if (targetVariable.compare("CollectionName") == 0) {
         // check that the value is a string
-        auto val = localValue->view()[0];
-        if (val.type() != bsoncxx::type::k_utf8) {
-            BOOST_LOG_TRIVIAL(fatal)
-                << "Trying to set the collection name to something other than a string";
-            exit(0);
-        }
-        state.CollectionName = val.get_utf8().value.to_string();
+        BOOST_LOG_TRIVIAL(trace) << "Setting CollectionName in set_variable";
+        state.CollectionName = valAsString(*localValue);
     } else {
         // is targetVariable in tvariables or wvariables?
         // Check tvariables first, then wvariable. If in neither, insert into tvariables.
-
         BOOST_LOG_TRIVIAL(trace) << "set_variable about to actually set variable";
         if (state.tvariables.count(targetVariable) > 0)
             state.tvariables.find(targetVariable)->second = std::move(*localValue);
