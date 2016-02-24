@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
 
         // variables for override
         string myString, variable, value;
-        int indexOfEquals;
+        size_t indexOfEquals;
 
         switch (arg) {
             case 0:
