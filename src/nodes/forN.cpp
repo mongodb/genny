@@ -40,8 +40,8 @@ void ForN::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
 std::pair<std::string, std::string> ForN::generateDotGraph() {
     // Do default, and get any extra from the child node.
     // Don't use the graph from the child node itself since it's next node isn't used.
-    return (std::pair<std::string, std::string>{name + " -> " + nextName + "\n",
-                                                name + " -> " + myNodeName + " \n "});
+    return (std::pair<std::string, std::string>{
+        name + " -> " + nextName + ";\n" + name + " -> " + myNodeName + ";\n", ""});
 }
 
 bsoncxx::document::value ForN::getStats(bool withReset) {
