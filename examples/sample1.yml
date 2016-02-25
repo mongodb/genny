@@ -4,6 +4,7 @@
 #  watchable.
 
 runLengthMs: &run 10000
+delay: &delay 1000
 
 main : 
   seed: 131415161718
@@ -18,7 +19,7 @@ main :
     - name : sleep
       type : sleep
       next : random
-      sleepMs : 1000
+      sleepMs : *delay
     - name : random
       print : In Random Choice
       type : random_choice

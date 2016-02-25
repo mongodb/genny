@@ -8,17 +8,20 @@ add_test(insertMany mwg -l error ../examples/insertMany.yml)
 add_test(insertRandom mwg -l error ../examples/insertRandom.yml)
 add_test(insertSequential mwg -l error ../examples/insertSequential.yml)
 add_test(override mwg -l error ../examples/override.yml)
-add_test(sample1 mwg -l error ../examples/sample1.yml)
-add_test(sample1+threads mwg -l error ../examples/sample1+threads.yml)
-add_test(sample1+threadsNoSleep mwg -l error ../examples/sample1+threadsNoSleep.yml)
-add_test(sample2 mwg -l error ../examples/sample2.yml)
+add_test(sample1 mwg -l error ../examples/sample1.yml --variable
+delay=100 --variable runLengthMs=1000)
+add_test(sample1+threads mwg -l error ../examples/sample1+threads.yml --variable
+delay=100 --variable runLengthMs=1000)
+add_test(sample1+threadsNoSleep mwg -l error
+../examples/sample1+threadsNoSleep.yml --runLength=1000)
+add_test(sample2 mwg -l error ../examples/sample2.yml --variable delay=10)
 add_test(speed mwg -l error ../examples/speedtest.yml)
 add_test(workloadNode mwg -l error ../examples/workloadNode.yml)
 add_test(spawn mwg -l error ../examples/spawn.yml)
 add_test(sample+yamloverride mwg -l info ../examples/sample1.yml --variable runLengthMs=2000)
 add_test(sample+cmdlinerunLength mwg -l info ../examples/sample1.yml --runLengthMs=2000)
 # With the override it should run the sleep twice.
-SET_TESTS_PROPERTIES(sample+yamloverride sample+cmdlinerunLength PROPERTIES PASS_REGULAR_EXPRESSION "sleep, Count=3")
+SET_TESTS_PROPERTIES(sample+yamloverride sample+cmdlinerunLength PROPERTIES PASS_REGULAR_EXPRESSION "sleep, Count=2")
 # Check for error messages or fatal
 SET_TESTS_PROPERTIES(operations ifNode insertMany insertSequential
 override spawn PROPERTIES FAIL_REGULAR_EXPRESSION "error;fatal")

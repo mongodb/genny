@@ -3,6 +3,8 @@
 #  absorbing state -- the workload stops when it gets to Finish. There
 #  is a sleep between every node to make it human watchable.
 
+delay: &delay 1000
+
 main : 
   seed: 234762873642
   name: main
@@ -16,7 +18,7 @@ main :
     - name : sleep
       type : sleep
       next : random
-      sleepMs : 1000
+      sleepMs : *delay
     - name : random
       print : In Random Choice
       type : random_choice
