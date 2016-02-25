@@ -33,7 +33,7 @@ void ForN::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
                        vector<shared_ptr<node>>& vectornodesIn) {
     BOOST_LOG_TRIVIAL(debug) << "Setting next node vector for ForN node" << name
                              << ". Next node should be " << nextName;
-    nextNode = nodes[nextName];
+    node::setNextNode(nodes, vectornodesIn);
     myNode = nodes[myNodeName];
 }
 

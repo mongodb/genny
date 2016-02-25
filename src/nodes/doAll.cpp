@@ -34,7 +34,7 @@ void doAll::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
                         vector<shared_ptr<node>>& vectornodesIn) {
     BOOST_LOG_TRIVIAL(debug) << "Setting next node vector for doAll node" << name
                              << ". Next node should be " << nextName;
-    nextNode = nodes[nextName];
+    node::setNextNode(nodes, vectornodesIn);
     for (auto name : nodeNames) {
         vectornodes.push_back(nodes[name]);
     }
