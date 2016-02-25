@@ -154,6 +154,8 @@ void parseIndexOptions(mongocxx::options::index& options, YAML::Node node) {
 void parseInsertOptions(mongocxx::options::insert& options, YAML::Node node) {
     if (node["write_concern"])
         options.write_concern(parseWriteConcern(node["write_concern"]));
+    if (node["ordered"])
+        options.ordered(node["ordered"].as<bool>());
 }
 
 

@@ -29,6 +29,7 @@ main :
             min : 0
             max : 100
       options : 
+        ordered: false
         write_concern : 
           nodes : 1
     - name : check1
