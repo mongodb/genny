@@ -53,7 +53,7 @@ crud: &crud
               type: randomint
               min: *docValMin
               max: *docValMax
-              next: crud
+        next: crud
       - name: read
         print: Running read
         type: find
