@@ -6,23 +6,26 @@ execution of operations. Unless otherwise noted, every node has
 
 * A _name_
 * A _next_ node
-* Optional text field _print_ which is printed out when the node
-executes.
+* Optional text field _print_ which is printed out when the node executes.
 
-### Currently supported nodes
+There are different classes of nodes. Some nodes primarily control the
+flow of execution, while others execute operations against the server,
+or update the saved state of the workload.
 
-1. opNode: This is the default node. It executes its associated
-   [operation](Operations.yml), and then moves execution to its next
-   node.
-   * _op_ : the operation. Or if not set will look for operation
-     fields at the top level of the node definition.
-2. ForN: This node wraps a node. It executes the underlying node N
-   times and continues through it's child nodes until it reaches a
-   Finish node.
+Control Flow Nodes
+------------------
+
+These nodes effect the flow of control for the workload, including
+starting new threads.
+
+1. ForN: This node wraps another node or set of nodes. It executes the
+   underlying node N times. It executes the child node, it's next node,
+   etc, until the thread of execution reaches a finish node, at which
+   point it repeats the process until achieving the count of N.
    * _N_: number of times to execute the node
    * _node_: The name of the node to execute multiple times. Note this can be a
       workload node.
-3. randomChoice: This node has a map of other nodes and weights
+2. randomChoice: This node has a map of other nodes and weights
    (converted to probabilities) in the _next_ subdocument. It uses the
    pseudo-random number generator to select the next node to execute.
 4. Finish: This represents an absorbing state in the graph. The
@@ -77,11 +80,18 @@ executes.
          a new thread, or a list of nodes. If it is a list, a new
          thread is created for each node name in the list.
 
-### Future Nodes
+Operation Nodes
+---------------
 
-3. Phase Marker: Make a transition externally visible. For instance,
+These nodes do something, such as database commands, or manipulating
+variables. They are described in [Operations.md](operations.md)
+
+Future Nodes
+------------
+
+1. Phase Marker: Make a transition externally visible. For instance,
    to mark the end of the warmup phsae of a workload.
-4. External trigger: A node that waits for an external trigger before
+2. External trigger: A node that waits for an external trigger before
    executing it's next node. For multi machine client systems, this could be
    used with the phase marker to synchronize multiple client
    machines. For example, all the clients can have a phase marker node
@@ -90,7 +100,8 @@ executes.
    clients have finished their warmups, and then indicate for all of
    the clients to continue.
 
-### Future Extensions
+Future Extensions
+-----------------
 
 1. The sleep node currently sleeps for a constant amount of time. In
    the future it will have an option to sleep for a random period of

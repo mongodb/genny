@@ -26,24 +26,19 @@ is the intention that:
     under test responds differently because of factors not under the tools
     control.
 
-There are five basic components in a workload, enabling the
+There are three basic components in a workload, enabling the
 specification of arbitrarily complex workloads in a graph of
 operations.
 
-1. [Operations](Operations.md): These are basic operations, such as a find_one. These
-   operations *do* something
-2. [Nodes](Nodes.md): These are nodes in the workload graph. They often have an
-   associated operation. Nodes control the order of execution of the
-   operations.
-3. [Workloads](Workloads.md): These are collection of nodes and represent an actual
+1. [Nodes](Nodes.md): These are nodes in the workload graph. They may
+   do something, such as a find_one, or they may control the flow of
+   execution, such as random_choice.
+2. [Workloads](Workloads.md): These are collection of nodes and represent an actual
    workload. They specify the node that should execute first in the
    workload. They also supply parameters and a pseudo-random number
    generator to the nodes and ops.
-4. [Documents](Documents.md): These are objects that can be used anywhere a bson
+3. [Documents](Documents.md): These are objects that can be used anywhere a bson
    Object is needed.
-5. Variables: A workload has a list of variables that be used and
-   set. Variables can be thread local, or shared across the
-   workload. Variables are described in [Workloads](Workloads.md)
 
 There are a number of [examples](examples/README.md) that demonstrate
 the basic ideas. All the examples work.
