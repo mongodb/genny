@@ -11,6 +11,7 @@
 #include "random_choice.hpp"
 #include "sleep.hpp"
 #include "spawn.hpp"
+#include "system_node.hpp"
 #include "workloadNode.hpp"
 
 namespace mwg {
@@ -167,6 +168,8 @@ node* makeNode(YAML::Node yamlNode) {
         return new ifNode(yamlNode);
     } else if (yamlNode["type"].Scalar() == "spawn") {
         return new Spawn(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "system") {
+        return new SystemNode(yamlNode);
     } else {
         BOOST_LOG_TRIVIAL(debug) << "In makeNode. Type was " << yamlNode["type"].Scalar()
                                  << ". Defaulting to opNode";
