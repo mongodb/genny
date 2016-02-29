@@ -92,7 +92,7 @@ Operation Nodes
 ---------------
 
 These nodes do something, such as database commands, or manipulating
-variables. They are described in [Operations.md](operations.md)
+variables. They are described in [Operations.md](Operations.md)
 
 Future Nodes
 ------------
