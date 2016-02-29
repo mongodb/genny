@@ -62,8 +62,21 @@ level. They can also be printed out periodically using the -p option.
 
 The following stats and stat features are not implemented yet.
 
-2. Histogram data
-3. Percentile data (95th, 99th percentile)
+1. Histogram data
+2. Percentile data (95th, 99th percentile), based on histogram data.
+
+I also intend to do the following:
+
+1. Rewrite the stats to be accumulating, rather than resetting. This
+   will allow for easy analysis of different regions of behavior.
+2. Add the ability for a phase marker node to trigger a stats
+   dump. This will enable specifically measuring stats for different
+   phases of execution.
+
+The two points combined will be enable us to   gather periodic stats,
+phase based stats, and overall stats at the same time. It will require
+post-processing to generate useful statistics. A script will be
+included to perform the post-processing.
 
 ### Future features
 
