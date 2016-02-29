@@ -1,0 +1,24 @@
+# Sample of using include functionality. It includes the sample 1
+# workload, and assigns it to the anchor sample1.
+
+includes:
+  - filename: sample1.yml
+    node: &sample1 main
+  - filename: sample2.yml
+    nodes:
+      - &delay delay
+      - &sample2 main
+
+main:
+  name: include
+  nodes:
+    - type: workloadNode
+      workload: *sample1
+      overrides:
+        runLengthMs: 1000
+    - type: sleep
+      sleepMs: *delay
+    - type: workloadNode
+      workload: *sample2
+      overrides:
+        runLengthMs: 1000

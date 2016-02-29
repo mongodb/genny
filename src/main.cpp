@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include <boost/filesystem.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
@@ -103,6 +104,77 @@ void runPeriodicStats(shared_ptr<StatsState> state, std::chrono::seconds period,
     state->myWorkload.logStats();
     if (haveFile)
         out << bsoncxx::to_json(state->myWorkload.getStats(true)) << "]\n";
+}
+
+// Look for an includes Node. Bring it into this space
+void processIncludes(YAML::Node& nodes, boost::filesystem::path path) {
+    if (!nodes["includes"]) {
+        return;
+    }
+    BOOST_LOG_TRIVIAL(debug) << "The file has includes. Processing.";
+    auto includes = nodes["includes"];
+    if (!includes.IsSequence()) {
+        BOOST_LOG_TRIVIAL(fatal) << "processInlucdes and includes is not a sequence";
+        exit(EXIT_FAILURE);
+    }
+
+    // for each include, load the file and replace the current node with it
+    // for (std::size_t i = 0; i < nodes["includes"].size(); i++) {
+    //     auto node = nodes["includes"][i];
+    for (auto&& node : nodes["includes"]) {
+        if (!node["filename"]) {
+            BOOST_LOG_TRIVIAL(fatal) << "processIncludes and entry doesn't have a filename";
+            exit(EXIT_FAILURE);
+        }
+        // actually process it.
+        // load the file
+        // put try catch here with error message
+        auto includePath = boost::filesystem::path(node["filename"].Scalar());
+        // does the path have a root? If not, use the parent_path from path
+        BOOST_LOG_TRIVIAL(debug) << "Including file " << node["filename"].Scalar();
+        if (!includePath.is_absolute()) {
+            BOOST_LOG_TRIVIAL(debug)
+                << "Include filename is not absolute. Prepending relative path";
+            // Should we always do this?
+            includePath = path.parent_path();
+            includePath /= node["filename"].Scalar();
+        }
+        BOOST_LOG_TRIVIAL(info) << "Including file " << includePath;
+        // Read in the file to use for includes
+        YAML::Node include = YAML::LoadFile(includePath.c_str());
+        // recursive process includes
+        processIncludes(include, includePath);
+
+        if (node["node"]) {
+            // one node only
+            if (!node["node"].IsScalar()) {
+                BOOST_LOG_TRIVIAL(fatal) << "processIncludes and node entry isn't a Scalar";
+                exit(EXIT_FAILURE);
+            }
+            auto nodeName = node["node"].Scalar();
+            // replace the entry
+            node["node"] = include[nodeName];
+        } else if (node["nodes"]) {
+            if (!node["nodes"].IsSequence()) {
+                BOOST_LOG_TRIVIAL(fatal) << "processIncludes and nodes is not a sequence";
+                exit(EXIT_FAILURE);
+            }
+            auto nodes = node["nodes"];
+            for (size_t i = 0; i < nodes.size(); i++) {
+                //            for (auto&& includeNode : nodes) {
+                if (!nodes[i].IsScalar()) {
+                    BOOST_LOG_TRIVIAL(fatal)
+                        << "processIncludes and entry in nodes isn't a Scalar ";
+                    exit(EXIT_FAILURE);
+                }
+                nodes[i] = include[nodes[i].Scalar()];
+            }
+        } else {
+            BOOST_LOG_TRIVIAL(fatal)
+                << "processIncludes and entry doesn't have any nodes to include";
+            exit(EXIT_FAILURE);
+        }
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -226,9 +298,13 @@ int main(int argc, char* argv[]) {
         return EXIT_SUCCESS;
     }
     BOOST_LOG_TRIVIAL(info) << fileName;
-
+    auto path = boost::filesystem::path(fileName);
+    if (!boost::filesystem::exists(path)) {
+        BOOST_LOG_TRIVIAL(fatal) << "File does not exist: " << path;
+    }
     // put try catch here with error message
     YAML::Node nodes = YAML::LoadFile(fileName);
+    processIncludes(nodes, path);
 
     // put in overrides
     for (auto override : variableOverrides) {

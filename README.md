@@ -89,7 +89,8 @@ Dependencies
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 * A compiler that supports c++11
 * [cmake](http://www.cmake.org/) for building
-* [Boost](http://www.boost.org/) for logging. Version 1.48 or later
+* [Boost](http://www.boost.org/) for logging and filesystem
+  libraries. Version 1.48 or later
 
 Install Script
 --------------
@@ -105,6 +106,7 @@ Building
     cmake ..
     make
     make test # optional. Expects a mongod running on port 27017
+
 
 Build Notes:
 
@@ -164,6 +166,35 @@ In particular, please note that the command line enables:
   _--resultsperiod_ flag enables this. When enabled the results.json
   is a json array, with one entry for every period in the run.
 
+Including YAML Files
+--------------------
+
+It is possible to include existing yaml files from another yaml
+file. This is done by having a top level YAML node named
+_includes_. The entry should be a YAML sequence, and each item in the
+sequence should have a _filename_ entry, and either a _node_ with the
+name of a node, or _nodes_ with a sequence of node names. The program
+will load the YAML from _filename_, and replace the value of _node_ or
+the values in _nodes_ with the nodes matching those names in the other
+file. To use an included node, assign it a YAML anchor, and use an
+alias to that anchor in the desired location. It should look like
+this:
+
+    includes:
+      - filename: sample1.yml
+        node: &sample1 main
+      - filename: sample2.yml
+        nodes:
+          - &delay delay
+          - &sample2 main
+
+In this exacmple the node _main_ from the file _sample1.yml_ will be
+available in includes[0]["node"]. The anchor _sample1_ is defined, an
+the main node from sample1.yml may now be referenced with the alias
+"*sample1". See [includes2.yml](examples/includes2.yml) and
+[includes.yml](examples/includes.yml) for complete examples in the
+example directory.
+
 Examples
 --------
 
@@ -173,10 +204,10 @@ the [forN.yml](examples/forN.yml) example, simply do:
 
 The workloads are all specified in yaml. An example find node is:
 
-        name: find
-        type: find
-        filter: { x : a }
-        next: sleep
+    name: find
+    type: find
+    filter: { x : a }
+    next: sleep
 
 The main parts of this are:
 
