@@ -9,8 +9,8 @@ exercises in order, performing the simplest version of each step, and
 then adding on embellishments. You should run your workload each time
 you change it, and observe the difference in behavior.
 
-1. Read through the [docs](Readme.md) and the
-   [examples](examples/Readme.md).
+1. Read through the [docs](README.md) and the
+   [examples](examples/README.md).
 2. Run [sample1.yml](examples/sample1.yml) in the examples
    directory. "bin/mwg examples/sample1.yml". Make sure there is a
    running mongod on the local system on port 27017. 
