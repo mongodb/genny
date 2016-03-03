@@ -41,7 +41,7 @@ operations.
    Object is needed.
 
 There are a number of [examples](examples/README.md) that demonstrate
-the basic ideas. All the examples work.
+the basic ideas. All the examples work. Additional, there is a [tutorial](Tutorial.md)
 
 ### Stats
 
