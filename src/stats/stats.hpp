@@ -24,9 +24,8 @@ public:
     void accumulate(const Stats&);  // add up Stats
     // this can be moved into an RAII accumulator
     void recordMicros(std::chrono::microseconds);  // record one event of given duration
-    void recordException() {
-        countExceptions++;
-    }
+    void recordException();
+
     std::chrono::microseconds getMinimumMicros() {
         return minimumMicros;
     }

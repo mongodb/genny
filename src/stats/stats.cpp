@@ -41,6 +41,10 @@ void Stats::recordMicros(std::chrono::microseconds duration) {
     // note that delta was computed with mean before it was updated.
     secondMomentMicros += delta.count() * (duration - meanMicros);
 }
+void Stats::recordException() {
+    std::lock_guard<std::mutex> lk(mut);
+    countExceptions++;
+}
 
 bsoncxx::document::value Stats::getStats(bool withReset) {
     bsoncxx::builder::stream::document document{};
