@@ -18,6 +18,176 @@ Unpack the tool and run
 
 There is a [tutorial](Tutorial.md) and collection of [examples](examples).
 
+Running
+-------
+
+    Usage: ./mwg [-hldrpv] /path/to/workload [workload to run]
+    Execution Options:
+    	--collection COLL      Use Collection name COLL by default
+    	--database DB          Use Database name DB by default
+    	--dotfile|-d FILE      Generate dotfile to FILE from workload and exit.
+    	                       WARNING: names with spaces or other special characters
+    	                       will break the dot file
+    	--help|-h              Display this help and exit
+    	--host Host            Host/Connection string for mongo server to test--must be a
+    	                       full URI,
+    	--loglevel|-l LEVEL    Set the logging level. Valid options are trace,
+    	                       debug, info, warning, error, and fatal.
+    	--numThreads NUM       Run the workload with NUM threads instead of number
+    	                       specified in yaml file
+    	--resultfile|-r FILE   FILE to store results to. defaults to results.json
+    	--resultsperiod|-p SEC Record results every SEC seconds
+    	--runLengthMs NUM      Run the workload for up to NUM milliseconds instead of length
+    	                       specified in yaml file
+    	--variable VAR=VALUE   Override the value of yaml node VAR with VALUE. May be called
+    	                       multiple times. If you override a node that defines a YAML
+    	                       anchor, all aliases to that anchor will get the new value
+    	--version|-v           Return version information
+
+In particular, please note that the command line enables:
+
+* Running multiple workloads from the same file. By default the tool
+  will run the workload at node _main_, but you can explicitly select
+  the workload to run by specifying it as a second argument to
+  mwg. You specify the name of the YAML node that defines the
+  workload. This is particularly useful when building and testing
+  hierarchically defined workloads, as it enables testing an embedded
+  workload by itself.
+* Overriding specific settings in the yaml. The collection name, database name,
+  runLengthMs, and numThreads for the top level workload can be
+  explicitly set from the command line.
+* Overriding nodes in the yaml file. The _--variable_ option enables
+  changing the value of a node inside the yaml file. The effect is
+  equivalent to having edited that line. If the overriden node defined
+  an anchor, all aliases to that anchor are also updated. This is a
+  very flexible way to change things in your workload.
+* Enable periodic stats reporting and saving. Setting the
+  _--resultsperiod_ flag enables this. When enabled the results.json
+  is a json array, with one entry for every period in the run.
+
+Examples
+--------
+
+There are a collections of examples in the [examples directory](examples/). To run
+the [forN.yml](examples/forN.yml) example, simply do:
+    mwg examples/forN.yml
+
+The workloads are all specified in yaml. An example to call the "find"
+operation is:
+
+    name: find
+    type: find
+    filter: { x : a }
+    next: sleep
+
+The main parts of this are:
+
+* name: This is a label used to refer to the node or operation. If not
+  specified, a default name will be provided.
+* type: This says what the operation should be. Basic operations
+  include the operations supported by the C++11 driver. Currently a
+  subset is supported. See [Operations.md](Operations.md) for more.
+* filter: This is specific to the find operation. The argument will be
+  converted into bson, and will be used as the find document passed
+  to the C++11 driver when generating the find
+* next: This is the node to transition to when completing this
+  operation. If not specified, the immediately following node in the
+  definition will be set as the next node.
+
+Here is a  simple workload that does an insert and a find, and randomly
+chooses between them:
+
+    name: simple_workload
+    nodes:
+         - name: insert_one
+           type: insert_one
+           document: {x: a}
+           next: choice
+         - name: find
+           type: find
+           find: {x: a}
+           next: choice
+         - name: choice
+           type: random_choice
+           next:
+               find: 0.5
+               insert_one: 0.5
+
+This workload has a name and a list of nodes. This workload will run
+forever. After each operation it will make a random choice of whether to
+do an insert_one or find next. The workload can be made finite by
+adding an absorbing state.
+
+    name: simple_workload
+    nodes:
+         - name: insert_one
+           type: insert_one
+           document: {x: a}
+           next: choice
+         - name: find
+           type: find
+           find: {x: a}
+           next: choice
+         - name: choice
+           type: random_choice
+           next:
+               find: 0.45
+               insert_one: 0.45
+               Finish: 0.1
+
+The Finish state is an implicit absorbing state. The workload will
+stop when it reaches the Finish state. Additionally, we can set a
+limit on how long the workload runs by adding the field runLengthMs
+
+    name: simple_workload
+    runLengthMs: 10000
+    nodes:
+         - name: insert_one
+           type: insert_one
+           document: {x: a}
+           next: choice
+         - name: find
+           type: find
+           find: {x: a}
+           next: choice
+         - name: choice
+           type: random_choice
+           next:
+               find: 0.45
+               insert_one: 0.45
+               Finish: 0.1
+
+This workload will now run for at most 10 seconds (10,000 ms). 
+
+Including YAML Files
+--------------------
+
+It is possible to include existing yaml files from another yaml
+file. This is done by having a top level YAML node named
+_includes_. The entry should be a YAML sequence, and each item in the
+sequence should have a _filename_ entry, and either a _node_ with the
+name of a node, or _nodes_ with a sequence of node names. The program
+will load the YAML from _filename_, and replace the value of _node_ or
+the values in _nodes_ with the nodes matching those names in the other
+file. To use an included node, assign it a YAML anchor, and use an
+alias to that anchor in the desired location. It should look like
+this:
+
+    includes:
+      - filename: sample1.yml
+        node: &sample1 main
+      - filename: sample2.yml
+        nodes:
+          - &delay delay
+          - &sample2 main
+
+In this exacmple the node _main_ from the file _sample1.yml_ will be
+available in includes[0]["node"]. The anchor _sample1_ is defined, an
+the main node from sample1.yml may now be referenced with the alias
+"*sample1". See [includes2.yml](examples/includes2.yml) and
+[includes.yml](examples/includes.yml) for complete examples in the
+example directory.
+
 Overview
 --------
 
@@ -149,151 +319,3 @@ Build Notes:
   /usr/local/lib/pkgconfig/) can fix this. On the Libs: line, move the
   non mongoc libraries after "-lmongoc-1.0".
 
-Running
--------
-
-    Usage: ./mwg [-hldrpv] /path/to/workload [workload to run]
-    Execution Options:
-    	--collection COLL      Use Collection name COLL by default
-    	--database DB          Use Database name DB by default
-    	--dotfile|-d FILE      Generate dotfile to FILE from workload and exit.
-    	                       WARNING: names with spaces or other special characters
-    	                       will break the dot file
-    	--help|-h              Display this help and exit
-    	--host Host            Host/Connection string for mongo server to test--must be a
-    	                       full URI,
-    	--loglevel|-l LEVEL    Set the logging level. Valid options are trace,
-    	                       debug, info, warning, error, and fatal.
-    	--numThreads NUM       Run the workload with NUM threads instead of number
-    	                       specified in yaml file
-    	--resultfile|-r FILE   FILE to store results to. defaults to results.json
-    	--resultsperiod|-p SEC Record results every SEC seconds
-    	--runLengthMs NUM      Run the workload for up to NUM milliseconds instead of length
-    	                       specified in yaml file
-    	--variable VAR=VALUE   Override the value of yaml node VAR with VALUE. May be called
-    	                       multiple times. If you override a node that defines a YAML
-    	                       anchor, all aliases to that anchor will get the new value
-    	--version|-v           Return version information
-
-In particular, please note that the command line enables:
-
-* Running multiple workloads from the same file. By default the tool
-  will run the workload at node _main_, but you can explicitly select
-  the workload to run by specifying it as a second argument to
-  mwg. You specify the name of the YAML node that defines the
-  workload. This is particularly useful when building and testing
-  hierarchically defined workloads, as it enables testing an embedded
-  workload by itself.
-* Overriding specific settings in the yaml. The collection name, database name,
-  runLengthMs, and numThreads for the top level workload can be
-  explicitly set from the command line.
-* Overriding nodes in the yaml file. The _--variable_ option enables
-  changing the value of a node inside the yaml file. The effect is
-  equivalent to having edited that line. If the overriden node defined
-  an anchor, all aliases to that anchor are also updated. This is a
-  very flexible way to change things in your workload.
-* Enable periodic stats reporting and saving. Setting the
-  _--resultsperiod_ flag enables this. When enabled the results.json
-  is a json array, with one entry for every period in the run.
-
-Including YAML Files
---------------------
-
-It is possible to include existing yaml files from another yaml
-file. This is done by having a top level YAML node named
-_includes_. The entry should be a YAML sequence, and each item in the
-sequence should have a _filename_ entry, and either a _node_ with the
-name of a node, or _nodes_ with a sequence of node names. The program
-will load the YAML from _filename_, and replace the value of _node_ or
-the values in _nodes_ with the nodes matching those names in the other
-file. To use an included node, assign it a YAML anchor, and use an
-alias to that anchor in the desired location. It should look like
-this:
-
-    includes:
-      - filename: sample1.yml
-        node: &sample1 main
-      - filename: sample2.yml
-        nodes:
-          - &delay delay
-          - &sample2 main
-
-In this exacmple the node _main_ from the file _sample1.yml_ will be
-available in includes[0]["node"]. The anchor _sample1_ is defined, an
-the main node from sample1.yml may now be referenced with the alias
-"*sample1". See [includes2.yml](examples/includes2.yml) and
-[includes.yml](examples/includes.yml) for complete examples in the
-example directory.
-
-Examples
---------
-
-There are a collections of examples in the [examples directory](examples/). To run
-the [forN.yml](examples/forN.yml) example, simply do:
-    ./build/mwg examples/forN.yml
-
-The workloads are all specified in yaml. An example find node is:
-
-    name: find
-    type: find
-    filter: { x : a }
-    next: sleep
-
-The main parts of this are:
-
-* name: This is a label used to refer to the node or operation. If not
-  specified, a default name will be provided.
-* type: This says what the operation should be. Basic operations
-  include the operations supported by the C++11 driver. Currently a
-  subset is supported. See [Operations.md](Operations.md) for more.
-* filter: This is specific to the find operation. The argument will be
-  converted into bson, and will be used as the find document passed
-  to the C++11 driver when generating the find
-* next: This is the node to transition to when completing this
-  operation. If not specified, the immediately following node in the
-  definition will be set as the next node.
-
-A simple workload that does an insert and a find, and randomly
-chooses between them:
-
-    seed: 13141516
-    name: simple_workload
-    nodes:
-         - name: insert_one
-           type: insert_one
-           document: {x: a}
-           next: choice
-         - name: find
-           type: find
-           find: {x: a}
-           next: choice
-         - name: choice
-           type: random_choice
-           next:
-               find: 0.5
-               insert_one: 0.5
-
-This workload will run forever, and after each operation make a random
-choice of whether to do an insert_one or find next. The workload can be
-made finite by adding an absorbing state.
-
-    seed: 13141516
-    name: simple_workload
-    nodes:
-         - name: insert_one
-           type: insert_one
-           document: {x: a}
-           next: choice
-         - name: find
-           type: find
-           find: {x: a}
-           next: choice
-         - name: choice
-           type: random_choice
-           next:
-               find: 0.45
-               insert_one: 0.45
-               Finish: 0.1
-
-The Finish state is an implicit absorbing state. The workload will
-stop when it reaches the Finish state.
