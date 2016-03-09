@@ -1,9 +1,12 @@
+#include "ifNode.hpp"
+
+#include <boost/log/trivial.hpp>
+#include <bsoncxx/json.hpp>
+#include <random>
 #include <stdio.h>
 #include <stdlib.h>
-#include "ifNode.hpp"
+
 #include "parse_util.hpp"
-#include <random>
-#include <boost/log/trivial.hpp>
 
 namespace mwg {
 ifNode::ifNode(YAML::Node& ynode) {
@@ -103,10 +106,9 @@ void ifNode::executeNode(shared_ptr<threadState> myState) {
     auto compareView = compareValue->view();
     switch (comparisonTest) {
         case comparison::EQUALS:
-            // BOOST_LOG_TRIVIAL(trace) << "In EQUALS than comparison with result "
-            //                          << myState->result->get_int64().value << " and compare value
-            //                          "
-            //                          << compareValue->get_int64().value;
+            BOOST_LOG_TRIVIAL(trace) << "In EQUALS than comparison with result "
+                                     << bsoncxx::to_json(resultView) << " and compare value     "
+                                     << bsoncxx::to_json(compareView);
             conState = (resultView == compareView);
             break;
         case comparison::GREATER_THAN:

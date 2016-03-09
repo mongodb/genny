@@ -1,51 +1,72 @@
 # Example workload for ifNode. Inserts documents, and then proceeds
 # through one if condition that is true, and on that is false.
-main : 
+main:
   seed: 131415161718
   name: main
-  nodes: 
-    - type : drop
-    - name : insert1
-      type : insert_many
-      container :
-        - {x : a}
-        - {x : a}
-        - {x : b}
-        - {x : c}
-        - {y : a}
-        - {y : b}
-    - type : count
-      filter : {x : a} # this will find two and save it in result
-    - name : ifNode1
-      type : ifNode
-      ifNode : takenif # Go here if condition true
-      elseNode : nottakenelse # Go here if condition false
-      comparison : #Test if result from previous operation (count) is equal to 2
-        value : 2 
-        test : equals
-    - name : nottakenelse
-      print : Not Taken Else
-      type : noop
-      next : count2
-    - name : takenif
-      print : Taken if
-      type : noop
-      next : count2
-    - name : count2
-      type : count
-      filter : { y : b }
-    - name : ifNode2
-      type : ifNode
-      ifNode : nottakenif
-      elseNode : takenelse
-      comparison : #Test if result from previous operation (count) is greater than 3
-        test : greater
-        value : 3
-    - name : nottakenif
-      type : noop
-      print : Not Taken If
-      next : Finish
-    - name : takenelse
-      type : noop
-      print : Taken else
-      next : Finish
+  nodes:
+    - type: drop
+    - name: insert1
+      type: insert_many
+      container:
+        - {x: a}
+        - {x: a}
+        - {x: b}
+        - {x: c}
+        - {y: a}
+        - {y: b}
+        - {z: 1, a: b}
+    - type: count
+      filter: {x: a} # this will find two and save it in result
+    - name: ifNode1
+      type: ifNode
+      ifNode: takenif # Go here if condition true
+      elseNode: nottakenelse # Go here if condition false
+      comparison: #Test if result from previous operation (count) is equal to 2
+        value: 2
+        test: equals
+    - name: nottakenelse
+      print: Not Taken Else
+      type: noop
+      next: count2
+    - name: takenif
+      print: Taken if
+      type: noop
+      next: count2
+    - name: count2
+      type: count
+      filter: {y: b }
+    - name: ifNode2
+      type: ifNode
+      ifNode: nottakenif
+      elseNode: takenelse
+      comparison: #Test if result from previous operation (count) is greater than 3
+        test: greater
+        value: 3
+    - name: nottakenif
+      type: noop
+      print: Not Taken If
+      next: find_one
+    - name: takenelse
+      type: noop
+      print: Taken else
+      next: find_one
+    - name: find_one
+      type: find_one
+      filter: {z: 1}
+      options:
+        projection: {a: 1, _id: 0}
+    - name: ifNode3
+      type: ifNode
+      ifNode: findoneif
+      elseNode: findoneelse
+      comparison:
+        test: equals
+        value: {a: b}
+    - name: findoneif
+      type: noop
+      print: findonetakenif
+      next: Finish
+    - name: findoneelse
+      type: noop
+      print: findoneelse
+      next: Finish

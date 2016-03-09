@@ -1,11 +1,10 @@
 #include "parse_util.hpp"
-#include <mongocxx/write_concern.hpp>
-#include <bsoncxx/builder/concatenate.hpp>
 
-#include <chrono>
-#include <boost/regex.hpp>  // STDLIB regex failed on Ubuntu 14.04 & CentOS 7
 #include <boost/log/trivial.hpp>
+#include <boost/regex.hpp>  // STDLIB regex failed on Ubuntu 14.04 & CentOS 7
 #include <chrono>
+#include <bsoncxx/builder/concatenate.hpp>
+#include <mongocxx/write_concern.hpp>
 
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::close_document;
@@ -67,14 +66,17 @@ bsoncxx::array::value parseSequence(YAML::Node node) {
 }
 
 bsoncxx::array::value yamlToValue(YAML::Node node) {
-    if (!node.IsScalar()) {
-        BOOST_LOG_TRIVIAL(fatal) << "yamlToValue and passed in non-scalar";
-    }
     bsoncxx::builder::stream::array myArray{};
-    if (isNumber(node.Scalar())) {
-        myArray << node.as<int64_t>();
-    } else {  // string
-        myArray << node.Scalar();
+    if (node.IsScalar()) {
+        if (isNumber(node.Scalar())) {
+            myArray << node.as<int64_t>();
+        } else {  // string
+            myArray << node.Scalar();
+        }
+    } else if (node.IsSequence()) {
+        myArray << open_array << concatenate(parseSequence(node)) << close_array;
+    } else {  // MAP
+        myArray << open_document << concatenate(parseMap(node)) << close_document;
     }
     return (std::move(myArray << bsoncxx::builder::stream::finalize));
 }

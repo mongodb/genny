@@ -1,10 +1,16 @@
 #include "find_one.hpp"
-#include "parse_util.hpp"
-#include "node.hpp"
-#include <bsoncxx/json.hpp>
-#include <stdlib.h>
+
 #include <boost/log/trivial.hpp>
+#include <bsoncxx/json.hpp>
 #include <mongocxx/exception/operation_exception.hpp>
+#include <stdlib.h>
+
+#include "node.hpp"
+#include "parse_util.hpp"
+
+using bsoncxx::builder::concatenate;
+using bsoncxx::builder::stream::close_document;
+using bsoncxx::builder::stream::open_document;
 
 namespace mwg {
 
@@ -38,6 +44,9 @@ void find_one::execute(mongocxx::client& conn, threadState& state) {
     auto view = filter->view(mydoc, state);
     try {
         auto value = collection.find_one(view, options);
+        state.result = bsoncxx::builder::stream::array()
+            << open_document << concatenate(value->view()) << close_document
+            << bsoncxx::builder::stream::finalize;
     } catch (mongocxx::operation_exception e) {
         state.currentNode->recordException();
         BOOST_LOG_TRIVIAL(error) << "Caught mongo exception in find_one: " << e.what();
