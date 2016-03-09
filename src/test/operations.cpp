@@ -184,11 +184,11 @@ TEST_CASE("Set Variables", "[variables]") {
     }
     SECTION("UseVar in operation") {
         auto yaml = YAML::Load(R"yaml(
-    type : set_variable
-    target : workloadVar
-    operation :
-      type : usevar
-      variable : threadVar
+    type: set_variable
+    target: workloadVar
+    operation:
+      type: usevar
+      variable: threadVar
 )yaml");
 
         auto testSet = set_variable(yaml);
@@ -196,6 +196,54 @@ TEST_CASE("Set Variables", "[variables]") {
         REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 2);
         REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 2);
     }
+
+    SECTION("UseVar with DBName") {
+        auto yaml = YAML::Load(R"yaml(
+    type: set_variable
+    target: workloadVar
+    operation:
+      type: usevar
+      variable: DBName
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        auto actual = state.wvariables.find("workloadVar")->second.view()[0].get_utf8().value;
+        INFO("Expected = \"" << state.DBName << "\"");
+        INFO("Got      = \"" << actual << "\"");
+        REQUIRE(actual.compare(state.DBName) == 0);
+    }
+    SECTION("UseVar with CollectionName") {
+        auto yaml = YAML::Load(R"yaml(
+    type: set_variable
+    target: workloadVar
+    operation:
+      type: usevar
+      variable: CollectionName
+)yaml");
+
+        auto testSet = set_variable(yaml);
+        testSet.execute(conn, state);
+        auto actual = state.wvariables.find("workloadVar")->second.view()[0].get_utf8().value;
+        INFO("Expected = \"" << state.CollectionName << "\"");
+        INFO("Got      = \"" << actual << "\"");
+        REQUIRE(actual.compare(state.CollectionName) == 0);
+    }
+    SECTION("UseResult in operation") {
+        auto yaml = YAML::Load(R"yaml(
+        type: set_variable
+        target: threadVar
+        operation:
+          type: useresult
+    )yaml");
+        auto testSet = set_variable(yaml);
+        state.result = bsoncxx::builder::stream::array() << 5 << finalize;
+        testSet.execute(conn, state);
+        INFO("Ran set_variable based on result");
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 5);
+    }
+
+
     SECTION("Increment in operation") {
         auto yaml = YAML::Load(R"yaml(
     type : set_variable

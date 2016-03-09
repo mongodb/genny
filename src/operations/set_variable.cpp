@@ -1,15 +1,18 @@
 #include "set_variable.hpp"
-#include "parse_util.hpp"
-#include <bsoncxx/json.hpp>
-#include <bsoncxx/array/view.hpp>
-#include <bsoncxx/view_or_value.hpp>
-#include <stdlib.h>
+
 #include <boost/log/trivial.hpp>
+#include <bsoncxx/array/view.hpp>
+#include <bsoncxx/json.hpp>
+#include <bsoncxx/view_or_value.hpp>
 #include <mongocxx/exception/operation_exception.hpp>
+#include <stdlib.h>
+
+#include "parse_util.hpp"
 #include "workload.hpp"
 
-using bsoncxx::array::view;
+using bsoncxx::builder::stream::finalize;
 using bsoncxx::array::value;
+using bsoncxx::array::view;
 using view_or_value = bsoncxx::view_or_value<view, value>;
 
 namespace mwg {
@@ -221,7 +224,14 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
                 auto type = (*operationNode)["type"].Scalar();
                 if (type == "usevar") {
                     string varname = (*operationNode)["variable"].Scalar();
-                    if (state.tvariables.count(varname) > 0) {
+                    BOOST_LOG_TRIVIAL(trace) << "In set_variable::execute with usevar. varnmame is "
+                                             << varname;
+                    if (varname == "DBName") {
+                        localValue = bsoncxx::builder::stream::array() << state.DBName << finalize;
+                    } else if (varname.compare("CollectionName") == 0) {
+                        localValue = bsoncxx::builder::stream::array() << state.CollectionName
+                                                                       << finalize;
+                    } else if (state.tvariables.count(varname) > 0) {
                         localValue =
                             bsoncxx::array::value(state.tvariables.find(varname)->second.view());
                     } else if (state.wvariables.count(varname) > 0) {  // in wvariables
@@ -237,6 +247,10 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
                         exit(EXIT_FAILURE);
                     }
 
+                } else if (type == "useresult") {
+                    BOOST_LOG_TRIVIAL(trace) << "In set_variable with useresult. Result is "
+                                             << bsoncxx::to_json(state.result->view());
+                    localValue = bsoncxx::array::value(state.result->view());
                 } else if (type == "increment") {
                     string varname = (*operationNode)["variable"].Scalar();
                     if (state.tvariables.count(varname) > 0) {
