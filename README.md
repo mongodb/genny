@@ -1,6 +1,23 @@
 Workload Generation
 ===================
 
+Quickstart
+----------
+
+Download the tool
+
+* [For Mac](https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.3.0-Darwin.tar.gz)
+* [For Linux](https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.3.0-AWS.tar.gz)
+
+Unpack the tool and run
+
+    #Start a mongod on default port
+    tar -zxvf WorkloadGeneration*.tar.gz
+    cd WorkloadGeneration*
+    bin/mwg example/sample1.yml
+
+There is a [tutorial](Tutorial.md) and collection of [examples](examples).
+
 Overview
 --------
 
