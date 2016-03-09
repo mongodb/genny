@@ -601,5 +601,50 @@ TEST_CASE("Nodes", "[nodes]") {
                 REQUIRE(thing2Node->getCount() == 1);
             }
         }
+        SECTION("Use Thread Var") {
+            auto ifNodeYaml = YAML::Load(R"yaml(
+          name : ifNode
+          type : ifNode
+          ifNode : thingA
+          elseNode : thingB
+          comparison : 
+              value : 1
+              test : equals
+              variable: tvar
+        )yaml");
+            auto ifNodeNode = makeSharedNode(ifNodeYaml);
+            nodes[ifNodeNode->getName()] = ifNodeNode;
+            vectornodes.push_back(ifNodeNode);
+
+            // connect the nodes
+            for (auto mnode : vectornodes) {
+                mnode->setNextNode(nodes, vectornodes);
+            }
+
+            bsoncxx::types::b_int64 value;
+            // execute -- if should evaluate false and take the ifnode
+            state->currentNode = ifNodeNode;
+            SECTION("true") {
+                state->tvariables.insert(
+                    {"tvar", bsoncxx::builder::stream::array() << 1 << finalize});
+                value.value = 1;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 1);
+                REQUIRE(thing2Node->getCount() == 0);
+            }
+            SECTION("false") {
+                state->tvariables.insert(
+                    {"tvar", bsoncxx::builder::stream::array() << 2 << finalize});
+                // execute -- if should evaluate false and take the elsenode
+                state->currentNode = ifNodeNode;
+                while (state->currentNode != nullptr)
+                    state->currentNode->executeNode(state);
+                REQUIRE(ifNodeNode->getCount() == 1);
+                REQUIRE(thing1Node->getCount() == 0);
+                REQUIRE(thing2Node->getCount() == 1);
+            }
+        }
     }
 }

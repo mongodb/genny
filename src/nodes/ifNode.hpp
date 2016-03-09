@@ -30,5 +30,6 @@ private:
     shared_ptr<node> iffNode, elseNode;
     bsoncxx::stdx::optional<bsoncxx::array::value> compareValue;
     comparison comparisonTest;
+    string comparisonVariable;
 };
 }

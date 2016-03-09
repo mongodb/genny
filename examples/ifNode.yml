@@ -2,6 +2,9 @@
 # through one if condition that is true, and on that is false.
 main:
   seed: 131415161718
+  tvariables: 
+    count: 0
+    counter: 0 #Can get this down to one variable
   name: main
   nodes:
     - type: drop
@@ -65,8 +68,25 @@ main:
     - name: findoneif
       type: noop
       print: findonetakenif
-      next: Finish
+      next: loop
     - name: findoneelse
       type: noop
       print: findoneelse
-      next: Finish
+      next: loop
+    - name: loop #This demonstrates a for loop implemented using ifNodes
+      type: ifNode
+      print: in loop
+      comparison:
+        test: equals
+        value: 5
+        variable: count
+      ifNode: Finish #If we match the count, stop
+      elseNode: increment #otherwise increment the counter
+    - name: increment
+      print: in loop incrementing
+      type: set_variable
+      targetVariable: counter #Can't currently increment self. Will fix
+      operation:
+        type: increment
+        variable: count
+      next: loop
