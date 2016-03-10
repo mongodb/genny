@@ -18,28 +18,29 @@ Unpack the tool and run
 
 Congratulations, you have run your first model. You can check the
 [console output](examples/sample1.output.txt) and the
-[results file results.json](examples/samples.results.json) and compare
+[results file results.json](examples/sample1.results.json) and compare
 the results to my results.
 
 ![image of sample1 graph](examples/images/sample1.png)
 
-The workload in sample1.yml is a simple single-threaded workloaded
-composed of five nodes. A picture of the workload is immediately above
-here. It insersts a simple document into the database, sleeps for 1
-second, then makes a choice. With a 50% probability it will go to the
-insert2 node, which inserts another simple document, and with a 50%
-probability it will go to the query node, and run a find operation
-against the database. In either case, the workload then goes back to
-the sleep node and repeats. By the structure of the workload it will
-run forever, however, the runLengthMs field under main sets a maximum
-execution time of 10s for the workload.
+The workload in [sample1.yml](examples/sample1.yml) is a simple
+single-threaded workloaded composed of five nodes. A picture of the
+workload is immediately above here. It inserts a simple document into
+the database, sleeps for 1 second, then makes a choice. With a 50%
+probability it will go to the insert2 node, which inserts another
+simple document, and with a 50% probability it will go to the query
+node, and run a find operation against the database. In either case,
+the workload then goes back to the sleep node and repeats. By the
+structure of the workload it will run forever, however, the
+runLengthMs field under main sets a maximum execution time of 10s for
+the workload.
 
 The [console output](examples/sample1.output.txt) shows the the
 workload proceeding from node to node in its execution, and then
 includes some summary statistics at the end. The tool keeps track of
 latency and count statistics for every node in the workload, and for
 the workload overall. The
-[results.json](examples/samples.results.json) file saves this data in
+[results.json](examples/sample1.results.json) file saves this data in
 a structured json document, matching the structure of the workload.
 
 There is also a [tutorial](Tutorial.md) and collection of [examples](examples).
