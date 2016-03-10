@@ -16,7 +16,25 @@ Unpack the tool and run
     cd WorkloadGeneration*
     bin/mwg example/sample1.yml
 
-There is a [tutorial](Tutorial.md) and collection of [examples](examples).
+Congratulations, you have run your first model. You can check the
+[console output](examples/sample1.output.txt) and the
+[results file results.json](examples/samples.results.json) and compare
+the results to my results.
+
+![image of sample1 graph](examples/images/sample1.png)
+
+The workload in sample1.yml is a simple single-threaded workloaded
+composed of five nodes. A picture of the workload is immediately above
+here. It insersts a simple document into the database, sleeps for 1
+second, then makes a choice. With a 50% probability it will go to the
+insert2 node, which inserts another simple document, and with a 50%
+probability it will go to the query node, and run a find operation
+against the database. In either case, the workload then goes back to
+the sleep node and repeats. By the structure of the workload it will
+run forever. The runLengthMs field under main sets a maximum execution
+time of 10s for the workload.
+
+There is also a [tutorial](Tutorial.md) and collection of [examples](examples).
 
 Running
 -------
@@ -157,7 +175,7 @@ limit on how long the workload runs by adding the field runLengthMs
                insert_one: 0.45
                Finish: 0.1
 
-This workload will now run for at most 10 seconds (10,000 ms). 
+This workload will now run for at most 10 seconds (10,000 ms).
 
 Including YAML Files
 --------------------
@@ -318,4 +336,3 @@ Build Notes:
   driver. In those cases, editing libmongo-c-1.0.pc (usually in
   /usr/local/lib/pkgconfig/) can fix this. On the Libs: line, move the
   non mongoc libraries after "-lmongoc-1.0".
-
