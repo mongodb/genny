@@ -14,7 +14,7 @@ Unpack the tool and run
     #Start a mongod on default port
     tar -zxvf WorkloadGeneration*.tar.gz
     cd WorkloadGeneration*
-    bin/mwg example/sample1.yml
+    bin/mwg examples/sample1.yml
 
 Congratulations, you have run your first model. You can check the
 [console output](examples/sample1.output.txt) and the
