@@ -102,7 +102,7 @@ add_subdirectory(src)
 include_directories(src/stats)
 add_executable(mwg src/main.cpp githash.cpp)
 target_link_libraries(mwg workload nodes operations
-docs parse stats ${Boost_LIBRARIES} ${LIBRARIES} ${YAMLCPP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+docs values parse stats ${Boost_LIBRARIES} ${LIBRARIES} ${YAMLCPP_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
 add_subdirectory(examples)
 

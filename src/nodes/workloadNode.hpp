@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "node.hpp"
+#include "value_generator.hpp"
 
 using bsoncxx::stdx::optional;
 
@@ -23,10 +24,10 @@ public:
 
 protected:
     unique_ptr<workload> myWorkload;
-    optional<YAML::Node> dbName;
-    optional<YAML::Node> collectionName;
-    optional<YAML::Node> workloadName;
-    optional<YAML::Node> numThreads;
-    optional<YAML::Node> runLengthMs;
+    unique_ptr<ValueGenerator> dbName;
+    unique_ptr<ValueGenerator> collectionName;
+    unique_ptr<ValueGenerator> workloadName;
+    unique_ptr<ValueGenerator> numThreads;
+    unique_ptr<ValueGenerator> runLengthMs;
 };
 }

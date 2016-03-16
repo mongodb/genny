@@ -6,5 +6,5 @@ read_preference.cpp write_concern.cpp name.cpp
 update_one.cpp update_many.cpp create_collection.cpp command.cpp
 set_variable.cpp noop.cpp)
 add_library(operations ${src_files})
-include_directories(documents nodes operations)
+include_directories(documents nodes operations values)
 set(CMAKE_CURRENT_BINARY_DIR ${CMAKE_BINARY_DIR})

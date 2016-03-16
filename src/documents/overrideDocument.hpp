@@ -1,8 +1,11 @@
-#include "document.hpp"
-#include "bsonDocument.hpp"
+#pragma once
+
+#include <memory>
 #include <unordered_map>
 
-#pragma once
+#include "bsonDocument.hpp"
+#include "document.hpp"
+#include "value_generator.hpp"
 
 using namespace std;
 
@@ -26,12 +29,8 @@ private:
                             bsoncxx::document::view,
                             string,
                             threadState&);
-    //    void applyOverrideLevel(bsoncxx::builder::stream::document &,
-    //    bsoncxx::document::view::iterator begin, bsoncxx::document::view::iterator end, string);
     // The document to override
     bsonDocument doc;
-    // The list of things to override.
-    // These are strings for now. Need to be generalized to a value type.
-    unordered_map<string, YAML::Node> override;
+    unordered_map<string, unique_ptr<ValueGenerator>> override;
 };
 }
