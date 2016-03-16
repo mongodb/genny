@@ -107,4 +107,5 @@ docs parse stats ${Boost_LIBRARIES} ${LIBRARIES} ${YAMLCPP_LIBRARY} ${CMAKE_THRE
 add_subdirectory(examples)
 
 install(TARGETS mwg DESTINATION bin)
-install(DIRECTORY "${PROJECT_SOURCE_DIR}/examples/" DESTINATION "examples")
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/examples/" DESTINATION
+"examples" FILES_MATCHING PATTERN "*.yml")
