@@ -621,13 +621,11 @@ TEST_CASE("Nodes", "[nodes]") {
                 mnode->setNextNode(nodes, vectornodes);
             }
 
-            bsoncxx::types::b_int64 value;
             // execute -- if should evaluate false and take the ifnode
             state->currentNode = ifNodeNode;
             SECTION("true") {
                 state->tvariables.insert(
                     {"tvar", bsoncxx::builder::stream::array() << 1 << finalize});
-                value.value = 1;
                 while (state->currentNode != nullptr)
                     state->currentNode->executeNode(state);
                 REQUIRE(ifNodeNode->getCount() == 1);
