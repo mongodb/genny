@@ -80,19 +80,3 @@ Helper operations
           variable is not updated.
           * _variable_: the variable to multiply. Must be a number
           * _factor_: The factor to multiply it by.
-
-Future Operations
------------------
-
-* Aggregation (Can be done through db command)
-* Remaining database operations (can be done through db command)
-* Value/Doc manipulation operations: These are for constructing or
-  changing values or documents. There is currently some support in
-  overrideDocument, but it needs to be generalized.
-
-Other Future support
-------------------------
-
-* The operations should return a value that is propogated in the
-  thread state. This will feed in with choice nodes, and document
-  manipulation.

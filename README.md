@@ -4,44 +4,79 @@ Workload Generation
 Quickstart
 ----------
 
-Download the tool
-
-* [For Mac](https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.3.0-Darwin.tar.gz)
-* [For Linux](https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.3.0-AWS.tar.gz)
-
-Unpack the tool and run
+On Mac
 
     #Start a mongod on default port
-    tar -zxvf WorkloadGeneration*.tar.gz
-    cd WorkloadGeneration*
-    bin/mwg examples/sample1.yml
+    wget https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.3.0-Darwin.tar.gz
+    tar -zxvf WorkloadGeneration-0.3.0-Darwin.tar.gz
+    cd WorkloadGeneration-0.3.0-Darwin
+    bin/mwg examples/hello_world.yml
+
+Or on linux (compiled on Ubuntu 14.04)
+
+    #Start a mongod on default port
+    wget https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.3.0-Linux.tar.gz
+    tar -zxvf WorkloadGeneration-0.3.0-Linux.tar.gz
+    cd WorkloadGeneration-0.3.0-Linux
+    bin/mwg examples/hello_world.yml
 
 Congratulations, you have run your first model. You can check the
-[console output](examples/sample1.output.txt) and the
-[results file results.json](examples/sample1.results.json) and compare
+[console output](examples/hello_world.output.txt) and the
+[results file results.json](examples/hello_world.results.json) and compare
 the results to my results.
 
-![image of sample1 graph](examples/images/sample1.png)
+The workload in [hello_world.yml](examples/hello_world.yml) performs a
+single insert_one of the document {x: "Hello World"} into a default
+database (testDB) and collection (testCollection). Try opening the
+mongo shell, and finding the document:
 
-The workload in [sample1.yml](examples/sample1.yml) is a simple
-single-threaded workloaded composed of five nodes. A picture of the
-workload is immediately above here. It inserts a simple document into
-the database, sleeps for 1 second, then makes a choice. With a 50%
-probability it will go to the insert2 node, which inserts another
-simple document, and with a 50% probability it will go to the query
-node, and run a find operation against the database. In either case,
-the workload then goes back to the sleep node and repeats. By the
-structure of the workload it will run forever, however, the
-runLengthMs field under main sets a maximum execution time of 10s for
-the workload.
+    use testDB
+    db.testCollection.findOne()
 
-The [console output](examples/sample1.output.txt) shows the the
-workload proceeding from node to node in its execution, and then
-includes some summary statistics at the end. The tool keeps track of
-latency and count statistics for every node in the workload, and for
-the workload overall. The
-[results.json](examples/sample1.results.json) file saves this data in
-a structured json document, matching the structure of the workload.
+The [results.json](examples/hello_world.results.json) file saves
+statistics on the workload execution in a structured json document,
+matching the structure of the workload. You should be able to see that
+the "Hello World" workload ran once (count: 1), and within that
+workload the "insert\_one0" node also ran once (count: 1), along with
+its mean latency (meanMicros) in microseconds.
+
+"insert\_one0" is generated name for the node since we did not
+explicitly name it. We can give it a name by adding the text "name:
+Insert_Hello" after the print statement. Try adding the line to your
+copy of the file. It should look like this:
+
+    main:
+      name: Hello_World
+      nodes:
+        - type: insert_one
+          document: {x: Hello World}
+          print: Inserted Hello World document
+          name: Hello_World
+
+We can also make the test run in a loop, repeatedly inserting this
+same document. By default after executing a node, the system executes
+the next node in the list or stops if there is no next node. We can
+explicitly tell the system the next node to execute by adding a _next_
+field. To make a loop, we would use "next: Hello\_World". This results
+in a workload that will run forever. We can put a timelimit in
+milliseconds on the workload by adding the workload field
+_runLengthMs_. The workload with all three of these changes would look
+like this:
+
+    main:
+      name: Hello_World
+      runLengthMs: 5000
+      nodes:
+        - type: insert_one
+          document: {x: Hello World}
+          print: Inserted Hello World document
+          name: Hello_World
+          next: Hello_World
+
+Try updating your copy of hello_world.yml to match, and observe the
+output and result file after running. After running the model, try
+changing a model parameter, such as the document inserted, or the
+run length.
 
 There is also a [tutorial](Tutorial.md) and collection of [examples](examples).
 
@@ -92,100 +127,6 @@ In particular, please note that the command line enables:
   _--resultsperiod_ flag enables this. When enabled the results.json
   is a json array, with one entry for every period in the run.
 
-Examples
---------
-
-There are a collections of examples in the [examples directory](examples/). To run
-the [forN.yml](examples/forN.yml) example, simply do:
-    mwg examples/forN.yml
-
-The workloads are all specified in yaml. An example to call the "find"
-operation is:
-
-    name: find
-    type: find
-    filter: { x : a }
-    next: sleep
-
-The main parts of this are:
-
-* name: This is a label used to refer to the node or operation. If not
-  specified, a default name will be provided.
-* type: This says what the operation should be. Basic operations
-  include the operations supported by the C++11 driver. Currently a
-  subset is supported. See [Operations.md](Operations.md) for more.
-* filter: This is specific to the find operation. The argument will be
-  converted into bson, and will be used as the find document passed
-  to the C++11 driver when generating the find
-* next: This is the node to transition to when completing this
-  operation. If not specified, the immediately following node in the
-  definition will be set as the next node.
-
-Here is a  simple workload that does an insert and a find, and randomly
-chooses between them:
-
-    name: simple_workload
-    nodes:
-         - name: insert_one
-           type: insert_one
-           document: {x: a}
-           next: choice
-         - name: find
-           type: find
-           find: {x: a}
-           next: choice
-         - name: choice
-           type: random_choice
-           next:
-               find: 0.5
-               insert_one: 0.5
-
-This workload has a name and a list of nodes. This workload will run
-forever. After each operation it will make a random choice of whether to
-do an insert_one or find next. The workload can be made finite by
-adding an absorbing state.
-
-    name: simple_workload
-    nodes:
-         - name: insert_one
-           type: insert_one
-           document: {x: a}
-           next: choice
-         - name: find
-           type: find
-           find: {x: a}
-           next: choice
-         - name: choice
-           type: random_choice
-           next:
-               find: 0.45
-               insert_one: 0.45
-               Finish: 0.1
-
-The Finish state is an implicit absorbing state. The workload will
-stop when it reaches the Finish state. Additionally, we can set a
-limit on how long the workload runs by adding the field runLengthMs
-
-    name: simple_workload
-    runLengthMs: 10000
-    nodes:
-         - name: insert_one
-           type: insert_one
-           document: {x: a}
-           next: choice
-         - name: find
-           type: find
-           find: {x: a}
-           next: choice
-         - name: choice
-           type: random_choice
-           next:
-               find: 0.45
-               insert_one: 0.45
-               Finish: 0.1
-
-This workload will now run for at most 10 seconds (10,000 ms).
-
 Including YAML Files
 --------------------
 
@@ -215,133 +156,27 @@ the main node from sample1.yml may now be referenced with the alias
 [includes.yml](examples/includes.yml) for complete examples in the
 example directory.
 
-Overview
---------
-
-This tool is a workload generator for testing the performance of a
-mongo cluster. The tool allows you to specify a workload in a yaml
-file, with a large degree of flexibility. The workload tool is written
-in C++ and wraps the
-[C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master),
-which in turn supports the
-[mongo driver spec](https://github.com/mongodb/specifications/blob/master/source/crud/crud.rst). It
-is the intention that:
-
-* Workloads are completely described in YAML (no C or other code
-  needed).
-* It is easy and fast to define new workloads or change an existing workload.
-* Workloads can be composed and defined hierarchically.
-* Workloads run consistently fast (the underlying engine is C++), so they test the
-  server, not the workload tool.
-* The tool scales to large thread counts up to hardware constraints.
-* The tool generates reproducible workload executions (seeded pseudo-random number
-  generator per thread).
-  * Note: The workload generation tool cannot control if the server
-    under test responds differently because of factors not under the tools
-    control.
-
-There are three basic components in a workload, enabling the
-specification of arbitrarily complex workloads in a graph of
-operations.
-
-1. [Nodes](Nodes.md): These are nodes in the workload graph. They may
-   do something, such as a find_one, or they may control the flow of
-   execution, such as random_choice.
-2. [Workloads](Workloads.md): These are collection of nodes and represent an actual
-   workload. They specify the node that should execute first in the
-   workload. They also supply parameters and a pseudo-random number
-   generator to the nodes and ops.
-3. [Documents](Documents.md): These are objects that can be used anywhere a bson
-   Object is needed.
-
-There are a number of [examples](examples/README.md) that demonstrate
-the basic ideas. All the examples work. Additional, there is a [tutorial](Tutorial.md)
-
-### Stats
-
-The duration of every node execution is measured and recorded. At the
-end of the run, the following stats are reported per node (and nested
-workload):
-
-1. Count of executions
-2. Average execution time in microseconds
-3. Min and Max exection time in microseconds
-4. Std. Deviation of execution time in microseconds
-
-Those results are reported to a configurable results json file
-(default results.json), and to the logging output at the info
-level. They can also be printed out periodically using the -p option.
-
-#### Future stats
-
-The following stats and stat features are not implemented yet.
-
-1. Histogram data
-2. Percentile data (95th, 99th percentile), based on histogram data.
-
-I also intend to do the following:
-
-1. Rewrite the stats to be accumulating, rather than resetting. This
-   will allow for easy analysis of different regions of behavior.
-2. Add the ability for a phase marker node to trigger a stats
-   dump. This will enable specifically measuring stats for different
-   phases of execution.
-
-The two points combined will be enable us to   gather periodic stats,
-phase based stats, and overall stats at the same time. It will require
-post-processing to generate useful statistics. A script will be
-included to perform the post-processing.
-
-### Future features
-
-This is an incomplete list.
-
-2. More types of transformation of values and tools for building
-   documents (hashing, concatenate, adding fields to an existing document)
-3. Use of variable in any field (currently only in overrideDocument).
-4. Access state from an embedded workload (e.g., give 5 copies of an
-   embedded workload unique sequence ids by incrementing a field)
-5. See [Operations](Operations.md), [Nodes](Nodes.md),
-   [Workloads](Workloads.md), and [Documents](Documents.md) for
-   additional future features.
-
-Dependencies
-------------
-
-* The
-  [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master). Currently
-  tested against r3.0.0. If compiling on OS X, see
-  [CXX-836](https://jira.mongodb.org/browse/CXX-836). The C++11 driver
-  in turn requires the c driver.
-* [yaml-cpp](https://github.com/jbeder/yaml-cpp)
-* A compiler that supports c++11
-* [cmake](http://www.cmake.org/) for building
-* [Boost](http://www.boost.org/) for logging and filesystem
-  libraries. Version 1.48 or later
-
-Install Script
---------------
-
-Jonathan Abrahams has added an [install script](install.sh) that
-should install all the dependencies and build the tool for CentOS,
-Ubuntu, Darwin, and Windows_NT.
 
 Building
 --------
 
-    cd build
-    cmake ..
-    make
-    make test # optional. Expects a mongod running on port 27017
+See [BUILD.md](BUILD.md)
+
+Examples
+--------
+
+There are a collections of examples in the [examples directory](examples/). To run
+the [forN.yml](examples/forN.yml) example, simply do:
+    mwg examples/forN.yml
+
+Overview of the Tool
+--------------------
+
+See [OVERVIEW.md](OVERVIEW.md)
 
 
-Build Notes:
+Future Features
+---------------
 
-* The build will use static boost by default, and static mongo c++
-  driver libraries if they exist. If boost static libraries don't
-  exist on your system, add "-DBoost\_NON\_STATIC=true" to the end of your
-  cmake line.
-* On some systems I've had trouble linking against the mongo c
-  driver. In those cases, editing libmongo-c-1.0.pc (usually in
-  /usr/local/lib/pkgconfig/) can fix this. On the Libs: line, move the
-  non mongoc libraries after "-lmongoc-1.0".
+See [FUTURE.md](FUTURE.md) for a list of planned but not implemented
+features.

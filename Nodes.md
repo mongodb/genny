@@ -94,25 +94,3 @@ Operation Nodes
 These nodes do something, such as database commands, or manipulating
 variables. They are described in [Operations.md](Operations.md)
 
-Future Nodes
-------------
-
-1. Phase Marker: Make a transition externally visible. For instance,
-   to mark the end of the warmup phsae of a workload.
-2. External trigger: A node that waits for an external trigger before
-   executing it's next node. For multi machine client systems, this could be
-   used with the phase marker to synchronize multiple client
-   machines. For example, all the clients can have a phase marker node
-   to indicate the end of warmup, and then immediately wait on an
-   external trigger. External software could track when all the
-   clients have finished their warmups, and then indicate for all of
-   the clients to continue.
-
-Future Extensions
------------------
-
-1. The sleep node currently sleeps for a constant amount of time. In
-   the future it will have an option to sleep for a random period of
-   time, and the distribution and parameters will be specifiable. An
-   exponential sleep, combined wiht the spawn node would allow
-   modeling a Poisson arrival process.

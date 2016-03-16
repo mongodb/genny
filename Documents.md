@@ -21,15 +21,3 @@ Currently supported documents
      increment.
    4. date: The current date
 
-Future documents
-----------------
-
-1. _generator_: This document is like an _override_, but is only
-   evaluated once, eather than every time it is accessed.
-
-Other Future Work
------------------
-
-Currently all the transformation of data is embedded in the _override_
-document type. This functionality should be pulled out into one or
-more helper functions that that return values and/or documents.

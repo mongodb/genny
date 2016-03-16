@@ -3,10 +3,12 @@ Examples
 
 This directory contains a number of example workloads. They all
 run. The subdirectory future contains example workloads that use
-features not fully operational yet, or don't exist yet.
+features not fully operational yet, or don't exist yet. This file
+provides a tour through some of those scripts, and also a tour of the
+basic syntax. 
 
-A Tour
----------
+A Tour of the example scripts
+-----------------------------
 These examples are all trivial workloads that illustrate different concepts or functionality
 supported by the tool.
 
@@ -42,3 +44,94 @@ supported by the tool.
   false. Here's an [image of the ifNode graph](images/ifNode.png)
 - [override.yml](override.yml): We can change values in documents. Increment, random
   int, random string, date.
+
+A tour of the syntax
+--------------------
+
+The workloads are all specified in yaml. An example to call the "find"
+operation is:
+
+    name: find
+    type: find
+    filter: { x : a }
+    next: sleep
+
+The main parts of this are:
+
+* name: This is a label used to refer to the node or operation. If not
+  specified, a default name will be provided.
+* type: This says what the operation should be. Basic operations
+  include the operations supported by the C++11 driver. Currently a
+  subset is supported. See [Operations.md](Operations.md) for more.
+* filter: This is specific to the find operation. The argument will be
+  converted into bson, and will be used as the find document passed
+  to the C++11 driver when generating the find
+* next: This is the node to transition to when completing this
+  operation. If not specified, the immediately following node in the
+  definition will be set as the next node.
+
+Here is a  simple workload that does an insert and a find, and randomly
+chooses between them:
+
+    name: simple_workload
+    nodes:
+         - name: insert_one
+           type: insert_one
+           document: {x: a}
+           next: choice
+         - name: find
+           type: find
+           find: {x: a}
+           next: choice
+         - name: choice
+           type: random_choice
+           next:
+               find: 0.5
+               insert_one: 0.5
+
+This workload has a name and a list of nodes. This workload will run
+forever. After each operation it will make a random choice of whether to
+do an insert_one or find next. The workload can be made finite by
+adding an absorbing state.
+
+    name: simple_workload
+    nodes:
+         - name: insert_one
+           type: insert_one
+           document: {x: a}
+           next: choice
+         - name: find
+           type: find
+           find: {x: a}
+           next: choice
+         - name: choice
+           type: random_choice
+           next:
+               find: 0.45
+               insert_one: 0.45
+               Finish: 0.1
+
+The Finish state is an implicit absorbing state. The workload will
+stop when it reaches the Finish state. Additionally, we can set a
+limit on how long the workload runs by adding the field runLengthMs
+
+    name: simple_workload
+    runLengthMs: 10000
+    nodes:
+         - name: insert_one
+           type: insert_one
+           document: {x: a}
+           next: choice
+         - name: find
+           type: find
+           find: {x: a}
+           next: choice
+         - name: choice
+           type: random_choice
+           next:
+               find: 0.45
+               insert_one: 0.45
+               Finish: 0.1
+
+This workload will now run for at most 10 seconds (10,000 ms).
+
