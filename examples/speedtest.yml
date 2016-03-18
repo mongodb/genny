@@ -29,7 +29,7 @@ main :
               doc : {y : 1}
               overrides : 
                 y :  # set y to a random int with uniform distribution from 0 to 100
-                type : randomint
+                  type : randomint
     - name : docNoop
       type : workloadNode
       workload : 
@@ -45,8 +45,8 @@ main :
               doc : {y : 1}
               overrides : 
                 y :  # set y to a random int with uniform distribution from 0 to 100
-                type : randomstring
-                length : 20
+                  type : randomstring
+                  length : 20
     - name : ping
       type : workloadNode
       workload : 
