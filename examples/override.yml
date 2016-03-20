@@ -90,10 +90,21 @@ main :
       options :
         write_concern :
           nodes : 1
+    - type: ForN
+      N: 20
+      next: check1
+      node: insert_choose
+    - name: insert_choose
+      type: insert_one
+      next: Finish
+      document:
+        type: override
+        doc: {y: 1}
+        overrides: {y: {type: choose, choices: [a, b, {z: [1 2]}]}}
     - name : check1
       type : count
       filter: {}
-      assertEquals : 6
+      assertEquals : 26
     - name : check2
       type : count
       filter : {x.y : b}

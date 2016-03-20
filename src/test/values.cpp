@@ -191,4 +191,30 @@ TEST_CASE("Value Generaotrs", "[generators]") {
         auto result = generator.generate(*state);
         REQUIRE(result.view()[0].get_int32().value == 5);
     }
+    SECTION("Choose1") {
+        auto genYaml = YAML::Load(R"yaml(
+    choices: 
+       - thingA
+)yaml");
+        auto generator = ChooseGenerator(genYaml);
+        auto result = generator.generate(*state);
+        auto actual = result.view()[0].get_utf8().value;
+        INFO("Expected thingA");
+        INFO("Got" << actual);
+        REQUIRE(actual.compare("thingA") == 0);
+    }
+    SECTION("Choose2") {
+        auto genYaml = YAML::Load(R"yaml(
+    choices: 
+       - thingA
+       - thingB
+)yaml");
+        auto generator = ChooseGenerator(genYaml);
+        auto result = generator.generate(*state);
+        auto actual = result.view()[0].get_utf8().value;
+        INFO("Expected thingA or thingB");
+        INFO("Got" << actual);
+        auto test = actual.compare("thingA") == 0 || actual.compare("thingB") == 0;
+        REQUIRE(test);
+    }
 }

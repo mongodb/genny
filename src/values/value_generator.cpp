@@ -20,7 +20,9 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode) {
     }
     if (yamlNode["type"]) {
         auto type = yamlNode["type"].Scalar();
-        if (type == "date") {
+        if (type == "choose") {
+            return new ChooseGenerator(yamlNode);
+        } else if (type == "date") {
             return new DateGenerator(yamlNode);
         } else if (type == "increment") {
             return new IncrementGenerator(yamlNode);

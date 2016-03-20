@@ -1,5 +1,6 @@
 #pragma once
 
+#include "choose_generator.hpp"
 #include "date_generator.hpp"
 #include "increment_generator.hpp"
 #include "multiply_generator.hpp"
