@@ -21,13 +21,19 @@ add_test(spawn mwg -l error ../examples/spawn.yml)
 add_test(sample+yamloverride mwg -l info ../examples/sample1.yml --variable runLengthMs=2000)
 add_test(sample+cmdlinerunLength mwg -l info ../examples/sample1.yml --runLengthMs=2000)
 add_test(includes mwg -l error ../examples/includes2.yml)
+add_test(load_file mwg -l error ../examples/load_file.yml)
 
 # With the override it should run the sleep twice.
-SET_TESTS_PROPERTIES(sample+yamloverride sample+cmdlinerunLength PROPERTIES PASS_REGULAR_EXPRESSION "sleep, Count=2")
+SET_TESTS_PROPERTIES(sample+yamloverride sample+cmdlinerunLength
+PROPERTIES PASS_REGULAR_EXPRESSION "sleep, Count=2") 
+
 # Check for error messages or fatal
 SET_TESTS_PROPERTIES(operations ifNode insertMany insertSequential
-override spawn includes PROPERTIES FAIL_REGULAR_EXPRESSION "error;fatal")
-SET_TESTS_PROPERTIES(doAll ifNode forN operations insertMany insertRandom
-insertSequential override sample1 sample1+threads
+override spawn includes load_file PROPERTIES FAIL_REGULAR_EXPRESSION
+"error;fatal")
+
+SET_TESTS_PROPERTIES(doAll ifNode forN operations insertMany
+insertRandom insertSequential override sample1 sample1+threads
 sample1+threadsNoSleep sample2 speed workloadNode spawn
-sample+yamloverride sample+cmdlinerunLength includes PROPERTIES WORKING_DIRECTORY  "${PROJECT_BINARY_DIR}")
+sample+yamloverride sample+cmdlinerunLength includes load_file
+PROPERTIES WORKING_DIRECTORY "${PROJECT_BINARY_DIR}")

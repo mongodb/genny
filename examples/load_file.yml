@@ -1,0 +1,27 @@
+path: &path replace_me
+
+main:
+  name: load_file
+  database: test
+  collection: imported
+  nodes:
+    - type: drop
+    - type: load_file
+      path: *path
+      file_name: import.json
+    - name : check1 # From here down is just checking
+      type : count
+      filter: {}
+      assertEquals : 25
+    - name : check2
+      type : count
+      filter : {x.y : b}
+      assertEquals : 1
+    - name : check3
+      type : count
+      filter : {x.y : a}
+      assertEquals : 0
+    - name : check4
+      type : count
+      filter : {x : test}
+      assertEquals : 1

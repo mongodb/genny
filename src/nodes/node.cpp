@@ -7,6 +7,7 @@
 #include "forN.hpp"
 #include "ifNode.hpp"
 #include "join.hpp"
+#include "load_file_node.hpp"
 #include "opNode.hpp"
 #include "random_choice.hpp"
 #include "sleep.hpp"
@@ -170,6 +171,8 @@ node* makeNode(YAML::Node yamlNode) {
         return new Spawn(yamlNode);
     } else if (yamlNode["type"].Scalar() == "system") {
         return new SystemNode(yamlNode);
+    } else if (yamlNode["type"].Scalar() == "load_file") {
+        return new LoadFileNode(yamlNode);
     } else {
         BOOST_LOG_TRIVIAL(debug) << "In makeNode. Type was " << yamlNode["type"].Scalar()
                                  << ". Defaulting to opNode";

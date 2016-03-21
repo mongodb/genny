@@ -106,8 +106,16 @@ void runPeriodicStats(shared_ptr<StatsState> state, std::chrono::seconds period,
         out << bsoncxx::to_json(state->myWorkload.getStats(true)) << "]\n";
 }
 
+// Replace a path field with the current path if it's in there
+void processPath(YAML::Node& nodes, boost::filesystem::path path) {
+    if (!nodes["path"])
+        return;
+    nodes["path"] = path.string();
+}
+
 // Look for an includes Node. Bring it into this space
 void processIncludes(YAML::Node& nodes, boost::filesystem::path path) {
+    processPath(nodes, path.parent_path());
     if (!nodes["includes"]) {
         return;
     }

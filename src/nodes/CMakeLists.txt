@@ -1,6 +1,7 @@
-set(src_files finish_node.cpp node.cpp forN.cpp opNode.cpp
-random_choice.cpp sleep.cpp doAll.cpp join.cpp workloadNode.cpp
-ifNode.cpp spawn.cpp system_node.cpp) 
+set(src_files finish_node.cpp load_file_node.cpp node.cpp forN.cpp
+opNode.cpp random_choice.cpp sleep.cpp doAll.cpp join.cpp
+workloadNode.cpp ifNode.cpp spawn.cpp system_node.cpp)
+
 include_directories(.. values)
 add_library(nodes ${src_files})
 include_directories(documents nodes operations)
