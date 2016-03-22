@@ -26,21 +26,34 @@ bool isNumber(string value) {
         return false;
 }
 
+bool isBool(string value) {
+    if (value.compare("true") == 0)
+        return true;
+    if (value.compare("false") == 0)
+        return true;
+    return false;
+}
+
 bsoncxx::document::value parseMap(YAML::Node node) {
     bsoncxx::builder::stream::document docbuilder{};
     for (auto entry : node) {
+        auto key = entry.first.Scalar();
         if (entry.second.IsMap()) {
-            docbuilder << entry.first.Scalar() << open_document
-                       << concatenate(parseMap(entry.second)) << close_document;
+            docbuilder << key << open_document << concatenate(parseMap(entry.second))
+                       << close_document;
         } else if (entry.second.IsSequence()) {
-            docbuilder << entry.first.Scalar() << open_array
-                       << concatenate(parseSequence(entry.second)) << close_array;
+            docbuilder << key << open_array << concatenate(parseSequence(entry.second))
+                       << close_array;
         } else {  // scalar
-            if (isNumber(entry.second.Scalar())) {
+            string value = entry.second.Scalar();
+            if (isNumber(value)) {
                 BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
-                docbuilder << entry.first.Scalar() << entry.second.as<int64_t>();
+                docbuilder << key << entry.second.as<int64_t>();
+            } else if (isBool(value)) {
+                BOOST_LOG_TRIVIAL(debug) << "Value is a boolean according to our regex";
+                docbuilder << key << entry.second.as<bool>();
             } else
-                docbuilder << entry.first.Scalar() << entry.second.Scalar();
+                docbuilder << key << entry.second.Scalar();
         }
     }
     return docbuilder << finalize;
@@ -55,11 +68,15 @@ bsoncxx::array::value parseSequence(YAML::Node node) {
             arraybuilder << open_array << concatenate(parseSequence(entry)) << close_array;
         } else  // scalar
         {
-            if (isNumber(entry.Scalar())) {
+            string value = entry.Scalar();
+            if (isNumber(value)) {
                 BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
                 arraybuilder << entry.as<int64_t>();
+            } else if (isBool(value)) {
+                BOOST_LOG_TRIVIAL(debug) << "Value is a boolean according to our regex";
+                arraybuilder << entry.as<bool>();
             } else
-                arraybuilder << entry.Scalar();
+                arraybuilder << value;
         }
     }
     return arraybuilder << finalize;
@@ -68,10 +85,14 @@ bsoncxx::array::value parseSequence(YAML::Node node) {
 bsoncxx::array::value yamlToValue(YAML::Node node) {
     bsoncxx::builder::stream::array myArray{};
     if (node.IsScalar()) {
-        if (isNumber(node.Scalar())) {
+        string value = node.Scalar();
+        if (isNumber(value)) {
             myArray << node.as<int64_t>();
+        } else if (isBool(value)) {
+            BOOST_LOG_TRIVIAL(debug) << "Value is a boolean according to our regex";
+            myArray << node.as<bool>();
         } else {  // string
-            myArray << node.Scalar();
+            myArray << value;
         }
     } else if (node.IsSequence()) {
         myArray << open_array << concatenate(parseSequence(node)) << close_array;
