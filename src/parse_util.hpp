@@ -7,6 +7,8 @@ using namespace std;
 
 namespace mwg {
 bool isNumber(string);
+bool isBool(string);
+string quoteIfNeeded(string);
 bsoncxx::array::value yamlToValue(YAML::Node);
 bsoncxx::document::value parseMap(YAML::Node);
 bsoncxx::array::value parseSequence(YAML::Node node);

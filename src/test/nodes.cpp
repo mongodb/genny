@@ -440,7 +440,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 mnode->setNextNode(nodes, vectornodes);
             }
 
-            bsoncxx::types::b_int64 value;
+            bsoncxx::types::b_int32 value;
             // execute -- if should evaluate false and take the ifnode
             state->currentNode = ifNodeNode;
             SECTION("true") {
@@ -485,7 +485,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 mnode->setNextNode(nodes, vectornodes);
             }
 
-            bsoncxx::types::b_int64 value;
+            bsoncxx::types::b_int32 value;
             // execute -- if should evaluate false and take the ifnode
             state->currentNode = ifNodeNode;
             SECTION("true") {
@@ -530,7 +530,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 mnode->setNextNode(nodes, vectornodes);
             }
 
-            bsoncxx::types::b_int64 value;
+            bsoncxx::types::b_int32 value;
             // execute -- if should evaluate false and take the ifnode
             state->currentNode = ifNodeNode;
             SECTION("true") {
@@ -575,7 +575,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 mnode->setNextNode(nodes, vectornodes);
             }
 
-            bsoncxx::types::b_int64 value;
+            bsoncxx::types::b_int32 value;
             // execute -- if should evaluate false and take the ifnode
             state->currentNode = ifNodeNode;
             SECTION("true") {

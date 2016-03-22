@@ -42,7 +42,7 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int64().value == 3);
+        REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 3);
         REQUIRE(state.wvariables.count("threadVar") ==
                 0);  // make sure it didn't show up in the wrong place
     }
@@ -54,7 +54,7 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int64().value == 3);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 3);
         REQUIRE(state.tvariables.count("workloadVar") ==
                 0);  // make sure it didn't show up in the wrong place
     }
@@ -66,7 +66,7 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.tvariables.find("newVar")->second.view()[0].get_int64().value == 4);
+        REQUIRE(state.tvariables.find("newVar")->second.view()[0].get_int32().value == 4);
         REQUIRE(state.wvariables.count("newVar") ==
                 0);  // make sure it didn't show up in the wrong place
     }
@@ -179,7 +179,7 @@ TEST_CASE("Set Variables", "[variables]") {
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int64().value == 3);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 3);
         REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 2);
     }
     SECTION("UseVar in operation") {

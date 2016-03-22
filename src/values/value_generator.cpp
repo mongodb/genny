@@ -63,7 +63,7 @@ std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node yamlNode) {
 }
 
 // Check type cases and get a string out of it. Assumes it is getting a bson array of length 1.
-std::string valAsString(bsoncxx::array::value val) {
+std::string valAsString(view_or_value val) {
     auto elem = val.view()[0];
     switch (elem.type()) {
         case bsoncxx::type::k_int64:
@@ -101,7 +101,7 @@ std::string valAsString(bsoncxx::array::value val) {
     }
     return ("");
 }
-int64_t valAsInt(bsoncxx::array::value val) {
+int64_t valAsInt(view_or_value val) {
     auto elem = val.view()[0];
     switch (elem.type()) {
         case bsoncxx::type::k_int64:
@@ -112,6 +112,42 @@ int64_t valAsInt(bsoncxx::array::value val) {
             break;
         case bsoncxx::type::k_double:
             return (static_cast<int64_t>(elem.get_double().value));
+            break;
+        case bsoncxx::type::k_utf8:
+        case bsoncxx::type::k_document:
+        case bsoncxx::type::k_array:
+        case bsoncxx::type::k_binary:
+        case bsoncxx::type::k_undefined:
+        case bsoncxx::type::k_oid:
+        case bsoncxx::type::k_bool:
+        case bsoncxx::type::k_date:
+        case bsoncxx::type::k_null:
+        case bsoncxx::type::k_regex:
+        case bsoncxx::type::k_dbpointer:
+        case bsoncxx::type::k_code:
+        case bsoncxx::type::k_symbol:
+        case bsoncxx::type::k_timestamp:
+
+            BOOST_LOG_TRIVIAL(fatal) << "valAsInt with type unsuported type in list";
+            exit(EXIT_FAILURE);
+            break;
+        default:
+            BOOST_LOG_TRIVIAL(fatal) << "valAsInt with type unsuported type not in list";
+            exit(EXIT_FAILURE);
+    }
+    return (0);
+}
+double valAsDouble(view_or_value val) {
+    auto elem = val.view()[0];
+    switch (elem.type()) {
+        case bsoncxx::type::k_int64:
+            return (static_cast<double>(elem.get_int64().value));
+            break;
+        case bsoncxx::type::k_int32:
+            return (static_cast<double>(elem.get_int32().value));
+            break;
+        case bsoncxx::type::k_double:
+            return (static_cast<double>(elem.get_double().value));
             break;
         case bsoncxx::type::k_utf8:
         case bsoncxx::type::k_document:

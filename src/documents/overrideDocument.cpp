@@ -37,7 +37,7 @@ overrideDocument::overrideDocument(YAML::Node& node) {
         exit(EXIT_FAILURE);
     }
     auto docnode = node["doc"];
-    doc = move(bsonDocument(docnode));
+    doc = bsonDocument(docnode);
     if (!node["overrides"]) {
         BOOST_LOG_TRIVIAL(fatal) << "No override entry in yaml in overrideDocument constructor";
         exit(EXIT_FAILURE);

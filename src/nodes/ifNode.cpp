@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include "parse_util.hpp"
+#include "value_generator.hpp"
 #include "workload.hpp"
 
 using view_or_value = bsoncxx::view_or_value<bsoncxx::array::view, bsoncxx::array::value>;
@@ -111,6 +112,7 @@ void ifNode::executeNode(shared_ptr<threadState> myState) {
         exit(EXIT_FAILURE);
     }
     auto compareView = compareValue->view();
+    double compareDouble, resultDouble;
     switch (comparisonTest) {
         case comparison::EQUALS:
             conState = (bsoncxx::to_json(resultView.view()) == bsoncxx::to_json(compareView));
@@ -120,122 +122,28 @@ void ifNode::executeNode(shared_ptr<threadState> myState) {
                                      << " conState=" << conState;
             break;
         case comparison::GREATER_THAN:
-            // Assuming integer time for comparison ops. Should be more general
-            // BOOST_LOG_TRIVIAL(trace) << "In Greater than comparison with result "
-            //                          << myState->result->get_int64().value << " and compare
-            //                          value
-            //                          "
-            //                          << compareValue->get_int64().value;
-
-            if (resultView.view()[0].type() != compareView[0].type())
-                BOOST_LOG_TRIVIAL(error) << "In Greater than but different types";
-            else {
-                switch (resultView.view()[0].type()) {
-                    case bsoncxx::type::k_date:
-                    case bsoncxx::type::k_int64:
-                        conState = (resultView.view()[0].get_int64().value >
-                                    compareView[0].get_int64().value);
-                        break;
-                    case bsoncxx::type::k_int32:
-                        conState = (resultView.view()[0].get_int32().value >
-                                    compareView[0].get_int32().value);
-                        break;
-                    case bsoncxx::type::k_double:
-                        conState = (resultView.view()[0].get_double().value >
-                                    compareView[0].get_double().value);
-                        break;
-                    default:
-                        BOOST_LOG_TRIVIAL(error)
-                            << "In Greater than but type is not int32,int64, date, or double";
-                }
-            }
+            // only applies to numbers. Convert everything to double
+            compareDouble = valAsDouble(compareView);
+            resultDouble = valAsDouble(resultView);
+            conState = (resultDouble > compareDouble);
             break;
         case comparison::LESS_THAN:
-            // BOOST_LOG_TRIVIAL(trace) << "In less than comparison with result "
-            //                          << myState->result->get_int64().value << " and compare
-            //                          value
-            //                          "
-            //                          << compareValue->get_int64().value;
-            if (resultView.view()[0].type() != compareView[0].type())
-                BOOST_LOG_TRIVIAL(error) << "In Greater than but different types";
-            else {
-                switch (resultView.view()[0].type()) {
-                    case bsoncxx::type::k_date:
-                    case bsoncxx::type::k_int64:
-                        conState = (resultView.view()[0].get_int64().value <
-                                    compareView[0].get_int64().value);
-                        break;
-                    case bsoncxx::type::k_int32:
-                        conState = (resultView.view()[0].get_int32().value <
-                                    compareView[0].get_int32().value);
-                        break;
-                    case bsoncxx::type::k_double:
-                        conState = (resultView.view()[0].get_double().value <
-                                    compareView[0].get_double().value);
-                        break;
-                    default:
-                        BOOST_LOG_TRIVIAL(error)
-                            << "In Greater than but type is not int32,int64, date, or double";
-                }
-            }
+            // only applies to numbers. Convert everything to double
+            compareDouble = valAsDouble(compareView);
+            resultDouble = valAsDouble(resultView);
+            conState = (resultDouble < compareDouble);
             break;
         case comparison::GREATER_THAN_EQUAL:
-            // BOOST_LOG_TRIVIAL(trace) << "In Greater than equal comparison with result "
-            //                          << myState->result->get_int64().value << " and compare
-            //                          value
-            //                          "
-            //                          << compareValue->get_int64().value;
-            if (resultView.view()[0].type() != compareView[0].type())
-                BOOST_LOG_TRIVIAL(error) << "In Greater than but different types";
-            else {
-                switch (resultView.view()[0].type()) {
-                    case bsoncxx::type::k_date:
-                    case bsoncxx::type::k_int64:
-                        conState = (resultView.view()[0].get_int64().value >=
-                                    compareView[0].get_int64().value);
-                        break;
-                    case bsoncxx::type::k_int32:
-                        conState = (resultView.view()[0].get_int32().value >=
-                                    compareView[0].get_int32().value);
-                        break;
-                    case bsoncxx::type::k_double:
-                        conState = (resultView.view()[0].get_double().value >=
-                                    compareView[0].get_double().value);
-                        break;
-                    default:
-                        BOOST_LOG_TRIVIAL(error)
-                            << "In Greater than but type is not int32,int64, date, or double";
-                }
-            }
+            // only applies to numbers. Convert everything to double
+            compareDouble = valAsDouble(compareView);
+            resultDouble = valAsDouble(resultView);
+            conState = (resultDouble >= compareDouble);
             break;
         case comparison::LESS_THAN_EQUAL:
-            // BOOST_LOG_TRIVIAL(trace) << "In less than equal comparison with result "
-            //                          << myState->result->get_int64().value << " and compare
-            //                          value
-            //                          "
-            //                          << compareValue->get_int64().value;
-            if (resultView.view()[0].type() != compareView[0].type())
-                BOOST_LOG_TRIVIAL(error) << "In Greater than but different types";
-            else {
-                switch (resultView.view()[0].type()) {
-                    case bsoncxx::type::k_date:
-                    case bsoncxx::type::k_int64:
-                        conState = (resultView.view()[0].get_int64().value <=
-                                    compareView[0].get_int64().value);
-                        break;
-                    case bsoncxx::type::k_int32:
-                        conState = (resultView.view()[0].get_int32().value <=
-                                    compareView[0].get_int32().value);
-                        break;
-                    case bsoncxx::type::k_double:
-                        conState = (resultView.view()[0].get_double().value <=
-                                    compareView[0].get_double().value);
-                        break;
-                    default:
-                        BOOST_LOG_TRIVIAL(error)
-                            << "In Greater than but type is not int32,int64, date, or double";
-                }
-            }
+            // only applies to numbers. Convert everything to double
+            compareDouble = valAsDouble(compareView);
+            resultDouble = valAsDouble(resultView);
+            conState = (resultDouble <= compareDouble);
             break;
         default:
             BOOST_LOG_TRIVIAL(fatal) << "ifNode executeNode and unhandled comparisonTest value";

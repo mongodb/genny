@@ -4,10 +4,12 @@
 
 #include <bsoncxx/array/value.hpp>
 #include <bsoncxx/stdx/optional.hpp>
+#include <bsoncxx/view_or_value.hpp>
 #include <yaml-cpp/yaml.h>
 
 
 using bsoncxx::stdx::optional;
+using view_or_value = bsoncxx::view_or_value<bsoncxx::array::view, bsoncxx::array::value>;
 
 namespace mwg {
 class threadState;
@@ -25,6 +27,7 @@ public:
 
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node);
 std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node);
-std::string valAsString(bsoncxx::array::value);
-int64_t valAsInt(bsoncxx::array::value);
+std::string valAsString(view_or_value);
+int64_t valAsInt(view_or_value);
+double valAsDouble(view_or_value);
 }

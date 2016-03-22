@@ -40,7 +40,7 @@ TEST_CASE("Documents are created", "[documents]") {
     bsoncxx::builder::stream::document mydoc{};
 
     SECTION("Simple bson") {
-        unique_ptr<document> doc = makeDoc(YAML::Load("{x : a}"));
+        unique_ptr<document> doc = makeDoc(YAML::Load("{x: a}"));
 
         auto view = doc->view(mydoc, state);
 

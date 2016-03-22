@@ -58,11 +58,11 @@ void set_variable::execute(mongocxx::client& conn, threadState& state) {
     if (targetVariable.compare("DBName") == 0) {
         // check that the value is a string
         BOOST_LOG_TRIVIAL(trace) << "Setting DBName in set_variable";
-        state.DBName = valAsString(*localValue);
+        state.DBName = valAsString(localValue->view());
     } else if (targetVariable.compare("CollectionName") == 0) {
         // check that the value is a string
         BOOST_LOG_TRIVIAL(trace) << "Setting CollectionName in set_variable";
-        state.CollectionName = valAsString(*localValue);
+        state.CollectionName = valAsString(localValue->view());
     } else {
         // is targetVariable in tvariables or wvariables?
         // Check tvariables first, then wvariable. If in neither, insert into tvariables.

@@ -2,6 +2,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/regex.hpp>  // STDLIB regex failed on Ubuntu 14.04 & CentOS 7
+#include <bsoncxx/json.hpp>
 #include <chrono>
 #include <bsoncxx/builder/concatenate.hpp>
 #include <mongocxx/write_concern.hpp>
@@ -16,10 +17,9 @@ using mongocxx::write_concern;
 
 namespace mwg {
 
-// This could be made much cleaner. Ideally check for all the various valid regex and return a value
-// that can be directly dropped into the builder.
+// Check for valid json number. This regex should match the diagram http://www.json.org/
 bool isNumber(string value) {
-    boost::regex re("-?[0-9]+");
+    boost::regex re("-?(([1-9][0-9]*)|0)([.][0-9]*)?([eE][+-]?[0-9]+)?");
     if (boost::regex_match(value, re))
         return true;
     else
@@ -34,6 +34,21 @@ bool isBool(string value) {
     return false;
 }
 
+// Surround by quotes if appropriate.
+string quoteIfNeeded(string value) {
+    // is it already quoted? Return as is
+    if (value[0] == '"' && value[value.length() - 1] == '"')
+        return value;
+    // Is it a number? Return as is
+    // should generalize the isNumber logic
+    if (isNumber(value))
+        return value;
+    // Is it a boolean? Return as is
+    if (isBool(value))
+        return value;
+    return "\"" + value + "\"";
+}
+
 bsoncxx::document::value parseMap(YAML::Node node) {
     bsoncxx::builder::stream::document docbuilder{};
     for (auto entry : node) {
@@ -45,15 +60,10 @@ bsoncxx::document::value parseMap(YAML::Node node) {
             docbuilder << key << open_array << concatenate(parseSequence(entry.second))
                        << close_array;
         } else {  // scalar
-            string value = entry.second.Scalar();
-            if (isNumber(value)) {
-                BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
-                docbuilder << key << entry.second.as<int64_t>();
-            } else if (isBool(value)) {
-                BOOST_LOG_TRIVIAL(debug) << "Value is a boolean according to our regex";
-                docbuilder << key << entry.second.as<bool>();
-            } else
-                docbuilder << key << entry.second.Scalar();
+            string doc = "{\"" + key + "\": " + quoteIfNeeded(entry.second.Scalar()) + "}";
+            BOOST_LOG_TRIVIAL(trace)
+                << "In parseMap and have scalar. Doc to pass to from_json: " << doc;
+            docbuilder << concatenate(bsoncxx::from_json(doc));
         }
     }
     return docbuilder << finalize;
@@ -68,15 +78,10 @@ bsoncxx::array::value parseSequence(YAML::Node node) {
             arraybuilder << open_array << concatenate(parseSequence(entry)) << close_array;
         } else  // scalar
         {
-            string value = entry.Scalar();
-            if (isNumber(value)) {
-                BOOST_LOG_TRIVIAL(debug) << "Value is a number according to our regex";
-                arraybuilder << entry.as<int64_t>();
-            } else if (isBool(value)) {
-                BOOST_LOG_TRIVIAL(debug) << "Value is a boolean according to our regex";
-                arraybuilder << entry.as<bool>();
-            } else
-                arraybuilder << value;
+            string doc = "{\"\": " + quoteIfNeeded(entry.Scalar()) + "}";
+            BOOST_LOG_TRIVIAL(trace)
+                << "In parseSequence and have scalar. Doc to pass to from_json: " << doc;
+            arraybuilder << bsoncxx::from_json(doc).view()[""].get_value();
         }
     }
     return arraybuilder << finalize;
@@ -85,21 +90,18 @@ bsoncxx::array::value parseSequence(YAML::Node node) {
 bsoncxx::array::value yamlToValue(YAML::Node node) {
     bsoncxx::builder::stream::array myArray{};
     if (node.IsScalar()) {
-        string value = node.Scalar();
-        if (isNumber(value)) {
-            myArray << node.as<int64_t>();
-        } else if (isBool(value)) {
-            BOOST_LOG_TRIVIAL(debug) << "Value is a boolean according to our regex";
-            myArray << node.as<bool>();
-        } else {  // string
-            myArray << value;
-        }
+        string doc = "{\"\": " + quoteIfNeeded(node.Scalar()) + "}";
+        BOOST_LOG_TRIVIAL(trace) << "In yamlToValue and have scalar. Doc to pass to from_json: "
+                                 << doc;
+        BOOST_LOG_TRIVIAL(trace) << "In yamlToValue and have scalar. Original value is : "
+                                 << node.Scalar();
+        myArray << bsoncxx::from_json(doc).view()[""].get_value();
     } else if (node.IsSequence()) {
         myArray << open_array << concatenate(parseSequence(node)) << close_array;
     } else {  // MAP
         myArray << open_document << concatenate(parseMap(node)) << close_document;
     }
-    return (std::move(myArray << bsoncxx::builder::stream::finalize));
+    return (myArray << bsoncxx::builder::stream::finalize);
 }
 
 write_concern parseWriteConcern(YAML::Node node) {
