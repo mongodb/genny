@@ -80,3 +80,13 @@ Helper operations
           variable is not updated.
           * _variable_: the variable to multiply. Must be a number
           * _factor_: The factor to multiply it by.
+* load\_file: This loads documents into the database. It takes a file
+  containing a sequence of json documents, such as those produced by
+  mongo-export.
+  Fields:
+      * _path_ (optional): The directory path to the file. See example
+        [load\_file.yml](examples/load_file.yml) for common usage of
+        this option. A top level _path_ node in the yaml will be
+        replaced with the path of the current yaml file.
+      * _file\_name_: The name of the file to load. This is combined
+        with the _path_ if it exists.
