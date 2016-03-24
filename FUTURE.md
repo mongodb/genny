@@ -7,18 +7,16 @@ tool.
 Document and value transformations
 ----------------------------------
 
-1. Generalize the current value transformations in overrideDocument,
-   workloadNode, and set_variable into common code.
-2. More types of transformation of values and tools for building
+1. More types of transformation of values and tools for building
    documents (hashing, concatenate, adding fields to an existing document)
-3. Use of variables and value generation in any field. Examples:
+2. Use of variables and value generation in any field. Examples:
    1. In a ForN node, should be able to set N to a random integer, or
       from an incrementing variable.
    2. A random_string should be able to have a random length, or a
       length read from a variable.
-4. _generator_: Similar to an _override_, only evaluate it once at
+3. _generator_: Similar to an _override_, only evaluate it once at
    startup
-5. General document and value templating for more compact
+4. General document and value templating for more compact
    definitions. Will build on top of the existing value generation
    functionality.
 

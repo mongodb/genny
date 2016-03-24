@@ -10,14 +10,12 @@ Currently supported documents
    representations. They are literal documents with no
    interpretation. They are the default type of documents.
 2. _override_: This is a document that wraps another document,
-   and can change arbitrary fields in a subdocument. Can currently
-   update nested fields except for fields nested in an array. There
-   are currently four kinds of overrides:
-   1. randomint: Generate a random integer. Accepts min and max
-      values.
-   2. randomstring: Generate a random string. Accepts a length value
-      (default of 10). Will support an alphabet option in the future
-   3. increment: Takes a variable and uses it's value and does a post
-     increment.
-   4. date: The current date
-
+   and can change arbitrary fields in a subdocument. The override
+   document has two required fields:
+   1. _doc_: This is a _bson_ document.
+   2. _overrides_: This is a yaml map of fields in _doc_ to
+      override. Each pair gives the field name (key) to override, and
+      the value to use. For example, a: {type: randomint} with replace
+      the value for field a, with a random integer. Note that it replaces
+      the value associated with the key a. Any [value generator](Values.md) may be
+      used for the value.

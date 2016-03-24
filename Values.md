@@ -1,0 +1,92 @@
+Value Generation
+================
+
+The tool supports a number of generic value generators and
+accessors. These generators are used throughout the tool in
+overrideDocuments, setVariable, workloadNode currently, and will be
+expanded to most fields. All the generators create a bson value of
+some sort and can be included as a value in a bson
+document. Additionally, where appropriate, they can be accessed as a
+number or string. It will return a runtime error if you access a value
+generator as a number and is not a number.
+
+Each value generator has a _type_ field. They are listed by _type_
+below.
+
+choose
+------
+
+A choose generator takes one field: _choices_, which should be a
+list. The entries are converted to bson values, and can be of
+arbitrary bson values.
+
+date
+----
+
+The date generator has no arguments. It generates a bson value with
+the current date.
+
+Note: This will be extended to include picking dates in specified
+range, or with an offset from the current date.
+
+increment
+---------
+
+The increment generator accesses a variable and does a
+post-increment. It has one argument: _variable_ with the name of the
+variable to increment.
+
+Future extensions:
+
+* specifying the increment
+* specifying a minimum and maximum value with wrapping
+
+multiply
+--------
+
+Multiplies two values and returns the result as a bson object. It
+takes two arguments:
+
+1. _variable_: The variable to multiply
+2. _factor_: The value with which to multiply the variable.
+
+This can be generalized fairly easily. Eventually it should take a
+list of factors, in which each factor can be a value generator.
+
+randomint
+---------
+
+Generates a uniform random integer. Arguments:
+
+1. _min_ (optional): minimum value (default = 0)
+2. _max_ (optional): maximum value (default = 100)
+
+randomstring
+------------
+
+Generates a random string. Arguments:
+
+1. _length_ (optional): Integer length of the string (default = 10)
+2. _alphabet_ (optional): String with possible characters to use in the random
+   string. (default alphanumerics plus + and /)
+
+useresult
+---------
+
+Uses the result from the last operation that saved a result, such as
+the count returned from a count operation. Doesn't take any
+arguments.
+
+useval
+------
+
+Useval wraps a static bson value defined in the _value_ field.
+
+usevar
+------
+
+Accesses a variable as is. It has one argument _variable_ to specify
+the variable to access. In addition to variables defined in the
+workload variables and thread variables, you can also access the
+current database name (_variable_: DBName) and collection name
+(_variable_: CollectionName) as strings.

@@ -50,9 +50,10 @@ starting new threads.
    _runLengthMs_, _name_) that match their definition in the
    workload. The value in the override will be used in place of the
    matching value in the workload definition. Overrides may be a value
-   (string or number as appropriate), a variable, or may increment a
-   variable (for _threads_ and _runLengthMs_). For now, a workloadNode
-   should only be called once at a time.
+   (string or number as appropriate), or a
+   [value generator](Values.md). Not all value generators make sense
+   for each case. For instance, using a random string for _threads_
+   field will lead to an error.
 6. sleep: This node just introduces a delay into the execution of the
    graph. _sleepMs_ specifies the sleep time in milliseconds.
 7. ifNode: This node represents a logical choice. It performs a
@@ -93,4 +94,3 @@ Operation Nodes
 
 These nodes do something, such as database commands, or manipulating
 variables. They are described in [Operations.md](Operations.md)
-
