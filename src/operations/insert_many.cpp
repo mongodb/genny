@@ -38,7 +38,7 @@ insert_many::insert_many(YAML::Node& ynode) {
         BOOST_LOG_TRIVIAL(debug) << "In insert_many and have a doc and times";
         doc = makeDoc(ynode["doc"]);
         BOOST_LOG_TRIVIAL(debug) << "In insert_many and parsed doc";
-        times = ynode["times"].as<uint64_t>();
+        times = IntOrValue(ynode["times"]);
         BOOST_LOG_TRIVIAL(debug) << "In insert_many and have times";
         use_collection = false;
     } else
@@ -56,8 +56,9 @@ void insert_many::execute(mongocxx::client& conn, threadState& state) {
     uint64_t size;
     if (use_collection)
         size = collection.size();
-    else
-        size = times;
+    else {
+        size = static_cast<uint64_t>(times.getInt(state));
+    }
     vector<bsoncxx::builder::stream::document> docs(size);
     vector<bsoncxx::document::view> views;
     // copy over the documents into bsoncxx documents
@@ -68,7 +69,7 @@ void insert_many::execute(mongocxx::client& conn, threadState& state) {
             newDoc++;
         }
     } else {
-        for (uint64_t i = 0; i < times; i++) {
+        for (uint64_t i = 0; i < size; i++) {
             views.push_back(doc->view(*newDoc, state));
             newDoc++;
         }

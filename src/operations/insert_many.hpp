@@ -3,6 +3,7 @@
 #include <mongocxx/instance.hpp>
 #include "document.hpp"
 
+#include "int_or_value.hpp"
 #include "operation.hpp"
 #pragma once
 using namespace std;
@@ -23,7 +24,7 @@ private:
     // This collection and the alternate doc and times should be abstracted
     vector<unique_ptr<document>> collection;
     unique_ptr<document> doc{};
-    uint64_t times;
+    IntOrValue times;
     bool use_collection;
     // vector<bsoncxx::builder::stream::document> collection;
     mongocxx::options::insert options{};

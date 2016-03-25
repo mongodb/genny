@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "int_or_value.hpp"
 #include "value_generator.hpp"
 
 
@@ -21,6 +22,6 @@ public:
 
 private:
     std::string alphabet;
-    int64_t length;
+    IntOrValue length;
 };
 }

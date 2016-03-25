@@ -1,5 +1,6 @@
 #pragma once
 
+#include "int_or_value.hpp"
 #include "node.hpp"
 #include "workload.hpp"
 
@@ -21,6 +22,6 @@ public:
 protected:
     shared_ptr<node> myNode;
     string myNodeName;
-    uint64_t N;
+    IntOrValue N;
 };
 }

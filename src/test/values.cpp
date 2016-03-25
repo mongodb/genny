@@ -5,6 +5,8 @@
 #include <bsoncxx/json.hpp>
 #include <unordered_map>
 
+#include "concatenate_generator.hpp"
+#include "int_or_value.hpp"
 #include "value_generators.hpp"
 #include "workload.hpp"
 
@@ -193,7 +195,7 @@ TEST_CASE("Value Generaotrs", "[generators]") {
     }
     SECTION("Choose1") {
         auto genYaml = YAML::Load(R"yaml(
-    choices: 
+    choices:
        - thingA
 )yaml");
         auto generator = ChooseGenerator(genYaml);
@@ -205,7 +207,7 @@ TEST_CASE("Value Generaotrs", "[generators]") {
     }
     SECTION("Choose2") {
         auto genYaml = YAML::Load(R"yaml(
-    choices: 
+    choices:
        - thingA
        - thingB
 )yaml");
@@ -216,5 +218,33 @@ TEST_CASE("Value Generaotrs", "[generators]") {
         INFO("Got" << actual);
         auto test = actual.compare("thingA") == 0 || actual.compare("thingB") == 0;
         REQUIRE(test);
+    }
+    SECTION("IntOrValue") {
+        SECTION("YamlInt") {
+            auto genYaml = YAML::Load(R"yaml(
+        value: 1
+)yaml");
+            auto intOrValue = IntOrValue(genYaml);
+            REQUIRE(intOrValue.getInt(*state) == 1);
+            REQUIRE(intOrValue.getInt(*state) == 1);
+        }
+    }
+    SECTION("Concatenate") {
+        auto genYaml = YAML::Load(R"yaml(
+        parts:
+          - A
+          - 1
+          - type: randomint
+            min: 5
+            max: 5
+)yaml");
+        auto generator = ConcatenateGenerator(genYaml);
+        auto result = generator.generate(*state);
+        auto elem = result.view()[0];
+        REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+        auto str = elem.get_utf8().value;
+        INFO("Generated string is " << str);
+        REQUIRE(str.length() == 3);
+        REQUIRE(str.compare("A15") == 0);
     }
 }

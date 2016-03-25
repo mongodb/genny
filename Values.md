@@ -20,6 +20,16 @@ A choose generator takes one field: _choices_, which should be a
 list. The entries are converted to bson values, and can be of
 arbitrary bson values.
 
+concatenate
+-----------
+
+A concatenate generator takes a list named _parts_ of other value
+generators. It will call each generator in turn to generate a string,
+and will concatenate them into a single string. The concatenate will
+work with string generators and number generators (the number will be
+converted to a string representation). Other types will create a
+runtime error.
+
 date
 ----
 

@@ -13,7 +13,7 @@ ForN::ForN(YAML::Node& ynode) : node(ynode) {
         BOOST_LOG_TRIVIAL(fatal) << "ForN constructor but yaml entry doesn't have node entry";
         exit(EXIT_FAILURE);
     }
-    N = ynode["N"].as<uint64_t>();
+    N = IntOrValue(ynode["N"]);
     myNodeName = ynode["node"].Scalar();
 }
 
@@ -21,8 +21,9 @@ ForN::ForN(YAML::Node& ynode) : node(ynode) {
 void ForN::execute(shared_ptr<threadState> myState) {
     // execute the workload N times
     chrono::high_resolution_clock::time_point start, stop;
-    for (uint64_t i = 0; i < N && !(stopped || myState->stopped); i++) {
-        BOOST_LOG_TRIVIAL(debug) << "In ForN and executing interation " << i;
+    int64_t number = N.getInt(*myState);
+    for (int64_t i = 0; i < number && !(stopped || myState->stopped); i++) {
+        BOOST_LOG_TRIVIAL(debug) << "In ForN and executing interation " << i << " of " << number;
         myState->currentNode = myNode;
         while (myState->currentNode != nullptr) {
             myState->currentNode->executeNode(myState);
