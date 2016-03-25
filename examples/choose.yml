@@ -1,0 +1,17 @@
+# Example of the choose node. Inserts documents with values randomly picked from a list of three objects. 
+
+main: 
+  name: choose
+  nodes: 
+    - type: drop
+    - type: ForN
+      N: 20
+      next: Finish
+      node: insert_choose
+    - name: insert_choose
+      type: insert_one
+      document: 
+        type: override
+        doc: {y: 1}
+        overrides: {y: {type: choose, choices: [a, b, {z: [1 2]}]}}
+      
