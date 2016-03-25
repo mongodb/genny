@@ -14,6 +14,8 @@
 
 namespace mwg {
 
+static int workloadCount = 0;
+
 void WorkloadExecutionState::increaseThreads() {
     uint64_t numThreads;
     {
@@ -81,7 +83,13 @@ workload::workload(YAML::Node& inputNodes) : baseWorkloadState(*this), stopped(f
     if (inputNodes.IsMap()) {
         // read out things like the seed
         yamlNodes = inputNodes["nodes"];
-        name = inputNodes["name"].Scalar();
+        if (inputNodes["name"]) {
+            name = inputNodes["name"].Scalar();
+            BOOST_LOG_TRIVIAL(trace) << "Set workload name to explicit name: " << name;
+        } else {
+            name = "Workload" + std::to_string(workloadCount++);  // default name
+            BOOST_LOG_TRIVIAL(trace) << "Set workload name to default name: " << name;
+        }
         BOOST_LOG_TRIVIAL(debug) << "In workload constructor, and was passed in a map. Name: "
                                  << name;
         if (!yamlNodes.IsSequence()) {

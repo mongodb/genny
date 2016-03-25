@@ -8,7 +8,6 @@ delay: &delay 1000
 
 main : 
   seed: 131415161718
-  name: main
   runLengthMs : *run
   nodes: 
     - name : insert1
