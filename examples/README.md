@@ -5,12 +5,14 @@ This directory contains a number of example workloads. They all
 run. The subdirectory future contains example workloads that use
 features not fully operational yet, or don't exist yet. This file
 provides a tour through some of those scripts, and also a tour of the
-basic syntax. 
+basic syntax.
 
 A Tour of the example scripts
 -----------------------------
-These examples are all trivial workloads that illustrate different concepts or functionality
-supported by the tool.
+
+These examples are all trivial workloads that illustrate different
+concepts or functionality supported by the tool. There are more
+complex examples described further down the page.
 
 - [sample1.yml](sample1.yml): Five node example. Inserts a document of
   one form, sleeps for a second, and
@@ -135,3 +137,45 @@ limit on how long the workload runs by adding the field runLengthMs
 
 This workload will now run for at most 10 seconds (10,000 ms).
 
+More Complex Examples
+---------------------
+
+The examples directory contains some more advanced examples as well.
+
+### [background_index.yml](background_index.yml)
+
+This workload is based off an FSM workload. It creates an index in the
+background while performing a collection of CRUD operations at the
+same time. The background index creation and the background workload
+are defined as their own workloads, and can be run independently. They
+are run in a coordinated fashion in the main workload.
+
+### [simpletext.yml](simpletext.yml)
+
+This workload is a protoype re-implementation of the tests in
+mongo-perf simple_test.js. Instead of generating random words and
+phrases, it includes words and phrases from an external file. It can
+be run two different ways: either loading existing json documents or
+generating json documents based on a dictionary of phrases and
+terms. The actual data used is toy example data, but the files could
+be trivially replaced with real data.
+
+### [text_test.yml](text_test.yml)
+
+This workload reimplements and extends the workload reported in
+[SERVER-21690](https://jira.mongodb.org/browse/SERVER-21690). It uses
+the load\_file node to import the document corpus used in the
+ticket. It creates the text index and runs the aggregation workload
+described in the ticket. Additionally, the workload can be run with a
+query based workload.
+
+The data must be separately downloaded before running, but
+there are instructions within the file.
+
+### [insert\_increasing\_threads.yml](insert_increasing_threads.yml)
+
+This workload is based on
+[SERVER-20409](https://jira.mongodb.org/browse/SERVER-20409). It
+steadily spawns new threads up to 15,000 threads. Each thread inserts
+a simple document and then sleeps for 100 ms. The workload should be
+tailored to the machine on which it is running.
