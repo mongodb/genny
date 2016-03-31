@@ -43,13 +43,16 @@ increment
 ---------
 
 The increment generator accesses a variable and does a
-post-increment. It has one argument: _variable_ with the name of the
-variable to increment.
+post-increment. It has the following arguments:
 
-Future extensions:
-
-* specifying the increment
-* specifying a minimum and maximum value with wrapping
+* _variable_ with the name of the variable to increment.
+* _increment_: Takes a value generator. The amount to increment
+  by. Defaults to 1.
+* _maximum_: Takes a value generator. The maximum value to increment
+  to. Will wrap around to _minimum_ when it gets to _maximum_. Default
+  value is max int.
+* _minimum_: Takes a value generator. The value to wrap to when
+  _maximum_ is reached. Default value is min int.
 
 multiply
 --------

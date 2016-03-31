@@ -61,6 +61,9 @@ main :
           x :
             type : increment
             variable : count
+            increment: 2 # increment by steps of 2.
+            minimum: 0 # Reset to 0 when it reaches maximum
+            maximum: 10 # Reset when it gets to 10
       options :
         write_concern :
           nodes : 1

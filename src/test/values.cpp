@@ -111,7 +111,32 @@ TEST_CASE("Value Generaotrs", "[generators]") {
             result = incGenerator.generate(*state);
             REQUIRE(result.view()[0].get_int32().value == 3);
         }
+        SECTION("increment value") {
+            auto incYaml = YAML::Load(R"yaml(
+            variable: tvar
+            increment: 2
+        )yaml");
+            auto incGenerator = IncrementGenerator(incYaml);
+            auto result = incGenerator.generate(*state);
+            REQUIRE(result.view()[0].get_int32().value == 1);
+            result = incGenerator.generate(*state);
+            REQUIRE(result.view()[0].get_int32().value == 3);
+        }
+        SECTION("Min and Max") {
+            auto incYaml = YAML::Load(R"yaml(
+            variable: tvar
+            increment: 2
+            minimum: -10
+            maximum: 2
+        )yaml");
+            auto incGenerator = IncrementGenerator(incYaml);
+            auto result = incGenerator.generate(*state);
+            REQUIRE(result.view()[0].get_int32().value == 1);
+            result = incGenerator.generate(*state);
+            REQUIRE(result.view()[0].get_int32().value == -9);
+        }
     }
+
 
     SECTION("DateGenerator") {
         auto genYaml = YAML::Load(R"yaml(
