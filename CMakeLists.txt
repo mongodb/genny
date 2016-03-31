@@ -79,7 +79,7 @@ else()
    ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
 endif()
 
-find_package(Boost 1.59 REQUIRED COMPONENTS log thread filesystem
+find_package(Boost 1.54 REQUIRED COMPONENTS log thread filesystem
 regex system)
 include_directories(${Boost_INCLUDE_DIRS})
 
