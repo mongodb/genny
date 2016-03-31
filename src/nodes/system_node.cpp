@@ -25,7 +25,7 @@ SystemNode::SystemNode(YAML::Node& ynode) : node(ynode) {
 // Execute the node
 void SystemNode::execute(shared_ptr<threadState> myState) {
     BOOST_LOG_TRIVIAL(debug) << "SystemNode.execute. Executing: " << command;
-    std::system(command.c_str());
-    BOOST_LOG_TRIVIAL(debug) << "System node executed command";
+    auto result = std::system(command.c_str());
+    BOOST_LOG_TRIVIAL(debug) << "System node executed command. Returned " << result;
 }
 }
