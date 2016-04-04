@@ -50,6 +50,9 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode) {
 int64_t ValueGenerator::generateInt(threadState& state) {
     return valAsInt(generate(state));
 };
+double ValueGenerator::generateDouble(threadState& state) {
+    return valAsDouble(generate(state));
+};
 std::string ValueGenerator::generateString(threadState& state) {
     return valAsString(generate(state));
 }

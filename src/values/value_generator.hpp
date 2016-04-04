@@ -22,6 +22,7 @@ public:
     virtual bsoncxx::array::value generate(threadState&) = 0;
     // Need some helper functions here to get a string, or an int
     virtual int64_t generateInt(threadState&);
+    virtual double generateDouble(threadState&);
     virtual std::string generateString(threadState&);
 };
 
