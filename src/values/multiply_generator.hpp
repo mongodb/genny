@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "value_generator.hpp"
 
 namespace mwg {
@@ -7,11 +10,12 @@ namespace mwg {
 class MultiplyGenerator : public ValueGenerator {
 public:
     MultiplyGenerator(YAML::Node&);
-    virtual bsoncxx::array::value generate(threadState&) override;
+    bsoncxx::array::value generate(threadState&) override;
+    int64_t generateInt(threadState&) override;
+    double generateDouble(threadState&) override;
+    std::string generateString(threadState&) override;
 
 private:
-    // this should evolve to be two value generators, or possibly a list of generators
-    std::string variableName;
-    uint64_t factor;
+    std::vector<std::unique_ptr<ValueGenerator>> factors;
 };
 }

@@ -158,17 +158,20 @@ TEST_CASE("Value Generaotrs", "[generators]") {
         REQUIRE(elem.get_int64().value >= 50);
         REQUIRE(elem.get_int64().value < 60);
     }
-    SECTION("MultipleGenerator") {
+    SECTION("MultiplyGenerator") {
         auto genYaml = YAML::Load(R"yaml(
-      variable: wvar
-      factor: 4
+      factors: 
+         - 4
+         - 3
+         - {type: usevar, variable: wvar}
 )yaml");
         auto generator = MultiplyGenerator(genYaml);
         auto result = generator.generate(*state);
         auto elem = result.view()[0];
-        REQUIRE(elem.type() == bsoncxx::type::k_int32);
-        REQUIRE(elem.get_int32().value == 8);
-        REQUIRE(generator.generateInt(*state) == 8);
+        //        REQUIRE(elem.type() == bsoncxx::type::k_double);
+        // REQUIRE(elem.get_double().value == 8);
+        REQUIRE(generator.generateDouble(*state) == 24.0);
+        REQUIRE(generator.generateInt(*state) == 24);
     }
     SECTION("RandomString") {
         SECTION("default") {

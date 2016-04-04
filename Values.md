@@ -57,14 +57,12 @@ post-increment. It has the following arguments:
 multiply
 --------
 
-Multiplies two values and returns the result as a bson object. It
-takes two arguments:
+Multiplies a list of values and returns the result as a bson object. It
+takes a list of _factors_. The result is a double, but can be used
+where an integer is required.
 
-1. _variable_: The variable to multiply
-2. _factor_: The value with which to multiply the variable.
-
-This can be generalized fairly easily. Eventually it should take a
-list of factors, in which each factor can be a value generator.
+2. _factors_: A yaml list of value generators or constants to multiple
+   together
 
 randomint
 ---------

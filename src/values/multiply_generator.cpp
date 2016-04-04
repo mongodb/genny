@@ -67,21 +67,28 @@ value multiplyVar(std::unordered_map<string, bsoncxx::array::value>::iterator va
 
 MultiplyGenerator::MultiplyGenerator(YAML::Node& node) : ValueGenerator(node) {
     // add in error checking
-    variableName = node["variable"].Scalar();
-    factor = node["factor"].as<int64_t>();
+    for (auto fnode : node["factors"]) {
+        factors.push_back(makeUniqueValueGenerator(fnode));
+    }
+}
+
+double MultiplyGenerator::generateDouble(threadState& state) {
+    double result = 1.0;
+    for (auto& factor : factors) {
+        result *= factor->generateDouble(state);
+    }
+    return result;
+}
+
+int64_t MultiplyGenerator::generateInt(threadState& state) {
+    return (static_cast<int64_t>(generateDouble(state)));
 }
 
 bsoncxx::array::value MultiplyGenerator::generate(threadState& state) {
-    if (state.tvariables.count(variableName) > 0) {
-        return (multiplyVar(state.tvariables.find(variableName), factor));
-    } else if (state.wvariables.count(variableName) > 0) {  // in wvariables
-        // Grab lock. Could be kinder hear and wait on condition variable
-        std::lock_guard<std::mutex> lk(state.workloadState.mut);
-        return (multiplyVar(state.wvariables.find(variableName), factor));
-    } else {
-        BOOST_LOG_TRIVIAL(fatal) << "In multiply var but variable " << variableName
-                                 << " doesn't exist";
-        exit(EXIT_FAILURE);
-    }
+    return (bsoncxx::builder::stream::array{} << generateDouble(state)
+                                              << bsoncxx::builder::stream::finalize);
+}
+std::string MultiplyGenerator::generateString(threadState& state) {
+    return (std::to_string(generateDouble(state)));
 }
 }

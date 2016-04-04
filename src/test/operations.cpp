@@ -310,13 +310,14 @@ TEST_CASE("Set Variables", "[variables]") {
     target : workloadVar
     operation :
       type : multiply
-      variable : threadVar
-      factor : 10
+      factors: 
+          - 10
+          - {type: usevar, variable : threadVar}
 )yaml");
 
         auto testSet = set_variable(yaml);
         testSet.execute(conn, state);
-        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_int32().value == 20);
+        REQUIRE(state.wvariables.find("workloadVar")->second.view()[0].get_double().value == 20);
         REQUIRE(state.tvariables.find("threadVar")->second.view()[0].get_int32().value == 2);
     }
 }
