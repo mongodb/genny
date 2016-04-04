@@ -13,6 +13,16 @@ generator as a number and is not a number.
 Each value generator has a _type_ field. They are listed by _type_
 below.
 
+add
+---
+
+Adds a list of values and returns the result as a bson object. It
+takes a list of _addends_. The result is a double, but can be used
+where an integer is required.
+
+1. _addends_: A yaml list of value generators or constants to add
+   together
+
 choose
 ------
 
@@ -61,7 +71,7 @@ Multiplies a list of values and returns the result as a bson object. It
 takes a list of _factors_. The result is a double, but can be used
 where an integer is required.
 
-2. _factors_: A yaml list of value generators or constants to multiple
+1. _factors_: A yaml list of value generators or constants to multiple
    together
 
 randomint

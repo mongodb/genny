@@ -168,10 +168,21 @@ TEST_CASE("Value Generaotrs", "[generators]") {
         auto generator = MultiplyGenerator(genYaml);
         auto result = generator.generate(*state);
         auto elem = result.view()[0];
-        //        REQUIRE(elem.type() == bsoncxx::type::k_double);
-        // REQUIRE(elem.get_double().value == 8);
         REQUIRE(generator.generateDouble(*state) == 24.0);
         REQUIRE(generator.generateInt(*state) == 24);
+    }
+    SECTION("AddGenerator") {
+        auto genYaml = YAML::Load(R"yaml(
+      addends: 
+         - 4
+         - 3
+         - {type: usevar, variable: wvar}
+)yaml");
+        auto generator = AddGenerator(genYaml);
+        auto result = generator.generate(*state);
+        auto elem = result.view()[0];
+        REQUIRE(generator.generateDouble(*state) == 9.0);
+        REQUIRE(generator.generateInt(*state) == 9);
     }
     SECTION("RandomString") {
         SECTION("default") {
