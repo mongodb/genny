@@ -3,7 +3,7 @@ project (WorkloadGeneration)
 
 # The version number.
 set (WorkloadGeneration_VERSION_MAJOR 0)
-set (WorkloadGeneration_VERSION_MINOR 3)
+set (WorkloadGeneration_VERSION_MINOR 4)
 set (WorkloadGeneration_VERSION_PATCH 0)
 
 # Additional cmake modules: git stuff and findyaml

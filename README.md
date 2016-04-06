@@ -7,17 +7,17 @@ Quickstart
 On Mac
 
     #Start a mongod on default port
-    wget https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.3.0-Darwin.tar.gz
-    tar -zxvf WorkloadGeneration-0.3.0-Darwin.tar.gz
-    cd WorkloadGeneration-0.3.0-Darwin
+    wget https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.4.0-Darwin.tar.gz
+    tar -zxvf WorkloadGeneration-0.4.0-Darwin.tar.gz
+    cd WorkloadGeneration-0.4.0-Darwin
     bin/mwg examples/hello_world.yml
 
 Or on linux (compiled on Ubuntu 14.04)
 
     #Start a mongod on default port
-    wget https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.3.0-Linux.tar.gz
-    tar -zxvf WorkloadGeneration-0.3.0-Linux.tar.gz
-    cd WorkloadGeneration-0.3.0-Linux
+    wget https://s3.amazonaws.com/cap-david-daly/WorkloadGeneration-0.4.0-Linux.tar.gz
+    tar -zxvf WorkloadGeneration-0.4.0-Linux.tar.gz
+    cd WorkloadGeneration-0.4.0-Linux
     bin/mwg examples/hello_world.yml
 
 Congratulations, you have run your first model. You can check the
