@@ -167,7 +167,6 @@ TEST_CASE("Value Generaotrs", "[generators]") {
 )yaml");
         auto generator = MultiplyGenerator(genYaml);
         auto result = generator.generate(*state);
-        auto elem = result.view()[0];
         REQUIRE(generator.generateDouble(*state) == 24.0);
         REQUIRE(generator.generateInt(*state) == 24);
     }
@@ -180,7 +179,6 @@ TEST_CASE("Value Generaotrs", "[generators]") {
 )yaml");
         auto generator = AddGenerator(genYaml);
         auto result = generator.generate(*state);
-        auto elem = result.view()[0];
         REQUIRE(generator.generateDouble(*state) == 9.0);
         REQUIRE(generator.generateInt(*state) == 9);
     }
