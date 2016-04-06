@@ -13,7 +13,7 @@ you change it, and observe the difference in behavior.
    [examples](examples/README.md).
 2. Run [sample1.yml](examples/sample1.yml) in the examples
    directory. "bin/mwg examples/sample1.yml". Make sure there is a
-   running mongod on the local system on port 27017. 
+   running mongod on the local system on port 27017.
    1. Compare the output to the expected
       [console output](examples/sample1.output.txt).
    2. Look through the results.json file. Do the results make sense to
@@ -58,4 +58,3 @@ you change it, and observe the difference in behavior.
       operations (possibly with loops), before finishing.
       1. Can you get the workload to a steady state?
       2. How can you show the workload has reached a steady state?
-   

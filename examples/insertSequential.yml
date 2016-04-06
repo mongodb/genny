@@ -15,13 +15,7 @@ main:
     - name: insert1
       type: insert_one
       next: Finish
-      document:
-        type: override
-        doc: {y: 1}
-        overrides:
-          y: # increment count and set y to count
-            type: increment
-            variable: count
+      document: {y: {$increment: {variable: count}}}
     - name: check1
       type: count
       filter: {y: 0}

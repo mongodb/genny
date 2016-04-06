@@ -284,4 +284,15 @@ TEST_CASE("Value Generaotrs", "[generators]") {
         REQUIRE(str.length() == 3);
         REQUIRE(str.compare("A15") == 0);
     }
+    SECTION("Value From templating") {
+        auto genYaml = YAML::Load(R"yaml(
+        $add: 
+           addends: 
+              - 1
+              - 1
+)yaml");
+
+        auto generator = makeUniqueValueGenerator(genYaml);
+        REQUIRE(generator->generateInt(*state) == 2);
+    }
 }

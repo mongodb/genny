@@ -12,16 +12,16 @@ using namespace std;
 namespace mwg {
 class overrideDocument : public document {
 public:
-    overrideDocument(){};
+    overrideDocument() : document(){};
     overrideDocument(YAML::Node&);
-    virtual ~overrideDocument() = default;
-    overrideDocument(const overrideDocument&) = default;
-    overrideDocument(overrideDocument&&) = default;
-    overrideDocument& operator=(const overrideDocument&) = default;
-    overrideDocument& operator=(overrideDocument&&) = default;
 
     virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&,
                                          threadState&) override;
+
+protected:
+    // The document to override
+    bsonDocument doc;
+    unordered_map<string, unique_ptr<ValueGenerator>> override;
 
 private:
     // apply the overides, one level at a time
@@ -29,8 +29,5 @@ private:
                             bsoncxx::document::view,
                             string,
                             threadState&);
-    // The document to override
-    bsonDocument doc;
-    unordered_map<string, unique_ptr<ValueGenerator>> override;
 };
 }

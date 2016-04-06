@@ -9,17 +9,11 @@ main:
   nodes:
     - type: drop
     - type: insert_one
-      document:
-        type: override
-        doc: {y: 1}
-        overrides: {y: {type: randomstring, length: 5}}
+      document: {y: {$randomstring: {length: 5}}}
     - type: ForN
       N: 10
       node: insert
       next: Finish
     - name: insert
       type: insert_one
-      document:
-        type: override
-        doc: {x: 1}
-        overrides: {x: {type: randomstring, length: {type: randomint, min: 1, max: 20}}}
+      document: {x: {$randomstring: {length: {$randomint: {min: 1, max: 20}}}}}

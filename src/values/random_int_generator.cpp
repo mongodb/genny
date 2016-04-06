@@ -12,11 +12,14 @@ using bsoncxx::builder::stream::finalize;
 
 namespace mwg {
 RandomIntGenerator::RandomIntGenerator(YAML::Node& node) : ValueGenerator(node), min(0), max(100) {
-    if (node["min"]) {
-        min = node["min"].as<int64_t>();
-    }
-    if (node["max"]) {
-        max = node["max"].as<int64_t>();
+    // It's okay to have a scalar for the templating. Just use defaults
+    if (node.IsMap()) {
+        if (node["min"]) {
+            min = node["min"].as<int64_t>();
+        }
+        if (node["max"]) {
+            max = node["max"].as<int64_t>();
+        }
     }
     BOOST_LOG_TRIVIAL(debug) << "RandomIntGenerator constructor. min=" << min << " max=" << max;
 }

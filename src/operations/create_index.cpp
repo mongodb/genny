@@ -39,9 +39,7 @@ void create_index::execute(mongocxx::client& conn, threadState& state) {
     BOOST_LOG_TRIVIAL(debug) << "Enter create_index execute";
     auto collection = conn[state.DBName][state.CollectionName];
     bsoncxx::builder::stream::document mydoc{};
-    bsoncxx::builder::stream::document myoptions{};
     auto view = keys->view(mydoc, state);
-    // auto opview = options->view(myoptions, state);
     try {
         auto result = collection.create_index(view, indexOptions);
     } catch (mongocxx::operation_exception e) {

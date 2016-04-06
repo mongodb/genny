@@ -20,14 +20,7 @@ main :
     - name : insert2
       type : insert_many
       times : 10
-      doc :
-        type : override 
-        doc : {y : 1}
-        overrides : 
-          y :  # set y to a random int with uniform distribution from 0 to 100
-            type : randomint
-            min : 0
-            max : 100
+      doc : {y: {$randomint: {min: 0, max: 100}}}
       options : 
         ordered: false
         write_concern : 

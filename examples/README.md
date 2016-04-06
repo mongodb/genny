@@ -44,7 +44,7 @@ complex examples described further down the page.
 - [ifNode.yml](ifNode.yml): Demonstrates simple ifNode behavior. It
   contains two ifNodes. The first evaluates true, and the second
   false. Here's an [image of the ifNode graph](images/ifNode.png)
-- [override.yml](override.yml): We can change values in documents. Increment, random
+- [templating.yml](templating.yml): We can change values in documents. Increment, random
   int, random string, date.
 
 A tour of the syntax

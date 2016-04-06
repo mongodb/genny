@@ -1,61 +1,50 @@
 # Test the speed of the tool
 
-main : 
-  name : main
-  nodes : 
-    - name : simpleNoop
-      type : workloadNode
-      workload : 
-        name : simpleNoop
-        runLengthMs : 1000
-        threads : 1
-        nodes : 
-          - name : snoop
-            type : noop
-            next : snoop
-            doc : {}
-    - name : intNoop
-      type : workloadNode
-      workload : 
-        name : intNoop
-        runLengthMs : 1000
-        threads : 1
-        nodes : 
-          - name : inoop
-            type : noop
-            next : inoop
-            doc :
-              type : override 
-              doc : {y : 1}
-              overrides : 
-                y :  # set y to a random int with uniform distribution from 0 to 100
-                  type : randomint
-    - name : docNoop
-      type : workloadNode
-      workload : 
-        name : docNoop
-        runLengthMs : 1000
-        threads : 1
-        nodes : 
-          - name : dnoop
-            type : noop
-            next : dnoop
-            doc :
-              type : override 
-              doc : {y : 1}
-              overrides : 
-                y :  # set y to a random int with uniform distribution from 0 to 100
-                  type : randomstring
-                  length : 20
-    - name : ping
-      type : workloadNode
-      workload : 
-        name : ping
-        runLengthMs : 1000
-        threads : 1
-        nodes : 
-          - name : ping
-            type : command
-            next : ping
-            command : 
-              ping : 1
+main: 
+  name: main
+  nodes: 
+    - name: simpleNoop
+      type: workloadNode
+      workload: 
+        name: simpleNoop
+        runLengthMs: 1000
+        threads: 1
+        nodes: 
+          - name: snoop
+            type: noop
+            next: snoop
+            doc: {}
+    - name: intNoop
+      type: workloadNode
+      workload: 
+        name: intNoop
+        runLengthMs: 1000
+        threads: 1
+        nodes: 
+          - name: inoop
+            type: noop
+            next: inoop
+            doc: {y: $randomint}
+    - name: docNoop
+      type: workloadNode
+      workload: 
+        name: docNoop
+        runLengthMs: 1000
+        threads: 1
+        nodes: 
+          - name: dnoop
+            type: noop
+            next: dnoop
+            doc: {y: {$randomstring: {length: 20}}}
+    - name: ping
+      type: workloadNode
+      workload: 
+        name: ping
+        runLengthMs: 1000
+        threads: 1
+        nodes: 
+          - name: ping
+            type: command
+            next: ping
+            command: 
+              ping: 1

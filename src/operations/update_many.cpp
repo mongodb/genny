@@ -38,7 +38,7 @@ void update_many::execute(mongocxx::client& conn, threadState& state) {
     bsoncxx::builder::stream::document mydoc{};
     bsoncxx::builder::stream::document myupdate{};
     auto view = filter->view(mydoc, state);
-    auto updateview = update->view(mydoc, state);
+    auto updateview = update->view(myupdate, state);
     try {
         auto result = collection.update_many(view, updateview, options);
     } catch (mongocxx::operation_exception e) {

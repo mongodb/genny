@@ -10,8 +10,5 @@ main:
       node: insert_choose
     - name: insert_choose
       type: insert_one
-      document: 
-        type: override
-        doc: {y: 1}
-        overrides: {y: {type: choose, choices: [a, b, {z: [1 2]}]}}
+      document: {y: {$choose: {choices: [a, b, {z: [1 2]}]}}}
       

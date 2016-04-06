@@ -8,6 +8,7 @@ add_test(insertMany mwg -l error ../examples/insertMany.yml)
 add_test(insertRandom mwg -l error ../examples/insertRandom.yml)
 add_test(insertSequential mwg -l error ../examples/insertSequential.yml)
 add_test(override mwg -l error ../examples/override.yml)
+add_test(templating mwg -l error ../examples/templating.yml)
 add_test(sample1 mwg -l error ../examples/sample1.yml --variable
 delay=100 --variable runLengthMs=1000)
 add_test(sample1+threads mwg -l error ../examples/sample1+threads.yml --variable
@@ -30,11 +31,12 @@ PROPERTIES PASS_REGULAR_EXPRESSION "sleep, Count=2")
 
 # Check for error messages or fatal
 SET_TESTS_PROPERTIES(operations ifNode insertMany insertSequential
-override spawn includes load_file simpletext PROPERTIES FAIL_REGULAR_EXPRESSION
-"error;fatal")
+override spawn includes load_file simpletext templating PROPERTIES
+FAIL_REGULAR_EXPRESSION "error;fatal")
 
 SET_TESTS_PROPERTIES(doAll ifNode forN operations insertMany
 insertRandom insertSequential override sample1 sample1+threads
 sample1+threadsNoSleep sample2 speed workloadNode spawn
 sample+yamloverride sample+cmdlinerunLength includes load_file
-simpletext PROPERTIES WORKING_DIRECTORY "${PROJECT_BINARY_DIR}")
+simpletext templating PROPERTIES WORKING_DIRECTORY
+"${PROJECT_BINARY_DIR}")

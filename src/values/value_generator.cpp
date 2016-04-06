@@ -7,8 +7,48 @@
 
 namespace mwg {
 
+// This returns a set of the value generator types with $ prefixes
+const std::set<std::string> getGeneratorTypes() {
+    return (std::set<std::string>{"$add",
+                                  "$choose",
+                                  "$date",
+                                  "$increment",
+                                  "$multiply",
+                                  "$randomint",
+                                  "$randomstring",
+                                  "$useresult",
+                                  "$useval",
+                                  "$usevar"});
+}
+
+
+ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type) {
+    if (type == "add") {
+        return new AddGenerator(yamlNode);
+    } else if (type == "choose") {
+        return new ChooseGenerator(yamlNode);
+    } else if (type == "date") {
+        return new DateGenerator(yamlNode);
+    } else if (type == "increment") {
+        return new IncrementGenerator(yamlNode);
+    } else if (type == "multiply") {
+        return new MultiplyGenerator(yamlNode);
+    } else if (type == "randomint") {
+        return new RandomIntGenerator(yamlNode);
+    } else if (type == "randomstring") {
+        return new RandomStringGenerator(yamlNode);
+    } else if (type == "useresult") {
+        return new UseResultGenerator(yamlNode);
+    } else if (type == "useval") {
+        return new UseValueGenerator(yamlNode);
+    } else if (type == "usevar") {
+        return new UseVarGenerator(yamlNode);
+    }
+    BOOST_LOG_TRIVIAL(fatal) << "In makeValueGenerator and don't know how to handle type " << type;
+    exit(EXIT_FAILURE);
+}
+
 ValueGenerator* makeValueGenerator(YAML::Node yamlNode) {
-    // if it's a scalar, treat it as a value
     if (yamlNode.IsScalar()) {
         return new UseValueGenerator(yamlNode);
     }
@@ -18,35 +58,17 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode) {
             << "ValueGenerator Node in makeValueGenerator is not a yaml map or a sequence";
         exit(EXIT_FAILURE);
     }
-    if (yamlNode["type"]) {
-        auto type = yamlNode["type"].Scalar();
-        if (type == "add") {
-            return new AddGenerator(yamlNode);
-        } else if (type == "choose") {
-            return new ChooseGenerator(yamlNode);
-        } else if (type == "date") {
-            return new DateGenerator(yamlNode);
-        } else if (type == "increment") {
-            return new IncrementGenerator(yamlNode);
-        } else if (type == "multiply") {
-            return new MultiplyGenerator(yamlNode);
-        } else if (type == "randomint") {
-            return new RandomIntGenerator(yamlNode);
-        } else if (type == "randomstring") {
-            return new RandomStringGenerator(yamlNode);
-        } else if (type == "useresult") {
-            return new UseResultGenerator(yamlNode);
-        } else if (type == "useval") {
-            return new UseValueGenerator(yamlNode);
-        } else if (type == "usevar") {
-            return new UseVarGenerator(yamlNode);
+    if (auto type = yamlNode["type"])
+        return (makeValueGenerator(yamlNode, type.Scalar()));
+    // If it doesn't have a type field, search for templating keys
+    for (auto&& entry : yamlNode) {
+        auto key = entry.first.Scalar();
+        if (getGeneratorTypes().count(key)) {
+            auto type = key.substr(1, key.length());
+            return (makeValueGenerator(entry.second, type));
         }
-        BOOST_LOG_TRIVIAL(fatal) << "In makeValueGenerator and don't know how to handle type "
-                                 << type;
-        exit(EXIT_FAILURE);
     }
-    // if no type field, treat the whole thing as a value
-    return new UseValueGenerator(yamlNode);
+    return (makeValueGenerator(yamlNode, "useval"));
 }
 
 int64_t ValueGenerator::generateInt(threadState& state) {
@@ -65,6 +87,13 @@ std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node yamlNode) {
 }
 std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node yamlNode) {
     return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode));
+}
+
+std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node yamlNode, std::string type) {
+    return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode, type));
+}
+std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node yamlNode, std::string type) {
+    return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode, type));
 }
 
 // Check type cases and get a string out of it. Assumes it is getting a bson array of length 1.

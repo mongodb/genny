@@ -2,7 +2,7 @@ Workloads
 =========
 
 A workload is a complete specification of a load to be applied to a
-server. It consists of a graph of [nodes](Nodes.md). 
+server. It consists of a graph of [nodes](Nodes.md).
 
 A workload has the following fields:
 
@@ -23,7 +23,7 @@ A workload has the following fields:
 * _collection_ : Optional string value defining the default collection
   name to use (does not include database name).
 * _threads_ : Number of parallel threads to use. Each thread executes
-  an instance of the workload. 
+  an instance of the workload.
 * _runLengthMs_: Maximum execution time for the workload in
   milliseconds. The execution time can be shorter based on the
   sequence of exeution.

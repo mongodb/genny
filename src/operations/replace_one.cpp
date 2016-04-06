@@ -38,7 +38,7 @@ void replace_one::execute(mongocxx::client& conn, threadState& state) {
     bsoncxx::builder::stream::document mydoc{};
     bsoncxx::builder::stream::document myreplacement{};
     auto view = filter->view(mydoc, state);
-    auto replacementview = replacement->view(mydoc, state);
+    auto replacementview = replacement->view(myreplacement, state);
     try {
         auto result = collection.replace_one(view, replacementview, options);
     } catch (mongocxx::operation_exception e) {

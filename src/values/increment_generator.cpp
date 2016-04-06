@@ -98,6 +98,7 @@ IncrementGenerator::IncrementGenerator(YAML::Node& node)
       maximum(std::numeric_limits<int64_t>::max()),
       increment(1) {
     // add in error checking
+    BOOST_LOG_TRIVIAL(trace) << "IncrementGenerator constructor";
     variableName = node["variable"].Scalar();
     if (auto minimum_node = node["minimum"])
         minimum = IntOrValue(minimum_node);

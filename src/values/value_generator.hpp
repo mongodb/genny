@@ -26,8 +26,11 @@ public:
     virtual std::string generateString(threadState&);
 };
 
+const std::set<std::string> getGeneratorTypes();
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node);
 std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node);
+std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, std::string);
+std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node, std::string);
 std::string valAsString(view_or_value);
 int64_t valAsInt(view_or_value);
 double valAsDouble(view_or_value);

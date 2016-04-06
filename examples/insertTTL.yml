@@ -10,15 +10,7 @@ fillttl: &fillttl
     - name: insert
       type: insert_many
       times: 10
-      next: Finish
-      doc:
-        type: override
-        doc: { ttl: 1, i: 1 }
-        overrides:
-          ttl:
-            type: date
-          i:
-            type: randomint
+      doc: {ttl: $date, i: $randomint}
 
 main:
   seed: 131415161718

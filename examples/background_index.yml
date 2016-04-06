@@ -45,51 +45,23 @@ crud: &crud
         print: Running create
         type: insert_many
         times: 10000
-        doc:
-          type: override
-          doc: {x: i}
-          overrides:
-            x:
-              type: randomint
-              min: *docValMin
-              max: *docValMax
+        doc: {x: {$randomint: {min: *docValMin, max: *docValMax}}}
         next: crud
       - name: read
         print: Running read
         type: find
-        filter:
-          type: override
-          doc: {x: i}
-          overrides:
-            x:
-              type: randomint
-              min: *docValMin
-              max: *docValMax
+        filter: {x: {$randomint: {min: *docValMin, max: *docValMax}}}
         next: crud
       - name: update
         print: Running update
         type: update_many
-        filter:
-          type: override
-          doc: {x: i}
-          overrides:
-            x:
-              type: randomint
-              min: *docValMin
-              max: *docValMax
+        filter: {x: {$randomint: {min: *docValMin, max: *docValMax}}}
         update: {$inc: {crud: 1}}
         next: crud
       - name: delete
         print: Running delete
         type: delete_many
-        filter:
-          type: override
-          doc: {x: i}
-          overrides:
-            x:
-              type: randomint
-              min: *docValMin
-              max: *docValMax
+        filter: {x: {$randomint: {min: *docValMin, max: *docValMax}}}
         next: crud
 
 main:
@@ -107,12 +79,7 @@ main:
       times: *numInitDocs
       doc:
         type: override
-        doc: {x: i}
-        overrides:
-          x:
-            type: randomint
-            min: *docValMin
-            max: *docValMax
+        doc: {x: {$randomint: {min: *docValMin, max: *docValMax}}}
       next: doOps
     - # run 2 child workloads:
       # - CRUD operations

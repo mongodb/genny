@@ -23,7 +23,7 @@ using bsoncxx::builder::stream::close_array;
 
 namespace mwg {
 
-overrideDocument::overrideDocument(YAML::Node& node) {
+overrideDocument::overrideDocument(YAML::Node& node) : document() {
     if (!node) {
         BOOST_LOG_TRIVIAL(fatal) << "overrideDocument constructor and !node";
         exit(EXIT_FAILURE);

@@ -63,11 +63,7 @@ generate_docs: &generate_docs
     - name: insertDocs
       type: insert_many
       times: *batchSize
-      doc:
-        type: override
-        doc: {x: 1}
-        # Choose override doesn't exist yet
-        overrides: {x: {type: choose, choices: *phraseDictionary}}
+      doc: {x: {$choose: {choices: *phraseDictionary}}}
 
 # The actual workload part of the test.
 queries: &queries
@@ -77,10 +73,8 @@ queries: &queries
     - name: find
       type: find
       next: find # Self loop. #could put in a shortcut for self loop so don't need to name
-      filter:
-        type: override
-        doc: {$text: {$search: phrase, $caseSensitive: *caseSensitive}}
-        overrides: {$text.$search: {type: choose, choices: *searchDictionary}}
+      filter: 
+        $text: {$search: {$choose: {choices: *searchDictionary}}, $caseSensitive: *caseSensitive}
 
 # Run the test with loading files
 test_with_load: &test_with_load

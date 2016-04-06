@@ -61,7 +61,7 @@ Helper operations
         database or collection)
       * _value_: A json/yaml value to set the variable to
       * _operation_: A map specifying how to generate the
-        value. The operations are the generic [value generators](Values.md). 
+        value. The operations are the generic [value generators](Values.md).
 * load\_file: This loads documents into the database. It takes a file
   containing a sequence of json documents, such as those produced by
   mongo-export.

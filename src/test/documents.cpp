@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "document.hpp"
 #include "workload.hpp"
+#include "template_document.hpp"
 
 #include <bson.h>
 #include <bsoncxx/builder/basic/array.hpp>
@@ -140,6 +141,23 @@ TEST_CASE("Documents are created", "[documents]") {
         viewable_eq_viewable(refdoc, view);
         bsoncxx::builder::stream::document mydoc2{};
         auto view2 = doc->view(mydoc2, state);
+        bsoncxx::builder::stream::document refdoc2{};
+        refdoc2 << "x" << 6;
+        viewable_eq_viewable(refdoc2, view2);
+    }
+    SECTION("template document") {
+        auto yaml = YAML::Load(R"yaml(
+              x : {$increment : {variable : count}}
+)yaml");
+        auto doc = templateDocument(yaml);
+        state.wvariables.insert({"count", bsoncxx::builder::stream::array() << 5 << finalize});
+        auto view = doc.view(mydoc, state);
+        bsoncxx::builder::stream::document refdoc{};
+
+        refdoc << "x" << 5;
+        viewable_eq_viewable(refdoc, view);
+        bsoncxx::builder::stream::document mydoc2{};
+        auto view2 = doc.view(mydoc2, state);
         bsoncxx::builder::stream::document refdoc2{};
         refdoc2 << "x" << 6;
         viewable_eq_viewable(refdoc2, view2);

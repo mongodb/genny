@@ -30,22 +30,18 @@ load_data: &load_data
       file_name: books.json
       path: *path
     - type: create_index
-      keys: { "$**" : "text" }
+      keys: { "$**": "text" }
 
 agg_load: &agg_load
   name: aggregation_workload
   nodes:
     - type: command
       command:
-        type: override
-        doc:
-          aggregate: testCollection
-          pipeline:
-            - $match : { $text : {$search : "house"}}
-            - $group : {_id : {author : "$author"}, count : {$sum : 1}}
-            - $sort : {count : -1}
-        overrides:
-          aggregate: {type: usevar, variable: CollectionName}
+        aggregate: {$usevar: {variable: CollectionName}}
+        pipeline:
+          - $match: {$text: {$search: "house"}}
+          - $group: {_id: {author: "$author"}, count: {$sum: 1}}
+          - $sort: {count: -1}
 
 query_load: &query_load
   name: query_workload
@@ -57,12 +53,10 @@ query_load: &query_load
       name: find
       next: find
       filter:
-        type: override
-        doc: {$text: {$search: phrase, $caseSensitive: true}}
-        projection: {_id: 1}
-        overrides:
-          $text.$search: {type: choose, choices: [house, tree, barn, bible, taxes, horse]}
-          $text.$caseSensitive: {type: usevar, variable: case}
+        $text:
+          $search: {$choose: {choices: [house, tree, barn, bible, taxes, horse]}}
+          $caseSensitive: {$usevar: {variable: case}}
+      options: {projection: {_id: 1}}
 
 main:
   name: text_test
