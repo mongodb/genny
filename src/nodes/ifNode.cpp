@@ -90,9 +90,12 @@ void ifNode::executeNode(shared_ptr<threadState> myState) {
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
     BOOST_LOG_TRIVIAL(debug) << "ifNode.execute.";
-    if (stopped || myState->stopped)  // short circuit and return if stopped flag set
-        return;
     shared_ptr<node> me = myState->currentNode;
+    if (stopped || myState->stopped) {  // short circuit and return if stopped flag set
+        BOOST_LOG_TRIVIAL(debug) << "Stopped set";
+        myState->currentNode = nullptr;
+        return;
+    }
     // this comparison should be more general.
     // switch through tests to compute flag
     bool conState = false;
