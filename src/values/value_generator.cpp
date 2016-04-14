@@ -11,6 +11,7 @@ namespace mwg {
 const std::set<std::string> getGeneratorTypes() {
     return (std::set<std::string>{"$add",
                                   "$choose",
+                                  "$concatenate",
                                   "$date",
                                   "$increment",
                                   "$multiply",
@@ -28,6 +29,8 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type) {
         return new AddGenerator(yamlNode);
     } else if (type == "choose") {
         return new ChooseGenerator(yamlNode);
+    } else if (type == "concatenate") {
+        return new ConcatenateGenerator(yamlNode);
     } else if (type == "date") {
         return new DateGenerator(yamlNode);
     } else if (type == "increment") {

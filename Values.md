@@ -77,10 +77,33 @@ where an integer is required.
 randomint
 ---------
 
-Generates a uniform random integer. Arguments:
+Generates a random integer. You can specify the random distribution
+and the parameters for that distribution. Defautl distribution is
+uniform.
 
-1. _min_ (optional): minimum value (default = 0)
-2. _max_ (optional): maximum value (default = 100)
+1. _distribution_: The random distribution to use when generating
+integers (default = uniform). Valid distributions are:
+    1. uniform
+    2. binomial
+    3. negative binomial
+    4. geometric
+    5. poisson
+
+The distributions take varying parameters:
+
+1. [uniform](https://en.wikipedia.org/wiki/Uniform_distribution_\(discrete\)):
+   1. _min_ (optional): minimum value (default = 0). 
+   2. _max_ (optional): maximum value (default = 100)
+2. [binomial](https://en.wikipedia.org/wiki/Binomial_distribution):
+   1. _t_: Number of trials t (matches n in wikipedia entry)
+   2. _p_: Probability p
+3. [negative binomial](https://en.wikipedia.org/wiki/Negative_binomial_distribution):
+   1. _p_: Probability p (matches r in wikipedia entry)
+4. [geometric](https://en.wikipedia.org/wiki/Geometric_distribution):
+   1. _p_: Probability p
+5. [poisson](https://en.wikipedia.org/wiki/Poisson_distribution)
+   1. _mean_: The mean (matches lambda in wikipedia entry)
+
 
 randomstring
 ------------

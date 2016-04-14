@@ -1,113 +1,109 @@
-variables : &variables
-          numdocs : 10000
-          numfields : 10
-          readratio : 0.5
-          writeration : 0.5
-          insertratio : 0
-          threadcount : 10
-          operationcount: 10000
-          maxexecutiontime: 1000
-          fieldlength: 100
+numdocs: &numdocs 10000000
+thread_count: &thread_count 10
+docs_per_thread: &docs_per_thread 1000000
+read_ratio: &read_ratio 0.5
+write_ratio: &write_ratio 0.5
+insert_ratio: &insert_ratio 0
+operation_count: &operation_count 1000000
+max_execution_time: &max_execution_time 100000
+field_length: &field_length 100
 
-doc : &document
-    type : override
-    doc : 
-         _id : \#SEQ_INT # is a comment in yaml. Might want something else here. Also, ycsb yses USER as a prefix.  
-    repeat : 
-        N : {variable : fieldcount} # Need functionality for variable fieldcount
-        field name : \#SEQ_INT
-        field value : 
-              type : random string
-              length : {variable : fieldlength}
-              
-query : &query
-      type : override
-      doc : 
-        _id : 1
-      overrides :
-        _id :  # This needs some fixing. Need to prefix with user. 
-          type : randomint 
-          min : 0
-          max : 
-            variable : numdocs
-          distribution : zipfian # Not currently supported
+doc: &document
+  _id: {$concatenate: {parts: [user, {$increment: {variable: document_count}}]}}
+  field1: &field {$randomstring: {length: *field_length}}
+  field2: *field
+  field3: *field
+  field4: *field
+  field5: *field
+  field6: *field
+  field7: *field
+  field8: *field
+  field9: *field
+  field10: *field
 
-operations : 
-           - &insert
-             name : insert
-             type : insert
-             document : *document
-           - &read
-           name : read
-           type : read
-           query : *query
-           - &write 
-           name : write
-           type : update
-           query : *query
-           update : *doc # Need to change this to not change the _id. 
-           
+update_document: &update_document
+  $set:
+    field1: *field
+    field2: *field
+    field3: *field
+    field4: *field
+    field5: *field
+    field6: *field
+    field7: *field
+    field8: *field
+    field9: *field
+    field10: *field
 
-insert phase : &insertphase
-       name : insert phase
-       type : workload 
-       nodes : 
-             - 
-             name : repeat
-             type : forN
-             N : {variable : numdocs}
-             workload : 
-                      - *insert
+mock_insert:
+  name: mock_insert
+  threads: *thread_count
+  runLengthMs: *max_execution_time
+  wvariables:
+    document_count: 0 # How many documents have we added
+  nodes:
+    - type: ForN
+      N: *docs_per_thread
+      node: doc_noop
+      next: Finish
+    - 
+      name: doc_noop
+      type: noop
+      doc: *document
+      next: Finish
 
-run phase : &runphase
-    name : run phase
-    type : workload
-    nodes : 
-          - name : timed
-            type : RunForTime
-            time : 
-                 variable : maxexecutiontime
-            wait : false # Don't wait if it finishes early
-            workload : 
-                   - 
-                   name : oplimit
-                   type : forN
-                   N : 
-                     variable : operationcount
-                   workload : 
-                            - 
-                            name : choice
-                            type : random_choice
-                            next : 
-                                 insert : 
-                                            variable : insertratio
-                                 read : 
-                                      variable : readratio
-                                 write :
-                                       variable : writeratio
-                            - 
-                              name : insert 
-                              operation : *insert
-                              next : Finish
-                            - 
-                              name : read
-                              operation : *read
-                              next : Finish
-                            - 
-                              name : write
-                              operation : *write
-                              next : Finish 
+insert_phase: &insertphase
+  name: insert_phase
+  threads: *thread_count
+  runLengthMs: *max_execution_time
+  # Should this be a workloadvariable? We could parallelize if so
+  wvariables:
+    document_count: 0 # How many documents have we added
+  nodes:
+    - type: ForN
+      N: *docs_per_thread
+      node: insert
+      next: Finish
+    - &insert
+      name: insert
+      type: insert_one
+      document: *document
+      next: Finish
 
-main : 
-     seed : 123141515
-     nodes : 
-           - 
-             type : workloadNode
-             workload : *insertphase
-             name : insert
-             next : run
-           - 
-             type : workloadNode
-             worklod : *runphase
-             name : runphase
-             next : Finish
+run_phase: &runphase
+  name: run_phase
+  runLengthMs: *max_execution_time
+  threads: *thread_count
+  wvariables:
+    document_count: *numdocs
+  nodes:
+    - type: ForN
+      N: *operation_count
+      node: choice
+      next: Finish
+    - name: choice
+      type: random_choice
+      next:
+        insert: *insert_ratio
+        read: *read_ratio
+        write: *write_ratio
+    - *insert
+    - name: read
+      type: find
+      filter: &filter {_id: {$concatenate: {parts: [user, {$randomint: {max: {$usevar: {variable: document_count}}}}]}}}
+      #filter with zipfian below
+      #filter: {$concatenate: {parts: [user, {$randomint: {distribution: zipfian, max: {$usevar: {variable: document_count}}}}]}}
+      next: Finish
+    - name: write
+      type: update_one
+      filter: *filter
+      update: *update_document
+      next: Finish
+
+main:
+  seed: 123141515
+  nodes:
+    - type: drop
+    - type: workloadNode
+      workload: *insertphase
+    - type: workloadNode
+      workload: *runphase
