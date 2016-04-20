@@ -15,6 +15,7 @@ const std::set<std::string> getGeneratorTypes() {
                                   "$increment",
                                   "$multiply",
                                   "$randomint",
+                                  "$fastrandomstring",
                                   "$randomstring",
                                   "$useresult",
                                   "$useval",
@@ -37,6 +38,8 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type) {
         return new RandomIntGenerator(yamlNode);
     } else if (type == "randomstring") {
         return new RandomStringGenerator(yamlNode);
+    } else if (type == "fastrandomstring") {
+        return new FastRandomStringGenerator(yamlNode);
     } else if (type == "useresult") {
         return new UseResultGenerator(yamlNode);
     } else if (type == "useval") {

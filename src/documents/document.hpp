@@ -9,6 +9,7 @@ namespace mwg {
 
 class document {
 public:
+    virtual ~document(){};
     virtual bsoncxx::document::view view(bsoncxx::builder::stream::document& doc, threadState&) {
         return doc.view();
     };

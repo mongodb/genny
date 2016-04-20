@@ -17,7 +17,8 @@ class threadState;
 // Generate a value, such as a random value or access a variable
 class ValueGenerator {
 public:
-    ValueGenerator(YAML::Node&){};
+    ValueGenerator(const YAML::Node&){};
+    virtual ~ValueGenerator(){};
     // Generate a new value.
     virtual bsoncxx::array::value generate(threadState&) = 0;
     // Need some helper functions here to get a string, or an int

@@ -29,8 +29,9 @@ bsoncxx::array::value RandomStringGenerator::generate(threadState& state) {
     auto alphabetLength = alphabet.size();
     uniform_int_distribution<int> distribution(0, alphabetLength - 1);
     auto thisLength = length.getInt(state);
+    str.resize(thisLength);
     for (int i = 0; i < thisLength; i++) {
-        str.push_back(alphabet[distribution(state.rng)]);
+        str[i] = alphabet[distribution(state.rng)];
     }
     return (bsoncxx::builder::stream::array{} << str << bsoncxx::builder::stream::finalize);
 }

@@ -222,6 +222,31 @@ TEST_CASE("Value Generaotrs", "[generators]") {
             REQUIRE(str[9] == 'a');
         }
     }
+    SECTION("FastRandomString") {
+        SECTION("default") {
+            auto genYaml = YAML::Load(R"yaml(
+)yaml");
+            auto generator = FastRandomStringGenerator(genYaml);
+            auto result = generator.generate(*state);
+            auto elem = result.view()[0];
+            REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+            auto str = elem.get_utf8().value;
+            INFO("Generated string is " << str);
+            REQUIRE(str.length() == 10);
+        }
+        SECTION("Length") {
+            auto genYaml = YAML::Load(R"yaml(
+        length: 15
+)yaml");
+            auto generator = FastRandomStringGenerator(genYaml);
+            auto result = generator.generate(*state);
+            auto elem = result.view()[0];
+            REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+            auto str = elem.get_utf8().value;
+            INFO("Generated string is " << str);
+            REQUIRE(str.length() == 15);
+        }
+    }
     SECTION("UseResult") {
         auto genYaml = YAML::Load(R"yaml(
 )yaml");

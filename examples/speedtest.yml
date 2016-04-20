@@ -48,7 +48,18 @@ main:
           - name: dnoop
             type: noop
             next: dnoop
-            doc: {y: {$randomstring: {length: 20}}}
+            doc: {y: {$randomstring: {length: 200}}}
+    - name: fastDocNoop
+      type: workloadNode
+      workload:
+        name: docNoop
+        runLengthMs: 1000
+        threads: 1
+        nodes:
+          - name: fastdnoop
+            type: noop
+            next: fastdnoop
+            doc: {y: {$fastrandomstring: {length: 200}}}
     - name: ping
       type: workloadNode
       workload:
