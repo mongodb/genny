@@ -162,4 +162,110 @@ TEST_CASE("Documents are created", "[documents]") {
         refdoc2 << "x" << 6;
         viewable_eq_viewable(refdoc2, view2);
     }
+    SECTION("Docuemnts are appended") {
+        SECTION("Random Int") {
+            // Add a more nested document
+            auto doc = makeDoc(YAML::Load(R"yaml(
+    type : append
+    doc : {}
+    appends :
+        z   :
+            type : randomint
+            min : 50
+            max : 60
+    )yaml"));
+            // Test that the document is an append document, and gives the right values.
+            auto view = doc->view(mydoc, state);
+            WARN("View is " << bsoncxx::to_json(view));
+            auto elem = doc->view(mydoc, state)["z"];
+            WARN("Elem is " << bsoncxx::to_json(elem));
+            REQUIRE(elem.type() == bsoncxx::type::k_int64);
+            REQUIRE(elem.get_int64().value >= 50);
+            REQUIRE(elem.get_int64().value < 60);
+        }
+        SECTION("Random string") {
+            auto doc = makeDoc(YAML::Load(R"yaml(
+    type : append
+    doc : {}
+    appends :
+      string :
+        type : randomstring
+        length : 15
+    )yaml"));
+
+            auto elem = doc->view(mydoc, state)["string"];
+            REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+            REQUIRE(elem.get_utf8().value.length() == 15);
+        }
+        SECTION("Date appends") {
+            auto doc = makeDoc(YAML::Load(R"yaml(
+            type : append
+            doc: {}
+            appends :
+              date :
+                type : date)yaml"));
+            auto elem = doc->view(mydoc, state)["date"];
+            REQUIRE(elem.type() == bsoncxx::type::k_date);
+        }
+        SECTION("Increment Thread Local") {
+            auto doc = makeDoc(YAML::Load(R"yaml(
+           type : append
+           appends :
+              x :
+                type : increment
+                variable : count)yaml"));
+            state.tvariables.insert({"count", bsoncxx::builder::stream::array() << 5 << finalize});
+            auto view = doc->view(mydoc, state);
+            bsoncxx::builder::stream::document refdoc{};
+
+            // The random number generator is deterministic, so we should get the same string each
+            // time
+            refdoc << "x" << 5;
+            viewable_eq_viewable(refdoc, view);
+            bsoncxx::builder::stream::document mydoc2{};
+            auto view2 = doc->view(mydoc2, state);
+            bsoncxx::builder::stream::document refdoc2{};
+            refdoc2 << "x" << 6;
+            viewable_eq_viewable(refdoc2, view2);
+        }
+        SECTION("Increment Workload Var") {
+            auto doc = makeDoc(YAML::Load(R"yaml(
+           type : append
+           appends :
+              x :
+                type : increment
+                variable : count)yaml"));
+            state.wvariables.insert({"count", bsoncxx::builder::stream::array() << 5 << finalize});
+            auto view = doc->view(mydoc, state);
+            bsoncxx::builder::stream::document refdoc{};
+
+            // The random number generator is deterministic, so we should get the same string each
+            // time
+            refdoc << "x" << 5;
+            viewable_eq_viewable(refdoc, view);
+            bsoncxx::builder::stream::document mydoc2{};
+            auto view2 = doc->view(mydoc2, state);
+            bsoncxx::builder::stream::document refdoc2{};
+            refdoc2 << "x" << 6;
+            viewable_eq_viewable(refdoc2, view2);
+        }
+        //         SECTION("template document") {
+        //             auto yaml = YAML::Load(R"yaml(
+        //               x : {$increment : {variable : count}}
+        // )yaml");
+        //             auto doc = templateDocument(yaml);
+        //             state.wvariables.insert({"count", bsoncxx::builder::stream::array() << 5 <<
+        //             finalize});
+        //             auto view = doc.view(mydoc, state);
+        //             bsoncxx::builder::stream::document refdoc{};
+
+        //             refdoc << "x" << 5;
+        //             viewable_eq_viewable(refdoc, view);
+        //             bsoncxx::builder::stream::document mydoc2{};
+        //             auto view2 = doc.view(mydoc2, state);
+        //             bsoncxx::builder::stream::document refdoc2{};
+        //             refdoc2 << "x" << 6;
+        //             viewable_eq_viewable(refdoc2, view2);
+        //         }
+    }
 }

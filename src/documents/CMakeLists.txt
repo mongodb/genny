@@ -1,5 +1,5 @@
 set(doc_files bsonDocument.cpp overrideDocument.cpp document.cpp
-template_document.cpp)
+appendDocument.cpp template_document.cpp)
 
 include_directories(values)
 add_library(docs ${doc_files})

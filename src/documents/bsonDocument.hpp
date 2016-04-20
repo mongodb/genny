@@ -8,7 +8,7 @@
 namespace mwg {
 class bsonDocument : public document {
 public:
-    bsonDocument(){};
+    bsonDocument();
     bsonDocument(YAML::Node);
 
     void setDoc(bsoncxx::document::value value) {

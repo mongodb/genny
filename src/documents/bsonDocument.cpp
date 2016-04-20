@@ -6,8 +6,14 @@
 
 using namespace std;
 
+using bsoncxx::builder::stream::finalize;
+
 
 namespace mwg {
+
+bsonDocument::bsonDocument() {
+    doc = bsoncxx::builder::stream::document{} << finalize;
+}
 
 bsonDocument::bsonDocument(YAML::Node node) {
     if (!node) {

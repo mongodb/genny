@@ -1,9 +1,10 @@
 #include "document.hpp"
 #include <boost/log/trivial.hpp>
 
+#include "appendDocument.hpp"
 #include "bsonDocument.hpp"
-#include "template_document.hpp"
 #include "overrideDocument.hpp"
+#include "template_document.hpp"
 
 namespace mwg {
 
@@ -17,6 +18,8 @@ unique_ptr<document> makeDoc(YAML::Node node) {
         return unique_ptr<document>{new bsonDocument(node)};
     } else if (node["type"].Scalar() == "override") {
         return unique_ptr<document>{new overrideDocument(node)};
+    } else if (node["type"].Scalar() == "append") {
+        return unique_ptr<document>{new AppendDocument(node)};
     } else {
         BOOST_LOG_TRIVIAL(fatal) << "in makeDoc and type exists, and isn't bson or override";
         exit(EXIT_FAILURE);
