@@ -32,6 +32,8 @@ add_definitions(-Wall)
 add_definitions(-Werror)
 add_definitions(-std=c++11)
 
+add_definitions(-fno-omit-frame-pointer)
+
 # Release build by default
 if(NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE "Release")
