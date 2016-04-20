@@ -1,50 +1,63 @@
 # Test the speed of the tool
 
-main: 
+main:
   name: main
-  nodes: 
+  nodes:
     - name: simpleNoop
       type: workloadNode
-      workload: 
+      workload:
         name: simpleNoop
         runLengthMs: 1000
         threads: 1
-        nodes: 
+        nodes:
           - name: snoop
             type: noop
             next: snoop
             doc: {}
     - name: intNoop
       type: workloadNode
-      workload: 
+      workload:
         name: intNoop
         runLengthMs: 1000
         threads: 1
-        nodes: 
+        nodes:
           - name: inoop
             type: noop
             next: inoop
             doc: {y: $randomint}
+    - name: incNoop
+      type: workloadNode
+      workload:
+        name: incNoop
+        runLengthMs: 1000
+        threads: 1
+        tvariables:
+          count: 0
+        nodes:
+          - name: incnoop
+            type: noop
+            next: incnoop
+            doc: {y: {$increment: {variable: count}}}
     - name: docNoop
       type: workloadNode
-      workload: 
+      workload:
         name: docNoop
         runLengthMs: 1000
         threads: 1
-        nodes: 
+        nodes:
           - name: dnoop
             type: noop
             next: dnoop
             doc: {y: {$randomstring: {length: 20}}}
     - name: ping
       type: workloadNode
-      workload: 
+      workload:
         name: ping
         runLengthMs: 1000
         threads: 1
-        nodes: 
+        nodes:
           - name: ping
             type: command
             next: ping
-            command: 
+            command:
               ping: 1
