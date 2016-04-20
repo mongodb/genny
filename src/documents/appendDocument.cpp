@@ -50,7 +50,7 @@ bsoncxx::document::view AppendDocument::view(bsoncxx::builder::stream::document&
     bsoncxx::builder::stream::document tempdoc{};
     output << bsoncxx::builder::concatenate(doc.view(output, state));
     for (auto&& entry : appends) {
-        BOOST_LOG_TRIVIAL(trace) << "Adding field " << entry.first;
+        //        BOOST_LOG_TRIVIAL(trace) << "Adding field " << entry.first;
         output << entry.first << entry.second->generate(state).view()[0].get_value();
     }
 

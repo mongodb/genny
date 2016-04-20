@@ -69,7 +69,7 @@ opNode::opNode(YAML::Node& ynode) : node(ynode) {
 }
 
 void opNode::execute(shared_ptr<threadState> myState) {
-    BOOST_LOG_TRIVIAL(trace) << "opNode::execute";
+    // BOOST_LOG_TRIVIAL(trace) << "opNode::execute";
     op->execute(myState->conn, *myState);
 }
 }
