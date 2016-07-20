@@ -105,7 +105,7 @@ void ifNode::executeNode(shared_ptr<threadState> myState) {
     } else if (myState->tvariables.count(comparisonVariable) > 0) {
         resultView = myState->tvariables.find(comparisonVariable)->second.view();
     } else if (myState->wvariables.count(comparisonVariable) > 0) {
-        std::lock_guard<std::mutex> lk(myState->workloadState.mut);
+        std::lock_guard<std::mutex> lk(myState->workloadState->mut);
         // make a copy so we can drop the lock
         resultView =
             bsoncxx::array::value(myState->wvariables.find(comparisonVariable)->second.view());

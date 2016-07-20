@@ -20,7 +20,7 @@ public:
     threadState(uint64_t seed,
                 unordered_map<string, bsoncxx::array::value> tvars,
                 unordered_map<string, bsoncxx::array::value>& wvars,
-                WorkloadExecutionState& parentWorkload,
+                WorkloadExecutionState* parentWorkload,
                 string dbname,
                 string collectionname,
                 string uri = mongocxx::uri::k_default_uri)
@@ -42,7 +42,7 @@ public:
     vector<shared_ptr<thread>> childThreads;
     vector<shared_ptr<thread>> backgroundThreads;
     shared_ptr<threadState> parentThread;
-    WorkloadExecutionState& workloadState;
+    WorkloadExecutionState* workloadState;
     string DBName;
     string CollectionName;
     std::atomic<bool> stopped;

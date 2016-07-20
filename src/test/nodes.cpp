@@ -49,7 +49,7 @@ TEST_CASE("Nodes", "[nodes]") {
     workload myWorkload;
     auto workloadState = myWorkload.newWorkloadState();
     auto state = shared_ptr<threadState>(
-        new threadState(12234, tvariables, wvariables, workloadState, "t", "c"));
+        new threadState(12234, tvariables, wvariables, &workloadState, "t", "c"));
     vector<shared_ptr<node>> vectornodes;
     unordered_map<string, shared_ptr<node>> nodes;
 
@@ -188,7 +188,7 @@ TEST_CASE("Nodes", "[nodes]") {
         state->currentNode = spawnNode;
         while (state->currentNode != nullptr)
             state->currentNode->executeNode(state);
-        state->workloadState.waitThreadsDone();
+        state->workloadState->waitThreadsDone();
         REQUIRE(spawnNode->getCount() == 1);
         REQUIRE(thing1Node->getCount() == 1);
         REQUIRE(thing2Node->getCount() == 1);

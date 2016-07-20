@@ -53,7 +53,7 @@ void Spawn::execute(shared_ptr<threadState> myState) {
                                                                 myState->workloadState,
                                                                 myState->DBName,
                                                                 myState->CollectionName,
-                                                                myState->workloadState.uri));
+                                                                myState->workloadState->uri));
         startThread(node, newState)->detach();
     }
 }

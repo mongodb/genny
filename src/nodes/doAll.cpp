@@ -54,7 +54,7 @@ void doAll::execute(shared_ptr<threadState> myState) {
                                                                 myState->workloadState,
                                                                 myState->DBName,
                                                                 myState->CollectionName,
-                                                                myState->workloadState.uri));
+                                                                myState->workloadState->uri));
         newState->parentThread = myState;
         myState->childThreads.push_back(startThread(node, newState));
     }
@@ -66,7 +66,7 @@ void doAll::execute(shared_ptr<threadState> myState) {
                                                                 myState->workloadState,
                                                                 myState->DBName,
                                                                 myState->CollectionName,
-                                                                myState->workloadState.uri));
+                                                                myState->workloadState->uri));
         newState->parentThread = myState;
         myState->backgroundThreadStates.push_back(newState);
         myState->backgroundThreads.push_back(startThread(node, newState));

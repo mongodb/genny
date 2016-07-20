@@ -23,7 +23,7 @@ class node;
 class workload;
 class WorkloadExecutionState {
 public:
-    WorkloadExecutionState(workload& work) : myWorkload(work){};
+    WorkloadExecutionState(workload* work) : myWorkload(work){};
     WorkloadExecutionState(const WorkloadExecutionState& other)
         : numParallelThreads(other.numParallelThreads),
           runLengthMs(other.runLengthMs),
@@ -37,7 +37,7 @@ public:
     uint64_t runLengthMs{0};
     string uri = mongocxx::uri::k_default_uri;
     unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
-    workload& myWorkload;
+    workload* myWorkload;
     mt19937_64 rng;  // random number generator
     string DBName = "testDB";
     string CollectionName = "testCollection";
@@ -64,10 +64,10 @@ shared_ptr<thread> startThread(shared_ptr<node>, shared_ptr<threadState>);
 
 class workload {
 public:
-    workload() : baseWorkloadState(*this), stopped(false){};
-    workload(YAML::Node& nodes);
+    workload() : baseWorkloadState(this), stopped(false){};
+    workload(const YAML::Node& nodes);
     // Execute the workload
-    virtual void execute(WorkloadExecutionState&);
+    virtual void execute(WorkloadExecutionState*);
     WorkloadExecutionState newWorkloadState() {
         return (move(WorkloadExecutionState(baseWorkloadState)));
     }
@@ -81,8 +81,8 @@ public:
 
     void logStats();
     virtual bsoncxx::document::value getStats(bool withReset);  // bson object with stats
-    void setRandomSeed(uint64_t seed, WorkloadExecutionState& state) {
-        state.rng.seed(seed);
+    void setRandomSeed(uint64_t seed, WorkloadExecutionState* state) {
+        state->rng.seed(seed);
     };
     string name;
 

@@ -49,11 +49,11 @@ workloadNode::workloadNode(YAML::Node& ynode) : node(ynode) {
 // Execute the node
 void workloadNode::execute(shared_ptr<threadState> myState) {
     WorkloadExecutionState myWorkloadState = myWorkload->newWorkloadState();
-    myWorkloadState.uri = myState->workloadState.uri;
+    myWorkloadState.uri = myState->workloadState->uri;
     BOOST_LOG_TRIVIAL(debug) << "In workloadNode and executing";
     // set random seed based on current random seed.
     // should it be set in constructor? Is that safe?
-    myWorkload->setRandomSeed(myState->rng(), myWorkloadState);
+    myWorkload->setRandomSeed(myState->rng(), &myWorkloadState);
     if (dbName) {
         myWorkloadState.DBName = dbName->generateString(*myState);
     }
@@ -69,7 +69,7 @@ void workloadNode::execute(shared_ptr<threadState> myState) {
     if (runLengthMs) {
         myWorkloadState.runLengthMs = runLengthMs->generateInt(*myState);
     }
-    myWorkload->execute(myWorkloadState);
+    myWorkload->execute(&myWorkloadState);
 }
 std::pair<std::string, std::string> workloadNode::generateDotGraph() {
     return (std::pair<std::string, std::string>{name + " -> " + nextName + ";\n",

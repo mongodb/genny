@@ -23,7 +23,7 @@ bsoncxx::array::value UseVarGenerator::generate(threadState& state) {
         return (bsoncxx::array::value(state.tvariables.find(variableName)->second.view()));
     } else if (state.wvariables.count(variableName) > 0) {  // in wvariables
         // Grab lock. Could be kinder hear and wait on condition variable
-        std::lock_guard<std::mutex> lk(state.workloadState.mut);
+        std::lock_guard<std::mutex> lk(state.workloadState->mut);
         return (bsoncxx::array::value(state.wvariables.find(variableName)->second.view()));
     } else {
         BOOST_LOG_TRIVIAL(fatal) << "In usevar but variable " << variableName << " doesn't exist";

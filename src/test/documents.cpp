@@ -37,7 +37,7 @@ TEST_CASE("Documents are created", "[documents]") {
 
     workload myWorkload;
     auto workloadState = myWorkload.newWorkloadState();
-    threadState state(12234, tvariables, wvariables, workloadState, "t", "c");
+    threadState state(12234, tvariables, wvariables, &workloadState, "t", "c");
     bsoncxx::builder::stream::document mydoc{};
 
     SECTION("Simple bson") {

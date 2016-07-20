@@ -33,7 +33,7 @@ TEST_CASE("Value Generaotrs", "[generators]") {
     workload myWorkload;
     auto workloadState = myWorkload.newWorkloadState();
     auto state = shared_ptr<threadState>(
-        new threadState(12234, tvariables, wvariables, workloadState, "t", "c"));
+        new threadState(12234, tvariables, wvariables, &workloadState, "t", "c"));
     state->tvariables.insert({"tvar", bsoncxx::builder::stream::array() << 1 << finalize});
     state->wvariables.insert({"wvar", bsoncxx::builder::stream::array() << 2 << finalize});
 

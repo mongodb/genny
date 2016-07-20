@@ -116,7 +116,7 @@ bsoncxx::array::value IncrementGenerator::generate(threadState& state) {
                              maximum.getInt(state)));
     } else if (state.wvariables.count(variableName) > 0) {  // in wvariables
         // Grab lock. Could be kinder hear and wait on condition variable
-        std::lock_guard<std::mutex> lk(state.workloadState.mut);
+        std::lock_guard<std::mutex> lk(state.workloadState->mut);
         return (incrementVar(state.wvariables.find(variableName),
                              increment.getInt(state),
                              minimum.getInt(state),

@@ -69,8 +69,8 @@ void printHelp(const char* processName) {
 
 class StatsState {
 public:
-    StatsState(workload& work) : myWorkload(work), done(false){};
-    workload& myWorkload;
+    StatsState(workload* work) : myWorkload(work), done(false){};
+    workload* myWorkload;
     std::atomic<bool> done;
 };
 
@@ -91,9 +91,9 @@ void runPeriodicStats(shared_ptr<StatsState> state, std::chrono::seconds period,
     while (!state->done) {
         chrono::high_resolution_clock::time_point start, stop;
         start = chrono::high_resolution_clock::now();
-        state->myWorkload.logStats();
+        state->myWorkload->logStats();
         if (haveFile) {
-            out << bsoncxx::to_json(state->myWorkload.getStats(true)) << ",\n";
+            out << bsoncxx::to_json(state->myWorkload->getStats(true)) << ",\n";
         }
         stop = chrono::high_resolution_clock::now();
         BOOST_LOG_TRIVIAL(debug) << "Periodic stats collection took "
@@ -101,9 +101,9 @@ void runPeriodicStats(shared_ptr<StatsState> state, std::chrono::seconds period,
                                         stop - start).count() << " us";
         std::this_thread::sleep_for(period);
     }
-    state->myWorkload.logStats();
+    state->myWorkload->logStats();
     if (haveFile)
-        out << bsoncxx::to_json(state->myWorkload.getStats(true)) << "]\n";
+        out << bsoncxx::to_json(state->myWorkload->getStats(true)) << "]\n";
 }
 
 // Replace a path field with the current path if it's in there
@@ -349,9 +349,9 @@ int main(int argc, char* argv[]) {
         if (databaseName != "")
             myWorkloadState.DBName = databaseName;
         myWorkloadState.uri = uri;
-        auto ss = shared_ptr<StatsState>(new StatsState(myWorkload));
+        auto ss = shared_ptr<StatsState>(new StatsState(&myWorkload));
         std::thread stats(runPeriodicStats, ss, resultPeriod, resultsFile);
-        myWorkload.execute(myWorkloadState);
+        myWorkload.execute(&myWorkloadState);
         ss->done = true;
         stats.join();
         myWorkload.logStats();

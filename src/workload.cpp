@@ -73,7 +73,7 @@ void WorkloadExecutionState::waitThreadsDone() {
 }
 
 
-workload::workload(YAML::Node& inputNodes) : baseWorkloadState(*this), stopped(false) {
+workload::workload(const YAML::Node& inputNodes) : baseWorkloadState(this), stopped(false) {
     if (!inputNodes) {
         BOOST_LOG_TRIVIAL(fatal) << "Workload constructor and !nodes";
         exit(EXIT_FAILURE);
@@ -185,8 +185,8 @@ workload::workload(YAML::Node& inputNodes) : baseWorkloadState(*this), stopped(f
 
 class timerState {
 public:
-    timerState(workload& work) : myWork(work), done(false){};
-    workload& myWork;
+    timerState(workload* work) : myWork(work), done(false){};
+    workload* myWork;
     std::mutex mut;
     bool done;
 };
@@ -200,7 +200,7 @@ void runTimer(shared_ptr<timerState> state, uint64_t runLengthMs) {
         // grab lock before checking state
         std::lock_guard<std::mutex> lk(state->mut);
         if (!state->done) {
-            state->myWork.stop();
+            state->myWork->stop();
         }
     }
 }
@@ -213,40 +213,40 @@ void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
     while (myState->currentNode != nullptr)
         myState->currentNode->executeNode(myState);
     // I'm done. Decrease the count of threads
-    myState->workloadState.decreaseThreads();
+    myState->workloadState->decreaseThreads();
 }
 
 // Start a new thread with thread state and initial state
 shared_ptr<thread> startThread(shared_ptr<node> startNode, shared_ptr<threadState> ts) {
     // increase the count of threads
-    ts->workloadState.increaseThreads();
+    ts->workloadState->increaseThreads();
     return (shared_ptr<thread>(new thread(runThread, startNode, ts)));
 }
 
 
-void workload::execute(WorkloadExecutionState& work) {
+void workload::execute(WorkloadExecutionState* work) {
     // prep the threads and start them. Should put the timer in here also.
     BOOST_LOG_TRIVIAL(trace) << "In workload::execute";
 
     // setup timeout
-    BOOST_LOG_TRIVIAL(trace) << "RunLength is " << work.runLengthMs << ". About to setup timer";
-    auto ts = shared_ptr<timerState>(new timerState(*this));
-    std::thread timer(runTimer, ts, work.runLengthMs);
+    BOOST_LOG_TRIVIAL(trace) << "RunLength is " << work->runLengthMs << ". About to setup timer";
+    auto ts = shared_ptr<timerState>(new timerState(this));
+    std::thread timer(runTimer, ts, work->runLengthMs);
 
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
-    auto numParallelThreads = work.numParallelThreads;
+    auto numParallelThreads = work->numParallelThreads;
     BOOST_LOG_TRIVIAL(debug) << "Starting " << numParallelThreads << " threads";
     for (uint64_t i = 0; i < numParallelThreads; i++) {
         BOOST_LOG_TRIVIAL(trace) << "Starting thread in workload";
         // create thread state for each
-        auto newState = shared_ptr<threadState>(new threadState(work.rng(),
+        auto newState = shared_ptr<threadState>(new threadState(work->rng(),
                                                                 tvariables,
-                                                                work.wvariables,
+                                                                work->wvariables,
                                                                 work,
-                                                                work.DBName,
-                                                                work.CollectionName,
-                                                                work.uri));
+                                                                work->DBName,
+                                                                work->CollectionName,
+                                                                work->uri));
         BOOST_LOG_TRIVIAL(trace) << "Created thread state";
         // Start the thread
         startThread(vectornodes[0], newState)->detach();
@@ -254,7 +254,7 @@ void workload::execute(WorkloadExecutionState& work) {
     }
     BOOST_LOG_TRIVIAL(trace) << "Started all threads in workload";
     // wait for all the threads to finish
-    work.waitThreadsDone();
+    work->waitThreadsDone();
     stop = chrono::high_resolution_clock::now();
     // need to put a lock around this
     myStats.recordMicros(std::chrono::duration_cast<chrono::microseconds>(stop - start));
