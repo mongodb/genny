@@ -6,10 +6,21 @@
 runLengthMs: &run 10000
 delay: &delay 1000
 
-main : 
+results:
+  main:
+    - name: total throughput
+      nodes:
+        - insert2
+        - query
+    - name: query throughput
+      nodes:
+        - query
+
+main:
   seed: 131415161718
   runLengthMs : *run
-  nodes: 
+  name: main # name should match the node name and entry in results for result parsing to work
+  nodes:
     - name : insert1
       print : Running insert1
       type : insert_one
@@ -22,7 +33,7 @@ main :
     - name : random
       print : In Random Choice
       type : random_choice
-      next : 
+      next :
         insert2 : 0.5
         query : 0.5
     - name : insert2
@@ -35,5 +46,3 @@ main :
       type : find
       filter : { x : a }
       next : sleep
-
-

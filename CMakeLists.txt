@@ -101,6 +101,7 @@ configure_file (
 enable_testing()
 
 add_subdirectory(src)
+add_subdirectory(scripts)
 include_directories(src/stats)
 add_executable(mwg src/main.cpp githash.cpp)
 target_link_libraries(mwg workload nodes operations
