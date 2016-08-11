@@ -3,7 +3,7 @@ Dependencies
 
 * The
   [C++11 mongo driver](https://github.com/mongodb/mongo-cxx-driver/tree/master). Currently
-  tested against r3.0.0. If compiling on OS X, see
+  tested against r3.0.1. If compiling on OS X, see
   [CXX-836](https://jira.mongodb.org/browse/CXX-836). The C++11 driver
   in turn requires the c driver.
 * [yaml-cpp](https://github.com/jbeder/yaml-cpp)

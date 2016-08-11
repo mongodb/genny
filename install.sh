@@ -100,7 +100,7 @@ echo "Installing Mongo C Driver"
 git clone -b master https://github.com/mongodb/mongo-c-driver
 pushd mongo-c-driver/
 # This should be changed to a tag once the the code is stable
-git checkout r1.3
+git checkout 1.4.0
 git submodule update
 ./autogen.sh --with-libbson=bundled
 make $c_flags && sudo make install
@@ -111,7 +111,7 @@ echo "Installing Mongo C++ Driver"
 git clone  -b master https://github.com/mongodb/mongo-cxx-driver.git
 pushd mongo-cxx-driver/build
 # This should be changed to a tag once the the code is stable
-git checkout r3.0.0
+git checkout r3.0.1
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
 sudo make && sudo make install
 popd
