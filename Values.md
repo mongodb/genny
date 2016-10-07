@@ -78,7 +78,7 @@ randomint
 ---------
 
 Generates a random integer. You can specify the random distribution
-and the parameters for that distribution. Defautl distribution is
+and the parameters for that distribution. Default distribution is
 uniform.
 
 1. _distribution_: The random distribution to use when generating
