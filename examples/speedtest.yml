@@ -2,23 +2,23 @@
 
 results:
   main.simpleNoop:
-    - name: Simple Noop
+    - name: SimpleNoop
       nodes:
         - snoop
   main.intNoop:
-    - name: Integer Noop
+    - name: IntegerNoop
       nodes:
         - inoop
   main.incNoop:
-    - name: Increment Noop
+    - name: IncrementNoop
       nodes:
         - incnoop
   main.docNoop:
-    - name: Document Noop
+    - name: DocumentNoop
       nodes:
         - dnoop
   main.fastDocNoop:
-    - name: Fast Document Noop
+    - name: FastDocumentNoop
       nodes:
         - fastdnoop
   main.ping:
