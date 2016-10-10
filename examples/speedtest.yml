@@ -1,5 +1,31 @@
 # Test the speed of the tool
 
+results:
+  main.simpleNoop:
+    - name: Simple Noop
+      nodes:
+        - snoop
+  main.intNoop:
+    - name: Integer Noop
+      nodes:
+        - inoop
+  main.incNoop:
+    - name: Increment Noop
+      nodes:
+        - incnoop
+  main.docNoop:
+    - name: Document Noop
+      nodes:
+        - dnoop
+  main.fastDocNoop:
+    - name: Fast Document Noop
+      nodes:
+        - fastdnoop
+  main.ping:
+    - name: Ping
+      nodes:
+        - ping
+
 main:
   name: main
   nodes:
@@ -52,7 +78,7 @@ main:
     - name: fastDocNoop
       type: workloadNode
       workload:
-        name: docNoop
+        name: fastDocNoop
         runLengthMs: 1000
         threads: 1
         nodes:
