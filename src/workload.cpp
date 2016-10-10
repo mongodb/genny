@@ -3,8 +3,8 @@
 #include <iostream>
 #include <mongocxx/instance.hpp>
 #include <stdlib.h>
-#include <time.h>
 #include <thread>
+#include <time.h>
 
 
 #include "finish_node.hpp"
@@ -109,8 +109,8 @@ workload::workload(const YAML::Node& inputNodes) : baseWorkloadState(this), stop
         if (inputNodes["tvariables"]) {
             // read in any variables
             for (auto var : inputNodes["tvariables"]) {
-                cout << "Reading in thread variable " << var.first.Scalar() << " with value "
-                     << var.second.Scalar();
+                BOOST_LOG_TRIVIAL(debug) << "Reading in thread variable " << var.first.Scalar()
+                                         << " with value " << var.second.Scalar();
                 tvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
             }
         }
@@ -150,7 +150,8 @@ workload::workload(const YAML::Node& inputNodes) : baseWorkloadState(this), stop
     if (!yamlNodes.IsSequence()) {
         BOOST_LOG_TRIVIAL(fatal)
             << "Not sequnce in workload type initializer after passing through "
-               "map or sequence processing. Type is " << yamlNodes.Type();
+               "map or sequence processing. Type is "
+            << yamlNodes.Type();
         exit(EXIT_FAILURE);
     }
 
@@ -267,9 +268,10 @@ void workload::execute(WorkloadExecutionState* work) {
         timer.detach();
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Workload " << name << " took "
-                             << std::chrono::duration_cast<chrono::milliseconds>(stop - start)
-                                    .count() << " milliseconds";
+    BOOST_LOG_TRIVIAL(debug)
+        << "Workload " << name << " took "
+        << std::chrono::duration_cast<chrono::milliseconds>(stop - start).count()
+        << " milliseconds";
 }
 void workload::stop() {
     stopped = true;
