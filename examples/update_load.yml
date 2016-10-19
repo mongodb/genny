@@ -1,0 +1,145 @@
+# Heavy update load
+
+threads: &threads 1
+min_time_ms: &min_time_ms 0
+field_length: &field_length 200
+
+prepare_database: &prep
+  name: load_phase
+  tvariables:
+    count: 0
+  nodes:
+    - type: drop
+    - type: ForN
+      N: 10000
+      next: index
+      node: inserts
+    - name: inserts
+      type: insert_many
+      times: 1000
+      next: Finish
+      doc:
+        y: &y {$randomint: {min: 0, max: &max 100000}}
+        x: This is a string of data
+        date: $date
+        i: {$increment: {variable: count}}
+        field1: &field {$randomstring: {length: *field_length}}
+        field2: *field
+    - name: index
+      type: create_index
+      keys: {y: 1}
+
+query: &query
+  name: query
+  threads: 1
+  nodes:
+    - type: sleep
+      name: sleep
+      sleepMs: 500
+    - type: find_one
+      filter: { y : *y }
+      next: sleep
+    - type: find_one
+
+aggregation: &agg
+  name: aggregation
+  threads: 1
+  nodes:
+    - type: sleep
+      name: sleep
+      sleepMs: 500
+    - type: command
+      command:
+        aggregate: {$usevar: {variable: CollectionName}}
+        pipeline:
+          - {$match: {y: {$lte: 100}}}
+          - {$group: {_id: "$y", count: {$sum: 1}}}
+      next: sleep
+
+update_multi_work: &update_multi
+  name: update_multi
+  threads: *threads
+  nodes:
+    - &spacer # This makes sure that all the threads are hammering in unison.
+      type: sleep
+      name: spacer
+      sleepMs: {$randomint: {min: 0, max: 1000}}
+    - type: doAll
+      name: pacer
+      childNodes:
+        - sleep
+      next: update
+    - name: update
+      type: update_one
+      filter: {y: {$randomint: {min: 0, max: *max}}}
+      update: {$set: {y: {$randomint: {min: 0, max: *max}}}}
+      next: join
+    - &sleep
+      name: sleep
+      type: sleep
+      sleepMs: *min_time_ms
+      next: join
+    - &join
+      name: join
+      type: join
+      next: pacer
+
+find_and_modify_work: &find_mod
+  name: find_and_mod
+  threads: *threads
+  nodes:
+    - *spacer
+    - type: doAll
+      name: pacer
+      childNodes:
+        - sleep
+      next: find_and_mod
+    - *sleep
+    - *join
+    - name: find_and_mod
+      next: join
+      type: find_one_and_update
+      filter: {}
+      update: {$inc: {y: {$randomint: {min: 1, max: 1000}}}}
+      options:
+        sort: {y: 1}
+
+combined: &combined
+  nodes:
+    - type: doAll
+      childNodes:
+        - query_work
+        - update_work
+        - find_and_mod_work
+        - agg_work
+    - type: join
+      name: join
+      next: Finish
+    - name: query_work
+      type: workloadNode
+      collection: query
+      workload: *query
+      overrides:
+        collection: query
+      next: join
+    - name: update_work
+      type: workloadNode
+      workload: *update_multi
+    - name: find_and_mod_work
+      type: workloadNode
+      workload: *find_mod
+    - name: agg_work
+      type: workloadNode
+      workload: *agg
+
+main:
+  nodes:
+    - type: workloadNode # Prep database for the hard stuff
+      overrides:
+        workload: prepare_database
+    - type: workloadNode # Prep database for the fast stuff in different collection
+      workload: prepare_database
+      overrides:
+        collection: query
+    - type: workloadNode
+      workload: *combined
