@@ -15,14 +15,15 @@ sleepNode::sleepNode(YAML::Node& ynode) : node(ynode) {
             << "SleepNode constructor but yaml entry doesn't have type == sleep";
         exit(EXIT_FAILURE);
     }
-    sleeptimeMs = std::chrono::milliseconds(ynode["sleepMs"].as<uint64_t>());
-    BOOST_LOG_TRIVIAL(debug) << "In sleepNode constructor. Sleep time is " << sleeptimeMs.count();
+    sleeptimeMs = IntOrValue(ynode["sleepMs"]);
 }
 
 // Execute the node
 void sleepNode::execute(shared_ptr<threadState> myState) {
-    BOOST_LOG_TRIVIAL(debug) << "sleepNode.execute. Sleeping for " << sleeptimeMs.count() << " ms";
-    std::this_thread::sleep_for(sleeptimeMs);
+    auto this_sleep_time_ms = std::chrono::milliseconds(sleeptimeMs.getInt(*myState));
+    BOOST_LOG_TRIVIAL(debug) << "sleepNode.execute. Sleeping for " << this_sleep_time_ms.count()
+                             << " ms";
+    std::this_thread::sleep_for(this_sleep_time_ms);
     BOOST_LOG_TRIVIAL(debug) << "Slept.";
 }
 }

@@ -1,6 +1,7 @@
 #include "yaml-cpp/yaml.h"
 #include <chrono>
 
+#include "int_or_value.hpp"
 #include "node.hpp"
 #pragma once
 
@@ -17,6 +18,6 @@ public:
 
 private:
     // possible next states with probabilities
-    std::chrono::milliseconds sleeptimeMs;
+    IntOrValue sleeptimeMs;
 };
 }
