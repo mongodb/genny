@@ -213,6 +213,21 @@ void runThread(node* Node, shared_ptr<threadState> myState) {
     BOOST_LOG_TRIVIAL(trace) << "Set node. Name is " << Node->name;
     while (myState->currentNode != nullptr)
         myState->currentNode->executeNode(myState);
+    // If I'm done, and stopped, all my child threads should also be done. Join on them.
+    // Wait for all the children to finish
+    for (auto child : myState->childThreads) {
+        child->join();
+    }
+    // now stop the background children
+    // mark all of them to stop, then join on their threads
+    for (auto child : myState->backgroundThreadStates) {
+        child->stopped = true;
+    }
+    for (auto child : myState->backgroundThreads) {
+        child->join();
+    }
+
+
     // I'm done. Decrease the count of threads
     myState->workloadState->decreaseThreads();
 }
