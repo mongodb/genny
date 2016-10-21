@@ -16,11 +16,10 @@ public:
     virtual void execute(shared_ptr<threadState>) override;
     virtual std::pair<std::string, std::string> generateDotGraph() override;
     virtual bsoncxx::document::value getStats(bool withReset) override;
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
-                             vector<shared_ptr<node>>&) override;
+    virtual void setNextNode(unordered_map<string, node*>&, vector<shared_ptr<node>>&) override;
 
 protected:
-    shared_ptr<node> myNode;
+    node* myNode;
     string myNodeName;
     IntOrValue N;
 };

@@ -45,8 +45,7 @@ node::node(YAML::Node& ynode) {
     }
 }
 
-void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
-                       vector<shared_ptr<node>>& vectornodes) {
+void node::setNextNode(unordered_map<string, node*>& nodes, vector<shared_ptr<node>>& vectornodes) {
     if (nextName.empty()) {
         // Need default next node.
         // Check if there's a next in the vectornodes. Use that if there is
@@ -60,7 +59,7 @@ void node::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
                     BOOST_LOG_TRIVIAL(trace) << "Setting next node to next node in list";
                     auto next = vectornodes[i + 1];
                     nextName = next->name;
-                    nextNode = next;
+                    nextNode = next.get();
                 } else {
                     BOOST_LOG_TRIVIAL(trace)
                         << "Node was last in vector. Setting next node to Finish";
@@ -80,8 +79,7 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
     // execute the next node if there is one. Actually only set it up for the runner to call the
     // next node
     // BOOST_LOG_TRIVIAL(debug) << "just executed " << name << ". NextName is " << nextName;
-    auto next = nextNode.lock();
-    if (!next) {
+    if (!nextNode) {
         BOOST_LOG_TRIVIAL(fatal) << "nextNode is null for some reason";
         exit(0);
     }
@@ -90,11 +88,10 @@ void node::executeNextNode(shared_ptr<threadState> myState) {
         BOOST_LOG_TRIVIAL(debug) << "Stopped set";
         return;
     }
-    if (name != "Finish" && next) {
+    if (name != "Finish" && nextNode) {
         // BOOST_LOG_TRIVIAL(debug) << "About to call nextNode->executeNode";
-        // update currentNode in the state. Protect the reference while executing
-        shared_ptr<node> me = myState->currentNode;
-        myState->currentNode = next;
+        // update currentNode in the state.
+        myState->currentNode = nextNode;
     } else {
         BOOST_LOG_TRIVIAL(debug) << "Next node is not null, but didn't execute it";
     }

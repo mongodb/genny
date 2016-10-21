@@ -17,13 +17,12 @@ public:
     doAll(doAll&&) = default;
     // Execute the node
     virtual void execute(shared_ptr<threadState>) override;
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
-                             vector<shared_ptr<node>>&) override;
+    virtual void setNextNode(unordered_map<string, node*>&, vector<shared_ptr<node>>&) override;
     virtual std::pair<std::string, std::string> generateDotGraph() override;
 
 private:
-    vector<shared_ptr<node>> vectornodes;
-    vector<shared_ptr<node>> vectorbackground;
+    vector<node*> vectornodes;
+    vector<node*> vectorbackground;
     vector<string> nodeNames;
     vector<string> backgroundNodeNames;
     string joinName;

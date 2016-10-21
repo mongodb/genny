@@ -1,8 +1,8 @@
 #include "spawn.hpp"
 
-#include <thread>
-#include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <stdlib.h>
+#include <thread>
 
 #include "workload.hpp"
 
@@ -32,7 +32,7 @@ Spawn::Spawn(YAML::Node& ynode) : node(ynode) {
     }
 }
 
-void Spawn::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
+void Spawn::setNextNode(unordered_map<string, node*>& nodes,
                         vector<shared_ptr<node>>& vectornodesIn) {
     BOOST_LOG_TRIVIAL(debug) << "Setting next node vector for Spawn node" << name
                              << ". Next node should be " << nextName;

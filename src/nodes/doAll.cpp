@@ -1,8 +1,8 @@
 #include "doAll.hpp"
 
-#include <thread>
-#include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <stdlib.h>
+#include <thread>
 
 #include "workload.hpp"
 
@@ -30,7 +30,7 @@ doAll::doAll(YAML::Node& ynode) : node(ynode) {
     }
 }
 
-void doAll::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
+void doAll::setNextNode(unordered_map<string, node*>& nodes,
                         vector<shared_ptr<node>>& vectornodesIn) {
     BOOST_LOG_TRIVIAL(debug) << "Setting next node vector for doAll node" << name
                              << ". Next node should be " << nextName;
@@ -55,7 +55,6 @@ void doAll::execute(shared_ptr<threadState> myState) {
                                                                 myState->DBName,
                                                                 myState->CollectionName,
                                                                 myState->workloadState->uri));
-        newState->parentThread = myState;
         myState->childThreads.push_back(startThread(node, newState));
     }
     for (auto node : vectorbackground) {
@@ -67,7 +66,6 @@ void doAll::execute(shared_ptr<threadState> myState) {
                                                                 myState->DBName,
                                                                 myState->CollectionName,
                                                                 myState->workloadState->uri));
-        newState->parentThread = myState;
         myState->backgroundThreadStates.push_back(newState);
         myState->backgroundThreads.push_back(startThread(node, newState));
     }

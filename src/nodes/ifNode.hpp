@@ -1,8 +1,8 @@
-#include <string>
-#include "yaml-cpp/yaml.h"
-#include <unordered_map>
-#include <bsoncxx/stdx/optional.hpp>
 #include "node.hpp"
+#include "yaml-cpp/yaml.h"
+#include <bsoncxx/stdx/optional.hpp>
+#include <string>
+#include <unordered_map>
 #pragma once
 
 using namespace std;
@@ -20,14 +20,13 @@ public:
     ifNode(ifNode&&) = default;
     // Execute the node
     virtual void executeNode(shared_ptr<threadState>) override;
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
-                             vector<shared_ptr<node>>&) override;
+    virtual void setNextNode(unordered_map<string, node*>&, vector<shared_ptr<node>>&) override;
     virtual std::pair<std::string, std::string> generateDotGraph() override;
 
 private:
     // possible next states with probabilities
     string ifNodeName, elseNodeName;
-    shared_ptr<node> iffNode, elseNode;
+    node *iffNode, *elseNode;
     bsoncxx::stdx::optional<bsoncxx::array::value> compareValue;
     comparison comparisonTest;
     string comparisonVariable;

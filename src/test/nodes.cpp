@@ -1,5 +1,8 @@
 #include "catch.hpp"
 
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/trivial.hpp>
 #include <bson.h>
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -9,9 +12,6 @@
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/trivial.hpp>
 
 
 #include "doAll.hpp"
@@ -51,7 +51,7 @@ TEST_CASE("Nodes", "[nodes]") {
     auto state = shared_ptr<threadState>(
         new threadState(12234, tvariables, wvariables, &workloadState, "t", "c"));
     vector<shared_ptr<node>> vectornodes;
-    unordered_map<string, shared_ptr<node>> nodes;
+    unordered_map<string, node*> nodes;
 
     SECTION("doAll") {
         auto doAllYaml = YAML::Load(R"yaml(
@@ -63,7 +63,7 @@ TEST_CASE("Nodes", "[nodes]") {
           next : join # Next state of the doAll should be a join.
         )yaml");
         auto doAllNode = makeSharedNode(doAllYaml);
-        nodes[doAllNode->getName()] = doAllNode;
+        nodes[doAllNode->getName()] = doAllNode.get();
         vectornodes.push_back(doAllNode);
 
         auto thing1Y = YAML::Load(R"yaml(
@@ -73,7 +73,7 @@ TEST_CASE("Nodes", "[nodes]") {
           next : join # Child thread continues until it gets to the join
             )yaml");
         auto thing1Node = makeSharedNode(thing1Y);
-        nodes[thing1Node->getName()] = thing1Node;
+        nodes[thing1Node->getName()] = thing1Node.get();
         vectornodes.push_back(thing1Node);
         auto thing2Y = YAML::Load(R"yaml(
           name : thingB
@@ -82,7 +82,7 @@ TEST_CASE("Nodes", "[nodes]") {
           next : join # Child thread continues until it gets to the join
             )yaml");
         auto thing2Node = makeSharedNode(thing2Y);
-        nodes[thing2Node->getName()] = thing2Node;
+        nodes[thing2Node->getName()] = thing2Node.get();
         vectornodes.push_back(thing2Node);
         auto joinY = YAML::Load(R"yaml(
           name : join
@@ -91,17 +91,17 @@ TEST_CASE("Nodes", "[nodes]") {
           next : Finish
             )yaml");
         auto joinNode = makeSharedNode(joinY);
-        nodes[joinNode->getName()] = joinNode;
+        nodes[joinNode->getName()] = joinNode.get();
         vectornodes.push_back(joinNode);
         auto mynode = make_shared<finishNode>();
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         vectornodes.push_back(mynode);
         // connect the nodes
         for (auto mnode : vectornodes) {
             mnode->setNextNode(nodes, vectornodes);
         }
         // execute
-        state->currentNode = doAllNode;
+        state->currentNode = doAllNode.get();
         while (state->currentNode != nullptr)
             state->currentNode->executeNode(state);
         REQUIRE(doAllNode->getCount() == 1);
@@ -119,7 +119,7 @@ TEST_CASE("Nodes", "[nodes]") {
           next: Finish
         )yaml");
         auto forNNode = makeSharedNode(ForNYaml);
-        nodes[forNNode->getName()] = forNNode;
+        nodes[forNNode->getName()] = forNNode.get();
         vectornodes.push_back(forNNode);
 
         auto thing1Y = YAML::Load(R"yaml(
@@ -129,17 +129,17 @@ TEST_CASE("Nodes", "[nodes]") {
           next: Finish
             )yaml");
         auto thing1Node = makeSharedNode(thing1Y);
-        nodes[thing1Node->getName()] = thing1Node;
+        nodes[thing1Node->getName()] = thing1Node.get();
         vectornodes.push_back(thing1Node);
         auto mynode = make_shared<finishNode>();
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         vectornodes.push_back(mynode);
         // connect the nodes
         for (auto mnode : vectornodes) {
             mnode->setNextNode(nodes, vectornodes);
         }
         // execute
-        state->currentNode = forNNode;
+        state->currentNode = forNNode.get();
         while (state->currentNode != nullptr)
             state->currentNode->executeNode(state);
         REQUIRE(forNNode->getCount() == 1);
@@ -156,7 +156,7 @@ TEST_CASE("Nodes", "[nodes]") {
           next : Finish # Next state of the spawn should be a join.
         )yaml");
         auto spawnNode = makeSharedNode(spawnYaml);
-        nodes[spawnNode->getName()] = spawnNode;
+        nodes[spawnNode->getName()] = spawnNode.get();
         vectornodes.push_back(spawnNode);
 
         auto thing1Y = YAML::Load(R"yaml(
@@ -166,7 +166,7 @@ TEST_CASE("Nodes", "[nodes]") {
           next : Finish # Child thread continues until it gets to the join
             )yaml");
         auto thing1Node = makeSharedNode(thing1Y);
-        nodes[thing1Node->getName()] = thing1Node;
+        nodes[thing1Node->getName()] = thing1Node.get();
         vectornodes.push_back(thing1Node);
         auto thing2Y = YAML::Load(R"yaml(
           name : thingB
@@ -175,17 +175,17 @@ TEST_CASE("Nodes", "[nodes]") {
           next : Finish # Child thread continues until it gets to the join
             )yaml");
         auto thing2Node = makeSharedNode(thing2Y);
-        nodes[thing2Node->getName()] = thing2Node;
+        nodes[thing2Node->getName()] = thing2Node.get();
         vectornodes.push_back(thing2Node);
         auto mynode = make_shared<finishNode>();
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         vectornodes.push_back(mynode);
         // connect the nodes
         for (auto mnode : vectornodes) {
             mnode->setNextNode(nodes, vectornodes);
         }
         // execute
-        state->currentNode = spawnNode;
+        state->currentNode = spawnNode.get();
         while (state->currentNode != nullptr)
             state->currentNode->executeNode(state);
         state->workloadState->waitThreadsDone();
@@ -216,10 +216,10 @@ TEST_CASE("Nodes", "[nodes]") {
             print : In sleep
         )yaml");
         auto workNode = make_shared<TestWorkloadNode>(workloadNodeYAML);
-        nodes[workNode->getName()] = workNode;
+        nodes[workNode->getName()] = workNode.get();
         vectornodes.push_back(workNode);
         auto mynode = make_shared<finishNode>();
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         vectornodes.push_back(mynode);
         // connect the nodes
         for (auto mnode : vectornodes) {
@@ -273,10 +273,10 @@ TEST_CASE("Nodes", "[nodes]") {
             print : In sleep
         )yaml");
         auto workNode = make_shared<TestWorkloadNode>(workloadNodeYAML);
-        nodes[workNode->getName()] = workNode;
+        nodes[workNode->getName()] = workNode.get();
         vectornodes.push_back(workNode);
         auto mynode = make_shared<finishNode>();
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         vectornodes.push_back(mynode);
         // connect the nodes
         for (auto mnode : vectornodes) {
@@ -319,7 +319,7 @@ TEST_CASE("Nodes", "[nodes]") {
             thingB : 0.5
         )yaml");
         auto randomNode = makeSharedNode(randomYaml);
-        nodes[randomNode->getName()] = randomNode;
+        nodes[randomNode->getName()] = randomNode.get();
         vectornodes.push_back(randomNode);
 
         auto thing1Y = YAML::Load(R"yaml(
@@ -329,7 +329,7 @@ TEST_CASE("Nodes", "[nodes]") {
           next : Finish
             )yaml");
         auto thing1Node = makeSharedNode(thing1Y);
-        nodes[thing1Node->getName()] = thing1Node;
+        nodes[thing1Node->getName()] = thing1Node.get();
         vectornodes.push_back(thing1Node);
         auto thing2Y = YAML::Load(R"yaml(
           name : thingB
@@ -338,17 +338,17 @@ TEST_CASE("Nodes", "[nodes]") {
           next : Finish
             )yaml");
         auto thing2Node = makeSharedNode(thing2Y);
-        nodes[thing2Node->getName()] = thing2Node;
+        nodes[thing2Node->getName()] = thing2Node.get();
         vectornodes.push_back(thing2Node);
         auto mynode = make_shared<finishNode>();
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         vectornodes.push_back(mynode);
         // connect the nodes
         for (auto mnode : vectornodes) {
             mnode->setNextNode(nodes, vectornodes);
         }
         // execute
-        state->currentNode = randomNode;
+        state->currentNode = randomNode.get();
         while (state->currentNode != nullptr)
             state->currentNode->executeNode(state);
         REQUIRE((thing1Node->getCount() + thing2Node->getCount()) == 1);
@@ -361,7 +361,7 @@ TEST_CASE("Nodes", "[nodes]") {
           next : Finish
             )yaml");
         auto thing1Node = makeSharedNode(thing1Y);
-        nodes[thing1Node->getName()] = thing1Node;
+        nodes[thing1Node->getName()] = thing1Node.get();
         vectornodes.push_back(thing1Node);
         auto thing2Y = YAML::Load(R"yaml(
           name : thingB
@@ -370,10 +370,10 @@ TEST_CASE("Nodes", "[nodes]") {
           next : Finish
             )yaml");
         auto thing2Node = makeSharedNode(thing2Y);
-        nodes[thing2Node->getName()] = thing2Node;
+        nodes[thing2Node->getName()] = thing2Node.get();
         vectornodes.push_back(thing2Node);
         auto mynode = make_shared<finishNode>();
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         vectornodes.push_back(mynode);
         bsoncxx::types::b_int64 value;
         SECTION("equality") {
@@ -387,7 +387,7 @@ TEST_CASE("Nodes", "[nodes]") {
               test : equals
         )yaml");
             auto ifNodeNode = makeSharedNode(ifNodeYaml);
-            nodes[ifNodeNode->getName()] = ifNodeNode;
+            nodes[ifNodeNode->getName()] = ifNodeNode.get();
             vectornodes.push_back(ifNodeNode);
 
             // connect the nodes
@@ -400,7 +400,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 state->result = bsoncxx::builder::stream::array()
                     << value << bsoncxx::builder::stream::finalize;
                 // execute -- if should evaluate true and take the ifnode
-                state->currentNode = ifNodeNode;
+                state->currentNode = ifNodeNode.get();
                 while (state->currentNode != nullptr)
                     state->currentNode->executeNode(state);
                 REQUIRE(ifNodeNode->getCount() == 1);
@@ -412,7 +412,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 state->result = bsoncxx::builder::stream::array()
                     << value << bsoncxx::builder::stream::finalize;
                 // execute -- if should evaluate false and take the elsenode
-                state->currentNode = ifNodeNode;
+                state->currentNode = ifNodeNode.get();
                 while (state->currentNode != nullptr)
                     state->currentNode->executeNode(state);
                 REQUIRE(ifNodeNode->getCount() == 1);
@@ -432,7 +432,7 @@ TEST_CASE("Nodes", "[nodes]") {
               test : greater
         )yaml");
             auto ifNodeNode = makeSharedNode(ifNodeYaml);
-            nodes[ifNodeNode->getName()] = ifNodeNode;
+            nodes[ifNodeNode->getName()] = ifNodeNode.get();
             vectornodes.push_back(ifNodeNode);
 
             // connect the nodes
@@ -442,7 +442,7 @@ TEST_CASE("Nodes", "[nodes]") {
 
             bsoncxx::types::b_int32 value;
             // execute -- if should evaluate false and take the ifnode
-            state->currentNode = ifNodeNode;
+            state->currentNode = ifNodeNode.get();
             SECTION("true") {
                 value.value = 5;
                 state->result = bsoncxx::builder::stream::array()
@@ -458,7 +458,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 state->result = bsoncxx::builder::stream::array()
                     << value << bsoncxx::builder::stream::finalize;
                 // execute -- if should evaluate false and take the elsenode
-                state->currentNode = ifNodeNode;
+                state->currentNode = ifNodeNode.get();
                 while (state->currentNode != nullptr)
                     state->currentNode->executeNode(state);
                 REQUIRE(ifNodeNode->getCount() == 1);
@@ -477,7 +477,7 @@ TEST_CASE("Nodes", "[nodes]") {
               test : less
         )yaml");
             auto ifNodeNode = makeSharedNode(ifNodeYaml);
-            nodes[ifNodeNode->getName()] = ifNodeNode;
+            nodes[ifNodeNode->getName()] = ifNodeNode.get();
             vectornodes.push_back(ifNodeNode);
 
             // connect the nodes
@@ -487,7 +487,7 @@ TEST_CASE("Nodes", "[nodes]") {
 
             bsoncxx::types::b_int32 value;
             // execute -- if should evaluate false and take the ifnode
-            state->currentNode = ifNodeNode;
+            state->currentNode = ifNodeNode.get();
             SECTION("true") {
                 value.value = 0;
                 state->result = bsoncxx::builder::stream::array()
@@ -503,7 +503,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 state->result = bsoncxx::builder::stream::array()
                     << value << bsoncxx::builder::stream::finalize;
                 // execute -- if should evaluate false and take the elsenode
-                state->currentNode = ifNodeNode;
+                state->currentNode = ifNodeNode.get();
                 while (state->currentNode != nullptr)
                     state->currentNode->executeNode(state);
                 REQUIRE(ifNodeNode->getCount() == 1);
@@ -522,7 +522,7 @@ TEST_CASE("Nodes", "[nodes]") {
               test : greater_or_equal
         )yaml");
             auto ifNodeNode = makeSharedNode(ifNodeYaml);
-            nodes[ifNodeNode->getName()] = ifNodeNode;
+            nodes[ifNodeNode->getName()] = ifNodeNode.get();
             vectornodes.push_back(ifNodeNode);
 
             // connect the nodes
@@ -532,7 +532,7 @@ TEST_CASE("Nodes", "[nodes]") {
 
             bsoncxx::types::b_int32 value;
             // execute -- if should evaluate false and take the ifnode
-            state->currentNode = ifNodeNode;
+            state->currentNode = ifNodeNode.get();
             SECTION("true") {
                 value.value = 1;
                 state->result = bsoncxx::builder::stream::array()
@@ -548,7 +548,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 state->result = bsoncxx::builder::stream::array()
                     << value << bsoncxx::builder::stream::finalize;
                 // execute -- if should evaluate false and take the elsenode
-                state->currentNode = ifNodeNode;
+                state->currentNode = ifNodeNode.get();
                 while (state->currentNode != nullptr)
                     state->currentNode->executeNode(state);
                 REQUIRE(ifNodeNode->getCount() == 1);
@@ -567,7 +567,7 @@ TEST_CASE("Nodes", "[nodes]") {
               test : less_or_equal
         )yaml");
             auto ifNodeNode = makeSharedNode(ifNodeYaml);
-            nodes[ifNodeNode->getName()] = ifNodeNode;
+            nodes[ifNodeNode->getName()] = ifNodeNode.get();
             vectornodes.push_back(ifNodeNode);
 
             // connect the nodes
@@ -577,7 +577,7 @@ TEST_CASE("Nodes", "[nodes]") {
 
             bsoncxx::types::b_int32 value;
             // execute -- if should evaluate false and take the ifnode
-            state->currentNode = ifNodeNode;
+            state->currentNode = ifNodeNode.get();
             SECTION("true") {
                 value.value = 1;
                 state->result = bsoncxx::builder::stream::array()
@@ -593,7 +593,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 state->result = bsoncxx::builder::stream::array()
                     << value << bsoncxx::builder::stream::finalize;
                 // execute -- if should evaluate false and take the elsenode
-                state->currentNode = ifNodeNode;
+                state->currentNode = ifNodeNode.get();
                 while (state->currentNode != nullptr)
                     state->currentNode->executeNode(state);
                 REQUIRE(ifNodeNode->getCount() == 1);
@@ -613,7 +613,7 @@ TEST_CASE("Nodes", "[nodes]") {
               variable: tvar
         )yaml");
             auto ifNodeNode = makeSharedNode(ifNodeYaml);
-            nodes[ifNodeNode->getName()] = ifNodeNode;
+            nodes[ifNodeNode->getName()] = ifNodeNode.get();
             vectornodes.push_back(ifNodeNode);
 
             // connect the nodes
@@ -622,7 +622,7 @@ TEST_CASE("Nodes", "[nodes]") {
             }
 
             // execute -- if should evaluate false and take the ifnode
-            state->currentNode = ifNodeNode;
+            state->currentNode = ifNodeNode.get();
             SECTION("true") {
                 state->tvariables.insert(
                     {"tvar", bsoncxx::builder::stream::array() << 1 << finalize});
@@ -636,7 +636,7 @@ TEST_CASE("Nodes", "[nodes]") {
                 state->tvariables.insert(
                     {"tvar", bsoncxx::builder::stream::array() << 2 << finalize});
                 // execute -- if should evaluate false and take the elsenode
-                state->currentNode = ifNodeNode;
+                state->currentNode = ifNodeNode.get();
                 while (state->currentNode != nullptr)
                     state->currentNode->executeNode(state);
                 REQUIRE(ifNodeNode->getCount() == 1);

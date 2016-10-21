@@ -35,7 +35,7 @@ public:
 
     virtual void stop();
     // Set the next node pointer
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&, vector<shared_ptr<node>>&);
+    virtual void setNextNode(unordered_map<string, node*>&, vector<shared_ptr<node>>&);
     string name;
     string nextName;
     // Generate a dot file for generating a graph.
@@ -57,7 +57,7 @@ public:
     }
 
 protected:
-    weak_ptr<node> nextNode;
+    node* nextNode;
     std::atomic<bool> stopped;
     string text;
     Stats myStats;

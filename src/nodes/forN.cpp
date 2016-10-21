@@ -1,6 +1,6 @@
 #include "forN.hpp"
-#include <stdlib.h>
 #include <boost/log/trivial.hpp>
+#include <stdlib.h>
 
 namespace mwg {
 
@@ -30,7 +30,7 @@ void ForN::execute(shared_ptr<threadState> myState) {
         }
     }
 }
-void ForN::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
+void ForN::setNextNode(unordered_map<string, node*>& nodes,
                        vector<shared_ptr<node>>& vectornodesIn) {
     BOOST_LOG_TRIVIAL(debug) << "Setting next node vector for ForN node" << name
                              << ". Next node should be " << nextName;

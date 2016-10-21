@@ -78,7 +78,7 @@ workload::workload(const YAML::Node& inputNodes) : baseWorkloadState(this), stop
         BOOST_LOG_TRIVIAL(fatal) << "Workload constructor and !nodes";
         exit(EXIT_FAILURE);
     }
-    unordered_map<string, shared_ptr<node>> nodes;
+    unordered_map<string, node*> nodes;
     YAML::Node yamlNodes;
     if (inputNodes.IsMap()) {
         // read out things like the seed
@@ -161,18 +161,18 @@ workload::workload(const YAML::Node& inputNodes) : baseWorkloadState(this), stop
             exit(EXIT_FAILURE);
         }
         auto mynode = makeSharedNode(yamlNode);
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         // this is an ugly hack for now
-        vectornodes.push_back(mynode);
+        vectornodes.push_back(std::move(mynode));
         BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added node";
     }
     BOOST_LOG_TRIVIAL(debug) << "Added all the nodes in yamlNode";
     // Add an implicit finish_node if it doesn't exist
     if (!nodes["Finish"]) {
         auto mynode = make_shared<finishNode>();
-        nodes[mynode->getName()] = mynode;
+        nodes[mynode->getName()] = mynode.get();
         // this is an ugly hack for now
-        vectornodes.push_back(mynode);
+        vectornodes.push_back(std::move(mynode));
         BOOST_LOG_TRIVIAL(debug) << "In workload constructor and added implicit finish node";
     }
 
@@ -207,7 +207,7 @@ void runTimer(shared_ptr<timerState> state, uint64_t runLengthMs) {
 }
 
 // wrapper to start a new thread
-void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
+void runThread(node* Node, shared_ptr<threadState> myState) {
     BOOST_LOG_TRIVIAL(trace) << "Node runThread";
     myState->currentNode = Node;
     BOOST_LOG_TRIVIAL(trace) << "Set node. Name is " << Node->name;
@@ -218,7 +218,7 @@ void runThread(shared_ptr<node> Node, shared_ptr<threadState> myState) {
 }
 
 // Start a new thread with thread state and initial state
-shared_ptr<thread> startThread(shared_ptr<node> startNode, shared_ptr<threadState> ts) {
+shared_ptr<thread> startThread(node* startNode, shared_ptr<threadState> ts) {
     // increase the count of threads
     ts->workloadState->increaseThreads();
     return (shared_ptr<thread>(new thread(runThread, startNode, ts)));
@@ -250,7 +250,7 @@ void workload::execute(WorkloadExecutionState* work) {
                                                                 work->uri));
         BOOST_LOG_TRIVIAL(trace) << "Created thread state";
         // Start the thread
-        startThread(vectornodes[0], newState)->detach();
+        startThread(vectornodes[0].get(), newState)->detach();
         BOOST_LOG_TRIVIAL(trace) << "Called run on thread";
     }
     BOOST_LOG_TRIVIAL(trace) << "Started all threads in workload";

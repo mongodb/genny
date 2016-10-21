@@ -19,8 +19,6 @@ public:
     virtual void executeNode(shared_ptr<threadState>) override;
 
 private:
-    vector<shared_ptr<node>> vectornodes;
-    vector<string> nodeNames;
     string joinName;
 };
 }

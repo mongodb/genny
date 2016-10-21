@@ -76,7 +76,7 @@ ifNode::ifNode(YAML::Node& ynode) : node(ynode) {
     BOOST_LOG_TRIVIAL(debug) << "Setting nextName to first entry. NextName: " << nextName;
 }
 
-void ifNode::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
+void ifNode::setNextNode(unordered_map<string, node*>& nodes,
                          vector<shared_ptr<node>>& vectornodesin) {
     BOOST_LOG_TRIVIAL(debug) << "Setting next nodes in IfNode";
     iffNode = nodes[ifNodeName];
@@ -90,7 +90,6 @@ void ifNode::executeNode(shared_ptr<threadState> myState) {
     chrono::high_resolution_clock::time_point start, stop;
     start = chrono::high_resolution_clock::now();
     BOOST_LOG_TRIVIAL(debug) << "ifNode.execute.";
-    shared_ptr<node> me = myState->currentNode;
     if (stopped || myState->stopped) {  // short circuit and return if stopped flag set
         BOOST_LOG_TRIVIAL(debug) << "Stopped set";
         myState->currentNode = nullptr;

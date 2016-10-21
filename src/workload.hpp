@@ -60,7 +60,7 @@ private:
 };
 
 // Start a new thread with thread state and initial state
-shared_ptr<thread> startThread(shared_ptr<node>, shared_ptr<threadState>);
+shared_ptr<thread> startThread(node*, shared_ptr<threadState>);
 
 class workload {
 public:
@@ -87,8 +87,10 @@ public:
     string name;
 
 protected:
-    vector<shared_ptr<node>> vectornodes;
     WorkloadExecutionState baseWorkloadState;
+    // This should be the owning copy.
+    // Can't make a vector of unique_ptr with incomplete forward declared type node.
+    vector<shared_ptr<node>> vectornodes;
     unordered_map<string, bsoncxx::array::value> tvariables;
     atomic<bool> stopped;
     Stats myStats;

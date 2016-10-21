@@ -13,12 +13,11 @@ public:
     Spawn() = delete;
     // Execute the node
     virtual void execute(shared_ptr<threadState>) override;
-    virtual void setNextNode(unordered_map<string, shared_ptr<node>>&,
-                             vector<shared_ptr<node>>&) override;
+    virtual void setNextNode(unordered_map<string, node*>&, vector<shared_ptr<node>>&) override;
     virtual std::pair<std::string, std::string> generateDotGraph() override;
 
 private:
-    vector<shared_ptr<node>> spawnNodes;
+    vector<node*> spawnNodes;
     vector<string> nodeNames;
 };
 }

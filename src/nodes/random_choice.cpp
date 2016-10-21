@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "random_choice.hpp"
 #include "parse_util.hpp"
-#include <random>
 #include <boost/log/trivial.hpp>
+#include <random>
+#include <stdio.h>
+#include <stdlib.h>
 
 namespace mwg {
 random_choice::random_choice(YAML::Node& ynode) {
@@ -42,13 +42,13 @@ random_choice::random_choice(YAML::Node& ynode) {
     BOOST_LOG_TRIVIAL(debug) << "Setting nextName to first entry. NextName: " << nextName;
 }
 
-void random_choice::setNextNode(unordered_map<string, shared_ptr<node>>& nodes,
+void random_choice::setNextNode(unordered_map<string, node*>& nodes,
                                 vector<shared_ptr<node>>& vectornodesin) {
     double partial = 0;  // put in distribution
     BOOST_LOG_TRIVIAL(debug) << "Setting next nodes in random choice";
     for (auto nextstate : vectornodestring) {
         partial += (nextstate.second / total);
-        vectornodes.push_back(pair<shared_ptr<node>, double>(nodes[nextstate.first], partial));
+        vectornodes.push_back(pair<node*, double>(nodes[nextstate.first], partial));
     }
     BOOST_LOG_TRIVIAL(debug) << "Set next nodes in random choice";
 }
@@ -63,7 +63,6 @@ void random_choice::executeNode(shared_ptr<threadState> myState) {
     BOOST_LOG_TRIVIAL(debug) << "random_choice.execute. Random_number is " << random_number;
     for (auto nextstate : vectornodes) {
         if (nextstate.second > random_number) {
-            shared_ptr<node> me = myState->currentNode;
             // execute this one
             if (stopped || myState->stopped) {  // short circuit and return if stopped flag set
                 BOOST_LOG_TRIVIAL(debug) << "Stopped set";

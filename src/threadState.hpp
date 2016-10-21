@@ -1,10 +1,10 @@
-#include <random>
-#include <thread>
-#include <mongocxx/client.hpp>
-#include <bsoncxx/types/value.hpp>
-#include <unordered_map>
 #include <atomic>
 #include <bsoncxx/stdx/optional.hpp>
+#include <bsoncxx/types/value.hpp>
+#include <mongocxx/client.hpp>
+#include <random>
+#include <thread>
+#include <unordered_map>
 
 #pragma once
 using namespace std;
@@ -34,14 +34,15 @@ public:
           stopped(false){};
     mongocxx::client conn;
     mt19937_64 rng;  // random number generator
-    shared_ptr<node> currentNode;
+    node* currentNode;
     unordered_map<string, bsoncxx::array::value> tvariables;
     unordered_map<string, bsoncxx::array::value>& wvariables;
     bsoncxx::stdx::optional<bsoncxx::array::value> result;
+    // These should be owned here, rather than being shared.
+    // The workload has to own the threadstats and threads for the top level threads
     vector<shared_ptr<threadState>> backgroundThreadStates;
     vector<shared_ptr<thread>> childThreads;
     vector<shared_ptr<thread>> backgroundThreads;
-    shared_ptr<threadState> parentThread;
     WorkloadExecutionState* workloadState;
     string DBName;
     string CollectionName;
