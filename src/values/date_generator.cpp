@@ -15,8 +15,8 @@ namespace mwg {
 DateGenerator::DateGenerator(YAML::Node& node) : ValueGenerator(node) {}
 
 bsoncxx::array::value DateGenerator::generate(threadState& state) {
-    auto currentTime = time(nullptr);
-    bsoncxx::types::b_date date = bsoncxx::types::b_date(currentTime * 1000);
+    auto currentTime = std::chrono::system_clock::now();
+    bsoncxx::types::b_date date = bsoncxx::types::b_date(currentTime);
     bsoncxx::builder::stream::array myArray{};
     return (myArray << date << bsoncxx::builder::stream::finalize);
 }

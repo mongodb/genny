@@ -1,7 +1,7 @@
-#include "catch.hpp"
 #include "document.hpp"
-#include "workload.hpp"
+#include "catch.hpp"
 #include "template_document.hpp"
+#include "workload.hpp"
 
 #include <bson.h>
 #include <bsoncxx/builder/basic/array.hpp>
@@ -176,9 +176,9 @@ TEST_CASE("Documents are created", "[documents]") {
     )yaml"));
             // Test that the document is an append document, and gives the right values.
             auto view = doc->view(mydoc, state);
-            WARN("View is " << bsoncxx::to_json(view));
+            // WARN("View is " << bsoncxx::to_json(view));
             auto elem = doc->view(mydoc, state)["z"];
-            WARN("Elem is " << bsoncxx::to_json(elem));
+            // WARN("Elem is " << bsoncxx::to_json(elem));
             REQUIRE(elem.type() == bsoncxx::type::k_int64);
             REQUIRE(elem.get_int64().value >= 50);
             REQUIRE(elem.get_int64().value < 60);

@@ -2,9 +2,9 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/regex.hpp>  // STDLIB regex failed on Ubuntu 14.04 & CentOS 7
+#include <bsoncxx/builder/concatenate.hpp>
 #include <bsoncxx/json.hpp>
 #include <chrono>
-#include <bsoncxx/builder/concatenate.hpp>
 #include <mongocxx/write_concern.hpp>
 #include <utility>
 
@@ -101,8 +101,8 @@ bsoncxx::document::value parseMap(
                                      << ", newKey is " << newKey << " and prefix is " << newPrefix;
             checkTemplates(newKey, entry.second, templates, newPrefix, overrides);
             string doc = "{\"" + key + "\": " + quoteIfNeeded(entry.second.Scalar()) + "}";
-            BOOST_LOG_TRIVIAL(trace)
-                << "In parseMap and have scalar. Doc to pass to from_json: " << doc;
+            BOOST_LOG_TRIVIAL(trace) << "In parseMap and have scalar. Doc to pass to from_json: "
+                                     << doc;
             docbuilder << concatenate(bsoncxx::from_json(doc));
         }
     }
@@ -207,8 +207,8 @@ void parseIndexOptions(mongocxx::options::index& options, YAML::Node node) {
     if (node["sparse"])
         options.sparse(node["sparse"].as<bool>());
     // Skipping storage options
-    if (node["expire_after_seconds"])
-        options.expire_after_seconds(node["expire_after_seconds"].as<std::int32_t>());
+    if (node["expire_after"])
+        options.expire_after(std::chrono::seconds(node["expire_after"].as<std::int32_t>()));
     if (node["version"])
         options.version(node["version"].as<std::int32_t>());
     if (node["weights"]) {
