@@ -24,20 +24,8 @@ workloadNode::workloadNode(YAML::Node& ynode) : node(ynode) {
     }
     if (auto override = ynode["overrides"]) {
         if (override.IsMap()) {
-            if (auto dbNameNode = override["database"]) {
-                dbName = makeUniqueValueGenerator(dbNameNode);
-            }
-            if (auto collectionNode = override["collection"]) {
-                collectionName = makeUniqueValueGenerator(collectionNode);
-            }
-            if (auto workNameNode = override["name"]) {
-                workloadName = makeUniqueValueGenerator(workNameNode);
-            }
-            if (auto threadsNode = override["threads"]) {
-                numThreads = makeUniqueValueGenerator(threadsNode);
-            }
-            if (auto runLengthMsNode = override["runLengthMs"]) {
-                runLengthMs = makeUniqueValueGenerator(runLengthMsNode);
+            for (auto entry : override) {
+                overrides[entry.first.Scalar()] = makeUniqueValueGenerator(entry.second);
             }
         } else {
             BOOST_LOG_TRIVIAL(fatal) << "Workload node overrides aren't a map";
@@ -54,20 +42,42 @@ void workloadNode::execute(shared_ptr<threadState> myState) {
     // set random seed based on current random seed.
     // should it be set in constructor? Is that safe?
     myWorkload->setRandomSeed(myState->rng(), &myWorkloadState);
-    if (dbName) {
-        myWorkloadState.DBName = dbName->generateString(*myState);
-    }
-    if (collectionName) {
-        myWorkloadState.CollectionName = collectionName->generateString(*myState);
-    }
-    if (workloadName) {
-        myWorkload->name = workloadName->generateString(*myState);
-    }
-    if (numThreads) {
-        myWorkloadState.numParallelThreads = numThreads->generateInt(*myState);
-    }
-    if (runLengthMs) {
-        myWorkloadState.runLengthMs = runLengthMs->generateInt(*myState);
+    for (auto override : overrides) {
+        if (override.first.compare("database") == 0) {
+            BOOST_LOG_TRIVIAL(trace) << "Setting database name in workloadnode";
+            myWorkloadState.DBName = override.second->generateString(*myState);
+        } else if (override.first.compare("collection") == 0) {
+            BOOST_LOG_TRIVIAL(trace) << "Setting collection name in workloadnode";
+            myWorkloadState.CollectionName = override.second->generateString(*myState);
+        } else if (override.first.compare("name") == 0) {
+            BOOST_LOG_TRIVIAL(trace) << "Setting workload name in workloadnode";
+            myWorkload->name = override.second->generateString(*myState);
+        } else if (override.first.compare("threads") == 0) {
+            BOOST_LOG_TRIVIAL(trace) << "Setting number of threads in workloadnode";
+            myWorkloadState.numParallelThreads = override.second->generateInt(*myState);
+        } else if (override.first.compare("RunLength") == 0) {
+            BOOST_LOG_TRIVIAL(trace) << "Setting runlength in workloadnode";
+            myWorkloadState.runLengthMs = override.second->generateInt(*myState);
+        } else {
+            // Handle generic variables here
+            BOOST_LOG_TRIVIAL(trace) << "Setting variable " << override.first << " in workloadnode";
+            if (myWorkloadState.tvariables.count(override.first) > 0) {
+                myWorkloadState.tvariables.find(override.first)->second =
+                    override.second->generate(*myState);
+                BOOST_LOG_TRIVIAL(trace) << "Setting existing tvariable " << override.first
+                                         << " in workloadnode";
+            } else if (myWorkloadState.wvariables.count(override.first) > 0) {
+                myWorkloadState.wvariables.find(override.first)->second =
+                    override.second->generate(*myState);
+                BOOST_LOG_TRIVIAL(trace) << "Setting existing wvariable " << override.first
+                                         << " in workloadnode";
+            } else {
+                myWorkloadState.tvariables.insert(
+                    {override.first, override.second->generate(*myState)});
+                BOOST_LOG_TRIVIAL(trace) << "Setting new tvariable " << override.first
+                                         << " in workloadnode";
+            }
+        }
     }
     myWorkload->execute(&myWorkloadState);
 }

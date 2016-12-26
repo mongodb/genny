@@ -7,21 +7,41 @@ workload : &work
   database : testDB1
   collection : testCollection1
   runLengthMs : 5000
+  wvariables:
+    x: 5
   threads : 5
   nodes :
     - type : sleep
       sleepMs : 1
       print : In sleep
+    - type: insert_one
+      document: {x: {$usevar: {variable: x}}}
+
 
 main :
   seed: 131415161718
   name: main
-  tvariables :
-    threads : 6
-    dbname : vardbname
+  database : testDB1
+  collection : testCollection1
+  tvariables:
+    threads: 6
+    dbname: vardbname
+    y: 6
   nodes:
+    - type: drop
     - type : workloadNode # Run the workload as is.
       workload : *work
+    - type: count # Check it behaved correctly
+      filter: {x: 5}
+      assertEquals: 5
+    # Switch to the database and collection we'll tell the workload to use
+    - type: set_variable
+      target: DBName
+      value: vardbname
+    - type: set_variable
+      target: CollectionName
+      value: testCollection2
+    - type: drop
     - &workOverrides
       type : workloadNode # Run the workload while changing settings of the embedded workload.
       overrides : # These setting override what is set in the embedded workload
@@ -34,5 +54,9 @@ main :
         collection : testCollection2
         runLengthMs : 10000
         name : NewName
+        x: {$usevar: {variable: y}}
       workload : *work
     - *workOverrides
+    - type: count
+      filter: {x: 6}
+      assertEquals: 13

@@ -29,6 +29,7 @@ public:
           runLengthMs(other.runLengthMs),
           uri(other.uri),
           wvariables(other.wvariables),
+          tvariables(other.tvariables),
           myWorkload(other.myWorkload),
           DBName(other.DBName),
           CollectionName(other.CollectionName){};
@@ -37,6 +38,7 @@ public:
     uint64_t runLengthMs{0};
     string uri = mongocxx::uri::k_default_uri;
     unordered_map<string, bsoncxx::array::value> wvariables;  // workload variables
+    unordered_map<string, bsoncxx::array::value> tvariables;  // thread variables
     workload* myWorkload;
     mt19937_64 rng;  // random number generator
     string DBName = "testDB";
@@ -91,7 +93,6 @@ protected:
     // This should be the owning copy.
     // Can't make a vector of unique_ptr with incomplete forward declared type node.
     vector<shared_ptr<node>> vectornodes;
-    unordered_map<string, bsoncxx::array::value> tvariables;
     atomic<bool> stopped;
     Stats myStats;
 };

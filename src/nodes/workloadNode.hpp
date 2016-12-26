@@ -2,6 +2,7 @@
 
 #include <bsoncxx/stdx/optional.hpp>
 #include <memory>
+#include <unordered_map>
 
 #include "node.hpp"
 #include "value_generator.hpp"
@@ -23,6 +24,7 @@ public:
     virtual void stop() override;
 
 protected:
+    std::unordered_map<string, shared_ptr<ValueGenerator>> overrides;
     unique_ptr<workload> myWorkload;
     unique_ptr<ValueGenerator> dbName;
     unique_ptr<ValueGenerator> collectionName;

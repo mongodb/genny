@@ -111,7 +111,7 @@ workload::workload(const YAML::Node& inputNodes) : baseWorkloadState(this), stop
             for (auto var : inputNodes["tvariables"]) {
                 BOOST_LOG_TRIVIAL(debug) << "Reading in thread variable " << var.first.Scalar()
                                          << " with value " << var.second.Scalar();
-                tvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
+                baseWorkloadState.tvariables.insert({var.first.Scalar(), yamlToValue(var.second)});
             }
         }
         if (inputNodes["seed"]) {
@@ -257,7 +257,7 @@ void workload::execute(WorkloadExecutionState* work) {
         BOOST_LOG_TRIVIAL(trace) << "Starting thread in workload";
         // create thread state for each
         auto newState = shared_ptr<threadState>(new threadState(work->rng(),
-                                                                tvariables,
+                                                                work->tvariables,
                                                                 work->wvariables,
                                                                 work,
                                                                 work->DBName,
