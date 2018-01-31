@@ -19,8 +19,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/src/third_party/findyaml")
 # Use git cmake module from rpavlik to put git hash into variable for
 # use by version option. Forces an update and a link on commit
 include(GetGitRevisionDescription)
-get_git_head_revision(GIT_REFSPEC GIT_SHA1) 
-#Shift to use following when we have tags 
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+#Shift to use following when we have tags
 #git_describe(GIT_SHA1)
 
 
@@ -45,7 +45,7 @@ if(NOT CMAKE_BUILD_TYPE)
    set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-# We have some generated header/cpp files. 
+# We have some generated header/cpp files.
 include_directories("${PROJECT_BINARY_DIR}")
 
 find_package(PkgConfig REQUIRED)
@@ -58,9 +58,12 @@ if (!${YAMLCPP_FOUND})
 endif()
 
 # Mongo c++11 driver support
-pkg_check_modules(LIBMONGOCXX  libmongocxx)
+pkg_check_modules(LIBMONGOCXX  libmongocxx-static)
 if (!${LIBMONGOCXX_FOUND})
-   message(FATAL_ERROR "libmongocxx not found")
+   pkg_check_modules(LIBMONGOCXX  libmongocxx)
+   if (!${LIBMONGOCXX_FOUND})
+      message(FATAL_ERROR "libmongocxx not found")
+   endif()
 endif()
 
 include_directories(${LIBMONGOCXX_INCLUDE_DIRS})
@@ -103,7 +106,7 @@ configure_file (
   "${PROJECT_BINARY_DIR}/githash.cpp"
 )
 
-# Support ctest and make test target 
+# Support ctest and make test target
 enable_testing()
 
 add_subdirectory(src)

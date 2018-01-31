@@ -186,8 +186,8 @@ write_concern parseWriteConcern(YAML::Node node) {
 void parseCreateCollectionOptions(mongocxx::options::create_collection& options, YAML::Node node) {
     if (node["capped"])
         options.capped(node["capped"].as<bool>());
-    if (node["auto_index_id"])
-        options.auto_index_id(node["auto_index_id"].as<bool>());
+    // if (node["auto_index_id"])
+    //     options.auto_index_id(node["auto_index_id"].as<bool>());
     if (node["size"])
         options.size(node["size"].as<int>());
     if (node["max"])
@@ -299,9 +299,9 @@ void parseFindOptions(mongocxx::options::find& options, YAML::Node node) {
         options.limit(node["limit"].as<int32_t>());
     if (node["max_time"])
         options.max_time(std::chrono::milliseconds(node["max_time"].as<int64_t>()));
-    if (node["modifiers"]) {
-        options.modifiers(parseMap(node["modifiers"]));
-    }
+    // if (node["modifiers"]) {
+    //     options.modifiers(parseMap(node["modifiers"]));
+    // }
     if (node["no_cursor_timeout"])
         options.no_cursor_timeout(node["no_cursor_timeout"].as<bool>());
     if (node["projection"]) {

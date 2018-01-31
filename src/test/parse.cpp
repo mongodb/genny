@@ -83,7 +83,7 @@ TEST_CASE("Parse YAML", "[parse]") {
         }
         SECTION("Exponent") {
             auto testValue = yamlToValue(YAML::Load("-3.02e+2"));
-            refValue << -302;
+            refValue << -302.0;
             viewable_eq_viewable(refValue, testValue.view());
         }
         SECTION("True") {

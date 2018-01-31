@@ -305,22 +305,20 @@ void workload::logStats() {
 }
 
 bsoncxx::document::value workload::getStats(bool withReset) {
-    using bsoncxx::builder::stream::open_document;
-    using bsoncxx::builder::stream::close_document;
-    bsoncxx::builder::stream::document document{};
+    using bsoncxx::builder::basic::kvp;
+    using bsoncxx::builder::basic::make_document;
+    using bsoncxx::builder::concatenate;
+    bsoncxx::builder::basic::document document;
 
     // FIXME: This should be cleaner. I think stats is a value and owns it's data, and that
     // could be
     // moved into document
-    auto stats = myStats.getStats(withReset);
-    document << name << open_document << bsoncxx::builder::concatenate(stats.view());
+    document.append(concatenate(myStats.getStats(withReset)));
     for (auto mnode : vectornodes) {
-        auto nstats = mnode->getStats(withReset);
-        document << bsoncxx::builder::concatenate(nstats.view());
+        document.append(concatenate(mnode->getStats(withReset)));
     }
-    document << "Date" << bsoncxx::types::b_date(std::chrono::system_clock::now());
-    document << close_document;
-    return (document << bsoncxx::builder::stream::finalize);
+    document.append(kvp("Date", bsoncxx::types::b_date(std::chrono::system_clock::now())));
+    return make_document(kvp(name, document.view()));
 }
 
 
