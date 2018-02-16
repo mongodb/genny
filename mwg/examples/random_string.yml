@@ -1,0 +1,19 @@
+# Demonstrates the randomstring value generator (see Values.md) and
+# nesting of value generators.
+#
+# The first insert inserts a document with a string of length 5. The
+# second insert gets called 10 times, and inserts a document with a
+# string of random length.
+
+main:
+  nodes:
+    - type: drop
+    - type: insert_one
+      document: {y: {$randomstring: {length: 5}}}
+    - type: ForN
+      N: 10
+      node: insert
+      next: Finish
+    - name: insert
+      type: insert_one
+      document: {x: {$randomstring: {length: {$randomint: {min: 1, max: 20}}}}}

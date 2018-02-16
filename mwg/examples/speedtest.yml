@@ -1,0 +1,100 @@
+# Test the speed of the tool
+
+results:
+  main.simpleNoop:
+    - name: SimpleNoop
+      nodes:
+        - snoop
+  main.intNoop:
+    - name: IntegerNoop
+      nodes:
+        - inoop
+  main.incNoop:
+    - name: IncrementNoop
+      nodes:
+        - incnoop
+  main.docNoop:
+    - name: DocumentNoop
+      nodes:
+        - dnoop
+  main.fastDocNoop:
+    - name: FastDocumentNoop
+      nodes:
+        - fastdnoop
+  main.ping:
+    - name: Ping
+      nodes:
+        - ping
+
+main:
+  name: main
+  nodes:
+    - name: simpleNoop
+      type: workloadNode
+      workload:
+        name: simpleNoop
+        runLengthMs: 1000
+        threads: 1
+        nodes:
+          - name: snoop
+            type: noop
+            next: snoop
+            doc: {}
+    - name: intNoop
+      type: workloadNode
+      workload:
+        name: intNoop
+        runLengthMs: 1000
+        threads: 1
+        nodes:
+          - name: inoop
+            type: noop
+            next: inoop
+            doc: {y: $randomint}
+    - name: incNoop
+      type: workloadNode
+      workload:
+        name: incNoop
+        runLengthMs: 1000
+        threads: 1
+        tvariables:
+          count: 0
+        nodes:
+          - name: incnoop
+            type: noop
+            next: incnoop
+            doc: {y: {$increment: {variable: count}}}
+    - name: docNoop
+      type: workloadNode
+      workload:
+        name: docNoop
+        runLengthMs: 1000
+        threads: 1
+        nodes:
+          - name: dnoop
+            type: noop
+            next: dnoop
+            doc: {y: {$randomstring: {length: 200}}}
+    - name: fastDocNoop
+      type: workloadNode
+      workload:
+        name: fastDocNoop
+        runLengthMs: 1000
+        threads: 1
+        nodes:
+          - name: fastdnoop
+            type: noop
+            next: fastdnoop
+            doc: {y: {$fastrandomstring: {length: 200}}}
+    - name: ping
+      type: workloadNode
+      workload:
+        name: ping
+        runLengthMs: 1000
+        threads: 1
+        nodes:
+          - name: ping
+            type: command
+            next: ping
+            command:
+              ping: 1

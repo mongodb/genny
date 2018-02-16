@@ -1,0 +1,30 @@
+# Run the same workload, but with increasing threads each time it is run
+# Runs the same embedded workload twice. Once with default settings, and once with overriden settings.
+
+workload : &work
+  name : embeddedWorkload
+  nodes :
+    - type : sleep
+      sleepMs : 500
+      print : sleep 1
+    - type : sleep
+      sleepMs : 500
+      print : sleep 2
+
+main :
+  seed: 131415161718
+  name: main
+  wvariables:
+    threads: 1
+  nodes:
+    - type: ForN
+      N: 10
+      node: runLoad
+      next: Finish
+    - name: runLoad # Run the workload while changing settings of the embedded workload.
+      type : workloadNode
+      overrides : # These setting override what is set in the embedded workload
+        threads :
+          type : increment
+          variable : threads
+      workload : *work

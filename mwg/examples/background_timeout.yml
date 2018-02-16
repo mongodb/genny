@@ -1,0 +1,22 @@
+
+main:
+  name: test_background
+  runLengthMs: 300
+  nodes:
+    - type: doAll
+      name: split
+      childNodes:
+        - sleep1
+      next: sleep3
+    - name: sleep1
+      type: sleep
+      sleepMs: 40
+      next: join
+    - name: sleep3
+      type: sleep
+      sleepMs: 100
+      next: join
+    - name: join
+      type: join
+      next: split
+    

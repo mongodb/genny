@@ -1,0 +1,7 @@
+# Sample of using recursive includes
+
+includes:
+  - filename: includes.yml
+    node: &main main
+
+main: *main

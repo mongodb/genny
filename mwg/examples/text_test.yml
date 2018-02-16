@@ -1,0 +1,67 @@
+# This workload is based off of SERVER-21690 and uses its data set. You must download the data file in order to run this test.
+#
+# Download https://s3.amazonaws.com/cap-david-daly/books.json.gz into the examples directory (same directory as this file), and unzip it.
+# wget https://s3.amazonaws.com/cap-david-daly/books.json.gz
+# gunzip books.json.gz
+
+# There are three parts to this test. The first two run by
+# default. Each can be run indepently, although the last two assume
+# the data has already been loaded. To run any part my itself add that
+# target to the end of the mwg commandline
+# (e.g., mwg text_test.yml load_data)
+
+# 1. load_data. This uses the load_file node to read in books.json and
+# load it into the database. It also creates the text index on the
+# collection.
+
+# 2. agg_load: This is the aggregation workload described in the SERVER ticket.
+
+# 3. query_load: This runs fund commands against the book corpus,
+# using a small test of search terms. Can easily be extended to use a
+# large list of search terms.
+
+path: &path .
+
+load_data: &load_data
+  name: load_data
+  nodes:
+    - type: drop
+    - type: load_file
+      file_name: books.json
+      path: *path
+    - type: create_index
+      keys: { "$**": "text" }
+
+agg_load: &agg_load
+  name: aggregation_workload
+  nodes:
+    - type: command
+      command:
+        aggregate: {$usevar: {variable: CollectionName}}
+        pipeline:
+          - $match: {$text: {$search: "house"}}
+          - $group: {_id: {author: "$author"}, count: {$sum: 1}}
+          - $sort: {count: -1}
+
+query_load: &query_load
+  name: query_workload
+  tvariables:
+    case: true
+  runLengthMs: 20000
+  nodes:
+    - type: find
+      name: find
+      next: find
+      filter:
+        $text:
+          $search: {$choose: {choices: [house, tree, barn, bible, taxes, horse]}}
+          $caseSensitive: {$usevar: {variable: case}}
+      options: {projection: {_id: 1}}
+
+main:
+  name: text_test
+  nodes:
+    - type: workloadNode
+      workload: *load_data
+    - type: workloadNode
+      workload: *agg_load

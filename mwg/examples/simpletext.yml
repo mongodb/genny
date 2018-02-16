@@ -1,0 +1,98 @@
+# Prototype to implementation of simple_text.js from mongo-perf a
+# couple different ways. This prototype attempts to solve the
+# underlying problem of simple_text.js, not the particularl
+# implementation in simple_text.js. Also view text_test.yml based off
+# SERVER-21690.
+
+# The workload is broken down into two parts: data setup, and
+# test. The data setup is performed two different ways.
+# 1. load_docs loads prestaged json documents into the database.
+# 2. generate_docs randomly creates documents using an imported phrase dictionary.
+#
+# Both cases uses the same query workload. The query workload search
+# for terms from an included term dictionary.
+
+
+# Should the queries be case sensitive or not
+caseSensitive: &caseSensitive true
+
+# Parameters for the query stage
+runLengthMs: &runLengthMs 10000
+numThreads: &numThreads 10
+
+# Parameters for the data load when generating documents
+batchSize: &batchSize 1024
+numBatches: &numBatches 1024 #number of docs is batchSize * numBatches
+
+# This is the current path and will be replaced by the tool as appropriate for the current path.
+path: &path .
+
+# Including from other yaml files. This is how we are bringing in our
+# phrase and term dictionaries. Both could be defined in this
+# file. The include allows us to separate out the potentially large
+# data files.
+includes:
+  - filename: data/phrase_dictionary.yml
+    node: &phraseDictionary dictionary
+  - filename: data/search_dictionary.yml
+    node: &searchDictionary dictionary
+
+# Load phase using pre-canned data in corpus.json
+load_docs: &load_docs
+  nodes:
+    - type: drop
+    - type: load_file
+      path: *path
+      file_name: data/corpus.json
+    - &create_index
+      name: create_index
+      type:  create_index
+      keys: { "$**" : "text" }
+      next: Finish
+
+# Load phase that generates data using the phrase dictionary.
+generate_docs: &generate_docs
+  nodes:
+    - type: drop
+    - type: ForN # I think this is going to be a common idiom, of a
+                 # for loop around an insert many. We could special
+                 # case it to more compactly represent it and implement it
+      N: *numBatches
+      node: insertDocs
+    - *create_index
+    - name: insertDocs
+      type: insert_many
+      times: *batchSize
+      doc: {x: {$choose: {choices: *phraseDictionary}}}
+
+# The actual workload part of the test.
+queries: &queries
+  threads: *numThreads
+  runLengthMs: *runLengthMs
+  nodes:
+    - name: find
+      type: find
+      next: find # Self loop. #could put in a shortcut for self loop so don't need to name
+      filter: 
+        $text: {$search: {$choose: {choices: *searchDictionary}}, $caseSensitive: *caseSensitive}
+
+# Run the test with loading files
+test_with_load: &test_with_load
+  name: test_with_load
+  nodes:
+    - type: workloadNode
+      workload: *load_docs
+    - type: workloadNode
+      workload: *queries
+
+# Run the test with generted data
+test_with_generate: &test_with_generate
+  name: test_with_generate
+  nodes:
+    - type: workloadNode
+      workload: *generate_docs
+    - type: workloadNode
+      workload: *queries
+
+# By default do the test with loaded data
+main: *test_with_load

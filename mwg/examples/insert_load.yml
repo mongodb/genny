@@ -1,0 +1,58 @@
+# Heavy insert load
+
+spacing: &spacing 1000
+runLengthMs: &run 10000
+docs_per_batch: &docs_per_batch 1000
+# This is a throttle. It ensures that each insert operation takes at
+# least that amount of time before making the next operation.
+min_time_ms: &min_time_ms 0
+threads: &threads 1
+field_length: &field_length 200
+
+insert_workload: &insert_work
+  name: insert
+  runLengthMs: *run
+  threads : *threads
+  nodes:
+    - &spacer # This makes sure that all the threads are hammering in unison.
+      type: sleep
+      name: spacer
+      sleepMs: {$randomint: {min: 0, max: *spacing}}
+    - type: doAll
+      name: pacer
+      childNodes:
+        - sleep
+      next: insert_load
+    - name: insert_load
+      type: insert_many
+      times: *docs_per_batch
+      doc:
+        y: {$randomint: {min: 0, max: 100}}
+        x: This is a string of data
+        date: $date
+        field1: &field {$randomstring: {length: *field_length}}
+        field2: *field
+      options:
+        ordered: false
+      next: join
+    - name: sleep
+      type: sleep
+      sleepMs: *min_time_ms
+      next: join
+    - name: join
+      type: join
+      next: pacer
+
+
+main :
+  name: main
+  runLengthMs : *run
+  database: &db insert_workload
+  collection: &coll inserts
+  nodes:
+    - type: drop
+    - type: workloadNode
+      overrides:
+        database: {$usevar: {variable: DBName}}
+        collection: {$usevar: {variable: CollectionName}}
+      workload: *insert_work

@@ -1,0 +1,36 @@
+# Example workload for doAll and join behavior. Executes two simple
+# workloads in parallel. The child threads continue until they get to
+# a join node. The parent thread waits at the join node until all of
+# its children complete
+
+main : 
+  seed: 131415161718
+  name: main
+  nodes: 
+    - name : doAll
+      type : doAll
+      childNodes : 
+        - thingA
+        - thingB
+      backgroundNodes : # Background nodes are stopped once childNodes have finished. 
+        - thingC
+      next : join # Next state of the doAll should be a join.
+    - name : join
+      print : In Join
+      type : join
+      next : Finish
+    - name : thingA
+      print : Thing A running
+      type : sleep
+      next : join # Child thread continues until it gets to the join
+      sleepMs : 1000
+    - name : thingB
+      print : Thing B running
+      type : sleep
+      next : join # Child thread continues until it gets to the join
+      sleepMs : 1000
+    - name : thingC # Background thread runs until killed by the join. This self loops until killed
+      type : sleep
+      next : thingC
+      print : Thing C running
+      sleepMs : 100

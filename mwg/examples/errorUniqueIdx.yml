@@ -1,0 +1,20 @@
+# Create a unique index, and try to insert multiple documents
+
+main:
+  nodes:
+    - type: drop
+    - type: create_index
+      keys:
+        a: 1
+      options:
+        unique: true
+    - type: ForN
+      N: 10
+      node: insert
+      next: Finish
+    - name: insert
+      type: insert_many
+      container:
+        - {a: 1}
+        - {a: 2}
+        - {a: 3}

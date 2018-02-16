@@ -1,0 +1,51 @@
+{
+    "Non Unique Index" : {
+        "count" : 1, 
+        "meanMicros" : 10086914, 
+        "drop0" : {
+            "count" : 1, 
+            "meanMicros" : 2497
+        }, 
+        "create_index1" : {
+            "count" : 1, 
+            "meanMicros" : 42523
+        }, 
+        "Load Workload" : {
+            "count" : 1, 
+            "meanMicros" : 10041586, 
+            "insertOp" : {
+                "count" : 2427, 
+                "minimumMicros" : 220, 
+                "maximumMicros" : 111890, 
+                "populationStdDev" : 5799, 
+                "meanMicros" : 2270
+            }, 
+            "updateOp" : {
+                "count" : 2427, 
+                "minimumMicros" : 411, 
+                "maximumMicros" : 88950, 
+                "populationStdDev" : 5989, 
+                "meanMicros" : 3272
+            }, 
+            "readOp" : {
+                "count" : 2426, 
+                "minimumMicros" : 414, 
+                "maximumMicros" : 164418, 
+                "populationStdDev" : 26428, 
+                "meanMicros" : 35767
+            }, 
+            "Finish" : {
+
+            }, 
+            "Date" : {
+                "$date" : 1456238900535
+            }
+        }, 
+        "Finish" : {
+
+        }, 
+        "Date" : {
+            "$date" : 1456238900535
+        }
+    }
+}

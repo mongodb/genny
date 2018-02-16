@@ -1,0 +1,16 @@
+{
+    "Hello_World" : {
+        "count" : 1, 
+        "meanMicros" : 2119, 
+        "insert_one0" : {
+            "count" : 1, 
+            "meanMicros" : 1893
+        }, 
+        "Finish" : {
+
+        }, 
+        "Date" : {
+            "$date" : 1458131375648
+        }
+    }
+}

@@ -1,0 +1,62 @@
+# Workload demonstrating unique indexes and exceptions on write
+# operations. The workload can be run two ways: 
+#
+# 1. mwg unique_index nonunique 
+#
+# This runs the workload with a standard index. At the end
+# of the test there should be no exceptions, 1 document with {a:1},
+# two with {a:2}, three with {a:3}, four with {a:4}, and a lot with
+# {a:5}
+#
+# 2. mwg unqique_index
+#
+# This runs the workload with a unique index. After the first insert,
+# all updates and inserts will throw exceptions. At the end of the
+# tests, the stats should report a lot of exceptions, and there should
+# be exactly 5 documents in the collection, all from the first insert.
+
+# This is the actuall workload. It runs 10 threads for 10 seconds,
+# looping through inserting 5 documents, updating by incrementing a if
+# a < 5, and finding all documents gt 4.
+
+benchwork: &benchwork
+  runLengthMs: 10000
+  name: Load Workload
+  threads: 10
+  nodes:
+    - name: insertOp
+      type: insert_many
+      container: 
+        - {a: 1}
+        - {a: 2}
+        - {a: 3}
+        - {a: 4}
+        - {a: 5}
+    - name: updateOp
+      type: update_many
+      filter: {a : {$lt : 5}}
+      update: {$inc : {a : 1}}
+    - name: readOp
+      type: find
+      filter: {a : {$gt : 4}}
+      next : insertOp
+
+nonunique: #Version of the workload without the unique index
+  name: Non Unique Index
+  nodes: 
+    - type: drop
+    - type: create_index
+      keys: {a: 1}
+    - type: workloadNode
+      workload: *benchwork
+
+main: # Version of the workload with the unique index. 
+  name: Unique Index
+  nodes: 
+    - type: drop
+    - type: create_index
+      keys: {a: 1}
+      options: 
+        unique: true
+    - type: workloadNode
+      workload: *benchwork
