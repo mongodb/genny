@@ -5,3 +5,4 @@ mwg
 cmake-build-debug
 
 /build
+/docker-build

@@ -2,12 +2,5 @@
 
 set -eou pipefail
 
-if [ ! -d build ]; then
-    mkdir build
-fi
-
-pushd build >/dev/null
-    cmake ..
-    make
-    ./squeeze
-popd >/dev/null
+docker build -t squeeze_dev_image .
+docker run --rm -v "$PWD":/squeeze -it squeeze_dev_image bash
