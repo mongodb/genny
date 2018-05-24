@@ -15,5 +15,8 @@ set(CMAKE_MACOSX_RPATH 1) # Ensure that RPATH is used on OSX
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
+
+enable_testing()
 
 add_subdirectory(src)
