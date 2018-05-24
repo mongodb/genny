@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-set -eou pipefail
+pushd build >/dev/null
+    cmake ..
+    make -j8
+    make
+popd >/dev/null
 
-docker build -t squeeze_dev_image .
-docker run --rm -v "$PWD":/squeeze -it squeeze_dev_image bash
