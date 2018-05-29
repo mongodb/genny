@@ -12,7 +12,6 @@ set(CMAKE_MACOSX_RPATH                  1) # Ensure that RPATH is used on OSX
 
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 
-# TODO: move to place where we do testing?
 enable_testing()
 
 add_subdirectory(src)
