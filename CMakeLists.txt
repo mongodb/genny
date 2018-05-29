@@ -5,18 +5,19 @@ project(squeeze LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 # Only works on gcc
-set(CMAKE_C_COMPILER    gcc-8)
-set(CMAKE_CXX_COMPILER  g++-8)
+set(CMAKE_C_COMPILER        gcc-8)
+set(CMAKE_CXX_COMPILER      g++-8)
 
-set (CMAKE_SKIP_BUILD_RPATH false)
-set (CMAKE_BUILD_WITH_INSTALL_RPATH false)
-set (CMAKE_INSTALL_RPATH_USE_LINK_PATH true)
-set(CMAKE_MACOSX_RPATH 1) # Ensure that RPATH is used on OSX
-
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS                OFF)
+set(CMAKE_SKIP_BUILD_RPATH              false)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH      false)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true)
+set(CMAKE_MACOSX_RPATH                  1) # Ensure that RPATH is used on OSX
 
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 
+# TODO: move to place where we do testing?
 enable_testing()
 
 add_subdirectory(src)
+
