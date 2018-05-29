@@ -14,7 +14,7 @@ find_package(
 include_directories("${Boost_INCLUDE_DIRS}")
 # </Boost>
 
-# So we can #include <squeeze/foo.h>
+# So we can #include <genny/foo.h>
 include_directories(.)
 
-add_subdirectory(squeeze)
+add_subdirectory(genny)
