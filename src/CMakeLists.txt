@@ -11,8 +11,9 @@ find_package(
     log_setup
     log
 )
-include_directories("${Boost_INCLUDE_DIRS}")
 # </Boost>
+
+set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
 # So we can #include <genny/foo.h>
 include_directories(.)
