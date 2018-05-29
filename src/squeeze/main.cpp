@@ -1,12 +1,13 @@
+#include <experimental/optional>
+
 #include <iostream>
-#include <optional>
 #include <string>
 
 #include "version.h"
 
 int main() {
     // basically just a test that we're using c++17
-    auto x { std::make_optional(squeeze::lib::get_version()) };
-    std::cout << x.value() << std::endl;
+    auto x { std::experimental::make_optional(squeeze::lib::get_version()) };
+    std::cout << x.value_or("ERROR") << std::endl;
     return 0;
 }

@@ -1,14 +1,21 @@
-link_libraries(${Boost_LIBRARIES})
 
-add_library(lib_squeeze
+
+# "squeeze" target
+set(squeeze_files
     version.cpp
 )
 
-add_executable(main main.cpp)
+add_library(squeeze SHARED ${squeeze_files})
+target_link_libraries(squeeze PUBLIC ${Boost_LIBRARIES})
 
-target_include_directories(main PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_libraries(main lib_squeeze ${Boost_LOG_LIBRARY})
-#target_link_libraries(main LINK_PUBLIC )
 
+# "main" target
+set(main_files
+    main.cpp
+)
+add_executable(main ${main_files})
+target_link_libraries(main squeeze)
+
+
+# subdirectories
 add_subdirectory(test)
-

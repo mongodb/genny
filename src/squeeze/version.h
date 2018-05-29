@@ -1,6 +1,6 @@
-#pragma once
-#include "log.h"
 #include <string>
+
+#include "log.h"
 
 namespace squeeze::lib {
     using namespace std;
