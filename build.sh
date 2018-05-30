@@ -3,6 +3,6 @@
 set -eou pipefail
 
 cd build
-cmake ../src
+cmake ..
 make
 make test
