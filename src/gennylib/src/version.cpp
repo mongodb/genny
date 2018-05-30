@@ -1,4 +1,4 @@
-#include "version.h"
+#include <gennylib/version.h>
 #include "log.h"
 
 std::string genny::lib::get_version() {
