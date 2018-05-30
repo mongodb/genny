@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 
-#include <gennylib/version.h>
+#include <gennylib/version.hpp>
 
 int main() {
     // basically just a test that we're using c++17

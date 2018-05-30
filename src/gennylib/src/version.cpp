@@ -1,5 +1,5 @@
-#include <gennylib/version.h>
-#include "log.h"
+#include <gennylib/version.hpp>
+#include "log.hh"
 
 std::string genny::lib::get_version() {
     BOOST_LOG_TRIVIAL(info) << "Confirmed logging through boost";
