@@ -9,7 +9,10 @@ TLDR:
 ```sh
 # on os-x:
 ./setup.sh
-./build.sh
+cd build
+cmake ..
+make
+make test
 ```
 
 We follow CMake and C++17 best-practices so anything that doesn't work

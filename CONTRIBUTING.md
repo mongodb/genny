@@ -39,6 +39,8 @@ General structure:
 
 -   Include Guard (`#pragma once`)
 -   System Headers `<vector>` (alphabetical order)
+-   Blank line
+-   Local headers `<genny/foo.hpp>` (alphabetical order)
 -   Open Namespace `genny`
 -   Code
 -   Close Namespace `genny`
@@ -48,8 +50,11 @@ Example:
 ```cpp
 #pragma once
 
+#include <string>
 #include <vector>
-#include <genny/blah.hpp>
+
+#include <genny/bar.hpp>
+#include <genny/foo.hpp>
 
 namespace genny {
 // Declarations
