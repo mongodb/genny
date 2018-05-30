@@ -4,7 +4,8 @@ xcode-select --install
 
 brew install cmake
 brew install icu4c
-brew install boost --build-from-source --include-test --with-icu4c
+brew remove boost
+brew install boost --build-from-source --include-test --with-icu4c --without-static
 
 if [ ! -e "src/third_party/catch2/include/catch.hpp" ]; then
     curl -fsS "https://raw.githubusercontent.com/CatchOrg/Catch2/master/single_include/catch.hpp" \
