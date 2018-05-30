@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 
+# https://cmake.org/cmake/help/v3.0/policy/CMP0025.html
+if(POLICY CMP0025)
+    cmake_policy(SET CMP0025 NEW)
+endif()
+
+
 project(genny VERSION 0.0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -23,6 +29,16 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 else()
     message(FATAL_ERROR "Unknown compiler... ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
 endif()
+
+
+# If the user did not customize the install prefix to ${genny_root}/install
+# set it to live under build so we don't inadverently pollute /usr/local
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
+endif()
+
+include(GNUInstallDirs)
+
 
 enable_testing()
 
