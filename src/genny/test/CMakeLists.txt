@@ -10,7 +10,9 @@ add_executable(
 target_link_libraries(test_genny genny)
 
 target_include_directories(test_genny
-    PRIVATE ../.. ${THIRD_PARTY_SOURCE_DIR}/catch2/include
+    PRIVATE ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
 
-add_test(genny test_genny)
+# TODO: `make test` fails unless you first do `make`
+add_test(NAME    test_genny
+         COMMAND test_genny)

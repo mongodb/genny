@@ -15,7 +15,10 @@ find_package(
 
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 
-# So we can #include <genny/foo.h>
-include_directories(.)
+# so you can #import <genny/foo.h>
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_BINARY_DIR}/src
+)
 
 add_subdirectory(genny)
