@@ -2,7 +2,7 @@
 
 #include <gennylib/version.hpp>
 
-SCENARIO("We have the right version") {
+TEST_CASE("We have the right version") {
     REQUIRE( genny::lib::get_version() == "0.0.1" );
 }
 
