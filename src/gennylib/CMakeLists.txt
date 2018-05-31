@@ -1,4 +1,6 @@
-project(gennylib VERSION 0.1 LANGUAGES CXX)
+# NB: this version number is duplicated in
+# src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
+project(gennylib VERSION 0.0.1 LANGUAGES CXX)
 
 add_library(gennylib SHARED
     src/version.cpp
@@ -29,9 +31,14 @@ install(TARGETS  gennylib EXPORT GennyLibraryConfig
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-# This makes the project importable from the install directory
-# Put config file in per-project dir (name MUST match), can also
-# just go into 'cmake'.
+# Below generates a cmake module so if you make install from this
+# project you can find_package(GennyLib) in another cmake project.
+#
+# Please don't build any projects that link against gennylib outside of
+# this repository please. Not yet. We need to think of a good ABI.
+# We're only exposing external cmake bindings because it encourages
+# best-practices and helps keep the codebase honest about what it
+# exports and how it's used.
 install(EXPORT GennyLibraryConfig DESTINATION share/GennyLibrary/cmake)
 
 # This makes the project importable from the build directory

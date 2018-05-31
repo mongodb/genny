@@ -5,6 +5,8 @@ if(POLICY CMP0025)
     cmake_policy(SET CMP0025 NEW)
 endif()
 
+# NB: this version number is duplicated in
+# src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(genny VERSION 0.0.1 LANGUAGES CXX)
 
 include(GNUInstallDirs)
