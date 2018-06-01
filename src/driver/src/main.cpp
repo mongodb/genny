@@ -7,7 +7,7 @@
 
 int main() {
     // basically just a test that we're using c++17
-    auto x { std::experimental::make_optional(genny::lib::get_version()) };
-    std::cout << x.value_or("ERROR") << std::endl;
+    auto v { std::experimental::make_optional(genny::lib::get_version()) };
+    std::cout << u8"🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔" << std::endl;
     return 0;
 }
