@@ -8,19 +8,33 @@ TLDR:
 
 ```sh
 # on os-x:
-./setup.sh
+xcode-select --install
+
+brew install cmake
+brew install icu4c
+brew remove boost
+brew install boost --build-from-source --include-test --with-icu4c --without-static
+
+# All operating-systems:
 cd build
 cmake ..
 make
 make test
 ```
 
+If not using OS X, ensure you have a recent C++ compiler and boost
+installation. Then specify compiler path when invoking `cmake`:
+
+```sh
+cd build
+cmake \
+    -DCMAKE_CXX_COMPILER="g++-7" \
+    ..
+```
+
 We follow CMake and C++17 best-practices so anything that doesn't work
 via "normal means" is probably a bug. We support using CLion and we
 don't tolerate squiggles or import or build errors in CLion.
-
-Ubuntu support is TODO as of 2018-05-30 but should work without much
-headache.
 
 System Requirements
 -------------------
