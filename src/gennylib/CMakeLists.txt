@@ -6,6 +6,11 @@ add_library(gennylib SHARED
     src/version.cpp
 )
 
+target_compile_options(gennylib
+    PRIVATE
+        -Wall -Wextra -Werror
+)
+
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
 # paths.
@@ -47,6 +52,11 @@ export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
 add_executable(test_gennylib
     test/version_test.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
+)
+
+target_compile_options(test_gennylib
+    PRIVATE
+        -Wall -Wextra -Werror
 )
 
 target_include_directories(test_gennylib
