@@ -32,12 +32,17 @@ guidelines to follow.
 
 ## Headers
 
-Public headers must have a `.hpp` suffix. Private headers must have a
-`.hh` suffix.
+Naming and bureaucracy:
 
-General structure:
+-    Public (exposed) header files belong in `include` directories.
+-    Public headers must have a `.hpp` suffix.
+-    Private headers must have a `.hh` suffix.
+-    Header file names are in `snake_case`.
 
--   Include Guard (`#pragma once`)
+General header file structure:
+
+-   Include Guard (`#ifndef HEADER_{uuid}_INCLUDED` `#define HEADER_{uuid}_INCLUDED`).
+    Use `uuidgen | sed s/-/_/g` to generate `{uuid}` for new files.
 -   System Headers `<vector>` (alphabetical order)
 -   Blank line
 -   Local headers `<genny/foo.hpp>` (alphabetical order)
@@ -45,10 +50,14 @@ General structure:
 -   Code
 -   Close Namespace `genny`
 
-Example:
+(Helpful tip: make a shell alias for the include string:
+`alias huuid="echo \"HEADER_\$(uuidgen | sed s/-/_/g)_INCLUDED\""`)
+
+Example header file:
 
 ```cpp
-#pragma once
+#ifndef HEADER_9854B7E9_CAFF_4CD3_8A48_BD5E6A368C96_INCLUDED
+#define HEADER_9854B7E9_CAFF_4CD3_8A48_BD5E6A368C96_INCLUDED
 
 #include <string>
 #include <vector>
@@ -60,6 +69,8 @@ namespace genny {
 // Declarations
 // Inline Implementations
 }  // namespace genny
+
+#endif  // HEADER_9854B7E9_CAFF_4CD3_8A48_BD5E6A368C96_INCLUDED
 ```
 
 ## Class Declarations
@@ -67,6 +78,7 @@ namespace genny {
 Guidelines:
 
 -   Blank line at beginning and end of class declaration
+-   Class names in PascalCase
 -   Public section up top / private at bottom
 -   Lifecycle methods first (see rules above)
 -   Private Member Ordering
@@ -78,15 +90,15 @@ Guidelines:
 Example:
 
 ```cpp
-class foo {
+class Foo {
 
     public:
-      foo();
+      Foo();
 
-      foo(foo&& other) noexcept;
-      foo& operator=(foo&& other) noexcept;
+      Foo(Foo&& other) noexcept;
+      Foo& operator=(Foo&& other) noexcept;
 
-      ~foo();
+      ~Foo();
 
     private:
       friend baz;
