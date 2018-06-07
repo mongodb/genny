@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace genny::lib {
+namespace genny {
     std::string get_version();
 }
 
