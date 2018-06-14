@@ -38,6 +38,9 @@ Naming and bureaucracy:
 -    Public headers must have a `.hpp` suffix.
 -    Private headers must have a `.hh` suffix.
 -    Header file names are in `snake_case`.
+-    Class names are in `PascalCase`, and local/member variables are `lowerCamelCase`.
+-    Member variables (class properties) have leading underscores.
+-    Method parameters do not have leading or trailing underscores.
 
 General header file structure:
 
@@ -78,14 +81,14 @@ namespace genny {
 Guidelines:
 
 -   Blank line at beginning and end of class declaration
--   Class names in PascalCase
+-   Class names in `PascalCase`
 -   Public section up top / private at bottom
 -   Lifecycle methods first (see rules above)
 -   Private Member Ordering
     -   Friendships
     -   Private Constructors
     -   Private Methods
-    -   Private Variables
+    -   Private Variables (leading underscore and `lowerCamelCase`)
 
 Example:
 

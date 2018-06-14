@@ -26,6 +26,7 @@ find_package(
 add_library(boost INTERFACE IMPORTED)
 set_property(TARGET boost PROPERTY
         INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
+add_definitions(-DBOOST_ALL_DYN_LINK)
 # </Boost>
 
 # <Misc 3rd Party Integrations>
