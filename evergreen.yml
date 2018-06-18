@@ -1,1 +1,146 @@
-# empty
+#                        🧞    Genny   🧞‍♀️
+#
+# This file defines how this project is built by evergreen at
+#
+#   https://evergreen.mongodb.com/waterfall/genny
+#
+# 1. Indent using 2 spaces. Structures start on indents (e.g. dashes aren't
+#    indented). Don't quote unnecessarily.
+#
+# 2.  Use `f_` prefix for function names and `t_` prefix for task names.
+#
+#     This allows
+#
+#     1.  grep for all usage of a function/task without colliding with
+#         inline shell etc.
+#     2.  grep for definition of a function `FOO` by grepping for `f_FOO:`
+#         (with a colon)
+#
+# 3.  Put comments in yaml not in inline shell.
+#
+# 4.  Keep yaml anchors/aliases to a minimum and always prefix with `a_`
+#     for similar grep-ability. Favor functions and tasks with
+#     dependencies.
+#
+# 5.  Always use functions for all task-bodies and pre/post-bodies rather
+#     than inlines. This keeps the overall logic separate from the
+#     implementation.
+#
+# 6.  Maintain one blank line between each unit (each function, task,
+#     variant etc). Two lines between each section.
+#
+# 7.  Don't change the order of the sections. Goal is to start with "entry
+#     points" (variants) and then define children in breadth-first order.
+#
+# 8.  Functions that are non-obvious must have a comment with the existing
+#     comment style.
+#
+# 9.  Any function that requires parameters or `${}`-style expansions must
+#     document those parameters appropriately such that callers don't need
+#     to read the function definition to figure out what they mean.
+#
+#                                                                       🧞‍♀️
+
+
+##                ⚡️ Variants ⚡️
+
+buildvariants:
+
+- name: archlinux
+  display_name: Arch Linux
+  modules: ~
+  run_on:
+  - archlinux-test
+  expansions:
+    path: ""
+  tasks:
+  - name: t_test
+
+- name: macos-1012
+  display_name: OS X Sierra
+  modules: ~
+  run_on:
+  - macos-1012
+  expansions:
+    path: "/Applications/CMake.app/Contents/bin"
+  tasks:
+  - name: t_test
+
+
+##                ⚡️ Tasks ⚡️
+
+tasks:
+
+- name: t_test
+  commands:
+    - func: f_fetch_source
+    - func: f_compile
+    - func: f_test
+
+
+##                ⚡️ Pre/Post ⚡️
+
+pre:
+- func: f_cleanup
+
+post:
+- func: f_report_results
+
+
+##                ⚡️ Functions ⚡️
+
+functions:
+
+  ##
+  # Remove any remnants of past builds.
+  ##
+  f_cleanup:
+  - command: shell.exec
+    params:
+      # the || true prevents a failure exit code for when `src` doesn't exist
+      script: |
+        rm -rf src || true
+
+  f_fetch_source:
+  - command: git.get_project
+    params:
+      directory: src
+
+  ##
+  # Compile the project in src/build.
+  #
+  # Expansions:
+  #  path: prepended to $PATH
+  ###
+  f_compile:
+  - command: shell.exec
+    params:
+      script: |
+        export PATH="${path}:$PATH"
+        cd src/build
+        cmake ..
+        make
+
+  ##
+  # Runs tests via `make test`.
+  # Requires f_compile to have been run first.
+  #
+  # Expansions:
+  #  path: prepended to $PATH
+  ##
+  f_test:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      script: |
+        export PATH="${path}:$PATH"
+        cd src/build
+        make test
+
+  ##
+  # Reports test results to evergreen API.
+  ##
+  f_report_results:
+  - command: attach.xunit_results
+    params:
+      file: ./src/build/src/*/*.junit.xml
