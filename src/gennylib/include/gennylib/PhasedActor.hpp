@@ -54,10 +54,9 @@ private:
      * @param currentPhaseNumber the current phase number
      */
     virtual void doPhase(int currentPhaseNumber) = 0;
-
 };
 
 
-}  // genny
+}  // namespace genny
 
 #endif  // HEADER_A446E094_43EC_4401_884D_2044AA041A00_INCLUDED

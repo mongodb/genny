@@ -22,6 +22,6 @@ private:
     metrics::Counter _operations;
 };
 
-}  // genny::actor
+}  // namespace genny::actor
 
 #endif  // HEADER_FF3E897B_C747_468B_AAAC_EA6421DB0902_INCLUDED

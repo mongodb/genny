@@ -20,19 +20,19 @@ class Reporter;
 /*
  * Could add a template policy class on Registry to let the following types be templatized.
  */
-using clock  = std::chrono::steady_clock;
-using count  = long long;
+using clock = std::chrono::steady_clock;
+using count = long long;
 using gauged = double;
 
 static_assert(clock::is_steady, "clock must be steady");
 
 // Convenience (wouldn't want to be configurable in the future)
 
-using period           = clock::duration;
-using time_point       = std::chrono::time_point<clock>;
+using period = clock::duration;
+using time_point = std::chrono::time_point<clock>;
 using duration_at_time = std::pair<time_point, period>;
-using count_at_time    = std::pair<time_point, count>;
-using gauged_at_time   = std::pair<time_point, gauged>;
+using count_at_time = std::pair<time_point, count>;
+using gauged_at_time = std::pair<time_point, gauged>;
 
 
 // The V1 namespace is here for two reasons:
@@ -49,7 +49,6 @@ private:
     constexpr Permission() = default;
     template <typename T>
     friend class Reporter;
-
 };
 
 static_assert(std::is_empty<Permission>::value, "empty");
@@ -79,7 +78,7 @@ public:
         _vals.emplace_back(metrics::clock::now(), std::forward<Args>(args)...);
     }
 
-// passkey:
+    // passkey:
     /**
      * Internal method to expose data-points for reporting, etc.
      * @return raw data
@@ -97,7 +96,6 @@ public:
 
 private:
     std::vector<std::pair<time_point, T>> _vals;
-
 };
 
 
@@ -108,12 +106,12 @@ private:
 class CounterImpl : private boost::noncopyable {
 
 public:
-    void reportValue(const count &delta) {
+    void reportValue(const count& delta) {
         auto nval = (this->_count += delta);
         _timeSeries.add(nval);
     }
 
-// passkey:
+    // passkey:
     const TimeSeries<count>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
@@ -121,7 +119,6 @@ public:
 private:
     TimeSeries<count> _timeSeries;
     count _count{};
-
 };
 
 
@@ -132,18 +129,17 @@ private:
 class GaugeImpl : private boost::noncopyable {
 
 public:
-    void set(const gauged &count) {
+    void set(const gauged& count) {
         _timeSeries.add(count);
     }
 
-// passkey:
+    // passkey:
     const TimeSeries<count>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
     TimeSeries<count> _timeSeries;
-
 };
 
 
@@ -158,17 +154,16 @@ public:
         _timeSeries.add(metrics::clock::now() - started);
     }
 
-// passkey:
+    // passkey:
     const TimeSeries<period>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
     TimeSeries<period> _timeSeries;
-
 };
 
-}  // V1
+}  // namespace V1
 
 
 /**
@@ -191,8 +186,7 @@ private:
 class Counter {
 
 public:
-    explicit Counter(V1::CounterImpl& counter)
-        : _counter{std::addressof(counter)} {}
+    explicit Counter(V1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
 
     void incr(const count& val = 1) {
         _counter->reportValue(val);
@@ -203,7 +197,6 @@ public:
 
 private:
     V1::CounterImpl* const _counter;
-
 };
 
 
@@ -225,8 +218,7 @@ private:
 class Gauge {
 
 public:
-    explicit constexpr Gauge(V1::GaugeImpl& gauge)
-        : _gauge{std::addressof(gauge)} {}
+    explicit constexpr Gauge(V1::GaugeImpl& gauge) : _gauge{std::addressof(gauge)} {}
 
     void set(const gauged& value) {
         _gauge->set(value);
@@ -234,7 +226,6 @@ public:
 
 private:
     V1::GaugeImpl* const _gauge;
-
 };
 
 
@@ -262,8 +253,7 @@ class RaiiStopwatch : private boost::noncopyable {
 
 public:
     explicit RaiiStopwatch(V1::TimerImpl& timer)
-        : _timer{std::addressof(timer)},
-          _started{metrics::clock::now()} {}
+        : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
 
     RaiiStopwatch(RaiiStopwatch&& other) noexcept : _started{other._started} {
         this->_timer = other._timer;
@@ -288,7 +278,6 @@ public:
 private:
     V1::TimerImpl* _timer;
     const time_point _started;
-
 };
 
 
@@ -320,8 +309,7 @@ class Stopwatch {
 
 public:
     explicit Stopwatch(V1::TimerImpl& timer)
-            : _timer{std::addressof(timer)},
-              _started{metrics::clock::now()} {}
+        : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
 
     void report() {
         this->_timer->report(_started);
@@ -330,15 +318,13 @@ public:
 private:
     V1::TimerImpl* const _timer;
     const time_point _started;
-
 };
 
 
 class Timer {
 
 public:
-    explicit Timer(V1::TimerImpl& t)
-    : _timer{std::addressof(t)} {}
+    explicit Timer(V1::TimerImpl& t) : _timer{std::addressof(t)} {}
 
     [[nodiscard]] Stopwatch start() const {
         return Stopwatch{*_timer};
@@ -350,7 +336,6 @@ public:
 
 private:
     V1::TimerImpl* const _timer;
-
 };
 
 
@@ -369,7 +354,7 @@ public:
         return Gauge{this->_gauges[name]};
     }
 
-// passkey:
+    // passkey:
     const std::unordered_map<std::string, V1::CounterImpl>& getCounters(V1::Permission) const {
         return this->_counters;
     };
@@ -392,6 +377,6 @@ static_assert(std::is_move_constructible<Registry>::value, "move");
 static_assert(std::is_move_assignable<Registry>::value, "move");
 
 
-}  // genny::metrics
+}  // namespace genny::metrics
 
 #endif  // HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED

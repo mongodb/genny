@@ -7,6 +7,6 @@ namespace genny {
 
 std::string getVersion();
 
-}  // genny
+}  // namespace genny
 
 #endif  // HEADER_92D78FE6_A97C_4F86_A282_3A27352A24F6_INCLUDED

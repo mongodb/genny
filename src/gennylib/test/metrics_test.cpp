@@ -3,8 +3,8 @@
 #include <iomanip>
 #include <iostream>
 
-#include <gennylib/metrics.hpp>
 #include <gennylib/MetricsReporter.hpp>
+#include <gennylib/metrics.hpp>
 
 TEST_CASE("example metrics usage") {
     genny::metrics::Registry metrics;
@@ -12,14 +12,14 @@ TEST_CASE("example metrics usage") {
     // pretend this is an actor's implementation
 
     // actor constructor
-    auto queryTime  = metrics.timer("client.query");
-    auto phaseTime  = metrics.timer("actor.phase");
+    auto queryTime = metrics.timer("client.query");
+    auto phaseTime = metrics.timer("actor.phase");
     auto operations = metrics.counter("actor.operations");
-    auto failures   = metrics.counter("actor.failures");
-    auto sessions   = metrics.gauge("actor.sessions");
+    auto failures = metrics.counter("actor.failures");
+    auto sessions = metrics.gauge("actor.sessions");
 
     // in each phase, do something things
-    for(int phase=0; phase < 10; ++phase) {
+    for (int phase = 0; phase < 10; ++phase) {
         auto thisIter = phaseTime.raii();
 
         try {
@@ -32,7 +32,7 @@ TEST_CASE("example metrics usage") {
             }
 
             operations.incr();
-        } catch(...) {
+        } catch (...) {
             failures.incr();
         }
     }
@@ -171,7 +171,7 @@ TEST_CASE("metrics reporter") {
                 auto a2 = t.raii();
                 // moving doesn't count toward closing
                 auto a3 = std::move(a2);
-                auto a4 { std::move(a1) };
+                auto a4{std::move(a1)};
             }
             REQUIRE(reporter.getTimerPointsCount() == 9);
 
@@ -192,8 +192,8 @@ TEST_CASE("metrics tests") {
     auto g = reg.gauge("sessions");
     startReg.report();
 
-    for(int i=0; i<10; ++i) {
-        auto wholetest {w.raii() };
+    for (int i = 0; i < 10; ++i) {
+        auto wholetest{w.raii()};
         auto f = t.start();
 
         c.incr();
@@ -204,13 +204,11 @@ TEST_CASE("metrics tests") {
         f.report();
 
         {
-            auto x {t.raii() };  // automatically closed
+            auto x{t.raii()};  // automatically closed
             x.report();
             g.set(30);
         }
-        {
-            auto x {t.raii()};
-        }
+        { auto x{t.raii()}; }
         g.set(100);
     }
 

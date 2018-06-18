@@ -8,16 +8,16 @@
 
 namespace {
 
-std::ostream &operator<<(std::ostream &out, const genny::metrics::period &p) {
+std::ostream& operator<<(std::ostream& out, const genny::metrics::period& p) {
     out << p.count();
     return out;
 }
 
-template<typename X>
-void doReport(std::ostream &out, X &counters) {
-    for (auto &&c : counters) {
-        for (auto &&v : c.second.getTimeSeries(genny::metrics::V1::Permission{}).getVals(
-                genny::metrics::V1::Permission{})) {
+template <typename X>
+void doReport(std::ostream& out, X& counters) {
+    for (auto&& c : counters) {
+        for (auto&& v : c.second.getTimeSeries(genny::metrics::V1::Permission{})
+                            .getVals(genny::metrics::V1::Permission{})) {
             out << v.first.time_since_epoch().count();
             out << ",";
             out << c.first;
@@ -29,11 +29,12 @@ void doReport(std::ostream &out, X &counters) {
 }
 
 
-template<class X>
-long dataPointsCount(X &x) {
-    auto reduction = [](auto &a, const auto &b) {
-        return a + b.second.getTimeSeries(
-            genny::metrics::V1::Permission{}).getDataPointCount(genny::metrics::V1::Permission{});
+template <class X>
+long dataPointsCount(X& x) {
+    auto reduction = [](auto& a, const auto& b) {
+        return a +
+            b.second.getTimeSeries(genny::metrics::V1::Permission{})
+                .getDataPointCount(genny::metrics::V1::Permission{});
     };
     return std::reduce(x.begin(), x.end(), 0L, reduction);
 }
@@ -52,12 +53,11 @@ namespace genny::metrics {
 class Reporter {
 
 public:
-    constexpr explicit Reporter(Registry &registry)
-    : _registry{std::addressof(registry)} {}
+    constexpr explicit Reporter(Registry& registry) : _registry{std::addressof(registry)} {}
 
     /** @return how many distinct gauges were registered */
     auto getGaugeCount() {
-        auto &x = _registry->getGauges(V1::Permission{});
+        auto& x = _registry->getGauges(V1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
@@ -68,7 +68,7 @@ public:
 
     /** @return how many distinct timers were registered */
     auto getTimerCount() {
-        auto &x = _registry->getTimers(V1::Permission{});
+        auto& x = _registry->getTimers(V1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
@@ -79,7 +79,7 @@ public:
 
     /** @return how many counters were registered */
     auto getCounterCount() {
-        auto &x = _registry->getCounters(V1::Permission{});
+        auto& x = _registry->getCounters(V1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
@@ -92,7 +92,7 @@ public:
      * @param out print a human-readable listing of all
      *            data-points to this ostream.
      */
-    void report(std::ostream &out) {
+    void report(std::ostream& out) {
         out << "counters" << std::endl;
         doReport(out, _registry->getCounters(V1::Permission{}));
         out << std::endl;
@@ -107,10 +107,9 @@ public:
     }
 
 private:
-    Registry *const _registry;
-
+    Registry* const _registry;
 };
 
-}  // genny::metrics
+}  // namespace genny::metrics
 
 #endif  // HEADER_1EB08DF5_3853_4277_8B3D_4542552B8154_INCLUDED

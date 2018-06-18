@@ -8,14 +8,14 @@ using namespace genny;
 namespace {
 
 std::thread start(Orchestrator& o, int phase) {
-    return std::thread{[&o,phase](){
+    return std::thread{[&o, phase]() {
         o.awaitPhaseStart();
         REQUIRE(o.currentPhaseNumber() == phase);
     }};
 }
 
 std::thread end(Orchestrator& o, int phase) {
-    return std::thread{[&o,phase](){
+    return std::thread{[&o, phase]() {
         REQUIRE(o.currentPhaseNumber() == phase);
         o.awaitPhaseEnd();
     }};

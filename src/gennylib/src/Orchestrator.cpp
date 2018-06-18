@@ -4,11 +4,7 @@ namespace genny {
 
 
 Orchestrator::Orchestrator(unsigned int actors)
-: _actors{actors},
-  _phase{0},
-  _running{0},
-  _errors{false}
-  {}
+    : _actors{actors}, _phase{0}, _running{0}, _errors{false} {}
 
 Orchestrator::~Orchestrator() = default;
 
@@ -46,4 +42,4 @@ void Orchestrator::abort() {
     this->_errors = true;
 }
 
-}
+}  // namespace genny

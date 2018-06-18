@@ -1,9 +1,9 @@
 #include <thread>
 #include <vector>
 
-#include <gennylib/actors/HelloWorld.hpp>
-#include <gennylib/PhasedActor.hpp>
 #include <gennylib/MetricsReporter.hpp>
+#include <gennylib/PhasedActor.hpp>
+#include <gennylib/actors/HelloWorld.hpp>
 
 #include "DefaultDriver.hpp"
 
