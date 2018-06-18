@@ -1,0 +1,10 @@
+#ifndef HEADER_92D78FE6_A97C_4F86_A282_3A27352A24F6_INCLUDED
+#define HEADER_92D78FE6_A97C_4F86_A282_3A27352A24F6_INCLUDED
+
+#include <string>
+
+namespace genny {
+    std::string getVersion();
+}  // genny
+
+#endif  // HEADER_92D78FE6_A97C_4F86_A282_3A27352A24F6_INCLUDED

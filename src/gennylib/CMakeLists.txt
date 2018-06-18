@@ -1,0 +1,64 @@
+# NB: this version number is duplicated in
+# src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
+project(gennylib VERSION 0.0.1 LANGUAGES CXX)
+
+add_library(gennylib SHARED
+    src/version.cpp
+)
+
+# Define headers for this library. PUBLIC headers are used for
+# compiling the library, and will be added to consumers' build
+# paths.
+target_include_directories(gennylib
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        ${Boost_INCLUDE_DIR}
+    PRIVATE
+        src
+)
+
+
+# Depend on a library that we defined in the top-level file
+target_link_libraries(gennylib
+    PUBLIC ${Boost_LIBRARIES}
+)
+
+# 'make install' to the correct locations (provided by GNUInstallDirs).
+install(TARGETS  gennylib EXPORT GennyLibraryConfig
+        ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+# Below generates a cmake module so if you make install from this
+# project you can find_package(GennyLib) in another cmake project.
+#
+# Please don't build any projects that link against gennylib outside of
+# this repository please. Not yet. We need to think of a good ABI.
+# We're only exposing external cmake bindings because it encourages
+# best-practices and helps keep the codebase honest about what it
+# exports and how it's used.
+install(EXPORT GennyLibraryConfig DESTINATION share/GennyLibrary/cmake)
+
+# This makes the project importable from the build directory
+export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
+
+add_executable(test_gennylib
+    test/version_test.cpp
+    ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
+)
+
+target_include_directories(test_gennylib
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        src
+        ${THIRD_PARTY_SOURCE_DIR}/catch2/include
+)
+target_link_libraries(test_gennylib
+    PUBLIC ${Boost_LIBRARIES} gennylib
+)
+
+add_test(test_gennylib test_gennylib)

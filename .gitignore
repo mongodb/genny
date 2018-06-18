@@ -1,2 +1,7 @@
 *.d
 mwg
+
+# clion
+cmake-build-debug
+
+/build
