@@ -76,4 +76,12 @@ target_link_libraries(test_gennylib
     PUBLIC ${Boost_LIBRARIES} gennylib
 )
 
-add_test(test_gennylib test_gennylib)
+add_test(
+    NAME    test_gennylib
+    COMMAND test_gennylib
+        -r junit
+        -d yes
+        --rng-seed 12345
+        --success
+        --out test_gennylib.junit.xml
+)
