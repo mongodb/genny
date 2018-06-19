@@ -2,7 +2,6 @@
 #define HEADER_1EB08DF5_3853_4277_8B3D_4542552B8154_INCLUDED
 
 #include <iostream>
-#include <numeric>
 
 #include <gennylib/metrics.hpp>
 
@@ -31,12 +30,12 @@ void doReport(std::ostream& out, X& counters) {
 
 template <class X>
 long dataPointsCount(X& x) {
-    auto reduction = [](auto& a, const auto& b) {
-        return a +
-            b.second.getTimeSeries(genny::metrics::V1::Permission{})
-                .getDataPointCount(genny::metrics::V1::Permission{});
-    };
-    return std::reduce(x.begin(), x.end(), 0L, reduction);
+    auto out = 0L;
+    for(auto& v : x) {
+        out += v.second.getTimeSeries(genny::metrics::V1::Permission{})
+            .getDataPointCount(genny::metrics::V1::Permission{});
+    }
+    return out;
 }
 
 

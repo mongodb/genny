@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <thread>
 #include <vector>
 
