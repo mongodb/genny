@@ -12,28 +12,33 @@ std::ostream& operator<<(std::ostream& out, const genny::metrics::period& p) {
     return out;
 }
 
+/**
+ * Prints a map<string,X> where X is a CounterImpl, GaugeImpl, etc.
+ * @tparam X is a map<string,V> where V has getTimeSeries() that exposes a metrics::TimeSeries
+ */
 template <typename X>
-void doReport(std::ostream& out, X& counters) {
-    for (auto&& c : counters) {
-        for (auto&& v : c.second.getTimeSeries(genny::metrics::V1::Permission{})
-                            .getVals(genny::metrics::V1::Permission{})) {
-            out << v.first.time_since_epoch().count();
-            out << ",";
-            out << c.first;
-            out << ",";
-            out << v.second;
-            out << std::endl;
+void doReport(std::ostream& out, X& haveTimeSeries) {
+    auto perm = genny::metrics::V1::Permission{};
+    for (auto&& c: haveTimeSeries) {
+        for (auto&& v : c.second.getTimeSeries(perm).getVals(perm)) {
+            out << v.first.time_since_epoch().count()
+                << "," << c.first << "," << v.second
+                << std::endl;
         }
     }
 }
 
 
+/**
+ * @return the number of data-points held by a map with values CounterImpl, GaugeImpl, etc.
+ */
 template <class X>
 long dataPointsCount(X& x) {
+    auto perm = genny::metrics::V1::Permission{};
+
     auto out = 0L;
     for(auto& v : x) {
-        out += v.second.getTimeSeries(genny::metrics::V1::Permission{})
-            .getDataPointCount(genny::metrics::V1::Permission{});
+        out += v.second.getTimeSeries(perm).getDataPointCount(perm);
     }
     return out;
 }
