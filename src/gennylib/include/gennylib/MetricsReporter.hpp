@@ -53,6 +53,10 @@ namespace genny::metrics {
  * A Reporter is the only object in the system that
  * has read access to metrics data-points. It is not
  * intended to be used by actors, only by drivers.
+ *
+ * The Reporter is given read-access to metrics data
+ * for the purposes of reporting data.
+ * This class is not ABI-safe.
  */
 class Reporter {
 

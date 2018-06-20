@@ -21,8 +21,8 @@ class Reporter;
  * Could add a template policy class on Registry to let the following types be templatized.
  */
 using clock = std::chrono::steady_clock;
-using count = long long;
-using gauged = double;
+using count_type = long long;
+using gauged_type = double;
 
 static_assert(clock::is_steady, "clock must be steady");
 
@@ -31,8 +31,8 @@ static_assert(clock::is_steady, "clock must be steady");
 using period = clock::duration;
 using time_point = std::chrono::time_point<clock>;
 using duration_at_time = std::pair<time_point, period>;
-using count_at_time = std::pair<time_point, count>;
-using gauged_at_time = std::pair<time_point, gauged>;
+using count_at_time = std::pair<time_point, count_type>;
+using gauged_at_time = std::pair<time_point, gauged_type>;
 
 
 // The V1 namespace is here for two reasons:
@@ -55,7 +55,8 @@ static_assert(std::is_empty<Permission>::value, "empty");
 
 
 /**
- * Not intended to be used directly. Data storage for TSD values.
+ * Not intended to be used directly.
+ * This is used by the *Impl classes as storage for TSD values.
  *
  * @tparam T The value to record at a particular time-point.
  */
@@ -106,19 +107,19 @@ private:
 class CounterImpl : private boost::noncopyable {
 
 public:
-    void reportValue(const count& delta) {
+    void reportValue(const count_type& delta) {
         auto nval = (this->_count += delta);
         _timeSeries.add(nval);
     }
 
     // passkey:
-    const TimeSeries<count>& getTimeSeries(Permission) const {
+    const TimeSeries<count_type>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
-    TimeSeries<count> _timeSeries;
-    count _count{};
+    TimeSeries<count_type> _timeSeries;
+    count_type _count{};
 };
 
 
@@ -129,17 +130,17 @@ private:
 class GaugeImpl : private boost::noncopyable {
 
 public:
-    void set(const gauged& count) {
+    void set(const gauged_type& count) {
         _timeSeries.add(count);
     }
 
     // passkey:
-    const TimeSeries<count>& getTimeSeries(Permission) const {
+    const TimeSeries<count_type>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
-    TimeSeries<count> _timeSeries;
+    TimeSeries<count_type> _timeSeries;
 };
 
 
@@ -188,10 +189,10 @@ class Counter {
 public:
     explicit Counter(V1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
 
-    void incr(const count& val = 1) {
+    void incr(const count_type& val = 1) {
         _counter->reportValue(val);
     }
-    void decr(const count& val = -1) {
+    void decr(const count_type& val = -1) {
         _counter->reportValue(val);
     }
 
@@ -220,7 +221,7 @@ class Gauge {
 public:
     explicit constexpr Gauge(V1::GaugeImpl& gauge) : _gauge{std::addressof(gauge)} {}
 
-    void set(const gauged& value) {
+    void set(const gauged_type& value) {
         _gauge->set(value);
     }
 
@@ -339,6 +340,30 @@ private:
 };
 
 
+/**
+ * Supports recording a number of types of Time-Series Values:
+ *
+ *   Counters:   a count of things that can be incremented or decremented
+ *   Gauges:     a "current" number of things; a value that can be known and observed
+ *   Timers:     recordings of how long certain operations took
+ *
+ * All data-points are recorded along with the clock::now() value of when
+ * the points are recorded.
+ *
+ * It is expensive to create a distinct metric name but cheap to record new values.
+ * The first time registry.counter("foo") is called for a distinct counter
+ * name "foo", a large block of memory is reserved to store its data-points. But
+ * all calls to registry.counter("foo") return pimpl-backed wrappers that are cheap
+ * to construct and are safe to pass-by-value. Same applies for other metric types.
+ *
+ * As of now, none of the metrics classes are thread-safe, however they are all
+ * thread-compatible. Two threads may not record values to the same metrics names
+ * at the same time.
+ *
+ * metrics::Reporter instances have read-access to the TSD data, but that should
+ * only be used by workload-drivers to produce a report of the metrics at specific-points
+ * in their workload lifecycle.
+ */
 class Registry {
 
 public:
