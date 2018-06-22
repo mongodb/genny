@@ -6,9 +6,6 @@ void genny::actor::HelloWorld::doPhase(int currentPhase) {
     _operations.incr();
 }
 
-
-genny::actor::HelloWorld::~HelloWorld() = default;
-
 genny::actor::HelloWorld::HelloWorld(genny::Orchestrator& orchestrator,
                                      genny::metrics::Registry& metrics,
                                      const std::string& name)

@@ -13,12 +13,13 @@ public:
     HelloWorld(Orchestrator& orchestrator,
                metrics::Registry& metrics,
                const std::string& name = "hello");
-    ~HelloWorld() override;
+
+    ~HelloWorld() override= default;
 
 private:
     void doPhase(int phase) override;
 
-    metrics::Timer _cout;
+    metrics::Timer _cout; // bad name
     metrics::Counter _operations;
 };
 

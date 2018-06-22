@@ -12,22 +12,23 @@ int genny::driver::DefaultDriver::run(int, char**) const {
     const int nActors = 2;
 
     genny::metrics::Registry metrics;
-    auto orchestrator = std::make_unique<Orchestrator>(nActors);
+    //auto orchestrator = std::make_unique<Orchestrator>(nActors);
+    Orchestrator orchestrator{ nActors };
 
     std::vector<std::unique_ptr<genny::PhasedActor>> actors;
-    actors.push_back(std::make_unique<genny::actor::HelloWorld>(*orchestrator, metrics, "one"));
-    actors.push_back(std::make_unique<genny::actor::HelloWorld>(*orchestrator, metrics, "two"));
+    actors.push_back(std::make_unique<genny::actor::HelloWorld>(orchestrator, metrics, "one"));
+    actors.push_back(std::make_unique<genny::actor::HelloWorld>(orchestrator, metrics, "two"));
 
     assert(actors.size() == nActors);
 
     std::vector<std::thread> threads;
-    for (auto&& actor : actors)
-        threads.emplace_back(&genny::PhasedActor::run, &*actor);
+    std::transform( cbegin( actors ), cend( actors ), std::back_inserter( threads ),
+    []( const auto &actor ) { return std::thread{ &genny::PhasedActor::run, actor.get() }; } );
 
     for (auto& thread : threads)
         thread.join();
 
-    auto reporter = genny::metrics::Reporter{metrics};
+    const auto reporter = genny::metrics::Reporter{metrics};
     reporter.report(std::cout);
 
     return 0;
