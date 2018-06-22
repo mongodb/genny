@@ -28,13 +28,16 @@ target_include_directories(gennylib
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
         ${Boost_INCLUDE_DIR}
+        ${YAML_CPP_INCLUDE_DIR}
     PRIVATE
         src
 )
 
-# Depend on a library that we defined in the top-level file
+# Depend on libraries that we defined in the top-level CMakeLists.txt file
 target_link_libraries(gennylib
-    PUBLIC ${Boost_LIBRARIES}
+    PUBLIC
+        ${Boost_LIBRARIES}
+        ${YAML_CPP_LIBRARIES}
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
