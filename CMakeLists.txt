@@ -29,6 +29,11 @@ set_property(TARGET boost PROPERTY
 add_definitions(-DBOOST_ALL_DYN_LINK)
 # </Boost>
 
+# <Yaml CPP>
+set(YAMLCPP_STATIC_LIBRARY FALSE)
+find_package(yaml-cpp REQUIRED)
+# </Yaml CPP>
+
 # <Misc 3rd Party Integrations>
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 # </Misc 3rd Party Integrations>
