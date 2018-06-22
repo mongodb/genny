@@ -19,7 +19,9 @@ public:
      *  The number of actors that will participate in phase lifecycle methods
      *  such as {@code awaitPhaseStart} and {@code awaitPhaseEnd}.
      */
-    explicit Orchestrator(unsigned int actors);
+    explicit Orchestrator(unsigned long actors);
+
+    void setActors(unsigned long actors);
 
     ~Orchestrator();
 
@@ -48,7 +50,7 @@ public:
     void abort();
 
 private:
-    const unsigned int _actors;
+    unsigned long _actors;
     unsigned int _phase;
     unsigned int _running;
     bool _errors;

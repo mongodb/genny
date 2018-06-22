@@ -3,7 +3,7 @@
 namespace genny {
 
 
-Orchestrator::Orchestrator(unsigned int actors)
+Orchestrator::Orchestrator(unsigned long actors)
     : _actors{actors}, _phase{0}, _running{0}, _errors{false} {}
 
 Orchestrator::~Orchestrator() = default;
@@ -40,6 +40,11 @@ void Orchestrator::awaitPhaseEnd() {
 void Orchestrator::abort() {
     std::unique_lock<std::mutex> lck{_lock};
     this->_errors = true;
+}
+
+void Orchestrator::setActors(unsigned long actors) {
+    std::unique_lock<std::mutex> lck{_lock};
+    this->_actors = actors;
 }
 
 }  // namespace genny

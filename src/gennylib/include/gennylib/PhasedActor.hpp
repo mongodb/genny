@@ -20,8 +20,8 @@ public:
      * @param registry metrics registry with which to register metrics trackers.
      * @param name optional actor name. Useful for debugging scenarios.
      */
-    explicit PhasedActor(Orchestrator& orchestrator,
-                         metrics::Registry& registry,
+    explicit PhasedActor(Orchestrator* orchestrator,
+                         metrics::Registry* registry,
                          std::string name = "anonymous");
 
     virtual ~PhasedActor() = default;

@@ -7,6 +7,11 @@ add_library(gennylib SHARED
     include/gennylib/version.hpp
                  src/version.cpp
 
+    include/gennylib/ActorConfig.hpp
+                 src/ActorConfig.cpp
+
+    include/gennylib/ActorFactory.hpp
+
     include/gennylib/metrics.hpp
     include/gennylib/MetricsReporter.hpp
 

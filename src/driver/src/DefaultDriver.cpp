@@ -4,21 +4,36 @@
 
 #include <gennylib/MetricsReporter.hpp>
 #include <gennylib/PhasedActor.hpp>
+#include <gennylib/ActorConfig.hpp>
+#include <gennylib/ActorFactory.hpp>
 #include <gennylib/actors/HelloWorld.hpp>
 
 #include "DefaultDriver.hpp"
 
 int genny::driver::DefaultDriver::run(int, char**) const {
-    const int nActors = 2;
 
-    genny::metrics::Registry metrics;
-    auto orchestrator = std::make_unique<Orchestrator>(nActors);
+    auto metrics = genny::metrics::Registry {};
+    auto orchestrator = Orchestrator{0};
 
-    std::vector<std::unique_ptr<genny::PhasedActor>> actors;
-    actors.push_back(std::make_unique<genny::actor::HelloWorld>(*orchestrator, metrics, "one"));
-    actors.push_back(std::make_unique<genny::actor::HelloWorld>(*orchestrator, metrics, "two"));
+    const auto yaml = YAML::Load("SchemaVersion: 2018-06-22");
 
-    assert(actors.size() == nActors);
+    auto config = genny::ActorConfig{yaml, metrics, orchestrator};
+
+    genny::ActorFactory<genny::PhasedActor> factory;
+
+    // Can p be loaded from dlopen?
+    auto p = [](ActorConfig* actorConfig) {
+        std::vector<std::unique_ptr<genny::PhasedActor>> out;
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig->orchestrator(), actorConfig->registry(),
+            actorConfig));
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig->orchestrator(), actorConfig->registry(), "two"));
+        return out;
+    };
+    factory.hook(p);
+
+    const auto actors = factory.actors(&config);
+    const unsigned long nActors = actors.size();
+    orchestrator.setActors(nActors);
 
     std::vector<std::thread> threads;
     for (auto&& actor : actors)

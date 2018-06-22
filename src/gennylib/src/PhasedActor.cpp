@@ -21,9 +21,9 @@ void genny::PhasedActor::run() {
     }
 }
 
-genny::PhasedActor::PhasedActor(genny::Orchestrator& orchestrator,
-                                genny::metrics::Registry& registry,
+genny::PhasedActor::PhasedActor(genny::Orchestrator* orchestrator,
+                                genny::metrics::Registry* registry,
                                 std::string name)
-    : _orchestrator{std::addressof(orchestrator)},
-      _metrics{std::addressof(registry)},
+    : _orchestrator{orchestrator},
+      _metrics{registry},
       _name{std::move(name)} {}
