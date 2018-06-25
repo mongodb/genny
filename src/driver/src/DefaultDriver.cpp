@@ -12,8 +12,7 @@ int genny::driver::DefaultDriver::run(int, char**) const {
     const int nActors = 2;
 
     genny::metrics::Registry metrics;
-    //auto orchestrator = std::make_unique<Orchestrator>(nActors);
-    Orchestrator orchestrator{ nActors };
+    auto orchestrator = Orchestrator{nActors};
 
     std::vector<std::unique_ptr<genny::PhasedActor>> actors;
     actors.push_back(std::make_unique<genny::actor::HelloWorld>(orchestrator, metrics, "one"));
@@ -22,8 +21,10 @@ int genny::driver::DefaultDriver::run(int, char**) const {
     assert(actors.size() == nActors);
 
     std::vector<std::thread> threads;
-    std::transform( cbegin( actors ), cend( actors ), std::back_inserter( threads ),
-    []( const auto &actor ) { return std::thread{ &genny::PhasedActor::run, actor.get() }; } );
+    std::transform(
+        cbegin(actors), cend(actors), std::back_inserter(threads), [](const auto& actor) {
+            return std::thread{&genny::PhasedActor::run, actor.get()};
+        });
 
     for (auto& thread : threads)
         thread.join();

@@ -19,7 +19,7 @@ public:
 private:
     void doPhase(int phase) override;
 
-    metrics::Timer _cout; // bad name
+    metrics::Timer _output_timer;
     metrics::Counter _operations;
 };
 
