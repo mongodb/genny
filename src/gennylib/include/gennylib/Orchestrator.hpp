@@ -15,12 +15,7 @@ namespace genny {
 class Orchestrator {
 
 public:
-    /**
-     * @param actors
-     *  The number of actors that will participate in phase lifecycle methods
-     *  such as {@code awaitPhaseStart} and {@code awaitPhaseEnd}.
-     */
-    explicit Orchestrator(unsigned int actors) : _actors(actors) {}
+    explicit Orchestrator() = default;
 
     ~Orchestrator() = default;
 

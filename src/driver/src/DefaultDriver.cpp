@@ -12,37 +12,40 @@
 
 #include "DefaultDriver.hpp"
 
+namespace {
+
+YAML::Node loadConfig(char *const *argv) {
+    const char* fileName = argv[1];
+    auto yaml = YAML::LoadFile(fileName);
+    return yaml;
+}
+
+std::unique_ptr<genny::actor::HelloWorld> helloWorldProducer(genny::WorkloadConfig* config) {
+    static int i = 0;
+    return std::make_unique<genny::actor::HelloWorld>(*config->orchestrator(), *config->registry(), std::to_string(++i));
+}
+
+}  // namespace
+
 int genny::driver::DefaultDriver::run(int argc, char**argv) const {
 
     auto metrics = genny::metrics::Registry{};
-    auto orchestrator = Orchestrator{1};
+    auto orchestrator = Orchestrator{};
     auto factory = genny::ActorFactory<PhasedActor>{};
+    auto yaml = loadConfig(argv);
 
-    auto producer = [&](const genny::WorkloadConfig* config) {
-        static int i = 0;
-        return std::make_unique<genny::actor::HelloWorld>(orchestrator, metrics, std::to_string(++i));
+    auto config = genny::WorkloadConfig{
+        yaml,
+        metrics,
+        orchestrator
     };
 
-    factory.addProducer("HelloWorld", producer);
+    // add producers
+    factory.addProducer("HelloWorld", &helloWorldProducer);
 
-    // test we can load yaml (just smoke-testing yaml for now, this will be real soon!)
-    const char* fileName = argv[1];
-    if (argc >= 3 && strncmp("--debug", argv[2], 100) != 0) {
-        fileName = argv[2];
-        auto yamlFile = std::ifstream {fileName, std::ios_base::binary};
-        std::cout << "YAML File" << fileName << ":" << std::endl << yamlFile.rdbuf();
-    }
+    const auto actors = factory.actors(&config);
 
-    auto yaml = YAML::LoadFile(fileName);
-
-    std::cout << std::endl << "Using Schema Version:" << std::endl
-              << yaml["SchemaVersion"].as<std::string>() << std::endl;
-
-    auto config = genny::WorkloadConfig{yaml, metrics, orchestrator};
-
-    std::vector<std::unique_ptr<genny::PhasedActor>> actors = factory.actors(&config);
-    orchestrator.setActorCount(actors.size());
-//    assert(actors.size() == nActors);
+    orchestrator.setActorCount(static_cast<unsigned int>(actors.size()));
 
     std::vector<std::thread> threads;
     std::transform(

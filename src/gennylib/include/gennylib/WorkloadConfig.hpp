@@ -15,6 +15,11 @@ public:
                          metrics::Registry& registry,
                          Orchestrator& orchestrator);
 
+    // no rvals
+    WorkloadConfig(YAML::Node&& node,
+                    metrics::Registry&& registry,
+                    Orchestrator&& orchestrator) = delete;
+
     Orchestrator* orchestrator();
     metrics::Registry* registry();
 
