@@ -35,29 +35,31 @@ private:
     clock::duration duration;
 
 public:
-    period()= default;
+    period() = default;
 
-    template< typename Arg0, typename ... Args >
-    period( Arg0 arg0, Args &&... args )
-            : duration( std::forward< Arg0 >( arg0 ), std::forward< Args >( args )... ) {}
-            
-    template< typename Arg,
-            typename = typename std::enable_if< std::is_convertible< Arg, clock::duration >::value, void >::type >
-    period( Arg && arg )
-            : duration( std::forward< Arg >( arg ) ) {}
+    // recursive case
+    template <typename Arg0, typename... Args>
+    period(Arg0 arg0, Args &&... args)
+            : duration(std::forward<Arg0>(arg0), std::forward<Args>(args)...) {}
 
-    template< typename Arg,
-            typename = typename std::enable_if< !std::is_convertible< Arg, clock::duration >::value, void >::type,
-            typename = void >
-    explicit
-    period( Arg && arg )
-            : duration( std::forward< Arg >( arg ) ) {}
+    // base-case for arg that is implicitly-convertible to clock::duration
+    template <typename Arg,
+            typename = typename std::enable_if<
+                    std::is_convertible<Arg, clock::duration>::value, void>::type>
+    period(Arg &&arg) : duration(std::forward<Arg>(arg)) {}
 
-    friend std::ostream &operator << ( std::ostream&os, const period &p )
-    {
+    // base-case for arg that isn't explicitly-convertible to clock::duration; marked explicit
+    template <typename Arg,
+            typename = typename std::enable_if<
+                    !std::is_convertible<Arg, clock::duration>::value, void>::type,
+            typename = void>
+    explicit period(Arg &&arg) : duration(std::forward<Arg>(arg)) {}
+
+    friend std::ostream &operator<<(std::ostream &os, const period &p) {
         return os << p.duration.count();
     }
 };
+
 using time_point = std::chrono::time_point<clock>;
 using duration_at_time = std::pair<time_point, period>;
 using count_at_time = std::pair<time_point, count_type>;
