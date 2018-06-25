@@ -10,15 +10,16 @@ namespace genny::actor {
 class HelloWorld : public genny::PhasedActor {
 
 public:
-    HelloWorld(Orchestrator* orchestrator,
-               metrics::Registry* metrics,
+    HelloWorld(Orchestrator& orchestrator,
+               metrics::Registry& metrics,
                const std::string& name = "hello");
-    ~HelloWorld() override;
+
+    ~HelloWorld() override = default;
 
 private:
     void doPhase(int phase) override;
 
-    metrics::Timer _cout;
+    metrics::Timer _output_timer;
     metrics::Counter _operations;
 };
 

@@ -5,48 +5,6 @@
 
 #include <gennylib/metrics.hpp>
 
-namespace {
-
-std::ostream& operator<<(std::ostream& out, const genny::metrics::period& p) {
-    out << p.count();
-    return out;
-}
-
-/**
- * Prints a map<string,X> where X is a CounterImpl, GaugeImpl, etc.
- * @tparam X is a map<string,V> where V has getTimeSeries() that exposes a metrics::TimeSeries
- */
-template <typename X>
-void doReport(std::ostream& out, X& haveTimeSeries) {
-    auto perm = genny::metrics::V1::Permission{};
-    for (auto&& c: haveTimeSeries) {
-        for (auto&& v : c.second.getTimeSeries(perm).getVals(perm)) {
-            out << v.first.time_since_epoch().count()
-                << "," << c.first << "," << v.second
-                << std::endl;
-        }
-    }
-}
-
-
-/**
- * @return the number of data-points held by a map with values CounterImpl, GaugeImpl, etc.
- */
-template <class X>
-long dataPointsCount(X& x) {
-    auto perm = genny::metrics::V1::Permission{};
-
-    auto out = 0L;
-    for(auto& v : x) {
-        out += v.second.getTimeSeries(perm).getDataPointCount(perm);
-    }
-    return out;
-}
-
-
-}  // namespace
-
-
 namespace genny::metrics {
 
 /**
@@ -61,61 +19,89 @@ namespace genny::metrics {
 class Reporter {
 
 public:
-    constexpr explicit Reporter(Registry& registry) : _registry{std::addressof(registry)} {}
+    constexpr explicit Reporter(const Registry& registry) : _registry{std::addressof(registry)} {}
 
     /** @return how many distinct gauges were registered */
-    auto getGaugeCount() {
-        auto& x = _registry->getGauges(V1::Permission{});
+    auto getGaugeCount(V1::Permission perm = {}) const {
+        auto& x = _registry->getGauges(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many gauge data-points were recorded */
-    long getGaugePointsCount() {
-        return dataPointsCount(_registry->getGauges(V1::Permission{}));
+    long getGaugePointsCount(V1::Permission perm = {}) const {
+        return dataPointsCount(_registry->getGauges(perm), perm);
     }
 
     /** @return how many distinct timers were registered */
-    auto getTimerCount() {
-        auto& x = _registry->getTimers(V1::Permission{});
+    auto getTimerCount(V1::Permission perm = {}) const {
+        auto& x = _registry->getTimers(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many timer data-points were recorded */
-    long getTimerPointsCount() {
-        return dataPointsCount(_registry->getTimers(V1::Permission{}));
+    long getTimerPointsCount(V1::Permission perm = {}) const {
+        return dataPointsCount(_registry->getTimers(perm), perm);
     }
 
     /** @return how many counters were registered */
-    auto getCounterCount() {
-        auto& x = _registry->getCounters(V1::Permission{});
+    auto getCounterCount(V1::Permission perm = {}) const {
+        auto& x = _registry->getCounters(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many counter data-points were recorded */
-    long getCounterPointsCount() {
-        return dataPointsCount(_registry->getCounters(V1::Permission{}));
+    long getCounterPointsCount(V1::Permission perm = {}) const {
+        return dataPointsCount(_registry->getCounters(perm), perm);
     }
 
     /**
      * @param out print a human-readable listing of all
      *            data-points to this ostream.
      */
-    void report(std::ostream& out) {
+    void report(std::ostream& out, V1::Permission perm = {}) const {
         out << "counters" << std::endl;
-        doReport(out, _registry->getCounters(V1::Permission{}));
+        doReport(out, _registry->getCounters(perm), perm);
         out << std::endl;
 
         out << "gauges" << std::endl;
-        doReport(out, _registry->getGauges(V1::Permission{}));
+        doReport(out, _registry->getGauges(perm), perm);
         out << std::endl;
 
         out << "timers" << std::endl;
-        doReport(out, _registry->getTimers(V1::Permission{}));
+        doReport(out, _registry->getTimers(perm), perm);
         out << std::endl;
     }
 
 private:
-    Registry* const _registry;
+    /**
+     * Prints a map<string,X> where X is a CounterImpl, GaugeImpl, etc.
+     * @tparam X is a map<string,V> where V has getTimeSeries() that exposes a metrics::TimeSeries
+     */
+    template <typename X>
+    static void doReport(std::ostream& out,
+                         const X& haveTimeSeries,
+                         genny::metrics::V1::Permission perm) {
+        for (const auto& c : haveTimeSeries) {
+            for (const auto& v : c.second.getTimeSeries(perm).getVals(perm)) {
+                out << v.first.time_since_epoch().count() << "," << c.first << "," << v.second
+                    << std::endl;
+            }
+        }
+    }
+
+
+    /**
+     * @return the number of data-points held by a map with values CounterImpl, GaugeImpl, etc.
+     */
+    template <class X>
+    static long dataPointsCount(const X& x, genny::metrics::V1::Permission perm) {
+        auto out = 0L;
+        for (const auto& v : x) {
+            out += v.second.getTimeSeries(perm).getDataPointCount(perm);
+        }
+        return out;
+    }
+    const Registry* _registry;
 };
 
 }  // namespace genny::metrics

@@ -19,11 +19,9 @@ public:
      *  The number of actors that will participate in phase lifecycle methods
      *  such as {@code awaitPhaseStart} and {@code awaitPhaseEnd}.
      */
-    explicit Orchestrator(unsigned long actors);
+    explicit Orchestrator(unsigned int actors) : _actors(actors) {}
 
-    void setActors(unsigned long actors);
-
-    ~Orchestrator();
+    ~Orchestrator() = default;
 
     /**
      * @return the current phase number
@@ -50,13 +48,15 @@ public:
     void abort();
 
 private:
-    unsigned long _actors;
-    unsigned int _phase;
-    unsigned int _running;
-    bool _errors;
-
+    mutable std::mutex _lock;
     std::condition_variable _cv;
-    std::mutex _lock;
+
+    const unsigned int _actors;
+    unsigned int _phase = 0;
+    unsigned int _running = 0;
+    bool _errors = false;
+    enum class State { PhaseEnded, PhaseStarted };
+    State state = State::PhaseEnded;
 };
 
 

@@ -7,11 +7,6 @@ add_library(gennylib SHARED
     include/gennylib/version.hpp
                  src/version.cpp
 
-    include/gennylib/ActorConfig.hpp
-                 src/ActorConfig.cpp
-
-    include/gennylib/ActorFactory.hpp
-
     include/gennylib/metrics.hpp
     include/gennylib/MetricsReporter.hpp
 
@@ -37,6 +32,7 @@ target_include_directories(gennylib
     PRIVATE
         src
 )
+
 
 # Depend on libraries that we defined in the top-level CMakeLists.txt file
 target_link_libraries(gennylib

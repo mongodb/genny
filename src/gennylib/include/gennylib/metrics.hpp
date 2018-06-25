@@ -2,6 +2,7 @@
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
 #include <chrono>
+#include <iostream>
 #include <unordered_map>
 #include <vector>
 
@@ -28,13 +29,42 @@ static_assert(clock::is_steady, "clock must be steady");
 
 // Convenience (wouldn't want to be configurable in the future)
 
-using period = clock::duration;
+class period {
+private:
+    clock::duration duration;
+
+public:
+    period() = default;
+
+    // recursive case
+    template <typename Arg0, typename... Args>
+    period(Arg0 arg0, Args&&... args)
+        : duration(std::forward<Arg0>(arg0), std::forward<Args>(args)...) {}
+
+    // base-case for arg that is implicitly-convertible to clock::duration
+    template <typename Arg,
+              typename = typename std::enable_if<std::is_convertible<Arg, clock::duration>::value,
+                                                 void>::type>
+    period(Arg&& arg) : duration(std::forward<Arg>(arg)) {}
+
+    // base-case for arg that isn't explicitly-convertible to clock::duration; marked explicit
+    template <typename Arg,
+              typename = typename std::enable_if<!std::is_convertible<Arg, clock::duration>::value,
+                                                 void>::type,
+              typename = void>
+    explicit period(Arg&& arg) : duration(std::forward<Arg>(arg)) {}
+
+    friend std::ostream& operator<<(std::ostream& os, const period& p) {
+        return os << p.duration.count();
+    }
+};
+
 using time_point = std::chrono::time_point<clock>;
 using duration_at_time = std::pair<time_point, period>;
 using count_at_time = std::pair<time_point, count_type>;
 using gauged_at_time = std::pair<time_point, gauged_type>;
 
-
+class Reporter;
 // The V1 namespace is here for two reasons:
 // 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes
 // 2) it prevents auto-completion of metrics::{X}Impl when you really want metrics::{X}
@@ -43,12 +73,16 @@ namespace V1 {
 /**
  * Ignore this. Used for passkey for some methods.
  */
-class Permission {
+class Evil {
+protected:
+    Evil() = default;
+};
+class Permission : private Evil {
 
 private:
     constexpr Permission() = default;
-    template <typename T>
-    friend class Reporter;
+    // template <typename T>
+    friend class genny::metrics::Reporter;
 };
 
 static_assert(std::is_empty<Permission>::value, "empty");
@@ -187,7 +221,7 @@ private:
 class Counter {
 
 public:
-    explicit Counter(V1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
+    explicit constexpr Counter(V1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
 
     void incr(const count_type& val = 1) {
         _counter->reportValue(val);
@@ -197,7 +231,7 @@ public:
     }
 
 private:
-    V1::CounterImpl* const _counter;
+    V1::CounterImpl* _counter;
 };
 
 
@@ -226,7 +260,7 @@ public:
     }
 
 private:
-    V1::GaugeImpl* const _gauge;
+    V1::GaugeImpl* _gauge;
 };
 
 
@@ -250,21 +284,18 @@ private:
  * but that does not prevent the timer from reporting on
  * its own in its dtor.
  */
-class RaiiStopwatch : private boost::noncopyable {
+class RaiiStopwatch {
 
 public:
     explicit RaiiStopwatch(V1::TimerImpl& timer)
         : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
-
+    RaiiStopwatch(const RaiiStopwatch& other) = delete;
     RaiiStopwatch(RaiiStopwatch&& other) noexcept : _started{other._started} {
         this->_timer = other._timer;
         other._timer = nullptr;
     }
-    RaiiStopwatch& operator=(RaiiStopwatch&& other) noexcept {
-        this->_timer = other._timer;
-        other._timer = nullptr;
-        return *this;
-    }
+
+    RaiiStopwatch& operator=(RaiiStopwatch other) noexcept = delete;
 
     ~RaiiStopwatch() {
         if (this->_timer != nullptr) {
@@ -273,6 +304,7 @@ public:
     }
 
     void report() {
+        assert(this->_timer);
         this->_timer->report(_started);
     }
 
@@ -325,18 +357,37 @@ private:
 class Timer {
 
 public:
-    explicit Timer(V1::TimerImpl& t) : _timer{std::addressof(t)} {}
+    explicit constexpr Timer(V1::TimerImpl& t) : _timer{std::addressof(t)} {}
 
+    /**
+     * @return a {@code Stopwatch} instance that must be manually reported via {@code .report()}.
+     *         When calling .report(), the amount of time elapsed from the calling of .start() to
+     *         to calling .report() is reported to the metrics back-end. Can call .report() multiple
+     *         times. Use .start() when you want to record successful outcomes of some specific code-path.
+     *         If you never call .report(), no metrics data will be recorded.
+     *
+     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names. They are
+     *         simply two APIs for reporting timing data.
+     */
     [[nodiscard]] Stopwatch start() const {
         return Stopwatch{*_timer};
     }
 
+    /**
+     * @return an {@code RaiiStopwatch} that will automatically report the time elapsed since it was
+     *         constructed in its dtor. Call .raii() at the start of your method or scope to record
+     *         how long that method or scope takes even in the case of exceptions or early-rueturns.
+     *         You can also manually call .report() multiple times, but it's unclear if this is useful.
+     *
+     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names. They are
+     *         simply two APIs for reporting timing data.
+     */
     [[nodiscard]] RaiiStopwatch raii() const {
         return RaiiStopwatch{*_timer};
     };
 
 private:
-    V1::TimerImpl* const _timer;
+    V1::TimerImpl* _timer;
 };
 
 
