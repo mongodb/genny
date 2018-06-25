@@ -8,17 +8,19 @@
 
 namespace genny {
 
-class ActorConfig {
+class WorkloadConfig {
 
 public:
-    explicit ActorConfig(const YAML::Node& node,
+    explicit WorkloadConfig(const YAML::Node& node,
                          metrics::Registry& registry,
                          Orchestrator& orchestrator);
 
-    const YAML::Node& operator->() const;
-
     Orchestrator* orchestrator();
     metrics::Registry* registry();
+
+    const YAML::Node operator[](const std::string& key) {
+        return this->_node->operator[](key);
+    }
 
 private:
     const YAML::Node* const _node;

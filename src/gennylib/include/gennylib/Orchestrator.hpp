@@ -48,11 +48,13 @@ public:
 
     void abort();
 
+    void setActorCount(unsigned int count);
+
 private:
     mutable std::mutex _lock;
     std::condition_variable _cv;
 
-    const unsigned int _actors;
+    unsigned int _actors;
     unsigned int _phase = 0;
     unsigned int _running = 0;
     bool _errors = false;

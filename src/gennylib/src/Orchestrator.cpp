@@ -42,4 +42,9 @@ void Orchestrator::abort() {
     this->_errors = true;
 }
 
+void Orchestrator::setActorCount(unsigned int count) {
+    std::unique_lock<std::mutex> lck{_lock};
+    this->_actors = count;
+}
+
 }  // namespace genny

@@ -1,2 +1,8 @@
 SchemaVersion: 2018-06-22
 
+Actors:
+- Name: HelloWorld
+  Count: 2000
+  Parameters:
+    foo: bar
+

@@ -1,27 +1,23 @@
-#include <gennylib/ActorConfig.hpp>
+#include <gennylib/WorkloadConfig.hpp>
 #include <gennylib/Orchestrator.hpp>
 
 namespace genny {
 
-
-const YAML::Node& ActorConfig::operator->() const {
-    return *this->_node;
-}
-
-ActorConfig::ActorConfig(const YAML::Node& node,
+WorkloadConfig::WorkloadConfig(const YAML::Node& node,
                          metrics::Registry& registry,
                          Orchestrator& orchestrator)
 : _node{std::addressof(node)},
   _registry{std::addressof(registry)},
   _orchestrator{std::addressof(orchestrator)} {}
 
-metrics::Registry* ActorConfig::registry() {
+metrics::Registry* WorkloadConfig::registry() {
     return _registry;
 }
 
-Orchestrator *ActorConfig::orchestrator() {
+Orchestrator *WorkloadConfig::orchestrator() {
     return _orchestrator;
 }
+
 
 }  // genny
 
