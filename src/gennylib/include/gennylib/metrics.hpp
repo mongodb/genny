@@ -221,7 +221,7 @@ private:
 class Counter {
 
 public:
-    explicit Counter(V1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
+    explicit constexpr Counter(V1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
 
     void incr(const count_type& val = 1) {
         _counter->reportValue(val);
@@ -357,7 +357,7 @@ private:
 class Timer {
 
 public:
-    explicit Timer(V1::TimerImpl& t) : _timer{std::addressof(t)} {}
+    explicit constexpr Timer(V1::TimerImpl& t) : _timer{std::addressof(t)} {}
 
     [[nodiscard]] Stopwatch start() const {
         return Stopwatch{*_timer};
