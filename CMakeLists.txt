@@ -29,6 +29,11 @@ set_property(TARGET boost PROPERTY
 add_definitions(-DBOOST_ALL_DYN_LINK)
 # </Boost>
 
+# <Yaml CPP>
+set(YAMLCPP_STATIC_LIBRARY FALSE)
+find_package(yaml-cpp REQUIRED)
+# </Yaml CPP>
+
 # <Misc 3rd Party Integrations>
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 # </Misc 3rd Party Integrations>
@@ -52,8 +57,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         message(FATAL_ERROR "Insufficient clang version - clang 5.0+ required")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.3.1")
-        message(FATAL_ERROR "Insufficient GCC/GNU version - gnu/gcc 7.3.1+ required")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.3.0")
+        message(FATAL_ERROR "Insufficient GCC/GNU version - gnu/gcc 7.3.0+ required")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.14.26430")
