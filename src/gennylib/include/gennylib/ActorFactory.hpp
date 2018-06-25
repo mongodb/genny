@@ -9,20 +9,21 @@
 #include <iostream>
 
 namespace genny {
+class ActorConfig;
 
 template<typename T>
 class ActorFactory {
 
 public:
     using ActorList = std::vector<std::unique_ptr<T>>;
-    using Producer = std::function<ActorList(class ActorConfig*)>;
+    using Producer = std::function<ActorList(ActorConfig*)>;
 
     void hook(const Producer& function) {
         _producers.push_back(function);
     }
 
     ActorList actors(ActorConfig* config) {
-        auto out = ActorList {};
+        auto out = ActorList {}; // TODO: insert_bulk
         for(const Producer& producer : _producers) {
             for(auto&& p : producer(config)) {
                 out.push_back(std::move(p));
@@ -32,7 +33,7 @@ public:
     }
 
 private:
-    std::vector<const Producer> _producers;
+    std::vector<Producer> _producers;
 };
 
 }  // genny

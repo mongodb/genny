@@ -21,11 +21,11 @@ int genny::driver::DefaultDriver::run(int, char**) const {
 
     genny::ActorFactory<genny::PhasedActor> factory;
 
+    // TODO: map string in config file to factory function
     // Can p be loaded from dlopen?
     auto p = [](ActorConfig* actorConfig) {
         std::vector<std::unique_ptr<genny::PhasedActor>> out;
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig->orchestrator(), actorConfig->registry(),
-            actorConfig));
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig->orchestrator(), actorConfig->registry(), "one"));
         out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig->orchestrator(), actorConfig->registry(), "two"));
         return out;
     };
