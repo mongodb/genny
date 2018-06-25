@@ -14,7 +14,7 @@ public:
                metrics::Registry& metrics,
                const std::string& name = "hello");
 
-    ~HelloWorld() override= default;
+    ~HelloWorld() override = default;
 
 private:
     void doPhase(int phase) override;

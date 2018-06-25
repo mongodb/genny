@@ -19,7 +19,7 @@ public:
      *  The number of actors that will participate in phase lifecycle methods
      *  such as {@code awaitPhaseStart} and {@code awaitPhaseEnd}.
      */
-    explicit Orchestrator(unsigned int actors) : _actors( actors ) {}
+    explicit Orchestrator(unsigned int actors) : _actors(actors) {}
 
     ~Orchestrator() = default;
 
@@ -52,11 +52,11 @@ private:
     std::condition_variable _cv;
 
     const unsigned int _actors;
-    unsigned int _phase= 0;
-    unsigned int _running= 0;
-    bool _errors= false;
+    unsigned int _phase = 0;
+    unsigned int _running = 0;
+    bool _errors = false;
     enum class State { PhaseEnded, PhaseStarted };
-    State state= State::PhaseEnded;
+    State state = State::PhaseEnded;
 };
 
 

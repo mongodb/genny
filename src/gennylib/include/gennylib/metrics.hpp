@@ -2,9 +2,9 @@
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
 #include <chrono>
+#include <iostream>
 #include <unordered_map>
 #include <vector>
-#include <iostream>
 
 #include <boost/core/noncopyable.hpp>
 
@@ -29,8 +29,7 @@ static_assert(clock::is_steady, "clock must be steady");
 
 // Convenience (wouldn't want to be configurable in the future)
 
-class period
-{
+class period {
 private:
     clock::duration duration;
 
@@ -39,23 +38,23 @@ public:
 
     // recursive case
     template <typename Arg0, typename... Args>
-    period(Arg0 arg0, Args &&... args)
-            : duration(std::forward<Arg0>(arg0), std::forward<Args>(args)...) {}
+    period(Arg0 arg0, Args&&... args)
+        : duration(std::forward<Arg0>(arg0), std::forward<Args>(args)...) {}
 
     // base-case for arg that is implicitly-convertible to clock::duration
     template <typename Arg,
-            typename = typename std::enable_if<
-                    std::is_convertible<Arg, clock::duration>::value, void>::type>
-    period(Arg &&arg) : duration(std::forward<Arg>(arg)) {}
+              typename = typename std::enable_if<std::is_convertible<Arg, clock::duration>::value,
+                                                 void>::type>
+    period(Arg&& arg) : duration(std::forward<Arg>(arg)) {}
 
     // base-case for arg that isn't explicitly-convertible to clock::duration; marked explicit
     template <typename Arg,
-            typename = typename std::enable_if<
-                    !std::is_convertible<Arg, clock::duration>::value, void>::type,
-            typename = void>
-    explicit period(Arg &&arg) : duration(std::forward<Arg>(arg)) {}
+              typename = typename std::enable_if<!std::is_convertible<Arg, clock::duration>::value,
+                                                 void>::type,
+              typename = void>
+    explicit period(Arg&& arg) : duration(std::forward<Arg>(arg)) {}
 
-    friend std::ostream &operator<<(std::ostream &os, const period &p) {
+    friend std::ostream& operator<<(std::ostream& os, const period& p) {
         return os << p.duration.count();
     }
 };
@@ -74,13 +73,15 @@ namespace V1 {
 /**
  * Ignore this. Used for passkey for some methods.
  */
-class Evil { protected: Evil()= default; };
-class Permission : private Evil
-{
+class Evil {
+protected:
+    Evil() = default;
+};
+class Permission : private Evil {
 
 private:
     constexpr Permission() = default;
-    //template <typename T>
+    // template <typename T>
     friend class genny::metrics::Reporter;
 };
 
@@ -288,13 +289,13 @@ class RaiiStopwatch {
 public:
     explicit RaiiStopwatch(V1::TimerImpl& timer)
         : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
-    RaiiStopwatch(const RaiiStopwatch& other)=delete;
+    RaiiStopwatch(const RaiiStopwatch& other) = delete;
     RaiiStopwatch(RaiiStopwatch&& other) noexcept : _started{other._started} {
         this->_timer = other._timer;
         other._timer = nullptr;
     }
 
-    RaiiStopwatch& operator=(RaiiStopwatch other) noexcept= delete;
+    RaiiStopwatch& operator=(RaiiStopwatch other) noexcept = delete;
 
     ~RaiiStopwatch() {
         if (this->_timer != nullptr) {

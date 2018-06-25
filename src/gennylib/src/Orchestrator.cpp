@@ -3,23 +3,23 @@
 namespace genny {
 
 unsigned int Orchestrator::currentPhaseNumber() const {
-    std::lock_guard lk( this->_lock );
+    std::lock_guard lk(this->_lock);
     return this->_phase;
 }
 
 bool Orchestrator::morePhases() const {
-    std::lock_guard lk( this->_lock );
+    std::lock_guard lk(this->_lock);
     return this->_phase <= 1 && !this->_errors;
 }
 
 void Orchestrator::awaitPhaseStart() {
     std::unique_lock lck{_lock};
-    assert( state == State::PhaseEnded );
+    assert(state == State::PhaseEnded);
     ++_running;
     if (_running == _actors) {
         ++_phase;
         _cv.notify_all();
-        state= State::PhaseStarted;
+        state = State::PhaseStarted;
     } else {
         _cv.wait(lck);
     }
@@ -27,11 +27,11 @@ void Orchestrator::awaitPhaseStart() {
 
 void Orchestrator::awaitPhaseEnd() {
     std::unique_lock<std::mutex> lck{_lock};
-    assert( State::PhaseStarted == state );
+    assert(State::PhaseStarted == state);
     --_running;
     if (_running == 0) {
         _cv.notify_all();
-        state= State::PhaseEnded;
+        state = State::PhaseEnded;
     } else {
         _cv.wait(lck);
     }
