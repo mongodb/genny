@@ -8,4 +8,3 @@ std::string genny::getVersion() {
     // src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
     return "0.0.1";
 }
-

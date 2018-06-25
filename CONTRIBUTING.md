@@ -9,7 +9,7 @@ will add the ID later when we squash or merge it.)
 
 > ABC-883 Add commit message conventions to CONTRIBUTING.md
 
-Capitalize subject lines and don't use a trailing period. Keep the
+Capitalize subject lines, and don't use a trailing period. Keep the
 subject at most 70 characters long. Use active voice! Imagine this
 preamble to get your phrasing right:
 
@@ -84,6 +84,7 @@ Guidelines:
 -   Class names in `PascalCase`
 -   Public section up top / private at bottom
 -   Lifecycle methods first (see rules above)
+-   Passkey/pseudo-private methods within public section
 -   Private Member Ordering
     -   Friendships
     -   Private Constructors

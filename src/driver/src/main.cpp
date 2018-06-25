@@ -1,19 +1,24 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
-#include <string>
 
 #include <yaml-cpp/yaml.h>
 
+#include <gennylib/metrics.hpp>
 #include <gennylib/version.hpp>
 
-int main(int argc, char**argv) {
+#include "DefaultDriver.hpp"
+
+
+int main(int argc, char** argv) {
     // basically just a test that we're using c++17
-    auto v { std::make_optional(genny::getVersion()) };
+    auto v = std::make_optional(genny::getVersion());
     std::cout << u8"🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔" << std::endl;
 
+    genny::driver::DefaultDriver d;
+
     if (argc <= 2) {
-        return 0;
+        return d.run(argc, argv);
     }
 
     // test we can load yaml (just smoke-testing yaml for now, this will be real soon!)
@@ -29,5 +34,5 @@ int main(int argc, char**argv) {
     std::cout << std::endl << "Using Schema Version:" << std::endl
               << config["SchemaVersion"].as<std::string>() << std::endl;
 
-    return 0;
+    return d.run(argc, argv);
 }

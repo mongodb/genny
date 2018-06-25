@@ -2,8 +2,22 @@
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(gennylib VERSION 0.0.1 LANGUAGES CXX)
 
+# Eventually will move gennylib/actors into its own lib so keep those files together
 add_library(gennylib SHARED
-    src/version.cpp
+    include/gennylib/version.hpp
+                 src/version.cpp
+
+    include/gennylib/metrics.hpp
+    include/gennylib/MetricsReporter.hpp
+
+    include/gennylib/PhasedActor.hpp
+                 src/PhasedActor.cpp
+
+    include/gennylib/Orchestrator.hpp
+                 src/Orchestrator.cpp
+
+    include/gennylib/actors/HelloWorld.hpp
+                 src/actors/HelloWorld.cpp
 )
 
 # Define headers for this library. PUBLIC headers are used for
@@ -49,6 +63,8 @@ export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
 
 add_executable(test_gennylib
     test/version_test.cpp
+    test/metrics_test.cpp
+    test/orchestrator_test.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
 )
 
@@ -73,4 +89,3 @@ add_test(
         --success
         --out test_gennylib.junit.xml
 )
-
