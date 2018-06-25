@@ -1,6 +1,7 @@
 #ifndef HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
+#include <cassert>
 #include <chrono>
 #include <iostream>
 #include <unordered_map>

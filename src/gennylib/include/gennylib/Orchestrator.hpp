@@ -1,6 +1,7 @@
 #ifndef HEADER_8615FA7A_9344_43E1_A102_889F47CCC1A6_INCLUDED
 #define HEADER_8615FA7A_9344_43E1_A102_889F47CCC1A6_INCLUDED
 
+#include <cassert>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
