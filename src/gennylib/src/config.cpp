@@ -1,11 +1,11 @@
 #include <gennylib/config.hpp>
 
 
-std::vector<std::unique_ptr<genny::ActorConfig>> genny::WorkloadConfig::createActorConfigs(
+std::vector<std::unique_ptr<const genny::ActorConfig>> genny::WorkloadConfig::createActorConfigs(
     const YAML::Node& node, genny::WorkloadConfig& workloadConfig) {
-    auto out = std::vector<std::unique_ptr<genny::ActorConfig>>{};
+    auto out = std::vector<std::unique_ptr<const genny::ActorConfig>>{};
     for (const auto& actor : node["Actors"]) {
-        out.push_back(std::unique_ptr<genny::ActorConfig>{new ActorConfig(actor, workloadConfig)});
+        out.push_back(std::unique_ptr<const genny::ActorConfig>{new ActorConfig(actor, workloadConfig)});
     }
     return out;
 }

@@ -1,6 +1,6 @@
 #include <gennylib/actors/HelloWorld.hpp>
 
-void genny::actor::HelloWorld::doPhase(int currentPhase) {
+void genny::actor::HelloWorld::doPhase(int) {
     auto op = _output_timer.raii();
     std::cout << _name << " Doing Phase " << _orchestrator->currentPhaseNumber() << std::endl;
     _operations.incr();

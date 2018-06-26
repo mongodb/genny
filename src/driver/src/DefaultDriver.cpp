@@ -26,7 +26,7 @@ YAML::Node loadConfig(char* const* argv) {
 std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(
     const genny::ActorConfig* const actorConfig,
     const genny::WorkloadConfig* const workloadConfig) {
-    auto count = actorConfig->get("Count").as<int>();
+    const auto count = actorConfig->get("Count").as<int>();
     auto out = std::vector<std::unique_ptr<genny::PhasedActor>>{};
     for (int i = 0; i < count; ++i) {
         out.push_back(std::make_unique<genny::actor::HelloWorld>(

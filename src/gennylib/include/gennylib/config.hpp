@@ -28,7 +28,7 @@ public:
         return this->_node[key];
     }
 
-    const std::vector<std::unique_ptr<class ActorConfig>>& actorConfigs() const {
+    const std::vector<std::unique_ptr<const class ActorConfig>>& actorConfigs() const {
         return this->_actorConfigs;
     }
 
@@ -44,9 +44,9 @@ private:
     const YAML::Node _node;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
-    const std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
+    const std::vector<std::unique_ptr<const ActorConfig>> _actorConfigs;
 
-    static std::vector<std::unique_ptr<ActorConfig>> createActorConfigs(
+    static std::vector<std::unique_ptr<const ActorConfig>> createActorConfigs(
         const YAML::Node& node, WorkloadConfig& workloadConfig);
 };
 
