@@ -39,10 +39,11 @@ std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(const genny:
 
 int genny::driver::DefaultDriver::run(int argc, char**argv) const {
 
+    auto yaml = loadConfig(argv);
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
-    auto yaml = loadConfig(argv);
-    auto factory = genny::PhasedActorFactory{metrics, orchestrator, yaml};
+
+    auto factory = genny::PhasedActorFactory{yaml, metrics, orchestrator};
 
     // add producers
     factory.addProducer(&helloWorldProducer);
