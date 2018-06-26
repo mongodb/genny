@@ -23,6 +23,7 @@ YAML::Node loadConfig(char* const* argv) {
     return yaml;
 }
 
+// TODO: move to static method of HelloWorld
 std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(
     const genny::ActorConfig* const actorConfig,
     const genny::WorkloadConfig* const workloadConfig) {
