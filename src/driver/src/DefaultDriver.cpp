@@ -58,14 +58,12 @@ public:
 class ActorConfig {
 private:
     const YAML::Node _node;
-    WorkloadConfig _workloadConfig;
+    WorkloadConfig* _workloadConfig;
 
 public:
-    Orchestrator* orchestrator() { return _workloadConfig.orchestrator(); }
-    metrics::Registry* registry() { return _workloadConfig.registry(); }
 
-    ActorConfig(YAML::Node node, WorkloadConfig config)
-    : _node{node}, _workloadConfig{config} {}
+    ActorConfig(YAML::Node node, WorkloadConfig& config)
+    : _node{node}, _workloadConfig{&config} {}
 
     const YAML::Node get(const std::string& key) {
         return this->_node[key];
@@ -84,16 +82,16 @@ class ActorFactory {
 public:
     using Actor = std::unique_ptr<genny::PhasedActor>;
     using ActorList = std::vector<Actor>;
-    using Producer = std::function<ActorList(ActorConfig, WorkloadConfig)>;
+    using Producer = std::function<ActorList(ActorConfig, WorkloadConfig*)>;
 
     void addProducer(const Producer function) {
         _producers.emplace_back(std::move(function));
     }
 
-    ActorList actors(WorkloadConfig config) {
+    ActorList actors(WorkloadConfig* config) {
         auto out = ActorList {};
         for(Producer& producer : _producers) {
-            for(ActorConfig& actorConfig : config.actorConfigs()) {
+            for(ActorConfig& actorConfig : config->actorConfigs()) {
                 ActorList produced = producer(actorConfig, config);
                 for (auto&& actor : produced) {
                     out.push_back(std::move(actor));
@@ -123,11 +121,11 @@ YAML::Node loadConfig(char *const *argv) {
     return yaml;
 }
 
-std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(genny::ActorConfig actorConfig, const genny::WorkloadConfig&) {
+std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(genny::ActorConfig actorConfig, genny::WorkloadConfig* workloadConfig) {
     auto count = actorConfig["Count"].as<int>();
     auto out = std::vector<std::unique_ptr<genny::PhasedActor>> {};
     for(int i=0; i<count; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig.orchestrator(), actorConfig.registry(), std::to_string(i)));
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(workloadConfig->orchestrator(), workloadConfig->registry(), std::to_string(i)));
     }
     return out;
 }
@@ -151,7 +149,7 @@ int genny::driver::DefaultDriver::run(int argc, char**argv) const {
     // add producers
     factory.addProducer(&helloWorldProducer);
 
-    const auto actors = factory.actors(config);
+    const auto actors = factory.actors(&config);
 
     orchestrator.setActorCount(static_cast<unsigned int>(actors.size()));
 
