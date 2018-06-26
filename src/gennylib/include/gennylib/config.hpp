@@ -57,14 +57,16 @@ public:
     void operator=(ActorConfig&&) = delete;
     ActorConfig(ActorConfig&&) = delete;
 
-    ActorConfig(const YAML::Node& node, WorkloadConfig& config)
-        : _node{node}, _workloadConfig{&config} {}
-
     const YAML::Node get(const std::string& key) const {
         return this->_node[key];
     }
 
 private:
+    friend class WorkloadConfig;
+
+    ActorConfig(const YAML::Node& node, WorkloadConfig& config)
+    : _node{node}, _workloadConfig{&config} {}
+
     const YAML::Node _node;
     WorkloadConfig* _workloadConfig;
 };
@@ -73,18 +75,20 @@ private:
 class PhasedActorFactory : private boost::noncopyable {
 
 public:
+    PhasedActorFactory() = default;
+
     void operator=(PhasedActorFactory&&) = delete;
     PhasedActorFactory(PhasedActorFactory&&) = delete;
 
-    using ActorList = std::vector<std::unique_ptr<PhasedActor>>;
-    using Producer = std::function<ActorList(ActorConfig*, WorkloadConfig*)>;
+    using ActorVector = std::vector<std::unique_ptr<PhasedActor>>;
+    using Producer = std::function<ActorVector(ActorConfig*, WorkloadConfig*)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    ActorList actors(WorkloadConfig* workloadConfig) const;
+    ActorVector actors(WorkloadConfig* workloadConfig) const;
 
 private:
     std::vector<Producer> _producers;
