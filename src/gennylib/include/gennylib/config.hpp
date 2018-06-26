@@ -14,7 +14,6 @@ namespace genny {
 class WorkloadConfig : private boost::noncopyable {
 
 public:
-
     void operator=(WorkloadConfig&&) = delete;
     WorkloadConfig(WorkloadConfig&&) = delete;
 
@@ -37,10 +36,10 @@ private:
     friend class PhasedActorFactory;
 
     WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
-    : _node{node},
-      _registry{&registry},
-      _orchestrator{&orchestrator},
-      _actorConfigs{createActorConfigs(node, *this)} {}
+        : _node{node},
+          _registry{&registry},
+          _orchestrator{&orchestrator},
+          _actorConfigs{createActorConfigs(node, *this)} {}
 
     const YAML::Node _node;
     metrics::Registry* const _registry;
@@ -66,7 +65,7 @@ private:
     friend class WorkloadConfig;
 
     ActorConfig(const YAML::Node& node, WorkloadConfig& config)
-    : _node{node}, _workloadConfig{&config} {}
+        : _node{node}, _workloadConfig{&config} {}
 
     const YAML::Node _node;
     WorkloadConfig* _workloadConfig;
@@ -76,8 +75,9 @@ private:
 class PhasedActorFactory : private boost::noncopyable {
 
 public:
-    PhasedActorFactory(const YAML::Node &root, genny::metrics::Registry &registry,
-                           genny::Orchestrator &orchestrator);
+    PhasedActorFactory(const YAML::Node& root,
+                       genny::metrics::Registry& registry,
+                       genny::Orchestrator& orchestrator);
 
     void operator=(PhasedActorFactory&&) = delete;
     PhasedActorFactory(PhasedActorFactory&&) = delete;

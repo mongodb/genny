@@ -24,6 +24,7 @@ genny::PhasedActorFactory::ActorVector genny::PhasedActorFactory::actors() const
     return out;
 }
 
-genny::PhasedActorFactory::PhasedActorFactory(const YAML::Node &root, genny::metrics::Registry &registry,
-                                              genny::Orchestrator &orchestrator)
-: _workloadConfig{root, registry, orchestrator} {}
+genny::PhasedActorFactory::PhasedActorFactory(const YAML::Node& root,
+                                              genny::metrics::Registry& registry,
+                                              genny::Orchestrator& orchestrator)
+    : _workloadConfig{root, registry, orchestrator} {}

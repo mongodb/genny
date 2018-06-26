@@ -1,35 +1,36 @@
 #include <algorithm>
-#include <cstdlib>
 #include <cassert>
+#include <cstdlib>
 #include <thread>
 #include <vector>
 
-#include <gennylib/config.hpp>
+#include <fstream>
 #include <gennylib/MetricsReporter.hpp>
 #include <gennylib/PhasedActor.hpp>
 #include <gennylib/actors/HelloWorld.hpp>
-#include <fstream>
+#include <gennylib/config.hpp>
 
 #include <yaml-cpp/yaml.h>
 
 #include "DefaultDriver.hpp"
 
 
-
 namespace {
 
-YAML::Node loadConfig(char *const *argv) {
+YAML::Node loadConfig(char* const* argv) {
     const char* fileName = argv[1];
     auto yaml = YAML::LoadFile(fileName);
     return yaml;
 }
 
-std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(const genny::ActorConfig* const actorConfig,
-                                                                    const genny::WorkloadConfig* const workloadConfig) {
+std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(
+    const genny::ActorConfig* const actorConfig,
+    const genny::WorkloadConfig* const workloadConfig) {
     auto count = actorConfig->get("Count").as<int>();
-    auto out = std::vector<std::unique_ptr<genny::PhasedActor>> {};
-    for(int i=0; i<count; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(workloadConfig->orchestrator(), workloadConfig->registry(), std::to_string(i)));
+    auto out = std::vector<std::unique_ptr<genny::PhasedActor>>{};
+    for (int i = 0; i < count; ++i) {
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(
+            workloadConfig->orchestrator(), workloadConfig->registry(), std::to_string(i)));
     }
     return out;
 }
@@ -37,7 +38,7 @@ std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(const genny:
 }  // namespace
 
 
-int genny::driver::DefaultDriver::run(int argc, char**argv) const {
+int genny::driver::DefaultDriver::run(int argc, char** argv) const {
 
     auto yaml = loadConfig(argv);
     auto metrics = genny::metrics::Registry{};
