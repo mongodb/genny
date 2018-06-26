@@ -36,15 +36,15 @@ public:
     : _node{node}, _registry{&registry}, _orchestrator{&orchestrator},
       _actorConfigs{createActorConfigs(node, *this)} {}
 
+    WorkloadConfig(YAML::Node&&,
+                   metrics::Registry&&,
+                   Orchestrator&&) = delete;
+
     Orchestrator* orchestrator() const { return _orchestrator; }
     metrics::Registry* registry() const { return _registry; }
 
     const YAML::Node get(const std::string& key) const {
         return this->_node[key];
-    }
-
-    const YAML::Node operator[](const std::string& key) const {
-        return this->get(key);
     }
 
     const vector<unique_ptr<ActorConfig>>& actorConfigs() const {
@@ -69,16 +69,11 @@ private:
     WorkloadConfig* _workloadConfig;
 
 public:
-
     ActorConfig(const YAML::Node& node, WorkloadConfig& config)
     : _node{node}, _workloadConfig{&config} {}
 
     const YAML::Node get(const std::string& key) const {
         return this->_node[key];
-    }
-
-    const YAML::Node operator[](const std::string& key) const {
-        return this->get(key);
     }
 };
 
