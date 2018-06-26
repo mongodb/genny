@@ -47,7 +47,7 @@ private:
     const std::vector<std::unique_ptr<const ActorConfig>> _actorConfigs;
 
     static std::vector<std::unique_ptr<const ActorConfig>> createActorConfigs(
-        const YAML::Node& node, WorkloadConfig& workloadConfig);
+        const YAML::Node& node,const WorkloadConfig& workloadConfig);
 };
 
 
@@ -64,11 +64,11 @@ public:
 private:
     friend class WorkloadConfig;
 
-    ActorConfig(const YAML::Node& node, WorkloadConfig& config)
+    ActorConfig(const YAML::Node& node, const WorkloadConfig& config)
         : _node{node}, _workloadConfig{&config} {}
 
     const YAML::Node _node;
-    WorkloadConfig* _workloadConfig;
+    const WorkloadConfig* const _workloadConfig;
 };
 
 
