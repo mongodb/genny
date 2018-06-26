@@ -64,12 +64,12 @@ private:
 class ActorFactory {
 
 public:
-    using Actor = std::unique_ptr<genny::PhasedActor>;
-    using ActorList = std::vector<Actor>;
+    using ActorList = std::vector<std::unique_ptr<PhasedActor>>;
     using Producer = std::function<ActorList(ActorConfig*, WorkloadConfig*)>;
 
-    void addProducer(const Producer &function) {
-        _producers.emplace_back(function);
+    template<class...Args>
+    void addProducer(Args&&...args) {
+        _producers.emplace_back(std::forward<Args>(args)...);
     }
 
     ActorList actors(WorkloadConfig* const workloadConfig) const {
