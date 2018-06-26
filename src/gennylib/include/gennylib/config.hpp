@@ -3,13 +3,15 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <boost/noncopyable.hpp>
+
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/metrics.hpp>
 #include <gennylib/PhasedActor.hpp>
 
 namespace genny {
 
-class WorkloadConfig {
+class WorkloadConfig : private boost::noncopyable {
 
 public:
     WorkloadConfig(const YAML::Node& node,
@@ -21,6 +23,9 @@ public:
     WorkloadConfig(YAML::Node&&,
                    metrics::Registry&&,
                    Orchestrator&&) = delete;
+
+    void operator=(WorkloadConfig&&) = delete;
+    WorkloadConfig(WorkloadConfig&&) = delete;
 
     Orchestrator* orchestrator() const { return _orchestrator; }
     metrics::Registry* registry() const { return _registry; }
@@ -44,9 +49,12 @@ private:
 
 
 
-class ActorConfig {
+class ActorConfig : private boost::noncopyable {
 
 public:
+    void operator=(ActorConfig&&) = delete;
+    ActorConfig(ActorConfig&&) = delete;
+
     ActorConfig(const YAML::Node& node, WorkloadConfig& config)
             : _node{node}, _workloadConfig{&config} {}
 
@@ -61,9 +69,13 @@ private:
 };
 
 
-class PhasedActorFactory {
+class PhasedActorFactory : private boost::noncopyable {
 
 public:
+
+    void operator=(PhasedActorFactory&&) = delete;
+    PhasedActorFactory(PhasedActorFactory&&) = delete;
+
     using ActorList = std::vector<std::unique_ptr<PhasedActor>>;
     using Producer = std::function<ActorList(ActorConfig*, WorkloadConfig*)>;
 
