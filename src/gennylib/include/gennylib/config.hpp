@@ -9,17 +9,7 @@
 
 namespace genny {
 
-class ActorConfig;
-class WorkloadConfig;
-
 class WorkloadConfig {
-
-private:
-    const YAML::Node _node;
-    metrics::Registry* const _registry;
-    Orchestrator* const _orchestrator;
-    // computed based on _node
-    const std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
 
 public:
     WorkloadConfig(const YAML::Node& node,
@@ -39,11 +29,17 @@ public:
         return this->_node[key];
     }
 
-    const std::vector<std::unique_ptr<ActorConfig>>& actorConfigs() const {
+    const std::vector<std::unique_ptr<class ActorConfig>>& actorConfigs() const {
         return this->_actorConfigs;
     }
 
 private:
+    const YAML::Node _node;
+    metrics::Registry* const _registry;
+    Orchestrator* const _orchestrator;
+    // computed based on _node
+    const std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
+
     static std::vector<std::unique_ptr<ActorConfig>> createActorConfigs(const YAML::Node& node, WorkloadConfig& workloadConfig) {
         auto out = std::vector<std::unique_ptr<ActorConfig>> {};
         for(const auto& actor : node["Actors"]) {
@@ -51,14 +47,12 @@ private:
         }
         return out;
     }
+
 };
 
 
 
 class ActorConfig {
-private:
-    const YAML::Node _node;
-    WorkloadConfig* _workloadConfig;
 
 public:
     ActorConfig(const YAML::Node& node, WorkloadConfig& config)
@@ -67,10 +61,13 @@ public:
     const YAML::Node get(const std::string& key) const {
         return this->_node[key];
     }
+
+private:
+    const YAML::Node _node;
+    WorkloadConfig* _workloadConfig;
+
 };
 
-
-class WorkloadConfig;
 
 class ActorFactory {
 
@@ -98,6 +95,7 @@ public:
 
 private:
     std::vector<Producer> _producers;
+
 };
 
 
