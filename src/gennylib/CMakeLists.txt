@@ -7,6 +7,7 @@ add_library(gennylib SHARED
     include/gennylib/version.hpp
                  src/version.cpp
 
+        include/gennylib/config.hpp
         include/gennylib/metrics.hpp
     include/gennylib/MetricsReporter.hpp
 
