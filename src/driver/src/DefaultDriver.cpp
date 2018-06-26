@@ -15,8 +15,6 @@
 
 namespace genny {
 
-using namespace std;
-
 class ActorConfig;
 class WorkloadConfig;
 
@@ -27,7 +25,7 @@ private:
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
     // computed based on _node
-    const vector<unique_ptr<ActorConfig>> _actorConfigs;
+    const std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
 
 public:
     WorkloadConfig(const YAML::Node& node,
@@ -47,13 +45,13 @@ public:
         return this->_node[key];
     }
 
-    const vector<unique_ptr<ActorConfig>>& actorConfigs() const {
+    const std::vector<std::unique_ptr<ActorConfig>>& actorConfigs() const {
         return this->_actorConfigs;
     }
 
 private:
-    static vector<unique_ptr<ActorConfig>> createActorConfigs(const YAML::Node& node, WorkloadConfig& workloadConfig) {
-        auto out = vector<unique_ptr<ActorConfig>> {};
+    static std::vector<std::unique_ptr<ActorConfig>> createActorConfigs(const YAML::Node& node, WorkloadConfig& workloadConfig) {
+        auto out = std::vector<std::unique_ptr<ActorConfig>> {};
         for(const auto& actor : node["Actors"]) {
             out.push_back(std::make_unique<ActorConfig>(actor, workloadConfig));
         }
