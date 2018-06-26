@@ -42,7 +42,7 @@ int genny::driver::DefaultDriver::run(int argc, char**argv) const {
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
     auto yaml = loadConfig(argv);
-    auto factory = genny::PhasedActorFactory{&metrics, &orchestrator, yaml};
+    auto factory = genny::PhasedActorFactory{metrics, orchestrator, yaml};
 
     // add producers
     factory.addProducer(&helloWorldProducer);

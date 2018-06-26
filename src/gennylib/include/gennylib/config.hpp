@@ -76,7 +76,7 @@ private:
 class PhasedActorFactory : private boost::noncopyable {
 
 public:
-    PhasedActorFactory(metrics::Registry* registry, Orchestrator* orchestrator, const YAML::Node& root);
+    PhasedActorFactory(metrics::Registry& registry, Orchestrator& orchestrator, const YAML::Node& root);
 
     void operator=(PhasedActorFactory&&) = delete;
     PhasedActorFactory(PhasedActorFactory&&) = delete;
