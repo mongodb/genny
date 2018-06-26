@@ -10,11 +10,11 @@ std::vector<std::unique_ptr<genny::ActorConfig>> genny::WorkloadConfig::createAc
     return out;
 }
 
-genny::PhasedActorFactory::ActorVector genny::PhasedActorFactory::actors(
-    genny::WorkloadConfig* const workloadConfig) const {
+genny::PhasedActorFactory::ActorVector genny::PhasedActorFactory::actors() const {
     auto out = ActorVector{};
     for (const auto& producer : _producers) {
-        for (const auto& actorConfig : workloadConfig->actorConfigs()) {
+        for (const auto& actorConfig : _workloadConfig.actorConfigs()) {
+            const WorkloadConfig* workloadConfig = &_workloadConfig;
             ActorVector produced = producer(actorConfig.get(), workloadConfig);
             for (auto&& actor : produced) {
                 out.push_back(std::move(actor));
@@ -23,3 +23,8 @@ genny::PhasedActorFactory::ActorVector genny::PhasedActorFactory::actors(
     }
     return out;
 }
+
+genny::PhasedActorFactory::PhasedActorFactory(genny::metrics::Registry* registry,
+                                              genny::Orchestrator* orchestrator,
+                                              const YAML::Node &root)
+: _workloadConfig{root, *registry, *orchestrator} {}

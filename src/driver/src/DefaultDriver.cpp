@@ -41,19 +41,13 @@ int genny::driver::DefaultDriver::run(int argc, char**argv) const {
 
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
-    auto factory = genny::PhasedActorFactory{};
     auto yaml = loadConfig(argv);
-
-    auto config = genny::WorkloadConfig{
-        yaml,
-        metrics,
-        orchestrator
-    };
+    auto factory = genny::PhasedActorFactory{&metrics, &orchestrator, yaml};
 
     // add producers
     factory.addProducer(&helloWorldProducer);
 
-    const auto actors = factory.actors(&config);
+    const auto actors = factory.actors();
 
     orchestrator.setActorCount(static_cast<unsigned int>(actors.size()));
 

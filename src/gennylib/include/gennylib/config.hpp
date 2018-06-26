@@ -14,13 +14,6 @@ namespace genny {
 class WorkloadConfig : private boost::noncopyable {
 
 public:
-    WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
-        : _node{node},
-          _registry{&registry},
-          _orchestrator{&orchestrator},
-          _actorConfigs{createActorConfigs(node, *this)} {}
-
-    WorkloadConfig(YAML::Node&&, metrics::Registry&&, Orchestrator&&) = delete;
 
     void operator=(WorkloadConfig&&) = delete;
     WorkloadConfig(WorkloadConfig&&) = delete;
@@ -41,6 +34,14 @@ public:
     }
 
 private:
+    friend class PhasedActorFactory;
+
+    WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
+    : _node{node},
+      _registry{&registry},
+      _orchestrator{&orchestrator},
+      _actorConfigs{createActorConfigs(node, *this)} {}
+
     const YAML::Node _node;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
@@ -75,23 +76,24 @@ private:
 class PhasedActorFactory : private boost::noncopyable {
 
 public:
-    PhasedActorFactory() = default;
+    PhasedActorFactory(metrics::Registry* registry, Orchestrator* orchestrator, const YAML::Node& root);
 
     void operator=(PhasedActorFactory&&) = delete;
     PhasedActorFactory(PhasedActorFactory&&) = delete;
 
     using ActorVector = std::vector<std::unique_ptr<PhasedActor>>;
-    using Producer = std::function<ActorVector(ActorConfig*, WorkloadConfig*)>;
+    using Producer = std::function<ActorVector(const ActorConfig*, const WorkloadConfig*)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    ActorVector actors(WorkloadConfig* workloadConfig) const;
+    ActorVector actors() const;
 
 private:
     std::vector<Producer> _producers;
+    const WorkloadConfig _workloadConfig;
 };
 
 
