@@ -10,3 +10,16 @@ genny::WorkloadConfig::createActorConfigs(const YAML::Node& node, genny::Workloa
     }
     return out;
 }
+
+genny::PhasedActorFactory::ActorList genny::PhasedActorFactory::actors(genny::WorkloadConfig *const workloadConfig) const {
+    auto out = ActorList {};
+    for(const auto& producer : _producers) {
+        for(const auto& actorConfig : workloadConfig->actorConfigs()) {
+            ActorList produced = producer(actorConfig.get(), workloadConfig);
+            for (auto&& actor : produced) {
+                out.push_back(std::move(actor));
+            }
+        }
+    }
+    return out;
+}

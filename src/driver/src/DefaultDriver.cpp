@@ -41,7 +41,7 @@ int genny::driver::DefaultDriver::run(int argc, char**argv) const {
 
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
-    auto factory = genny::ActorFactory{};
+    auto factory = genny::PhasedActorFactory{};
     auto yaml = loadConfig(argv);
 
     auto config = genny::WorkloadConfig{

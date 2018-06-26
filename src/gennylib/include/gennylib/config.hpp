@@ -61,7 +61,7 @@ private:
 };
 
 
-class ActorFactory {
+class PhasedActorFactory {
 
 public:
     using ActorList = std::vector<std::unique_ptr<PhasedActor>>;
@@ -72,18 +72,7 @@ public:
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    ActorList actors(WorkloadConfig* const workloadConfig) const {
-        auto out = ActorList {};
-        for(const auto& producer : _producers) {
-            for(const auto& actorConfig : workloadConfig->actorConfigs()) {
-                ActorList produced = producer(actorConfig.get(), workloadConfig);
-                for (auto&& actor : produced) {
-                    out.push_back(std::move(actor));
-                }
-            }
-        }
-        return out;
-    }
+    ActorList actors(WorkloadConfig* workloadConfig) const;
 
 private:
     std::vector<Producer> _producers;
