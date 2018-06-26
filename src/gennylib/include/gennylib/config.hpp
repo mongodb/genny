@@ -6,29 +6,31 @@
 #include <boost/noncopyable.hpp>
 
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/metrics.hpp>
 #include <gennylib/PhasedActor.hpp>
+#include <gennylib/metrics.hpp>
 
 namespace genny {
 
 class WorkloadConfig : private boost::noncopyable {
 
 public:
-    WorkloadConfig(const YAML::Node& node,
-                   metrics::Registry& registry,
-                   Orchestrator& orchestrator)
-            : _node{node}, _registry{&registry}, _orchestrator{&orchestrator},
-              _actorConfigs{createActorConfigs(node, *this)} {}
+    WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
+        : _node{node},
+          _registry{&registry},
+          _orchestrator{&orchestrator},
+          _actorConfigs{createActorConfigs(node, *this)} {}
 
-    WorkloadConfig(YAML::Node&&,
-                   metrics::Registry&&,
-                   Orchestrator&&) = delete;
+    WorkloadConfig(YAML::Node&&, metrics::Registry&&, Orchestrator&&) = delete;
 
     void operator=(WorkloadConfig&&) = delete;
     WorkloadConfig(WorkloadConfig&&) = delete;
 
-    Orchestrator* orchestrator() const { return _orchestrator; }
-    metrics::Registry* registry() const { return _registry; }
+    Orchestrator* orchestrator() const {
+        return _orchestrator;
+    }
+    metrics::Registry* registry() const {
+        return _registry;
+    }
 
     const YAML::Node get(const std::string& key) const {
         return this->_node[key];
@@ -44,9 +46,9 @@ private:
     Orchestrator* const _orchestrator;
     const std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
 
-    static std::vector<std::unique_ptr<ActorConfig>> createActorConfigs(const YAML::Node& node, WorkloadConfig& workloadConfig);
+    static std::vector<std::unique_ptr<ActorConfig>> createActorConfigs(
+        const YAML::Node& node, WorkloadConfig& workloadConfig);
 };
-
 
 
 class ActorConfig : private boost::noncopyable {
@@ -56,7 +58,7 @@ public:
     ActorConfig(ActorConfig&&) = delete;
 
     ActorConfig(const YAML::Node& node, WorkloadConfig& config)
-            : _node{node}, _workloadConfig{&config} {}
+        : _node{node}, _workloadConfig{&config} {}
 
     const YAML::Node get(const std::string& key) const {
         return this->_node[key];
@@ -65,22 +67,20 @@ public:
 private:
     const YAML::Node _node;
     WorkloadConfig* _workloadConfig;
-
 };
 
 
 class PhasedActorFactory : private boost::noncopyable {
 
 public:
-
     void operator=(PhasedActorFactory&&) = delete;
     PhasedActorFactory(PhasedActorFactory&&) = delete;
 
     using ActorList = std::vector<std::unique_ptr<PhasedActor>>;
     using Producer = std::function<ActorList(ActorConfig*, WorkloadConfig*)>;
 
-    template<class...Args>
-    void addProducer(Args&&...args) {
+    template <class... Args>
+    void addProducer(Args&&... args) {
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
@@ -88,10 +88,9 @@ public:
 
 private:
     std::vector<Producer> _producers;
-
 };
 
 
-}  // genny
+}  // namespace genny
 
 #endif  // HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
