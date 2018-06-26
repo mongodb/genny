@@ -37,17 +37,9 @@ private:
     const YAML::Node _node;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
-    // computed based on _node
     const std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
 
-    static std::vector<std::unique_ptr<ActorConfig>> createActorConfigs(const YAML::Node& node, WorkloadConfig& workloadConfig) {
-        auto out = std::vector<std::unique_ptr<ActorConfig>> {};
-        for(const auto& actor : node["Actors"]) {
-            out.push_back(std::make_unique<ActorConfig>(actor, workloadConfig));
-        }
-        return out;
-    }
-
+    static std::vector<std::unique_ptr<ActorConfig>> createActorConfigs(const YAML::Node& node, WorkloadConfig& workloadConfig);
 };
 
 
