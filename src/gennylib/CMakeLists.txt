@@ -14,6 +14,9 @@ add_library(gennylib SHARED
 
     include/gennylib/MetricsReporter.hpp
 
+    include/gennylib/ErrorBag.hpp
+                 src/ErrorBag.cpp
+
     include/gennylib/PhasedActor.hpp
                  src/PhasedActor.cpp
 

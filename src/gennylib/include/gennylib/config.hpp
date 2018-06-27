@@ -5,6 +5,7 @@
 
 #include <boost/noncopyable.hpp>
 
+#include <gennylib/ErrorBag.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhasedActor.hpp>
 #include <gennylib/metrics.hpp>
@@ -35,19 +36,25 @@ public:
 private:
     friend class PhasedActorFactory;
 
-    WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
+    WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator, ErrorBag& errorBag)
         : _node{node},
           _registry{&registry},
           _orchestrator{&orchestrator},
-          _actorConfigs{createActorConfigs(node, *this)} {}
+          _actorConfigs{createActorConfigs(node, *this)},
+          _errorBag{&errorBag} {
+            validateWorkloadConfig();
+          }
 
     const YAML::Node _node;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
     const std::vector<std::unique_ptr<const ActorConfig>> _actorConfigs;
+    ErrorBag* const _errorBag;
 
     static std::vector<std::unique_ptr<const ActorConfig>> createActorConfigs(
         const YAML::Node& node,const WorkloadConfig& workloadConfig);
+
+    void validateWorkloadConfig();
 };
 
 
@@ -77,20 +84,21 @@ class PhasedActorFactory : private boost::noncopyable {
 public:
     PhasedActorFactory(const YAML::Node& root,
                        genny::metrics::Registry& registry,
-                       genny::Orchestrator& orchestrator);
+                       genny::Orchestrator& orchestrator,
+                       genny::ErrorBag& errorBag);
 
     void operator=(PhasedActorFactory&&) = delete;
     PhasedActorFactory(PhasedActorFactory&&) = delete;
 
     using ActorVector = std::vector<std::unique_ptr<PhasedActor>>;
-    using Producer = std::function<ActorVector(const ActorConfig*, const WorkloadConfig*)>;
+    using Producer = std::function<ActorVector(const ActorConfig*, const WorkloadConfig*, ErrorBag*)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    ActorVector actors() const;
+    ActorVector actors(ErrorBag* errorBag) const;
 
 private:
     std::vector<Producer> _producers;

@@ -11,16 +11,24 @@ std::vector<std::unique_ptr<const genny::ActorConfig>> genny::WorkloadConfig::cr
     return out;
 }
 
-genny::PhasedActorFactory::ActorVector genny::PhasedActorFactory::actors() const {
+void genny::WorkloadConfig::validateWorkloadConfig() {
+    _errorBag->require("SchemaVersion",
+        get("SchemaVersion").as<std::string>(),
+        "2018-06-27"
+    );
+}
+
+genny::PhasedActorFactory::ActorVector genny::PhasedActorFactory::actors(genny::ErrorBag* const errorBag) const {
     auto out = ActorVector{};
     for (const auto& producer : _producers)
         for (const auto& actorConfig : _workloadConfig.actorConfigs())
-            for (auto&& actor : producer(actorConfig.get(), &_workloadConfig))
+            for (auto&& actor : producer(actorConfig.get(), &_workloadConfig, errorBag))
                 out.push_back(std::move(actor));
     return out;
 }
 
 genny::PhasedActorFactory::PhasedActorFactory(const YAML::Node& root,
                                               genny::metrics::Registry& registry,
-                                              genny::Orchestrator& orchestrator)
-    : _workloadConfig{root, registry, orchestrator} {}
+                                              genny::Orchestrator& orchestrator,
+                                              genny::ErrorBag& errorBag)
+    : _workloadConfig{root, registry, orchestrator, errorBag} {}
