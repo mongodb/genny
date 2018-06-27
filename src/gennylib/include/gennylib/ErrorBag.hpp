@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <type_traits>
+#include <yaml-cpp/yaml.h>
 
 namespace genny {
 
@@ -38,6 +39,15 @@ public:
         if (expect != is) {
             add((key.empty() ? "" : "Key " + key + " ") + "expect [" + expect + "] but is [" + is + "]");
         }
+    }
+
+    template<class E = std::string>
+    void require(const std::string& key, const YAML::Node& node, const E& expect, const std::string& path = "") {
+        if (!node[key]) {
+            add("Key " + path + key + " not found");
+            return;
+        }
+        require(key, node[key].as<E>(), expect);
     }
 
 private:

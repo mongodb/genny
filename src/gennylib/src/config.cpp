@@ -12,10 +12,7 @@ std::vector<std::unique_ptr<const genny::ActorConfig>> genny::WorkloadConfig::cr
 }
 
 void genny::WorkloadConfig::validateWorkloadConfig() {
-    _errorBag->require("SchemaVersion",
-        get("SchemaVersion").as<std::string>(),
-        "2018-07-01"
-    );
+    _errorBag->require("SchemaVersion", _node, std::string("2018-07-01"));
 }
 
 genny::PhasedActorFactory::ActorVector genny::PhasedActorFactory::actors(genny::ErrorBag* const errorBag) const {

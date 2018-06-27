@@ -19,15 +19,19 @@ namespace {
 
 YAML::Node loadConfig(char* const* argv) {
     const char* fileName = argv[1];
-    auto yaml = YAML::LoadFile(fileName);
-    return yaml;
+    try {
+        return YAML::LoadFile(fileName);
+    } catch(const std::exception& ex) {
+        std::cerr << "Error loading yaml from " << fileName << ": " << ex.what();
+        throw ex;
+    }
 }
 
 // TODO: move to static method of HelloWorld
 std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(
     const genny::ActorConfig* const actorConfig,
     const genny::WorkloadConfig* const workloadConfig,
-    genny::ErrorBag* const errorBag) {
+    genny::ErrorBag*) {
     const auto count = actorConfig->get("Count").as<int>();
     auto out = std::vector<std::unique_ptr<genny::PhasedActor>>{};
     for (int i = 0; i < count; ++i) {

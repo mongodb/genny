@@ -55,5 +55,10 @@ Actors:
         REQUIRE(report(errors) == errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
     }
 
-
+    SECTION("Empty Yaml") {
+        auto yaml = YAML::Load("");
+        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
+        REQUIRE((bool)errors);
+        REQUIRE(report(errors) == errString("Key SchemaVersion not found"));
+    }
 }
