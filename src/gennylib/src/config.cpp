@@ -14,7 +14,7 @@ std::vector<std::unique_ptr<const genny::ActorConfig>> genny::WorkloadConfig::cr
 void genny::WorkloadConfig::validateWorkloadConfig() {
     _errorBag->require("SchemaVersion",
         get("SchemaVersion").as<std::string>(),
-        "2018-06-27"
+        "2018-07-01"
     );
 }
 

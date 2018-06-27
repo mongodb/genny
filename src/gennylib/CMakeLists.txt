@@ -69,6 +69,7 @@ install(EXPORT GennyLibraryConfig DESTINATION share/GennyLibrary/cmake)
 export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
 
 add_executable(test_gennylib
+    test/config_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
