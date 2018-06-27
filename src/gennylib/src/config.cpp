@@ -1,12 +1,11 @@
 #include <gennylib/config.hpp>
 
 
-std::vector<std::unique_ptr<genny::ActorConfig>> genny::WorkloadConfig::createActorConfigs(
-    const YAML::Node& node, genny::WorkloadConfig& workloadConfig) {
+std::vector<std::unique_ptr<genny::ActorConfig>> genny::WorkloadConfig::createActorConfigs() {
     auto out = std::vector<std::unique_ptr<genny::ActorConfig>>{};
-    for (const auto& actor : node["Actors"]) {
+    for (const auto& actor : _node["Actors"]) {
         // need to do this over make_unique so we can take advantage of class-friendship
-        out.push_back(std::unique_ptr<genny::ActorConfig>{new ActorConfig(actor, workloadConfig)});
+        out.push_back(std::unique_ptr<genny::ActorConfig>{new ActorConfig(actor, *this)});
     }
     return out;
 }

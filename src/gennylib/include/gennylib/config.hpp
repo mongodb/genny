@@ -17,12 +17,12 @@ namespace genny {
 class PhasedActor;
 
 /**
- * Represents the top-level/"global" configuration. This configuration
- * typically comes from the user-provided workload config yaml.
+ * Represents the top-level/"global" configuration and context for configuring actors.
  */
 class WorkloadConfig : private boost::noncopyable {
 
 public:
+    // no move
     void operator=(WorkloadConfig&&) = delete;
     WorkloadConfig(WorkloadConfig&&) = delete;
 
@@ -40,31 +40,39 @@ private:
 
     WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
         : _node{node},
+          _errorBag{},
           _registry{&registry},
           _orchestrator{&orchestrator},
-          _actorConfigs{createActorConfigs(node, *this)},
-          _errorBag{} {
+          _actorConfigs{createActorConfigs()} {
         validateWorkloadConfig();
     }
 
     const YAML::Node _node;
+    ErrorBag _errorBag;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
     const std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
-    ErrorBag _errorBag;
 
-    static std::vector<std::unique_ptr<ActorConfig>> createActorConfigs(
-        const YAML::Node& node, WorkloadConfig& workloadConfig);
-
+    std::vector<std::unique_ptr<ActorConfig>> createActorConfigs();
     void validateWorkloadConfig();
 };
 
-
+/**
+ * Represents each {@code Actor:} block within a WorkloadConfig.
+ */
 class ActorConfig : private boost::noncopyable {
 
 public:
     void operator=(ActorConfig&&) = delete;
     ActorConfig(ActorConfig&&) = delete;
+
+    metrics::Registry* registry() const {
+        return this->_workloadConfig->_registry;
+    }
+
+    Orchestrator* orchestrator() const {
+        return this->_workloadConfig->_orchestrator;
+    }
 
     template <class... Args>
     YAML::Node operator[](Args&&... args) const {
@@ -86,14 +94,6 @@ public:
     void require(Arg0&& arg0, Args&&... args) {
         this->_workloadConfig->_errorBag.require(
             *this, std::forward<Arg0>(arg0), std::forward<Args>(args)...);
-    }
-
-    metrics::Registry* registry() const {
-        return this->_workloadConfig->_registry;
-    }
-
-    Orchestrator* orchestrator() const {
-        return this->_workloadConfig->_orchestrator;
     }
 
 private:
@@ -125,6 +125,7 @@ public:
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
+    // TODO: this isn't ideal
     struct Results {
         ActorVector actors;
         const ErrorBag& errorBag;
