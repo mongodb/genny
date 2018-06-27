@@ -34,8 +34,6 @@ using namespace genny;
 TEST_CASE("loads configuration okay") {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
-    genny::ErrorBag errors;
-
     SECTION("Valid YAML") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
@@ -43,24 +41,27 @@ Actors:
 - Name: HelloWorld
   Count: 7
         )");
-        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
-        REQUIRE(!errors);
-        REQUIRE(reported(errors) == "");
+        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator};
+        auto result = factory.actors();
+        REQUIRE(!result.errorBag);
+        REQUIRE(reported(result.errorBag) == "");
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
-        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
-        REQUIRE((bool)errors);
-        REQUIRE(reported(errors) ==
+        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator};
+        auto result = factory.actors();
+        REQUIRE((bool)result.errorBag);
+        REQUIRE(reported(result.errorBag) ==
                 errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
     }
 
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("");
-        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
-        REQUIRE((bool)errors);
-        REQUIRE(reported(errors) == errString("Key SchemaVersion not found"));
+        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator};
+        auto result = factory.actors();
+        REQUIRE((bool)result.errorBag);
+        REQUIRE(reported(result.errorBag) == errString("Key SchemaVersion not found"));
     }
 
 
@@ -73,24 +74,24 @@ Actors:
 - Name: One
 - Name: Two
         )");
-        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
+        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator};
 
         int calls = 0;
-        factory.addProducer([&](const ActorConfig& actorConfig) {
+        factory.addProducer([&](ActorConfig& actorConfig) {
             // purposefully "fail" require
-            actorConfig.errors()->require(
+            actorConfig.require(
                 "Name", actorConfig["Name"].as<std::string>(), std::string{"One"});
             ++calls;
             return PhasedActorFactory::ActorVector {};
         });
-        factory.addProducer([&](const ActorConfig& actorConfig) {
+        factory.addProducer([&](ActorConfig& actorConfig) {
             ++calls;
             return PhasedActorFactory::ActorVector {};
         });
 
         auto actors = factory.actors();
 
-        REQUIRE(reported(errors) == errString("Key Name expect [One] but is [Two]"));
+        REQUIRE(reported(actors.errorBag) == errString("Key Name expect [One] but is [Two]"));
         REQUIRE(calls == 4);
     }
 }

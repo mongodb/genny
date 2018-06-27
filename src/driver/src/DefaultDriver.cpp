@@ -47,25 +47,22 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
-    // TODO: don't expose ErrorBag here
-    ErrorBag errorBag;
-    genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errorBag};
+    genny::PhasedActorFactory factory = {yaml, metrics, orchestrator};
 
     // add producers
     factory.addProducer(&helloWorldProducer);
 
-    const auto actors = factory.actors();
+    const auto results = factory.actors();
 
-    if (errorBag) {
-        errorBag.report(std::cerr);
+    if (results.errorBag) {
+        results.errorBag.report(std::cerr);
         throw std::logic_error("Invalid configuration or setup");
     }
-
-    orchestrator.setActorCount(static_cast<unsigned int>(actors.size()));
+    orchestrator.setActorCount(static_cast<unsigned int>(results.actors.size()));
 
     std::vector<std::thread> threads;
     std::transform(
-        cbegin(actors), cend(actors), std::back_inserter(threads), [](const auto& actor) {
+        cbegin(results.actors), cend(results.actors), std::back_inserter(threads), [](const auto& actor) {
             return std::thread{&genny::PhasedActor::run, actor.get()};
         });
 
