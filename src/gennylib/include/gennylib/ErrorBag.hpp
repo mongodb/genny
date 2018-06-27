@@ -14,7 +14,7 @@ class ErrorBag_base {
 
 public:
 
-    explicit operator bool() {
+    explicit operator bool() const {
         return !this->errors.empty();
     }
 
@@ -22,7 +22,7 @@ public:
         errors.push_back(std::move(error));
     }
 
-    void report(std::ostream& out) {
+    void report(std::ostream& out) const {
         for(const auto& error : errors) {
             out << u8"😱 ";
             out << error;

@@ -5,8 +5,11 @@
 
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/metrics.hpp>
+#include <gennylib/config.hpp>
 
 namespace genny {
+
+class WorkloadConfig;
 
 /**
  * The basic extension point for actors that want to vary
@@ -22,6 +25,9 @@ public:
      */
     explicit PhasedActor(Orchestrator* orchestrator,
                          metrics::Registry* registry,
+                         std::string name = "anonymous");
+
+    explicit PhasedActor(const genny::WorkloadConfig& workloadConfig,
                          std::string name = "anonymous");
 
     virtual ~PhasedActor() = default;

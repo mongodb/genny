@@ -12,6 +12,8 @@
 
 namespace genny {
 
+class PhasedActor;
+
 class WorkloadConfig : private boost::noncopyable {
 
 public:

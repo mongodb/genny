@@ -27,3 +27,7 @@ genny::PhasedActor::PhasedActor(genny::Orchestrator* orchestrator,
     : _orchestrator{orchestrator},
       _metrics{registry},
       _name{std::move(name)} {}
+
+genny::PhasedActor::PhasedActor(const genny::WorkloadConfig& workloadConfig,
+                                std::string name)
+: PhasedActor(workloadConfig.orchestrator(), workloadConfig.registry(), std::move(name)) {}

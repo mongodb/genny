@@ -21,7 +21,7 @@ std::string errString(Str&&...args) {
     return out.str();
 }
 
-std::string report(genny::ErrorBag& bag) {
+std::string reported(const genny::ErrorBag& bag) {
     std::stringstream out;
     bag.report(out);
     return out.str();
@@ -45,20 +45,53 @@ Actors:
         )");
         genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
         REQUIRE(!errors);
-        REQUIRE(report(errors) == "");
+        REQUIRE(reported(errors) == "");
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
         genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
         REQUIRE((bool)errors);
-        REQUIRE(report(errors) == errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
+        REQUIRE(reported(errors) == errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
     }
 
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("");
         genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
         REQUIRE((bool)errors);
-        REQUIRE(report(errors) == errString("Key SchemaVersion not found"));
+        REQUIRE(reported(errors) == errString("Key SchemaVersion not found"));
     }
+
+
+    SECTION("Two ActorProducers can see all Actors blocks and producers continue even if errors reported") {
+        auto yaml = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+- Name: Two
+        )");
+        genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
+
+        int calls = 0;
+        factory.addProducer([&](const ActorConfig* actorConfig,
+                                const WorkloadConfig* workloadConfig,
+                                ErrorBag* errorBag) -> PhasedActorFactory::ActorVector {
+                // purposefully "fail" require
+                errorBag->require("Name", actorConfig->get("Name").as<std::string>(), std::string{"One"});
+                ++calls;
+                return {};
+        });
+        factory.addProducer([&](const ActorConfig* actorConfig,
+                                const WorkloadConfig* workloadConfig,
+                                ErrorBag* errorBag) -> PhasedActorFactory::ActorVector {
+            ++calls;
+            return {};
+        });
+
+        auto actors = factory.actors(&errors);
+
+        REQUIRE(reported(errors) == errString("Key Name expect [One] but is [Two]"));
+        REQUIRE(calls == 4);
+    }
+
 }
