@@ -6,8 +6,7 @@ std::vector<std::unique_ptr<genny::ActorConfig>> genny::WorkloadConfig::createAc
     auto out = std::vector<std::unique_ptr<genny::ActorConfig>>{};
     for (const auto& actor : node["Actors"]) {
         // need to do this over make_unique so we can take advantage of class-friendship
-        out.push_back(
-            std::unique_ptr<genny::ActorConfig>{new ActorConfig(actor, workloadConfig)});
+        out.push_back(std::unique_ptr<genny::ActorConfig>{new ActorConfig(actor, workloadConfig)});
     }
     return out;
 }

@@ -27,8 +27,7 @@ public:
                          metrics::Registry* registry,
                          std::string name = "anonymous");
 
-    explicit PhasedActor(const genny::ActorConfig& config,
-                         std::string name = "anonymous");
+    explicit PhasedActor(const genny::ActorConfig& config, std::string name = "anonymous");
 
     virtual ~PhasedActor() = default;
 

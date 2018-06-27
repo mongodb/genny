@@ -83,24 +83,23 @@ Actors:
         factory.addProducer([&](ActorConfig& actorConfig) {
             // purposefully "fail" require
             actorConfig.require("Name", std::string("One"));
-            actorConfig.require("Count", 5); // we're type-safe
+            actorConfig.require("Count", 5);  // we're type-safe
             actorConfig.require(actorConfig["SomeList"], 0, 100);
             ++calls;
-            return PhasedActorFactory::ActorVector {};
+            return PhasedActorFactory::ActorVector{};
         });
         factory.addProducer([&](ActorConfig& actorConfig) {
             ++calls;
-            return PhasedActorFactory::ActorVector {};
+            return PhasedActorFactory::ActorVector{};
         });
 
         auto actors = factory.actors();
 
-        REQUIRE(reported(actors.errorBag) == errString(
-            "Key Count not found",
-            "Key Name expect [One] but is [Two]",
-            "Key Count expect [5] but is [7]",
-            "Key 0 expect [100] but is [2]"
-        ));
+        REQUIRE(reported(actors.errorBag) ==
+                errString("Key Count not found",
+                          "Key Name expect [One] but is [Two]",
+                          "Key Count expect [5] but is [7]",
+                          "Key 0 expect [100] but is [2]"));
         REQUIRE(calls == 4);
     }
 }

@@ -25,19 +25,18 @@ public:
     }
 
     template <class N, class K = std::string, class E = std::string>
-    void require(const N& node,
-                 const K& key,
-                 const E& expect,
-                 const std::string& path = "") {
+    void require(const N& node, const K& key, const E& expect, const std::string& path = "") {
         auto val = node.operator[](key);
         if (!val) {
             add("Key " + write(path) + write(key) + " not found");
             return;
         }
-        auto asType = val.template as<E>(); // ugh the C++ grammar is unpleasant
-        // in future could allow for a more general-purpose Operator/functor type rather than just !=
+        auto asType = val.template as<E>();  // ugh the C++ grammar is unpleasant
+        // in future could allow for a more general-purpose Operator/functor type rather than just
+        // !=
         if (!(expect == asType)) {
-            add("Key " +  write(path) + write(key) + " expect [" + write(expect) + "] but is [" + write(asType) + "]");
+            add("Key " + write(path) + write(key) + " expect [" + write(expect) + "] but is [" +
+                write(asType) + "]");
         }
     }
 
@@ -49,7 +48,7 @@ private:
     std::vector<std::string> errors;
 
     // Add operator<<(ostream) to get better error-reporting of types
-    template<class T>
+    template <class T>
     static std::string write(const T& val) {
         std::stringstream out;
         out << val;

@@ -61,10 +61,12 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     orchestrator.setActorCount(static_cast<unsigned int>(results.actors.size()));
 
     std::vector<std::thread> threads;
-    std::transform(
-        cbegin(results.actors), cend(results.actors), std::back_inserter(threads), [](const auto& actor) {
-            return std::thread{&genny::PhasedActor::run, actor.get()};
-        });
+    std::transform(cbegin(results.actors),
+                   cend(results.actors),
+                   std::back_inserter(threads),
+                   [](const auto& actor) {
+                       return std::thread{&genny::PhasedActor::run, actor.get()};
+                   });
 
     for (auto& thread : threads)
         thread.join();

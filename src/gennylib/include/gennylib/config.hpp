@@ -30,9 +30,7 @@ private:
     friend class PhasedActorFactory;
     friend class ActorConfig;
 
-    WorkloadConfig(const YAML::Node& node,
-                   metrics::Registry& registry,
-                   Orchestrator& orchestrator)
+    WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
         : _node{node},
           _registry{&registry},
           _orchestrator{&orchestrator},
@@ -60,24 +58,26 @@ public:
     void operator=(ActorConfig&&) = delete;
     ActorConfig(ActorConfig&&) = delete;
 
-    template<class...Args>
-    YAML::Node operator[](Args&&...args) const {
+    template <class... Args>
+    YAML::Node operator[](Args&&... args) const {
         return _node.operator[](std::forward<Args>(args)...);
     }
 
-    template<class Arg0, class...Args,
-            typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type
-            >
-    void require(Arg0&& arg0, Args&&...args) {
-        this->_workloadConfig->_errorBag.require(std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+    template <class Arg0,
+              class... Args,
+              typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type>
+    void require(Arg0&& arg0, Args&&... args) {
+        this->_workloadConfig->_errorBag.require(std::forward<Arg0>(arg0),
+                                                 std::forward<Args>(args)...);
     }
 
-    template<class Arg0, class...Args,
-            typename = typename std::enable_if<!std::is_base_of<YAML::Node, Arg0>::value>::type,
-            typename = void
-    >
-    void require(Arg0&& arg0, Args&&...args) {
-        this->_workloadConfig->_errorBag.require(*this, std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+    template <class Arg0,
+              class... Args,
+              typename = typename std::enable_if<!std::is_base_of<YAML::Node, Arg0>::value>::type,
+              typename = void>
+    void require(Arg0&& arg0, Args&&... args) {
+        this->_workloadConfig->_errorBag.require(
+            *this, std::forward<Arg0>(arg0), std::forward<Args>(args)...);
     }
 
     metrics::Registry* registry() const {
@@ -102,7 +102,6 @@ private:
 class PhasedActorFactory : private boost::noncopyable {
 
 public:
-
     PhasedActorFactory(const YAML::Node& root,
                        genny::metrics::Registry& registry,
                        genny::Orchestrator& orchestrator);
