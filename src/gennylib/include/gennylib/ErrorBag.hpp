@@ -10,16 +10,11 @@
 
 namespace genny {
 
-template <class T>
-class ErrorBag_base {
+class ErrorBag {
 
 public:
     explicit operator bool() const {
         return !this->errors.empty();
-    }
-
-    void add(T error) {
-        errors.push_back(std::move(error));
     }
 
     void report(std::ostream& out) const {
@@ -29,36 +24,36 @@ public:
         }
     }
 
-    template <class Is, class Expect>
-    void require(Is&& is, Expect&& expect) {
-        require("", std::forward<Is>(is), std::forward<Expect>(expect));
-    }
-
-    template <class Is, class Expect>
-    void require(const std::string& key, const Is& is, const Expect& expect) {
-        if (expect != is) {
-            add((key.empty() ? "" : "Key " + key + " ") + "expect [" + expect + "] but is [" + is +
-                "]");
-        }
-    }
-
-    template <class E = std::string>
-    void require(const std::string& key,
-                 const YAML::Node& node,
+    template <class N, class K = std::string, class E = std::string>
+    void require(const N& node,
+                 const K& key,
                  const E& expect,
                  const std::string& path = "") {
-        if (!node[key]) {
+        auto val = node.operator[](key);
+        if (!val) {
             add("Key " + path + key + " not found");
             return;
         }
-        require(key, node[key].as<E>(), expect);
+        auto asType = val.template as<E>(); // ugh the C++ grammar is unpleasant
+        if (expect != asType) {
+            add("Key " +  write(path) + write(key) + " expect [" + write(expect) + "] but is [" + write(asType) + "]");
+        }
     }
 
 private:
-    std::vector<T> errors;
-};
+    void add(std::string error) {
+        errors.push_back(std::move(error));
+    }
 
-using ErrorBag = ErrorBag_base<std::string>;
+    std::vector<std::string> errors;
+
+    template<class T>
+    static std::string write(const T& val) {
+        std::stringstream out;
+        out << val;
+        return out.str();
+    }
+};
 
 }  // namespace genny
 

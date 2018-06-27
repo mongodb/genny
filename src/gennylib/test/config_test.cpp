@@ -73,14 +73,15 @@ SchemaVersion: 2018-07-01
 Actors:
 - Name: One
 - Name: Two
+  Count: 7
         )");
         genny::PhasedActorFactory factory = {yaml, metrics, orchestrator};
 
         int calls = 0;
         factory.addProducer([&](ActorConfig& actorConfig) {
             // purposefully "fail" require
-            actorConfig.require(
-                "Name", actorConfig["Name"].as<std::string>(), std::string{"One"});
+            actorConfig.require(actorConfig, "Name", std::string("One"));
+            actorConfig.require(actorConfig, "Count", 5); // we're type-safe
             ++calls;
             return PhasedActorFactory::ActorVector {};
         });
@@ -91,7 +92,11 @@ Actors:
 
         auto actors = factory.actors();
 
-        REQUIRE(reported(actors.errorBag) == errString("Key Name expect [One] but is [Two]"));
+        REQUIRE(reported(actors.errorBag) == errString(
+            "Key Count not found",
+            "Key Name expect [One] but is [Two]",
+            "Key Count expect [5] but is [7]"
+        ));
         REQUIRE(calls == 4);
     }
 }
