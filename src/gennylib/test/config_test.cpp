@@ -80,8 +80,8 @@ Actors:
         int calls = 0;
         factory.addProducer([&](ActorConfig& actorConfig) {
             // purposefully "fail" require
-            actorConfig.require(actorConfig, "Name", std::string("One"));
-            actorConfig.require(actorConfig, "Count", 5); // we're type-safe
+            actorConfig.require("Name", std::string("One"));
+            actorConfig.require("Count", 5); // we're type-safe
             ++calls;
             return PhasedActorFactory::ActorVector {};
         });

@@ -65,7 +65,7 @@ public:
 
     template<class...Args>
     void require(Args&&...args) {
-        this->_workloadConfig->_errorBag.require(std::forward<Args>(args)...);
+        this->_workloadConfig->_errorBag.require(*this, std::forward<Args>(args)...);
     }
 
     metrics::Registry* registry() const {
