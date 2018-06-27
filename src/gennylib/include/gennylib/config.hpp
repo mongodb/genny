@@ -60,11 +60,7 @@ public:
     ActorConfig(ActorConfig&&) = delete;
 
     YAML::Node operator[](const std::string& key) const {
-        return this->get(key);
-    }
-
-    YAML::Node get(const std::string& key) const {
-        return this->_node[key];
+        return _node[key];
     }
 
     metrics::Registry* registry() const {
@@ -99,7 +95,7 @@ public:
 
     using ActorVector = std::vector<std::unique_ptr<PhasedActor>>;
     using Producer =
-        std::function<ActorVector(const ActorConfig*, ErrorBag*)>;
+        std::function<ActorVector(const ActorConfig&, ErrorBag*)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {

@@ -29,12 +29,12 @@ YAML::Node loadConfig(char* const* argv) {
 
 // TODO: move to static method of HelloWorld
 std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(
-    const genny::ActorConfig* const actorConfig,
+    const genny::ActorConfig& actorConfig,
     genny::ErrorBag*) {
-    const auto count = actorConfig->get("Count").as<int>();
+    const auto count = actorConfig["Count"].as<int>();
     auto out = std::vector<std::unique_ptr<genny::PhasedActor>>{};
     for (int i = 0; i < count; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(*actorConfig, std::to_string(i)));
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig, std::to_string(i)));
     }
     return out;
 }

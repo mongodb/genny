@@ -76,15 +76,15 @@ Actors:
         genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
 
         int calls = 0;
-        factory.addProducer([&](const ActorConfig* actorConfig,
+        factory.addProducer([&](const ActorConfig& actorConfig,
                                 ErrorBag* errorBag) -> PhasedActorFactory::ActorVector {
             // purposefully "fail" require
             errorBag->require(
-                "Name", actorConfig->get("Name").as<std::string>(), std::string{"One"});
+                "Name", actorConfig["Name"].as<std::string>(), std::string{"One"});
             ++calls;
             return {};
         });
-        factory.addProducer([&](const ActorConfig* actorConfig,
+        factory.addProducer([&](const ActorConfig& actorConfig,
                                 ErrorBag* errorBag) -> PhasedActorFactory::ActorVector {
             ++calls;
             return {};

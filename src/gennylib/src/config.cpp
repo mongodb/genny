@@ -21,7 +21,7 @@ genny::PhasedActorFactory::ActorVector genny::PhasedActorFactory::actors(
     auto out = ActorVector{};
     for (const auto& producer : _producers)
         for (const auto& actorConfig : _workloadConfig.actorConfigs())
-            for (auto&& actor : producer(actorConfig.get(), errorBag))
+            for (auto&& actor : producer(*actorConfig.get(), errorBag))
                 out.push_back(std::move(actor));
     return out;
 }
