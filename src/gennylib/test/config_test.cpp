@@ -76,21 +76,19 @@ Actors:
         genny::PhasedActorFactory factory = {yaml, metrics, orchestrator, errors};
 
         int calls = 0;
-        factory.addProducer([&](const ActorConfig& actorConfig,
-                                ErrorBag* errorBag) -> PhasedActorFactory::ActorVector {
+        factory.addProducer([&](const ActorConfig& actorConfig) -> PhasedActorFactory::ActorVector {
             // purposefully "fail" require
-            errorBag->require(
+            actorConfig.errors()->require(
                 "Name", actorConfig["Name"].as<std::string>(), std::string{"One"});
             ++calls;
             return {};
         });
-        factory.addProducer([&](const ActorConfig& actorConfig,
-                                ErrorBag* errorBag) -> PhasedActorFactory::ActorVector {
+        factory.addProducer([&](const ActorConfig& actorConfig) -> PhasedActorFactory::ActorVector {
             ++calls;
             return {};
         });
 
-        auto actors = factory.actors(&errors);
+        auto actors = factory.actors();
 
         REQUIRE(reported(errors) == errString("Key Name expect [One] but is [Two]"));
         REQUIRE(calls == 4);

@@ -59,8 +59,13 @@ public:
     void operator=(ActorConfig&&) = delete;
     ActorConfig(ActorConfig&&) = delete;
 
-    YAML::Node operator[](const std::string& key) const {
-        return _node[key];
+    template<class...Args>
+    YAML::Node operator[](Args&&...args) const {
+        return _node.operator[](std::forward<Args>(args)...);
+    }
+
+    ErrorBag* errors() const {
+        return this->_workloadConfig->_errorBag;
     }
 
     metrics::Registry* registry() const {
@@ -94,15 +99,14 @@ public:
     PhasedActorFactory(PhasedActorFactory&&) = delete;
 
     using ActorVector = std::vector<std::unique_ptr<PhasedActor>>;
-    using Producer =
-        std::function<ActorVector(const ActorConfig&, ErrorBag*)>;
+    using Producer = std::function<ActorVector(const ActorConfig&)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    ActorVector actors(ErrorBag* errorBag) const;
+    ActorVector actors() const;
 
 private:
     std::vector<Producer> _producers;
