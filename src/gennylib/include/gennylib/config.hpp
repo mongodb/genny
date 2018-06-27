@@ -16,12 +16,20 @@ namespace genny {
 
 class PhasedActor;
 
+/**
+ * Represents the top-level/"global" configuration. This configuration
+ * typically comes from the user-provided workload config yaml.
+ */
 class WorkloadConfig : private boost::noncopyable {
 
 public:
     void operator=(WorkloadConfig&&) = delete;
     WorkloadConfig(WorkloadConfig&&) = delete;
 
+    /**
+     * @return return a {@code ActorConfig} for each of hhe {@code Actors} structures.
+     *         This value is created when the WorkloadConfig is constructed.
+     */
     const std::vector<std::unique_ptr<class ActorConfig>>& actorConfigs() const {
         return this->_actorConfigs;
     }
