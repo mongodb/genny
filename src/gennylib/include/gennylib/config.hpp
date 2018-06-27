@@ -74,21 +74,28 @@ public:
         return this->_workloadConfig->_orchestrator;
     }
 
+    // Act like the wrapped YAML::Node, so actorConfig["foo"] gives you node["foo"]
     template <class... Args>
     YAML::Node operator[](Args&&... args) const {
         return _node.operator[](std::forward<Args>(args)...);
     }
 
+    // lets you do
+    //   actorConfig.require(actorConfig["foo"], "bar", 3); // assert config["foo"]["bar"] == 3
     template <class Arg0,
               class... Args,
+              // enable this version if Arg0 is a YAML::Node
               typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type>
     void require(Arg0&& arg0, Args&&... args) {
         this->_workloadConfig->_errorBag.require(std::forward<Arg0>(arg0),
                                                  std::forward<Args>(args)...);
     }
 
+    // lets you do
+    //   actorConfig.require("foo", 3); // assert config["foo"] == 3
     template <class Arg0,
               class... Args,
+              // enable this version if Arg0 is *not* a YAML::Node (it's something intended for this->operator[])
               typename = typename std::enable_if<!std::is_base_of<YAML::Node, Arg0>::value>::type,
               typename = void>
     void require(Arg0&& arg0, Args&&... args) {

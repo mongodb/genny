@@ -32,8 +32,7 @@ public:
             return;
         }
         auto asType = val.template as<E>();  // ugh the C++ grammar is unpleasant
-        // in future could allow for a more general-purpose Operator/functor type rather than just
-        // !=
+        // in future pass in BinaryFunction<E,E,bool> so can generalize == etc
         if (!(expect == asType)) {
             add("Key " + write(path) + write(key) + " expect [" + write(expect) + "] but is [" +
                 write(asType) + "]");
