@@ -30,13 +30,11 @@ YAML::Node loadConfig(char* const* argv) {
 // TODO: move to static method of HelloWorld
 std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(
     const genny::ActorConfig* const actorConfig,
-    const genny::WorkloadConfig* const workloadConfig,
     genny::ErrorBag*) {
     const auto count = actorConfig->get("Count").as<int>();
     auto out = std::vector<std::unique_ptr<genny::PhasedActor>>{};
     for (int i = 0; i < count; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(
-            workloadConfig->orchestrator(), workloadConfig->registry(), std::to_string(i)));
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(*actorConfig, std::to_string(i)));
     }
     return out;
 }

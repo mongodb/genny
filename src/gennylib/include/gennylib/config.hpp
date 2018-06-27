@@ -20,23 +20,13 @@ public:
     void operator=(WorkloadConfig&&) = delete;
     WorkloadConfig(WorkloadConfig&&) = delete;
 
-    Orchestrator* orchestrator() const {
-        return _orchestrator;
-    }
-    metrics::Registry* registry() const {
-        return _registry;
-    }
-
-    const YAML::Node get(const std::string& key) const {
-        return this->_node[key];
-    }
-
     const std::vector<std::unique_ptr<const class ActorConfig>>& actorConfigs() const {
         return this->_actorConfigs;
     }
 
 private:
     friend class PhasedActorFactory;
+    friend class ActorConfig;
 
     WorkloadConfig(const YAML::Node& node,
                    metrics::Registry& registry,
@@ -69,8 +59,20 @@ public:
     void operator=(ActorConfig&&) = delete;
     ActorConfig(ActorConfig&&) = delete;
 
-    const YAML::Node get(const std::string& key) const {
+    YAML::Node operator[](const std::string& key) const {
+        return this->get(key);
+    }
+
+    YAML::Node get(const std::string& key) const {
         return this->_node[key];
+    }
+
+    metrics::Registry* registry() const {
+        return this->_workloadConfig->_registry;
+    }
+
+    Orchestrator* orchestrator() const {
+        return this->_workloadConfig->_orchestrator;
     }
 
 private:
@@ -97,7 +99,7 @@ public:
 
     using ActorVector = std::vector<std::unique_ptr<PhasedActor>>;
     using Producer =
-        std::function<ActorVector(const ActorConfig*, const WorkloadConfig*, ErrorBag*)>;
+        std::function<ActorVector(const ActorConfig*, ErrorBag*)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {

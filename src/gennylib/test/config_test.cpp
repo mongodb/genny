@@ -77,7 +77,6 @@ Actors:
 
         int calls = 0;
         factory.addProducer([&](const ActorConfig* actorConfig,
-                                const WorkloadConfig* workloadConfig,
                                 ErrorBag* errorBag) -> PhasedActorFactory::ActorVector {
             // purposefully "fail" require
             errorBag->require(
@@ -86,7 +85,6 @@ Actors:
             return {};
         });
         factory.addProducer([&](const ActorConfig* actorConfig,
-                                const WorkloadConfig* workloadConfig,
                                 ErrorBag* errorBag) -> PhasedActorFactory::ActorVector {
             ++calls;
             return {};

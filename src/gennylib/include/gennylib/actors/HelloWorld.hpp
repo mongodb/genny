@@ -10,9 +10,8 @@ namespace genny::actor {
 class HelloWorld : public genny::PhasedActor {
 
 public:
-    HelloWorld(Orchestrator* orchestrator,
-               metrics::Registry* metrics,
-               const std::string& name = "hello");
+
+    HelloWorld(const ActorConfig& config, const std::string& name = "hello");
 
     ~HelloWorld() override = default;
 

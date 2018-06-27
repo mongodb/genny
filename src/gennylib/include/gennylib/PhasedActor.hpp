@@ -9,7 +9,7 @@
 
 namespace genny {
 
-class WorkloadConfig;
+class ActorConfig;
 
 /**
  * The basic extension point for actors that want to vary
@@ -27,7 +27,7 @@ public:
                          metrics::Registry* registry,
                          std::string name = "anonymous");
 
-    explicit PhasedActor(const genny::WorkloadConfig& workloadConfig,
+    explicit PhasedActor(const genny::ActorConfig& config,
                          std::string name = "anonymous");
 
     virtual ~PhasedActor() = default;

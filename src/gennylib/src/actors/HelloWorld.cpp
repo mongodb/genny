@@ -6,9 +6,8 @@ void genny::actor::HelloWorld::doPhase(int) {
     _operations.incr();
 }
 
-genny::actor::HelloWorld::HelloWorld(genny::Orchestrator* orchestrator,
-                                     genny::metrics::Registry* metrics,
+genny::actor::HelloWorld::HelloWorld(const genny::ActorConfig& config,
                                      const std::string& name)
-    : PhasedActor(orchestrator, metrics, name),
-      _output_timer{metrics->timer("hello." + name + ".output")},
-      _operations{metrics->counter("hello." + name + ".operations")} {};
+    : PhasedActor(config, name),
+      _output_timer{config.registry()->timer("hello." + name + ".output")},
+      _operations{config.registry()->counter("hello." + name + ".operations")} {};
