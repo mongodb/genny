@@ -38,14 +38,17 @@ public:
 private:
     friend class PhasedActorFactory;
 
-    WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator, ErrorBag& errorBag)
+    WorkloadConfig(const YAML::Node& node,
+                   metrics::Registry& registry,
+                   Orchestrator& orchestrator,
+                   ErrorBag& errorBag)
         : _node{node},
           _registry{&registry},
           _orchestrator{&orchestrator},
           _actorConfigs{createActorConfigs(node, *this)},
           _errorBag{&errorBag} {
-            validateWorkloadConfig();
-          }
+        validateWorkloadConfig();
+    }
 
     const YAML::Node _node;
     metrics::Registry* const _registry;
@@ -54,7 +57,7 @@ private:
     ErrorBag* const _errorBag;
 
     static std::vector<std::unique_ptr<const ActorConfig>> createActorConfigs(
-        const YAML::Node& node,const WorkloadConfig& workloadConfig);
+        const YAML::Node& node, const WorkloadConfig& workloadConfig);
 
     void validateWorkloadConfig();
 };
@@ -93,7 +96,8 @@ public:
     PhasedActorFactory(PhasedActorFactory&&) = delete;
 
     using ActorVector = std::vector<std::unique_ptr<PhasedActor>>;
-    using Producer = std::function<ActorVector(const ActorConfig*, const WorkloadConfig*, ErrorBag*)>;
+    using Producer =
+        std::function<ActorVector(const ActorConfig*, const WorkloadConfig*, ErrorBag*)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {

@@ -4,8 +4,8 @@
 #include <string>
 
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/metrics.hpp>
 #include <gennylib/config.hpp>
+#include <gennylib/metrics.hpp>
 
 namespace genny {
 

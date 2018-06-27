@@ -24,7 +24,7 @@ std::thread end(Orchestrator& o, int phase) {
 }  // namespace
 
 TEST_CASE("Orchestrator") {
-    auto o = Orchestrator {};
+    auto o = Orchestrator{};
     o.setActorCount(2);
 
     REQUIRE(o.currentPhaseNumber() == 0);

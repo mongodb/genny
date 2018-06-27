@@ -21,7 +21,7 @@ YAML::Node loadConfig(char* const* argv) {
     const char* fileName = argv[1];
     try {
         return YAML::LoadFile(fileName);
-    } catch(const std::exception& ex) {
+    } catch (const std::exception& ex) {
         std::cerr << "Error loading yaml from " << fileName << ": " << ex.what();
         throw ex;
     }
@@ -58,7 +58,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
 
     const auto actors = factory.actors(&errorBag);
 
-    if(errorBag) {
+    if (errorBag) {
         errorBag.report(std::cerr);
         throw std::logic_error("Invalid configuration or setup");
     }
