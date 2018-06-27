@@ -31,11 +31,12 @@ public:
                  const std::string& path = "") {
         auto val = node.operator[](key);
         if (!val) {
-            add("Key " + path + key + " not found");
+            add("Key " + write(path) + write(key) + " not found");
             return;
         }
         auto asType = val.template as<E>(); // ugh the C++ grammar is unpleasant
-        if (expect != asType) {
+        // in future could allow for a more general-purpose Operator/functor type rather than just !=
+        if (!(expect == asType)) {
             add("Key " +  write(path) + write(key) + " expect [" + write(expect) + "] but is [" + write(asType) + "]");
         }
     }
@@ -47,6 +48,7 @@ private:
 
     std::vector<std::string> errors;
 
+    // Add operator<<(ostream) to get better error-reporting of types
     template<class T>
     static std::string write(const T& val) {
         std::stringstream out;

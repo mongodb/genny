@@ -72,8 +72,10 @@ Actors:
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
+  SomeList: [100, 2, 3]
 - Name: Two
   Count: 7
+  SomeList: [2]
         )");
         genny::PhasedActorFactory factory = {yaml, metrics, orchestrator};
 
@@ -82,6 +84,7 @@ Actors:
             // purposefully "fail" require
             actorConfig.require("Name", std::string("One"));
             actorConfig.require("Count", 5); // we're type-safe
+            actorConfig.require(actorConfig["SomeList"], 0, 100);
             ++calls;
             return PhasedActorFactory::ActorVector {};
         });
@@ -95,7 +98,8 @@ Actors:
         REQUIRE(reported(actors.errorBag) == errString(
             "Key Count not found",
             "Key Name expect [One] but is [Two]",
-            "Key Count expect [5] but is [7]"
+            "Key Count expect [5] but is [7]",
+            "Key 0 expect [100] but is [2]"
         ));
         REQUIRE(calls == 4);
     }

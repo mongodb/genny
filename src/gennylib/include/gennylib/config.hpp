@@ -1,6 +1,8 @@
 #ifndef HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 #define HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 
+#include <type_traits>
+
 #include <yaml-cpp/yaml.h>
 
 #include <boost/noncopyable.hpp>
@@ -63,9 +65,19 @@ public:
         return _node.operator[](std::forward<Args>(args)...);
     }
 
-    template<class...Args>
-    void require(Args&&...args) {
-        this->_workloadConfig->_errorBag.require(*this, std::forward<Args>(args)...);
+    template<class Arg0, class...Args,
+            typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type
+            >
+    void require(Arg0&& arg0, Args&&...args) {
+        this->_workloadConfig->_errorBag.require(std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+    }
+
+    template<class Arg0, class...Args,
+            typename = typename std::enable_if<!std::is_base_of<YAML::Node, Arg0>::value>::type,
+            typename = void
+    >
+    void require(Arg0&& arg0, Args&&...args) {
+        this->_workloadConfig->_errorBag.require(*this, std::forward<Arg0>(arg0), std::forward<Args>(args)...);
     }
 
     metrics::Registry* registry() const {
