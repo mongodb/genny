@@ -20,6 +20,8 @@ namespace genny {
 class WorkloadContext : private boost::noncopyable {
 
 public:
+    using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
+
     /**
      * @return return a {@code ActorConfig} for each of hhe {@code Actors} structures.
      *         This value is created when the WorkloadConfig is constructed.
@@ -28,8 +30,17 @@ public:
         return this->_actorContexts;
     }
 
+    ErrorBag& errors() {
+        return _errorBag;
+    }
+
+    const ActorVector& actors() const {
+        return _actors;
+    }
+
 private:
     friend class ActorContext;
+    friend class WorkloadContextFactory;
 
     WorkloadContext(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
         : _node{node},
@@ -47,35 +58,19 @@ private:
       _orchestrator{other._orchestrator},
       _actorContexts{std::move(other._actorContexts)} {};
 
-    const YAML::Node _node;
+    std::vector<std::unique_ptr<ActorContext>> createActorConfigs();
+
+    void validateWorkloadConfig();
+
+    YAML::Node _node;
     ErrorBag _errorBag;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
-
-    std::vector<std::unique_ptr<ActorContext>> createActorConfigs();
-    void validateWorkloadConfig();
-
-public:
-    using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
-
-//    WorkloadContext(const YAML::Node& root,
-//                    genny::metrics::Registry& registry,
-//                    genny::Orchestrator& orchestrator)
-//            : _workloadConfig{root, registry, orchestrator} {}
-
-    ErrorBag& errors() {
-        return _errorBag;
-    }
-    const ActorVector& actors() {
-        return _actors;
-    }
-
-private:
-    friend class WorkloadContextFactory;
     ActorVector _actors;
-//    WorkloadConfig _workloadConfig;
+
 };
+
 
 /**
  * Represents each {@code Actor:} block within a WorkloadConfig.
@@ -115,7 +110,6 @@ public:
     //   actorConfig.require(actorConfig["foo"], "bar", 3); // assert config["foo"]["bar"] == 3
     template <class Arg0,
               class... Args,
-              // enable this version if Arg0 is a YAML::Node
               typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type>
     void require(Arg0&& arg0, Args&&... args) {
         this->_workloadConfig->_errorBag.require(std::forward<Arg0>(arg0),
@@ -126,7 +120,6 @@ public:
     //   actorConfig.require("foo", 3); // assert config["foo"] == 3
     template <class Arg0,
               class... Args,
-              // enable this version if Arg0 is *not* a YAML::Node (it's something intended for this->operator[])
               typename = typename std::enable_if<!std::is_base_of<YAML::Node, Arg0>::value>::type,
               typename = void>
     void require(Arg0&& arg0, Args&&... args) {
@@ -140,20 +133,15 @@ private:
     ActorContext(const YAML::Node& node, WorkloadContext& config)
         : _node{node}, _workloadConfig{&config} {}
 
-    const YAML::Node _node;
+    YAML::Node _node;
     WorkloadContext* const _workloadConfig;
-};
 
+};
 
 
 class WorkloadContextFactory : private boost::noncopyable {
 
 public:
-    explicit WorkloadContextFactory() = default;
-
-    void operator=(WorkloadContextFactory&&) = delete;
-    WorkloadContextFactory(WorkloadContextFactory&&) = delete;
-
     using Producer = std::function<typename WorkloadContext::ActorVector(ActorContext&)>;
 
     template <class... Args>
@@ -162,11 +150,12 @@ public:
     }
 
     WorkloadContext build(const YAML::Node& root,
-                       genny::metrics::Registry& registry,
-                       genny::Orchestrator& orchestrator) const;
+                          genny::metrics::Registry& registry,
+                          genny::Orchestrator& orchestrator) const;
 
 private:
     std::vector<Producer> _producers;
+
 };
 
 
