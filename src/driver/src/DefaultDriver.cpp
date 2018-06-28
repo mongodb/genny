@@ -29,7 +29,7 @@ YAML::Node loadConfig(char* const* argv) {
 
 // TODO: move to static method of HelloWorld
 std::vector<std::unique_ptr<genny::Actor>> helloWorldProducer(
-    const genny::ActorConfig& actorConfig) {
+    const genny::ActorContext& actorConfig) {
     const auto count = actorConfig["Count"].as<int>();
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     for (int i = 0; i < count; ++i) {
@@ -47,7 +47,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
-    genny::ActorContextFactory factory{};
+    genny::WorkloadContextFactory factory{};
 
     // add producers
     factory.addProducer(&helloWorldProducer);

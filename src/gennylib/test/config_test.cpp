@@ -41,7 +41,7 @@ Actors:
 - Name: HelloWorld
   Count: 7
         )");
-        genny::ActorContextFactory factory{};
+        genny::WorkloadContextFactory factory{};
         auto result = factory.build(yaml, metrics, orchestrator);
         REQUIRE(!result.errors());
         REQUIRE(reported(result.errors()) == "");
@@ -49,7 +49,7 @@ Actors:
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
-        genny::ActorContextFactory factory{};
+        genny::WorkloadContextFactory factory{};
         auto result = factory.build(yaml, metrics, orchestrator);
         REQUIRE((bool)result.errors());
         REQUIRE(reported(result.errors()) ==
@@ -58,7 +58,7 @@ Actors:
 
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("");
-        genny::ActorContextFactory factory{};
+        genny::WorkloadContextFactory factory{};
         auto result = factory.build(yaml, metrics, orchestrator);
         REQUIRE((bool)result.errors());
         REQUIRE(reported(result.errors()) == errString("Key SchemaVersion not found"));
@@ -77,10 +77,10 @@ Actors:
   Count: 7
   SomeList: [2]
         )");
-        genny::ActorContextFactory factory;
+        genny::WorkloadContextFactory factory;
 
         int calls = 0;
-        factory.addProducer([&](ActorConfig& actorConfig) {
+        factory.addProducer([&](ActorContext& actorConfig) {
             // purposefully "fail" require
             actorConfig.require("Name", std::string("One"));
             actorConfig.require("Count", 5);  // we're type-safe
@@ -88,7 +88,7 @@ Actors:
             ++calls;
             return WorkloadContext::ActorVector {};
         });
-        factory.addProducer([&](ActorConfig& actorConfig) {
+        factory.addProducer([&](ActorContext& actorConfig) {
             ++calls;
             return WorkloadContext::ActorVector {};
         });

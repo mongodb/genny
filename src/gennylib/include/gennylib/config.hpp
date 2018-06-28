@@ -24,20 +24,20 @@ public:
      * @return return a {@code ActorConfig} for each of hhe {@code Actors} structures.
      *         This value is created when the WorkloadConfig is constructed.
      */
-    const std::vector<std::unique_ptr<class ActorConfig>>& actorConfigs() const {
-        return this->_actorConfigs;
+    const std::vector<std::unique_ptr<class ActorContext>>& actorContexts() const {
+        return this->_actorContexts;
     }
 
 private:
     friend class WorkloadContext;
-    friend class ActorConfig;
+    friend class ActorContext;
 
     WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
         : _node{node},
           _errorBag{},
           _registry{&registry},
           _orchestrator{&orchestrator},
-          _actorConfigs{createActorConfigs()} {
+          _actorContexts{createActorConfigs()} {
         validateWorkloadConfig();
     }
 
@@ -46,26 +46,26 @@ private:
       _errorBag{std::move(other._errorBag)},
       _registry{other._registry},
       _orchestrator{other._orchestrator},
-      _actorConfigs{std::move(other._actorConfigs)} {};
+      _actorContexts{std::move(other._actorContexts)} {};
 
     const YAML::Node _node;
     ErrorBag _errorBag;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
-    std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
+    std::vector<std::unique_ptr<ActorContext>> _actorContexts;
 
-    std::vector<std::unique_ptr<ActorConfig>> createActorConfigs();
+    std::vector<std::unique_ptr<ActorContext>> createActorConfigs();
     void validateWorkloadConfig();
 };
 
 /**
  * Represents each {@code Actor:} block within a WorkloadConfig.
  */
-class ActorConfig : private boost::noncopyable {
+class ActorContext : private boost::noncopyable {
 
 public:
-    void operator=(ActorConfig&&) = delete;
-    ActorConfig(ActorConfig&&) = delete;
+    void operator=(ActorContext&&) = delete;
+    ActorContext(ActorContext&&) = delete;
 
     template<class...Args>
     auto timer(Args&&...args) const {
@@ -118,7 +118,7 @@ public:
 private:
     friend class WorkloadConfig;
 
-    ActorConfig(const YAML::Node& node, WorkloadConfig& config)
+    ActorContext(const YAML::Node& node, WorkloadConfig& config)
         : _node{node}, _workloadConfig{&config} {}
 
     const YAML::Node _node;
@@ -143,21 +143,21 @@ public:
     }
 
 private:
-    friend class ActorContextFactory;
+    friend class WorkloadContextFactory;
     ActorVector _actors;
     WorkloadConfig _workloadConfig;
 };
 
 
-class ActorContextFactory : private boost::noncopyable {
+class WorkloadContextFactory : private boost::noncopyable {
 
 public:
-    explicit ActorContextFactory() = default;
+    explicit WorkloadContextFactory() = default;
 
-    void operator=(ActorContextFactory&&) = delete;
-    ActorContextFactory(ActorContextFactory&&) = delete;
+    void operator=(WorkloadContextFactory&&) = delete;
+    WorkloadContextFactory(WorkloadContextFactory&&) = delete;
 
-    using Producer = std::function<typename WorkloadContext::ActorVector(ActorConfig&)>;
+    using Producer = std::function<typename WorkloadContext::ActorVector(ActorContext&)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {

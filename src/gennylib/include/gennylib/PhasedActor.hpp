@@ -10,7 +10,7 @@
 
 namespace genny {
 
-class ActorConfig;
+class ActorContext;
 
 /**
  * The basic extension point for actors that want to vary
@@ -19,7 +19,7 @@ class ActorConfig;
 class PhasedActor : public Actor {
 
 public:
-    explicit PhasedActor(const genny::ActorConfig& config, std::string name = "anonymous");
+    explicit PhasedActor(const genny::ActorContext& config, std::string name = "anonymous");
 
     virtual ~PhasedActor() override = default;
 
@@ -41,7 +41,7 @@ public:
     void run() override final;
 
 protected:
-    const ActorConfig& _config;
+    const ActorContext& _config;
     const std::string _name;
 
 private:
