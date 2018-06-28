@@ -28,8 +28,7 @@ YAML::Node loadConfig(char* const* argv) {
 }
 
 // TODO: move to static method of HelloWorld
-std::vector<std::unique_ptr<genny::Actor>> helloWorldProducer(
-    const genny::ActorContext& actorConfig) {
+std::vector<std::unique_ptr<genny::Actor>> helloWorldProducer(genny::ActorContext& actorConfig) {
     const auto count = actorConfig["Count"].as<int>();
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     for (int i = 0; i < count; ++i) {

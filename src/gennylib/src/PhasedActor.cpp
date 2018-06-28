@@ -21,5 +21,5 @@ void genny::PhasedActor::run() {
     }
 }
 
-genny::PhasedActor::PhasedActor(genny::ActorContext context, std::string name)
+genny::PhasedActor::PhasedActor(genny::ActorContext& context, std::string name)
 : _context{std::move(context)}, _name{std::move(name)} {}

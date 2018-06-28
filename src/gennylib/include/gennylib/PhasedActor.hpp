@@ -17,7 +17,7 @@ namespace genny {
 class PhasedActor : public Actor {
 
 public:
-    explicit PhasedActor(genny::ActorContext context, std::string name = "anonymous");
+    explicit PhasedActor(genny::ActorContext& context, std::string name = "anonymous");
 
     ~PhasedActor() override = default;
 

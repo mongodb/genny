@@ -23,7 +23,7 @@ class WorkloadContext : private boost::noncopyable {
 
 public:
     using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
-    using Producer = typename std::function<ActorVector(ActorContext)>;
+    using Producer = typename std::function<ActorVector(ActorContext&)>;
 
     WorkloadContext(const YAML::Node& node,
                     metrics::Registry& registry,
@@ -33,6 +33,7 @@ public:
       _errors{},
       _registry{&registry},
       _orchestrator{&orchestrator},
+      _actorContexts{constructActorContexts()},
       _actors{constructActors(producers)} {}
 
     template<class...Args>
@@ -52,11 +53,13 @@ private:
     friend class ActorContext;
 
     ActorVector constructActors(const std::vector<Producer>& producers);
+    std::vector<std::unique_ptr<ActorContext>> constructActorContexts();
 
     YAML::Node _node;
     ErrorBag _errors;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
+    std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
 };
 
