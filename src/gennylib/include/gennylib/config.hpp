@@ -20,10 +20,6 @@ namespace genny {
 class WorkloadConfig : private boost::noncopyable {
 
 public:
-    // no move
-    void operator=(WorkloadConfig&&) = delete;
-    WorkloadConfig(WorkloadConfig&&) = delete;
-
     /**
      * @return return a {@code ActorConfig} for each of hhe {@code Actors} structures.
      *         This value is created when the WorkloadConfig is constructed.
@@ -34,6 +30,7 @@ public:
 
 private:
     friend class ActorContextFactory;
+    friend class ActorContext;
     friend class ActorConfig;
 
     WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
@@ -45,11 +42,18 @@ private:
         validateWorkloadConfig();
     }
 
+    WorkloadConfig(WorkloadConfig&& other)
+    : _node{std::move(other._node)},
+      _errorBag{std::move(other._errorBag)},
+      _registry{std::move(other._registry)},
+      _orchestrator{std::move(other._orchestrator)},
+      _actorConfigs{std::move(other._actorConfigs)} {};
+
     const YAML::Node _node;
     ErrorBag _errorBag;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
-    const std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
+    std::vector<std::unique_ptr<ActorConfig>> _actorConfigs;
 
     std::vector<std::unique_ptr<ActorConfig>> createActorConfigs();
     void validateWorkloadConfig();
@@ -120,21 +124,34 @@ private:
     WorkloadConfig* const _workloadConfig;
 };
 
-struct ActorContext {
+class ActorContext {
 
+public:
     using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
 
-    const ActorVector actors;
-    const ErrorBag& errors;
+    ActorContext(const YAML::Node& root,
+                 genny::metrics::Registry& registry,
+                 genny::Orchestrator& orchestrator)
+    : _workloadConfig{root, registry, orchestrator} {}
+
+    ErrorBag& errors() {
+        return _workloadConfig._errorBag;
+    }
+    const ActorVector& actors() {
+        return _actors;
+    }
+
+private:
+    friend class ActorContextFactory;
+    ActorVector _actors;
+    WorkloadConfig _workloadConfig;
 };
 
 
 class ActorContextFactory : private boost::noncopyable {
 
 public:
-    ActorContextFactory(const YAML::Node& root,
-                        genny::metrics::Registry& registry,
-                        genny::Orchestrator& orchestrator);
+    explicit ActorContextFactory() = default;
 
     void operator=(ActorContextFactory&&) = delete;
     ActorContextFactory(ActorContextFactory&&) = delete;
@@ -146,11 +163,12 @@ public:
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    ActorContext build() const;
+    ActorContext build(const YAML::Node& root,
+                       genny::metrics::Registry& registry,
+                       genny::Orchestrator& orchestrator) const;
 
 private:
     std::vector<Producer> _producers;
-    const WorkloadConfig _workloadConfig;
 };
 
 

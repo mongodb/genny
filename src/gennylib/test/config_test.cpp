@@ -41,27 +41,27 @@ Actors:
 - Name: HelloWorld
   Count: 7
         )");
-        genny::ActorContextFactory factory = {yaml, metrics, orchestrator};
-        auto result = factory.build();
-        REQUIRE(!result.errors);
-        REQUIRE(reported(result.errors) == "");
+        genny::ActorContextFactory factory{};
+        auto result = factory.build(yaml, metrics, orchestrator);
+        REQUIRE(!result.errors());
+        REQUIRE(reported(result.errors()) == "");
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
-        genny::ActorContextFactory factory = {yaml, metrics, orchestrator};
-        auto result = factory.build();
-        REQUIRE((bool)result.errors);
-        REQUIRE(reported(result.errors) ==
+        genny::ActorContextFactory factory{};
+        auto result = factory.build(yaml, metrics, orchestrator);
+        REQUIRE((bool)result.errors());
+        REQUIRE(reported(result.errors()) ==
                 errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
     }
 
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("");
-        genny::ActorContextFactory factory = {yaml, metrics, orchestrator};
-        auto result = factory.build();
-        REQUIRE((bool)result.errors);
-        REQUIRE(reported(result.errors) == errString("Key SchemaVersion not found"));
+        genny::ActorContextFactory factory{};
+        auto result = factory.build(yaml, metrics, orchestrator);
+        REQUIRE((bool)result.errors());
+        REQUIRE(reported(result.errors()) == errString("Key SchemaVersion not found"));
     }
 
 
@@ -77,7 +77,7 @@ Actors:
   Count: 7
   SomeList: [2]
         )");
-        genny::ActorContextFactory factory = {yaml, metrics, orchestrator};
+        genny::ActorContextFactory factory;
 
         int calls = 0;
         factory.addProducer([&](ActorConfig& actorConfig) {
@@ -93,9 +93,9 @@ Actors:
             return ActorContext::ActorVector {};
         });
 
-        auto actors = factory.build();
+        auto actors = factory.build(yaml, metrics, orchestrator);
 
-        REQUIRE(reported(actors.errors) ==
+        REQUIRE(reported(actors.errors()) ==
                 errString("Key Count not found",
                           "Key Name expect [One] but is [Two]",
                           "Key Count expect [5] but is [7]",
