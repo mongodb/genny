@@ -21,7 +21,7 @@ class PhasedActor : public Actor {
 public:
     explicit PhasedActor(const genny::ActorContext& config, std::string name = "anonymous");
 
-    virtual ~PhasedActor() override = default;
+    ~PhasedActor() override = default;
 
     /**
      * Wrapper to {@code doPhase()}. Not virtual so this parent class can add
@@ -38,7 +38,7 @@ public:
      * The "main" method of the actor. This should only be called by workload
      * drivers.
      */
-    void run() override final;
+    void run() final;
 
 protected:
     const ActorContext& _config;

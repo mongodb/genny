@@ -54,6 +54,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
         results.errors().report(std::cerr);
         throw std::logic_error("Invalid configuration or setup");
     }
+
     orchestrator.setActorCount(static_cast<unsigned int>(results.actors().size()));
 
     std::vector<std::thread> threads;
@@ -63,6 +64,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
                    [](const auto& actor) {
                        return std::thread{&genny::Actor::run, actor.get()};
                    });
+
 
     for (auto& thread : threads)
         thread.join();
