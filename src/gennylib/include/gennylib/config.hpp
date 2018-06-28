@@ -26,23 +26,32 @@ public:
     using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
     using Producer = typename std::function<ActorVector(ActorContext&)>;
 
-    WorkloadContext(const YAML::Node& node,
-                    metrics::Registry& registry,
-                    Orchestrator& orchestrator,
+    WorkloadContext(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator,
                     const std::vector<Producer>& producers)
-    : _node{node},
-      _errors{},
-      _registry{&registry},
-      _orchestrator{&orchestrator},
-      _actors{constructActors(producers)} {}
+            : _node{node},
+              _errorBag{},
+              _registry{&registry},
+              _orchestrator{&orchestrator},
+              _actors{constructActors(producers)} {
+//        validateWorkloadConfig();
+    }
+
+
+//    /**
+//     * @return return a {@code ActorConfig} for each of hhe {@code Actors} structures.
+//     *         This value is created when the WorkloadConfig is constructed.
+//     */
+//    const std::vector<std::unique_ptr<class ActorContext>>& actorContexts() const {
+//        return this->_actorContexts;
+//    }
 
     template<class...Args>
     YAML::Node operator[](Args&&...args) const {
         return _node.operator[](std::forward<Args>(args)...);
     }
 
-    const ErrorBag& errors() const {
-        return _errors;
+    ErrorBag& errors() {
+        return _errorBag;
     }
 
     const ActorVector& actors() const {
@@ -51,13 +60,26 @@ public:
 
 private:
     friend class ActorContext;
+    friend class WorkloadContextFactory;
+
+
+    WorkloadContext(WorkloadContext&& other) noexcept
+    : _node{other._node},
+      _errorBag{std::move(other._errorBag)},
+      _registry{other._registry},
+      _orchestrator{other._orchestrator} {};
+
+//    std::vector<std::unique_ptr<ActorContext>> createActorConfigs();
+
+//    void validateWorkloadConfig();
 
     ActorVector constructActors(const std::vector<Producer>& producers);
 
     YAML::Node _node;
-    ErrorBag _errors;
+    ErrorBag _errorBag;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
+//    std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
 
 };
@@ -69,28 +91,28 @@ class ActorContext : private boost::noncopyable {
 
 public:
     ActorContext(const YAML::Node& node, WorkloadContext& config)
-            : _node{node}, _workload{&config} {}
+            : _node{node}, _workloadConfig{&config} {}
 
     void operator=(ActorContext&&) = delete;
     ActorContext(ActorContext&&) = delete;
 
     template<class...Args>
     auto timer(Args&&...args) const {
-        return this->_workload->_registry->timer(std::forward<Args>(args)...);
+        return this->_workloadConfig->_registry->timer(std::forward<Args>(args)...);
     }
 
     template<class...Args>
     auto gauge(Args&&...args) const {
-        return this->_workload->_registry->gauge(std::forward<Args>(args)...);
+        return this->_workloadConfig->_registry->gauge(std::forward<Args>(args)...);
     }
 
     template<class...Args>
     auto counter(Args&&...args) const {
-        return this->_workload->_registry->counter(std::forward<Args>(args)...);
+        return this->_workloadConfig->_registry->counter(std::forward<Args>(args)...);
     }
 
     Orchestrator* orchestrator() const {
-        return this->_workload->_orchestrator;
+        return this->_workloadConfig->_orchestrator;
     }
 
     // Act like the wrapped YAML::Node, so actorConfig["foo"] gives you node["foo"]
@@ -105,7 +127,7 @@ public:
               class... Args,
               typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type>
     void require(Arg0&& arg0, Args&&... args) {
-        this->_workload->_errors.require(std::forward<Arg0>(arg0),
+        this->_workloadConfig->_errorBag.require(std::forward<Arg0>(arg0),
                                                  std::forward<Args>(args)...);
     }
 
@@ -116,15 +138,19 @@ public:
               typename = typename std::enable_if<!std::is_base_of<YAML::Node, Arg0>::value>::type,
               typename = void>
     void require(Arg0&& arg0, Args&&... args) {
-        this->_workload->_errors.require(
+        this->_workloadConfig->_errorBag.require(
             *this, std::forward<Arg0>(arg0), std::forward<Args>(args)...);
     }
 
 private:
+    friend class WorkloadContext;
+
     YAML::Node _node;
-    WorkloadContext* const _workload;
+    WorkloadContext* const _workloadConfig;
 
 };
+
+
 
 }  // namespace genny
 
