@@ -14,6 +14,9 @@
 
 namespace genny {
 
+class ActorContext;
+class Actor;
+
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  */
@@ -21,6 +24,7 @@ class WorkloadContext : private boost::noncopyable {
 
 public:
     using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
+    using Producer = typename std::function<ActorVector(ActorContext&)>;
 
     /**
      * @return return a {@code ActorConfig} for each of hhe {@code Actors} structures.
@@ -37,6 +41,12 @@ public:
     const ActorVector& actors() const {
         return _actors;
     }
+
+    static WorkloadContext build(const YAML::Node& root,
+                          genny::metrics::Registry& registry,
+                          genny::Orchestrator& orchestrator,
+                          std::vector<Producer> _producers);
+
 
 private:
     friend class ActorContext;
@@ -70,24 +80,6 @@ private:
     ActorVector _actors;
 
 };
-
-class WorkloadContextFactory : private boost::noncopyable {
-
-public:
-    using Producer = std::function<typename WorkloadContext::ActorVector(ActorContext&)>;
-
-//    template <class... Args>
-//    void addProducer(Args&&... args) {
-//        _producers.emplace_back(std::forward<Args>(args)...);
-//    }
-
-    WorkloadContext build(const YAML::Node& root,
-                          genny::metrics::Registry& registry,
-                          genny::Orchestrator& orchestrator,
-                          std::vector<Producer> _producers) const;
-
-};
-
 
 /**
  * Represents each {@code Actor:} block within a WorkloadConfig.

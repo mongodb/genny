@@ -14,10 +14,10 @@ void genny::WorkloadContext::validateWorkloadConfig() {
     _errorBag.require(_node, std::string("SchemaVersion"), std::string("2018-07-01"));
 }
 
-genny::WorkloadContext genny::WorkloadContextFactory::build(const YAML::Node& root,
+genny::WorkloadContext genny::WorkloadContext::build(const YAML::Node& root,
                                                       genny::metrics::Registry& registry,
                                                       genny::Orchestrator& orchestrator,
-                                                      std::vector<Producer> _producers) const {
+                                                      std::vector<Producer> _producers) {
     WorkloadContext out {root, registry, orchestrator};
 
     genny::WorkloadContext::ActorVector actors {};

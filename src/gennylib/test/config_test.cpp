@@ -41,16 +41,14 @@ Actors:
 - Name: HelloWorld
   Count: 7
         )");
-        genny::WorkloadContextFactory factory{};
-        auto result = factory.build(yaml, metrics, orchestrator, {});
+        auto result = WorkloadContext::build(yaml, metrics, orchestrator, {});
         REQUIRE(!result.errors());
         REQUIRE(reported(result.errors()) == "");
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
-        genny::WorkloadContextFactory factory{};
-        auto result = factory.build(yaml, metrics, orchestrator, {});
+        auto result = WorkloadContext::build(yaml, metrics, orchestrator, {});
         REQUIRE((bool)result.errors());
         REQUIRE(reported(result.errors()) ==
                 errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
@@ -58,8 +56,7 @@ Actors:
 
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("");
-        genny::WorkloadContextFactory factory{};
-        auto result = factory.build(yaml, metrics, orchestrator, {});
+        auto result = WorkloadContext::build(yaml, metrics, orchestrator, {});
         REQUIRE((bool)result.errors());
         REQUIRE(reported(result.errors()) == errString("Key SchemaVersion not found"));
     }
@@ -77,10 +74,9 @@ Actors:
   Count: 7
   SomeList: [2]
         )");
-        genny::WorkloadContextFactory factory;
 
         int calls = 0;
-        std::vector<WorkloadContextFactory::Producer> producers;
+        std::vector<WorkloadContext::Producer> producers;
         producers.push_back([&](ActorContext& actorConfig) {
             // purposefully "fail" require
             actorConfig.require("Name", std::string("One"));
@@ -94,7 +90,7 @@ Actors:
             return WorkloadContext::ActorVector {};
         });
 
-        auto actors = factory.build(yaml, metrics, orchestrator, producers);
+        auto actors = WorkloadContext::build(yaml, metrics, orchestrator, producers);
 
         REQUIRE(reported(actors.errors()) ==
                 errString("Key Count not found",
