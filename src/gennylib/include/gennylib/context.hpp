@@ -35,15 +35,15 @@ public:
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::vector<Producer>& producers)
-    : _node{node},
-      _errors{},
-      _registry{&registry},
-      _orchestrator{&orchestrator},
-      _actorContexts{constructActorContexts()},
-      _actors{constructActors(producers)} {}
+        : _node{node},
+          _errors{},
+          _registry{&registry},
+          _orchestrator{&orchestrator},
+          _actorContexts{constructActorContexts()},
+          _actors{constructActors(producers)} {}
 
-    template<class...Args>
-    YAML::Node operator[](Args&&...args) const {
+    template <class... Args>
+    YAML::Node operator[](Args&&... args) const {
         return _node.operator[](std::forward<Args>(args)...);
     }
 
@@ -76,7 +76,7 @@ class ActorContext {
 
 public:
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
-            : _node{node}, _workload{&workloadContext} {}
+        : _node{node}, _workload{&workloadContext} {}
 
     // no copy or move
     ActorContext(ActorContext&) = delete;
@@ -86,18 +86,18 @@ public:
 
     // just convenience forwarding methods to avoid having to do context.registry().timer(...)
 
-    template<class...Args>
-    auto timer(Args&&...args) const {
+    template <class... Args>
+    auto timer(Args&&... args) const {
         return this->_workload->_registry->timer(std::forward<Args>(args)...);
     }
 
-    template<class...Args>
-    auto gauge(Args&&...args) const {
+    template <class... Args>
+    auto gauge(Args&&... args) const {
         return this->_workload->_registry->gauge(std::forward<Args>(args)...);
     }
 
-    template<class...Args>
-    auto counter(Args&&...args) const {
+    template <class... Args>
+    auto counter(Args&&... args) const {
         return this->_workload->_registry->counter(std::forward<Args>(args)...);
     }
 
@@ -117,8 +117,7 @@ public:
               class... Args,
               typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type>
     void require(Arg0&& arg0, Args&&... args) {
-        this->_workload->_errors.require(std::forward<Arg0>(arg0),
-                                                 std::forward<Args>(args)...);
+        this->_workload->_errors.require(std::forward<Arg0>(arg0), std::forward<Args>(args)...);
     }
 
     // lets you do

@@ -10,8 +10,10 @@ std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadContext::constr
     return out;
 }
 
-genny::WorkloadContext::ActorVector genny::WorkloadContext::constructActors(const std::vector<Producer>& producers) {
-    // Eventually support a WorkloadContextValidator or something to put validation logic into sane places
+genny::WorkloadContext::ActorVector genny::WorkloadContext::constructActors(
+    const std::vector<Producer>& producers) {
+    // Eventually support a WorkloadContextValidator or something to put validation logic into sane
+    // places
     _errors.require(*this, std::string("SchemaVersion"), std::string("2018-07-01"));
 
     auto actors = genny::WorkloadContext::ActorVector{};
@@ -21,4 +23,3 @@ genny::WorkloadContext::ActorVector genny::WorkloadContext::constructActors(cons
                 actors.push_back(std::move(actor));
     return actors;
 }
-

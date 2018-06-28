@@ -41,14 +41,14 @@ Actors:
 - Name: HelloWorld
   Count: 7
         )");
-        auto workloadContext = WorkloadContext {yaml, metrics, orchestrator, {}};
+        auto workloadContext = WorkloadContext{yaml, metrics, orchestrator, {}};
         REQUIRE(!workloadContext.errors());
         REQUIRE(reported(workloadContext.errors()) == "");
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
-        auto result = WorkloadContext {yaml, metrics, orchestrator, {}};
+        auto result = WorkloadContext{yaml, metrics, orchestrator, {}};
         REQUIRE((bool)result.errors());
         REQUIRE(reported(result.errors()) ==
                 errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
@@ -56,7 +56,7 @@ Actors:
 
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("");
-        auto result = WorkloadContext {yaml, metrics, orchestrator, {}};
+        auto result = WorkloadContext{yaml, metrics, orchestrator, {}};
         REQUIRE((bool)result.errors());
         REQUIRE(reported(result.errors()) == errString("Key SchemaVersion not found"));
     }
@@ -83,14 +83,14 @@ Actors:
             actoractorContext.require("Count", 5);  // we're type-safe
             actoractorContext.require(actoractorContext["SomeList"], 0, 100);
             ++calls;
-            return WorkloadContext::ActorVector {};
+            return WorkloadContext::ActorVector{};
         });
         producers.emplace_back([&](ActorContext&) {
             ++calls;
-            return WorkloadContext::ActorVector {};
+            return WorkloadContext::ActorVector{};
         });
 
-        auto actors = WorkloadContext {yaml, metrics, orchestrator, producers};
+        auto actors = WorkloadContext{yaml, metrics, orchestrator, producers};
 
         REQUIRE(reported(actors.errors()) ==
                 errString("Key Count not found",
