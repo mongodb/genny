@@ -1,33 +1,28 @@
 #include <gennylib/config.hpp>
 
 
-std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadContext::createActorConfigs() {
+std::vector<std::unique_ptr<genny::ActorContext>> createActorConfigs(genny::WorkloadContext& context) {
     auto out = std::vector<std::unique_ptr<genny::ActorContext>>{};
-    for (const auto& actor : _node["Actors"]) {
+    for (const auto& actor : context["Actors"]) {
         // need to do this over make_unique so we can take advantage of class-friendship
-        out.push_back(std::unique_ptr<genny::ActorContext>{new ActorContext(actor, *this)});
+        out.push_back(std::unique_ptr<genny::ActorContext>{new genny::ActorContext(actor, context)});
     }
     return out;
 }
 
-void genny::WorkloadContext::validateWorkloadConfig() {
-    _errorBag.require(_node, std::string("SchemaVersion"), std::string("2018-07-01"));
+void validateWorkloadConfig(genny::WorkloadContext& context) {
+    context.errors().require(context, std::string("SchemaVersion"), std::string("2018-07-01"));
 }
 
-genny::WorkloadContext genny::WorkloadContext::build(const YAML::Node& root,
-                                                      genny::metrics::Registry& registry,
-                                                      genny::Orchestrator& orchestrator,
-                                                      std::vector<Producer> _producers) {
-    WorkloadContext out {root, registry, orchestrator};
+genny::WorkloadContext::ActorVector genny::WorkloadContext::constructActors(const std::vector<Producer>& producers) {
+    validateWorkloadConfig(*this);
 
+    auto actorContexts = createActorConfigs(*this);
     genny::WorkloadContext::ActorVector actors {};
-    for (const auto& producer : _producers)
-        for (auto& actorConfig : out.actorContexts())
+    for (const auto& producer : producers)
+        for (auto& actorConfig : actorContexts)
             for (auto&& actor : producer(*actorConfig.get()))
                 actors.push_back(std::move(actor));
-
-    out._actors = std::move(actors);
-
-    return out;
+    return actors;
 }
 

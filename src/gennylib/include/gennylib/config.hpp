@@ -26,12 +26,28 @@ public:
     using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
     using Producer = typename std::function<ActorVector(ActorContext&)>;
 
-    /**
-     * @return return a {@code ActorConfig} for each of hhe {@code Actors} structures.
-     *         This value is created when the WorkloadConfig is constructed.
-     */
-    const std::vector<std::unique_ptr<class ActorContext>>& actorContexts() const {
-        return this->_actorContexts;
+    WorkloadContext(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator,
+                    const std::vector<Producer>& producers)
+            : _node{node},
+              _errorBag{},
+              _registry{&registry},
+              _orchestrator{&orchestrator},
+              _actors{constructActors(producers)} {
+//        validateWorkloadConfig();
+    }
+
+
+//    /**
+//     * @return return a {@code ActorConfig} for each of hhe {@code Actors} structures.
+//     *         This value is created when the WorkloadConfig is constructed.
+//     */
+//    const std::vector<std::unique_ptr<class ActorContext>>& actorContexts() const {
+//        return this->_actorContexts;
+//    }
+
+    template<class...Args>
+    YAML::Node operator[](Args&&...args) const {
+        return _node.operator[](std::forward<Args>(args)...);
     }
 
     ErrorBag& errors() {
@@ -42,41 +58,28 @@ public:
         return _actors;
     }
 
-    static WorkloadContext build(const YAML::Node& root,
-                          genny::metrics::Registry& registry,
-                          genny::Orchestrator& orchestrator,
-                          std::vector<Producer> _producers);
-
-
 private:
     friend class ActorContext;
     friend class WorkloadContextFactory;
 
-    WorkloadContext(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
-        : _node{node},
-          _errorBag{},
-          _registry{&registry},
-          _orchestrator{&orchestrator},
-          _actorContexts{createActorConfigs()} {
-        validateWorkloadConfig();
-    }
 
     WorkloadContext(WorkloadContext&& other) noexcept
     : _node{other._node},
       _errorBag{std::move(other._errorBag)},
       _registry{other._registry},
-      _orchestrator{other._orchestrator},
-      _actorContexts{std::move(other._actorContexts)} {};
+      _orchestrator{other._orchestrator} {};
 
-    std::vector<std::unique_ptr<ActorContext>> createActorConfigs();
+//    std::vector<std::unique_ptr<ActorContext>> createActorConfigs();
 
-    void validateWorkloadConfig();
+//    void validateWorkloadConfig();
+
+    ActorVector constructActors(const std::vector<Producer>& producers);
 
     YAML::Node _node;
     ErrorBag _errorBag;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
-    std::vector<std::unique_ptr<ActorContext>> _actorContexts;
+//    std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
 
 };
@@ -87,6 +90,9 @@ private:
 class ActorContext : private boost::noncopyable {
 
 public:
+    ActorContext(const YAML::Node& node, WorkloadContext& config)
+            : _node{node}, _workloadConfig{&config} {}
+
     void operator=(ActorContext&&) = delete;
     ActorContext(ActorContext&&) = delete;
 
@@ -138,9 +144,6 @@ public:
 
 private:
     friend class WorkloadContext;
-
-    ActorContext(const YAML::Node& node, WorkloadContext& config)
-        : _node{node}, _workloadConfig{&config} {}
 
     YAML::Node _node;
     WorkloadContext* const _workloadConfig;
