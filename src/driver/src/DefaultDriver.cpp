@@ -47,12 +47,9 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
-    genny::WorkloadContextFactory factory{};
-
-    // add producers
-    factory.addProducer(&helloWorldProducer);
-
-    auto results = factory.build(yaml, metrics, orchestrator);
+    std::vector<genny::WorkloadContextFactory::Producer> producers {&helloWorldProducer};
+    WorkloadContextFactory factory {};
+    auto results = factory.build(yaml, metrics, orchestrator, producers);
 
     if (results.errors()) {
         results.errors().report(std::cerr);

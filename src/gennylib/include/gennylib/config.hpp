@@ -71,6 +71,23 @@ private:
 
 };
 
+class WorkloadContextFactory : private boost::noncopyable {
+
+public:
+    using Producer = std::function<typename WorkloadContext::ActorVector(ActorContext&)>;
+
+//    template <class... Args>
+//    void addProducer(Args&&... args) {
+//        _producers.emplace_back(std::forward<Args>(args)...);
+//    }
+
+    WorkloadContext build(const YAML::Node& root,
+                          genny::metrics::Registry& registry,
+                          genny::Orchestrator& orchestrator,
+                          std::vector<Producer> _producers) const;
+
+};
+
 
 /**
  * Represents each {@code Actor:} block within a WorkloadConfig.
@@ -138,25 +155,6 @@ private:
 
 };
 
-
-class WorkloadContextFactory : private boost::noncopyable {
-
-public:
-    using Producer = std::function<typename WorkloadContext::ActorVector(ActorContext&)>;
-
-    template <class... Args>
-    void addProducer(Args&&... args) {
-        _producers.emplace_back(std::forward<Args>(args)...);
-    }
-
-    WorkloadContext build(const YAML::Node& root,
-                          genny::metrics::Registry& registry,
-                          genny::Orchestrator& orchestrator) const;
-
-private:
-    std::vector<Producer> _producers;
-
-};
 
 
 }  // namespace genny

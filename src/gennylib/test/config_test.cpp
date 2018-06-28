@@ -42,7 +42,7 @@ Actors:
   Count: 7
         )");
         genny::WorkloadContextFactory factory{};
-        auto result = factory.build(yaml, metrics, orchestrator);
+        auto result = factory.build(yaml, metrics, orchestrator, {});
         REQUIRE(!result.errors());
         REQUIRE(reported(result.errors()) == "");
     }
@@ -50,7 +50,7 @@ Actors:
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
         genny::WorkloadContextFactory factory{};
-        auto result = factory.build(yaml, metrics, orchestrator);
+        auto result = factory.build(yaml, metrics, orchestrator, {});
         REQUIRE((bool)result.errors());
         REQUIRE(reported(result.errors()) ==
                 errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
@@ -59,7 +59,7 @@ Actors:
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("");
         genny::WorkloadContextFactory factory{};
-        auto result = factory.build(yaml, metrics, orchestrator);
+        auto result = factory.build(yaml, metrics, orchestrator, {});
         REQUIRE((bool)result.errors());
         REQUIRE(reported(result.errors()) == errString("Key SchemaVersion not found"));
     }
@@ -80,7 +80,8 @@ Actors:
         genny::WorkloadContextFactory factory;
 
         int calls = 0;
-        factory.addProducer([&](ActorContext& actorConfig) {
+        std::vector<WorkloadContextFactory::Producer> producers;
+        producers.push_back([&](ActorContext& actorConfig) {
             // purposefully "fail" require
             actorConfig.require("Name", std::string("One"));
             actorConfig.require("Count", 5);  // we're type-safe
@@ -88,12 +89,12 @@ Actors:
             ++calls;
             return WorkloadContext::ActorVector {};
         });
-        factory.addProducer([&](ActorContext& actorConfig) {
+        producers.push_back([&](ActorContext& actorConfig) {
             ++calls;
             return WorkloadContext::ActorVector {};
         });
 
-        auto actors = factory.build(yaml, metrics, orchestrator);
+        auto actors = factory.build(yaml, metrics, orchestrator, producers);
 
         REQUIRE(reported(actors.errors()) ==
                 errString("Key Count not found",

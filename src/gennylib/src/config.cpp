@@ -16,7 +16,8 @@ void genny::WorkloadContext::validateWorkloadConfig() {
 
 genny::WorkloadContext genny::WorkloadContextFactory::build(const YAML::Node& root,
                                                       genny::metrics::Registry& registry,
-                                                      genny::Orchestrator& orchestrator) const {
+                                                      genny::Orchestrator& orchestrator,
+                                                      std::vector<Producer> _producers) const {
     WorkloadContext out {root, registry, orchestrator};
 
     genny::WorkloadContext::ActorVector actors {};
