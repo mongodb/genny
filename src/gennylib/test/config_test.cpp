@@ -86,11 +86,11 @@ Actors:
             actorConfig.require("Count", 5);  // we're type-safe
             actorConfig.require(actorConfig["SomeList"], 0, 100);
             ++calls;
-            return ActorContext::ActorVector {};
+            return WorkloadContext::ActorVector {};
         });
         factory.addProducer([&](ActorConfig& actorConfig) {
             ++calls;
-            return ActorContext::ActorVector {};
+            return WorkloadContext::ActorVector {};
         });
 
         auto actors = factory.build(yaml, metrics, orchestrator);

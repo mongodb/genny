@@ -29,8 +29,7 @@ public:
     }
 
 private:
-    friend class ActorContextFactory;
-    friend class ActorContext;
+    friend class WorkloadContext;
     friend class ActorConfig;
 
     WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
@@ -126,14 +125,14 @@ private:
     WorkloadConfig* const _workloadConfig;
 };
 
-class ActorContext {
+class WorkloadContext {
 
 public:
     using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
 
-    ActorContext(const YAML::Node& root,
-                 genny::metrics::Registry& registry,
-                 genny::Orchestrator& orchestrator)
+    WorkloadContext(const YAML::Node& root,
+                    genny::metrics::Registry& registry,
+                    genny::Orchestrator& orchestrator)
     : _workloadConfig{root, registry, orchestrator} {}
 
     ErrorBag& errors() {
@@ -158,14 +157,14 @@ public:
     void operator=(ActorContextFactory&&) = delete;
     ActorContextFactory(ActorContextFactory&&) = delete;
 
-    using Producer = std::function<typename ActorContext::ActorVector(ActorConfig&)>;
+    using Producer = std::function<typename WorkloadContext::ActorVector(ActorConfig&)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    ActorContext build(const YAML::Node& root,
+    WorkloadContext build(const YAML::Node& root,
                        genny::metrics::Registry& registry,
                        genny::Orchestrator& orchestrator) const;
 
