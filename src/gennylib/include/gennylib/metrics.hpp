@@ -364,11 +364,11 @@ public:
      * @return a {@code Stopwatch} instance that must be manually reported via {@code .report()}.
      *         When calling .report(), the amount of time elapsed from the calling of .start() to
      *         to calling .report() is reported to the metrics back-end. Can call .report() multiple
-     *         times. Use .start() when you want to record successful outcomes of some specific
-     * code-path. If you never call .report(), no metrics data will be recorded.
+     *         times. Use .start() when you want to record successful outcomes of some specific code-path.
+     *         If you never call .report(), no metrics data will be recorded.
      *
-     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names. They
-     * are simply two APIs for reporting timing data.
+     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names. They are
+     *         simply two APIs for reporting timing data.
      */
     [[nodiscard]] Stopwatch start() const {
         return Stopwatch{*_timer};
@@ -378,11 +378,10 @@ public:
      * @return an {@code RaiiStopwatch} that will automatically report the time elapsed since it was
      *         constructed in its dtor. Call .raii() at the start of your method or scope to record
      *         how long that method or scope takes even in the case of exceptions or early-rueturns.
-     *         You can also manually call .report() multiple times, but it's unclear if this is
-     * useful.
+     *         You can also manually call .report() multiple times, but it's unclear if this is useful.
      *
-     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names. They
-     * are simply two APIs for reporting timing data.
+     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names. They are
+     *         simply two APIs for reporting timing data.
      */
     [[nodiscard]] RaiiStopwatch raii() const {
         return RaiiStopwatch{*_timer};
