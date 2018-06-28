@@ -14,7 +14,7 @@ void genny::WorkloadConfig::validateWorkloadConfig() {
     _errorBag.require(_node, std::string("SchemaVersion"), std::string("2018-07-01"));
 }
 
-genny::PhasedActorFactory::Results genny::PhasedActorFactory::actors() const {
+genny::ActorFactory::Results genny::ActorFactory::actors() const {
     auto out = ActorVector{};
     for (const auto& producer : _producers)
         for (auto& actorConfig : _workloadConfig.actorConfigs())
@@ -23,7 +23,7 @@ genny::PhasedActorFactory::Results genny::PhasedActorFactory::actors() const {
     return {std::move(out), _workloadConfig._errorBag};
 }
 
-genny::PhasedActorFactory::PhasedActorFactory(const YAML::Node& root,
+genny::ActorFactory::ActorFactory(const YAML::Node& root,
                                               genny::metrics::Registry& registry,
                                               genny::Orchestrator& orchestrator)
     : _workloadConfig{root, registry, orchestrator} {}

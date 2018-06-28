@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/config.hpp>
 #include <gennylib/metrics.hpp>
@@ -15,7 +16,7 @@ class ActorConfig;
  * The basic extension point for actors that want to vary
  * their behavior over the course of a workload.
  */
-class PhasedActor {
+class PhasedActor : public Actor {
 
 public:
     /**
@@ -29,7 +30,7 @@ public:
 
     explicit PhasedActor(const genny::ActorConfig& config, std::string name = "anonymous");
 
-    virtual ~PhasedActor() = default;
+    virtual ~PhasedActor() override = default;
 
     /**
      * Wrapper to {@code doPhase()}. Not virtual so this parent class can add
@@ -46,7 +47,7 @@ public:
      * The "main" method of the actor. This should only be called by workload
      * drivers.
      */
-    void run();
+    void run() override = 0;
 
 protected:
     Orchestrator* const _orchestrator;

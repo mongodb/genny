@@ -35,7 +35,7 @@ public:
     }
 
 private:
-    friend class PhasedActorFactory;
+    friend class ActorFactory;
     friend class ActorConfig;
 
     WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
@@ -114,17 +114,17 @@ private:
 };
 
 
-class PhasedActorFactory : private boost::noncopyable {
+class ActorFactory : private boost::noncopyable {
 
 public:
-    PhasedActorFactory(const YAML::Node& root,
-                       genny::metrics::Registry& registry,
-                       genny::Orchestrator& orchestrator);
+    ActorFactory(const YAML::Node& root,
+                 genny::metrics::Registry& registry,
+                 genny::Orchestrator& orchestrator);
 
-    void operator=(PhasedActorFactory&&) = delete;
-    PhasedActorFactory(PhasedActorFactory&&) = delete;
+    void operator=(ActorFactory&&) = delete;
+    ActorFactory(ActorFactory&&) = delete;
 
-    using ActorVector = std::vector<std::unique_ptr<PhasedActor>>;
+    using ActorVector = std::vector<std::unique_ptr<Actor>>;
     using Producer = std::function<ActorVector(ActorConfig&)>;
 
     template <class... Args>
