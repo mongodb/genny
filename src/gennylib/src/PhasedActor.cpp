@@ -6,25 +6,20 @@
 
 
 void genny::PhasedActor::run() {
-    while (_orchestrator->morePhases()) {
-        _orchestrator->awaitPhaseStart();
+    while (_config.orchestrator()->morePhases()) {
+        _config.orchestrator()->awaitPhaseStart();
 
         try {
-            this->phase(_orchestrator->currentPhaseNumber());
+            this->phase(_config.orchestrator()->currentPhaseNumber());
         } catch (const std::exception& ex) {
             BOOST_LOG_TRIVIAL(error) << "Exception " << ex.what();
-            _orchestrator->abort();
+            _config.orchestrator()->abort();
         }
 
         // wait for phase to end before proceeding
-        _orchestrator->awaitPhaseEnd();
+        _config.orchestrator()->awaitPhaseEnd();
     }
 }
 
-genny::PhasedActor::PhasedActor(genny::Orchestrator* orchestrator,
-                                genny::metrics::Registry* registry,
-                                std::string name)
-    : _orchestrator{orchestrator}, _metrics{registry}, _name{std::move(name)} {}
-
 genny::PhasedActor::PhasedActor(const genny::ActorConfig& config, std::string name)
-    : PhasedActor(config.orchestrator(), config.registry(), std::move(name)) {}
+: _config{config}, _name{std::move(name)} {}

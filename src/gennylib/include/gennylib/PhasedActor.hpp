@@ -19,15 +19,6 @@ class ActorConfig;
 class PhasedActor : public Actor {
 
 public:
-    /**
-     * @param orchestrator the {@code Orchestrator} to which we should report and wait.
-     * @param registry metrics registry with which to register metrics trackers.
-     * @param name optional actor name. Useful for debugging scenarios.
-     */
-    explicit PhasedActor(Orchestrator* orchestrator,
-                         metrics::Registry* registry,
-                         std::string name = "anonymous");
-
     explicit PhasedActor(const genny::ActorConfig& config, std::string name = "anonymous");
 
     virtual ~PhasedActor() override = default;
@@ -50,9 +41,8 @@ public:
     void run() override final;
 
 protected:
-    Orchestrator* const _orchestrator;
+    const ActorConfig& _config;
     const std::string _name;
-    metrics::Registry* const _metrics;
 
 private:
     /**

@@ -66,8 +66,17 @@ public:
     void operator=(ActorConfig&&) = delete;
     ActorConfig(ActorConfig&&) = delete;
 
-    metrics::Registry* registry() const {
-        return this->_workloadConfig->_registry;
+    template<class...Args>
+    auto timer(Args&&...args) const {
+        return this->_workloadConfig->_registry->timer(std::forward<Args>(args)...);
+    }
+    template<class...Args>
+    auto gauge(Args&&...args) const {
+        return this->_workloadConfig->_registry->gauge(std::forward<Args>(args)...);
+    }
+    template<class...Args>
+    auto counter(Args&&...args) const {
+        return this->_workloadConfig->_registry->counter(std::forward<Args>(args)...);
     }
 
     Orchestrator* orchestrator() const {
