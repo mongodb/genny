@@ -14,8 +14,6 @@
 
 namespace genny {
 
-class PhasedActor;
-
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  */
@@ -35,7 +33,7 @@ public:
     }
 
 private:
-    friend class ActorFactory;
+    friend class ActorContextFactory;
     friend class ActorConfig;
 
     WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
@@ -131,15 +129,15 @@ struct ActorContext {
 };
 
 
-class ActorFactory : private boost::noncopyable {
+class ActorContextFactory : private boost::noncopyable {
 
 public:
-    ActorFactory(const YAML::Node& root,
-                 genny::metrics::Registry& registry,
-                 genny::Orchestrator& orchestrator);
+    ActorContextFactory(const YAML::Node& root,
+                        genny::metrics::Registry& registry,
+                        genny::Orchestrator& orchestrator);
 
-    void operator=(ActorFactory&&) = delete;
-    ActorFactory(ActorFactory&&) = delete;
+    void operator=(ActorContextFactory&&) = delete;
+    ActorContextFactory(ActorContextFactory&&) = delete;
 
     using Producer = std::function<typename ActorContext::ActorVector(ActorConfig&)>;
 
@@ -148,7 +146,7 @@ public:
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    ActorContext actors() const;
+    ActorContext build() const;
 
 private:
     std::vector<Producer> _producers;

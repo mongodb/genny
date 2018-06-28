@@ -47,12 +47,12 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
-    genny::ActorFactory factory = {yaml, metrics, orchestrator};
+    genny::ActorContextFactory factory = {yaml, metrics, orchestrator};
 
     // add producers
     factory.addProducer(&helloWorldProducer);
 
-    const auto results = factory.actors();
+    const auto results = factory.build();
 
     if (results.errors) {
         results.errors.report(std::cerr);
