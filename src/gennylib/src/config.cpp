@@ -4,10 +4,10 @@
 namespace {
 
 // Helper method to convert Actors:[...] to ActorContexts
-std::vector<std::unique_ptr<genny::ActorContext>> createActorConfigs(genny::WorkloadContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::ActorContext>>{};
+std::vector<genny::ActorContext> createActorConfigs(genny::WorkloadContext& context) {
+    auto out = std::vector<genny::ActorContext>{};
     for (const auto& actor : context["Actors"]) {
-        out.push_back(std::make_unique<genny::ActorContext>(actor, context));
+        out.emplace_back(actor, context);
     }
     return out;
 }
@@ -22,8 +22,8 @@ genny::WorkloadContext::ActorVector genny::WorkloadContext::constructActors(cons
     auto actorContexts = createActorConfigs(*this);
     genny::WorkloadContext::ActorVector actors {};
     for (const auto& producer : producers)
-        for (auto& actorConfig : actorContexts)
-            for (auto&& actor : producer(*actorConfig))
+        for (auto& actorContext : actorContexts)
+            for (auto&& actor : producer(actorContext))
                 actors.push_back(std::move(actor));
     return actors;
 }

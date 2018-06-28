@@ -7,15 +7,14 @@
 
 #include <boost/noncopyable.hpp>
 
+#include <gennylib/Actor.hpp>
 #include <gennylib/ErrorBag.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/PhasedActor.hpp>
 #include <gennylib/metrics.hpp>
 
 namespace genny {
 
 class ActorContext;
-class Actor;
 
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
@@ -24,7 +23,7 @@ class WorkloadContext : private boost::noncopyable {
 
 public:
     using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
-    using Producer = typename std::function<ActorVector(ActorContext&)>;
+    using Producer = typename std::function<ActorVector(ActorContext)>;
 
     WorkloadContext(const YAML::Node& node,
                     metrics::Registry& registry,
@@ -59,20 +58,16 @@ private:
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
     ActorVector _actors;
-
 };
 
 /**
  * Represents each {@code Actor:} block within a WorkloadConfig.
  */
-class ActorContext : private boost::noncopyable {
+class ActorContext {
 
 public:
     ActorContext(const YAML::Node& node, WorkloadContext& config)
             : _node{node}, _workload{&config} {}
-
-    void operator=(ActorContext&&) = delete;
-    ActorContext(ActorContext&&) = delete;
 
     template<class...Args>
     auto timer(Args&&...args) const {
@@ -123,7 +118,6 @@ public:
 private:
     YAML::Node _node;
     WorkloadContext* const _workload;
-
 };
 
 }  // namespace genny

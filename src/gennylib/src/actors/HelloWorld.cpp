@@ -6,7 +6,7 @@ void genny::actor::HelloWorld::doPhase(int) {
     _operations.incr();
 }
 
-genny::actor::HelloWorld::HelloWorld(const genny::ActorContext& config, const std::string& name)
+genny::actor::HelloWorld::HelloWorld(genny::ActorContext config, const std::string& name)
     : PhasedActor(config, name),
       _output_timer{config.timer("hello." + name + ".output")},
       _operations{config.counter("hello." + name + ".operations")} {};

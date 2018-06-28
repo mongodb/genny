@@ -10,7 +10,7 @@ namespace genny::actor {
 class HelloWorld : public genny::PhasedActor {
 
 public:
-    HelloWorld(const ActorContext& config, const std::string& name = "hello");
+    HelloWorld(ActorContext config, const std::string& name = "hello");
 
     ~HelloWorld() override = default;
 

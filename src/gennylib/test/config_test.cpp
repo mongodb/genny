@@ -77,7 +77,7 @@ Actors:
 
         int calls = 0;
         std::vector<WorkloadContext::Producer> producers;
-        producers.push_back([&](ActorContext& actorConfig) {
+        producers.emplace_back([&](ActorContext actorConfig) {
             // purposefully "fail" require
             actorConfig.require("Name", std::string("One"));
             actorConfig.require("Count", 5);  // we're type-safe
@@ -85,7 +85,7 @@ Actors:
             ++calls;
             return WorkloadContext::ActorVector {};
         });
-        producers.push_back([&](ActorContext& actorConfig) {
+        producers.emplace_back([&](ActorContext actorConfig) {
             ++calls;
             return WorkloadContext::ActorVector {};
         });

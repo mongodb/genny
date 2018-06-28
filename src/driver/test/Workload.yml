@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 
 Actors:
 - Name: HelloWorld
-  Count: 3
+  Count: 30
   Parameters:
     foo: bar
 
