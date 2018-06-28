@@ -10,12 +10,8 @@ std::vector<std::unique_ptr<genny::ActorContext>> createActorConfigs(genny::Work
     return out;
 }
 
-void validateWorkloadConfig(genny::WorkloadContext& context) {
-    context.errors().require(context, std::string("SchemaVersion"), std::string("2018-07-01"));
-}
-
 genny::WorkloadContext::ActorVector genny::WorkloadContext::constructActors(const std::vector<Producer>& producers) {
-    validateWorkloadConfig(*this);
+    _errors.require(*this, std::string("SchemaVersion"), std::string("2018-07-01"));
 
     auto actorContexts = createActorConfigs(*this);
     genny::WorkloadContext::ActorVector actors {};
