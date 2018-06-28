@@ -28,10 +28,10 @@ YAML::Node loadConfig(char* const* argv) {
 }
 
 // TODO: move to static method of HelloWorld
-std::vector<std::unique_ptr<genny::PhasedActor>> helloWorldProducer(
+std::vector<std::unique_ptr<genny::Actor>> helloWorldProducer(
     const genny::ActorConfig& actorConfig) {
     const auto count = actorConfig["Count"].as<int>();
-    auto out = std::vector<std::unique_ptr<genny::PhasedActor>>{};
+    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     for (int i = 0; i < count; ++i) {
         out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig, std::to_string(i)));
     }
@@ -54,8 +54,8 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
 
     const auto results = factory.actors();
 
-    if (results.errorBag) {
-        results.errorBag.report(std::cerr);
+    if (results.errors) {
+        results.errors.report(std::cerr);
         throw std::logic_error("Invalid configuration or setup");
     }
     orchestrator.setActorCount(static_cast<unsigned int>(results.actors.size()));
@@ -65,7 +65,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
                    cend(results.actors),
                    std::back_inserter(threads),
                    [](const auto& actor) {
-                       return std::thread{&genny::PhasedActor::run, actor.get()};
+                       return std::thread{&genny::Actor::run, actor.get()};
                    });
 
     for (auto& thread : threads)

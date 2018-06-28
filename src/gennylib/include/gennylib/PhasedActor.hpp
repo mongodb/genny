@@ -47,7 +47,7 @@ public:
      * The "main" method of the actor. This should only be called by workload
      * drivers.
      */
-    void run() override = 0;
+    void run() override final;
 
 protected:
     Orchestrator* const _orchestrator;

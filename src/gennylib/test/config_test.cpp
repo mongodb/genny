@@ -43,16 +43,16 @@ Actors:
         )");
         genny::ActorFactory factory = {yaml, metrics, orchestrator};
         auto result = factory.actors();
-        REQUIRE(!result.errorBag);
-        REQUIRE(reported(result.errorBag) == "");
+        REQUIRE(!result.errors);
+        REQUIRE(reported(result.errors) == "");
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
         genny::ActorFactory factory = {yaml, metrics, orchestrator};
         auto result = factory.actors();
-        REQUIRE((bool)result.errorBag);
-        REQUIRE(reported(result.errorBag) ==
+        REQUIRE((bool)result.errors);
+        REQUIRE(reported(result.errors) ==
                 errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
     }
 
@@ -60,8 +60,8 @@ Actors:
         auto yaml = YAML::Load("");
         genny::ActorFactory factory = {yaml, metrics, orchestrator};
         auto result = factory.actors();
-        REQUIRE((bool)result.errorBag);
-        REQUIRE(reported(result.errorBag) == errString("Key SchemaVersion not found"));
+        REQUIRE((bool)result.errors);
+        REQUIRE(reported(result.errors) == errString("Key SchemaVersion not found"));
     }
 
 
@@ -86,16 +86,16 @@ Actors:
             actorConfig.require("Count", 5);  // we're type-safe
             actorConfig.require(actorConfig["SomeList"], 0, 100);
             ++calls;
-            return ActorFactory::ActorVector{};
+            return ActorContext::ActorVector {};
         });
         factory.addProducer([&](ActorConfig& actorConfig) {
             ++calls;
-            return ActorFactory::ActorVector{};
+            return ActorContext::ActorVector {};
         });
 
         auto actors = factory.actors();
 
-        REQUIRE(reported(actors.errorBag) ==
+        REQUIRE(reported(actors.errors) ==
                 errString("Key Count not found",
                           "Key Name expect [One] but is [Two]",
                           "Key Count expect [5] but is [7]",

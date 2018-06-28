@@ -14,8 +14,8 @@ void genny::WorkloadConfig::validateWorkloadConfig() {
     _errorBag.require(_node, std::string("SchemaVersion"), std::string("2018-07-01"));
 }
 
-genny::ActorFactory::Results genny::ActorFactory::actors() const {
-    auto out = ActorVector{};
+genny::ActorContext genny::ActorFactory::actors() const {
+    auto out = genny::ActorContext::ActorVector {};
     for (const auto& producer : _producers)
         for (auto& actorConfig : _workloadConfig.actorConfigs())
             for (auto&& actor : producer(*actorConfig.get()))

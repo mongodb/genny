@@ -113,6 +113,14 @@ private:
     WorkloadConfig* const _workloadConfig;
 };
 
+struct ActorContext {
+
+    using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
+
+    const ActorVector actors;
+    const ErrorBag& errors;
+};
+
 
 class ActorFactory : private boost::noncopyable {
 
@@ -124,21 +132,14 @@ public:
     void operator=(ActorFactory&&) = delete;
     ActorFactory(ActorFactory&&) = delete;
 
-    using ActorVector = std::vector<std::unique_ptr<Actor>>;
-    using Producer = std::function<ActorVector(ActorConfig&)>;
+    using Producer = std::function<typename ActorContext::ActorVector(ActorConfig&)>;
 
     template <class... Args>
     void addProducer(Args&&... args) {
         _producers.emplace_back(std::forward<Args>(args)...);
     }
 
-    // TODO: this isn't ideal
-    struct Results {
-        ActorVector actors;
-        const ErrorBag& errorBag;
-    };
-
-    Results actors() const;
+    ActorContext actors() const;
 
 private:
     std::vector<Producer> _producers;
