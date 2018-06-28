@@ -66,8 +66,8 @@ private:
 class ActorContext {
 
 public:
-    ActorContext(const YAML::Node& node, WorkloadContext& config)
-            : _node{node}, _workload{&config} {}
+    ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
+            : _node{node}, _workload{&workloadContext} {}
 
     template<class...Args>
     auto timer(Args&&...args) const {
@@ -88,14 +88,14 @@ public:
         return this->_workload->_orchestrator;
     }
 
-    // Act like the wrapped YAML::Node, so actorConfig["foo"] gives you node["foo"]
+    // Act like the wrapped YAML::Node, so ctx["foo"] gives you node["foo"]
     template <class... Args>
     YAML::Node operator[](Args&&... args) const {
         return _node.operator[](std::forward<Args>(args)...);
     }
 
     // lets you do
-    //   actorConfig.require(actorConfig["foo"], "bar", 3); // assert config["foo"]["bar"] == 3
+    //   ctx.require(ctx["foo"], "bar", 3); // assert ctx["foo"]["bar"] == 3
     template <class Arg0,
               class... Args,
               typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type>
@@ -105,7 +105,7 @@ public:
     }
 
     // lets you do
-    //   actorConfig.require("foo", 3); // assert config["foo"] == 3
+    //   ctx.require("foo", 3); // assert ctx["foo"] == 3
     template <class Arg0,
               class... Args,
               typename = typename std::enable_if<!std::is_base_of<YAML::Node, Arg0>::value>::type,

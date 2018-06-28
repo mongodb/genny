@@ -8,7 +8,7 @@
 #include <gennylib/MetricsReporter.hpp>
 #include <gennylib/PhasedActor.hpp>
 #include <gennylib/actors/HelloWorld.hpp>
-#include <gennylib/config.hpp>
+#include <gennylib/context.hpp>
 
 #include <yaml-cpp/yaml.h>
 

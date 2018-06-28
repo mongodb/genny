@@ -7,8 +7,8 @@ add_library(gennylib SHARED
     include/gennylib/version.hpp
                  src/version.cpp
 
-    include/gennylib/config.hpp
-                 src/config.cpp
+        include/gennylib/context.hpp
+        src/context.cpp
 
     include/gennylib/metrics.hpp
 
@@ -71,7 +71,7 @@ install(EXPORT GennyLibraryConfig DESTINATION share/GennyLibrary/cmake)
 export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
 
 add_executable(test_gennylib
-    test/config_test.cpp
+        test/context_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp

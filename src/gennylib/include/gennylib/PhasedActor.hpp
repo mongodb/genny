@@ -5,7 +5,7 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/config.hpp>
+#include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
 
 namespace genny {
@@ -17,7 +17,7 @@ namespace genny {
 class PhasedActor : public Actor {
 
 public:
-    explicit PhasedActor(genny::ActorContext config, std::string name = "anonymous");
+    explicit PhasedActor(genny::ActorContext context, std::string name = "anonymous");
 
     ~PhasedActor() override = default;
 
@@ -39,7 +39,7 @@ public:
     void run() final;
 
 protected:
-    ActorContext _config;
+    ActorContext _context;
     const std::string _name;
 
 private:

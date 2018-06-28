@@ -6,7 +6,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/ErrorBag.hpp>
-#include <gennylib/config.hpp>
+#include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
 
 namespace {
@@ -41,9 +41,9 @@ Actors:
 - Name: HelloWorld
   Count: 7
         )");
-        auto result = WorkloadContext {yaml, metrics, orchestrator, {}};
-        REQUIRE(!result.errors());
-        REQUIRE(reported(result.errors()) == "");
+        auto workloadContext = WorkloadContext {yaml, metrics, orchestrator, {}};
+        REQUIRE(!workloadContext.errors());
+        REQUIRE(reported(workloadContext.errors()) == "");
     }
 
     SECTION("Invalid Schema Version") {
@@ -77,15 +77,15 @@ Actors:
 
         int calls = 0;
         std::vector<WorkloadContext::Producer> producers;
-        producers.emplace_back([&](ActorContext actorConfig) {
+        producers.emplace_back([&](ActorContext actoractorContext) {
             // purposefully "fail" require
-            actorConfig.require("Name", std::string("One"));
-            actorConfig.require("Count", 5);  // we're type-safe
-            actorConfig.require(actorConfig["SomeList"], 0, 100);
+            actoractorContext.require("Name", std::string("One"));
+            actoractorContext.require("Count", 5);  // we're type-safe
+            actoractorContext.require(actoractorContext["SomeList"], 0, 100);
             ++calls;
             return WorkloadContext::ActorVector {};
         });
-        producers.emplace_back([&](ActorContext actorConfig) {
+        producers.emplace_back([&](ActorContext) {
             ++calls;
             return WorkloadContext::ActorVector {};
         });

@@ -1,4 +1,4 @@
-#include <gennylib/config.hpp>
+#include <gennylib/context.hpp>
 #include <memory>
 
 namespace {
