@@ -42,11 +42,11 @@ private:
         validateWorkloadConfig();
     }
 
-    WorkloadConfig(WorkloadConfig&& other)
-    : _node{std::move(other._node)},
+    WorkloadConfig(WorkloadConfig&& other) noexcept
+    : _node{other._node},
       _errorBag{std::move(other._errorBag)},
-      _registry{std::move(other._registry)},
-      _orchestrator{std::move(other._orchestrator)},
+      _registry{other._registry},
+      _orchestrator{other._orchestrator},
       _actorConfigs{std::move(other._actorConfigs)} {};
 
     const YAML::Node _node;
@@ -72,10 +72,12 @@ public:
     auto timer(Args&&...args) const {
         return this->_workloadConfig->_registry->timer(std::forward<Args>(args)...);
     }
+
     template<class...Args>
     auto gauge(Args&&...args) const {
         return this->_workloadConfig->_registry->gauge(std::forward<Args>(args)...);
     }
+
     template<class...Args>
     auto counter(Args&&...args) const {
         return this->_workloadConfig->_registry->counter(std::forward<Args>(args)...);
