@@ -1,7 +1,7 @@
 #include <gennylib/config.hpp>
 
 
-std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadConfig::createActorConfigs() {
+std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadContext::createActorConfigs() {
     auto out = std::vector<std::unique_ptr<genny::ActorContext>>{};
     for (const auto& actor : _node["Actors"]) {
         // need to do this over make_unique so we can take advantage of class-friendship
@@ -10,7 +10,7 @@ std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadConfig::createA
     return out;
 }
 
-void genny::WorkloadConfig::validateWorkloadConfig() {
+void genny::WorkloadContext::validateWorkloadConfig() {
     _errorBag.require(_node, std::string("SchemaVersion"), std::string("2018-07-01"));
 }
 
@@ -21,7 +21,7 @@ genny::WorkloadContext genny::WorkloadContextFactory::build(const YAML::Node& ro
 
     genny::WorkloadContext::ActorVector actors {};
     for (const auto& producer : _producers)
-        for (auto& actorConfig : out._workloadConfig.actorContexts())
+        for (auto& actorConfig : out.actorContexts())
             for (auto&& actor : producer(*actorConfig.get()))
                 actors.push_back(std::move(actor));
 

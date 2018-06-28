@@ -17,7 +17,7 @@ namespace genny {
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  */
-class WorkloadConfig : private boost::noncopyable {
+class WorkloadContext : private boost::noncopyable {
 
 public:
     /**
@@ -29,10 +29,9 @@ public:
     }
 
 private:
-    friend class WorkloadContext;
     friend class ActorContext;
 
-    WorkloadConfig(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
+    WorkloadContext(const YAML::Node& node, metrics::Registry& registry, Orchestrator& orchestrator)
         : _node{node},
           _errorBag{},
           _registry{&registry},
@@ -41,7 +40,7 @@ private:
         validateWorkloadConfig();
     }
 
-    WorkloadConfig(WorkloadConfig&& other) noexcept
+    WorkloadContext(WorkloadContext&& other) noexcept
     : _node{other._node},
       _errorBag{std::move(other._errorBag)},
       _registry{other._registry},
@@ -56,6 +55,26 @@ private:
 
     std::vector<std::unique_ptr<ActorContext>> createActorConfigs();
     void validateWorkloadConfig();
+
+public:
+    using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
+
+//    WorkloadContext(const YAML::Node& root,
+//                    genny::metrics::Registry& registry,
+//                    genny::Orchestrator& orchestrator)
+//            : _workloadConfig{root, registry, orchestrator} {}
+
+    ErrorBag& errors() {
+        return _errorBag;
+    }
+    const ActorVector& actors() {
+        return _actors;
+    }
+
+private:
+    friend class WorkloadContextFactory;
+    ActorVector _actors;
+//    WorkloadConfig _workloadConfig;
 };
 
 /**
@@ -116,37 +135,15 @@ public:
     }
 
 private:
-    friend class WorkloadConfig;
+    friend class WorkloadContext;
 
-    ActorContext(const YAML::Node& node, WorkloadConfig& config)
+    ActorContext(const YAML::Node& node, WorkloadContext& config)
         : _node{node}, _workloadConfig{&config} {}
 
     const YAML::Node _node;
-    WorkloadConfig* const _workloadConfig;
+    WorkloadContext* const _workloadConfig;
 };
 
-class WorkloadContext {
-
-public:
-    using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
-
-    WorkloadContext(const YAML::Node& root,
-                    genny::metrics::Registry& registry,
-                    genny::Orchestrator& orchestrator)
-    : _workloadConfig{root, registry, orchestrator} {}
-
-    ErrorBag& errors() {
-        return _workloadConfig._errorBag;
-    }
-    const ActorVector& actors() {
-        return _actors;
-    }
-
-private:
-    friend class WorkloadContextFactory;
-    ActorVector _actors;
-    WorkloadConfig _workloadConfig;
-};
 
 
 class WorkloadContextFactory : private boost::noncopyable {
