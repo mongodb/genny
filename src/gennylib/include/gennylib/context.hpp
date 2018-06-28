@@ -19,11 +19,17 @@ class ActorContext;
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  */
-class WorkloadContext : private boost::noncopyable {
+class WorkloadContext {
 
 public:
     using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
     using Producer = typename std::function<ActorVector(ActorContext&)>;
+
+    // no copy or move
+    WorkloadContext(WorkloadContext&) = delete;
+    void operator=(WorkloadContext&) = delete;
+    WorkloadContext(WorkloadContext&&) = default;
+    void operator=(WorkloadContext&&) = delete;
 
     WorkloadContext(const YAML::Node& node,
                     metrics::Registry& registry,
@@ -71,6 +77,14 @@ class ActorContext {
 public:
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
             : _node{node}, _workload{&workloadContext} {}
+
+    // no copy or move
+    ActorContext(ActorContext&) = delete;
+    void operator=(ActorContext&) = delete;
+    ActorContext(ActorContext&&) = default;
+    void operator=(ActorContext&&) = delete;
+
+    // just convenience forwarding methods to avoid having to do context.registry().timer(...)
 
     template<class...Args>
     auto timer(Args&&...args) const {
@@ -120,7 +134,7 @@ public:
 
 private:
     YAML::Node _node;
-    WorkloadContext* const _workload;
+    WorkloadContext* _workload;
 };
 
 }  // namespace genny

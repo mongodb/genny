@@ -39,7 +39,7 @@ public:
     void run() final;
 
 protected:
-    ActorContext _context;
+    ActorContext& _context;
     const std::string _name;
 
 private:
