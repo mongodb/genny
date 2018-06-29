@@ -1,9 +1,10 @@
+#include "log.hh"
+
 #include <gennylib/actors/HelloWorld.hpp>
 
 void genny::actor::HelloWorld::doPhase(int) {
     auto op = _output_timer.raii();
-    std::cout << _name << " Doing Phase " << _context.orchestrator()->currentPhaseNumber()
-              << std::endl;
+    BOOST_LOG_TRIVIAL(info) << _name << " Doing Phase " << _context.orchestrator()->currentPhaseNumber();
     _operations.incr();
 }
 
