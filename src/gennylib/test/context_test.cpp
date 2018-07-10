@@ -38,16 +38,18 @@ Actors:
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
 Some Ints: [1,2,[3,4]]
-Other: [{ Foo: [{Key: 1, Another: true}] }]
+Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, false]}] }]
 )");
         WorkloadContext w{yaml, metrics, orchestrator, {}};
-        REQUIRE(w.get<std::string>("SchemaVersion") == "2018-07-01");
-        REQUIRE(w.get<int>("Other", 0, "Foo", 0, "Key") == 1);
-        REQUIRE(w.get<bool>("Other", 0, "Foo", 0, "Another"));
-        REQUIRE(w.get<int>("Some Ints", 0) == 1);
-        REQUIRE(w.get<int>("Some Ints", 1) == 2);
-        REQUIRE(w.get<int>("Some Ints", 2, 0) == 3);
-        REQUIRE(w.get<int>("Some Ints", 2, 1) == 4);
+        CHECK(w.get<std::string>("SchemaVersion") == "2018-07-01");
+        CHECK(w.get<int>("Other", 0, "Foo", 0, "Key") == 1);
+        CHECK(w.get<bool>("Other", 0, "Foo", 0, "Another"));
+        CHECK(w.get<bool>("Other", 0, "Foo", 0, "Nested", 0) == false);
+        CHECK(w.get<bool>("Other", 0, "Foo", 0, "Nested", 1) == false);
+        CHECK(w.get<int>("Some Ints", 0) == 1);
+        CHECK(w.get<int>("Some Ints", 1) == 2);
+        CHECK(w.get<int>("Some Ints", 2, 0) == 3);
+        CHECK(w.get<int>("Some Ints", 2, 1) == 4);
     }
 
     SECTION("Empty Yaml") {
