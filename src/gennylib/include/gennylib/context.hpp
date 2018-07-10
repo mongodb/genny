@@ -16,8 +16,14 @@ namespace genny {
 class InvalidConfigurationException : public std::invalid_argument {
 
 public:
-    explicit InvalidConfigurationException(const std::string& msg)
-    : std::invalid_argument{msg} {}
+    explicit InvalidConfigurationException(const std::string &s)
+    : std::invalid_argument{s} {}
+
+    explicit InvalidConfigurationException(const char *s) : invalid_argument(s) {}
+
+    const char *what() const throw() {
+        return logic_error::what();
+    }
 };
 
 
@@ -81,7 +87,12 @@ public:
           _registry{&registry},
           _orchestrator{&orchestrator},
           _actorContexts{constructActorContexts()},
-          _actors{constructActors(producers)} {}
+          _actors{constructActors(producers)} {
+
+        if (get<std::string>("SchemaVersion") != "2018-07-01") {
+            throw InvalidConfigurationException("Invalid schema version");
+        }
+      }
 
     const ActorVector& actors() const {
         return _actors;
@@ -145,6 +156,10 @@ public:
     O get(Args&&...args) {
         return detail::get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
     };
+
+    WorkloadContext& workload() {
+        return *_workload;
+    }
 
 private:
     YAML::Node _node;
