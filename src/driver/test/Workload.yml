@@ -4,5 +4,5 @@ Actors:
 - Name: HelloWorld
   Count: 30
   Parameters:
-    foo: bar
+    Message: Hello, World!
 

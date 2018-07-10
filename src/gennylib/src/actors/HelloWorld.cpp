@@ -4,14 +4,17 @@
 
 void genny::actor::HelloWorld::doPhase(int) {
     auto op = _output_timer.raii();
-    BOOST_LOG_TRIVIAL(info) << _name << " Doing Phase " << _context.orchestrator()->currentPhaseNumber();
+    BOOST_LOG_TRIVIAL(info) << _name
+        << " Doing Phase " << _context.orchestrator()->currentPhaseNumber()
+        << " " << _message;
     _operations.incr();
 }
 
 genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const std::string& name)
     : PhasedActor(context, name),
       _output_timer{context.timer("hello." + name + ".output")},
-      _operations{context.counter("hello." + name + ".operations")} {}
+      _operations{context.counter("hello." + name + ".operations")},
+      _message{context["Parameters"]["Message"].as<std::string>()} {}
 
 std::vector<std::unique_ptr<genny::Actor>> genny::actor::HelloWorld::producer(genny::ActorContext &actorConfig) {
     const auto count = actorConfig["Count"].as<int>();
