@@ -31,11 +31,18 @@ public:
             add("Key " + write(path) + write(key) + " not found");
             return;
         }
-        auto asType = val.template as<E>();  // ugh the C++ grammar is unpleasant
-        // in future pass in BinaryFunction<E,E,bool> so can generalize == etc
+        auto asType = val.template as<E>();
         if (!(expect == asType)) {
             add("Key " + write(path) + write(key) + " expect [" + write(expect) + "] but is [" +
                 write(asType) + "]");
+        }
+    }
+
+    template <class N, class E = std::string>
+    void require(const N& val, const E& expect) {
+        auto asType = val.template as<E>();
+        if (!(expect == asType)) {
+            add("Expect [" + write(expect) + "] but is [" + write(asType) + "]");
         }
     }
 
