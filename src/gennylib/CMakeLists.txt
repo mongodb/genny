@@ -16,10 +16,7 @@ add_library(gennylib SHARED
 
     include/gennylib/Actor.hpp
 
-    include/gennylib/ErrorBag.hpp
-                 src/ErrorBag.cpp
-
-    include/gennylib/PhasedActor.hpp
+        include/gennylib/PhasedActor.hpp
                  src/PhasedActor.cpp
 
     include/gennylib/Orchestrator.hpp

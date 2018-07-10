@@ -16,11 +16,11 @@ genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const std::st
       _operations{context.counter("hello." + name + ".operations")},
       _message{context.get<std::string>("Parameters","Message")} {}
 
-std::vector<std::unique_ptr<genny::Actor>> genny::actor::HelloWorld::producer(genny::ActorContext &actorConfig) {
-    const auto count = actorConfig["Count"].as<int>();
+std::vector<std::unique_ptr<genny::Actor>> genny::actor::HelloWorld::producer(genny::ActorContext &context) {
+    const auto count = context.get<int>("Count");
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     for (int i = 0; i < count; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig, std::to_string(i)));
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(context, std::to_string(i)));
     }
     return out;
 }

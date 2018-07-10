@@ -41,11 +41,6 @@ int genny::driver::DefaultDriver::run(int, char** argv) const {
     auto producers = std::vector<genny::WorkloadContext::Producer>{&genny::actor::HelloWorld::producer};
     auto results = WorkloadContext{yaml, metrics, orchestrator, producers};
 
-    if (results.errors()) {
-        results.errors().report(std::cerr);
-        throw std::logic_error("Invalid configuration or setup");
-    }
-
     orchestrator.setActorCount(static_cast<unsigned int>(results.actors().size()));
 
     std::vector<std::thread> threads;

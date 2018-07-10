@@ -8,7 +8,6 @@
 #include <boost/noncopyable.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/ErrorBag.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/metrics.hpp>
 
@@ -36,21 +35,10 @@ public:
                     Orchestrator& orchestrator,
                     const std::vector<Producer>& producers)
         : _node{node},
-          _errors{},
           _registry{&registry},
           _orchestrator{&orchestrator},
           _actorContexts{constructActorContexts()},
           _actors{constructActors(producers)} {}
-
-    // So you can say workloadContext[foo] and this forwards to the root YAML::Node.
-    template <class... Args>
-    YAML::Node operator[](Args&&... args) const {
-        return _node.operator[](std::forward<Args>(args)...);
-    }
-
-    const ErrorBag& errors() const {
-        return _errors;
-    }
 
     const ActorVector& actors() const {
         return _actors;
@@ -63,7 +51,6 @@ private:
     std::vector<std::unique_ptr<ActorContext>> constructActorContexts();
 
     YAML::Node _node;
-    ErrorBag _errors;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
@@ -106,33 +93,7 @@ public:
         return this->_workload->_orchestrator;
     }
 
-    // Act like the wrapped YAML::Node, so ctx["foo"] gives you node["foo"]
-    template <class... Args>
-    YAML::Node operator[](Args&&... args) const {
-        return _node.operator[](std::forward<Args>(args)...);
-    }
-
-    // lets you do
-    //   ctx.require(ctx["foo"], "bar", 3); // assert ctx["foo"]["bar"] == 3
-    template <class Arg0,
-              class... Args,
-              typename = typename std::enable_if<std::is_base_of<YAML::Node, Arg0>::value>::type>
-    void require(Arg0&& arg0, Args&&... args) {
-        this->_workload->_errors.require(std::forward<Arg0>(arg0), std::forward<Args>(args)...);
-    }
-
-    // lets you do
-    //   ctx.require("foo", 3); // assert ctx["foo"] == 3
-    template <class Arg0,
-              class... Args,
-              typename = typename std::enable_if<!std::is_base_of<YAML::Node, Arg0>::value>::type,
-              typename = void>
-    void require(Arg0&& arg0, Args&&... args) {
-        this->_workload->_errors.require(
-            *this, std::forward<Arg0>(arg0), std::forward<Args>(args)...);
-    }
-
-    template<class O, class...Args>
+    template<class O = YAML::Node, class...Args>
     O get(Args&&...args) {
         return get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
     };
