@@ -35,18 +35,18 @@ YAML::Node loadConfig(const char* fileName) {
 int genny::driver::DefaultDriver::run(int, char** argv) const {
 
     auto yaml = loadConfig(argv[1]);
-    auto metrics = genny::metrics::Registry{};
+    auto registry = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
     auto producers =
         std::vector<genny::WorkloadContext::Producer>{&genny::actor::HelloWorld::producer};
-    auto results = WorkloadContext{yaml, metrics, orchestrator, producers};
+    auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
 
-    orchestrator.setActorCount(static_cast<unsigned int>(results.actors().size()));
+    orchestrator.setActorCount(static_cast<unsigned int>(workloadContext.actors().size()));
 
     std::vector<std::thread> threads;
-    std::transform(cbegin(results.actors()),
-                   cend(results.actors()),
+    std::transform(cbegin(workloadContext.actors()),
+                   cend(workloadContext.actors()),
                    std::back_inserter(threads),
                    [](const auto& actor) {
                        return std::thread{&genny::Actor::run, actor.get()};
@@ -56,7 +56,7 @@ int genny::driver::DefaultDriver::run(int, char** argv) const {
     for (auto& thread : threads)
         thread.join();
 
-    const auto reporter = genny::metrics::Reporter{metrics};
+    const auto reporter = genny::metrics::Reporter{registry};
     reporter.report(std::cout);
 
     return 0;

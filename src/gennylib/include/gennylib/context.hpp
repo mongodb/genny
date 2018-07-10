@@ -20,7 +20,7 @@ public:
 
     explicit InvalidConfigurationException(const char* s) : invalid_argument(s) {}
 
-    const char* what() const throw() {
+    const char* what() const throw() override {
         return logic_error::what();
     }
 };
