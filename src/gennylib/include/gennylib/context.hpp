@@ -13,6 +13,13 @@
 
 namespace genny {
 
+class InvalidConfigurationException : public std::invalid_argument {
+
+public:
+    explicit InvalidConfigurationException(const std::string& msg)
+    : std::invalid_argument{msg} {}
+};
+
 class ActorContext;
 
 /**
@@ -105,13 +112,13 @@ private:
     template<class O, class N, class Arg0, class...Args>
     O get_helper(std::string path, N curr, Arg0&& arg0, Args&&...args) {
         if (curr.IsScalar()) {
-            throw std::logic_error(std::string{"Wanted ["} + path + "/" + arg0 + "] but [" + path + "] is scalar.");
+            throw InvalidConfigurationException(std::string{"Wanted ["} + path + "/" + arg0 + "] but [" + path + "] is scalar.");
         }
         path += std::string{"/"} + arg0;
 
         auto ncurr = curr[std::forward<Arg0>(arg0)];
         if (!ncurr) {
-            throw std::logic_error(std::string{"Invalid key ["} + arg0 + "] at path [" + path + "]");
+            throw InvalidConfigurationException(std::string{"Invalid key ["} + arg0 + "] at path [" + path + "]");
         }
         return get_helper<O>(path, ncurr, std::forward<Args>(args)...);
     };
@@ -119,7 +126,7 @@ private:
     template<class O, class N>
     O get_helper(const std::string& path, N curr) {
         if (!curr) {
-            throw std::logic_error("Invalid Key at path " + path);
+            throw InvalidConfigurationException("Invalid Key at path " + path);
         }
         try {
             return curr.template as<O>();
@@ -128,7 +135,7 @@ private:
             std::stringstream error;
             error << "Bad conversion of " << curr << " to " <<  typeid(O).name() << " "
                   << "at path [" << path << "]: " << conv.what();
-            throw std::logic_error(error.str());
+            throw InvalidConfigurationException(error.str());
         }
 
     };

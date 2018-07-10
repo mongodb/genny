@@ -21,17 +21,14 @@ Actors:
 - Name: HelloWorld
   Count: 7
         )");
-        auto workloadContext = WorkloadContext{yaml, metrics, orchestrator, {}};
-//        REQUIRE(!workloadContext.errors());
-//        REQUIRE(reported(workloadContext.errors()) == "");
+        WorkloadContext w{yaml, metrics, orchestrator, {}};
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
-        auto result = WorkloadContext{yaml, metrics, orchestrator, {}};
-//        REQUIRE((bool)result.errors());
-//        REQUIRE(reported(result.errors()) ==
-//                errString("Key SchemaVersion expect [2018-07-01] but is [2018-06-27]"));
+
+        auto test = [&]() { WorkloadContext w{yaml, metrics, orchestrator, {}}; };
+        REQUIRE_THROWS_WITH(test, "Invalid schema version");
     }
 
     SECTION("Empty Yaml") {
