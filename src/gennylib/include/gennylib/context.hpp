@@ -20,6 +20,42 @@ public:
     : std::invalid_argument{msg} {}
 };
 
+
+namespace detail {
+
+template<class O, class N>
+O get_helper(const std::string& path, N curr) {
+    if (!curr) {
+        throw InvalidConfigurationException("Invalid Key at path " + path);
+    }
+    try {
+        return curr.template as<O>();
+    }
+    catch(const YAML::BadConversion& conv) {
+        std::stringstream error;
+        error << "Bad conversion of " << curr << " to " <<  typeid(O).name() << " "
+              << "at path [" << path << "]: " << conv.what();
+        throw InvalidConfigurationException(error.str());
+    }
+}
+
+template<class O, class N, class Arg0, class...Args>
+O get_helper(std::string path, N curr, Arg0&& arg0, Args&&...args) {
+    if (curr.IsScalar()) {
+        throw InvalidConfigurationException(std::string{"Wanted ["} + path + "/" + arg0 + "] but [" + path + "] is scalar.");
+    }
+    path += std::string{"/"} + arg0;
+
+    auto ncurr = curr[std::forward<Arg0>(arg0)];
+    if (!ncurr) {
+        throw InvalidConfigurationException(std::string{"Invalid key ["} + arg0 + "] at path [" + path + "]");
+    }
+    return detail::get_helper<O>(path, ncurr, std::forward<Args>(args)...);
+}
+
+}  // namespace detail
+
+
 class ActorContext;
 
 /**
@@ -50,6 +86,11 @@ public:
     const ActorVector& actors() const {
         return _actors;
     }
+
+    template<class O = YAML::Node, class...Args>
+    O get(Args&&...args) {
+        return detail::get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
+    };
 
 private:
     friend class ActorContext;
@@ -102,43 +143,12 @@ public:
 
     template<class O = YAML::Node, class...Args>
     O get(Args&&...args) {
-        return get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
+        return detail::get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
     };
 
 private:
     YAML::Node _node;
     WorkloadContext* _workload;
-
-    template<class O, class N, class Arg0, class...Args>
-    O get_helper(std::string path, N curr, Arg0&& arg0, Args&&...args) {
-        if (curr.IsScalar()) {
-            throw InvalidConfigurationException(std::string{"Wanted ["} + path + "/" + arg0 + "] but [" + path + "] is scalar.");
-        }
-        path += std::string{"/"} + arg0;
-
-        auto ncurr = curr[std::forward<Arg0>(arg0)];
-        if (!ncurr) {
-            throw InvalidConfigurationException(std::string{"Invalid key ["} + arg0 + "] at path [" + path + "]");
-        }
-        return get_helper<O>(path, ncurr, std::forward<Args>(args)...);
-    };
-
-    template<class O, class N>
-    O get_helper(const std::string& path, N curr) {
-        if (!curr) {
-            throw InvalidConfigurationException("Invalid Key at path " + path);
-        }
-        try {
-            return curr.template as<O>();
-        }
-        catch(const YAML::BadConversion& conv) {
-            std::stringstream error;
-            error << "Bad conversion of " << curr << " to " <<  typeid(O).name() << " "
-                  << "at path [" << path << "]: " << conv.what();
-            throw InvalidConfigurationException(error.str());
-        }
-
-    };
 };
 
 }  // namespace genny
