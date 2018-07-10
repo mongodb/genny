@@ -29,16 +29,6 @@ YAML::Node loadConfig(const char* fileName) {
     }
 }
 
-// TODO: move to static method of HelloWorld
-std::vector<std::unique_ptr<genny::Actor>> helloWorldProducer(genny::ActorContext& actorConfig) {
-    const auto count = actorConfig["Count"].as<int>();
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    for (int i = 0; i < count; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(actorConfig, std::to_string(i)));
-    }
-    return out;
-}
-
 }  // namespace
 
 
@@ -48,7 +38,7 @@ int genny::driver::DefaultDriver::run(int, char** argv) const {
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
-    auto producers = std::vector<genny::WorkloadContext::Producer>{&helloWorldProducer};
+    auto producers = std::vector<genny::WorkloadContext::Producer>{&genny::actor::HelloWorld::producer};
     auto results = WorkloadContext{yaml, metrics, orchestrator, producers};
 
     if (results.errors()) {
