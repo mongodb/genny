@@ -1,16 +1,19 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <fstream>
 #include <thread>
 #include <vector>
 
-#include <fstream>
+#include <boost/log/trivial.hpp>
+
+#include <yaml-cpp/yaml.h>
+
 #include <gennylib/MetricsReporter.hpp>
 #include <gennylib/PhasedActor.hpp>
 #include <gennylib/actors/HelloWorld.hpp>
 #include <gennylib/context.hpp>
 
-#include <yaml-cpp/yaml.h>
 
 #include "DefaultDriver.hpp"
 
@@ -21,7 +24,7 @@ YAML::Node loadConfig(const char* fileName) {
     try {
         return YAML::LoadFile(fileName);
     } catch (const std::exception& ex) {
-        std::cerr << "Error loading yaml from " << fileName << ": " << ex.what();
+        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << fileName << ": " << ex.what();
         throw ex;
     }
 }
