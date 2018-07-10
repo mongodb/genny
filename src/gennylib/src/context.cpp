@@ -19,5 +19,3 @@ genny::WorkloadContext::ActorVector genny::WorkloadContext::constructActors(
                 actors.push_back(std::move(actor));
     return actors;
 }
-
-

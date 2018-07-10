@@ -16,12 +16,11 @@ namespace genny {
 class InvalidConfigurationException : public std::invalid_argument {
 
 public:
-    explicit InvalidConfigurationException(const std::string &s)
-    : std::invalid_argument{s} {}
+    explicit InvalidConfigurationException(const std::string& s) : std::invalid_argument{s} {}
 
-    explicit InvalidConfigurationException(const char *s) : invalid_argument(s) {}
+    explicit InvalidConfigurationException(const char* s) : invalid_argument(s) {}
 
-    const char *what() const throw() {
+    const char* what() const throw() {
         return logic_error::what();
     }
 };
@@ -29,32 +28,33 @@ public:
 
 namespace detail {
 
-template<class O, class N>
+template <class O, class N>
 O get_helper(const std::string& path, N curr) {
     if (!curr) {
         throw InvalidConfigurationException("Invalid Key at path " + path);
     }
     try {
         return curr.template as<O>();
-    }
-    catch(const YAML::BadConversion& conv) {
+    } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
-        error << "Bad conversion of " << curr << " to " <<  typeid(O).name() << " "
+        error << "Bad conversion of " << curr << " to " << typeid(O).name() << " "
               << "at path [" << path << "]: " << conv.what();
         throw InvalidConfigurationException(error.str());
     }
 }
 
-template<class O, class N, class Arg0, class...Args>
-O get_helper(std::string path, N curr, Arg0&& arg0, Args&&...args) {
+template <class O, class N, class Arg0, class... Args>
+O get_helper(std::string path, N curr, Arg0&& arg0, Args&&... args) {
     if (curr.IsScalar()) {
-        throw InvalidConfigurationException(std::string{"Wanted ["} + path + "/" + arg0 + "] but [" + path + "] is scalar.");
+        throw InvalidConfigurationException(std::string{"Wanted ["} + path + "/" + arg0 +
+                                            "] but [" + path + "] is scalar.");
     }
     path += std::string{"/"} + arg0;
 
     auto ncurr = curr[std::forward<Arg0>(arg0)];
     if (!ncurr) {
-        throw InvalidConfigurationException(std::string{"Invalid key ["} + arg0 + "] at path [" + path + "]");
+        throw InvalidConfigurationException(std::string{"Invalid key ["} + arg0 + "] at path [" +
+                                            path + "]");
     }
     return detail::get_helper<O>(path, ncurr, std::forward<Args>(args)...);
 }
@@ -88,18 +88,19 @@ public:
           _orchestrator{&orchestrator},
           _actorContexts{constructActorContexts()},
           _actors{constructActors(producers)} {
-
+        // This is good enough for now. Later can add a WorkloadContextValidator concept
+        // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get<std::string>("SchemaVersion") != "2018-07-01") {
             throw InvalidConfigurationException("Invalid schema version");
         }
-      }
+    }
 
     const ActorVector& actors() const {
         return _actors;
     }
 
-    template<class O = YAML::Node, class...Args>
-    O get(Args&&...args) {
+    template <class O = YAML::Node, class... Args>
+    O get(Args&&... args) {
         return detail::get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
     };
 
@@ -152,8 +153,8 @@ public:
         return this->_workload->_orchestrator;
     }
 
-    template<class O = YAML::Node, class...Args>
-    O get(Args&&...args) {
+    template <class O = YAML::Node, class... Args>
+    O get(Args&&... args) {
         return detail::get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
     };
 

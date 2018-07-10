@@ -38,7 +38,8 @@ int genny::driver::DefaultDriver::run(int, char** argv) const {
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
-    auto producers = std::vector<genny::WorkloadContext::Producer>{&genny::actor::HelloWorld::producer};
+    auto producers =
+        std::vector<genny::WorkloadContext::Producer>{&genny::actor::HelloWorld::producer};
     auto results = WorkloadContext{yaml, metrics, orchestrator, producers};
 
     orchestrator.setActorCount(static_cast<unsigned int>(results.actors().size()));
