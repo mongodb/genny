@@ -1,6 +1,8 @@
 #ifndef HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 #define HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 
+#include <iterator>
+#include <list>
 #include <type_traits>
 
 #include <yaml-cpp/yaml.h>
@@ -28,33 +30,52 @@ public:
 
 namespace detail {
 
+using paths = std::list<std::string>;
+
+inline std::string join(const paths& ps) {
+    std::ostringstream out;
+    std::copy(cbegin(ps), cend(ps),
+              std::ostream_iterator<std::string>(out, "/"));
+    return out.str();
+}
+
 template <class O, class N>
-O get_helper(const std::string& path, N curr) {
+O get_helper(const paths& path, N curr) {
     if (!curr) {
-        throw InvalidConfigurationException("Invalid Key at path " + path);
+        throw InvalidConfigurationException("Invalid Key at path " + join(path));
     }
     try {
         return curr.template as<O>();
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
         error << "Bad conversion of " << curr << " to " << typeid(O).name() << " "
-              << "at path [" << path << "]: " << conv.what();
+              << "at path [" << join(path) << "]: " << conv.what();
         throw InvalidConfigurationException(error.str());
     }
 }
 
-template <class O, class N, class Arg0, class... Args>
-O get_helper(std::string path, N curr, Arg0&& arg0, Args&&... args) {
-    if (curr.IsScalar()) {
-        throw InvalidConfigurationException(std::string{"Wanted ["} + path + "/" + arg0 +
-                                            "] but [" + path + "] is scalar.");
-    }
-    path += std::string{"/"} + arg0;
+template<class T>
+void push_path(paths& p, const T& t) {
+    std::ostringstream out;
+    out << t;
+    p.push_back(out.str());
+}
 
+template <class O, class N, class Arg0, class... Args>
+O get_helper(paths& path, N curr, Arg0&& arg0, Args&&... args) {
+    if (curr.IsScalar()) {
+        std::stringstream error;
+        error << "Wanted [" << join(path) << "/" << arg0 << "] but [" << join(path) << "] is scalar.";
+        throw InvalidConfigurationException(error.str());
+    }
     auto ncurr = curr[std::forward<Arg0>(arg0)];
-    if (!ncurr) {
-        throw InvalidConfigurationException(std::string{"Invalid key ["} + arg0 + "] at path [" +
-                                            path + "]");
+
+    push_path(path, arg0);
+
+    if (!ncurr.IsDefined()) {
+        std::stringstream error;
+        error << "Invalid key [" << arg0 << "] at path [" << join(path) << "]";
+        throw InvalidConfigurationException(error.str());
     }
     return detail::get_helper<O>(path, ncurr, std::forward<Args>(args)...);
 }
@@ -101,7 +122,8 @@ public:
 
     template <class O = YAML::Node, class... Args>
     O get(Args&&... args) {
-        return detail::get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
+        detail::paths p;
+        return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
     };
 
 private:
@@ -155,7 +177,8 @@ public:
 
     template <class O = YAML::Node, class... Args>
     O get(Args&&... args) {
-        return detail::get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
+        detail::paths p;
+        return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
     };
 
     WorkloadContext& workload() {

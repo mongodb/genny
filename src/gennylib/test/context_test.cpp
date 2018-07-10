@@ -34,12 +34,27 @@ Actors:
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
     }
 
-    //    SECTION("Empty Yaml") {
-    //        auto yaml = YAML::Load("");
-    //        auto result = WorkloadContext{yaml, metrics, orchestrator, {}};
-    ////        REQUIRE((bool)result.errors());
-    ////        REQUIRE(reported(result.errors()) == errString("Key SchemaVersion not found"));
-    //    }
+    SECTION("Access nested structures") {
+        auto yaml = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Some Ints: [1,2,[3,4]]
+Other: [{ Foo: [{Key: 1, Another: true}] }]
+)");
+        WorkloadContext w{yaml, metrics, orchestrator, {}};
+        REQUIRE(w.get<std::string>("SchemaVersion") == "2018-07-01");
+        REQUIRE(w.get<int>("Other", 0, "Foo", 0, "Key") == 1);
+        REQUIRE(w.get<bool>("Other", 0, "Foo", 0, "Another"));
+        REQUIRE(w.get<int>("Some Ints", 0) == 1);
+        REQUIRE(w.get<int>("Some Ints", 1) == 2);
+        REQUIRE(w.get<int>("Some Ints", 2, 0) == 3);
+        REQUIRE(w.get<int>("Some Ints", 2, 1) == 4);
+    }
+
+    SECTION("Empty Yaml") {
+        auto yaml = YAML::Load("");
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path.*)"));
+    }
     //
     //
     //    SECTION(
