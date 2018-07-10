@@ -17,8 +17,7 @@
 
 namespace {
 
-YAML::Node loadConfig(char* const* argv) {
-    const char* fileName = argv[1];
+YAML::Node loadConfig(const char* fileName) {
     try {
         return YAML::LoadFile(fileName);
     } catch (const std::exception& ex) {
@@ -40,9 +39,9 @@ std::vector<std::unique_ptr<genny::Actor>> helloWorldProducer(genny::ActorContex
 }  // namespace
 
 
-int genny::driver::DefaultDriver::run(int argc, char** argv) const {
+int genny::driver::DefaultDriver::run(int, char** argv) const {
 
-    auto yaml = loadConfig(argv);
+    auto yaml = loadConfig(argv[1]);
     auto metrics = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
