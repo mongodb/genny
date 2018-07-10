@@ -42,6 +42,7 @@ public:
           _actorContexts{constructActorContexts()},
           _actors{constructActors(producers)} {}
 
+    // So you can say workloadContext[foo] and this forwards to the root YAML::Node.
     template <class... Args>
     YAML::Node operator[](Args&&... args) const {
         return _node.operator[](std::forward<Args>(args)...);
