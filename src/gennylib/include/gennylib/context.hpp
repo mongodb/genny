@@ -132,9 +132,45 @@ public:
             *this, std::forward<Arg0>(arg0), std::forward<Args>(args)...);
     }
 
+    template<class O, class...Args>
+    O get(Args&&...args) {
+        return get_helper<O>(std::string{""}, _node, std::forward<Args>(args)...);
+    };
+
 private:
     YAML::Node _node;
     WorkloadContext* _workload;
+
+    template<class O, class N, class Arg0, class...Args>
+    O get_helper(std::string path, N curr, Arg0&& arg0, Args&&...args) {
+        if (curr.IsScalar()) {
+            throw std::logic_error(std::string{"Wanted ["} + path + "/" + arg0 + "] but [" + path + "] is scalar.");
+        }
+        path += std::string{"/"} + arg0;
+
+        auto ncurr = curr[std::forward<Arg0>(arg0)];
+        if (!ncurr) {
+            throw std::logic_error(std::string{"Invalid key ["} + arg0 + "] at path [" + path + "]");
+        }
+        return get_helper<O>(path, ncurr, std::forward<Args>(args)...);
+    };
+
+    template<class O, class N>
+    O get_helper(const std::string& path, N curr) {
+        if (!curr) {
+            throw std::logic_error("Invalid Key at path " + path);
+        }
+        try {
+            return curr.template as<O>();
+        }
+        catch(const YAML::BadConversion& conv) {
+            std::stringstream error;
+            error << "Bad conversion of " << curr << " to " <<  typeid(O).name() << " "
+                  << "at path [" << path << "]: " << conv.what();
+            throw std::logic_error(error.str());
+        }
+
+    };
 };
 
 }  // namespace genny

@@ -14,7 +14,7 @@ genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const std::st
     : PhasedActor(context, name),
       _output_timer{context.timer("hello." + name + ".output")},
       _operations{context.counter("hello." + name + ".operations")},
-      _message{context["Parameters"]["Message"].as<std::string>()} {}
+      _message{context.get<std::string>("Parameters","Message")} {}
 
 std::vector<std::unique_ptr<genny::Actor>> genny::actor::HelloWorld::producer(genny::ActorContext &actorConfig) {
     const auto count = actorConfig["Count"].as<int>();
