@@ -4,7 +4,7 @@
 // Helper method to convert Actors:[...] to ActorContexts
 std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadContext::constructActorContexts() {
     auto out = std::vector<std::unique_ptr<genny::ActorContext>>{};
-    for (const auto& actor : _node["Actors"]) {
+    for (const auto& actor : get("Actors")) {
         out.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
     return out;

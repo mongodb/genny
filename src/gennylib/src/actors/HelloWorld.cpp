@@ -15,8 +15,7 @@ genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const std::st
       _operations{context.counter("hello." + name + ".operations")},
       _message{context.get<std::string>("Parameters", "Message")} {}
 
-std::vector<std::unique_ptr<genny::Actor>> genny::actor::HelloWorld::producer(
-    genny::ActorContext& context) {
+genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
     const auto count = context.get<int>("Count");
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     for (int i = 0; i < count; ++i) {

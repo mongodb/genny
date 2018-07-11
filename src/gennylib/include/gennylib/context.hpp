@@ -154,6 +154,9 @@ private:
 class ActorContext {
 
 public:
+
+    ActorContext() = default;
+
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
         : _node{node}, _workload{&workloadContext} {}
 
