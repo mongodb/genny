@@ -14,7 +14,7 @@ public:
 
     ~HelloWorld() override = default;
 
-    static std::vector<std::unique_ptr<genny::Actor>> producer(genny::ActorContext& context);
+    static ActorVector producer(ActorContext& context);
 
 private:
     void doPhase(int phase) override;
