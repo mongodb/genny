@@ -1,6 +1,7 @@
 #ifndef HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 #define HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 
+#include <functional>
 #include <iterator>
 #include <list>
 #include <type_traits>
@@ -49,9 +50,7 @@ public:
 
     template <class T>
     void add(const T& elt) {
-        std::ostringstream out;
-        out << elt;
-        _elts.push_back(out.str());
+        _elts.push_back(elt);
     }
     auto begin() const {
         return std::begin(_elts);
@@ -61,13 +60,16 @@ public:
     }
 
 private:
-    std::list<std::string> _elts;
+    std::list<std::function<void(std::ostream&)>> _elts;
 
 };
 
 // Support putting ConfigPaths onto ostreams
 inline std::ostream& operator<<(std::ostream& out, const ConfigPath& p) {
-    std::copy(std::cbegin(p), std::cend(p), std::ostream_iterator<std::string>(out, "/"));
+    for(const auto& f : p) {
+        f(out);
+        out << "/";
+    }
     return out;
 }
 
@@ -109,7 +111,7 @@ Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, P
     }
     const auto& next = curr[std::forward<PathFirst>(pathFirst)];
 
-    parent.add(pathFirst);
+    parent.add([&](std::ostream& out) { out << pathFirst; });
 
     if (!next.IsDefined()) {
         std::stringstream error;
