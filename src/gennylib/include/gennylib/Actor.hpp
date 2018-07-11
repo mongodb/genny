@@ -6,8 +6,10 @@ namespace genny {
 class Actor {
 
 public:
-    virtual void run() = 0;
     virtual ~Actor() = default;
+
+    virtual void run() = 0;
+
 };
 
 

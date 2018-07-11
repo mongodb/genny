@@ -1,6 +1,8 @@
 #ifndef HEADER_E4B4F388_CF15_44CC_8782_EA61F79FC2A0_INCLUDED
 #define HEADER_E4B4F388_CF15_44CC_8782_EA61F79FC2A0_INCLUDED
 
+#include <exception>
+
 namespace genny {
 
 class InvalidConfigurationException : public std::invalid_argument {
@@ -13,11 +15,10 @@ public:
     const char* what() const throw() override {
         return logic_error::what();
     }
+
 };
 
-
 }
-
 
 
 #endif  // HEADER_E4B4F388_CF15_44CC_8782_EA61F79FC2A0_INCLUDED

@@ -19,9 +19,10 @@ public:
 private:
     void doPhase(int phase) override;
 
-    metrics::Timer _output_timer;
+    metrics::Timer _outputTimer;
     metrics::Counter _operations;
     std::string _message;
+
 };
 
 }  // namespace genny::actor

@@ -3,7 +3,7 @@
 #include <gennylib/actors/HelloWorld.hpp>
 
 void genny::actor::HelloWorld::doPhase(int) {
-    auto op = _output_timer.raii();
+    auto op = _outputTimer.raii();
     BOOST_LOG_TRIVIAL(info) << _name << " Doing Phase "
                             << _context.orchestrator()->currentPhaseNumber() << " " << _message;
     _operations.incr();
@@ -11,7 +11,7 @@ void genny::actor::HelloWorld::doPhase(int) {
 
 genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const std::string& name)
     : PhasedActor(context, name),
-      _output_timer{context.timer("hello." + name + ".output")},
+      _outputTimer{context.timer("hello." + name + ".output")},
       _operations{context.counter("hello." + name + ".operations")},
       _message{context.get<std::string>("Parameters", "Message")} {}
 
