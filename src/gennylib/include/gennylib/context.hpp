@@ -13,8 +13,8 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/metrics.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/metrics.hpp>
 
 /**
  * This file defines {@code WorkloadContext} and {@code ActorContext} which provide access
@@ -63,12 +63,11 @@ public:
 
 private:
     std::vector<std::function<void(std::ostream&)>> _elts;
-
 };
 
 // Support putting ConfigPaths onto ostreams
 inline std::ostream& operator<<(std::ostream& out, const ConfigPath& p) {
-    for(const auto& f : p) {
+    for (const auto& f : p) {
         f(out);
         out << "/";
     }
@@ -107,8 +106,8 @@ template <class Out, class Current, class PathFirst, class... PathRest>
 Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
     if (curr.IsScalar()) {
         std::stringstream error;
-        error << "Wanted [" << parent << pathFirst << "] but [" << parent << "] is scalar: [" << curr
-              << "]";
+        error << "Wanted [" << parent << pathFirst << "] but [" << parent << "] is scalar: ["
+              << curr << "]";
         throw InvalidConfigurationException(error.str());
     }
     const auto& next = curr[std::forward<PathFirst>(pathFirst)];
@@ -117,8 +116,8 @@ Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, P
 
     if (!next.IsDefined()) {
         std::stringstream error;
-        error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed [" << curr
-              << "].";
+        error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed ["
+              << curr << "].";
         throw InvalidConfigurationException(error.str());
     }
     return detail::get_helper<Out>(parent, next, std::forward<PathRest>(rest)...);
@@ -144,11 +143,11 @@ public:
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::vector<ActorProducer>& producers)
-            : _node{node},
-              _registry{&registry},
-              _orchestrator{&orchestrator},
-              _actorContexts{constructActorContexts()},
-              _actors{constructActors(producers)} {
+        : _node{node},
+          _registry{&registry},
+          _orchestrator{&orchestrator},
+          _actorContexts{constructActorContexts()},
+          _actors{constructActors(producers)} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get<std::string>("SchemaVersion") != "2018-07-01") {
@@ -224,7 +223,6 @@ private:
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
-
 };
 
 
@@ -301,7 +299,7 @@ public:
         return this->_workload->_registry->timer(std::forward<Args>(args)...);
     }
 
-/**
+    /**
      * Convenience method for creating a {@code metrics::Gauge}.
      */
     template <class... Args>
@@ -309,7 +307,7 @@ public:
         return this->_workload->_registry->gauge(std::forward<Args>(args)...);
     }
 
-/**
+    /**
      * Convenience method for creating a {@code metrics::Counter}.
      */
     template <class... Args>
@@ -320,7 +318,6 @@ public:
 private:
     YAML::Node _node;
     WorkloadContext* _workload;
-
 };
 
 }  // namespace genny

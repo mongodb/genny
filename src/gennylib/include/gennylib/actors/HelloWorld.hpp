@@ -22,7 +22,6 @@ private:
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
     std::string _message;
-
 };
 
 }  // namespace genny::actor

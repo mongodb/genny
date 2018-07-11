@@ -44,7 +44,6 @@ public:
      * This is only intended to be called by workload drivers.
      */
     virtual void run() = 0;
-
 };
 
 

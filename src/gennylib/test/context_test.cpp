@@ -16,8 +16,8 @@ using namespace std;
 using Catch::Matchers::Matches;
 using Catch::Matchers::StartsWith;
 
-template<class Out, class... Args>
-void errors(const string &yaml, string message, Args...args) {
+template <class Out, class... Args>
+void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
@@ -28,8 +28,8 @@ void errors(const string &yaml, string message, Args...args) {
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
 }
-template<class Out, class... Args>
-void gives(const string &yaml, Out expect, Args...args) {
+template <class Out, class... Args>
+void gives(const string& yaml, Out expect, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
@@ -66,23 +66,27 @@ Actors:
         // key not found
         errors<string>("Foo: bar", "Invalid key [FoO]", "FoO");
         // yaml library does type-conversion; we just forward through...
-        gives<string> ("Foo: 123", "123", "Foo");
-        gives<int>    ("Foo: 123", 123, "Foo");
+        gives<string>("Foo: 123", "123", "Foo");
+        gives<int>("Foo: 123", 123, "Foo");
         // ...and propagate errors.
-        errors<int>   ("Foo: Bar", "Bad conversion of [Bar] to [i] at path [Foo/]:", "Foo");
+        errors<int>("Foo: Bar", "Bad conversion of [Bar] to [i] at path [Foo/]:", "Foo");
         // okay
-        gives<int>    ("Foo: [1,\"bar\"]", 1, "Foo", 0);
+        gives<int>("Foo: [1,\"bar\"]", 1, "Foo", 0);
         // give meaningful error message:
-        errors<string>("Foo: [1,\"bar\"]", "Invalid key [0] at path [Foo/0/]. Last accessed [[1, bar]].", "Foo", "0");
+        errors<string>("Foo: [1,\"bar\"]",
+                       "Invalid key [0] at path [Foo/0/]. Last accessed [[1, bar]].",
+                       "Foo",
+                       "0");
 
         errors<string>("Foo: 7", "Wanted [Foo/Bar] but [Foo/] is scalar: [7]", "Foo", "Bar");
-        errors<string>("Foo: 7", "Wanted [Foo/Bar] but [Foo/] is scalar: [7]", "Foo", "Bar", "Baz", "Bat");
+        errors<string>(
+            "Foo: 7", "Wanted [Foo/Bar] but [Foo/] is scalar: [7]", "Foo", "Bar", "Baz", "Bat");
 
         auto other = R"(Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }])";
 
-        gives<int>(other, 1,     "Other", 0, "Foo", 0, "Key");
+        gives<int>(other, 1, "Other", 0, "Foo", 0, "Key");
         gives<bool>(other, true, "Other", 0, "Foo", 0, "Another");
-        gives<bool>(other, false,"Other", 0, "Foo", 0, "Nested", 0);
+        gives<bool>(other, false, "Other", 0, "Foo", 0, "Nested", 0);
         gives<bool>(other, true, "Other", 0, "Foo", 0, "Nested", 1);
 
         gives<int>("Some Ints: [1,2,[3,4]]", 1, "Some Ints", 0);

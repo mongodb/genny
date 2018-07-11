@@ -18,10 +18,9 @@ public:
     const char* what() const throw() override {
         return logic_error::what();
     }
-
 };
 
-}
+}  // namespace genny
 
 
 #endif  // HEADER_E4B4F388_CF15_44CC_8782_EA61F79FC2A0_INCLUDED

@@ -4,9 +4,9 @@
 #include <string>
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
-#include <gennylib/Orchestrator.hpp>
 
 namespace genny {
 
