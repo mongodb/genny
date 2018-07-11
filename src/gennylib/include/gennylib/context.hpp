@@ -38,19 +38,22 @@ struct path {
     path() = default;
 
     std::list<std::string> _elts;
-    template<class T>
+    template <class T>
     void add(const T& elt) {
         std::ostringstream out;
         out << elt;
         _elts.push_back(out.str());
     }
-    auto begin() const { return std::begin(_elts); }
-    auto end()   const { return std::end(_elts);   }
+    auto begin() const {
+        return std::begin(_elts);
+    }
+    auto end() const {
+        return std::end(_elts);
+    }
 };
 
 inline std::ostream& operator<<(std::ostream& out, const path& p) {
-    std::copy(std::cbegin(p), std::cend(p),
-        std::ostream_iterator<std::string>(out, "/"));
+    std::copy(std::cbegin(p), std::cend(p), std::ostream_iterator<std::string>(out, "/"));
     return out;
 }
 
@@ -75,8 +78,8 @@ template <class O, class N, class Arg0, class... Args>
 O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
     if (curr.IsScalar()) {
         std::stringstream error;
-        error << "Wanted [" << path << "/" << arg0 << "] but [" << path
-              << "] is scalar: [" << curr << "]";
+        error << "Wanted [" << path << "/" << arg0 << "] but [" << path << "] is scalar: [" << curr
+              << "]";
         throw InvalidConfigurationException(error.str());
     }
     const auto& ncurr = curr[std::forward<Arg0>(arg0)];
@@ -85,7 +88,8 @@ O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
 
     if (!ncurr.IsDefined()) {
         std::stringstream error;
-        error << "Invalid key [" << arg0 << "] at path [" << path << "]. Last accessed [" << curr << "].";
+        error << "Invalid key [" << arg0 << "] at path [" << path << "]. Last accessed [" << curr
+              << "].";
         throw InvalidConfigurationException(error.str());
     }
     return detail::get_helper<O>(path, ncurr, std::forward<Args>(args)...);
