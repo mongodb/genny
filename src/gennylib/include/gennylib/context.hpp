@@ -10,6 +10,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/ActorProducer.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/metrics.hpp>
 
@@ -93,13 +94,6 @@ O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
 }  // namespace detail
 
 
-// TODO: separate Producer.hpp
-class ActorContext;
-class Actor;
-using Producer = typename std::function<ActorVector(ActorContext&)>;
-
-class Orchestrator;
-
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  */
@@ -115,7 +109,7 @@ public:
     WorkloadContext(const YAML::Node& node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
-                    const std::vector<Producer>& producers)
+                    const std::vector<ActorProducer>& producers)
         : _node{node},
           _registry{&registry},
           _orchestrator{&orchestrator},
@@ -141,7 +135,7 @@ public:
 private:
     friend class ActorContext;
 
-    ActorVector constructActors(const std::vector<Producer>& producers);
+    ActorVector constructActors(const std::vector<ActorProducer>& producers);
     std::vector<std::unique_ptr<ActorContext>> constructActorContexts();
 
     YAML::Node _node;

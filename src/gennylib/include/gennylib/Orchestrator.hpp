@@ -7,7 +7,6 @@
 #include <thread>
 
 #include <gennylib/ActorVector.hpp>
-#include <gennylib/context.hpp>
 
 namespace genny {
 

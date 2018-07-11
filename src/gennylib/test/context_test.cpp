@@ -70,7 +70,7 @@ Actors:
         )");
 
         int calls = 0;
-        std::vector<Producer> producers;
+        std::vector<ActorProducer> producers;
         producers.emplace_back([&](ActorContext& context) {
             REQUIRE(context.workload().get<int>("Actors", 0, "SomeList", 0) == 100);
             ++calls;

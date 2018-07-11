@@ -16,6 +16,7 @@ add_library(gennylib SHARED
 
 
     include/gennylib/Actor.hpp
+    include/gennylib/ActorProducer.hpp
     include/gennylib/ActorVector.hpp
 
         include/gennylib/PhasedActor.hpp

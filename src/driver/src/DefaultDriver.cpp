@@ -44,7 +44,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto orchestrator = Orchestrator{};
 
     auto producers =
-        std::vector<genny::Producer>{&genny::actor::HelloWorld::producer};
+        std::vector<genny::ActorProducer>{&genny::actor::HelloWorld::producer};
     auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
 
     orchestrator.setActors(workloadContext.actors());
