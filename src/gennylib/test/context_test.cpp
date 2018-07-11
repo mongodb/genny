@@ -14,18 +14,31 @@ using namespace genny;
 using namespace std;
 
 using Catch::Matchers::Matches;
+using Catch::Matchers::StartsWith;
 
-template<class... Args>
-void errors(string yaml, string expect, Args...args) {
+template<class Out, class... Args>
+void errors(string yaml, string message, Args...args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
-    auto read = YAML::Load(yaml);
+    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
+    auto read = YAML::Load(modified);
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, {}};
-        context.get(std::forward<Args>(args)...);
+        return context.get<Out>(std::forward<Args>(args)...);
     };
-
-    CHECK_THROWS_WITH(test(), expect);
+    CHECK_THROWS_WITH(test(), StartsWith(message));
+}
+template<class Out, class... Args>
+void gives(string yaml, Out expect, Args...args) {
+    genny::metrics::Registry metrics;
+    genny::Orchestrator orchestrator;
+    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
+    auto read = YAML::Load(modified);
+    auto test = [&]() {
+        auto context = WorkloadContext{read, metrics, orchestrator, {}};
+        return context.get<Out>(std::forward<Args>(args)...);
+    };
+    REQUIRE(test() == expect);
 }
 
 TEST_CASE("loads configuration okay") {
@@ -56,7 +69,17 @@ Actors:
     }
 
     SECTION("Invalid config accesses") {
-
+        // key not found
+        errors<string>("Foo: bar", "Invalid key [FoO]", "FoO");
+        // yaml library does type-conversion; we just forward through...
+        gives<string> ("Foo: 123", "123", "Foo");
+        gives<int>    ("Foo: 123", 123, "Foo");
+        // ...and propagate errors.
+        errors<int>   ("Foo: Bar", "Bad conversion of [Bar] to [i] at path [Foo/]:", "Foo");
+        // okay
+        gives<int>    ("Foo: [1,\"bar\"]", 1, "Foo", 0);
+        // give meaningful error message:
+        errors<string>("Foo: [1,\"bar\"]", "Invalid key [0] at path [Foo/0/]. Last accessed [[1, bar]].", "Foo", "0");
     }
 
     SECTION("Access nested structures") {
