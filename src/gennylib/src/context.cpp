@@ -10,9 +10,9 @@ std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadContext::constr
     return out;
 }
 
-genny::WorkloadContext::ActorVector genny::WorkloadContext::constructActors(
+genny::ActorVector genny::WorkloadContext::constructActors(
     const std::vector<Producer>& producers) {
-    auto actors = genny::WorkloadContext::ActorVector{};
+    auto actors = genny::ActorVector{};
     for (const auto& producer : producers)
         for (auto& actorContext : _actorContexts)
             for (auto&& actor : producer(*actorContext))

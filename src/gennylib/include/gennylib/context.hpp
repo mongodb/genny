@@ -31,6 +31,11 @@ public:
 namespace detail {
 
 struct path {
+
+    path(path&) = delete;
+    void operator=(path&) = delete;
+    path() = default;
+
     std::list<std::string> _elts;
     template<class T>
     void add(const T& elt) {
@@ -59,7 +64,7 @@ O get_helper(const path& path, const N& curr) {
         return curr.template as<O>();
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
-        error << "Bad conversion of " << curr << " to " << typeid(O).name() << " "
+        error << "Bad conversion of [" << curr << "] to [" << typeid(O).name() << "] "
               << "at path [" << path << "]: " << conv.what();
         throw InvalidConfigurationException(error.str());
     }
@@ -70,7 +75,7 @@ O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
     if (curr.IsScalar()) {
         std::stringstream error;
         error << "Wanted [" << path << "/" << arg0 << "] but [" << path
-              << "] is scalar.";
+              << "] is scalar: [" << curr << "]";
         throw InvalidConfigurationException(error.str());
     }
     const auto& ncurr = curr[std::forward<Arg0>(arg0)];
@@ -79,7 +84,7 @@ O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
 
     if (!ncurr.IsDefined()) {
         std::stringstream error;
-        error << "Invalid key [" << arg0 << "] at path [" << path << "]";
+        error << "Invalid key [" << arg0 << "] at path [" << path << "]. Last accessed [" << curr << "].";
         throw InvalidConfigurationException(error.str());
     }
     return detail::get_helper<O>(path, ncurr, std::forward<Args>(args)...);
@@ -90,15 +95,16 @@ O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
 
 class ActorContext;
 
+using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
+using Producer = typename std::function<ActorVector(ActorContext&)>;
+
+
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  */
 class WorkloadContext {
 
 public:
-    using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
-    using Producer = typename std::function<ActorVector(ActorContext&)>;
-
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
     void operator=(WorkloadContext&) = delete;
@@ -126,7 +132,7 @@ public:
     }
 
     template <class O = YAML::Node, class... Args>
-    O get(Args&&... args) {
+    O get(Args&&... args) const {
         detail::path p;
         return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
     };
@@ -181,12 +187,12 @@ public:
     }
 
     template <class O = YAML::Node, class... Args>
-    O get(Args&&... args) {
+    O get(Args&&... args) const {
         detail::path p;
         return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
     };
 
-    WorkloadContext& workload() {
+    WorkloadContext& workload() const {
         return *_workload;
     }
 

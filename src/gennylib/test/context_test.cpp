@@ -70,16 +70,16 @@ Actors:
         )");
 
         int calls = 0;
-        std::vector<WorkloadContext::Producer> producers;
+        std::vector<Producer> producers;
         producers.emplace_back([&](ActorContext& context) {
             REQUIRE(context.workload().get<int>("Actors", 0, "SomeList", 0) == 100);
             ++calls;
-            return WorkloadContext::ActorVector{};
+            return ActorVector{};
         });
         producers.emplace_back([&](ActorContext& context) {
             REQUIRE(context.workload().get<int>("Actors", 1, "Count") == 7);
             ++calls;
-            return WorkloadContext::ActorVector{};
+            return ActorVector{};
         });
 
         auto context = WorkloadContext{yaml, metrics, orchestrator, producers};
