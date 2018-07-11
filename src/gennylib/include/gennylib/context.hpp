@@ -28,6 +28,17 @@
  */
 namespace genny::detail {
 
+/**
+ * The "path" to a configured value. E.g. given the structure
+ *
+ * <pre>
+ * foo:
+ *   bar:
+ *     baz: [10,20,30]
+ * </pre>
+ *
+ * The path to the 10 is "foo/bar/baz/0".
+ */
 class ConfigPath {
 
 public:
@@ -54,11 +65,15 @@ private:
 
 };
 
+// Support putting ConfigPaths onto ostreams
 inline std::ostream& operator<<(std::ostream& out, const ConfigPath& p) {
     std::copy(std::cbegin(p), std::cend(p), std::ostream_iterator<std::string>(out, "/"));
     return out;
 }
 
+// Used by get() in WorkloadContext and ActorContext
+//
+// This is the base-case when we're out of Args... expansions in the other helper below
 template <class Out, class Current>
 Out get_helper(const ConfigPath& parent, const Current& curr) {
     if (!curr) {
@@ -70,12 +85,20 @@ Out get_helper(const ConfigPath& parent, const Current& curr) {
         return curr.template as<Out>();
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
+        // typeid(Out).name() is kinda hokey but could be useful when debugging config issues.
         error << "Bad conversion of [" << curr << "] to [" << typeid(Out).name() << "] "
               << "at path [" << parent << "]: " << conv.what();
         throw InvalidConfigurationException(error.str());
     }
 }
 
+// Used by get() in WorkloadContext and ActorContext
+//
+// Recursive case where we pick off first item and recurse:
+//      get_helper(foo, a, b, c) // this fn
+//   -> get_helper(foo[a], b, c) // this fn
+//   -> get_helper(foo[a][b], c) // this fn
+//   -> get_helper(foo[a][b][c]) // "base case" fn above
 template <class Out, class Current, class PathFirst, class... PathRest>
 Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
     if (curr.IsScalar()) {
@@ -104,6 +127,7 @@ namespace genny {
 
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
+ * Call .get() to access top-level yaml configs.
  */
 class WorkloadContext {
 
@@ -130,10 +154,10 @@ public:
     WorkloadContext(WorkloadContext&&) = default;
     void operator=(WorkloadContext&&) = delete;
 
-    template <class O = YAML::Node, class... Args>
-    O get(Args&&... args) const {
+    template <class T = YAML::Node, class... Args>
+    T get(Args&&... args) const {
         detail::ConfigPath p;
-        return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
+        return detail::get_helper<T>(p, _node, std::forward<Args>(args)...);
     };
 
     const ActorVector& actors() const {
@@ -170,10 +194,10 @@ public:
     ActorContext(ActorContext&&) = default;
     void operator=(ActorContext&&) = delete;
 
-    template <class O = YAML::Node, class... Args>
-    O get(Args&&... args) const {
+    template <class T = YAML::Node, class... Args>
+    T get(Args&&... args) const {
         detail::ConfigPath p;
-        return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
+        return detail::get_helper<T>(p, _node, std::forward<Args>(args)...);
     };
 
     Orchestrator* orchestrator() const {
