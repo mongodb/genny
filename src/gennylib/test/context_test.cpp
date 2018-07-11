@@ -11,8 +11,22 @@
 
 
 using namespace genny;
+using namespace std;
 
 using Catch::Matchers::Matches;
+
+template<class... Args>
+void errors(string yaml, string expect, Args...args) {
+    genny::metrics::Registry metrics;
+    genny::Orchestrator orchestrator;
+    auto read = YAML::Load(yaml);
+    auto test = [&]() {
+        auto context = WorkloadContext{read, metrics, orchestrator, {}};
+        context.get(std::forward<Args>(args)...);
+    };
+
+    CHECK_THROWS_WITH(test(), expect);
+}
 
 TEST_CASE("loads configuration okay") {
     genny::metrics::Registry metrics;
@@ -28,15 +42,27 @@ Actors:
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-06-27");
+        auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
 
         auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
     }
 
+    SECTION("Invalid config") {
+        auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
+
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
+    }
+
+    SECTION("Invalid config accesses") {
+
+    }
+
     SECTION("Access nested structures") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
+Actors: []
 Some Ints: [1,2,[3,4]]
 Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }]
 )");
@@ -53,9 +79,14 @@ Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }]
     }
 
     SECTION("Empty Yaml") {
-        auto yaml = YAML::Load("");
+        auto yaml = YAML::Load("Actors: []");
         auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path.*)"));
+    }
+    SECTION("No Actors") {
+        auto yaml = YAML::Load("SchemaVersion: 2018-07-01");
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path.*)"));
     }
 
     SECTION("Can call two actor producers") {
