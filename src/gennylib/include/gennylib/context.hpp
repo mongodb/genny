@@ -34,8 +34,7 @@ using path = std::list<std::string>;
 
 inline std::string join(const path& ps) {
     std::ostringstream out;
-    std::copy(cbegin(ps), cend(ps),
-              std::ostream_iterator<std::string>(out, "/"));
+    std::copy(cbegin(ps), cend(ps), std::ostream_iterator<std::string>(out, "/"));
     return out.str();
 }
 
@@ -54,7 +53,7 @@ O get_helper(const path& path, const N& curr) {
     }
 }
 
-template<class T>
+template <class T>
 void push_path(path& p, const T& t) {
     std::ostringstream out;
     out << t;
@@ -65,7 +64,8 @@ template <class O, class N, class Arg0, class... Args>
 O get_helper(path& path, N curr, Arg0&& arg0, Args&&... args) {
     if (curr.IsScalar()) {
         std::stringstream error;
-        error << "Wanted [" << join(path) << "/" << arg0 << "] but [" << join(path) << "] is scalar.";
+        error << "Wanted [" << join(path) << "/" << arg0 << "] but [" << join(path)
+              << "] is scalar.";
         throw InvalidConfigurationException(error.str());
     }
     auto ncurr = curr[std::forward<Arg0>(arg0)];
