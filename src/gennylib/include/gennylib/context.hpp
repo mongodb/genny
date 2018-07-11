@@ -75,7 +75,7 @@ template <class Out, class Current, class PathFirst, class... PathRest>
 Out get_helper(path& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
     if (curr.IsScalar()) {
         std::stringstream error;
-        error << "Wanted [" << parent << "/" << pathFirst << "] but [" << parent << "] is scalar: [" << curr
+        error << "Wanted [" << parent << pathFirst << "] but [" << parent << "] is scalar: [" << curr
               << "]";
         throw InvalidConfigurationException(error.str());
     }

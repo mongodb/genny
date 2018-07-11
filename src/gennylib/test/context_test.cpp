@@ -61,13 +61,6 @@ Actors:
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
     }
 
-    SECTION("Invalid config") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
-
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
-        REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
-    }
-
     SECTION("Invalid config accesses") {
         // key not found
         errors<string>("Foo: bar", "Invalid key [FoO]", "FoO");
@@ -81,19 +74,20 @@ Actors:
         // give meaningful error message:
         errors<string>("Foo: [1,\"bar\"]", "Invalid key [0] at path [Foo/0/]. Last accessed [[1, bar]].", "Foo", "0");
 
-        auto other = R"(
-Some Ints: [1,2,[3,4]]
-Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }]
-)";
+        errors<string>("Foo: 7", "Wanted [Foo/Bar] but [Foo/] is scalar: [7]", "Foo", "Bar");
+        errors<string>("Foo: 7", "Wanted [Foo/Bar] but [Foo/] is scalar: [7]", "Foo", "Bar", "Baz", "Bat");
+
+        auto other = R"(Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }])";
 
         gives<int>(other, 1,     "Other", 0, "Foo", 0, "Key");
         gives<bool>(other, true, "Other", 0, "Foo", 0, "Another");
         gives<bool>(other, false,"Other", 0, "Foo", 0, "Nested", 0);
         gives<bool>(other, true, "Other", 0, "Foo", 0, "Nested", 1);
-        gives<int>(other, 1, "Some Ints", 0);
-        gives<int>(other, 2, "Some Ints", 1);
-        gives<int>(other, 3, "Some Ints", 2, 0);
-        gives<int>(other, 4, "Some Ints", 2, 1);
+
+        gives<int>("Some Ints: [1,2,[3,4]]", 1, "Some Ints", 0);
+        gives<int>("Some Ints: [1,2,[3,4]]", 2, "Some Ints", 1);
+        gives<int>("Some Ints: [1,2,[3,4]]", 3, "Some Ints", 2, 0);
+        gives<int>("Some Ints: [1,2,[3,4]]", 4, "Some Ints", 2, 1);
     }
 
     SECTION("Empty Yaml") {
