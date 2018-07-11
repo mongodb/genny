@@ -47,7 +47,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
         std::vector<genny::Producer>{&genny::actor::HelloWorld::producer};
     auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
 
-    orchestrator.setActorCount(static_cast<unsigned int>(workloadContext.actors().size()));
+    orchestrator.setActors(workloadContext.actors());
 
     std::vector<std::thread> threads;
     std::transform(cbegin(workloadContext.actors()),

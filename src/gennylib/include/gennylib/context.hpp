@@ -93,11 +93,12 @@ O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
 }  // namespace detail
 
 
+// TODO: separate Producer.hpp
 class ActorContext;
-
-using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
+class Actor;
 using Producer = typename std::function<ActorVector(ActorContext&)>;
 
+class Orchestrator;
 
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.

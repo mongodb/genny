@@ -6,6 +6,9 @@
 #include <mutex>
 #include <thread>
 
+#include <gennylib/ActorVector.hpp>
+#include <gennylib/context.hpp>
+
 namespace genny {
 
 /**
@@ -41,15 +44,15 @@ public:
      */
     void awaitPhaseEnd();
 
-    void abort();
+    void setActors(const genny::ActorVector& actors);
 
-    void setActorCount(unsigned int count);
+    void abort();
 
 private:
     mutable std::mutex _lock;
     std::condition_variable _cv;
 
-    unsigned int _actors;
+    ActorVector::size_type _actors = 0;
     unsigned int _phase = 0;
     unsigned int _running = 0;
     bool _errors = false;

@@ -25,7 +25,10 @@ std::thread end(Orchestrator& o, int phase) {
 
 TEST_CASE("Orchestrator") {
     auto o = Orchestrator{};
-    o.setActorCount(2);
+    ActorVector vec;
+    vec.push_back({});
+    vec.push_back({});
+    o.setActors(vec);
 
     REQUIRE(o.currentPhaseNumber() == 0);
     REQUIRE(o.morePhases());
