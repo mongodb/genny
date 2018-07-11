@@ -13,6 +13,8 @@ namespace genny {
 /**
  * The basic extension point for actors that want to vary
  * their behavior over the course of a workload.
+ *
+ * Please see additional documentation in the Actor class.
  */
 class PhasedActor : public Actor {
 

@@ -5,6 +5,9 @@
 
 namespace genny {
 
+/**
+ * Throw this to indicate bad configuration.
+ */
 class InvalidConfigurationException : public std::invalid_argument {
 
 public:

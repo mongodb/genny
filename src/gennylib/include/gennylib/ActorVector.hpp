@@ -7,6 +7,9 @@
 
 namespace genny {
 
+/**
+ * A convenience typedef for the return value from ActorProducer.
+ */
 using ActorVector = typename std::vector<std::unique_ptr<Actor>>;
 
 

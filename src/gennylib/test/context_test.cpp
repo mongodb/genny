@@ -52,6 +52,7 @@ Actors:
   Count: 7
         )");
         WorkloadContext w{yaml, metrics, orchestrator, {}};
+        auto actors = w.get("Actors");
     }
 
     SECTION("Invalid Schema Version") {

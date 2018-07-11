@@ -43,6 +43,11 @@ public:
      */
     void awaitPhaseEnd();
 
+    /**
+     * @param actors the actors that will participate in phasing.
+     * The Orchestrator needs to know which actors will be calling
+     * awaitPhaseStart() etc so it can synchronize flow-control properly.
+     */
     void setActors(const genny::ActorVector& actors);
 
     void abort();
