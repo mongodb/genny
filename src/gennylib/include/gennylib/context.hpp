@@ -30,51 +30,56 @@ public:
 
 namespace detail {
 
-using path = std::list<std::string>;
+struct path {
+    std::list<std::string> _elts;
+    template<class T>
+    void add(const T& elt) {
+        std::ostringstream out;
+        out << elt;
+        _elts.push_back(out.str());
+    }
+    auto begin() const { return std::begin(_elts); }
+    auto end()   const { return std::end(_elts);   }
+};
 
-inline std::string join(const path& ps) {
-    std::ostringstream out;
-    std::copy(cbegin(ps), cend(ps), std::ostream_iterator<std::string>(out, "/"));
-    return out.str();
+inline std::ostream& operator<<(std::ostream& out, const path& p) {
+    std::copy(std::cbegin(p), std::cend(p),
+        std::ostream_iterator<std::string>(out, "/"));
+    return out;
 }
 
 template <class O, class N>
 O get_helper(const path& path, const N& curr) {
     if (!curr) {
-        throw InvalidConfigurationException("Invalid Key at path " + join(path));
+        std::stringstream error;
+        error << "Invalid key at path [" << path << "]";
+        throw InvalidConfigurationException(error.str());
     }
     try {
         return curr.template as<O>();
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
         error << "Bad conversion of " << curr << " to " << typeid(O).name() << " "
-              << "at path [" << join(path) << "]: " << conv.what();
+              << "at path [" << path << "]: " << conv.what();
         throw InvalidConfigurationException(error.str());
     }
-}
-
-template <class T>
-void push_path(path& p, const T& t) {
-    std::ostringstream out;
-    out << t;
-    p.push_back(out.str());
 }
 
 template <class O, class N, class Arg0, class... Args>
-O get_helper(path& path, N curr, Arg0&& arg0, Args&&... args) {
+O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
     if (curr.IsScalar()) {
         std::stringstream error;
-        error << "Wanted [" << join(path) << "/" << arg0 << "] but [" << join(path)
+        error << "Wanted [" << path << "/" << arg0 << "] but [" << path
               << "] is scalar.";
         throw InvalidConfigurationException(error.str());
     }
-    auto ncurr = curr[std::forward<Arg0>(arg0)];
+    const auto& ncurr = curr[std::forward<Arg0>(arg0)];
 
-    push_path(path, arg0);
+    path.add(arg0);
 
     if (!ncurr.IsDefined()) {
         std::stringstream error;
-        error << "Invalid key [" << arg0 << "] at path [" << join(path) << "]";
+        error << "Invalid key [" << arg0 << "] at path [" << path << "]";
         throw InvalidConfigurationException(error.str());
     }
     return detail::get_helper<O>(path, ncurr, std::forward<Args>(args)...);
