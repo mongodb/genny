@@ -12,22 +12,10 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/metrics.hpp>
 
 namespace genny {
-
-class InvalidConfigurationException : public std::invalid_argument {
-
-public:
-    explicit InvalidConfigurationException(const std::string& s) : std::invalid_argument{s} {}
-
-    explicit InvalidConfigurationException(const char* s) : invalid_argument(s) {}
-
-    const char* what() const throw() override {
-        return logic_error::what();
-    }
-};
-
 
 namespace detail {
 
@@ -57,42 +45,42 @@ inline std::ostream& operator<<(std::ostream& out, const path& p) {
     return out;
 }
 
-template <class O, class N>
-O get_helper(const path& path, const N& curr) {
+template <class Out, class Current>
+Out get_helper(const path& parent, const Current& curr) {
     if (!curr) {
         std::stringstream error;
-        error << "Invalid key at path [" << path << "]";
+        error << "Invalid key at path [" << parent << "]";
         throw InvalidConfigurationException(error.str());
     }
     try {
-        return curr.template as<O>();
+        return curr.template as<Out>();
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
-        error << "Bad conversion of [" << curr << "] to [" << typeid(O).name() << "] "
-              << "at path [" << path << "]: " << conv.what();
+        error << "Bad conversion of [" << curr << "] to [" << typeid(Out).name() << "] "
+              << "at path [" << parent << "]: " << conv.what();
         throw InvalidConfigurationException(error.str());
     }
 }
 
-template <class O, class N, class Arg0, class... Args>
-O get_helper(path& path, const N& curr, Arg0&& arg0, Args&&... args) {
+template <class Out, class Current, class PathFirst, class... PathRest>
+Out get_helper(path& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
     if (curr.IsScalar()) {
         std::stringstream error;
-        error << "Wanted [" << path << "/" << arg0 << "] but [" << path << "] is scalar: [" << curr
+        error << "Wanted [" << parent << "/" << pathFirst << "] but [" << parent << "] is scalar: [" << curr
               << "]";
         throw InvalidConfigurationException(error.str());
     }
-    const auto& ncurr = curr[std::forward<Arg0>(arg0)];
+    const auto& next = curr[std::forward<PathFirst>(pathFirst)];
 
-    path.add(arg0);
+    parent.add(pathFirst);
 
-    if (!ncurr.IsDefined()) {
+    if (!next.IsDefined()) {
         std::stringstream error;
-        error << "Invalid key [" << arg0 << "] at path [" << path << "]. Last accessed [" << curr
+        error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed [" << curr
               << "].";
         throw InvalidConfigurationException(error.str());
     }
-    return detail::get_helper<O>(path, ncurr, std::forward<Args>(args)...);
+    return detail::get_helper<Out>(parent, next, std::forward<PathRest>(rest)...);
 }
 
 }  // namespace detail

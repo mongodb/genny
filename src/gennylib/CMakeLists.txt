@@ -14,6 +14,8 @@ add_library(gennylib SHARED
 
     include/gennylib/MetricsReporter.hpp
 
+    include/gennylib/InvalidConfigurationException.hpp
+
 
     include/gennylib/Actor.hpp
     include/gennylib/ActorProducer.hpp
