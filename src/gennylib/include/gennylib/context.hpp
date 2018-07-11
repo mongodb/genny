@@ -15,9 +15,18 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/metrics.hpp>
 
-namespace genny {
+/**
+ * This file defines {@code WorkloadContext} and {@code ActorContext} which provide access
+ * to configuration values and other workload collaborators (e.g. metrics) during the construction
+ * of actors.
+ */
 
-namespace detail {
+
+/**
+ * This is all helper/private implementation details. Ideally this section could
+ * be defined below the important stuff, but we live in a cruel world.
+ */
+namespace genny::detail {
 
 struct path {
 
@@ -83,8 +92,10 @@ Out get_helper(path& parent, const Current& curr, PathFirst&& pathFirst, PathRes
     return detail::get_helper<Out>(parent, next, std::forward<PathRest>(rest)...);
 }
 
-}  // namespace detail
+}  // namespace genny::detail
 
+
+namespace genny {
 
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
