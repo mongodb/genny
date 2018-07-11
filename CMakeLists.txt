@@ -34,6 +34,10 @@ set(YAMLCPP_STATIC_LIBRARY FALSE)
 find_package(yaml-cpp REQUIRED)
 # </Yaml CPP>
 
+# <Mongo Driver>
+find_package(libmongocxx REQUIRED)
+# </Mongo Driver>
+
 # <Misc 3rd Party Integrations>
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 # </Misc 3rd Party Integrations>
