@@ -32,7 +32,12 @@ YAML::Node loadConfig(const char* fileName) {
 }  // namespace
 
 
-int genny::driver::DefaultDriver::run(int, char** argv) const {
+int genny::driver::DefaultDriver::run(int argc, char** argv) const {
+
+    if (argc < 2) {
+        BOOST_LOG_TRIVIAL(fatal) << "Usage: " << argv[0] << " WORKLOAD_FILE.yml";
+        return EXIT_FAILURE;
+    }
 
     auto yaml = loadConfig(argv[1]);
     auto registry = genny::metrics::Registry{};
