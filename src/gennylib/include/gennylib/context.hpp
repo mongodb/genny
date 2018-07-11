@@ -5,15 +5,15 @@
 #include <list>
 #include <type_traits>
 
-#include <yaml-cpp/yaml.h>
-
 #include <boost/noncopyable.hpp>
+
+#include <yaml-cpp/yaml.h>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
-#include <gennylib/Orchestrator.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/metrics.hpp>
+#include <gennylib/Orchestrator.hpp>
 
 /**
  * This file defines {@code WorkloadContext} and {@code ActorContext} which provide access
@@ -28,13 +28,14 @@
  */
 namespace genny::detail {
 
-struct path {
+class ConfigPath {
 
-    path(path&) = delete;
-    void operator=(path&) = delete;
-    path() = default;
+public:
+    ConfigPath() = default;
 
-    std::list<std::string> _elts;
+    ConfigPath(ConfigPath&) = delete;
+    void operator=(ConfigPath&) = delete;
+
     template <class T>
     void add(const T& elt) {
         std::ostringstream out;
@@ -47,15 +48,19 @@ struct path {
     auto end() const {
         return std::end(_elts);
     }
+
+private:
+    std::list<std::string> _elts;
+
 };
 
-inline std::ostream& operator<<(std::ostream& out, const path& p) {
+inline std::ostream& operator<<(std::ostream& out, const ConfigPath& p) {
     std::copy(std::cbegin(p), std::cend(p), std::ostream_iterator<std::string>(out, "/"));
     return out;
 }
 
 template <class Out, class Current>
-Out get_helper(const path& parent, const Current& curr) {
+Out get_helper(const ConfigPath& parent, const Current& curr) {
     if (!curr) {
         std::stringstream error;
         error << "Invalid key at path [" << parent << "]";
@@ -72,7 +77,7 @@ Out get_helper(const path& parent, const Current& curr) {
 }
 
 template <class Out, class Current, class PathFirst, class... PathRest>
-Out get_helper(path& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
+Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
     if (curr.IsScalar()) {
         std::stringstream error;
         error << "Wanted [" << parent << pathFirst << "] but [" << parent << "] is scalar: [" << curr
@@ -103,21 +108,15 @@ namespace genny {
 class WorkloadContext {
 
 public:
-    // no copy or move
-    WorkloadContext(WorkloadContext&) = delete;
-    void operator=(WorkloadContext&) = delete;
-    WorkloadContext(WorkloadContext&&) = default;
-    void operator=(WorkloadContext&&) = delete;
-
     WorkloadContext(const YAML::Node& node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::vector<ActorProducer>& producers)
-        : _node{node},
-          _registry{&registry},
-          _orchestrator{&orchestrator},
-          _actorContexts{constructActorContexts()},
-          _actors{constructActors(producers)} {
+            : _node{node},
+              _registry{&registry},
+              _orchestrator{&orchestrator},
+              _actorContexts{constructActorContexts()},
+              _actors{constructActors(producers)} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get<std::string>("SchemaVersion") != "2018-07-01") {
@@ -125,15 +124,21 @@ public:
         }
     }
 
-    const ActorVector& actors() const {
-        return _actors;
-    }
+    // no copy or move
+    WorkloadContext(WorkloadContext&) = delete;
+    void operator=(WorkloadContext&) = delete;
+    WorkloadContext(WorkloadContext&&) = default;
+    void operator=(WorkloadContext&&) = delete;
 
     template <class O = YAML::Node, class... Args>
     O get(Args&&... args) const {
-        detail::path p;
+        detail::ConfigPath p;
         return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
     };
+
+    const ActorVector& actors() const {
+        return _actors;
+    }
 
 private:
     friend class ActorContext;
@@ -146,7 +151,9 @@ private:
     Orchestrator* const _orchestrator;
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
+
 };
+
 
 /**
  * Represents each {@code Actor:} block within a WorkloadConfig.
@@ -154,9 +161,6 @@ private:
 class ActorContext {
 
 public:
-
-    ActorContext() = default;
-
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
         : _node{node}, _workload{&workloadContext} {}
 
@@ -165,6 +169,20 @@ public:
     void operator=(ActorContext&) = delete;
     ActorContext(ActorContext&&) = default;
     void operator=(ActorContext&&) = delete;
+
+    template <class O = YAML::Node, class... Args>
+    O get(Args&&... args) const {
+        detail::ConfigPath p;
+        return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
+    };
+
+    Orchestrator* orchestrator() const {
+        return this->_workload->_orchestrator;
+    }
+
+    WorkloadContext& workload() const {
+        return *_workload;
+    }
 
     // just convenience forwarding methods to avoid having to do context.registry().timer(...)
 
@@ -183,23 +201,10 @@ public:
         return this->_workload->_registry->counter(std::forward<Args>(args)...);
     }
 
-    Orchestrator* orchestrator() const {
-        return this->_workload->_orchestrator;
-    }
-
-    template <class O = YAML::Node, class... Args>
-    O get(Args&&... args) const {
-        detail::path p;
-        return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
-    };
-
-    WorkloadContext& workload() const {
-        return *_workload;
-    }
-
 private:
     YAML::Node _node;
     WorkloadContext* _workload;
+
 };
 
 }  // namespace genny
