@@ -38,14 +38,14 @@ Actors:
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
 Some Ints: [1,2,[3,4]]
-Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, false]}] }]
+Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }]
 )");
         WorkloadContext w{yaml, metrics, orchestrator, {}};
         CHECK(w.get<std::string>("SchemaVersion") == "2018-07-01");
         CHECK(w.get<int>("Other", 0, "Foo", 0, "Key") == 1);
         CHECK(w.get<bool>("Other", 0, "Foo", 0, "Another"));
         CHECK(w.get<bool>("Other", 0, "Foo", 0, "Nested", 0) == false);
-        CHECK(w.get<bool>("Other", 0, "Foo", 0, "Nested", 1) == false);
+        CHECK(w.get<bool>("Other", 0, "Foo", 0, "Nested", 1) == true);
         CHECK(w.get<int>("Some Ints", 0) == 1);
         CHECK(w.get<int>("Some Ints", 1) == 2);
         CHECK(w.get<int>("Some Ints", 2, 0) == 3);
@@ -57,46 +57,32 @@ Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, false]}] }]
         auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path.*)"));
     }
-    //
-    //
-    //    SECTION(
-    //        "Two ActorProducers can see all Actors blocks and producers continue even if errors "
-    //        "reported") {
-    //        auto yaml = YAML::Load(R"(
-    // SchemaVersion: 2018-07-01
-    // Actors:
-    //- Name: One
-    //  SomeList: [100, 2, 3]
-    //- Name: Two
-    //  Count: 7
-    //  SomeList: [2]
-    //        )");
-    //
-    //        int calls = 0;
-    //        std::vector<WorkloadContext::Producer> producers;
-    //        producers.emplace_back([&](ActorContext& actoractorContext) {
-    //            // purposefully "fail" require
-    ////            actoractorContext.require("Name", std::string("One"));
-    ////            actoractorContext.require("Count", 5);  // we're type-safe
-    ////            actoractorContext.require(actoractorContext["SomeList"], 0, 100);
-    //            ++calls;
-    //            return WorkloadContext::ActorVector{};
-    //        });
-    //        producers.emplace_back([&](ActorContext&) {
-    //            ++calls;
-    //            return WorkloadContext::ActorVector{};
-    //        });
-    //
-    //        auto actors = WorkloadContext{yaml, metrics, orchestrator, producers};
-    //
-    //        // TODO
-    //
-    ////        REQUIRE(// reported(actors.errors()) ==
-    ////                "" ==
-    ////                errString("Key Count not found",
-    ////                          "Key Name expect [One] but is [Two]",
-    ////                          "Key Count expect [5] but is [7]",
-    ////                          "Key 0 expect [100] but is [2]"));
-    ////        REQUIRE(calls == 4);
-    //    }
+
+    SECTION("Can call two actor producers") {
+        auto yaml = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  SomeList: [100, 2, 3]
+- Name: Two
+  Count: 7
+  SomeList: [2]
+        )");
+
+        int calls = 0;
+        std::vector<WorkloadContext::Producer> producers;
+        producers.emplace_back([&](ActorContext& context) {
+            REQUIRE(context.workload().get<int>("Actors", 0, "SomeList", 0) == 100);
+            ++calls;
+            return WorkloadContext::ActorVector{};
+        });
+        producers.emplace_back([&](ActorContext& context) {
+            REQUIRE(context.workload().get<int>("Actors", 1, "Count") == 7);
+            ++calls;
+            return WorkloadContext::ActorVector{};
+        });
+
+        auto context = WorkloadContext{yaml, metrics, orchestrator, producers};
+        REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
+    }
 }

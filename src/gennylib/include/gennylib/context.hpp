@@ -30,9 +30,9 @@ public:
 
 namespace detail {
 
-using paths = std::list<std::string>;
+using path = std::list<std::string>;
 
-inline std::string join(const paths& ps) {
+inline std::string join(const path& ps) {
     std::ostringstream out;
     std::copy(cbegin(ps), cend(ps),
               std::ostream_iterator<std::string>(out, "/"));
@@ -40,7 +40,7 @@ inline std::string join(const paths& ps) {
 }
 
 template <class O, class N>
-O get_helper(const paths& path, N curr) {
+O get_helper(const path& path, const N& curr) {
     if (!curr) {
         throw InvalidConfigurationException("Invalid Key at path " + join(path));
     }
@@ -55,14 +55,14 @@ O get_helper(const paths& path, N curr) {
 }
 
 template<class T>
-void push_path(paths& p, const T& t) {
+void push_path(path& p, const T& t) {
     std::ostringstream out;
     out << t;
     p.push_back(out.str());
 }
 
 template <class O, class N, class Arg0, class... Args>
-O get_helper(paths& path, N curr, Arg0&& arg0, Args&&... args) {
+O get_helper(path& path, N curr, Arg0&& arg0, Args&&... args) {
     if (curr.IsScalar()) {
         std::stringstream error;
         error << "Wanted [" << join(path) << "/" << arg0 << "] but [" << join(path) << "] is scalar.";
@@ -122,7 +122,7 @@ public:
 
     template <class O = YAML::Node, class... Args>
     O get(Args&&... args) {
-        detail::paths p;
+        detail::path p;
         return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
     };
 
@@ -177,7 +177,7 @@ public:
 
     template <class O = YAML::Node, class... Args>
     O get(Args&&... args) {
-        detail::paths p;
+        detail::path p;
         return detail::get_helper<O>(p, _node, std::forward<Args>(args)...);
     };
 
