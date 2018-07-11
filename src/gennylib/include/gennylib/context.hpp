@@ -3,8 +3,8 @@
 
 #include <functional>
 #include <iterator>
-#include <list>
 #include <type_traits>
+#include <vector>
 
 #include <boost/noncopyable.hpp>
 
@@ -60,7 +60,7 @@ public:
     }
 
 private:
-    std::list<std::function<void(std::ostream&)>> _elts;
+    std::vector<std::function<void(std::ostream&)>> _elts;
 
 };
 
@@ -162,7 +162,7 @@ public:
         return detail::get_helper<T>(p, _node, std::forward<Args>(args)...);
     };
 
-    const ActorVector& actors() const {
+    constexpr const ActorVector& actors() const {
         return _actors;
     }
 
@@ -202,28 +202,28 @@ public:
         return detail::get_helper<T>(p, _node, std::forward<Args>(args)...);
     };
 
-    Orchestrator* orchestrator() const {
+    constexpr Orchestrator* orchestrator() const {
         return this->_workload->_orchestrator;
     }
 
-    WorkloadContext& workload() const {
+    constexpr WorkloadContext& workload() const {
         return *_workload;
     }
 
     // just convenience forwarding methods to avoid having to do context.registry().timer(...)
 
     template <class... Args>
-    auto timer(Args&&... args) const {
+    constexpr auto timer(Args&&... args) const {
         return this->_workload->_registry->timer(std::forward<Args>(args)...);
     }
 
     template <class... Args>
-    auto gauge(Args&&... args) const {
+    constexpr auto gauge(Args&&... args) const {
         return this->_workload->_registry->gauge(std::forward<Args>(args)...);
     }
 
     template <class... Args>
-    auto counter(Args&&... args) const {
+    constexpr auto counter(Args&&... args) const {
         return this->_workload->_registry->counter(std::forward<Args>(args)...);
     }
 
