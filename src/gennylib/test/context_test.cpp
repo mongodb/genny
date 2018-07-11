@@ -17,7 +17,7 @@ using Catch::Matchers::Matches;
 using Catch::Matchers::StartsWith;
 
 template<class Out, class... Args>
-void errors(string yaml, string message, Args...args) {
+void errors(const string &yaml, string message, Args...args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
@@ -29,7 +29,7 @@ void errors(string yaml, string message, Args...args) {
     CHECK_THROWS_WITH(test(), StartsWith(message));
 }
 template<class Out, class... Args>
-void gives(string yaml, Out expect, Args...args) {
+void gives(const string &yaml, Out expect, Args...args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
@@ -80,25 +80,20 @@ Actors:
         gives<int>    ("Foo: [1,\"bar\"]", 1, "Foo", 0);
         // give meaningful error message:
         errors<string>("Foo: [1,\"bar\"]", "Invalid key [0] at path [Foo/0/]. Last accessed [[1, bar]].", "Foo", "0");
-    }
 
-    SECTION("Access nested structures") {
-        auto yaml = YAML::Load(R"(
-SchemaVersion: 2018-07-01
-Actors: []
+        auto other = R"(
 Some Ints: [1,2,[3,4]]
 Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }]
-)");
-        WorkloadContext w{yaml, metrics, orchestrator, {}};
-        CHECK(w.get<std::string>("SchemaVersion") == "2018-07-01");
-        CHECK(w.get<int>("Other", 0, "Foo", 0, "Key") == 1);
-        CHECK(w.get<bool>("Other", 0, "Foo", 0, "Another"));
-        CHECK(w.get<bool>("Other", 0, "Foo", 0, "Nested", 0) == false);
-        CHECK(w.get<bool>("Other", 0, "Foo", 0, "Nested", 1) == true);
-        CHECK(w.get<int>("Some Ints", 0) == 1);
-        CHECK(w.get<int>("Some Ints", 1) == 2);
-        CHECK(w.get<int>("Some Ints", 2, 0) == 3);
-        CHECK(w.get<int>("Some Ints", 2, 1) == 4);
+)";
+
+        gives<int>(other, 1,     "Other", 0, "Foo", 0, "Key");
+        gives<bool>(other, true, "Other", 0, "Foo", 0, "Another");
+        gives<bool>(other, false,"Other", 0, "Foo", 0, "Nested", 0);
+        gives<bool>(other, true, "Other", 0, "Foo", 0, "Nested", 1);
+        gives<int>(other, 1, "Some Ints", 0);
+        gives<int>(other, 2, "Some Ints", 1);
+        gives<int>(other, 3, "Some Ints", 2, 0);
+        gives<int>(other, 4, "Some Ints", 2, 1);
     }
 
     SECTION("Empty Yaml") {
