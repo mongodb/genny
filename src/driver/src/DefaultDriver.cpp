@@ -39,6 +39,12 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
         return EXIT_FAILURE;
     }
 
+    genny::metrics::Registry metrics;
+
+    auto actorSetupTimer = metrics.timer("actorSetup");
+    auto threadCounter = metrics.counter("threadCounter");
+
+    auto stopwatch = actorSetupTimer.start();
     auto yaml = loadConfig(argv[1]);
     auto registry = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
@@ -47,15 +53,26 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
 
     orchestrator.setActors(workloadContext.actors());
+    stopwatch.report();
 
+    std::mutex lock;
     std::vector<std::thread> threads;
     std::transform(cbegin(workloadContext.actors()),
                    cend(workloadContext.actors()),
                    std::back_inserter(threads),
-                   [](const auto& actor) {
-                       return std::thread{&genny::Actor::run, actor.get()};
-                   });
+                   [&](const auto& actor) {
+                       return std::thread{[&]() {
+                           lock.lock();
+                           threadCounter.incr();
+                           lock.unlock();
 
+                           actor->run();
+
+                           lock.lock();
+                           threadCounter.decr();
+                           lock.unlock();
+                       }};
+                   });
 
     for (auto& thread : threads)
         thread.join();

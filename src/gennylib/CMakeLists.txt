@@ -40,6 +40,7 @@ target_include_directories(gennylib
         $<INSTALL_INTERFACE:include>
         ${Boost_INCLUDE_DIR}
         ${YAML_CPP_INCLUDE_DIR}
+        ${LIBMONGOCXX_INCLUDE_DIRS}
     PRIVATE
         src
 )
@@ -50,6 +51,7 @@ target_link_libraries(gennylib
     PUBLIC
         ${Boost_LIBRARIES}
         ${YAML_CPP_LIBRARIES}
+        ${LIBMONGOCXX_LIBRARIES}
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
