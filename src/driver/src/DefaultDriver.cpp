@@ -57,20 +57,22 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
 
     std::mutex lock;
     std::vector<std::thread> threads;
-    std::transform(
-        cbegin(workloadContext.actors()), cend(workloadContext.actors()), std::back_inserter(threads), [&](const auto& actor) {
-            return std::thread{[&]() {
-                lock.lock();
-                threadCounter.incr();
-                lock.unlock();
+    std::transform(cbegin(workloadContext.actors()),
+                   cend(workloadContext.actors()),
+                   std::back_inserter(threads),
+                   [&](const auto& actor) {
+                       return std::thread{[&]() {
+                           lock.lock();
+                           threadCounter.incr();
+                           lock.unlock();
 
-                actor->run();
+                           actor->run();
 
-                lock.lock();
-                threadCounter.decr();
-                lock.unlock();
-            }};
-        });
+                           lock.lock();
+                           threadCounter.decr();
+                           lock.unlock();
+                       }};
+                   });
 
     for (auto& thread : threads)
         thread.join();
