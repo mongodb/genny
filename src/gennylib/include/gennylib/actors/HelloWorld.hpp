@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <mongocxx/client_session.hpp>
+
 #include <gennylib/PhasedActor.hpp>
 
 namespace genny::actor {
@@ -21,6 +23,8 @@ private:
 
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
+    // TODO: for now this is dummy / smoke-test that we have the driver
+    mongocxx::client_session* session;
     std::string _message;
 };
 
