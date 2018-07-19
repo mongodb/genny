@@ -29,7 +29,7 @@
  * This is all helper/private implementation details. Ideally this section could
  * be defined _below_ the important stuff, but we live in a cruel world.
  */
-namespace genny::detail {
+namespace genny::V1 {
 
 /**
  * The "path" to a configured value. E.g. given the structure
@@ -120,10 +120,10 @@ Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, P
               << curr << "].";
         throw InvalidConfigurationException(error.str());
     }
-    return detail::get_helper<Out>(parent, next, std::forward<PathRest>(rest)...);
+    return V1::get_helper<Out>(parent, next, std::forward<PathRest>(rest)...);
 }
 
-}  // namespace genny::detail
+}  // namespace genny::V1
 
 
 namespace genny {
@@ -197,8 +197,8 @@ public:
      */
     template <class T = YAML::Node, class... Args>
     static T get_static(const YAML::Node& node, Args&&... args) {
-        detail::ConfigPath p;
-        return detail::get_helper<T>(p, node, std::forward<Args>(args)...);
+        V1::ConfigPath p;
+        return V1::get_helper<T>(p, node, std::forward<Args>(args)...);
     };
 
     template <typename T = YAML::Node, class... Args>
@@ -281,13 +281,9 @@ public:
      */
     template <class T = YAML::Node, class... Args>
     T get(Args&&... args) const {
-        detail::ConfigPath p;
-        return detail::get_helper<T>(p, _node, std::forward<Args>(args)...);
+        V1::ConfigPath p;
+        return V1::get_helper<T>(p, _node, std::forward<Args>(args)...);
     };
-
-    constexpr WorkloadContext& workload() const {
-        return *_workload;
-    }
 
     // just convenience forwarding methods to avoid having to do context.registry().timer(...)
 
