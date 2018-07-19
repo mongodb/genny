@@ -143,17 +143,14 @@ public:
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::vector<ActorProducer>& producers)
-        : _node{std::move(node)},
-          _registry{&registry},
-          _orchestrator{&orchestrator}
-    {
+        : _node{std::move(node)}, _registry{&registry}, _orchestrator{&orchestrator} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
             throw InvalidConfigurationException("Invalid schema version");
         }
-        _actorContexts= constructActorContexts(_node, this);
-        _actors= constructActors(producers, _actorContexts);
+        _actorContexts = constructActorContexts(_node, this);
+        _actors = constructActors(producers, _actorContexts);
     }
 
     // no copy or move
@@ -199,15 +196,14 @@ public:
      * </pre>
      */
     template <class T = YAML::Node, class... Args>
-    static T get_static(const YAML::Node &node, Args&&... args) {
+    static T get_static(const YAML::Node& node, Args&&... args) {
         detail::ConfigPath p;
         return detail::get_helper<T>(p, node, std::forward<Args>(args)...);
     };
 
-    template< typename T= YAML::Node, class ... Args >
-    T get( Args &&... args )
-    {
-        return WorkloadContext::get_static< T >( _node, std::forward< Args >( args )... );
+    template <typename T = YAML::Node, class... Args>
+    T get(Args&&... args) {
+        return WorkloadContext::get_static<T>(_node, std::forward<Args>(args)...);
     };
 
     /**
@@ -221,8 +217,10 @@ private:
     friend class ActorContext;
 
     // helper methods used during construction
-    static ActorVector constructActors(const std::vector<ActorProducer>& producers, const std::vector<std::unique_ptr<ActorContext>> &);
-    static std::vector<std::unique_ptr<ActorContext>> constructActorContexts(const YAML::Node &, WorkloadContext *);
+    static ActorVector constructActors(const std::vector<ActorProducer>& producers,
+                                       const std::vector<std::unique_ptr<ActorContext>>&);
+    static std::vector<std::unique_ptr<ActorContext>> constructActorContexts(const YAML::Node&,
+                                                                             WorkloadContext*);
     YAML::Node _node;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
@@ -326,7 +324,7 @@ private:
     WorkloadContext* _workload;
 };
 
-//using ActorContext= WorkloadContext::ActorContext;
+// using ActorContext= WorkloadContext::ActorContext;
 
 }  // namespace genny
 
