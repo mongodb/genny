@@ -285,10 +285,6 @@ public:
         return detail::get_helper<T>(p, _node, std::forward<Args>(args)...);
     };
 
-    constexpr Orchestrator* orchestrator() const {
-        return this->_workload->_orchestrator;
-    }
-
     constexpr WorkloadContext& workload() const {
         return *_workload;
     }
@@ -317,6 +313,27 @@ public:
     template <class... Args>
     constexpr auto counter(Args&&... args) const {
         return this->_workload->_registry->counter(std::forward<Args>(args)...);
+    }
+
+     // Convenience forwarders for Orchestrator
+
+     auto morePhases() {
+        return this->_workload->_orchestrator->morePhases();
+     }
+
+    auto currentPhaseNumber() {
+        return this->_workload->_orchestrator->currentPhaseNumber();
+    }
+    auto awaitPhaseStart() {
+        return this->_workload->_orchestrator->awaitPhaseStart();
+    }
+
+    auto awaitPhaseEnd() {
+        return this->_workload->_orchestrator->awaitPhaseEnd();
+    }
+
+    auto abort() {
+        return this->_workload->_orchestrator->abort();
     }
 
 private:

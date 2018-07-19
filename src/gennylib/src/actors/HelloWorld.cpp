@@ -2,10 +2,10 @@
 
 #include <gennylib/actors/HelloWorld.hpp>
 
-void genny::actor::HelloWorld::doPhase(int) {
+void genny::actor::HelloWorld::doPhase(int currentPhase) {
     auto op = _outputTimer.raii();
     BOOST_LOG_TRIVIAL(info) << _name << " Doing Phase "
-                            << _context.orchestrator()->currentPhaseNumber() << " " << _message;
+                            << currentPhase << " " << _message;
     _operations.incr();
 }
 
