@@ -17,7 +17,7 @@
 #include <gennylib/metrics.hpp>
 
 /**
- * This file defines `WorkloadContext` and `@code ActorContext` which provide access
+ * This file defines `WorkloadContext` and `ActorContext` which provide access
  * to configuration values and other workload collaborators (e.g. metrics) during the construction
  * of actors.
  *
@@ -41,6 +41,8 @@ namespace genny::V1 {
  * ```
  *
  * The path to the 10 is "foo/bar/baz/0".
+ *
+ * This is used to report meaningful exceptions in the case of mis-configuration.
  */
 class ConfigPath {
 
@@ -67,15 +69,23 @@ private:
      *
      * ```yaml
      * foo:
-     *   bar: baz
+     *   bar: [bat, baz]
      * ```
+     *
+     * If this `ConfigPath` represents "baz", then `_elements`
+     * will be `["foo", "bar", 1]`.
+     *
+     * To be "efficient" we only store a `function` that produces the
+     * path component string; do this to avoid (maybe) expensive
+     * string-formatting in the "happy case" where the ConfigPath is
+     * never fully serialized to an exception.
      */
     std::vector<std::function<void(std::ostream&)>> _elements;
 };
 
 // Support putting ConfigPaths onto ostreams
-inline std::ostream& operator<<(std::ostream& out, const ConfigPath& p) {
-    for (const auto& f : p) {
+inline std::ostream& operator<<(std::ostream& out, const ConfigPath& path) {
+    for (const auto& f : path) {
         f(out);
         out << "/";
     }
@@ -175,11 +185,11 @@ public:
      *
      * Typical usage:
      *
-     * ```
+     * ```c++
      *     class MyActor ... {
      *       string name;
-     *       MyActor(ActorContext& ctx)
-     *       : name{ctx.get<string>("Name")} {}
+     *       MyActor(ActorContext& context)
+     *       : name{context.get<string>("Name")} {}
      *     }
      * ```
      *
@@ -196,12 +206,13 @@ public:
      * Then traverse as with the following:
      *
      * ```c++
-     *     auto schema = cx.get<std::string>("SchemaVersion");
-     *     auto actors = cx.get("Actors"); // actors is a YAML::Node
-     *     auto name0  = cx.get<std::string>("Actors", 0, "Name");
-     *     auto count0 = cx.get<int>("Actors", 0, "Count");
-     *     auto name1  = cx.get<std::string>("Actors", 1, "Name");
+     *     auto schema = context.get<std::string>("SchemaVersion");
+     *     auto actors = context.get("Actors"); // actors is a YAML::Node
+     *     auto name0  = context.get<std::string>("Actors", 0, "Name");
+     *     auto count0 = context.get<int>("Actors", 0, "Count");
+     *     auto name1  = context.get<std::string>("Actors", 1, "Name");
      * ```
+     * @tparam T the output type required. Will forward to YAML::Node.as<T>()
      */
     template <class T = YAML::Node, class... Args>
     static T get_static(const YAML::Node& node, Args&&... args) {
@@ -209,6 +220,9 @@ public:
         return V1::get_helper<T>(p, node, std::forward<Args>(args)...);
     };
 
+    /**
+     * @see get_static()
+     */
     template <typename T = YAML::Node, class... Args>
     T get(Args&&... args) {
         return WorkloadContext::get_static<T>(_node, std::forward<Args>(args)...);
@@ -239,7 +253,7 @@ private:
 
 
 /**
- * Represents each {@code Actor:} block within a WorkloadConfig.
+ * Represents each `Actor:` block within a WorkloadConfig.
  */
 class ActorContext final {
 
@@ -254,38 +268,35 @@ public:
     void operator=(ActorContext&&) = delete;
 
     /**
-     * Retrieve configuration values from a particular 'Actor:' block in the workload configuration.
-     * Returns actor[arg1][arg2]...[argN].
+     * Retrieve configuration values from a particular `Actor:` block in the workload configuration.
+     * `Returns actor[arg1][arg2]...[argN]`.
      *
      * This is somewhat expensive and should only be called during actor/workload setup.
      *
      * Typical usage:
      *
-     * <pre>
+     * ```c++
      *     class MyActor ... {
      *       string name;
-     *       MyActor(ActorContext& ctx)
-     *       : name{ctx.get<string>("Name")} {}
+     *       MyActor(ActorContext& context)
+     *       : name{context.get<string>("Name")} {}
      *     }
-     * </pre>
+     * ```
      *
      * Given this YAML:
      *
-     * <pre>
+     * ```yaml
      *     SchemaVersion: 2018-07-01
      *     Actors:
      *     - Name: Foo
      *     - Name: Bar
-     * </pre>
+     * ```
      *
-     * There will be two ActorConfigs, one for {Name:Foo} and another for {Name:Bar}.
+     * There will be two ActorConfigs, one for `{Name:Foo}` and another for `{Name:Bar}`.
      *
-     * <pre>
-     *     auto name = cx.get<std::string>("Name");
-     * </pre>
-     *
-     * If you need top-level configuration values (e.g. SchemaVersion in the above example),
-     * then you can access {@code actorContext.workload()}.
+     * ```
+     * auto name = cx.get<std::string>("Name");
+     * ```
      */
     template <class T = YAML::Node, class... Args>
     T get(Args&&... args) const {
@@ -296,7 +307,7 @@ public:
     // just convenience forwarding methods to avoid having to do context.registry().timer(...)
 
     /**
-     * Convenience method for creating a {@code metrics::Timer}.
+     * Convenience method for creating a metrics::Timer.
      */
     template <class... Args>
     constexpr auto timer(Args&&... args) const {
@@ -304,7 +315,7 @@ public:
     }
 
     /**
-     * Convenience method for creating a {@code metrics::Gauge}.
+     * Convenience method for creating a metrics::Gauge.
      */
     template <class... Args>
     constexpr auto gauge(Args&&... args) const {
@@ -312,7 +323,7 @@ public:
     }
 
     /**
-     * Convenience method for creating a {@code metrics::Counter}.
+     * Convenience method for creating a metrics::Counter.
      */
     template <class... Args>
     constexpr auto counter(Args&&... args) const {
