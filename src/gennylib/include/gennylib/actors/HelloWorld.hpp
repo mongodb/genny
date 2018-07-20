@@ -14,12 +14,12 @@ class HelloWorld : public genny::PhasedActor {
 public:
     HelloWorld(ActorContext& context, const std::string& name = "hello");
 
-    ~HelloWorld() override = default;
+    ~HelloWorld() = default;
 
     static ActorVector producer(ActorContext& context);
 
 private:
-    void doPhase(int phase) override;
+    void doPhase(int phase);
 
     metrics::Timer _outputTimer;
     metrics::Counter _operations;

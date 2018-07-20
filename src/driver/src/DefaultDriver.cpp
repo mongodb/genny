@@ -20,7 +20,7 @@
 
 namespace {
 
-YAML::Node loadConfig(const char* fileName) {
+YAML::Node loadConfig(const std::string& fileName) {
     try {
         return YAML::LoadFile(fileName);
     } catch (const std::exception& ex) {
