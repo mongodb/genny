@@ -25,7 +25,7 @@ YAML::Node loadConfig(const std::string& fileName) {
         return YAML::LoadFile(fileName);
     } catch (const std::exception& ex) {
         BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << fileName << ": " << ex.what();
-        throw ex;
+        throw;
     }
 }
 

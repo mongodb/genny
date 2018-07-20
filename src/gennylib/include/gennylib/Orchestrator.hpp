@@ -56,7 +56,7 @@ private:
     mutable std::mutex _lock;
     std::condition_variable _cv;
 
-    ActorVector::size_type _actors = 0;
+    ActorVector::size_type _numActors = 0;
     unsigned int _phase = 0;
     unsigned int _running = 0;
     bool _errors = false;

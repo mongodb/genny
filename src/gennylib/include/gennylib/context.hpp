@@ -17,7 +17,7 @@
 #include <gennylib/metrics.hpp>
 
 /**
- * This file defines {@code WorkloadContext} and {@code ActorContext} which provide access
+ * This file defines `WorkloadContext` and `@code ActorContext` which provide access
  * to configuration values and other workload collaborators (e.g. metrics) during the construction
  * of actors.
  *
@@ -34,11 +34,11 @@ namespace genny::V1 {
 /**
  * The "path" to a configured value. E.g. given the structure
  *
- * <pre>
+ * ```yaml
  * foo:
  *   bar:
  *     baz: [10,20,30]
- * </pre>
+ * ```
  *
  * The path to the 10 is "foo/bar/baz/0".
  */
@@ -52,17 +52,25 @@ public:
 
     template <class T>
     void add(const T& elt) {
-        _elts.push_back(elt);
+        _elements.push_back(elt);
     }
     auto begin() const {
-        return std::begin(_elts);
+        return std::begin(_elements);
     }
     auto end() const {
-        return std::end(_elts);
+        return std::end(_elements);
     }
 
 private:
-    std::vector<std::function<void(std::ostream&)>> _elts;
+    /**
+     * The parts of the path, so for this structure
+     *
+     * ```yaml
+     * foo:
+     *   bar: baz
+     * ```
+     */
+    std::vector<std::function<void(std::ostream&)>> _elements;
 };
 
 // Support putting ConfigPaths onto ostreams
@@ -130,7 +138,7 @@ namespace genny {
 
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
- * Call .get() to access top-level yaml configs.
+ * Call `.get()` to access top-level yaml configs.
  */
 class WorkloadContext {
 
@@ -161,39 +169,39 @@ public:
 
     /**
      * Retrieve configuration values from the top-level workload configuration.
-     * Returns root[arg1][arg2]...[argN].
+     * Returns `root[arg1][arg2]...[argN]`.
      *
      * This is somewhat expensive and should only be called during actor/workload setup.
      *
      * Typical usage:
      *
-     * <pre>
+     * ```
      *     class MyActor ... {
      *       string name;
      *       MyActor(ActorContext& ctx)
      *       : name{ctx.get<string>("Name")} {}
      *     }
-     * </pre>
+     * ```
      *
      * Given this YAML:
      *
-     * <pre>
+     * ```yaml
      *     SchemaVersion: 2018-07-01
      *     Actors:
      *     - Name: Foo
      *       Count: 100
      *     - Name: Bar
-     * </pre>
+     * ```
      *
      * Then traverse as with the following:
      *
-     * <pre>
+     * ```c++
      *     auto schema = cx.get<std::string>("SchemaVersion");
      *     auto actors = cx.get("Actors"); // actors is a YAML::Node
      *     auto name0  = cx.get<std::string>("Actors", 0, "Name");
      *     auto count0 = cx.get<int>("Actors", 0, "Count");
      *     auto name1  = cx.get<std::string>("Actors", 1, "Name");
-     * </pre>
+     * ```
      */
     template <class T = YAML::Node, class... Args>
     static T get_static(const YAML::Node& node, Args&&... args) {
