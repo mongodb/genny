@@ -49,7 +49,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto registry = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
-    auto producers = std::vector<genny::ActorProducer>{&genny::actor::HelloWorld::producer};
+    auto producers = std::vector<genny::ActorProducer>{&genny::actor::HelloWorld::producer, &genny::actor::Insert::producer};
     auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
 
     orchestrator.setActors(workloadContext.actors());
