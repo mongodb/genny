@@ -7,10 +7,21 @@ add_library(gennylib SHARED
     include/gennylib/version.hpp
                  src/version.cpp
 
+        include/gennylib/context.hpp
+        src/context.cpp
+
     include/gennylib/metrics.hpp
+
     include/gennylib/MetricsReporter.hpp
 
-    include/gennylib/PhasedActor.hpp
+    include/gennylib/InvalidConfigurationException.hpp
+
+
+    include/gennylib/Actor.hpp
+    include/gennylib/ActorProducer.hpp
+    include/gennylib/ActorVector.hpp
+
+        include/gennylib/PhasedActor.hpp
                  src/PhasedActor.cpp
 
     include/gennylib/Orchestrator.hpp
@@ -64,6 +75,7 @@ install(EXPORT GennyLibraryConfig DESTINATION share/GennyLibrary/cmake)
 export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
 
 add_executable(test_gennylib
+        test/context_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
