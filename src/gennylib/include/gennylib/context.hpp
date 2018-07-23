@@ -304,6 +304,13 @@ public:
         return V1::get_helper<T>(p, _node, std::forward<Args>(args)...);
     };
 
+    /**
+     * Access top-level workload configuration.
+     */
+    WorkloadContext& workload() {
+        return *this->_workload;
+    }
+
     // just convenience forwarding methods to avoid having to do context.registry().timer(...)
 
     /**
