@@ -9,6 +9,5 @@ Actors:
 - Name: InsertSmall
   Type: Insert
   Documents:
-    - {'foo':'bar'}
-    - {'bar': 'baz'}
-    - {'baz': 'foo'}
+    - 'big'
+    - 'small'
