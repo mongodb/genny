@@ -33,11 +33,23 @@ brew install boost --build-from-source \
 **Other Operating-Systems**:
 
 If not using OS X, ensure you have a recent C++ compiler and boost
-installation. You will also need packages installed corresponding to the above `brew install` lines. Then specify compiler path when invoking `cmake`. 
+installation. You will also need packages installed corresponding to the
+above `brew install` lines. Then specify compiler path when invoking
+`cmake`.
 
 E.g. for Ubuntu:
 
 ```sh
+apt-get install -y \
+    software-properties-common \
+    clang-6.0 \
+    make \
+    libboost-all-dev \
+    libyaml-cpp-dev
+
+# install mongo C++ driver:
+#   https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
+
 cd build
 cmake \
     -DCMAKE_CXX_COMPILER=clang++-6.0 \
@@ -45,11 +57,15 @@ cmake \
     ..
 ```
 
+**IDEs and Whatnot**
+
 We follow CMake and C++17 best-practices so anything that doesn't work
-via "normal means" is probably a bug. 
+via "normal means" is probably a bug.
 
 We support using CLion and any conventional editors or IDEs (VSCode,
-emacs, vim, etc.).
+emacs, vim, etc.). Before doing anything cute (see
+[CONTRIBUTING.md](./CONTRIBUTING.md)), please do due-diligence to ensure
+it's not going to make common editing environments go wonky.
 
 Code Style and Limitations
 ---------------------------

@@ -3,7 +3,7 @@ Contributing Guidelines
 
 We follow the [MongoDB Server Code Style][msg] except:
 
--   We use GUID include guards rather than `#pragma once`
+-   We use GUID include-guards rather than `#pragma once`
 -   File names match class names e.g. `class FooBar` will be found in
     `FooBar.hpp` and `FooBar.cpp` rather than `foo_bar.hpp`.
 
@@ -25,7 +25,7 @@ Please avoid:
     standard C++ features)
 -   Compiler-specific features
 -   `std::experimental`
--   Code-generation (e.g. generating C++ from another language including
+-   Code-generation (e.g. generating C++ from another language, including
     CMake)
 
 Many editors and IDEs have a hard time if code hides lots of things
