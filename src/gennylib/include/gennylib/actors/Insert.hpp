@@ -1,5 +1,5 @@
-#ifndef HEADER_FF3E897B_C747_468B_AAAC_EA6421DB0902_INCLUDED
-#define HEADER_FF3E897B_C747_468B_AAAC_EA6421DB0902_INCLUDED
+#ifndef HEADER_C7F4E568_590C_4D4D_B46F_766447E6AE31_INCLUDED
+#define HEADER_C7F4E568_590C_4D4D_B46F_766447E6AE31_INCLUDED
 
 #include <iostream>
 
@@ -24,9 +24,9 @@ private:
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
     mongocxx::client_session* session;
-    std::vector<std::string> documents;
+    std::vector<std::string> _documents;
 };
 
 }  // namespace genny::actor
 
-#endif  // HEADER_FF3E897B_C747_468B_AAAC_EA6421DB0902_INCLUDED
+#endif  // HEADER_C7F4E568_590C_4D4D_B46F_766447E6AE31_INCLUDED

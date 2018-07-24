@@ -20,8 +20,8 @@ genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& conte
     if (context.get<std::string>("Type") != "HelloWorld") {
         return out;
     }
-    const auto count = context.get<int>("Count");
-    for (int i = 0; i < count; ++i) {
+    const auto threads = context.get<int>("Threads");
+    for (int i = 0; i < threads; ++i) {
         out.push_back(std::make_unique<genny::actor::HelloWorld>(context, std::to_string(i)));
     }
     return out;

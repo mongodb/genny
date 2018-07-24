@@ -1,13 +1,9 @@
 SchemaVersion: 2018-07-01
 
 Actors:
-- Name: HelloTest
-  Type: HelloWorld
-  Count: 30
-  Parameters:
-    Message: Hello, World!
 - Name: InsertSmall
   Type: Insert
+  Threads: 1
   Documents:
-    - 'big'
-    - 'small'
+    - "big"
+    - "small"
