@@ -17,7 +17,6 @@ void Orchestrator::awaitPhaseStart() {
     assert(state == State::PhaseEnded);
     ++_running;
     if (_running == _numActors) {
-        ++_phase;
         _cv.notify_all();
         state = State::PhaseStarted;
     } else {
@@ -30,6 +29,7 @@ void Orchestrator::awaitPhaseEnd() {
     assert(State::PhaseStarted == state);
     --_running;
     if (_running == 0) {
+        ++_phase;
         _cv.notify_all();
         state = State::PhaseEnded;
     } else {
