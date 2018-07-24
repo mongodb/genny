@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <mongocxx/client_session.hpp>
+
 #include <gennylib/PhasedActor.hpp>
 
 namespace genny::actor {
@@ -10,17 +12,20 @@ namespace genny::actor {
 class HelloWorld : public genny::PhasedActor {
 
 public:
-    HelloWorld(Orchestrator& orchestrator,
-               metrics::Registry& metrics,
-               const std::string& name = "hello");
+    explicit HelloWorld(ActorContext& context, const std::string& name = "hello");
 
-    ~HelloWorld() override = default;
+    ~HelloWorld() = default;
+
+    static ActorVector producer(ActorContext& context);
 
 private:
-    void doPhase(int phase) override;
+    void doPhase(int phase);
 
-    metrics::Timer _output_timer;
+    metrics::Timer _outputTimer;
     metrics::Counter _operations;
+    // TODO: for now this is dummy / smoke-test that we have the driver
+    mongocxx::client_session* session;
+    std::string _message;
 };
 
 }  // namespace genny::actor

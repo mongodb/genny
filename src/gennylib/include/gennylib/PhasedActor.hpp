@@ -3,7 +3,9 @@
 
 #include <string>
 
+#include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
 
 namespace genny {
@@ -11,20 +13,15 @@ namespace genny {
 /**
  * The basic extension point for actors that want to vary
  * their behavior over the course of a workload.
+ *
+ * Please see additional documentation in the Actor class.
  */
-class PhasedActor {
+class PhasedActor : public Actor {
 
 public:
-    /**
-     * @param orchestrator the {@code Orchestrator} to which we should report and wait.
-     * @param registry metrics registry with which to register metrics trackers.
-     * @param name optional actor name. Useful for debugging scenarios.
-     */
-    explicit PhasedActor(Orchestrator& orchestrator,
-                         metrics::Registry& registry,
-                         std::string name = "anonymous");
+    explicit PhasedActor(genny::ActorContext& context, std::string name = "anonymous");
 
-    virtual ~PhasedActor() = default;
+    ~PhasedActor() = default;
 
     /**
      * Wrapper to {@code doPhase()}. Not virtual so this parent class can add
@@ -41,12 +38,11 @@ public:
      * The "main" method of the actor. This should only be called by workload
      * drivers.
      */
-    void run();
+    void run() final;
 
 protected:
-    Orchestrator* const _orchestrator;
+    ActorContext& _context;
     const std::string _name;
-    metrics::Registry* const _metrics;
 
 private:
     /**

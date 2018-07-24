@@ -16,7 +16,7 @@ void Orchestrator::awaitPhaseStart() {
     std::unique_lock lck{_lock};
     assert(state == State::PhaseEnded);
     ++_running;
-    if (_running == _actors) {
+    if (_running == _numActors) {
         ++_phase;
         _cv.notify_all();
         state = State::PhaseStarted;
@@ -40,6 +40,11 @@ void Orchestrator::awaitPhaseEnd() {
 void Orchestrator::abort() {
     std::unique_lock<std::mutex> lck{_lock};
     this->_errors = true;
+}
+
+void Orchestrator::setActors(const genny::ActorVector& actors) {
+    std::unique_lock<std::mutex> lck{_lock};
+    this->_numActors = actors.size();
 }
 
 }  // namespace genny

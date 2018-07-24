@@ -6,6 +6,8 @@
 #include <mutex>
 #include <thread>
 
+#include <gennylib/ActorVector.hpp>
+
 namespace genny {
 
 /**
@@ -15,12 +17,7 @@ namespace genny {
 class Orchestrator {
 
 public:
-    /**
-     * @param actors
-     *  The number of actors that will participate in phase lifecycle methods
-     *  such as {@code awaitPhaseStart} and {@code awaitPhaseEnd}.
-     */
-    explicit Orchestrator(unsigned int actors) : _actors(actors) {}
+    explicit Orchestrator() = default;
 
     ~Orchestrator() = default;
 
@@ -46,13 +43,20 @@ public:
      */
     void awaitPhaseEnd();
 
+    /**
+     * @param actors the actors that will participate in phasing.
+     * The Orchestrator needs to know which actors will be calling
+     * awaitPhaseStart() etc so it can synchronize flow-control properly.
+     */
+    void setActors(const genny::ActorVector& actors);
+
     void abort();
 
 private:
     mutable std::mutex _lock;
     std::condition_variable _cv;
 
-    const unsigned int _actors;
+    ActorVector::size_type _numActors = 0;
     unsigned int _phase = 0;
     unsigned int _running = 0;
     bool _errors = false;
