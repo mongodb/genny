@@ -12,7 +12,7 @@ namespace genny::actor {
 class HelloWorld : public genny::PhasedActor {
 
 public:
-    explicit HelloWorld(ActorContext& context, const std::string& name = "hello");
+    explicit HelloWorld(ActorContext& context, const unsigned int thread);
 
     ~HelloWorld() = default;
 
@@ -26,6 +26,7 @@ private:
     // TODO: for now this is dummy / smoke-test that we have the driver
     mongocxx::client_session* session;
     std::string _message;
+    const std::string _type = "HelloWorld";
 };
 
 }  // namespace genny::actor

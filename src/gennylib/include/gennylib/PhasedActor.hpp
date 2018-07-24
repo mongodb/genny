@@ -19,7 +19,7 @@ namespace genny {
 class PhasedActor : public Actor {
 
 public:
-    explicit PhasedActor(genny::ActorContext& context, std::string name = "anonymous");
+    explicit PhasedActor(genny::ActorContext& context, unsigned int thread);
 
     ~PhasedActor() = default;
 
@@ -35,6 +35,13 @@ public:
     }
 
     /**
+     * Returns the full name of the actor in the format <NAME>.<THREAD>.
+     */
+    std::string getFullName() {
+        return _context.get<std::string>("Name") + "." + std::to_string(_thread);
+    }
+
+    /**
      * The "main" method of the actor. This should only be called by workload
      * drivers.
      */
@@ -42,7 +49,7 @@ public:
 
 protected:
     ActorContext& _context;
-    const std::string _name;
+    const unsigned int _thread;
 
 private:
     /**

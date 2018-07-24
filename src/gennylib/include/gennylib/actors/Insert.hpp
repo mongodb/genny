@@ -12,7 +12,7 @@ namespace genny::actor {
 class Insert : public genny::PhasedActor {
 
 public:
-    explicit Insert(ActorContext& context, const std::string& name = "insert");
+    explicit Insert(ActorContext& context, const unsigned int thread);
 
     ~Insert() = default;
 
@@ -25,6 +25,7 @@ private:
     metrics::Counter _operations;
     mongocxx::client_session* session;
     std::vector<std::string> _documents;
+    const std::string _type = "Insert";
 };
 
 }  // namespace genny::actor

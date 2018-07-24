@@ -4,15 +4,15 @@
 
 void genny::actor::HelloWorld::doPhase(int currentPhase) {
     auto op = _outputTimer.raii();
-    BOOST_LOG_TRIVIAL(info) << _name << " Doing Phase "
-                            << currentPhase << " " << _message;
+    BOOST_LOG_TRIVIAL(info) << this->getFullName() << " Doing Phase " << currentPhase << " "
+                            << _message;
     _operations.incr();
 }
 
-genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const std::string& name)
-    : PhasedActor(context, name),
-      _outputTimer{context.timer("hello." + name + ".output")},
-      _operations{context.counter("hello." + name + ".operations")},
+genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
+    : PhasedActor(context, thread),
+      _outputTimer{context.timer(this->getFullName() + ".output")},
+      _operations{context.counter(this->getFullName() + ".operations")},
       _message{context.get<std::string>("Parameters", "Message")} {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
@@ -22,7 +22,7 @@ genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& conte
     }
     const auto threads = context.get<int>("Threads");
     for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(context, std::to_string(i)));
+        out.push_back(std::make_unique<genny::actor::HelloWorld>(context, i));
     }
     return out;
 }
