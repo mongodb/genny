@@ -26,7 +26,6 @@ private:
     // TODO: for now this is dummy / smoke-test that we have the driver
     mongocxx::client_session* session;
     std::string _message;
-    const std::string _type = "HelloWorld";
 };
 
 }  // namespace genny::actor

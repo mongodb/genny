@@ -1,14 +1,11 @@
 SchemaVersion: 2018-07-01
 
 Actors:
-- Name: HelloTest
-  Type: HelloWorld
-  Threads: 30
-  Parameters:
-    Message: Hello World!
-- Name: InsertTest
-  Type: Insert
-  Threads: 1
-  Documents:
-    - "big"
-    - "small"
+  - Name: InsertTest
+    Type: Insert
+    Threads: 1
+    Documents:
+      - Collection: "inserts"
+        Document: '{"a":"b"}'
+      - Collection: "inserts"
+        Document: '{"b":"c"}'
