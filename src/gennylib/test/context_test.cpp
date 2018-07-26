@@ -20,7 +20,8 @@ template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
-    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
+    string modified =
+        "SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27017\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, {}};
@@ -32,7 +33,8 @@ template <class Out, class... Args>
 void gives(const string& yaml, Out expect, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
-    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
+    string modified =
+        "SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27107\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, {}};
@@ -47,6 +49,7 @@ TEST_CASE("loads configuration okay") {
     SECTION("Valid YAML") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
+MongoUri: mongodb://localhost:27017
 Actors:
 - Name: HelloWorld
   Count: 7
@@ -56,7 +59,8 @@ Actors:
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
+        auto yaml = YAML::Load(
+            "SchemaVersion: 2018-06-27\nMongoUri: mongodb://localhost:27017\nActors: []");
 
         auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
@@ -96,19 +100,20 @@ Actors:
     }
 
     SECTION("Empty Yaml") {
-        auto yaml = YAML::Load("Actors: []");
+        auto yaml = YAML::Load("MongoUri: mongodb://localhost:27017\nActors: []");
         auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path.*)"));
+        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
     }
     SECTION("No Actors") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01");
+        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27017");
         auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path.*)"));
+        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path(.*\n*)*)"));
     }
 
     SECTION("Can call two actor producers") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
+MongoUri: mongodb://localhost:27017
 Actors:
 - Name: One
   SomeList: [100, 2, 3]
