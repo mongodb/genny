@@ -163,7 +163,10 @@ public:
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::vector<ActorProducer>& producers)
-        : _node{std::move(node)}, _registry{&registry}, _orchestrator{&orchestrator} {
+        : _node{std::move(node)},
+          _registry{&registry},
+          _orchestrator{&orchestrator},
+          _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
@@ -251,6 +254,7 @@ private:
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
+    mongocxx::pool _clientPool;
 };
 
 
@@ -361,18 +365,12 @@ public:
     }
 
     mongocxx::pool::entry client() {
-        if (!_poolSet) {
-            mongocxx::uri uri{this->get<std::string>("MongoUri")};
-            mongocxx::pool _clientPool{uri};
-            _poolSet = true;
-        }
-        return _clientPool.acquire();
+        return _workload->_clientPool.acquire();
     }
 
 private:
     YAML::Node _node;
     WorkloadContext* _workload;
-    mongocxx::pool _clientPool;
     bool _poolSet = false;
 };
 

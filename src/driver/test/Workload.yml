@@ -1,5 +1,7 @@
 SchemaVersion: 2018-07-01
 
+MongoUri: "mongodb://localhost:27017"
+
 Actors:
   - Name: HelloTest
     Type: HelloWorld
@@ -9,7 +11,6 @@ Actors:
   - Name: InsertTest
     Type: Insert
     Threads: 1
-    MongoUri: "mongodb://localhost:27017"
     Database: "test"
     Documents:
       - Collection: "inserts"
