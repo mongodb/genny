@@ -360,13 +360,13 @@ public:
         return this->_workload->_orchestrator->abort();
     }
 
-    mongocxx::pool& clientPool() {
+    mongocxx::pool::entry client() {
         if (!_poolSet) {
             mongocxx::uri uri{this->get<std::string>("MongoUri")};
             mongocxx::pool _clientPool{uri};
             _poolSet = true;
         }
-        return _clientPool;
+        return _clientPool.acquire();
     }
 
 private:

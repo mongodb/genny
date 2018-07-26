@@ -10,6 +10,8 @@
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
 
+#include <yaml-cpp/yaml.h>
+
 #include <gennylib/PhasedActor.hpp>
 
 namespace genny::actor {
@@ -24,11 +26,14 @@ public:
     static ActorVector producer(ActorContext& context);
 
 private:
+    struct Config;
+
     void doPhase(int phase);
 
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
     mongocxx::database _db;
+    std::unique_ptr<Config> _config;
 };
 
 }  // namespace genny::actor

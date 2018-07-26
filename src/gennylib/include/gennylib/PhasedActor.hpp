@@ -35,13 +35,6 @@ public:
     }
 
     /**
-     * Returns the full name of the actor in the format <NAME>.<THREAD>.
-     */
-    std::string getFullName() {
-        return _context.get<std::string>("Name") + "." + std::to_string(_thread);
-    }
-
-    /**
      * The "main" method of the actor. This should only be called by workload
      * drivers.
      */
@@ -50,6 +43,9 @@ public:
 protected:
     ActorContext& _context;
     const unsigned int _thread;
+    std::string _name;
+    std::string _fullName;
+    std::string _type;
 
 private:
     /**

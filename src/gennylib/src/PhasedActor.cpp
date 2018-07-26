@@ -22,4 +22,8 @@ void genny::PhasedActor::run() {
 }
 
 genny::PhasedActor::PhasedActor(genny::ActorContext& context, unsigned int thread)
-    : _context{context}, _thread{thread} {}
+    : _context{context},
+      _thread{thread},
+      _name{context.get<std::string>("Name")},
+      _fullName{_name + "." + std::to_string(_thread)},
+      _type{context.get<std::string>("Type")} {}

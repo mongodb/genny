@@ -4,15 +4,14 @@
 
 void genny::actor::HelloWorld::doPhase(int currentPhase) {
     auto op = _outputTimer.raii();
-    BOOST_LOG_TRIVIAL(info) << this->getFullName() << " Doing Phase " << currentPhase << " "
-                            << _message;
+    BOOST_LOG_TRIVIAL(info) << _fullName << " Doing Phase " << currentPhase << " " << _message;
     _operations.incr();
 }
 
 genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
     : PhasedActor(context, thread),
-      _outputTimer{context.timer(this->getFullName() + ".output")},
-      _operations{context.counter(this->getFullName() + ".operations")},
+      _outputTimer{context.timer(_fullName + ".output")},
+      _operations{context.counter(_fullName + ".operations")},
       _message{context.get<std::string>("Parameters", "Message")} {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
