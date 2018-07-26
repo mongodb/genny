@@ -1,9 +1,16 @@
 SchemaVersion: 2018-07-01
 
 Actors:
+  - Name: HelloTest
+    Type: HelloWorld
+    Threads: 1
+    Parameters:
+      Message: Hello World!
   - Name: InsertTest
     Type: Insert
     Threads: 1
+    MongoUri: "mongodb://localhost:27017"
+    Database: "test"
     Documents:
       - Collection: "inserts"
         Document: '{"a":"b"}'

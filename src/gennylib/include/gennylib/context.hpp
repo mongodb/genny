@@ -8,6 +8,8 @@
 
 #include <boost/noncopyable.hpp>
 
+#include <mongocxx/pool.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/Actor.hpp>
@@ -337,11 +339,11 @@ public:
         return this->_workload->_registry->counter(std::forward<Args>(args)...);
     }
 
-     // Convenience forwarders for Orchestrator
+    // Convenience forwarders for Orchestrator
 
-     auto morePhases() {
+    auto morePhases() {
         return this->_workload->_orchestrator->morePhases();
-     }
+    }
 
     auto currentPhaseNumber() {
         return this->_workload->_orchestrator->currentPhaseNumber();
@@ -358,9 +360,20 @@ public:
         return this->_workload->_orchestrator->abort();
     }
 
+    mongocxx::pool& clientPool() {
+        if (!_poolSet) {
+            mongocxx::uri uri{this->get<std::string>("MongoUri")};
+            mongocxx::pool _clientPool{uri};
+            _poolSet = true;
+        }
+        return _clientPool;
+    }
+
 private:
     YAML::Node _node;
     WorkloadContext* _workload;
+    mongocxx::pool _clientPool;
+    bool _poolSet = false;
 };
 
 // using ActorContext= WorkloadContext::ActorContext;

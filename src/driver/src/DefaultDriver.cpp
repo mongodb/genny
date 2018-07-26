@@ -7,6 +7,8 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <mongocxx/instance.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/MetricsReporter.hpp>
@@ -41,6 +43,8 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     }
 
     genny::metrics::Registry metrics;
+
+    mongocxx::instance instance{};
 
     auto actorSetupTimer = metrics.timer("actorSetup");
     auto threadCounter = metrics.counter("threadCounter");

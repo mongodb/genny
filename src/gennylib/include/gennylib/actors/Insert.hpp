@@ -4,9 +4,9 @@
 #include <iostream>
 
 #include <bsoncxx/json.hpp>
-#include <mongocxx/exception/bulk_write_exception.hpp>
+
 #include <mongocxx/client.hpp>
-#include <mongocxx/instance.hpp>
+#include <mongocxx/exception/bulk_write_exception.hpp>
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
 
@@ -17,10 +17,7 @@ namespace genny::actor {
 class Insert : public genny::PhasedActor {
 
 public:
-    explicit Insert(ActorContext& context,
-                    const unsigned int thread,
-                    std::string mongoUri = "mongodb://localhost:27017",
-                    std::string dbName = "test");
+    explicit Insert(ActorContext& context, const unsigned int thread);
 
     ~Insert() = default;
 
@@ -32,9 +29,6 @@ private:
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
     mongocxx::database _db;
-    std::string _mongoUri;
-    std::string _dbName;
-    std::vector<std::string> _documents;
 };
 
 }  // namespace genny::actor
