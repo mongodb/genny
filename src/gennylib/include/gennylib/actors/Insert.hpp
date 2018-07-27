@@ -3,12 +3,7 @@
 
 #include <iostream>
 
-#include <bsoncxx/json.hpp>
-
-#include <mongocxx/client.hpp>
-#include <mongocxx/exception/bulk_write_exception.hpp>
-#include <mongocxx/stdx.hpp>
-#include <mongocxx/uri.hpp>
+#include <mongocxx/pool.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -32,7 +27,7 @@ private:
 
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
-    mongocxx::database _db;
+    mongocxx::pool::entry _client;
     std::unique_ptr<Config> _config;
 };
 

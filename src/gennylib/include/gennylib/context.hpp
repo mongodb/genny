@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <vector>
 
+#include <boost/log/trivial.hpp>
 #include <boost/noncopyable.hpp>
 
 #include <mongocxx/pool.hpp>
@@ -267,6 +268,10 @@ public:
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
         : _node{node}, _workload{&workloadContext} {}
 
+    ~ActorContext() {
+        BOOST_LOG_TRIVIAL(info) << "HELLO";
+    }
+
     // no copy or move
     ActorContext(ActorContext&) = delete;
     void operator=(ActorContext&) = delete;
@@ -371,7 +376,6 @@ public:
 private:
     YAML::Node _node;
     WorkloadContext* _workload;
-    bool _poolSet = false;
 };
 
 // using ActorContext= WorkloadContext::ActorContext;

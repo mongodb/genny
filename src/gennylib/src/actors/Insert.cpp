@@ -4,26 +4,33 @@
 
 struct genny::actor::Insert::Config {
 
-    Config(genny::ActorContext& context) : database{context.get<std::string>("Database")} {
-        YAML::Node node_documents = context.get("Documents");
+    struct PhaseConfig {
+        PhaseConfig(const std::string collection_name,
+                    const std::string document,
+                    const mongocxx::database& db)
+            : collection{db[collection_name]},
+              json_document{bsoncxx::from_json(document)},
+              string_document{document} {}
+        mongocxx::collection collection;
+        const bsoncxx::document::view_or_value json_document;
+        const std::string string_document;
+    };
+
+    Config(const genny::ActorContext& context, const mongocxx::database& db) {
         for (const auto& node : context.get("Documents")) {
-            std::string collection = node["Collection"].as<std::string>();
-            std::string document = node["Document"].as<std::string>();
-            bsoncxx::document::view_or_value json_doc = bsoncxx::from_json(document);
-            documents.push_back(std::make_tuple(collection, json_doc, document));
+            const auto& collection_name = node["Collection"].as<std::string>();
+            const auto& document = node["Document"].as<std::string>();
+            phases.emplace_back(collection_name, document, db);
         }
     }
-    std::string database;
-    std::vector<std::tuple<std::string, bsoncxx::document::view_or_value, std::string>> documents;
+    std::vector<PhaseConfig> phases;
 };
 
 void genny::actor::Insert::doPhase(int currentPhase) {
     auto op = _outputTimer.raii();
-    auto collection = _db[std::get<0>(_config->documents[currentPhase])];
-    auto document = std::get<1>(_config->documents[currentPhase]);
-    auto string_document = std::get<2>(_config->documents[currentPhase]);
-    BOOST_LOG_TRIVIAL(info) << _fullName << " Inserting " << string_document;
-    bsoncxx::stdx::optional<mongocxx::result::insert_one> res = collection.insert_one(document);
+    auto& phase = _config->phases[currentPhase];
+    BOOST_LOG_TRIVIAL(info) << _fullName << " Inserting " << phase.string_document;
+    phase.collection.insert_one(phase.json_document);
     _operations.incr();
 }
 
@@ -31,9 +38,8 @@ genny::actor::Insert::Insert(genny::ActorContext& context, const unsigned int th
     : PhasedActor(context, thread),
       _outputTimer{context.timer(_fullName + ".output")},
       _operations{context.counter(_fullName + ".operations")},
-      _config{std::make_unique<Config>(context)} {
-    auto client = context.client();
-    _db = (*client)[_config->database];
+      _client{std::move(context.client())},
+      _config{std::make_unique<Config>(context, (*_client)[context.get<std::string>("Database")])} {
 }
 
 genny::ActorVector genny::actor::Insert::producer(genny::ActorContext& context) {

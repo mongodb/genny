@@ -3,6 +3,13 @@
 
 #include <string>
 
+#include <bsoncxx/json.hpp>
+
+#include <mongocxx/client.hpp>
+#include <mongocxx/database.hpp>
+#include <mongocxx/stdx.hpp>
+#include <mongocxx/uri.hpp>
+
 #include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
@@ -21,7 +28,7 @@ class PhasedActor : public Actor {
 public:
     explicit PhasedActor(genny::ActorContext& context, unsigned int thread);
 
-    ~PhasedActor() = default;
+    virtual ~PhasedActor() = default;
 
     /**
      * Wrapper to {@code doPhase()}. Not virtual so this parent class can add
