@@ -268,10 +268,6 @@ public:
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
         : _node{node}, _workload{&workloadContext} {}
 
-    ~ActorContext() {
-        BOOST_LOG_TRIVIAL(info) << "HELLO";
-    }
-
     // no copy or move
     ActorContext(ActorContext&) = delete;
     void operator=(ActorContext&) = delete;
