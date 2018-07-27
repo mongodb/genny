@@ -12,7 +12,7 @@ Actors:
     Type: Insert
     Threads: 1
     Database: "test"
-    Documents:
+    Phases:
       - Collection: "inserts"
         Document: '{"a":"b"}'
       - Collection: "inserts"

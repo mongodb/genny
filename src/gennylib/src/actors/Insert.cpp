@@ -17,7 +17,7 @@ struct genny::actor::Insert::Config {
     };
 
     Config(const genny::ActorContext& context, const mongocxx::database& db) {
-        for (const auto& node : context.get("Documents")) {
+        for (const auto& node : context.get("Phases")) {
             const auto& collection_name = node["Collection"].as<std::string>();
             const auto& document = node["Document"].as<std::string>();
             phases.emplace_back(collection_name, document, db);
