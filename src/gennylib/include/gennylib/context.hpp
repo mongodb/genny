@@ -254,8 +254,8 @@ private:
     Orchestrator* const _orchestrator;
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
-    ActorVector _actors;
     mongocxx::pool _clientPool;
+    ActorVector _actors;
 };
 
 
