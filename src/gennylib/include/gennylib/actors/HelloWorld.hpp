@@ -12,7 +12,7 @@ namespace genny::actor {
 class HelloWorld : public genny::PhasedActor {
 
 public:
-    explicit HelloWorld(ActorContext& context, const std::string& name = "hello");
+    explicit HelloWorld(ActorContext& context, const unsigned int thread);
 
     ~HelloWorld() = default;
 

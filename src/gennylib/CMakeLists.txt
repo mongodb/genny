@@ -29,6 +29,9 @@ add_library(gennylib SHARED
 
     include/gennylib/actors/HelloWorld.hpp
                  src/actors/HelloWorld.cpp
+
+    include/gennylib/actors/Insert.hpp
+                 src/actors/Insert.cpp
 )
 
 # Define headers for this library. PUBLIC headers are used for

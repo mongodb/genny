@@ -8,6 +8,8 @@
 
 #include <boost/noncopyable.hpp>
 
+#include <mongocxx/pool.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/Actor.hpp>
@@ -161,7 +163,10 @@ public:
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::vector<ActorProducer>& producers)
-        : _node{std::move(node)}, _registry{&registry}, _orchestrator{&orchestrator} {
+        : _node{std::move(node)},
+          _registry{&registry},
+          _orchestrator{&orchestrator},
+          _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
@@ -248,6 +253,7 @@ private:
     Orchestrator* const _orchestrator;
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
+    mongocxx::pool _clientPool;
     ActorVector _actors;
 };
 
@@ -337,11 +343,11 @@ public:
         return this->_workload->_registry->counter(std::forward<Args>(args)...);
     }
 
-     // Convenience forwarders for Orchestrator
+    // Convenience forwarders for Orchestrator
 
-     auto morePhases() {
+    auto morePhases() {
         return this->_workload->_orchestrator->morePhases();
-     }
+    }
 
     auto currentPhaseNumber() {
         return this->_workload->_orchestrator->currentPhaseNumber();
@@ -356,6 +362,10 @@ public:
 
     auto abort() {
         return this->_workload->_orchestrator->abort();
+    }
+
+    mongocxx::pool::entry client() {
+        return _workload->_clientPool.acquire();
     }
 
 private:

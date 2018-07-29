@@ -3,6 +3,13 @@
 
 #include <string>
 
+#include <bsoncxx/json.hpp>
+
+#include <mongocxx/client.hpp>
+#include <mongocxx/database.hpp>
+#include <mongocxx/stdx.hpp>
+#include <mongocxx/uri.hpp>
+
 #include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
@@ -19,9 +26,9 @@ namespace genny {
 class PhasedActor : public Actor {
 
 public:
-    explicit PhasedActor(genny::ActorContext& context, std::string name = "anonymous");
+    explicit PhasedActor(genny::ActorContext& context, unsigned int thread);
 
-    ~PhasedActor() = default;
+    virtual ~PhasedActor() = default;
 
     /**
      * Wrapper to {@code doPhase()}. Not virtual so this parent class can add
@@ -42,7 +49,10 @@ public:
 
 protected:
     ActorContext& _context;
-    const std::string _name;
+    const unsigned int _thread;
+    std::string _name;
+    std::string _fullName;
+    std::string _type;
 
 private:
     /**

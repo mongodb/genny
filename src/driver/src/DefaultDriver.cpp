@@ -7,11 +7,14 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <mongocxx/instance.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/MetricsReporter.hpp>
 #include <gennylib/PhasedActor.hpp>
 #include <gennylib/actors/HelloWorld.hpp>
+#include <gennylib/actors/Insert.hpp>
 #include <gennylib/context.hpp>
 
 
@@ -41,6 +44,8 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
 
     genny::metrics::Registry metrics;
 
+    mongocxx::instance instance{};
+
     auto actorSetupTimer = metrics.timer("actorSetup");
     auto threadCounter = metrics.counter("threadCounter");
 
@@ -49,7 +54,8 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto registry = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
-    auto producers = std::vector<genny::ActorProducer>{&genny::actor::HelloWorld::producer};
+    auto producers = std::vector<genny::ActorProducer>{&genny::actor::HelloWorld::producer,
+                                                       &genny::actor::Insert::producer};
     auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
 
     orchestrator.setActors(workloadContext.actors());
