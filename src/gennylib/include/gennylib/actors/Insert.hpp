@@ -2,6 +2,7 @@
 #define HEADER_C7F4E568_590C_4D4D_B46F_766447E6AE31_INCLUDED
 
 #include <iostream>
+#include <memory>
 
 #include <mongocxx/pool.hpp>
 

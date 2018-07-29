@@ -6,7 +6,6 @@
 #include <type_traits>
 #include <vector>
 
-#include <boost/log/trivial.hpp>
 #include <boost/noncopyable.hpp>
 
 #include <mongocxx/pool.hpp>
