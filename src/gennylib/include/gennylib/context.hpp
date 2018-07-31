@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <iterator>
+#include <optional>
 #include <type_traits>
 #include <vector>
 
@@ -97,15 +98,26 @@ inline std::ostream& operator<<(std::ostream& out, const ConfigPath& path) {
 // Used by get() in WorkloadContext and ActorContext
 //
 // This is the base-case when we're out of Args... expansions in the other helper below
-template <class Out, class Current>
-Out get_helper(const ConfigPath& parent, const Current& curr) {
+template <class Out, class Current,
+          bool Required = true,
+          class OutV = typename std::conditional<Required,Out,std::optional<Out>>::type>
+OutV get_helper(const ConfigPath& parent, const Current& curr) {
     if (!curr) {
-        std::stringstream error;
-        error << "Invalid key at path [" << parent << "]";
-        throw InvalidConfigurationException(error.str());
+        if constexpr (Required) {
+            std::stringstream error;
+            error << "Invalid key at path [" << parent << "]";
+            throw InvalidConfigurationException(error.str());
+        }
+        else {
+            return std::make_optional<Out>();
+        }
     }
     try {
-        return curr.template as<Out>();
+        if constexpr(Required) {
+            return curr.template as<Out>();
+        } else {
+            return std::make_optional<Out>(curr.template as<Out>());
+        }
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
         // typeid(Out).name() is kinda hokey but could be useful when debugging config issues.
@@ -122,8 +134,11 @@ Out get_helper(const ConfigPath& parent, const Current& curr) {
 //   -> get_helper(foo[a], b, c) // this fn
 //   -> get_helper(foo[a][b], c) // this fn
 //   -> get_helper(foo[a][b][c]) // "base case" fn above
-template <class Out, class Current, class PathFirst, class... PathRest>
-Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
+template <class Out, class Current,
+          bool Required = true,
+          class OutV = typename std::conditional<Required,Out,std::optional<Out>>::type,
+          class PathFirst, class... PathRest>
+OutV get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
     if (curr.IsScalar()) {
         std::stringstream error;
         error << "Wanted [" << parent << pathFirst << "] but [" << parent << "] is scalar: ["
@@ -135,12 +150,16 @@ Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, P
     parent.add([&](std::ostream& out) { out << pathFirst; });
 
     if (!next.IsDefined()) {
-        std::stringstream error;
-        error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed ["
-              << curr << "].";
-        throw InvalidConfigurationException(error.str());
+        if constexpr(Required) {
+            std::stringstream error;
+            error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed ["
+                  << curr << "].";
+            throw InvalidConfigurationException(error.str());
+        } else {
+            return std::make_optional<Out>();
+        }
     }
-    return V1::get_helper<Out>(parent, next, std::forward<PathRest>(rest)...);
+    return V1::get_helper<Out,Current,Required>(parent, next, std::forward<PathRest>(rest)...);
 }
 
 }  // namespace genny::V1
@@ -219,18 +238,18 @@ public:
      * ```
      * @tparam T the output type required. Will forward to YAML::Node.as<T>()
      */
-    template <class T = YAML::Node, class... Args>
+    template <class T = YAML::Node, bool Required = true, class... Args>
     static T get_static(const YAML::Node& node, Args&&... args) {
         V1::ConfigPath p;
-        return V1::get_helper<T>(p, node, std::forward<Args>(args)...);
+        return V1::get_helper<T, YAML::Node, Required>(p, node, std::forward<Args>(args)...);
     };
 
     /**
      * @see get_static()
      */
-    template <typename T = YAML::Node, class... Args>
+    template <typename T = YAML::Node, bool Required = true, class... Args>
     T get(Args&&... args) {
-        return WorkloadContext::get_static<T>(_node, std::forward<Args>(args)...);
+        return WorkloadContext::get_static<T, YAML::Node, Required>(_node, std::forward<Args>(args)...);
     };
 
     /**
