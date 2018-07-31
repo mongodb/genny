@@ -2,6 +2,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <optional>
 
 #include <yaml-cpp/yaml.h>
 
@@ -29,8 +30,11 @@ void errors(const string& yaml, string message, Args... args) {
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
 }
-template <class Out, class... Args>
-void gives(const string& yaml, Out expect, Args... args) {
+template <class Out,
+          bool Required = true,
+          class OutV = typename std::conditional<Required, Out, std::optional<Out>>::type,
+          class... Args>
+void gives(const string& yaml, OutV expect, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
     string modified =
@@ -38,7 +42,7 @@ void gives(const string& yaml, Out expect, Args... args) {
     auto read = YAML::Load(modified);
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, {}};
-        return context.get<Out>(std::forward<Args>(args)...);
+        return context.get<Out, Required>(std::forward<Args>(args)...);
     };
     REQUIRE(test() == expect);
 }
@@ -97,6 +101,13 @@ Actors:
         gives<int>("Some Ints: [1,2,[3,4]]", 2, "Some Ints", 1);
         gives<int>("Some Ints: [1,2,[3,4]]", 3, "Some Ints", 2, 0);
         gives<int>("Some Ints: [1,2,[3,4]]", 4, "Some Ints", 2, 1);
+
+        gives<int, false>("A: 1", make_optional<int>(), "B");
+        gives<int, false>("A: 2", make_optional<int>(2), "A");
+        gives<int, false>("A: {B: [1,2,3]}", make_optional<int>(2), "A", "B", 1);
+
+        gives<int, false>("A: {B: [1,2,3]}", make_optional<int>(), "A", "B", 30);
+        gives<int, false>("A: {B: [1,2,3]}", make_optional<int>(), "B");
     }
 
     SECTION("Empty Yaml") {
