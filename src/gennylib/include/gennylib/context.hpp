@@ -335,11 +335,18 @@ public:
      * ```
      * auto name = cx.get<std::string>("Name");
      * ```
+     * @tparam T the return-value type. Will return a T if Required (and throw if not found) else
+     * will return an optional<T> (empty optional if not found).
+     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
+     * that will be empty if not found.
      */
-    template <class T = YAML::Node, class... Args>
-    T get(Args&&... args) const {
+    template <typename T = YAML::Node,
+            bool Required = true,
+            class OutV = typename std::conditional<Required, T, std::optional<T>>::type,
+            class... Args>
+    OutV get(Args&&... args) const {
         V1::ConfigPath p;
-        return V1::get_helper<T>(p, _node, std::forward<Args>(args)...);
+        return V1::get_helper<T, YAML::Node, Required>(p, _node, std::forward<Args>(args)...);
     };
 
     /**
