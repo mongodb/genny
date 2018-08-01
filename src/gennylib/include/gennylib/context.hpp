@@ -117,7 +117,7 @@ OutV get_helper(const ConfigPath& parent, const Current& curr) {
             error << "Invalid key at path [" << parent << "]";
             throw InvalidConfigurationException(error.str());
         } else {
-            return std::make_optional<Out>();
+            return std::nullopt;
         }
     }
     try {
@@ -169,7 +169,7 @@ OutV get_helper(ConfigPath& parent,
                   << curr << "].";
             throw InvalidConfigurationException(error.str());
         } else {
-            return std::make_optional<Out>();
+            return std::nullopt;
         }
     }
     return V1::get_helper<Out, Current, Required>(parent, next, std::forward<PathRest>(rest)...);

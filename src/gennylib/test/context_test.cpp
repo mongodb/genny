@@ -102,12 +102,12 @@ Actors:
         gives<int>("Some Ints: [1,2,[3,4]]", 3, "Some Ints", 2, 0);
         gives<int>("Some Ints: [1,2,[3,4]]", 4, "Some Ints", 2, 1);
 
-        gives<int, false>("A: 1", make_optional<int>(), "B");
+        gives<int, false>("A: 1", std::nullopt, "B");
         gives<int, false>("A: 2", make_optional<int>(2), "A");
         gives<int, false>("A: {B: [1,2,3]}", make_optional<int>(2), "A", "B", 1);
 
-        gives<int, false>("A: {B: [1,2,3]}", make_optional<int>(), "A", "B", 30);
-        gives<int, false>("A: {B: [1,2,3]}", make_optional<int>(), "B");
+        gives<int, false>("A: {B: [1,2,3]}", std::nullopt, "A", "B", 30);
+        gives<int, false>("A: {B: [1,2,3]}", std::nullopt, "B");
     }
 
     SECTION("Empty Yaml") {
