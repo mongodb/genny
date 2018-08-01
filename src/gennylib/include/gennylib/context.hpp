@@ -261,7 +261,7 @@ public:
               bool Required = true,
               class OutV = typename std::conditional<Required, T, std::optional<T>>::type,
               class... Args>
-    OutV get(Args&&... args) {
+    OutV get(Args&&... args) const {
         return WorkloadContext::get_static<T, Required>(_node, std::forward<Args>(args)...);
     };
 
