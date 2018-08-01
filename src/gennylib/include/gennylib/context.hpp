@@ -35,6 +35,14 @@
 namespace genny::V1 {
 
 /**
+ * If Required, type is Out, else it's optional<Out>
+ */
+template <class Out, bool Required = true>
+struct MaybeOptional {
+    using type = typename std::conditional<Required, Out, std::optional<Out>>::type;
+};
+
+/**
  * The "path" to a configured value. E.g. given the structure
  *
  * ```yaml
@@ -101,7 +109,7 @@ inline std::ostream& operator<<(std::ostream& out, const ConfigPath& path) {
 template <class Out,
           class Current,
           bool Required = true,
-          class OutV = typename std::conditional<Required, Out, std::optional<Out>>::type>
+          class OutV = typename MaybeOptional<Out,Required>::type>
 OutV get_helper(const ConfigPath& parent, const Current& curr) {
     if (!curr) {
         if constexpr (Required) {
@@ -137,7 +145,7 @@ OutV get_helper(const ConfigPath& parent, const Current& curr) {
 template <class Out,
           class Current,
           bool Required = true,
-          class OutV = typename std::conditional<Required, Out, std::optional<Out>>::type,
+          class OutV = typename MaybeOptional<Out,Required>::type,
           class PathFirst,
           class... PathRest>
 OutV get_helper(ConfigPath& parent,
@@ -240,6 +248,9 @@ public:
      *     auto name0  = context.get<std::string>("Actors", 0, "Name");
      *     auto count0 = context.get<int>("Actors", 0, "Count");
      *     auto name1  = context.get<std::string>("Actors", 1, "Name");
+     *
+     *     // if value may not exist:
+     *     std::optional<int> = context.get<int,false>("Actors", 0, "Count");
      * ```
      * @tparam T the output type required. Will forward to YAML::Node.as<T>()
      * @tparam Required If true, will error if item not found. If false, will return an optional<T>
@@ -247,7 +258,7 @@ public:
      */
     template <class T = YAML::Node,
               bool Required = true,
-              class OutV = typename std::conditional<Required, T, std::optional<T>>::type,
+              class OutV = typename V1::MaybeOptional<T,Required>::type,
               class... Args>
     static OutV get_static(const YAML::Node& node, Args&&... args) {
         V1::ConfigPath p;
@@ -259,7 +270,7 @@ public:
      */
     template <typename T = YAML::Node,
               bool Required = true,
-              class OutV = typename std::conditional<Required, T, std::optional<T>>::type,
+              class OutV = typename V1::MaybeOptional<T,Required>::type,
               class... Args>
     OutV get(Args&&... args) const {
         return WorkloadContext::get_static<T, Required>(_node, std::forward<Args>(args)...);
@@ -342,7 +353,7 @@ public:
      */
     template <typename T = YAML::Node,
             bool Required = true,
-            class OutV = typename std::conditional<Required, T, std::optional<T>>::type,
+            class OutV = typename V1::MaybeOptional<T,Required>::type,
             class... Args>
     OutV get(Args&&... args) const {
         V1::ConfigPath p;
