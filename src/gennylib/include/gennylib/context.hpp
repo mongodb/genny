@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <iterator>
+#include <optional>
 #include <type_traits>
 #include <vector>
 
@@ -32,6 +33,14 @@
  * be defined _below_ the important stuff, but we live in a cruel world.
  */
 namespace genny::V1 {
+
+/**
+ * If Required, type is Out, else it's optional<Out>
+ */
+template <class Out, bool Required = true>
+struct MaybeOptional {
+    using type = typename std::conditional<Required, Out, std::optional<Out>>::type;
+};
 
 /**
  * The "path" to a configured value. E.g. given the structure
@@ -97,15 +106,26 @@ inline std::ostream& operator<<(std::ostream& out, const ConfigPath& path) {
 // Used by get() in WorkloadContext and ActorContext
 //
 // This is the base-case when we're out of Args... expansions in the other helper below
-template <class Out, class Current>
-Out get_helper(const ConfigPath& parent, const Current& curr) {
+template <class Out,
+          class Current,
+          bool Required = true,
+          class OutV = typename MaybeOptional<Out,Required>::type>
+OutV get_helper(const ConfigPath& parent, const Current& curr) {
     if (!curr) {
-        std::stringstream error;
-        error << "Invalid key at path [" << parent << "]";
-        throw InvalidConfigurationException(error.str());
+        if constexpr (Required) {
+            std::stringstream error;
+            error << "Invalid key at path [" << parent << "]";
+            throw InvalidConfigurationException(error.str());
+        } else {
+            return std::nullopt;
+        }
     }
     try {
-        return curr.template as<Out>();
+        if constexpr (Required) {
+            return curr.template as<Out>();
+        } else {
+            return std::make_optional<Out>(curr.template as<Out>());
+        }
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
         // typeid(Out).name() is kinda hokey but could be useful when debugging config issues.
@@ -122,8 +142,16 @@ Out get_helper(const ConfigPath& parent, const Current& curr) {
 //   -> get_helper(foo[a], b, c) // this fn
 //   -> get_helper(foo[a][b], c) // this fn
 //   -> get_helper(foo[a][b][c]) // "base case" fn above
-template <class Out, class Current, class PathFirst, class... PathRest>
-Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, PathRest&&... rest) {
+template <class Out,
+          class Current,
+          bool Required = true,
+          class OutV = typename MaybeOptional<Out,Required>::type,
+          class PathFirst,
+          class... PathRest>
+OutV get_helper(ConfigPath& parent,
+                const Current& curr,
+                PathFirst&& pathFirst,
+                PathRest&&... rest) {
     if (curr.IsScalar()) {
         std::stringstream error;
         error << "Wanted [" << parent << pathFirst << "] but [" << parent << "] is scalar: ["
@@ -135,12 +163,16 @@ Out get_helper(ConfigPath& parent, const Current& curr, PathFirst&& pathFirst, P
     parent.add([&](std::ostream& out) { out << pathFirst; });
 
     if (!next.IsDefined()) {
-        std::stringstream error;
-        error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed ["
-              << curr << "].";
-        throw InvalidConfigurationException(error.str());
+        if constexpr (Required) {
+            std::stringstream error;
+            error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed ["
+                  << curr << "].";
+            throw InvalidConfigurationException(error.str());
+        } else {
+            return std::nullopt;
+        }
     }
-    return V1::get_helper<Out>(parent, next, std::forward<PathRest>(rest)...);
+    return V1::get_helper<Out, Current, Required>(parent, next, std::forward<PathRest>(rest)...);
 }
 
 }  // namespace genny::V1
@@ -216,21 +248,32 @@ public:
      *     auto name0  = context.get<std::string>("Actors", 0, "Name");
      *     auto count0 = context.get<int>("Actors", 0, "Count");
      *     auto name1  = context.get<std::string>("Actors", 1, "Name");
+     *
+     *     // if value may not exist:
+     *     std::optional<int> = context.get<int,false>("Actors", 0, "Count");
      * ```
      * @tparam T the output type required. Will forward to YAML::Node.as<T>()
+     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
+     * that will be empty if not found.
      */
-    template <class T = YAML::Node, class... Args>
-    static T get_static(const YAML::Node& node, Args&&... args) {
+    template <class T = YAML::Node,
+              bool Required = true,
+              class OutV = typename V1::MaybeOptional<T,Required>::type,
+              class... Args>
+    static OutV get_static(const YAML::Node& node, Args&&... args) {
         V1::ConfigPath p;
-        return V1::get_helper<T>(p, node, std::forward<Args>(args)...);
+        return V1::get_helper<T, YAML::Node, Required>(p, node, std::forward<Args>(args)...);
     };
 
     /**
      * @see get_static()
      */
-    template <typename T = YAML::Node, class... Args>
-    T get(Args&&... args) {
-        return WorkloadContext::get_static<T>(_node, std::forward<Args>(args)...);
+    template <typename T = YAML::Node,
+              bool Required = true,
+              class OutV = typename V1::MaybeOptional<T,Required>::type,
+              class... Args>
+    OutV get(Args&&... args) const {
+        return WorkloadContext::get_static<T, Required>(_node, std::forward<Args>(args)...);
     };
 
     /**
@@ -303,11 +346,18 @@ public:
      * ```
      * auto name = cx.get<std::string>("Name");
      * ```
+     * @tparam T the return-value type. Will return a T if Required (and throw if not found) else
+     * will return an optional<T> (empty optional if not found).
+     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
+     * that will be empty if not found.
      */
-    template <class T = YAML::Node, class... Args>
-    T get(Args&&... args) const {
+    template <typename T = YAML::Node,
+            bool Required = true,
+            class OutV = typename V1::MaybeOptional<T,Required>::type,
+            class... Args>
+    OutV get(Args&&... args) const {
         V1::ConfigPath p;
-        return V1::get_helper<T>(p, _node, std::forward<Args>(args)...);
+        return V1::get_helper<T, YAML::Node, Required>(p, _node, std::forward<Args>(args)...);
     };
 
     /**
