@@ -21,8 +21,7 @@
 
 /**
  * This file defines `WorkloadContext` and `ActorContext` which provide access
- * to configuration values and other workload collaborators (e.g. metrics)
- * during the construction
+ * to configuration values and other workload collaborators (e.g. metrics) during the construction
  * of actors.
  *
  * Please see the documentation below on WorkloadContext and ActorContext.
@@ -53,8 +52,7 @@ struct MaybeOptional {
  *
  * The path to the 10 is "foo/bar/baz/0".
  *
- * This is used to report meaningful exceptions in the case of
- * mis-configuration.
+ * This is used to report meaningful exceptions in the case of mis-configuration.
  */
 class ConfigPath {
 public:
@@ -105,8 +103,7 @@ inline std::ostream& operator<<(std::ostream& out, const ConfigPath& path) {
 
 // Used by get() in WorkloadContext and ActorContext
 //
-// This is the base-case when we're out of Args... expansions in the other
-// helper below
+// This is the base-case when we're out of Args... expansions in the other helper below
 template <class Out,
           class Current,
           bool Required = true,
@@ -133,8 +130,7 @@ OutV get_helper(const ConfigPath& parent, const Current& curr) {
         }
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
-        // typeid(Out).name() is kinda hokey but could be useful when debugging
-        // config issues.
+        // typeid(Out).name() is kinda hokey but could be useful when debugging config issues.
         error << "Bad conversion of [" << curr << "] to [" << typeid(Out).name() << "] "
               << "at path [" << parent << "]: " << conv.what();
         throw InvalidConfigurationException(error.str());
@@ -188,8 +184,7 @@ OutV get_helper(ConfigPath& parent,
 namespace genny {
 
 /**
- * Represents the top-level/"global" configuration and context for configuring
- * actors.
+ * Represents the top-level/"global" configuration and context for configuring actors.
  * Call `.get()` to access top-level yaml configs.
  */
 class WorkloadContext {
@@ -206,10 +201,8 @@ public:
           _registry{&registry},
           _orchestrator{&orchestrator},
           _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}} {
-        // This is good enough for now. Later can add a WorkloadContextValidator
-        // concept
-        // and wire in a vector of those similar to how we do with the vector of
-        // Producers.
+        // This is good enough for now. Later can add a WorkloadContextValidator concept
+        // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
             throw InvalidConfigurationException("Invalid schema version");
         }
@@ -231,8 +224,7 @@ public:
      * Retrieve configuration values from the top-level workload configuration.
      * Returns `root[arg1][arg2]...[argN]`.
      *
-     * This is somewhat expensive and should only be called during actor/workload
-     * setup.
+     * This is somewhat expensive and should only be called during actor/workload setup.
      *
      * Typical usage:
      *
@@ -292,8 +284,7 @@ public:
     };
 
     /**
-     * @return all the actors produced. This should only be called by workload
-     * drivers.
+     * @return all the actors produced. This should only be called by workload drivers.
      */
     constexpr const ActorVector& actors() const {
         return _actors;
@@ -334,12 +325,10 @@ public:
     void operator=(ActorContext&&) = delete;
 
     /**
-     * Retrieve configuration values from a particular `Actor:` block in the
-     * workload configuration.
+     * Retrieve configuration values from a particular `Actor:` block in the workload configuration.
      * `Returns actor[arg1][arg2]...[argN]`.
      *
-     * This is somewhat expensive and should only be called during actor/workload
-     * setup.
+     * This is somewhat expensive and should only be called during actor/workload setup.
      *
      * Typical usage:
      *
@@ -360,8 +349,7 @@ public:
      *     - Name: Bar
      * ```
      *
-     * There will be two ActorConfigs, one for `{Name:Foo}` and another for
-     * `{Name:Bar}`.
+     * There will be two ActorConfigs, one for `{Name:Foo}` and another for `{Name:Bar}`.
      *
      * ```
      * auto name = cx.get<std::string>("Name");
@@ -389,8 +377,7 @@ public:
         return *this->_workload;
     }
 
-    // just convenience forwarding methods to avoid having to do
-    // context.registry().timer(...)
+    // just convenience forwarding methods to avoid having to do context.registry().timer(...)
 
     /**
      * Convenience method for creating a metrics::Timer.
