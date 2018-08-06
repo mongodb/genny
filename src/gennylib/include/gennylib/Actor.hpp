@@ -1,6 +1,8 @@
 #ifndef HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 #define HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 
+#include <random>
+
 namespace genny {
 
 /**
@@ -35,7 +37,6 @@ namespace genny {
  * refs or copies of config objects
  */
 class Actor {
-
 public:
     virtual ~Actor() = default;
 
@@ -44,9 +45,22 @@ public:
      * This is only intended to be called by workload drivers.
      */
     virtual void run() = 0;
+
+    /**
+     * Pseudo-random number generator for this actor. This is a mersene twister
+     * prng generating 64
+     * bit random values.
+     */
+    std::mt19937_64 rng;
+
+    /**
+     * Set the random seed for this actor's random number generator. Each actor
+     * has it's own rng.
+     */
+    void setRandomSeed(uint64_t seed) {
+        rng.seed(seed);
+    };
 };
-
-
 }  // namespace genny
 
 #endif  // HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
