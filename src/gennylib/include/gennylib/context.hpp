@@ -27,6 +27,7 @@
  * Please see the documentation below on WorkloadContext and ActorContext.
  */
 
+
 /*
  * This is all helper/private implementation details. Ideally this section could
  * be defined _below_ the important stuff, but we live in a cruel world.
@@ -55,6 +56,7 @@ struct MaybeOptional {
  * This is used to report meaningful exceptions in the case of mis-configuration.
  */
 class ConfigPath {
+
 public:
     ConfigPath() = default;
 
@@ -261,8 +263,7 @@ public:
      *     std::optional<int> = context.get<int,false>("Actors", 0, "Count");
      * ```
      * @tparam T the output type required. Will forward to YAML::Node.as<T>()
-     * @tparam Required If true, will error if item not found. If false, will
-     * return an optional<T>
+     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
      * that will be empty if not found.
      */
     template <class T = YAML::Node,
@@ -371,11 +372,9 @@ public:
      * ```
      * auto name = cx.get<std::string>("Name");
      * ```
-     * @tparam T the return-value type. Will return a T if Required (and throw if
-     * not found) else
+     * @tparam T the return-value type. Will return a T if Required (and throw if not found) else
      * will return an optional<T> (empty optional if not found).
-     * @tparam Required If true, will error if item not found. If false, will
-     * return an optional<T>
+     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
      * that will be empty if not found.
      */
     template <typename T = YAML::Node,
