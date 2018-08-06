@@ -53,12 +53,12 @@ set(CMAKE_MACOSX_RPATH                  1) # Ensure that RPATH is used on OSX
 # Help spot unknown compilers and versions.
 # Other compilers are probably supported just fine but aren't officially checked
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "9.0")
-        message(FATAL_ERROR "Insufficient Apple clang version - XCode 9+ required")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10.0")
+        message(FATAL_ERROR "Insufficient Apple clang version - XCode 10+ required")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "5.0")
-        message(FATAL_ERROR "Insufficient clang version - clang 5.0+ required")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0")
+        message(FATAL_ERROR "Insufficient clang version - clang 6.0+ required")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.3.0")

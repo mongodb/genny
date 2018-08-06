@@ -6,11 +6,11 @@ C++17.
 
 **Quick-Start on OS X**:
 
-```sh
-# Download Xcode 10 Beta (or install apple clang 10+)
-#    https://developer.apple.com/download/
-#
+1. [Download XCode 10 Beta](https://developer.apple.com/download/) (around 10GB) and install.
+2. Drag `Xcode-beta.app` into `Applications`. For some reason the installer puts it in `~/Downloads`.
+3. Run the below shell (requires [`brew`](https://brew.sh/))
 
+```sh
 sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
 
 # install third-party packages and build-tools
@@ -23,12 +23,18 @@ cd build
 cmake ..
 make -j8
 make test
+```
 
-# if you get boost errors:
+If you get boost errors:
+
+```sh
 brew remove boost
 brew install boost --build-from-source \
     --include-test --with-icu4c --without-static
 ```
+
+Other errors, run `brew doctor`.
+
 
 **Other Operating-Systems**:
 
