@@ -200,7 +200,8 @@ public:
         : _node{std::move(node)},
           _registry{&registry},
           _orchestrator{&orchestrator},
-          _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}} {
+          _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}},
+          _done{false} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
@@ -211,7 +212,8 @@ public:
         // between 1 and 10^9 and concatenating.
         rng.seed(get_static<int, false>(node, "RandomSeed").value_or(269849313357703264));
         _actorContexts = constructActorContexts(_node, this);
-        _actors = constructActors(producers, _actorContexts, rng);
+        _actors = constructActors(producers, _actorContexts);
+        _done = true;
     }
 
     // no copy or move
@@ -290,13 +292,25 @@ public:
         return _actors;
     }
 
+    /*
+     * @return a new seeded random number generator. This should only be called during construction
+     * to ensure reproducibility.
+     */
+    std::mt19937_64 getRNG() {
+        if (_done) {
+            std::stringstream error;
+            error << "Tried to access a random number generator after construction";
+            throw InvalidConfigurationException(error.str());
+        }
+        return std::mt19937_64{rng()};
+    }
+
 private:
     friend class ActorContext;
 
     // helper methods used during construction
     static ActorVector constructActors(const std::vector<ActorProducer>& producers,
-                                       const std::vector<std::unique_ptr<ActorContext>>&,
-                                       std::mt19937_64&);
+                                       const std::vector<std::unique_ptr<ActorContext>>&);
     static std::vector<std::unique_ptr<ActorContext>> constructActorContexts(const YAML::Node&,
                                                                              WorkloadContext*);
     YAML::Node _node;
@@ -308,6 +322,9 @@ private:
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     mongocxx::pool _clientPool;
     ActorVector _actors;
+    // Indicate that we are doing building the context. This is used to gate certain methods that
+    // should not be called after construction.
+    bool _done;
 };
 
 /**

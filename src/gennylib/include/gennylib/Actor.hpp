@@ -45,21 +45,6 @@ public:
      * This is only intended to be called by workload drivers.
      */
     virtual void run() = 0;
-
-    /**
-     * Pseudo-random number generator for this actor. This is a mersene twister
-     * prng generating 64
-     * bit random values.
-     */
-    std::mt19937_64 rng;
-
-    /**
-     * Set the random seed for this actor's random number generator. Each actor
-     * has it's own rng.
-     */
-    void setRandomSeed(uint64_t seed) {
-        rng.seed(seed);
-    };
 };
 }  // namespace genny
 

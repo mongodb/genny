@@ -13,14 +13,11 @@ std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadContext::constr
 
 genny::ActorVector genny::WorkloadContext::constructActors(
     const std::vector<ActorProducer>& producers,
-    const std::vector<std::unique_ptr<ActorContext>>& actorContexts,
-    std::mt19937_64& rng) {
+    const std::vector<std::unique_ptr<ActorContext>>& actorContexts) {
     auto actors = genny::ActorVector{};
     for (const auto& producer : producers)
         for (auto& actorContext : actorContexts)
-            for (auto&& actor : producer(*actorContext)) {
-                actor->setRandomSeed(rng());
+            for (auto&& actor : producer(*actorContext))
                 actors.push_back(std::move(actor));
-            }
     return actors;
 }
