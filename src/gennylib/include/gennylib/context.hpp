@@ -292,10 +292,10 @@ public:
      * @return a new seeded random number generator. This should only be called during construction
      * to ensure reproducibility.
      */
-    std::mt19937_64 getRNG() {
+    std::mt19937_64 createRNG() {
         if (_done) {
             throw InvalidConfigurationException(
-                "Tried to access a random number generator after construction");
+                "Tried to create a random number generator after construction");
         }
         return std::mt19937_64{rng()};
     }
