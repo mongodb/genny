@@ -21,3 +21,21 @@ genny::ActorVector genny::WorkloadContext::constructActors(
                 actors.push_back(std::move(actor));
     return actors;
 }
+
+// Helper method to convert Phases:[...] to ActorPhaseContexts
+std::unordered_map<int, std::unique_ptr<genny::PhaseContext>>
+genny::ActorContext::constructPhaseContexts(const YAML::Node&, genny::ActorContext* actorContext) {
+    std::unordered_map<int, std::unique_ptr<genny::PhaseContext>> out;
+    auto phases = actorContext->get<YAML::Node, false>("Phases");
+    if (!phases) {
+        return out;
+    }
+
+    int index = 0;
+    for (const auto& phase : *phases) {
+        out.emplace(phase["Phase"].as<int>(index),
+                    std::make_unique<genny::PhaseContext>(phase, *actorContext));
+        ++index;
+    }
+    return out;
+}
