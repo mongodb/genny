@@ -4,6 +4,7 @@
 #include <functional>
 #include <iterator>
 #include <optional>
+#include <random>
 #include <type_traits>
 #include <vector>
 
@@ -293,9 +294,8 @@ public:
      */
     std::mt19937_64 getRNG() {
         if (_done) {
-            std::stringstream error;
-            error << "Tried to access a random number generator after construction";
-            throw InvalidConfigurationException(error.str());
+            throw InvalidConfigurationException(
+                "Tried to access a random number generator after construction");
         }
         return std::mt19937_64{rng()};
     }
