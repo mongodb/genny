@@ -513,7 +513,7 @@ public:
     };
 
 private:
-    const YAML::Node& _node;
+    YAML::Node _node;
     const ActorContext* _actor;
 };
 
