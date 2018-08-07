@@ -41,9 +41,28 @@ public:
 
     /**
      * Signal from an actor that it is done with the current phase.
-     * Blocks until the phase is ended when all actors report they are done.
+     * Optionally blocks until the phase is ended when all actors report they are done.
+     *
+     * @param block whether or not this call should block until phase is ended
+     * This can be used to make actors work "in the background" either across
+     * phases or in an "optimistic" fashion such that long-running operations
+     * don't cause the phase-progression to stall.
+     *
+     * ```c++
+     * while (orchestrator.morePhases()) {
+     *     int phase = orchestrator.awaitPhaseStart();
+     *     orchestrator.awaitPhaseEnd(false);
+     *     while(phase == orchestrator.currentPhaseNumber()) {
+     *         // do operation
+     *     }
+     * }
+     * ```
      */
-    void awaitPhaseEnd(bool block=true, unsigned int morePhases = 0);
+    // TODO: should the bool instead be on awaitStart() to indicate "hey don't wait for me"?
+    // TODO: should Orchestrator intsead be a type of Iterator?
+    // for (auto phase : context.orchestratorLoop()) { ... } with
+    // orchestratorLoop taking params to indicate blocking-ness or something?
+    void awaitPhaseEnd(bool block = true, unsigned int morePhases = 0);
 
     /**
      * @param actors the actors that will participate in phasing.
