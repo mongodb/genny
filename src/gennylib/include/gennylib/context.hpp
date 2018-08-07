@@ -112,22 +112,18 @@ template <class Out,
           class OutV = typename MaybeOptional<Out, Required>::type>
 OutV get_helper(const ConfigPath& parent, const Current& curr) {
     if (!curr) {
-        if
-            constexpr(Required) {
-                std::stringstream error;
-                error << "Invalid key at path [" << parent << "]";
-                throw InvalidConfigurationException(error.str());
-            }
-        else {
+        if constexpr (Required) {
+            std::stringstream error;
+            error << "Invalid key at path [" << parent << "]";
+            throw InvalidConfigurationException(error.str());
+        } else {
             return std::nullopt;
         }
     }
     try {
-        if
-            constexpr(Required) {
-                return curr.template as<Out>();
-            }
-        else {
+        if constexpr (Required) {
+            return curr.template as<Out>();
+        } else {
             return std::make_optional<Out>(curr.template as<Out>());
         }
     } catch (const YAML::BadConversion& conv) {
@@ -167,14 +163,12 @@ OutV get_helper(ConfigPath& parent,
     parent.add([&](std::ostream& out) { out << pathFirst; });
 
     if (!next.IsDefined()) {
-        if
-            constexpr(Required) {
-                std::stringstream error;
-                error << "Invalid key [" << pathFirst << "] at path [" << parent
-                      << "]. Last accessed [" << curr << "].";
-                throw InvalidConfigurationException(error.str());
-            }
-        else {
+        if constexpr (Required) {
+            std::stringstream error;
+            error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed ["
+                  << curr << "].";
+            throw InvalidConfigurationException(error.str());
+        } else {
             return std::nullopt;
         }
     }
