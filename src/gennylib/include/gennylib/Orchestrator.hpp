@@ -34,14 +34,16 @@ public:
     /**
      * Signal from an actor that it is ready to start the next phase.
      * Blocks until the phase is started when all actors report they are ready.
+     * @return the phase that has just started. This can be used to do "background"
+     * actors that
      */
-    void awaitPhaseStart();
+    int awaitPhaseStart();
 
     /**
      * Signal from an actor that it is done with the current phase.
      * Blocks until the phase is ended when all actors report they are done.
      */
-    void awaitPhaseEnd();
+    void awaitPhaseEnd(bool block=true, unsigned int morePhases = 0);
 
     /**
      * @param actors the actors that will participate in phasing.
@@ -57,6 +59,7 @@ private:
     std::condition_variable _cv;
 
     ActorVector::size_type _numActors = 0;
+    unsigned int _maxPhase = 1;
     unsigned int _phase = 0;
     unsigned int _running = 0;
     bool _errors = false;
