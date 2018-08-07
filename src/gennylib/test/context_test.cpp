@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <optional>
@@ -160,3 +161,116 @@ Actors:
         REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
     }
 }
+
+void onContext(YAML::Node& yaml, std::function<void(ActorContext&)>& op) {
+    genny::metrics::Registry metrics;
+    genny::Orchestrator orchestrator;
+
+    ActorProducer producer = [&](ActorContext& context) -> ActorVector {
+        op(context);
+        return {};
+    };
+
+    WorkloadContext {yaml, metrics, orchestrator, {
+        producer
+    }};
+}
+
+TEST_CASE("PhaseContexts constructed as expected") {
+    auto yaml = YAML::Load(R"(
+    SchemaVersion: 2018-07-01
+    MongoUri: mongodb://localhost:27017
+    Actors:
+    - Name: HelloWorld
+      Foo: Bar
+      Foo2: Bar2
+      Phases:
+      - Operation: One
+        Foo: Baz
+      - Operation: Two
+        Phase: 2 # intentionally out of order for testing
+      - Operation: Three
+        Phase: 1 # intentionally out of order for testing
+        Extra: [1,2]
+    )");
+
+    SECTION("Loads Phases") {
+        // "test of the test"
+        int calls = 0;
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            ++calls;
+        };
+        onContext(yaml, op);
+        REQUIRE(calls == 1);
+    }
+
+    SECTION("One Phase per block") {
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            const auto& ph = ctx.phases();
+            REQUIRE(ph.size() == 3);
+        };
+        onContext(yaml, op);
+    }
+    SECTION("Phase index is defaulted") {
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            REQUIRE(ctx.phases().at(0)->get<std::string>("Operation") == "One");
+            REQUIRE(ctx.phases().at(1)->get<std::string>("Operation") == "Three");
+            REQUIRE(ctx.phases().at(2)->get<std::string>("Operation") == "Two");
+        };
+        onContext(yaml, op);
+    }
+    SECTION("Phase values can override parent values") {
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            REQUIRE(ctx.phases().at(0)->get<std::string>("Foo") == "Baz");
+            REQUIRE(ctx.phases().at(1)->get<std::string>("Foo") == "Bar");
+            REQUIRE(ctx.phases().at(2)->get<std::string>("Foo") == "Bar");
+        };
+        onContext(yaml, op);
+    }
+    SECTION("Optional values also override") {
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            REQUIRE(*(ctx.phases().at(0)->get<std::string, false>("Foo")) == "Baz");
+            REQUIRE(*(ctx.phases().at(1)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo")) == "Bar");
+        };
+        onContext(yaml, op);
+    }
+    SECTION("Optional values can be fround from parent") {
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            REQUIRE(*(ctx.phases().at(0)->get<std::string, false>("Foo2")) == "Bar2");
+            REQUIRE(*(ctx.phases().at(1)->get<std::string, false>("Foo2")) == "Bar2");
+            REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo2")) == "Bar2");
+        };
+        onContext(yaml, op);
+    }
+    SECTION("Phases can have extra configs") {
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            REQUIRE(ctx.phases().at(1)->get<int>("Extra", 0) == 1);
+        };
+        onContext(yaml, op);
+    }
+    SECTION("Missing require values throw") {
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            REQUIRE_THROWS(ctx.phases().at(1)->get<int>("Extra", 100));
+        };
+        onContext(yaml, op);
+    }
+}
+
+TEST_CASE("No PhaseContexts") {
+    auto yaml = YAML::Load(R"(
+    SchemaVersion: 2018-07-01
+    MongoUri: mongodb://localhost:27017
+    Actors:
+    - Name: HelloWorld
+    )");
+
+    SECTION("Empty PhaseContexts") {
+        std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+            REQUIRE(ctx.phases().size() == 0);
+        };
+        onContext(yaml, op);
+    }
+}
+
