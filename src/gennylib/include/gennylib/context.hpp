@@ -4,6 +4,7 @@
 #include <functional>
 #include <iterator>
 #include <optional>
+#include <random>
 #include <type_traits>
 #include <vector>
 
@@ -177,7 +178,6 @@ OutV get_helper(ConfigPath& parent,
 
 }  // namespace genny::V1
 
-
 namespace genny {
 
 /**
@@ -185,7 +185,6 @@ namespace genny {
  * Call `.get()` to access top-level yaml configs.
  */
 class WorkloadContext {
-
 public:
     /**
      * @param producers
@@ -198,14 +197,20 @@ public:
         : _node{std::move(node)},
           _registry{&registry},
           _orchestrator{&orchestrator},
-          _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}} {
+          _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}},
+          _done{false} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.
         if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
             throw InvalidConfigurationException("Invalid schema version");
         }
+
+        // Default value selected from random.org, by selecting 2 random numbers
+        // between 1 and 10^9 and concatenating.
+        rng.seed(get_static<int, false>(node, "RandomSeed").value_or(269849313357703264));
         _actorContexts = constructActorContexts(_node, this);
         _actors = constructActors(producers, _actorContexts);
+        _done = true;
     }
 
     // no copy or move
@@ -283,6 +288,18 @@ public:
         return _actors;
     }
 
+    /*
+     * @return a new seeded random number generator. This should only be called during construction
+     * to ensure reproducibility.
+     */
+    std::mt19937_64 createRNG() {
+        if (_done) {
+            throw InvalidConfigurationException(
+                "Tried to create a random number generator after construction");
+        }
+        return std::mt19937_64{rng()};
+    }
+
 private:
     friend class ActorContext;
 
@@ -292,12 +309,17 @@ private:
     static std::vector<std::unique_ptr<ActorContext>> constructActorContexts(const YAML::Node&,
                                                                              WorkloadContext*);
     YAML::Node _node;
+
+    std::mt19937_64 rng;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     mongocxx::pool _clientPool;
     ActorVector _actors;
+    // Indicate that we are doing building the context. This is used to gate certain methods that
+    // should not be called after construction.
+    bool _done;
 };
 
 // For some reason need to decl this; see impl below
@@ -307,7 +329,6 @@ class PhaseContext;
  * Represents each `Actor:` block within a WorkloadConfig.
  */
 class ActorContext final {
-
 public:
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
         : _node{node}, _workload{&workloadContext}, _phaseContexts{} {
