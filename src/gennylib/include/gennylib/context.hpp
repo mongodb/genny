@@ -21,11 +21,11 @@
 #include <gennylib/metrics.hpp>
 
 /**
- * This file defines `WorkloadContext` and `ActorContext` which provide access
+ * This file defines `WorkloadContext`, `ActorContext`, and `PhaseContext` which provide access
  * to configuration values and other workload collaborators (e.g. metrics) during the construction
  * of actors.
  *
- * Please see the documentation below on WorkloadContext and ActorContext.
+ * Please see the documentation below on WorkloadContext, ActorContext, and PhaseContext.
  */
 
 
@@ -322,13 +322,18 @@ private:
     bool _done;
 };
 
+// For some reason need to decl this; see impl below
+class PhaseContext;
+
 /**
  * Represents each `Actor:` block within a WorkloadConfig.
  */
 class ActorContext final {
 public:
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
-        : _node{node}, _workload{&workloadContext} {}
+        : _node{node}, _workload{&workloadContext}, _phaseContexts{} {
+        _phaseContexts = constructPhaseContexts(node, this);
+    }
 
     // no copy or move
     ActorContext(ActorContext&) = delete;
@@ -387,7 +392,53 @@ public:
         return *this->_workload;
     }
 
-    // just convenience forwarding methods to avoid having to do context.registry().timer(...)
+    /**
+     * @return a structure representing the `Phases:` block in the Actor config.
+     * Keys are phase numbers and values are the Phase blocks associated with them.
+     * Empty if there are no configured Phases.
+     *
+     * E.g.
+     *
+     * ```yaml
+     * ...
+     * Actors:
+     * - Name: Linkbench
+     *   Type: Linkbench
+     *   Collection: links
+     *
+     *   Phases:
+     *   - Phase: 0
+     *     Operation: Insert
+     *     Repeat: 1000
+     *     # Inherits `Collection: links` from parent
+     *
+     *   - Phase: 1
+     *     Operation: Request
+     *     Duration: 1 minute
+     *     Collection: links2 # Overrides `Collection: links` from parent
+     *
+     *   - Operation: Cleanup
+     *     # inherits `Collection: links` from parent,
+     *     # and `Phase: 3` is derived based on index
+     * ```
+     *
+     * This would result in 3 `PhaseContext` structures. Keys are inherited from the
+     * parent (Actor-level) unless overridden, and the `Phase` key is defaulted from
+     * the block's index if not otherwise specified.
+     *
+     * *Note* that Phases are "opt-in" to all Actors and may represent phase-specific
+     * configuration in other mechanisms if desired. The `Phases:` structure and
+     * related PhaseContext type are purely for conventional convenience.
+     */
+    const std::unordered_map<int, std::unique_ptr<PhaseContext>>& phases() const {
+        return _phaseContexts;
+    };
+
+    mongocxx::pool::entry client() {
+        return _workload->_clientPool.acquire();
+    }
+
+    // <Forwarding to delegates>
 
     /**
      * Convenience method for creating a metrics::Timer.
@@ -413,8 +464,6 @@ public:
         return this->_workload->_registry->counter(std::forward<Args>(args)...);
     }
 
-    // Convenience forwarders for Orchestrator
-
     auto morePhases() {
         return this->_workload->_orchestrator->morePhases();
     }
@@ -434,16 +483,60 @@ public:
         return this->_workload->_orchestrator->abort();
     }
 
-    mongocxx::pool::entry client() {
-        return _workload->_clientPool.acquire();
-    }
+    // </Forwarding to delegates>
+
+private:
+    static std::unordered_map<int, std::unique_ptr<PhaseContext>> constructPhaseContexts(
+        const YAML::Node&, ActorContext*);
+    YAML::Node _node;
+    WorkloadContext* _workload;
+    std::unordered_map<int, std::unique_ptr<PhaseContext>> _phaseContexts;
+};
+
+
+class PhaseContext final {
+
+public:
+    PhaseContext(const YAML::Node& node, const ActorContext& actorContext)
+        : _node{node}, _actor{&actorContext} {}
+
+    // no copy or move
+    PhaseContext(PhaseContext&) = delete;
+    void operator=(PhaseContext&) = delete;
+    PhaseContext(PhaseContext&&) = default;
+    void operator=(PhaseContext&&) = delete;
+
+    /**
+     * @return the value associated with the given key. If not specified
+     * directly in this `Phases` block, then the value from the parent `Actor`
+     * context is used, if present.
+     */
+    template <typename T = YAML::Node,
+              bool Required = true,
+              class OutV = typename V1::MaybeOptional<T, Required>::type,
+              class... Args>
+    OutV get(Args&&... args) const {
+        V1::ConfigPath p;
+        // try to extract from own node
+        auto fromSelf = V1::get_helper<T, YAML::Node, false>(p, _node, std::forward<Args>(args)...);
+        if (fromSelf) {
+            if constexpr (Required) {
+                // unwrap from optional<T>
+                return *fromSelf;
+            } else {
+                // don't unwrap, return the optional<T> itself
+                return fromSelf;
+            }
+        }
+
+        // fallback to actor node
+        return this->_actor->get<T, Required>(std::forward<Args>(args)...);
+    };
 
 private:
     YAML::Node _node;
-    WorkloadContext* _workload;
+    const ActorContext* _actor;
 };
-
-// using ActorContext= WorkloadContext::ActorContext;
 
 }  // namespace genny
 
