@@ -22,7 +22,7 @@ genny::ActorVector genny::WorkloadContext::constructActors(
     return actors;
 }
 
-// Helper method to convert Phases:[...] to ActorPhaseContexts
+// Helper method to convert Phases:[...] to PhaseContexts
 std::unordered_map<int, std::unique_ptr<genny::PhaseContext>>
 genny::ActorContext::constructPhaseContexts(const YAML::Node&, genny::ActorContext* actorContext) {
     std::unordered_map<int, std::unique_ptr<genny::PhaseContext>> out;
