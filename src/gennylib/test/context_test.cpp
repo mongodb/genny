@@ -232,11 +232,12 @@ TEST_CASE("PhaseContexts constructed as expected") {
             REQUIRE(*(ctx.phases().at(0)->get<std::string, false>("Foo")) == "Baz");
             REQUIRE(*(ctx.phases().at(1)->get<std::string, false>("Foo")) == "Bar");
             REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo")) == "Bar");
+            // call twice just for funsies
             REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo")) == "Bar");
         };
         onContext(yaml, op);
     }
-    SECTION("Optional values can be fround from parent") {
+    SECTION("Optional values can be found from parent") {
         std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
             REQUIRE(*(ctx.phases().at(0)->get<std::string, false>("Foo2")) == "Bar2");
             REQUIRE(*(ctx.phases().at(1)->get<std::string, false>("Foo2")) == "Bar2");
