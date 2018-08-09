@@ -146,7 +146,7 @@ public:
         }
         if (_minDuration && _minDuration->count() < 0) {
             std::stringstream str;
-            str << "Need non-negative duration. Gave " << _minDuration->count() << "milliseconds";
+            str << "Need non-negative duration. Gave " << _minDuration->count() << " milliseconds";
             throw InvalidConfigurationException(str.str());
         }
     }
