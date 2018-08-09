@@ -14,6 +14,6 @@ Actors:
     Database: "test"
     Phases:
       - Collection: "inserts"
-        Document: '{"a":"b"}'
+        Document: {"a":"b"}
       - Collection: "inserts"
-        Document: '{"b":"c"}'
+        Document: {"b":"c"}
