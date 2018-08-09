@@ -9,7 +9,7 @@ namespace {
 
 std::thread start(Orchestrator& o, int phase) {
     return std::thread{[&o, phase]() {
-        o.awaitPhaseStart();
+        REQUIRE(o.awaitPhaseStart() == phase);
         REQUIRE(o.currentPhaseNumber() == phase);
     }};
 }
