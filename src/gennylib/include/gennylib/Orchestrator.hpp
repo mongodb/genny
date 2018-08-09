@@ -6,8 +6,6 @@
 #include <mutex>
 #include <thread>
 
-#include <gennylib/ActorVector.hpp>
-
 namespace genny {
 
 /**
@@ -34,10 +32,9 @@ public:
     /**
      * Signal from an actor that it is ready to start the next phase.
      * Blocks until the phase is started when all actors report they are ready.
-     * @return the phase that has just started. This can be used to do "background"
-     * actors that
+     * @return the phase that has just started.
      */
-    int awaitPhaseStart();
+    int awaitPhaseStart(bool block=true, int callbacks = 1);
 
     /**
      * Signal from an actor that it is done with the current phase.
@@ -62,14 +59,9 @@ public:
     // TODO: should Orchestrator intsead be a type of Iterator?
     // for (auto phase : context.orchestratorLoop()) { ... } with
     // orchestratorLoop taking params to indicate blocking-ness or something?
-    void awaitPhaseEnd(bool block = true, unsigned int morePhases = 0);
+    void awaitPhaseEnd(bool block = true, unsigned int morePhases = 0, int callbacks=1);
 
-    /**
-     * @param actors the actors that will participate in phasing.
-     * The Orchestrator needs to know which actors will be calling
-     * awaitPhaseStart() etc so it can synchronize flow-control properly.
-     */
-    void setActors(const genny::ActorVector& actors);
+    void registerCallbacks(int callbacks);
 
     void abort();
 
@@ -77,7 +69,7 @@ private:
     mutable std::mutex _lock;
     std::condition_variable _cv;
 
-    ActorVector::size_type _numActors = 0;
+    int _numActors = 0;
     unsigned int _maxPhase = 1;
     unsigned int _phase = 0;
     unsigned int _running = 0;
