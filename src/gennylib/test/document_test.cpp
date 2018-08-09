@@ -63,4 +63,26 @@ TEST_CASE("Value Generators", "[generators]") {
         refdoc << "test";
         viewable_eq_viewable(refdoc, result.view());
     }
+    SECTION("RandomIntGenerator") {
+        auto genYaml = YAML::Load(R"yaml(
+    min: 50
+    max: 60
+)yaml");
+        auto generator = RandomIntGenerator(genYaml);
+        auto result = generator.generate(rng);
+        auto elem = result.view()[0];
+        REQUIRE(elem.type() == bsoncxx::type::k_int64);
+        REQUIRE(elem.get_int64().value >= 50);
+        REQUIRE(elem.get_int64().value < 60);
+    }
+    SECTION("IntOrValue") {
+        SECTION("YamlInt") {
+            auto genYaml = YAML::Load(R"yaml(
+        value: 1
+)yaml");
+            auto intOrValue = IntOrValue(genYaml);
+            REQUIRE(intOrValue.getInt(rng) == 1);
+            REQUIRE(intOrValue.getInt(rng) == 1);
+        }
+    }
 }

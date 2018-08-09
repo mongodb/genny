@@ -40,4 +40,4 @@ templateDocument::templateDocument(YAML::Node& node) : overrideDocument() {
         override[key] = makeUniqueValueGenerator(yamlOverride, type);
     }
 }
-}
+}  // namespace mwg
