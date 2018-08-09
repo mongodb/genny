@@ -16,6 +16,10 @@ add_library(gennylib SHARED
 
     include/gennylib/InvalidConfigurationException.hpp
 
+    include/gennylib/parse_util.hpp
+    src/parse_util.cpp
+    include/gennylib/generators.hpp
+    src/generators.cpp
 
     include/gennylib/Actor.hpp
     include/gennylib/ActorProducer.hpp
