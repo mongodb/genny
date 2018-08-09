@@ -90,6 +90,39 @@ private:
     std::unique_ptr<ValueGenerator> mean;  // for poisson
 };
 
+// default alphabet
+constexpr char fastAlphaNum[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/";
+constexpr int fastAlphaNumLength = 64;
+
+class FastRandomStringGenerator : public ValueGenerator {
+public:
+    FastRandomStringGenerator(const YAML::Node&);
+    virtual bsoncxx::array::value generate(std::mt19937_64&) override;
+
+private:
+    IntOrValue length;
+};
+
+// default alphabet
+static const char alphaNum[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/";
+static const int alphaNumLength = 64;
+
+class RandomStringGenerator : public ValueGenerator {
+public:
+    RandomStringGenerator(YAML::Node&);
+    virtual bsoncxx::array::value generate(std::mt19937_64&) override;
+
+private:
+    std::string alphabet;
+    IntOrValue length;
+};
+
 class document {
 public:
     virtual ~document(){};

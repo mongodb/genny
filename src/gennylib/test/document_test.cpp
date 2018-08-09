@@ -59,6 +59,15 @@ TEST_CASE("Documents are created", "[documents]") {
         REQUIRE(elem.get_int64().value >= 50);
         REQUIRE(elem.get_int64().value < 60);
     }
+    SECTION("Random string") {
+        auto doc = makeDoc(YAML::Load(R"yaml(
+      string: {$randomstring: {length : 15}}
+    )yaml"));
+
+        auto elem = doc->view(mydoc, rng)["string"];
+        REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+        REQUIRE(elem.get_utf8().value.length() == 15);
+    }
 }
 
 TEST_CASE("Value Generators", "[generators]") {
@@ -95,6 +104,71 @@ TEST_CASE("Value Generators", "[generators]") {
             auto intOrValue = IntOrValue(genYaml);
             REQUIRE(intOrValue.getInt(rng) == 1);
             REQUIRE(intOrValue.getInt(rng) == 1);
+        }
+    }
+    SECTION("RandomString") {
+        SECTION("default") {
+            auto genYaml = YAML::Load(R"yaml(
+)yaml");
+            auto generator = RandomStringGenerator(genYaml);
+            auto result = generator.generate(rng);
+            auto elem = result.view()[0];
+            REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+            auto str = elem.get_utf8().value;
+            INFO("Generated string is " << str);
+            REQUIRE(str.length() == 10);
+        }
+        SECTION("Length") {
+            auto genYaml = YAML::Load(R"yaml(
+        length: 15
+)yaml");
+            auto generator = RandomStringGenerator(genYaml);
+            auto result = generator.generate(rng);
+            auto elem = result.view()[0];
+            REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+            auto str = elem.get_utf8().value;
+            INFO("Generated string is " << str);
+            REQUIRE(str.length() == 15);
+        }
+        SECTION("Alphabet") {
+            auto genYaml = YAML::Load(R"yaml(
+        alphabet: a
+)yaml");
+            auto generator = RandomStringGenerator(genYaml);
+            auto result = generator.generate(rng);
+            auto elem = result.view()[0];
+            REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+            auto str = elem.get_utf8().value;
+            INFO("Generated string is " << str);
+            REQUIRE(str.length() == 10);
+            REQUIRE(str[0] == 'a');
+            REQUIRE(str[1] == 'a');
+            REQUIRE(str[9] == 'a');
+        }
+    }
+    SECTION("FastRandomString") {
+        SECTION("default") {
+            auto genYaml = YAML::Load(R"yaml(
+)yaml");
+            auto generator = FastRandomStringGenerator(genYaml);
+            auto result = generator.generate(rng);
+            auto elem = result.view()[0];
+            REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+            auto str = elem.get_utf8().value;
+            INFO("Generated string is " << str);
+            REQUIRE(str.length() == 10);
+        }
+        SECTION("Length") {
+            auto genYaml = YAML::Load(R"yaml(
+        length: 15
+)yaml");
+            auto generator = FastRandomStringGenerator(genYaml);
+            auto result = generator.generate(rng);
+            auto elem = result.view()[0];
+            REQUIRE(elem.type() == bsoncxx::type::k_utf8);
+            auto str = elem.get_utf8().value;
+            INFO("Generated string is " << str);
+            REQUIRE(str.length() == 15);
         }
     }
 }

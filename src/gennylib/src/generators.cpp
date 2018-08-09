@@ -198,8 +198,8 @@ const std::set<std::string> getGeneratorTypes() {
         // "$increment",
         // "$multiply",
         "$randomint",
-        // "$fastrandomstring",
-        // "$randomstring",
+        "$fastrandomstring",
+        "$randomstring",
         // "$useresult",
         "$useval",
         // "$usevar"});
@@ -222,10 +222,11 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type) {
     // } else
     if (type == "randomint") {
         return new RandomIntGenerator(yamlNode);
-    }  // else if (type == "randomstring") {
-    //     return new RandomStringGenerator(yamlNode);
-    // } else if (type == "fastrandomstring") {
-    //     return new FastRandomStringGenerator(yamlNode);
+    } else if (type == "randomstring") {
+        return new RandomStringGenerator(yamlNode);
+    } else if (type == "fastrandomstring") {
+        return new FastRandomStringGenerator(yamlNode);
+    }
     // } else if (type == "useresult") {
     //     return new UseResultGenerator(yamlNode);
     else if (type == "useval") {
@@ -551,4 +552,55 @@ IntOrValue::IntOrValue(YAML::Node yamlNode) : myInt(0), myGenerator(nullptr) {
         myGenerator = makeUniqueValueGenerator(yamlNode);
     }
 }
+FastRandomStringGenerator::FastRandomStringGenerator(const YAML::Node& node)
+    : ValueGenerator(node) {
+    if (node["length"]) {
+        length = IntOrValue(node["length"]);
+    } else {
+        length = IntOrValue(10);
+    }
+}
+bsoncxx::array::value FastRandomStringGenerator::generate(std::mt19937_64& rng) {
+    std::string str;
+    auto thisLength = length.getInt(rng);
+    str.resize(thisLength);
+    auto randomnum = rng();
+    int bits = 64;
+    for (int i = 0; i < thisLength; i++) {
+        if (bits < 6) {
+            bits = 64;
+            randomnum = rng();
+        }
+        str[i] = fastAlphaNum[(randomnum & 0x2f) % fastAlphaNumLength];
+        randomnum >>= 6;
+        bits -= 6;
+    }
+    return (bsoncxx::builder::stream::array{} << str << bsoncxx::builder::stream::finalize);
+}
+
+RandomStringGenerator::RandomStringGenerator(YAML::Node& node) : ValueGenerator(node) {
+    if (node["length"]) {
+        length = IntOrValue(node["length"]);
+    } else {
+        length = IntOrValue(10);
+    }
+    if (node["alphabet"]) {
+        alphabet = node["alphabet"].Scalar();
+    } else {
+        alphabet = alphaNum;
+    }
+}
+bsoncxx::array::value RandomStringGenerator::generate(std::mt19937_64& rng) {
+    std::string str;
+    auto alphabetLength = alphabet.size();
+    uniform_int_distribution<int> distribution(0, alphabetLength - 1);
+    auto thisLength = length.getInt(rng);
+    str.resize(thisLength);
+    for (int i = 0; i < thisLength; i++) {
+        str[i] = alphabet[distribution(rng)];
+    }
+    return (bsoncxx::builder::stream::array{} << str << bsoncxx::builder::stream::finalize);
+}
+
+
 }  // namespace genny
