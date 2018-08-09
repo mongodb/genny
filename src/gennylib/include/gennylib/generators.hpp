@@ -14,7 +14,7 @@ class ValueGenerator;
 
 class document {
 public:
-  virtual ~document() = 0;
+  virtual ~document(){};
   virtual bsoncxx::document::view view(bsoncxx::builder::stream::document &doc,
                                        std::mt19937_64 &) {
     return doc.view();
