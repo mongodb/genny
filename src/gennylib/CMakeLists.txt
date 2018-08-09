@@ -86,6 +86,7 @@ add_executable(test_gennylib
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
+    test/document_test.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
 )
 

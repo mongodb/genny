@@ -51,6 +51,10 @@ private:
   void applyOverrideLevel(bsoncxx::builder::stream::document &,
                           bsoncxx::document::view, string, std::mt19937_64 &);
 };
+
+// parse a YAML Node and make a document of the correct type
+unique_ptr<document> makeDoc(YAML::Node &&);
+
 } // namespace genny
 
 #endif // HEADER_E6E05F14_BE21_4A9B_822D_FFD669CFB1B4_INCLUDED
