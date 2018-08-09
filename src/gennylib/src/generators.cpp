@@ -53,20 +53,21 @@ unique_ptr<document> makeDoc(const YAML::Node node) {
 
 // This returns a set of the value generator types with $ prefixes
 const std::set<std::string> getGeneratorTypes() {
-    return (std::set<std::string>{});  // "$add",
-                                       // "$choose",
-                                       // "$concatenate",
-                                       // "$date",
-                                       // "$increment",
-                                       // "$multiply",
-                                       // "$randomint",
-                                       // "$fastrandomstring",
-                                       // "$randomstring",
-                                       // "$useresult",
-                                       // "$useval",
-                                       // "$usevar"});
+    return (std::set<std::string>{
+        // "$add",
+        // "$choose",
+        // "$concatenate",
+        // "$date",
+        // "$increment",
+        // "$multiply",
+        "$randomint",
+        // "$fastrandomstring",
+        // "$randomstring",
+        // "$useresult",
+        "$useval",
+        // "$usevar"});
+    });
 }
-
 
 ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type) {
     // if (type == "add") {
@@ -81,17 +82,19 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type) {
     //     return new IncrementGenerator(yamlNode);
     // } else if (type == "multiply") {
     //     return new MultiplyGenerator(yamlNode);
-    // } else if (type == "randomint") {
-    //     return new RandomIntGenerator(yamlNode);
-    // } else if (type == "randomstring") {
+    // } else
+    if (type == "randomint") {
+        return new RandomIntGenerator(yamlNode);
+    }  // else if (type == "randomstring") {
     //     return new RandomStringGenerator(yamlNode);
     // } else if (type == "fastrandomstring") {
     //     return new FastRandomStringGenerator(yamlNode);
     // } else if (type == "useresult") {
     //     return new UseResultGenerator(yamlNode);
-    // } else if (type == "useval") {
-    //     return new UseValueGenerator(yamlNode);
-    // } else if (type == "usevar") {
+    else if (type == "useval") {
+        return new UseValueGenerator(yamlNode);
+    }
+    // else if (type == "usevar") {
     //     return new UseVarGenerator(yamlNode);
     // }
     BOOST_LOG_TRIVIAL(fatal) << "In makeValueGenerator and don't know how to handle type " << type;
