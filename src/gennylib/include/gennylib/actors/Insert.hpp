@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <random>
 
 #include <mongocxx/pool.hpp>
 
@@ -15,23 +16,24 @@ namespace genny::actor {
 class Insert : public genny::PhasedActor {
 
 public:
-    explicit Insert(ActorContext& context, const unsigned int thread);
+  explicit Insert(ActorContext &context, const unsigned int thread);
 
-    ~Insert() = default;
+  ~Insert() = default;
 
-    static ActorVector producer(ActorContext& context);
+  static ActorVector producer(ActorContext &context);
 
 private:
-    struct Config;
+  struct Config;
 
-    void doPhase(int phase);
-
-    metrics::Timer _outputTimer;
-    metrics::Counter _operations;
-    mongocxx::pool::entry _client;
-    std::unique_ptr<Config> _config;
+  void doPhase(int phase);
+  // std::mt19937_64 _rng;
+  const ActorVector &_rng;
+  metrics::Timer _outputTimer;
+  metrics::Counter _operations;
+  mongocxx::pool::entry _client;
+  std::unique_ptr<Config> _config;
 };
 
-}  // namespace genny::actor
+} // namespace genny::actor
 
-#endif  // HEADER_C7F4E568_590C_4D4D_B46F_766447E6AE31_INCLUDED
+#endif // HEADER_C7F4E568_590C_4D4D_B46F_766447E6AE31_INCLUDED

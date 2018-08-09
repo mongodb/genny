@@ -24,7 +24,7 @@ public:
 class bsonDocument : public document {
 public:
   bsonDocument();
-  bsonDocument(YAML::Node &);
+  bsonDocument(const YAML::Node);
 
   void setDoc(bsoncxx::document::value value) { doc = value; }
   virtual bsoncxx::document::view view(bsoncxx::builder::stream::document &,
@@ -37,7 +37,7 @@ private:
 class templateDocument : public document {
 public:
   templateDocument();
-  templateDocument(YAML::Node &);
+  templateDocument(const YAML::Node);
   virtual bsoncxx::document::view view(bsoncxx::builder::stream::document &,
                                        std::mt19937_64 &) override;
 
@@ -53,7 +53,7 @@ private:
 };
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<document> makeDoc(YAML::Node &&);
+unique_ptr<document> makeDoc(const YAML::Node);
 
 } // namespace genny
 

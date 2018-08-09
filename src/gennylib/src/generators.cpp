@@ -12,7 +12,7 @@ bsonDocument::bsonDocument() {
         << bsoncxx::builder::stream::finalize;
 }
 
-bsonDocument::bsonDocument(YAML::Node &node) {
+bsonDocument::bsonDocument(const YAML::Node node) {
   if (!node) {
     BOOST_LOG_TRIVIAL(info) << "bsonDocument constructor using empty document";
   } else if (!node.IsMap()) {
@@ -31,7 +31,7 @@ bsoncxx::document::view bsonDocument::view(bsoncxx::builder::stream::document &,
 }
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<document> makeDoc(YAML::Node &&node) {
+unique_ptr<document> makeDoc(const YAML::Node node) {
   if (!node) { // empty document should be bsonDocument
     return unique_ptr<document>{new bsonDocument(node)};
   } else if (!node["type"] or node["type"].Scalar() == "bson") {
