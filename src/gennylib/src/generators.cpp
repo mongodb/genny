@@ -13,49 +13,49 @@ using bsoncxx::builder::stream::open_document;
 
 namespace genny {
 
-bsonDocument::bsonDocument() {
+BsonDocument::BsonDocument() {
     doc = bsoncxx::builder::stream::document{} << bsoncxx::builder::stream::finalize;
 }
 
-bsonDocument::bsonDocument(const YAML::Node node) {
+BsonDocument::BsonDocument(const YAML::Node node) {
     if (!node) {
-        BOOST_LOG_TRIVIAL(info) << "bsonDocument constructor using empty document";
+        BOOST_LOG_TRIVIAL(info) << "BsonDocument constructor using empty document";
     } else if (!node.IsMap()) {
-        BOOST_LOG_TRIVIAL(fatal) << "Not map in bsonDocument constructor";
+        BOOST_LOG_TRIVIAL(fatal) << "Not map in BsonDocument constructor";
         exit(EXIT_FAILURE);
     } else {
-        BOOST_LOG_TRIVIAL(trace) << "In bsonDocument constructor";
+        BOOST_LOG_TRIVIAL(trace) << "In BsonDocument constructor";
         doc = parseMap(node);
-        BOOST_LOG_TRIVIAL(trace) << "Parsed map in bsonDocument constructor";
+        BOOST_LOG_TRIVIAL(trace) << "Parsed map in BsonDocument constructor";
     }
 }
 
-bsoncxx::document::view bsonDocument::view(bsoncxx::builder::stream::document&, std::mt19937_64&) {
+bsoncxx::document::view BsonDocument::view(bsoncxx::builder::stream::document&, std::mt19937_64&) {
     return doc->view();
 }
 
-templateDocument::templateDocument(YAML::Node node) : document() {
+TemplateDocument::TemplateDocument(YAML::Node node) : Document() {
     if (!node) {
-        BOOST_LOG_TRIVIAL(fatal) << "templateDocument constructor and !node";
+        BOOST_LOG_TRIVIAL(fatal) << "TemplateDocument constructor and !node";
         exit(EXIT_FAILURE);
     }
     if (!node.IsMap()) {
-        BOOST_LOG_TRIVIAL(fatal) << "Not map in templateDocument constructor";
+        BOOST_LOG_TRIVIAL(fatal) << "Not map in TemplateDocument constructor";
         exit(EXIT_FAILURE);
     }
 
     auto templates = getGeneratorTypes();
     std::vector<std::tuple<std::string, std::string, YAML::Node>> overrides;
 
-    BOOST_LOG_TRIVIAL(trace) << "In templateDocument constructor";
+    BOOST_LOG_TRIVIAL(trace) << "In TemplateDocument constructor";
     doc.setDoc(parseMap(node, templates, "", overrides));
     BOOST_LOG_TRIVIAL(trace)
-        << "In templateDocument constructor. Parsed the document. About to deal with overrides";
+        << "In TemplateDocument constructor. Parsed the document. About to deal with overrides";
     for (auto entry : overrides) {
         auto key = std::get<0>(entry);
         auto typeString = std::get<1>(entry);
         YAML::Node yamlOverride = std::get<2>(entry);
-        BOOST_LOG_TRIVIAL(trace) << "In templateDocument constructor. Dealing with an override for "
+        BOOST_LOG_TRIVIAL(trace) << "In TemplateDocument constructor. Dealing with an override for "
                                  << key;
 
         auto type = typeString.substr(1, typeString.length());
@@ -65,7 +65,7 @@ templateDocument::templateDocument(YAML::Node node) : document() {
     }
 }
 
-void templateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& output,
+void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& output,
                                           bsoncxx::document::view doc,
                                           string prefix,
                                           std::mt19937_64& rng) {
@@ -151,7 +151,7 @@ void templateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     }
 }
 
-bsoncxx::document::view templateDocument::view(bsoncxx::builder::stream::document& output,
+bsoncxx::document::view TemplateDocument::view(bsoncxx::builder::stream::document& output,
                                                std::mt19937_64& rng) {
     // Need to iterate through the doc, and for any field see if it
     // matches. Override the value if it does.
@@ -168,73 +168,28 @@ bsoncxx::document::view templateDocument::view(bsoncxx::builder::stream::documen
 
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<document> makeDoc(const YAML::Node node) {
-    if (!node) {  // empty document should be bsonDocument
-        return unique_ptr<document>{new bsonDocument(node)};
-    } else  // if (!node["type"] or node["type"].Scalar() == "bson") {
-        return unique_ptr<document>{new templateDocument(node)};
-    // } else if (!node["type"] or node["type"].Scalar() == "templating") {
-    //   return unique_ptr<document>{new templateDocument(node)};
-    // } else if (node["type"].Scalar() == "bson") {
-    //   return unique_ptr<document>{new bsonDocument(node)};
-    // } else if (node["type"].Scalar() == "override") {
-    //   return unique_ptr<document>{new overrideDocument(node)};
-    // } else if (node["type"].Scalar() == "append") {
-    //   return unique_ptr<document>{new AppendDocument(node)};
-    // } else {
-    //   BOOST_LOG_TRIVIAL(fatal)
-    //       << "in makeDoc and type exists, and isn't bson or override";
-    //   exit(EXIT_FAILURE);
-    // }
+unique_ptr<Document> makeDoc(const YAML::Node node) {
+    if (!node) {  // empty document should be BsonDocument
+        return unique_ptr<Document>{new BsonDocument(node)};
+    } else
+        return unique_ptr<Document>{new TemplateDocument(node)};
 };
 
 // This returns a set of the value generator types with $ prefixes
 const std::set<std::string> getGeneratorTypes() {
-    return (std::set<std::string>{
-        // "$add",
-        // "$choose",
-        // "$concatenate",
-        // "$date",
-        // "$increment",
-        // "$multiply",
-        "$randomint",
-        "$fastrandomstring",
-        "$randomstring",
-        // "$useresult",
-        "$useval",
-        // "$usevar"});
-    });
+    return (std::set<std::string>{"$randomint", "$fastrandomstring", "$randomstring", "$useval"});
 }
 
 ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type) {
-    // if (type == "add") {
-    //     return new AddGenerator(yamlNode);
-    // } else if (type == "choose") {
-    //     return new ChooseGenerator(yamlNode);
-    // } else if (type == "concatenate") {
-    //     return new ConcatenateGenerator(yamlNode);
-    // } else if (type == "date") {
-    //     return new DateGenerator(yamlNode);
-    // } else if (type == "increment") {
-    //     return new IncrementGenerator(yamlNode);
-    // } else if (type == "multiply") {
-    //     return new MultiplyGenerator(yamlNode);
-    // } else
     if (type == "randomint") {
         return new RandomIntGenerator(yamlNode);
     } else if (type == "randomstring") {
         return new RandomStringGenerator(yamlNode);
     } else if (type == "fastrandomstring") {
         return new FastRandomStringGenerator(yamlNode);
-    }
-    // } else if (type == "useresult") {
-    //     return new UseResultGenerator(yamlNode);
-    else if (type == "useval") {
+    } else if (type == "useval") {
         return new UseValueGenerator(yamlNode);
     }
-    // else if (type == "usevar") {
-    //     return new UseVarGenerator(yamlNode);
-    // }
     BOOST_LOG_TRIVIAL(fatal) << "In makeValueGenerator and don't know how to handle type " << type;
     exit(EXIT_FAILURE);
 }

@@ -36,7 +36,7 @@ TEST_CASE("Documents are created", "[documents]") {
     rng.seed(269849313357703264);
 
     SECTION("Simple bson") {
-        unique_ptr<document> doc = makeDoc(YAML::Load("{x: a}"));
+        unique_ptr<Document> doc = makeDoc(YAML::Load("{x: a}"));
 
         auto view = doc->view(mydoc, rng);
 

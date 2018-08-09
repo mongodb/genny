@@ -15,7 +15,7 @@ struct genny::actor::Insert::Config {
                     const mongocxx::database& db)
             : collection{db[collection_name]}, json_document{makeDoc(document_node)} {}
         mongocxx::collection collection;
-        std::unique_ptr<document> json_document;
+        std::unique_ptr<Document> json_document;
     };
 
     Config(const genny::ActorContext& context, const mongocxx::database& db) {

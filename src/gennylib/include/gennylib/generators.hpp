@@ -123,19 +123,19 @@ private:
     IntOrValue length;
 };
 
-class document {
+class Document {
 public:
-    virtual ~document(){};
+    virtual ~Document(){};
     virtual bsoncxx::document::view view(bsoncxx::builder::stream::document& doc,
                                          std::mt19937_64&) {
         return doc.view();
     };
 };
 
-class bsonDocument : public document {
+class BsonDocument : public Document {
 public:
-    bsonDocument();
-    bsonDocument(const YAML::Node);
+    BsonDocument();
+    BsonDocument(const YAML::Node);
 
     void setDoc(bsoncxx::document::value value) {
         doc = value;
@@ -147,16 +147,16 @@ private:
     std::optional<bsoncxx::document::value> doc;
 };
 
-class templateDocument : public document {
+class TemplateDocument : public Document {
 public:
-    templateDocument();
-    templateDocument(const YAML::Node);
+    TemplateDocument();
+    TemplateDocument(const YAML::Node);
     virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&,
                                          std::mt19937_64&) override;
 
 protected:
     // The document to override
-    bsonDocument doc;
+    BsonDocument doc;
     unordered_map<string, unique_ptr<ValueGenerator>> override;
 
 private:
@@ -168,7 +168,7 @@ private:
 };
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<document> makeDoc(const YAML::Node);
+unique_ptr<Document> makeDoc(const YAML::Node);
 
 }  // namespace genny
 
