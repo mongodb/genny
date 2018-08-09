@@ -47,6 +47,18 @@ TEST_CASE("Documents are created", "[documents]") {
         viewable_eq_viewable(refdoc, view);
         // Test that the document is bson and has the correct view.
     }
+    SECTION("Random Int") {
+        auto doc = makeDoc(YAML::Load(R"yaml(
+        x :
+          y : b
+        z : {$randomint: {min: 50, max: 60}}
+    )yaml"));
+        // Test that the document is an override document, and gives the right values.
+        auto elem = doc->view(mydoc, rng)["z"];
+        REQUIRE(elem.type() == bsoncxx::type::k_int64);
+        REQUIRE(elem.get_int64().value >= 50);
+        REQUIRE(elem.get_int64().value < 60);
+    }
 }
 
 TEST_CASE("Value Generators", "[generators]") {

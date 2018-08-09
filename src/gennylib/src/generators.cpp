@@ -172,7 +172,7 @@ unique_ptr<document> makeDoc(const YAML::Node node) {
     if (!node) {  // empty document should be bsonDocument
         return unique_ptr<document>{new bsonDocument(node)};
     } else  // if (!node["type"] or node["type"].Scalar() == "bson") {
-        return unique_ptr<document>{new bsonDocument(node)};
+        return unique_ptr<document>{new templateDocument(node)};
     // } else if (!node["type"] or node["type"].Scalar() == "templating") {
     //   return unique_ptr<document>{new templateDocument(node)};
     // } else if (node["type"].Scalar() == "bson") {
