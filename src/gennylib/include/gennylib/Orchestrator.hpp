@@ -14,6 +14,8 @@ namespace genny {
  */
 class Orchestrator {
 
+    struct PhaseIterator;
+
 public:
     explicit Orchestrator() = default;
 
@@ -65,7 +67,40 @@ public:
 
     void abort();
 
+    struct Loop {
+        Orchestrator::PhaseIterator begin();
+        Orchestrator::PhaseIterator end();
+
+        Loop(Orchestrator &_orchestrator, const int _start, const int _end, const bool _block);
+
+        Orchestrator& _orchestrator;
+        const int _start;
+        const int _end;
+        const bool _block;
+    };
+
+    Loop loop(int start, int end, bool block) {
+        return Loop{*this, start, end, block};
+    }
+
 private:
+    struct PhaseIterator {
+        operator int() const;
+        int operator*() const;
+        void operator++();
+        bool operator==(const PhaseIterator&) const;
+
+        PhaseIterator(Orchestrator &_orchestrator, const bool _isEnd, const int _beginPhase, const int _endPhase,
+                      bool _block);
+
+        Orchestrator& _orchestrator;
+        const bool _isEnd;
+        const int _beginPhase;
+        const int _endPhase;
+        bool _block;
+    };
+
+
     mutable std::mutex _lock;
     std::condition_variable _cv;
 

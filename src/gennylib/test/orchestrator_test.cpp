@@ -23,6 +23,18 @@ std::thread end(Orchestrator& o, int phase) {
 
 }  // namespace
 
+TEST_CASE("Orchestrator Looping") {
+    auto o = Orchestrator{};
+    o.registerCallbacks(5);
+
+    int i = 0;
+    for(auto p : o.loop(0, 0, true)) {
+        // TODO: not working
+        ++i;
+    }
+    REQUIRE(i == 2);
+}
+
 TEST_CASE("Orchestrator") {
     auto o = Orchestrator{};
     o.registerCallbacks(2);
