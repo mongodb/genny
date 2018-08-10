@@ -9,6 +9,10 @@ using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
 
+// This returns a set of the value generator types with $ prefixes
+const std::set<std::string> getGeneratorTypes() {
+    return (std::set<std::string>{"$randomint", "$fastrandomstring", "$randomstring", "$useval"});
+}
 BsonDocument::BsonDocument() {
     doc = bsoncxx::builder::stream::document{} << bsoncxx::builder::stream::finalize;
 }

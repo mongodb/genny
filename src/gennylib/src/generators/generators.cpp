@@ -16,10 +16,5 @@ std::unique_ptr<DocumentGenerator> makeDoc(const YAML::Node node, std::mt19937_6
         return std::unique_ptr<DocumentGenerator>{new TemplateDocument(node, rng)};
 };
 
-// This returns a set of the value generator types with $ prefixes
-const std::set<std::string> getGeneratorTypes() {
-    return (std::set<std::string>{"$randomint", "$fastrandomstring", "$randomstring", "$useval"});
-}
-
 
 }  // namespace genny::generators
