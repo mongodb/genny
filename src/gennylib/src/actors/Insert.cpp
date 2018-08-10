@@ -12,16 +12,17 @@ struct genny::actor::Insert::Config {
     struct PhaseConfig {
         PhaseConfig(const std::string collection_name,
                     const YAML::Node document_node,
+                    std::mt19937_64& rng,
                     const mongocxx::database& db)
-            : collection{db[collection_name]}, json_document{makeDoc(document_node)} {}
+            : collection{db[collection_name]}, json_document{makeDoc(document_node, rng)} {}
         mongocxx::collection collection;
         std::unique_ptr<Document> json_document;
     };
 
-    Config(const genny::ActorContext& context, const mongocxx::database& db) {
+    Config(const genny::ActorContext& context, const mongocxx::database& db, std::mt19937_64& rng) {
         for (const auto& node : context.get("Phases")) {
             const auto& collection_name = node["Collection"].as<std::string>();
-            phases.emplace_back(collection_name, node["Document"], db);
+            phases.emplace_back(collection_name, node["Document"], rng, db);
         }
     }
     std::vector<PhaseConfig> phases;
@@ -31,7 +32,7 @@ void genny::actor::Insert::doPhase(int currentPhase) {
     auto op = _outputTimer.raii();
     auto& phase = _config->phases[currentPhase];
     bsoncxx::builder::stream::document mydoc{};
-    auto view = phase.json_document->view(mydoc, _rng);
+    auto view = phase.json_document->view(mydoc);
     BOOST_LOG_TRIVIAL(info) << _fullName << " Inserting " << bsoncxx::to_json(view);
     phase.collection.insert_one(view);
     _operations.incr();
@@ -43,8 +44,8 @@ genny::actor::Insert::Insert(genny::ActorContext& context, const unsigned int th
       _outputTimer{context.timer(_fullName + ".output")},
       _operations{context.counter(_fullName + ".operations")},
       _client{std::move(context.client())},
-      _config{std::make_unique<Config>(context, (*_client)[context.get<std::string>("Database")])} {
-}
+      _config{std::make_unique<Config>(
+          context, (*_client)[context.get<std::string>("Database")], _rng)} {}
 
 genny::ActorVector genny::actor::Insert::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
