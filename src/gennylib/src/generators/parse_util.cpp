@@ -1,12 +1,12 @@
 #include "parse_util.hh"
 
 #include <boost/log/trivial.hpp>
-#include <boost/regex.hpp>  // STDLIB regex failed on Ubuntu 14.04 & CentOS 7
+#include <boost/regex.hpp>
+#include <chrono>
+#include <utility>
+
 #include <bsoncxx/builder/concatenate.hpp>
 #include <bsoncxx/json.hpp>
-#include <chrono>
-#include <mongocxx/write_concern.hpp>
-#include <utility>
 
 using bsoncxx::builder::concatenate;
 using bsoncxx::builder::stream::close_array;
@@ -14,7 +14,6 @@ using bsoncxx::builder::stream::close_document;
 using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
-using mongocxx::write_concern;
 
 namespace genny::generators::parser {
 
