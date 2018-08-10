@@ -1,5 +1,6 @@
 #include "generators-private.hh"
 #include "../log.hh"
+#include <gennylib/InvalidConfigurationException.hpp>
 
 namespace genny::generators {
 
@@ -13,37 +14,17 @@ using bsoncxx::builder::stream::open_document;
 const std::set<std::string> getGeneratorTypes() {
     return (std::set<std::string>{"$randomint", "$fastrandomstring", "$randomstring", "$useval"});
 }
-BsonDocument::BsonDocument() {
-    doc = bsoncxx::builder::stream::document{} << bsoncxx::builder::stream::finalize;
-}
+BsonDocument::BsonDocument()
+    : doc(bsoncxx::builder::stream::document{} << bsoncxx::builder::stream::finalize) {}
 
-BsonDocument::BsonDocument(const YAML::Node node) : DocumentGenerator() {
-    if (!node) {
-        BOOST_LOG_TRIVIAL(info) << "BsonDocument constructor using empty document";
-    } else if (!node.IsMap()) {
-        BOOST_LOG_TRIVIAL(fatal) << "Not map in BsonDocument constructor";
-        exit(EXIT_FAILURE);
-    } else {
-        BOOST_LOG_TRIVIAL(trace) << "In BsonDocument constructor";
-        doc = parser::parseMap(node);
-        BOOST_LOG_TRIVIAL(trace) << "Parsed map in BsonDocument constructor";
-    }
-}
+BsonDocument::BsonDocument(const YAML::Node node)
+    : DocumentGenerator(), doc(parser::parseMap(node)) {}
 
 bsoncxx::document::view BsonDocument::view(bsoncxx::builder::stream::document&) {
     return doc->view();
 }
 
 TemplateDocument::TemplateDocument(YAML::Node node, std::mt19937_64& rng) : DocumentGenerator() {
-    if (!node) {
-        BOOST_LOG_TRIVIAL(fatal) << "TemplateDocument constructor and !node";
-        exit(EXIT_FAILURE);
-    }
-    if (!node.IsMap()) {
-        BOOST_LOG_TRIVIAL(fatal) << "Not map in TemplateDocument constructor";
-        exit(EXIT_FAILURE);
-    }
-
     auto templates = getGeneratorTypes();
     std::vector<std::tuple<std::string, std::string, YAML::Node>> overrides;
 
@@ -136,10 +117,10 @@ void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                            "supported "
                            "yet.";
                 default:
-                    BOOST_LOG_TRIVIAL(fatal) << "Trying to descend a level of bson in "
-                                                "overrides but not a map or "
-                                                "array";
-                    exit(EXIT_FAILURE);
+                    throw InvalidConfigurationException(
+                        "Trying to descend a level of bson in "
+                        "overrides but not a map or "
+                        "array");
             }
         } else {
             //            BOOST_LOG_TRIVIAL(trace) << "No match, just pass through";
@@ -172,17 +153,12 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type, std::m
     } else if (type == "useval") {
         return new UseValueGenerator(yamlNode, rng);
     }
-    BOOST_LOG_TRIVIAL(fatal) << "In makeValueGenerator and don't know how to handle type " << type;
-    exit(EXIT_FAILURE);
+    std::stringstream error;
+    error << "In makeValueGenerator and don't know how to handle type " << type;
+    throw InvalidConfigurationException(error.str());
 }
 
 ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::mt19937_64& rng) {
-    // Should we put a list directly into UseValueGenerator also?
-    if (!yamlNode.IsMap()) {
-        BOOST_LOG_TRIVIAL(fatal)
-            << "ValueGenerator Node in makeValueGenerator is not a yaml map or a sequence";
-        exit(EXIT_FAILURE);
-    }
     if (auto type = yamlNode["type"])
         return (makeValueGenerator(yamlNode, type.Scalar(), rng));
     // If it doesn't have a type field, search for templating keys
@@ -247,12 +223,11 @@ std::string valAsString(view_or_value val) {
         case bsoncxx::type::k_symbol:
         case bsoncxx::type::k_timestamp:
 
-            BOOST_LOG_TRIVIAL(fatal) << "valAsString with type unsuported type in list";
-            exit(EXIT_FAILURE);
+            throw InvalidConfigurationException("valAsString with type unsuported type in list");
             break;
         default:
-            BOOST_LOG_TRIVIAL(fatal) << "valAsString with type unsuported type not in list";
-            exit(EXIT_FAILURE);
+            throw InvalidConfigurationException(
+                "valAsString with type unsuported type not in list");
     }
     return ("");
 }
@@ -283,12 +258,10 @@ int64_t valAsInt(view_or_value val) {
         case bsoncxx::type::k_symbol:
         case bsoncxx::type::k_timestamp:
 
-            BOOST_LOG_TRIVIAL(fatal) << "valAsInt with type unsuported type in list";
-            exit(EXIT_FAILURE);
+            throw InvalidConfigurationException("valAsInt with type unsuported type in list");
             break;
         default:
-            BOOST_LOG_TRIVIAL(fatal) << "valAsInt with type unsuported type not in list";
-            exit(EXIT_FAILURE);
+            throw InvalidConfigurationException("valAsInt with type unsuported type not in list");
     }
     return (0);
 }
@@ -319,12 +292,10 @@ double valAsDouble(view_or_value val) {
         case bsoncxx::type::k_symbol:
         case bsoncxx::type::k_timestamp:
 
-            BOOST_LOG_TRIVIAL(fatal) << "valAsInt with type unsuported type in list";
-            exit(EXIT_FAILURE);
+            throw InvalidConfigurationException("valAsInt with type unsuported type in list");
             break;
         default:
-            BOOST_LOG_TRIVIAL(fatal) << "valAsInt with type unsuported type not in list";
-            exit(EXIT_FAILURE);
+            throw InvalidConfigurationException("valAsInt with type unsuported type not in list");
     }
     return (0);
 }
@@ -361,10 +332,10 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, std::mt19937_64& 
             else if (distributionString == "poisson")
                 generator = GeneratorType::POISSON;
             else {
-                BOOST_LOG_TRIVIAL(fatal)
-                    << "In RandomIntGenerator and have unknown distribution type "
-                    << distributionString;
-                exit(EXIT_FAILURE);
+                std::stringstream error;
+                error << "In RandomIntGenerator and have unknown distribution type "
+                      << distributionString;
+                throw InvalidConfigurationException(error.str());
             }
         }
         // now read in parameters based on the distribution type
@@ -386,9 +357,8 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, std::mt19937_64& 
                 if (auto probability = node["p"])
                     p = makeUniqueValueGenerator(probability, rng);
                 else {
-                    BOOST_LOG_TRIVIAL(fatal)
-                        << "Binomial distribution in random int, but no p parameter";
-                    exit(EXIT_FAILURE);
+                    throw InvalidConfigurationException(
+                        "Binomial distribution in random int, but no p parameter");
                 }
                 break;
             case GeneratorType::NEGATIVE_BINOMIAL:
@@ -400,33 +370,29 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, std::mt19937_64& 
                 if (auto probability = node["p"])
                     p = makeUniqueValueGenerator(probability, rng);
                 else {
-                    BOOST_LOG_TRIVIAL(fatal)
-                        << "Binomial distribution in random int, but no p parameter";
-                    exit(EXIT_FAILURE);
+                    throw InvalidConfigurationException(
+                        "Binomial distribution in random int, but no p parameter");
                 }
                 break;
             case GeneratorType::GEOMETRIC:
                 if (auto probability = node["p"])
                     p = makeUniqueValueGenerator(probability, rng);
                 else {
-                    BOOST_LOG_TRIVIAL(fatal)
-                        << "Geometric distribution in random int, but no p parameter";
-                    exit(EXIT_FAILURE);
+                    throw InvalidConfigurationException(
+                        "Geometric distribution in random int, but no p parameter");
                 }
                 break;
             case GeneratorType::POISSON:
                 if (auto meannode = node["mean"])
                     mean = makeUniqueValueGenerator(meannode, rng);
                 else {
-                    BOOST_LOG_TRIVIAL(fatal)
-                        << "Geometric distribution in random int, but no p parameter";
-                    exit(EXIT_FAILURE);
+                    throw InvalidConfigurationException(
+                        "Geometric distribution in random int, but no p parameter");
                 }
                 break;
             default:
-                BOOST_LOG_TRIVIAL(fatal)
-                    << "Unknown generator type in RandomIntGenerator in switch statement";
-                exit(EXIT_FAILURE);
+                throw InvalidConfigurationException(
+                    "Unknown generator type in RandomIntGenerator in switch statement");
                 break;
         }
     }
@@ -456,14 +422,12 @@ int64_t RandomIntGenerator::generateInt() {
             return (distribution(_rng));
         } break;
         default:
-            BOOST_LOG_TRIVIAL(fatal)
-                << "Unknown generator type in RandomIntGenerator in switch rngment";
-            exit(EXIT_FAILURE);
+            throw InvalidConfigurationException(
+                "Unknown generator type in RandomIntGenerator in switch statement");
             break;
     }
-    BOOST_LOG_TRIVIAL(fatal)
-        << "Reached end of RandomIntGenerator::generateInt. Should have returned earlier";
-    exit(EXIT_FAILURE);
+    throw InvalidConfigurationException(
+        "Reached end of RandomIntGenerator::generateInt. Should have returned earlier");
 }
 std::string RandomIntGenerator::generateString() {
     return (std::to_string(generateInt()));
