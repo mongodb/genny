@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <random>
 
 #include <mongocxx/pool.hpp>
 
@@ -25,7 +26,7 @@ private:
     struct Config;
 
     void doPhase(int phase);
-
+    std::mt19937_64 _rng;
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
     mongocxx::pool::entry _client;

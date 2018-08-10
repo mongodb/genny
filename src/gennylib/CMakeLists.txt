@@ -16,6 +16,12 @@ add_library(gennylib SHARED
 
     include/gennylib/InvalidConfigurationException.hpp
 
+    src/value_generators/parser.hh
+    src/value_generators/parser.cpp
+    include/gennylib/value_generators.hpp
+    src/value_generators/generators-private.hh
+    src/value_generators/value_generators.cpp
+    src/value_generators/generators-private.cpp
 
     include/gennylib/Actor.hpp
     include/gennylib/ActorProducer.hpp
@@ -46,6 +52,7 @@ target_include_directories(gennylib
         ${LIBMONGOCXX_INCLUDE_DIRS}
     PRIVATE
         src
+        src/value_generators
 )
 
 
@@ -82,6 +89,7 @@ add_executable(test_gennylib
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
+    test/document_test.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
 )
 
