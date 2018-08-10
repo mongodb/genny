@@ -16,8 +16,8 @@ add_library(gennylib SHARED
 
     include/gennylib/InvalidConfigurationException.hpp
 
-    src/generators/parse_util.hh
-    src/generators/parse_util.cpp
+    src/generators/parser.hh
+    src/generators/parser.cpp
     include/gennylib/generators.hpp
     src/generators/generators-private.hh
     src/generators/generators.cpp

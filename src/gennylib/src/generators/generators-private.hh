@@ -1,7 +1,7 @@
 #ifndef HEADER_48C0CEE4_FC42_4B98_AABE_5980BF83A174
 #define HEADER_48C0CEE4_FC42_4B98_AABE_5980BF83A174
 
-#include "parse_util.hh"
+#include "parser.hh"
 #include <gennylib/generators.hpp>
 
 namespace genny::generators {

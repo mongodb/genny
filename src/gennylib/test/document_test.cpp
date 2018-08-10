@@ -1,7 +1,7 @@
 #include "test.h"
 
 #include "../src/generators/generators-private.hh"
-#include "../src/generators/parse_util.hh"
+#include "../src/generators/parser.hh"
 #include <gennylib/generators.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
