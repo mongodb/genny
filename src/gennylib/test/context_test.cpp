@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <random>
 
 #include <yaml-cpp/yaml.h>
 
@@ -257,6 +258,57 @@ TEST_CASE("PhaseContexts constructed as expected") {
         };
         onContext(yaml, op);
     }
+}
+
+TEST_CASE("Get Value Generators") {
+    auto yaml = YAML::Load(R"(
+    SchemaVersion: 2018-07-01
+    MongoUri: mongodb://localhost:27017
+    Actors:
+    - Name: HelloWorld
+      Document:
+        z: {$randomint: {min: 50, max: 60}}
+    )");
+
+    std::mt19937_64 rng{};
+
+    std::function<void(ActorContext&)> op = [&](ActorContext&ctx) {
+        auto docgen = ctx.get<genny::value_generators::DocumentGenerator>(rng, "Document");
+        bsoncxx::builder::stream::document mydoc{};
+        auto view = docgen->view(mydoc);
+        auto z = view["z"].get_int64().value;
+        REQUIRE(z >= 50);
+        REQUIRE(z <= 60);
+    };
+    onContext(yaml, op);
+
+    std::function<void(ActorContext&)> op331 = [&](ActorContext&ctx) {
+        auto docgen = ctx.get<genny::value_generators::DocumentGenerator, false>(rng, "Document");
+        bsoncxx::builder::stream::document mydoc{};
+        auto view = (*docgen)->view(mydoc);
+        auto z = view["z"].get_int64().value;
+        REQUIRE(z >= 50);
+        REQUIRE(z <= 60);
+    };
+    onContext(yaml, op331);
+
+    std::function<void(ActorContext&)> op33 = [&](ActorContext&ctx) {
+        auto docgen = ctx.get<genny::value_generators::DocumentGenerator, false>(rng, "DocumentNotFound");
+        REQUIRE(!docgen);
+    };
+    onContext(yaml, op33);
+
+    std::function<void(ActorContext&)> op2 = [&](ActorContext&ctx) {
+        auto node = ctx.get("Document");
+        REQUIRE(node["z"]["$randomint"]["min"].as<int>() == 50);
+    };
+    onContext(yaml, op2);
+
+    std::function<void(ActorContext&)> op3 = [&](ActorContext&ctx) {
+        auto node = ctx.get();
+        REQUIRE(node["Name"].as<std::string>() == "HelloWorld");
+    };
+    onContext(yaml, op3);
 }
 
 TEST_CASE("No PhaseContexts") {

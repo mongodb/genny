@@ -17,6 +17,7 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/value_generators.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/conventions.hpp>
@@ -380,12 +381,43 @@ public:
      */
     template <typename T = YAML::Node,
               bool Required = true,
-              class OutV = typename V1::MaybeOptional<T, Required>::type,
+              bool IsDocGen = std::is_same_v<T, genny::value_generators::DocumentGenerator>,
+              class OutV = typename V1::MaybeOptional<std::conditional_t<IsDocGen, std::unique_ptr<T>,T>, Required>::type,
+              class Arg0,
               class... Args>
-    OutV get(Args&&... args) const {
+    OutV get(Arg0&& arg0, Args&&... args) const {
         V1::ConfigPath p;
-        return V1::get_helper<T, YAML::Node, Required>(p, _node, std::forward<Args>(args)...);
+        if constexpr (IsDocGen) {
+            static_assert(std::is_same_v<Arg0, std::mt19937_64&>, "First arg to get DocumentGenerator must be rng&");
+            auto node = V1::get_helper<YAML::Node, YAML::Node, false>(p, _node, std::forward<Args>(args)...);
+            if (!node) {
+                // no node
+                if constexpr (Required) {
+                    // no node and required
+                    throw InvalidConfigurationException("Could not get DocumentGenerator");
+                } else {
+                    // no node and not required
+                    return std::nullopt;
+                }
+            } else {
+                // have node
+                if constexpr (Required) {
+                    // have node and required
+                    return genny::value_generators::makeDoc(*node, arg0);
+                } else {
+                    return OutV { genny::value_generators::makeDoc(*node, arg0) };
+                }
+            }
+        }
+        else {
+            return V1::get_helper<T, YAML::Node, Required>(p, _node, std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+        }
     };
+
+    // expose the raw Actor node
+    auto get() const {
+        return _node;
+    }
 
     /**
      * Access top-level workload configuration.
