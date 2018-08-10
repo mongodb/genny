@@ -10,6 +10,8 @@ add_library(gennylib SHARED
         include/gennylib/context.hpp
         src/context.cpp
 
+    include/gennylib/conventions.hpp
+
     include/gennylib/metrics.hpp
 
     include/gennylib/MetricsReporter.hpp
@@ -26,6 +28,8 @@ add_library(gennylib SHARED
     include/gennylib/Actor.hpp
     include/gennylib/ActorProducer.hpp
     include/gennylib/ActorVector.hpp
+
+    include/gennylib/PhaseLoop.hpp
 
         include/gennylib/PhasedActor.hpp
                  src/PhasedActor.cpp
@@ -86,6 +90,8 @@ export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
 
 add_executable(test_gennylib
         test/context_test.cpp
+    test/conventions_test.cpp
+    test/PhaseLoop_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
