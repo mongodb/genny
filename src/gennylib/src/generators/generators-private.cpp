@@ -207,17 +207,7 @@ std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node yamlNode,
                                                          std::mt19937_64& rng) {
     return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode, rng));
 }
-std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node yamlNode,
-                                                         std::mt19937_64& rng) {
-    return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode, rng));
-}
-
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node yamlNode,
-                                                         std::string type,
-                                                         std::mt19937_64& rng) {
-    return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode, type, rng));
-}
-std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node yamlNode,
                                                          std::string type,
                                                          std::mt19937_64& rng) {
     return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode, type, rng));

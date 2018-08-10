@@ -27,9 +27,7 @@ protected:
 
 const std::set<std::string> getGeneratorTypes();
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, std::mt19937_64&);
-std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node, std::mt19937_64&);
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, std::string, std::mt19937_64&);
-std::shared_ptr<ValueGenerator> makeSharedValueGenerator(YAML::Node, std::string, std::mt19937_64&);
 std::string valAsString(view_or_value);
 int64_t valAsInt(view_or_value);
 double valAsDouble(view_or_value);
