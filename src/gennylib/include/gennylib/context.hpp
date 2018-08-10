@@ -18,6 +18,7 @@
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/generators.hpp>
 #include <gennylib/metrics.hpp>
 
 /**
@@ -131,6 +132,40 @@ OutV get_helper(const ConfigPath& parent, const Current& curr) {
         std::stringstream error;
         // typeid(Out).name() is kinda hokey but could be useful when debugging config issues.
         error << "Bad conversion of [" << curr << "] to [" << typeid(Out).name() << "] "
+              << "at path [" << parent << "]: " << conv.what();
+        throw InvalidConfigurationException(error.str());
+    }
+}
+
+
+// this is a specialization for getting templated document generators
+template <class Current,
+          bool Required = true,
+          class OutV = typename MaybeOptional<std::unique_ptr<generators::DocumentGenerator>,
+                                              Required>::type>
+OutV get_helper(const ConfigPath& parent, const Current& curr) {
+    if (!curr) {
+        if constexpr (Required) {
+            std::stringstream error;
+            error << "Invalid key at path [" << parent << "]";
+            throw InvalidConfigurationException(error.str());
+        } else {
+            return std::nullopt;
+        }
+    }
+    try {
+        if constexpr (Required) {
+            // This won't work as is, since makeDoc requires a reference to the Actors rng
+            return generators::makeDoc(curr);
+        } else {
+            return std::make_optional<std::unique_ptr<generators::DocumentGenerator>>(
+                generators::makeDoc(curr));
+        }
+    } catch (const YAML::BadConversion& conv) {
+        std::stringstream error;
+        // typeid(Out).name() is kinda hokey but could be useful when debugging config issues.
+        error << "Bad conversion of [" << curr << "] to ["
+              << typeid(std::unique_ptr<generators::DocumentGenerator>).name() << "] "
               << "at path [" << parent << "]: " << conv.what();
         throw InvalidConfigurationException(error.str());
     }
