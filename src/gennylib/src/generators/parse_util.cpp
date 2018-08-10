@@ -1,4 +1,4 @@
-#include <gennylib/parse_util.hpp>
+#include "parse_util.hh"
 
 #include <boost/log/trivial.hpp>
 #include <boost/regex.hpp>  // STDLIB regex failed on Ubuntu 14.04 & CentOS 7
@@ -16,7 +16,7 @@ using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
 using mongocxx::write_concern;
 
-namespace genny {
+namespace genny::generators::parser {
 
 // Check for valid json number. This regex should match the diagram
 // http://www.json.org/
@@ -162,4 +162,4 @@ bsoncxx::array::value yamlToValue(YAML::Node node) {
     return (myArray << bsoncxx::builder::stream::finalize);
 }
 
-}  // namespace genny
+}  // namespace genny::generators::parser

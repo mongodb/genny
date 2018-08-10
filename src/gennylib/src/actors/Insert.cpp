@@ -14,9 +14,10 @@ struct genny::actor::Insert::Config {
                     const YAML::Node document_node,
                     std::mt19937_64& rng,
                     const mongocxx::database& db)
-            : collection{db[collection_name]}, json_document{makeDoc(document_node, rng)} {}
+            : collection{db[collection_name]},
+              json_document{generators::makeDoc(document_node, rng)} {}
         mongocxx::collection collection;
-        std::unique_ptr<Document> json_document;
+        std::unique_ptr<generators::DocumentGenerator> json_document;
     };
 
     Config(const genny::ActorContext& context, const mongocxx::database& db, std::mt19937_64& rng) {

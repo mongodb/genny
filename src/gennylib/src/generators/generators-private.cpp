@@ -1,9 +1,7 @@
-#include <gennylib/generators.hpp>
+#include "generators-private.hh"
+#include "../log.hh"
 
-#include <boost/log/trivial.hpp>
-#include <bsoncxx/json.hpp>
-#include <random>
-#include <stdlib.h>
+namespace genny::generators {
 
 using bsoncxx::builder::stream::close_array;
 using bsoncxx::builder::stream::close_document;
@@ -11,13 +9,11 @@ using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
 
-namespace genny {
-
 BsonDocument::BsonDocument() {
     doc = bsoncxx::builder::stream::document{} << bsoncxx::builder::stream::finalize;
 }
 
-BsonDocument::BsonDocument(const YAML::Node node) {
+BsonDocument::BsonDocument(const YAML::Node node) : DocumentGenerator() {
     if (!node) {
         BOOST_LOG_TRIVIAL(info) << "BsonDocument constructor using empty document";
     } else if (!node.IsMap()) {
@@ -25,7 +21,7 @@ BsonDocument::BsonDocument(const YAML::Node node) {
         exit(EXIT_FAILURE);
     } else {
         BOOST_LOG_TRIVIAL(trace) << "In BsonDocument constructor";
-        doc = parseMap(node);
+        doc = parser::parseMap(node);
         BOOST_LOG_TRIVIAL(trace) << "Parsed map in BsonDocument constructor";
     }
 }
@@ -34,7 +30,7 @@ bsoncxx::document::view BsonDocument::view(bsoncxx::builder::stream::document&) 
     return doc->view();
 }
 
-TemplateDocument::TemplateDocument(YAML::Node node, std::mt19937_64& rng) : Document() {
+TemplateDocument::TemplateDocument(YAML::Node node, std::mt19937_64& rng) : DocumentGenerator() {
     if (!node) {
         BOOST_LOG_TRIVIAL(fatal) << "TemplateDocument constructor and !node";
         exit(EXIT_FAILURE);
@@ -48,7 +44,7 @@ TemplateDocument::TemplateDocument(YAML::Node node, std::mt19937_64& rng) : Docu
     std::vector<std::tuple<std::string, std::string, YAML::Node>> overrides;
 
     BOOST_LOG_TRIVIAL(trace) << "In TemplateDocument constructor";
-    doc.setDoc(parseMap(node, templates, "", overrides));
+    doc.setDoc(parser::parseMap(node, templates, "", overrides));
     BOOST_LOG_TRIVIAL(trace)
         << "In TemplateDocument constructor. Parsed the document. About to deal with overrides";
     for (auto entry : overrides) {
@@ -84,7 +80,8 @@ void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
     //    cout << "prefix is " << prefix ;
     for (auto& elem : override) {
         std::string key = elem.first;
-        //        BOOST_LOG_TRIVIAL(trace) << "Going through overrides key: " << key << " value is "
+        //        BOOST_LOG_TRIVIAL(trace) << "Going through overrides key: " << key << " value
+        //        is "
         //                         << elem.second << " prefix.length() = " << prefix.length();
         if (prefix == "" || key.compare(0, prefix.length(), prefix) == 0) {
             // prefix match. Need what comes after
@@ -161,21 +158,6 @@ bsoncxx::document::view TemplateDocument::view(bsoncxx::builder::stream::documen
     applyOverrideLevel(output, doc.view(tempdoc), "");
     return output.view();
 }
-
-
-// parse a YAML Node and make a document of the correct type
-std::unique_ptr<Document> makeDoc(const YAML::Node node, std::mt19937_64& rng) {
-    if (!node) {  // empty document should be BsonDocument
-        return std::unique_ptr<Document>{new BsonDocument(node)};
-    } else
-        return std::unique_ptr<Document>{new TemplateDocument(node, rng)};
-};
-
-// This returns a set of the value generator types with $ prefixes
-const std::set<std::string> getGeneratorTypes() {
-    return (std::set<std::string>{"$randomint", "$fastrandomstring", "$randomstring", "$useval"});
-}
-
 ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type, std::mt19937_64& rng) {
     if (type == "randomint") {
         return new RandomIntGenerator(yamlNode, rng);
@@ -357,9 +339,9 @@ UseValueGenerator::UseValueGenerator(YAML::Node& node, std::mt19937_64& rng)
     : ValueGenerator(node, rng) {
     // add in error checking
     if (node.IsScalar()) {
-        value = yamlToValue(node);
+        value = parser::yamlToValue(node);
     } else {
-        value = yamlToValue(node["value"]);
+        value = parser::yamlToValue(node["value"]);
     }
 }
 
@@ -558,6 +540,4 @@ bsoncxx::array::value RandomStringGenerator::generate() {
     }
     return (bsoncxx::builder::stream::array{} << str << bsoncxx::builder::stream::finalize);
 }
-
-
-}  // namespace genny
+}  // namespace genny::generators

@@ -16,10 +16,12 @@ add_library(gennylib SHARED
 
     include/gennylib/InvalidConfigurationException.hpp
 
-    include/gennylib/parse_util.hpp
-    src/parse_util.cpp
+    src/generators/parse_util.hh
+    src/generators/parse_util.cpp
     include/gennylib/generators.hpp
-    src/generators.cpp
+    src/generators/generators-private.hh
+    src/generators/generators.cpp
+    src/generators/generators-private.cpp
 
     include/gennylib/Actor.hpp
     include/gennylib/ActorProducer.hpp
@@ -50,6 +52,7 @@ target_include_directories(gennylib
         ${LIBMONGOCXX_INCLUDE_DIRS}
     PRIVATE
         src
+        src/generators
 )
 
 
