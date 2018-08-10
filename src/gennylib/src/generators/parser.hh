@@ -2,11 +2,12 @@
 #ifndef HEADER_555BBB4B_4C7D_434E_8CB9_67990FAF0947
 #define HEADER_555BBB4B_4C7D_434E_8CB9_67990FAF0947
 
-#include "yaml-cpp/yaml.h"
+#include <set>
+
 #include <bsoncxx/builder/stream/array.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <mongocxx/client.hpp>
-#include <set>
+#include <yaml-cpp/yaml.h>
 
 namespace genny::generators::parser {
 bool isNumber(std::string);
