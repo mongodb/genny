@@ -49,9 +49,7 @@ public:
     }
 
     LoopIterator& operator++() {
-        if (_minIterations) {
-            ++_currentIteration;
-        }
+        ++_currentIteration;
         return *this;
     }
 
@@ -106,10 +104,11 @@ private:
     std::chrono::steady_clock::time_point _startedAt;
 
     const std::optional<int> _minIterations;
-    int _currentIteration;
+    unsigned int _currentIteration;
 };
 
 }  // namespace V1
+
 
 
 /**
