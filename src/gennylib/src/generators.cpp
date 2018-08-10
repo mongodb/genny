@@ -67,7 +67,7 @@ TemplateDocument::TemplateDocument(YAML::Node node, std::mt19937_64& rng) : Docu
 
 void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& output,
                                           bsoncxx::document::view doc,
-                                          string prefix) {
+                                          std::string prefix) {
     // Going to need variants of this for arrays
 
     // iterate through keys. if key matches exactly, replace in output.
@@ -78,12 +78,12 @@ void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
 
     // I don't think I want this as a naked pointer. It's owned
     // above. Can switch to shared_ptr
-    unordered_map<string, ValueGenerator*> thislevel;
+    std::unordered_map<std::string, ValueGenerator*> thislevel;
     // process override for elements at lower level
-    set<string> lowerlevel;
+    std::set<std::string> lowerlevel;
     //    cout << "prefix is " << prefix ;
     for (auto& elem : override) {
-        string key = elem.first;
+        std::string key = elem.first;
         //        BOOST_LOG_TRIVIAL(trace) << "Going through overrides key: " << key << " value is "
         //                         << elem.second << " prefix.length() = " << prefix.length();
         if (prefix == "" || key.compare(0, prefix.length(), prefix) == 0) {
@@ -164,11 +164,11 @@ bsoncxx::document::view TemplateDocument::view(bsoncxx::builder::stream::documen
 
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<Document> makeDoc(const YAML::Node node, std::mt19937_64& rng) {
+std::unique_ptr<Document> makeDoc(const YAML::Node node, std::mt19937_64& rng) {
     if (!node) {  // empty document should be BsonDocument
-        return unique_ptr<Document>{new BsonDocument(node)};
+        return std::unique_ptr<Document>{new BsonDocument(node)};
     } else
-        return unique_ptr<Document>{new TemplateDocument(node, rng)};
+        return std::unique_ptr<Document>{new TemplateDocument(node, rng)};
 };
 
 // This returns a set of the value generator types with $ prefixes
@@ -459,23 +459,24 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, std::mt19937_64& 
 int64_t RandomIntGenerator::generateInt() {
     switch (generator) {
         case GeneratorType::UNIFORM: {
-            uniform_int_distribution<int64_t> distribution(min.getInt(), max.getInt());
+            std::uniform_int_distribution<int64_t> distribution(min.getInt(), max.getInt());
             return (distribution(_rng));
         } break;
         case GeneratorType::BINOMIAL: {
-            binomial_distribution<int64_t> distribution(t.getInt(), p->generateDouble());
+            std::binomial_distribution<int64_t> distribution(t.getInt(), p->generateDouble());
             return (distribution(_rng));
         } break;
         case GeneratorType::NEGATIVE_BINOMIAL: {
-            negative_binomial_distribution<int64_t> distribution(t.getInt(), p->generateDouble());
+            std::negative_binomial_distribution<int64_t> distribution(t.getInt(),
+                                                                      p->generateDouble());
             return (distribution(_rng));
         } break;
         case GeneratorType::GEOMETRIC: {
-            geometric_distribution<int64_t> distribution(p->generateDouble());
+            std::geometric_distribution<int64_t> distribution(p->generateDouble());
             return (distribution(_rng));
         } break;
         case GeneratorType::POISSON: {
-            poisson_distribution<int64_t> distribution(mean->generateDouble());
+            std::poisson_distribution<int64_t> distribution(mean->generateDouble());
             return (distribution(_rng));
         } break;
         default:
@@ -549,7 +550,7 @@ RandomStringGenerator::RandomStringGenerator(YAML::Node& node, std::mt19937_64& 
 bsoncxx::array::value RandomStringGenerator::generate() {
     std::string str;
     auto alphabetLength = alphabet.size();
-    uniform_int_distribution<int> distribution(0, alphabetLength - 1);
+    std::uniform_int_distribution<int> distribution(0, alphabetLength - 1);
     auto thisLength = length.getInt();
     str.resize(thisLength);
     for (int i = 0; i < thisLength; i++) {

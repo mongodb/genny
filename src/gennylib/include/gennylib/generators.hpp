@@ -44,7 +44,7 @@ public:
     virtual bsoncxx::array::value generate() override;
 
 private:
-    optional<bsoncxx::array::value> value;
+    std::optional<bsoncxx::array::value> value;
 };
 
 // Class to wrap either a plain int64_t, or a value generator that will be called as an int. This
@@ -71,14 +71,6 @@ private:
     std::unique_ptr<ValueGenerator> myGenerator;
     bool isInt;
 };
-enum class GeneratorType {
-    UNIFORM,
-    BINOMIAL,
-    NEGATIVE_BINOMIAL,
-    GEOMETRIC,
-    POISSON,
-};
-
 class RandomIntGenerator : public ValueGenerator {
 public:
     RandomIntGenerator(const YAML::Node&, std::mt19937_64&);
@@ -87,6 +79,14 @@ public:
     virtual std::string generateString() override;
 
 private:
+    enum class GeneratorType {
+        UNIFORM,
+        BINOMIAL,
+        NEGATIVE_BINOMIAL,
+        GEOMETRIC,
+        POISSON,
+    };
+
     GeneratorType generator;
     IntOrValue min;
     IntOrValue max;
@@ -96,11 +96,6 @@ private:
 };
 
 // default alphabet
-constexpr char fastAlphaNum[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789+/";
-constexpr int fastAlphaNumLength = 64;
 
 class FastRandomStringGenerator : public ValueGenerator {
 public:
@@ -108,15 +103,14 @@ public:
     virtual bsoncxx::array::value generate() override;
 
 private:
+    static constexpr char fastAlphaNum[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/";
+    static constexpr int fastAlphaNumLength = 64;
     IntOrValue length;
 };
 
-// default alphabet
-static const char alphaNum[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789+/";
-static const int alphaNumLength = 64;
 
 class RandomStringGenerator : public ValueGenerator {
 public:
@@ -124,6 +118,12 @@ public:
     virtual bsoncxx::array::value generate() override;
 
 private:
+    // default alphabet
+    static constexpr char alphaNum[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/";
+    static constexpr int alphaNumLength = 64;
     std::string alphabet;
     IntOrValue length;
 };
@@ -159,15 +159,17 @@ public:
 protected:
     // The document to override
     BsonDocument doc;
-    unordered_map<string, unique_ptr<ValueGenerator>> override;
+    std::unordered_map<std::string, std::unique_ptr<ValueGenerator>> override;
 
 private:
     // apply the overides, one level at a time
-    void applyOverrideLevel(bsoncxx::builder::stream::document&, bsoncxx::document::view, string);
+    void applyOverrideLevel(bsoncxx::builder::stream::document&,
+                            bsoncxx::document::view,
+                            std::string);
 };
 
 // parse a YAML Node and make a document of the correct type
-unique_ptr<Document> makeDoc(const YAML::Node, std::mt19937_64&);
+std::unique_ptr<Document> makeDoc(const YAML::Node, std::mt19937_64&);
 
 }  // namespace genny
 
