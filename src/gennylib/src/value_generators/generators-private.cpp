@@ -2,7 +2,7 @@
 #include "../log.hh"
 #include <gennylib/InvalidConfigurationException.hpp>
 
-namespace genny::generators {
+namespace genny::value_generators {
 
 using bsoncxx::builder::stream::close_array;
 using bsoncxx::builder::stream::close_document;
@@ -498,4 +498,4 @@ bsoncxx::array::value RandomStringGenerator::generate() {
     }
     return (bsoncxx::builder::stream::array{} << str << bsoncxx::builder::stream::finalize);
 }
-}  // namespace genny::generators
+}  // namespace genny::value_generators

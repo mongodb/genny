@@ -2,9 +2,9 @@
 #define HEADER_48C0CEE4_FC42_4B98_AABE_5980BF83A174
 
 #include "parser.hh"
-#include <gennylib/generators.hpp>
+#include <gennylib/value_generators.hpp>
 
-namespace genny::generators {
+namespace genny::value_generators {
 
 using view_or_value = bsoncxx::view_or_value<bsoncxx::array::view, bsoncxx::array::value>;
 
@@ -153,7 +153,7 @@ private:
                             bsoncxx::document::view,
                             std::string);
 };
-}  // namespace genny::generators
+}  // namespace genny::value_generators
 
 
 #endif  // HEADER_48C0CEE4_FC42_4B98_AABE_5980BF83A174

@@ -1,11 +1,12 @@
+#include <gennylib/actors/Insert.hpp>
 
 #include <memory>
+
 #include <yaml-cpp/yaml.h>
 
 #include "log.hh"
-#include <gennylib/actors/Insert.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/generators.hpp>
+#include <gennylib/value_generators.hpp>
 
 struct genny::actor::Insert::Config {
 
@@ -15,9 +16,9 @@ struct genny::actor::Insert::Config {
                     std::mt19937_64& rng,
                     const mongocxx::database& db)
             : collection{db[collection_name]},
-              json_document{generators::makeDoc(document_node, rng)} {}
+              json_document{value_generators::makeDoc(document_node, rng)} {}
         mongocxx::collection collection;
-        std::unique_ptr<generators::DocumentGenerator> json_document;
+        std::unique_ptr<value_generators::DocumentGenerator> json_document;
     };
 
     Config(const genny::ActorContext& context, const mongocxx::database& db, std::mt19937_64& rng) {

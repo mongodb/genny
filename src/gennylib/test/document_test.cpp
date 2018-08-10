@@ -1,8 +1,8 @@
 #include "test.h"
 
-#include "../src/generators/generators-private.hh"
-#include "../src/generators/parser.hh"
-#include <gennylib/generators.hpp>
+#include "../src/value_generators/generators-private.hh"
+#include "../src/value_generators/parser.hh"
+#include <gennylib/value_generators.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -13,7 +13,7 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 
-using namespace genny::generators;
+using namespace genny::value_generators;
 using bsoncxx::builder::stream::close_document;
 using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_document;

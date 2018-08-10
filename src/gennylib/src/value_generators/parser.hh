@@ -9,7 +9,7 @@
 #include <mongocxx/client.hpp>
 #include <yaml-cpp/yaml.h>
 
-namespace genny::generators::parser {
+namespace genny::value_generators::parser {
 bool isNumber(std::string);
 bool isBool(std::string);
 std::string quoteIfNeeded(std::string);
@@ -24,6 +24,6 @@ bsoncxx::array::value parseSequence(YAML::Node node,
                                     std::set<std::string>,
                                     std::string,
                                     std::vector<std::tuple<std::string, std::string, YAML::Node>>&);
-}  // namespace genny::generators::parser
+}  // namespace genny::value_generators::parser
 
 #endif  // HEADER_555BBB4B_4C7D_434E_8CB9_67990FAF0947

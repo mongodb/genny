@@ -15,7 +15,7 @@ using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
 
-namespace genny::generators::parser {
+namespace genny::value_generators::parser {
 
 // Check for valid json number. This regex should match the diagram
 // http://www.json.org/
@@ -161,4 +161,4 @@ bsoncxx::array::value yamlToValue(YAML::Node node) {
     return (myArray << bsoncxx::builder::stream::finalize);
 }
 
-}  // namespace genny::generators::parser
+}  // namespace genny::value_generators::parser

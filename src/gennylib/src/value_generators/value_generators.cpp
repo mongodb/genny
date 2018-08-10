@@ -1,11 +1,11 @@
 #include "generators-private.hh"
 #include <boost/log/trivial.hpp>
 #include <bsoncxx/json.hpp>
-#include <gennylib/generators.hpp>
+#include <gennylib/value_generators.hpp>
 #include <random>
 #include <stdlib.h>
 
-namespace genny::generators {
+namespace genny::value_generators {
 
 
 // parse a YAML Node and make a document of the correct type
@@ -17,4 +17,4 @@ std::unique_ptr<DocumentGenerator> makeDoc(const YAML::Node node, std::mt19937_6
 };
 
 
-}  // namespace genny::generators
+}  // namespace genny::value_generators
