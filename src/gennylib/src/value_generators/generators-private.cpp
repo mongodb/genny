@@ -207,7 +207,7 @@ std::string valAsString(view_or_value val) {
             return (std::to_string(elem.get_double().value));
             break;
         case bsoncxx::type::k_utf8:
-            return (elem.get_utf8().value.to_string());
+            return (std::string{elem.get_utf8().value});
             break;
         case bsoncxx::type::k_document:
         case bsoncxx::type::k_array:
