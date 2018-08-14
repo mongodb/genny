@@ -94,12 +94,12 @@ void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
 
     for (auto elem : doc) {
         // BOOST_LOG_TRIVIAL(trace) << "Looking at key " << elem.key().to_string();
-        auto iter = thislevel.find(elem.key().to_string());
-        auto iter2 = lowerlevel.find(elem.key().to_string());
+        auto iter = thislevel.find(std::string{elem.key()});
+        auto iter2 = lowerlevel.find(std::string{elem.key()});
         if (iter != thislevel.end()) {
             // replace this entry
             // BOOST_LOG_TRIVIAL(trace) << "Matched on this level. Replacing ";
-            output << elem.key().to_string() << iter->second->generate().view()[0].get_value();
+            output << std::string{elem.key()} << iter->second->generate().view()[0].get_value();
         } else if (iter2 != lowerlevel.end()) {
             // need to check if child is document, array, or other.
             //            BOOST_LOG_TRIVIAL(trace) << "Partial match. Need to descend";
@@ -107,8 +107,8 @@ void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                 case bsoncxx::type::k_document: {
                     bsoncxx::builder::stream::document mydoc{};
                     applyOverrideLevel(
-                        mydoc, elem.get_document().value, prefix + elem.key().to_string() + '.');
-                    output << elem.key().to_string() << open_document
+                        mydoc, elem.get_document().value, prefix + std::string{elem.key()} + '.');
+                    output << std::string{elem.key()} << open_document
                            << bsoncxx::builder::concatenate(mydoc.view()) << close_document;
                 } break;
                 case bsoncxx::type::k_array:
@@ -125,7 +125,7 @@ void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
         } else {
             //            BOOST_LOG_TRIVIAL(trace) << "No match, just pass through";
             bsoncxx::types::value ele_val{elem.get_value()};
-            output << elem.key().to_string() << ele_val;
+            output << std::string{elem.key()} << ele_val;
         }
     }
 }
@@ -207,7 +207,7 @@ std::string valAsString(view_or_value val) {
             return (std::to_string(elem.get_double().value));
             break;
         case bsoncxx::type::k_utf8:
-            return (elem.get_utf8().value.to_string());
+            return (std::string{elem.get_utf8().value});
             break;
         case bsoncxx::type::k_document:
         case bsoncxx::type::k_array:
