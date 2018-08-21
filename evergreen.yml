@@ -113,6 +113,7 @@ functions:
   #
   # Expansions:
   #  path: prepended to $PATH
+  #  cmake_cxx_flags: sent to cmake as `-DCMAKE_CXX_FLAGS`
   ###
   f_compile:
   - command: shell.exec
