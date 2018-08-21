@@ -53,6 +53,7 @@ buildvariants:
   - archlinux-test
   expansions:
     path: ""
+    cmake_cxx_flags: -pthread
   tasks:
   - name: t_test
 
@@ -63,6 +64,7 @@ buildvariants:
   - macos-1012
   expansions:
     path: "/Applications/CMake.app/Contents/bin"
+    cmake_cxx_flags: ""
   tasks:
   - name: t_test
 
@@ -118,7 +120,7 @@ functions:
       script: |
         export PATH="${path}:$PATH"
         cd src/build
-        cmake ..
+        cmake -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" ..
         make
 
   ##
