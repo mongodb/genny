@@ -4,6 +4,7 @@
 #include <cassert>
 #include <condition_variable>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 
 namespace genny {
@@ -62,15 +63,19 @@ public:
     void abort();
 
 private:
-    mutable std::mutex _lock;
-    std::condition_variable _cv;
+    mutable std::shared_mutex _mutex;
+    std::condition_variable_any _cv;
 
-    int _numTokens = 0;
+    unsigned int _wantTokens = 0;
+    unsigned int _currentTokens = 0;
+
     unsigned int _maxPhase = 1;
     unsigned int _phase = 0;
-    unsigned int _currentTokens = 0;
+
     bool _errors = false;
+
     enum class State { PhaseEnded, PhaseStarted };
+
     State state = State::PhaseEnded;
 };
 
