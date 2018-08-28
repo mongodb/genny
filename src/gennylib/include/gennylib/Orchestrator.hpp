@@ -30,6 +30,8 @@ public:
      */
     bool morePhases() const;
 
+    void phasesAtLeastTo(unsigned int minPhase);
+
     /**
      * Signal from an actor that it is ready to start the next phase.
      * Blocks until the phase is started when all actors report they are ready.

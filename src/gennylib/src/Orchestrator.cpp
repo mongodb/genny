@@ -1,3 +1,4 @@
+#include <algorithm> // std::max
 #include <cassert>
 #include <iostream>
 #include <shared_mutex>
@@ -57,6 +58,11 @@ void Orchestrator::addTokens(int tokens) {
     writer lk{_mutex};
 
     this->_wantTokens += tokens;
+}
+
+void Orchestrator::phasesAtLeastTo(unsigned int minPhase) {
+    writer lk{_mutex};
+    this->_maxPhase = std::max(this->_maxPhase, minPhase);
 }
 
 // we end once no more tokens left
