@@ -45,7 +45,7 @@ bool advancePhase(Orchestrator& o) {
 
 TEST_CASE("Non-Blocking start") {
     auto o = Orchestrator{};
-    o.addTokens(2);
+    o.addRequiredTokens(2);
 
     // 2 tokens but we only count down 1 so normally would block
     auto t1 = start(o, 0, false, 1);
@@ -54,7 +54,7 @@ TEST_CASE("Non-Blocking start") {
 
 TEST_CASE("Non-Blocking end (background progression)") {
     auto o = Orchestrator{};
-    o.addTokens(2);
+    o.addRequiredTokens(2);
 
     auto bgIters = 0;
     auto fgIters = 0;
@@ -86,7 +86,7 @@ TEST_CASE("Non-Blocking end (background progression)") {
 
 TEST_CASE("Can add more tokens at start") {
     auto o = Orchestrator{};
-    o.addTokens(2);
+    o.addRequiredTokens(2);
 
     auto t1 = start(o, 0, false, 2);
     t1.join();
@@ -129,7 +129,7 @@ TEST_CASE("Set minimum number of phases") {
 
 TEST_CASE("Orchestrator") {
     auto o = Orchestrator{};
-    o.addTokens(2);
+    o.addRequiredTokens(2);
 
     REQUIRE(o.currentPhaseNumber() == 0);
     REQUIRE(o.morePhases());

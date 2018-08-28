@@ -30,11 +30,20 @@ public:
      */
     bool morePhases() const;
 
+    /**
+     * @param minPhase the minimum phase number that the Orchestrator should run to.
+     */
     void phasesAtLeastTo(unsigned int minPhase);
 
     /**
      * Signal from an actor that it is ready to start the next phase.
-     * Blocks until the phase is started when all actors report they are ready.
+     *
+     * The current phase is started when the current number of tokens
+     * equals the required number of tokens. This is usually the
+     * total number of Actors (each Actor owns a token).
+     *
+     * @param block if the call should block waiting for other callers.
+     * @param addTokens the number of tokens added by this call.
      * @return the phase that has just started.
      */
     unsigned int awaitPhaseStart(bool block = true, int addTokens = 1);
@@ -60,7 +69,7 @@ public:
      */
     bool awaitPhaseEnd(bool block = true, unsigned int morePhases = 0, int removeTokens = 1);
 
-    void addTokens(int tokens);
+    void addRequiredTokens(int tokens);
 
     void abort();
 
@@ -68,7 +77,7 @@ private:
     mutable std::shared_mutex _mutex;
     std::condition_variable_any _cv;
 
-    int _wantTokens = 0;
+    int _requireTokens = 0;
     int _currentTokens = 0;
 
     unsigned int _maxPhase = 1;

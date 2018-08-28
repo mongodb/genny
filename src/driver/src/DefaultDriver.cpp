@@ -58,8 +58,8 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
                                                        &genny::actor::Insert::producer};
     auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
 
-    orchestrator.addTokens(
-        int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
+    orchestrator.addRequiredTokens(
+            int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
     stopwatch.report();
 
     std::mutex lock;

@@ -43,7 +43,7 @@ unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     assert(state == State::PhaseEnded);
     _currentTokens += addTokens;
     unsigned int out = this->_phase;
-    if (_currentTokens >= _wantTokens) {
+    if (_currentTokens >= _requireTokens) {
         _cv.notify_all();
         state = State::PhaseStarted;
     } else {
@@ -54,10 +54,10 @@ unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     return out;
 }
 
-void Orchestrator::addTokens(int tokens) {
+void Orchestrator::addRequiredTokens(int tokens) {
     writer lk{_mutex};
 
-    this->_wantTokens += tokens;
+    this->_requireTokens += tokens;
 }
 
 void Orchestrator::phasesAtLeastTo(unsigned int minPhase) {
