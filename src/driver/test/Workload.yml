@@ -14,6 +14,6 @@ Actors:
     Database: "test"
     Phases:
       - Collection: "inserts"
-        Document: '{"a":"b"}'
+        Document: {"a": {$randomint: {min: 50, max: 60}}}
       - Collection: "inserts"
-        Document: '{"b":"c"}'
+        Document: {"b": {$randomstring: {length: {$randomint: {min: 5, max: 15}}, alphabet: abcde}}}

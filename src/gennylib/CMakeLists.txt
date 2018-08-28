@@ -10,16 +10,26 @@ add_library(gennylib SHARED
         include/gennylib/context.hpp
         src/context.cpp
 
+    include/gennylib/conventions.hpp
+
     include/gennylib/metrics.hpp
 
     include/gennylib/MetricsReporter.hpp
 
     include/gennylib/InvalidConfigurationException.hpp
 
+    src/value_generators/parser.hh
+    src/value_generators/parser.cpp
+    include/gennylib/value_generators.hpp
+    src/value_generators/generators-private.hh
+    src/value_generators/value_generators.cpp
+    src/value_generators/generators-private.cpp
 
     include/gennylib/Actor.hpp
     include/gennylib/ActorProducer.hpp
     include/gennylib/ActorVector.hpp
+
+    include/gennylib/PhaseLoop.hpp
 
         include/gennylib/PhasedActor.hpp
                  src/PhasedActor.cpp
@@ -46,6 +56,7 @@ target_include_directories(gennylib
         ${LIBMONGOCXX_INCLUDE_DIRS}
     PRIVATE
         src
+        src/value_generators
 )
 
 
@@ -79,9 +90,12 @@ export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
 
 add_executable(test_gennylib
         test/context_test.cpp
+    test/conventions_test.cpp
+    test/PhaseLoop_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
+    test/document_test.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
 )
 
