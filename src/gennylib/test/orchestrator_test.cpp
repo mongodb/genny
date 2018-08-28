@@ -1,9 +1,11 @@
 #include "test.h"
 
-#include <gennylib/Orchestrator.hpp>
 #include <iostream>
 
+#include <gennylib/Orchestrator.hpp>
+
 using namespace genny;
+
 
 namespace {
 
@@ -27,7 +29,26 @@ TEST_CASE("Non-Blocking Orchestration") {
     auto o = Orchestrator{};
     o.addTokens(2);
 
+    // 2 tokens but we only count down 1 so normally would block
+    auto t1 = start(o, 0, false, 1);
+    t1.join();
 }
+
+TEST_CASE("Add more tokens at start") {
+    auto o = Orchestrator{};
+    o.addTokens(2);
+
+    auto t1 = start(o, 0, false, 2);
+    t1.join();
+
+    auto t2 = end(o, 0, true, 0, 1);
+    auto t3 = end(o, 0, true, 0, 1);
+    t2.join();
+    t3.join();
+
+    REQUIRE(o.currentPhaseNumber() == 1);
+}
+
 
 TEST_CASE("Orchestrator") {
     auto o = Orchestrator{};
