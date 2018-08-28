@@ -10,14 +10,21 @@ using namespace genny;
 
 namespace {
 
-std::thread start(Orchestrator& o, const int phase, const bool block=true, const int addTokens=1) {
+std::thread start(Orchestrator& o,
+                  const int phase,
+                  const bool block = true,
+                  const int addTokens = 1) {
     return std::thread{[&o, phase, block, addTokens]() {
         REQUIRE(o.awaitPhaseStart(block, addTokens) == phase);
         REQUIRE(o.currentPhaseNumber() == phase);
     }};
 }
 
-std::thread end(Orchestrator& o, const int phase, const bool block=true, const unsigned int morePhases=0, const int removeTokens=1) {
+std::thread end(Orchestrator& o,
+                const int phase,
+                const bool block = true,
+                const unsigned int morePhases = 0,
+                const int removeTokens = 1) {
     return std::thread{[&o, phase, block, morePhases, removeTokens]() {
         REQUIRE(o.currentPhaseNumber() == phase);
         o.awaitPhaseEnd(block, morePhases, removeTokens);
@@ -42,17 +49,19 @@ TEST_CASE("Non-Blocking end (background progression)") {
     auto bgIters = 0;
     auto fgIters = 0;
 
-    auto t1 = std::thread([&](){
+    auto t1 = std::thread([&]() {
         auto phase = o.awaitPhaseStart();
         o.awaitPhaseEnd(false);
-        while( phase == o.currentPhaseNumber() ) {
+        while (phase == o.currentPhaseNumber()) {
             ++bgIters;
-            std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{1}));
+            std::this_thread::sleep_for(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{1}));
         }
     });
-    auto t2 = std::thread([&](){
+    auto t2 = std::thread([&]() {
         o.awaitPhaseStart();
-        std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{5}));
+        std::this_thread::sleep_for(
+            std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{5}));
         ++fgIters;
         o.awaitPhaseEnd();
     });
@@ -134,5 +143,4 @@ TEST_CASE("Orchestrator") {
         REQUIRE(o.currentPhaseNumber() == 2);
         REQUIRE(o.morePhases());
     }
-
 }
