@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include <chrono>
 #include <iostream>
 
 #include <gennylib/Orchestrator.hpp>
@@ -34,7 +35,37 @@ TEST_CASE("Non-Blocking start") {
     t1.join();
 }
 
-TEST_CASE("Add more tokens at start") {
+TEST_CASE("Non-Blocking end (background progression)") {
+    auto o = Orchestrator{};
+    o.addTokens(2);
+
+    auto bgIters = 0;
+    auto fgIters = 0;
+
+    auto t1 = std::thread([&](){
+        auto phase = o.awaitPhaseStart();
+        o.awaitPhaseEnd(false);
+        while( phase == o.currentPhaseNumber() ) {
+            ++bgIters;
+            std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{1}));
+        }
+    });
+    auto t2 = std::thread([&](){
+        o.awaitPhaseStart();
+        std::this_thread::sleep_for(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{5}));
+        ++fgIters;
+        o.awaitPhaseEnd();
+    });
+    t1.join();
+    t2.join();
+
+    REQUIRE(bgIters >= 4);
+    REQUIRE(bgIters <= 6);
+
+    REQUIRE(fgIters == 1);
+}
+
+TEST_CASE("Can add more tokens at start") {
     auto o = Orchestrator{};
     o.addTokens(2);
 
