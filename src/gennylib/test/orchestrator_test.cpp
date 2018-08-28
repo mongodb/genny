@@ -23,11 +23,10 @@ std::thread start(Orchestrator& o,
 std::thread end(Orchestrator& o,
                 const int phase,
                 const bool block = true,
-                const unsigned int morePhases = 0,
                 const int removeTokens = 1) {
-    return std::thread{[&o, phase, block, morePhases, removeTokens]() {
+    return std::thread{[&o, phase, block, removeTokens]() {
         REQUIRE(o.currentPhaseNumber() == phase);
-        o.awaitPhaseEnd(block, morePhases, removeTokens);
+        o.awaitPhaseEnd(block, removeTokens);
     }};
 }
 
@@ -173,6 +172,7 @@ TEST_CASE("Orchestrator") {
     SECTION("Can add more phases") {
         auto t7 = end(o, 1, true, 1);
         auto t8 = end(o, 1, true, 1);
+        o.phasesAtLeastTo(2);
         t7.join();
         t8.join();
         REQUIRE(o.currentPhaseNumber() == 2);

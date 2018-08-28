@@ -66,11 +66,10 @@ void Orchestrator::phasesAtLeastTo(unsigned int minPhase) {
 }
 
 // we end once no more tokens left
-bool Orchestrator::awaitPhaseEnd(bool block, unsigned int morePhases, int removeTokens) {
+bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
     writer lk{_mutex};
 
     assert(State::PhaseStarted == state);
-    this->_maxPhase += morePhases;
     _currentTokens -= removeTokens;
     if (_currentTokens <= 0) {
         ++_phase;
