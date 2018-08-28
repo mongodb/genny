@@ -66,8 +66,8 @@ private:
     mutable std::shared_mutex _mutex;
     std::condition_variable_any _cv;
 
-    unsigned int _wantTokens = 0;
-    unsigned int _currentTokens = 0;
+    int _wantTokens = 0;
+    int _currentTokens = 0;
 
     unsigned int _maxPhase = 1;
     unsigned int _phase = 0;

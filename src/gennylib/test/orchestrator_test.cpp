@@ -25,7 +25,7 @@ std::thread end(Orchestrator& o, const int phase, const bool block=true, const u
 
 }  // namespace
 
-TEST_CASE("Non-Blocking Orchestration") {
+TEST_CASE("Non-Blocking start") {
     auto o = Orchestrator{};
     o.addTokens(2);
 
@@ -41,8 +41,10 @@ TEST_CASE("Add more tokens at start") {
     auto t1 = start(o, 0, false, 2);
     t1.join();
 
-    auto t2 = end(o, 0, true, 0, 1);
-    auto t3 = end(o, 0, true, 0, 1);
+    REQUIRE(o.currentPhaseNumber() == 0);
+
+    auto t2 = end(o, 0);
+    auto t3 = end(o, 0);
     t2.join();
     t3.join();
 
@@ -83,11 +85,23 @@ TEST_CASE("Orchestrator") {
     REQUIRE(o.currentPhaseNumber() == 1);
     REQUIRE(o.morePhases());
 
-    auto t7 = end(o, 1);
-    auto t8 = end(o, 1);
-    t7.join();
-    t8.join();
+    SECTION("Default has phases 0 and 1") {
+        auto t7 = end(o, 1);
+        auto t8 = end(o, 1);
+        t7.join();
+        t8.join();
 
-    REQUIRE(o.currentPhaseNumber() == 2);
-    REQUIRE(!o.morePhases());
+        REQUIRE(o.currentPhaseNumber() == 2);
+        REQUIRE(!o.morePhases());
+    }
+
+    SECTION("Can add more phases") {
+        auto t7 = end(o, 1, true, 1);
+        auto t8 = end(o, 1, true, 1);
+        t7.join();
+        t8.join();
+        REQUIRE(o.currentPhaseNumber() == 2);
+        REQUIRE(o.morePhases());
+    }
+
 }

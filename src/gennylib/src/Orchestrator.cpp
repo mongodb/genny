@@ -35,13 +35,14 @@ bool Orchestrator::morePhases() const {
     return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
 }
 
+// we start once we have required number of tokens
 unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     writer lk{_mutex};
 
     assert(state == State::PhaseEnded);
     _currentTokens += addTokens;
     unsigned int out = this->_phase;
-    if (_currentTokens == _wantTokens) {
+    if (_currentTokens >= _wantTokens) {
         _cv.notify_all();
         state = State::PhaseStarted;
     } else {
@@ -58,13 +59,14 @@ void Orchestrator::addTokens(int tokens) {
     this->_wantTokens += tokens;
 }
 
+// we end once no more tokens left
 bool Orchestrator::awaitPhaseEnd(bool block, unsigned int morePhases, int removeTokens) {
     writer lk{_mutex};
 
     assert(State::PhaseStarted == state);
     this->_maxPhase += morePhases;
     _currentTokens -= removeTokens;
-    if (_currentTokens == 0) {
+    if (_currentTokens <= 0) {
         ++_phase;
         _cv.notify_all();
         state = State::PhaseEnded;
