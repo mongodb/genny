@@ -7,21 +7,27 @@ using namespace genny;
 
 namespace {
 
-std::thread start(Orchestrator& o, int phase) {
-    return std::thread{[&o, phase]() {
-        REQUIRE(o.awaitPhaseStart() == phase);
+std::thread start(Orchestrator& o, const int phase, const bool block=true, const int addTokens=1) {
+    return std::thread{[&o, phase, block, addTokens]() {
+        REQUIRE(o.awaitPhaseStart(block, addTokens) == phase);
         REQUIRE(o.currentPhaseNumber() == phase);
     }};
 }
 
-std::thread end(Orchestrator& o, int phase) {
-    return std::thread{[&o, phase]() {
+std::thread end(Orchestrator& o, const int phase, const bool block=true, const unsigned int morePhases=0, const int removeTokens=1) {
+    return std::thread{[&o, phase, block, morePhases, removeTokens]() {
         REQUIRE(o.currentPhaseNumber() == phase);
-        o.awaitPhaseEnd();
+        o.awaitPhaseEnd(block, morePhases, removeTokens);
     }};
 }
 
 }  // namespace
+
+TEST_CASE("Non-Blocking Orchestration") {
+    auto o = Orchestrator{};
+    o.addTokens(2);
+
+}
 
 TEST_CASE("Orchestrator") {
     auto o = Orchestrator{};
