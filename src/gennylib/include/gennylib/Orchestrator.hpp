@@ -35,7 +35,7 @@ public:
      * Blocks until the phase is started when all actors report they are ready.
      * @return the phase that has just started.
      */
-    int awaitPhaseStart(bool block = true, int addTokens = 1);
+    unsigned int awaitPhaseStart(bool block = true, int addTokens = 1);
 
     /**
      * Signal from an actor that it is done with the current phase.
@@ -56,7 +56,7 @@ public:
      * }
      * ```
      */
-    void awaitPhaseEnd(bool block = true, unsigned int morePhases = 0, int removeTokens = 1);
+    bool awaitPhaseEnd(bool block = true, unsigned int morePhases = 0, int removeTokens = 1);
 
     void addTokens(int tokens);
 

@@ -4,8 +4,22 @@
 
 #include <gennylib/Orchestrator.hpp>
 
+namespace {
+
+// so we can call morePhases() in awaitPhaseEnd.
+inline constexpr bool morePhaseLogic(int currentPhase, int maxPhase, bool errors) {
+    return currentPhase <= maxPhase && !errors;
+}
+
+}  // namespace
+
+
 namespace genny {
 
+/*
+ * Multiple readers can access at same time, but only one writer.
+ * Use reader when only reading internal state, but use writer whenever changing it.
+ */
 using reader = std::shared_lock<std::shared_mutex>;
 using writer = std::unique_lock<std::shared_mutex>;
 
@@ -18,20 +32,20 @@ unsigned int Orchestrator::currentPhaseNumber() const {
 bool Orchestrator::morePhases() const {
     reader lk{_mutex};
 
-    return this->_phase <= this->_maxPhase && !this->_errors;
+    return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
 }
 
-int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
+unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     writer lk{_mutex};
 
     assert(state == State::PhaseEnded);
     _currentTokens += addTokens;
-    int out = this->_phase;
+    unsigned int out = this->_phase;
     if (_currentTokens == _wantTokens) {
         _cv.notify_all();
         state = State::PhaseStarted;
     } else {
-        if(block) {
+        if (block) {
             _cv.wait(lk);
         }
     }
@@ -44,7 +58,7 @@ void Orchestrator::addTokens(int tokens) {
     this->_wantTokens += tokens;
 }
 
-void Orchestrator::awaitPhaseEnd(bool block, unsigned int morePhases, int removeTokens) {
+bool Orchestrator::awaitPhaseEnd(bool block, unsigned int morePhases, int removeTokens) {
     writer lk{_mutex};
 
     assert(State::PhaseStarted == state);
@@ -59,6 +73,7 @@ void Orchestrator::awaitPhaseEnd(bool block, unsigned int morePhases, int remove
             _cv.wait(lk);
         }
     }
+    return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
 }
 
 void Orchestrator::abort() {
