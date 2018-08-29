@@ -6,8 +6,8 @@
 #include <iterator>
 #include <mutex>
 #include <shared_mutex>
-#include <unordered_map>
 #include <thread>
+#include <unordered_map>
 #include <utility>
 
 namespace genny {
@@ -75,7 +75,7 @@ public:
      * }
      * ```
      */
-    bool awaitPhaseEnd(bool block=true, int removeTokens=1);
+    bool awaitPhaseEnd(bool block = true, int removeTokens = 1);
 
     void addRequiredTokens(int tokens);
 
@@ -109,7 +109,8 @@ class OrchestratorIterator;
 // returned from orchestrator.loop()
 class OrchestratorLoop {
 public:
-    explicit OrchestratorLoop(Orchestrator& orchestrator, std::unordered_map<long, bool> blockingPhases);
+    explicit OrchestratorLoop(Orchestrator& orchestrator,
+                              std::unordered_map<long, bool> blockingPhases);
     OrchestratorIterator begin();
     OrchestratorIterator end();
 
@@ -123,7 +124,7 @@ private:
     bool doesBlockOn(int phase) const;
 
     Orchestrator* _orchestrator;
-    std::unordered_map<long,bool> _blockingPhases;
+    std::unordered_map<long, bool> _blockingPhases;
 };
 
 // returned from orchestrator.loop().begin()
@@ -138,7 +139,7 @@ public:
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    explicit OrchestratorIterator(OrchestratorLoop& , bool);
+    explicit OrchestratorIterator(OrchestratorLoop&, bool);
     bool operator==(const OrchestratorIterator&) const;
     bool operator!=(const OrchestratorIterator&) const;
     int operator*();
@@ -152,13 +153,7 @@ private:
 };
 
 
-
-
-
-
-
 }  // namespace V1
-
 
 
 }  // namespace genny
