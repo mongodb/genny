@@ -3,11 +3,19 @@
 
 #include <cassert>
 #include <condition_variable>
+#include <iterator>
 #include <mutex>
 #include <shared_mutex>
+#include <unordered_map>
 #include <thread>
+#include <utility>
 
 namespace genny {
+
+namespace V1 {
+class OrchestratorLoop;
+}  // namespace V1
+
 
 /**
  * Responsible for the synchronization of actors
@@ -73,6 +81,8 @@ public:
 
     void abort();
 
+    V1::OrchestratorLoop loop(std::unordered_map<long, bool> blockingPhases);
+
 private:
     mutable std::shared_mutex _mutex;
     std::condition_variable_any _cv;
@@ -89,6 +99,66 @@ private:
 
     State state = State::PhaseEnded;
 };
+
+
+namespace V1 {
+
+
+class OrchestratorIterator;
+
+// returned from orchestrator.loop()
+class OrchestratorLoop {
+public:
+    explicit OrchestratorLoop(Orchestrator& orchestrator, std::unordered_map<long, bool> blockingPhases);
+    OrchestratorIterator begin();
+    OrchestratorIterator end();
+
+    // no copy
+    OrchestratorLoop(OrchestratorLoop&) = delete;
+    void operator=(OrchestratorLoop&) = delete;
+
+private:
+    friend OrchestratorIterator;
+    bool morePhases() const;
+    bool doesBlockOn(int phase) const;
+
+    Orchestrator* _orchestrator;
+    std::unordered_map<long,bool> _blockingPhases;
+};
+
+// returned from orchestrator.loop().begin()
+// and           orchestrator.loop().end()
+class OrchestratorIterator {
+public:
+    // <iterator-concept>
+    typedef std::forward_iterator_tag iterator_category;
+    typedef int value_type;
+    typedef int reference;
+    typedef int pointer;
+    typedef std::ptrdiff_t difference_type;
+    // </iterator-concept>
+
+    explicit OrchestratorIterator(OrchestratorLoop& , bool);
+    bool operator==(const OrchestratorIterator&) const;
+    bool operator!=(const OrchestratorIterator&) const;
+    int operator*();
+    OrchestratorIterator& operator++();
+
+private:
+    friend OrchestratorLoop;
+    bool atEnd() const;
+    OrchestratorLoop* _loop;
+    bool _isEnd;
+};
+
+
+
+
+
+
+
+}  // namespace V1
+
 
 
 }  // namespace genny
