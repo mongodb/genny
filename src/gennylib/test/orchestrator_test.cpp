@@ -6,7 +6,7 @@
 #include <gennylib/Orchestrator.hpp>
 
 using namespace genny;
-
+using namespace std::chrono;
 
 namespace {
 
@@ -178,4 +178,78 @@ TEST_CASE("Orchestrator") {
         REQUIRE(o.currentPhaseNumber() == 2);
         REQUIRE(o.morePhases());
     }
+}
+
+TEST_CASE("Range-based for loops") {
+    Orchestrator o;
+    o.addRequiredTokens(2);
+    o.phasesAtLeastTo(1);
+
+    std::unordered_map<int, system_clock::duration> t1TimePerPhase;
+    std::unordered_map<int, system_clock::duration> t2TimePerPhase;
+
+    const duration sleepTime = milliseconds{10};
+
+    auto t1 = std::thread([&]() {
+        std::unordered_map<long, bool> blocking = {
+                {0, false},
+                {1, true}
+        };
+
+        auto prevPhaseStart = system_clock::now();
+        int prevPhase = -1;
+
+        for(int phase : o.loop(blocking)) {
+            REQUIRE((phase == 1 || phase == 0));
+
+            if (prevPhase != -1) {
+                auto now = system_clock::now();
+                t1TimePerPhase[prevPhase] = now - prevPhaseStart;
+                prevPhaseStart = now;
+            }
+            prevPhase = phase;
+
+            if (phase == 1) {
+                // blocks t2 from progressing
+                std::this_thread::sleep_for(sleepTime);
+            }
+        }
+        REQUIRE(prevPhase == 1);
+        t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
+    });
+    auto t2 = std::thread([&]() {
+        std::unordered_map<long, bool> blocking = {
+                {0, true},
+                {1, false}
+        };
+
+        auto prevPhaseStart = system_clock::now();
+        int prevPhase = -1;
+
+        for(int phase : o.loop(blocking)) {
+            REQUIRE((phase == 1 || phase == 0));
+
+            if (prevPhase != -1) {
+                auto now = system_clock::now();
+                t2TimePerPhase[prevPhase] = now - prevPhaseStart;
+                prevPhaseStart = now;
+            }
+            prevPhase = phase;
+
+            if (phase == 0) {
+                // blocks t1 from progressing
+                std::this_thread::sleep_for(sleepTime);
+            }
+        }
+        REQUIRE(prevPhase == 1);
+        t2TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
+    });
+
+    t1.join();
+    t2.join();
+
+    REQUIRE(t1TimePerPhase[0] == sleepTime);
+    REQUIRE(t1TimePerPhase[1] == sleepTime);
+    REQUIRE(t2TimePerPhase[0] == sleepTime);
+    REQUIRE(t2TimePerPhase[1] == sleepTime);
 }
