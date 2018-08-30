@@ -141,7 +141,9 @@ public:
 
     explicit OrchestratorIterator(OrchestratorLoop&, bool);
     bool operator==(const OrchestratorIterator&) const;
-    bool operator!=(const OrchestratorIterator&) const;
+    bool operator!=(const OrchestratorIterator& other) const {
+        return !(*this == other);
+    }
     int operator*();
     OrchestratorIterator& operator++();
 
