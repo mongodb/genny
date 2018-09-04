@@ -128,6 +128,11 @@ V1::OrchestratorIterator::OrchestratorIterator(V1::OrchestratorLoop & orchestrat
 
 }
 
+/*
+operator*  calls awaitPhaseStart (and immediately awaitEnd if non-blocking)
+operator++ calls awaitPhaseEnd   (but not if blocking)
+*/
+
 int V1::OrchestratorIterator::operator*() {
     BOOST_LOG_TRIVIAL(info) << "start of operator* with currentPhase " << this->_loop->_orchestrator->currentPhaseNumber();
     auto phase = this->_loop->_orchestrator->awaitPhaseStart();
