@@ -477,8 +477,8 @@ public:
         return this->_workload->_orchestrator->awaitPhaseStart();
     }
 
-    template<class...Args>
-    auto awaitPhaseEnd(Args&&...args) {
+    template <class... Args>
+    auto awaitPhaseEnd(Args&&... args) {
         return this->_workload->_orchestrator->awaitPhaseEnd(std::forward<Args>(args)...);
     }
 

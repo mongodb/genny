@@ -47,8 +47,8 @@ TEST_CASE("Correctness for N iterations") {
     }
 
     SECTION("Configured for -1 Times barfs") {
-        REQUIRE_THROWS_WITH( (PhaseLoop{make_optional(-1), nullopt}),
-                             Catch::Contains("Need non-negative number of iterations. Gave -1"));
+        REQUIRE_THROWS_WITH((PhaseLoop{make_optional(-1), nullopt}),
+                            Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
 
@@ -106,14 +106,14 @@ TEST_CASE("Combinations of duration and iterations") {
     // combinations of the other tests 🙈
 
     SECTION("Configured for -1 milliseconds barfs") {
-        REQUIRE_THROWS_WITH( (PhaseLoop{nullopt, make_optional(chrono::milliseconds{-1})}),
-                              Catch::Contains("Need non-negative duration. Gave -1 milliseconds") );
+        REQUIRE_THROWS_WITH((PhaseLoop{nullopt, make_optional(chrono::milliseconds{-1})}),
+                            Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
 
 TEST_CASE("Need either iterations or duration") {
-    REQUIRE_THROWS_WITH( (PhaseLoop{nullopt, nullopt}),
-                         Catch::Contains("Need to specify either min iterations or min duration"));
+    REQUIRE_THROWS_WITH((PhaseLoop{nullopt, nullopt}),
+                        Catch::Contains("Need to specify either min iterations or min duration"));
 }
 
 TEST_CASE("Iterator concept correctness") {

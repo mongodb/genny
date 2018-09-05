@@ -110,7 +110,6 @@ private:
 }  // namespace V1
 
 
-
 /**
  * Configured with an optional<min#iterations> and/or optional<min duration>. The
  * returned .begin() iterators will not == .end() until both the # iterations and

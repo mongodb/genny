@@ -85,7 +85,7 @@ public:
 
 private:
     mutable std::shared_mutex _mutex;
-    std::condition_variable_any _cv;
+    std::condition_variable_any _phaseChange;
 
     int _requireTokens = 0;
     int _currentTokens = 0;
