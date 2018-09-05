@@ -149,7 +149,6 @@ public:
 
 private:
     friend OrchestratorLoop;
-    bool atEnd() const;
     OrchestratorLoop* _loop;
     bool _isEnd;
 };

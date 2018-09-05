@@ -2,6 +2,10 @@
 
 #include <chrono>
 #include <iostream>
+#include <unordered_map>
+#include <unordered_set>
+
+#include <boost/log/trivial.hpp>
 
 #include <gennylib/Orchestrator.hpp>
 
@@ -180,7 +184,32 @@ TEST_CASE("Orchestrator") {
     }
 }
 
-TEST_CASE("Range-based for loops") {
+// TODO: case when all blocking
+// TODO: case when no phases
+// TODO: case when mix/match blocking
+// TODO: case when map doesn't define a phase to block
+
+TEST_CASE("single-threaded range-based for loops, no blocking") {
+    Orchestrator o;
+    o.addRequiredTokens(1);
+    o.phasesAtLeastTo(2);
+
+    std::unordered_map<long,bool> blocking {
+            {0L, true},
+            {1L, true},
+            {2L, true}
+    };
+
+    std::unordered_set<long> seen;
+
+    for(long phase : o.loop(blocking)) {
+        seen.insert(phase);
+    }
+
+    REQUIRE(seen == std::unordered_set<long>{0L,1L, 2L});
+}
+
+TEST_CASE("Multi-threaded Range-based for loops") {
     Orchestrator o;
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
@@ -194,7 +223,7 @@ TEST_CASE("Range-based for loops") {
 
     auto t1 = std::thread([&]() {
         std::unordered_map<long, bool> blocking = {
-                {0, false},
+                {0, true},
                 {1, true}
         };
 
@@ -226,7 +255,7 @@ TEST_CASE("Range-based for loops") {
     auto t2 = std::thread([&]() {
         std::unordered_map<long, bool> blocking = {
                 {0, true},
-                {1, false}
+                {1, true}
         };
 
         auto prevPhaseStart = system_clock::now();

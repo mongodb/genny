@@ -3,8 +3,6 @@
 #include <iostream>
 #include <shared_mutex>
 
-#include <boost/log/trivial.hpp>
-
 #include <gennylib/Orchestrator.hpp>
 
 namespace {
@@ -133,10 +131,8 @@ V1::OrchestratorIterator V1::OrchestratorLoop::begin() {
 
 bool V1::OrchestratorLoop::doesBlockOn(int phase) const {
     if (auto it = _blockingPhases.find(phase); it != _blockingPhases.end()) {
-        BOOST_LOG_TRIVIAL(info) << "does block on " << phase << "? " << it->second;
         return it->second;
     }
-    BOOST_LOG_TRIVIAL(info) << "does block on " << phase << "? not found -> false";
     return false;
 }
 
@@ -146,11 +142,7 @@ bool V1::OrchestratorLoop::morePhases() const {
 
 V1::OrchestratorIterator::OrchestratorIterator(V1::OrchestratorLoop & orchestratorLoop, bool isEnd)
 : _loop{std::addressof(orchestratorLoop)},
-  _isEnd{isEnd} {
-
-    BOOST_LOG_TRIVIAL(info) << "iterator ctor for isEnd=" << isEnd;
-
-}
+  _isEnd{isEnd} {}
 
 /*
 operator*  calls awaitPhaseStart (and immediately awaitEnd if non-blocking)
@@ -158,40 +150,23 @@ operator++ calls awaitPhaseEnd   (but not if blocking)
 */
 
 int V1::OrchestratorIterator::operator*() {
-    BOOST_LOG_TRIVIAL(info) << "start of operator* with currentPhase " << this->_loop->_orchestrator->currentPhaseNumber();
     auto phase = this->_loop->_orchestrator->awaitPhaseStart();
-    BOOST_LOG_TRIVIAL(info) << "operator* phase from awaitStart: " << phase;
-    if (this->_loop->doesBlockOn(phase)) {
-        BOOST_LOG_TRIVIAL(info) << "operator* blocks on phase " << phase;
+    if (! this->_loop->doesBlockOn(phase)) {
         this->_loop->_orchestrator->awaitPhaseEnd(false);
     }
-    BOOST_LOG_TRIVIAL(info) << "end of operator* with currentPhase " << this->_loop->_orchestrator->currentPhaseNumber();
     return phase;
 }
 
 V1::OrchestratorIterator &V1::OrchestratorIterator::operator++() {
     auto phase = this->_loop->_orchestrator->currentPhaseNumber();
-    BOOST_LOG_TRIVIAL(info) << "operator++ phase=" << phase;
-    if (! this->_loop->doesBlockOn(phase)) {
-        if (!this->atEnd()) {
-            BOOST_LOG_TRIVIAL(info) << "operator* noblock on " << phase << " @ end";
-            this->_loop->_orchestrator->awaitPhaseEnd(true);
-        }
+    if (this->_loop->doesBlockOn(phase)) {
+        this->_loop->_orchestrator->awaitPhaseEnd(true);
     }
-    BOOST_LOG_TRIVIAL(info) << "end of operator++";
     return *this;
 }
 
-bool V1::OrchestratorIterator::atEnd() const {
-    return !(_loop->morePhases());
-}
-
 bool V1::OrchestratorIterator::operator==(const V1::OrchestratorIterator &other) const {
-    BOOST_LOG_TRIVIAL(info) << "operator== with other._isEnd " << other._isEnd << " and atEnd=" << this->atEnd();
-    return (other._isEnd && this->atEnd()) ||
-           (this->_isEnd && other.atEnd()) ||
-           (this == &other) ||
-           (this->_isEnd && other._isEnd && this->_loop == other._loop);
+    return (other._isEnd && !_loop->morePhases());
 }
 
 }  // namespace genny
