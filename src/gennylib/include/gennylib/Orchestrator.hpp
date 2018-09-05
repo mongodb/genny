@@ -151,6 +151,7 @@ private:
     friend OrchestratorLoop;
     OrchestratorLoop* _loop;
     bool _isEnd;
+    int _currentPhase;
 };
 
 

@@ -189,7 +189,7 @@ TEST_CASE("Orchestrator") {
 // TODO: case when mix/match blocking
 // TODO: case when map doesn't define a phase to block
 
-TEST_CASE("single-threaded range-based for loops, no blocking") {
+TEST_CASE("single-threaded range-based for loops all phases blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
@@ -209,21 +209,96 @@ TEST_CASE("single-threaded range-based for loops, no blocking") {
     REQUIRE(seen == std::unordered_set<long>{0L,1L, 2L});
 }
 
-TEST_CASE("Multi-threaded Range-based for loops") {
+TEST_CASE("single-threaded range-based for loops no phases blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
+    o.phasesAtLeastTo(2);
+
+    std::unordered_map<long,bool> blocking {
+            {0L, false},
+            {1L, false},
+            {2L, false}
+    };
+
+    std::unordered_set<long> seen;
+
+    for(long phase : o.loop(blocking)) {
+        seen.insert(phase);
+    }
+
+    REQUIRE(seen == std::unordered_set<long>{0L,1L, 2L});
+}
+
+TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
+    Orchestrator o;
+    o.addRequiredTokens(1);
+
+    std::unordered_map<long,bool> blocking {
+            {0L, false},
+            {1L, true},
+    };
+
+    std::unordered_set<long> seen;
+
+    for(long phase : o.loop(blocking)) {
+        seen.insert(phase);
+    }
+
+    REQUIRE(seen == std::unordered_set<long>{0L, 1L});
+}
+
+TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
+    Orchestrator o;
+    o.addRequiredTokens(1);
+
+    std::unordered_map<long,bool> blocking {
+            {0L, true},
+            {1L, false},
+    };
+
+    std::unordered_set<long> seen;
+
+    for(long phase : o.loop(blocking)) {
+        seen.insert(phase);
+    }
+
+    REQUIRE(seen == std::unordered_set<long>{0L, 1L});
+}
+
+TEST_CASE("single-threaded range-based for loops blocking then blocking") {
+    Orchestrator o;
+    o.addRequiredTokens(1);
+
+    std::unordered_map<long,bool> blocking {
+            {0L, true},
+            {1L, true},
+    };
+
+    std::unordered_set<long> seen;
+
+    for(long phase : o.loop(blocking)) {
+        seen.insert(phase);
+    }
+
+    REQUIRE(seen == std::unordered_set<long>{0L, 1L});
+}
+
+TEST_CASE("Multi-threaded Range-based for loops") {
+    Orchestrator o;
+    o.addRequiredTokens(2);
     o.phasesAtLeastTo(1);
 
     std::unordered_map<int, system_clock::duration> t1TimePerPhase;
     std::unordered_map<int, system_clock::duration> t2TimePerPhase;
 
-    const duration sleepTime = milliseconds{10};
+    const duration sleepTime = milliseconds{100};
 
     std::atomic_int failures = 0;
 
     auto t1 = std::thread([&]() {
+        BOOST_LOG_TRIVIAL(info) << "t1=" << std::this_thread::get_id();
         std::unordered_map<long, bool> blocking = {
-                {0, true},
+                {0, false},
                 {1, true}
         };
 
@@ -243,6 +318,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             prevPhase = phase;
 
             if (phase == 1) {
+                BOOST_LOG_TRIVIAL(info) << "t1 blocking in phase 1";
                 // blocks t2 from progressing
                 std::this_thread::sleep_for(sleepTime);
             }
@@ -253,9 +329,10 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
     auto t2 = std::thread([&]() {
+        BOOST_LOG_TRIVIAL(info) << "t2=" << std::this_thread::get_id();
         std::unordered_map<long, bool> blocking = {
                 {0, true},
-                {1, true}
+                {1, false}
         };
 
         auto prevPhaseStart = system_clock::now();
@@ -274,6 +351,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             prevPhase = phase;
 
             if (phase == 0) {
+                BOOST_LOG_TRIVIAL(info) << "t2 blocking in phase 0";
                 // blocks t1 from progressing
                 std::this_thread::sleep_for(sleepTime);
             }

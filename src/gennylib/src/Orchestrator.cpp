@@ -3,6 +3,8 @@
 #include <iostream>
 #include <shared_mutex>
 
+#include <boost/log/trivial.hpp>
+
 #include <gennylib/Orchestrator.hpp>
 
 namespace {
@@ -142,31 +144,49 @@ bool V1::OrchestratorLoop::morePhases() const {
 
 V1::OrchestratorIterator::OrchestratorIterator(V1::OrchestratorLoop & orchestratorLoop, bool isEnd)
 : _loop{std::addressof(orchestratorLoop)},
-  _isEnd{isEnd} {}
+  _isEnd{isEnd},
+  _currentPhase{0} {}
 
 /*
 operator*  calls awaitPhaseStart (and immediately awaitEnd if non-blocking)
 operator++ calls awaitPhaseEnd   (but not if blocking)
 */
 
+std::atomic<int> opStar = 0;
+
 int V1::OrchestratorIterator::operator*() {
-    auto phase = this->_loop->_orchestrator->awaitPhaseStart();
-    if (! this->_loop->doesBlockOn(phase)) {
+    ++opStar;
+    BOOST_LOG_TRIVIAL(info) << "operator*" << opStar << " awaitPhaseStart";
+    _currentPhase = this->_loop->_orchestrator->awaitPhaseStart();
+    BOOST_LOG_TRIVIAL(info) << "operator*" << opStar << " with _currentPhase=" << _currentPhase << " blocks=" << this->_loop->doesBlockOn(_currentPhase);
+    if (! this->_loop->doesBlockOn(_currentPhase)) {
+        BOOST_LOG_TRIVIAL(info) << "operator*" << opStar << " awaitPhaseEnd(false)";
         this->_loop->_orchestrator->awaitPhaseEnd(false);
     }
-    return phase;
+    return _currentPhase;
 }
 
+
+std::atomic<int> opPlus = 0;
+
 V1::OrchestratorIterator &V1::OrchestratorIterator::operator++() {
-    auto phase = this->_loop->_orchestrator->currentPhaseNumber();
-    if (this->_loop->doesBlockOn(phase)) {
+    ++opPlus;
+    BOOST_LOG_TRIVIAL(info) << "operator++" << opPlus << " with phase=" << _currentPhase << " blocks=" << this->_loop->doesBlockOn(_currentPhase);
+    if (this->_loop->doesBlockOn(_currentPhase)) {
+        BOOST_LOG_TRIVIAL(info) << "operator++" << opPlus << " awaitPhaseEnd(true)";
         this->_loop->_orchestrator->awaitPhaseEnd(true);
     }
     return *this;
 }
 
+std::atomic<int>  opEq = 0;
+
+
 bool V1::OrchestratorIterator::operator==(const V1::OrchestratorIterator &other) const {
-    return (other._isEnd && !_loop->morePhases());
+    ++opEq;
+    auto out = (other._isEnd && !_loop->morePhases());
+    BOOST_LOG_TRIVIAL(info) << "operator==" << opEq << " =>" << out;
+    return out;
 }
 
 }  // namespace genny
