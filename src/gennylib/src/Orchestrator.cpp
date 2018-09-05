@@ -118,9 +118,9 @@ V1::OrchestratorLoop Orchestrator::loop(std::unordered_map<long, bool> blockingP
     return V1::OrchestratorLoop(*this, std::move(blockingPhases));
 }
 
-V1::OrchestratorLoop::OrchestratorLoop(Orchestrator &orchestrator, std::unordered_map<long, bool> blockingPhases)
-: _orchestrator{std::addressof(orchestrator)},
-  _blockingPhases{std::move(blockingPhases)} {}
+V1::OrchestratorLoop::OrchestratorLoop(Orchestrator& orchestrator,
+                                       std::unordered_map<long, bool> blockingPhases)
+    : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{std::move(blockingPhases)} {}
 
 V1::OrchestratorIterator V1::OrchestratorLoop::end() {
     return V1::OrchestratorIterator{*this, true};
@@ -143,10 +143,8 @@ bool V1::OrchestratorLoop::morePhases() const {
     return this->_orchestrator->morePhases();
 }
 
-V1::OrchestratorIterator::OrchestratorIterator(V1::OrchestratorLoop & orchestratorLoop, bool isEnd)
-: _loop{std::addressof(orchestratorLoop)},
-  _isEnd{isEnd},
-  _currentPhase{0} {}
+V1::OrchestratorIterator::OrchestratorIterator(V1::OrchestratorLoop& orchestratorLoop, bool isEnd)
+    : _loop{std::addressof(orchestratorLoop)}, _isEnd{isEnd}, _currentPhase{0} {}
 
 /*
 operator*  calls awaitPhaseStart (and immediately awaitEnd if non-blocking)
@@ -156,7 +154,7 @@ operator++ calls awaitPhaseEnd   (but not if blocking)
 // TODO: handle multiple calls to operator*() without calls to operator++() between??
 int V1::OrchestratorIterator::operator*() {
     _currentPhase = this->_loop->_orchestrator->awaitPhaseStart();
-    if (! this->_loop->doesBlockOn(_currentPhase)) {
+    if (!this->_loop->doesBlockOn(_currentPhase)) {
         this->_loop->_orchestrator->awaitPhaseEnd(false);
     }
     return _currentPhase;
@@ -164,7 +162,7 @@ int V1::OrchestratorIterator::operator*() {
 
 
 // TODO: handle multiple calls to operator++() without calls to operator*() between?
-V1::OrchestratorIterator &V1::OrchestratorIterator::operator++() {
+V1::OrchestratorIterator& V1::OrchestratorIterator::operator++() {
     if (this->_loop->doesBlockOn(_currentPhase)) {
         this->_loop->_orchestrator->awaitPhaseEnd(true);
     }
@@ -173,7 +171,7 @@ V1::OrchestratorIterator &V1::OrchestratorIterator::operator++() {
 
 // TODO: handle self-equality
 // TODO: handle created from different _loops
-bool V1::OrchestratorIterator::operator==(const V1::OrchestratorIterator &other) const {
+bool V1::OrchestratorIterator::operator==(const V1::OrchestratorIterator& other) const {
     auto out = (other._isEnd && !_loop->morePhases());
     return out;
 }

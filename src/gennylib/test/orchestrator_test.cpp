@@ -196,19 +196,15 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_map<long,bool> blocking {
-            {0L, true},
-            {1L, true},
-            {2L, true}
-    };
+    std::unordered_map<long, bool> blocking{{0L, true}, {1L, true}, {2L, true}};
 
     std::unordered_set<long> seen;
 
-    for(long phase : o.loop(blocking)) {
+    for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
-    REQUIRE(seen == std::unordered_set<long>{0L,1L, 2L});
+    REQUIRE(seen == std::unordered_set<long>{0L, 1L, 2L});
 }
 
 TEST_CASE("single-threaded range-based for loops no phases blocking") {
@@ -216,33 +212,29 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_map<long,bool> blocking {
-            {0L, false},
-            {1L, false},
-            {2L, false}
-    };
+    std::unordered_map<long, bool> blocking{{0L, false}, {1L, false}, {2L, false}};
 
     std::unordered_set<long> seen;
 
-    for(long phase : o.loop(blocking)) {
+    for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
-    REQUIRE(seen == std::unordered_set<long>{0L,1L, 2L});
+    REQUIRE(seen == std::unordered_set<long>{0L, 1L, 2L});
 }
 
 TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<long,bool> blocking {
-            {0L, false},
-            {1L, true},
+    std::unordered_map<long, bool> blocking{
+        {0L, false},
+        {1L, true},
     };
 
     std::unordered_set<long> seen;
 
-    for(long phase : o.loop(blocking)) {
+    for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
@@ -253,14 +245,14 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<long,bool> blocking {
-            {0L, true},
-            {1L, false},
+    std::unordered_map<long, bool> blocking{
+        {0L, true},
+        {1L, false},
     };
 
     std::unordered_set<long> seen;
 
-    for(long phase : o.loop(blocking)) {
+    for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
@@ -271,14 +263,14 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<long,bool> blocking {
-            {0L, true},
-            {1L, true},
+    std::unordered_map<long, bool> blocking{
+        {0L, true},
+        {1L, true},
     };
 
     std::unordered_set<long> seen;
 
-    for(long phase : o.loop(blocking)) {
+    for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
@@ -298,16 +290,13 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     std::atomic_int failures = 0;
 
     auto t1 = std::thread([&]() {
-        std::unordered_map<long, bool> blocking = {
-                {0, false},
-                {1, true}
-        };
+        std::unordered_map<long, bool> blocking = {{0, false}, {1, true}};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for(int phase : o.loop(blocking)) {
-            if(!(phase == 1 || phase == 0)) {
+        for (int phase : o.loop(blocking)) {
+            if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
 
@@ -324,7 +313,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             }
 
             if (phase == 0) {
-                while(o.currentPhaseNumber() == 0) {
+                while (o.currentPhaseNumber() == 0) {
                     // nop
                 }
             }
@@ -335,16 +324,13 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
     auto t2 = std::thread([&]() {
-        std::unordered_map<long, bool> blocking = {
-                {0, true},
-                {1, false}
-        };
+        std::unordered_map<long, bool> blocking = {{0, true}, {1, false}};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for(int phase : o.loop(blocking)) {
-            if(!(phase == 1 || phase == 0)) {
+        for (int phase : o.loop(blocking)) {
+            if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
 
@@ -356,7 +342,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             prevPhase = phase;
 
             if (phase == 1) {
-                while(o.currentPhaseNumber() == 1) {
+                while (o.currentPhaseNumber() == 1) {
                     // nop
                 }
             }
@@ -376,10 +362,8 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     t2.join();
 
     // don't care about 1s place, so just int-divide to kill it :)
-    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[0]).count()/10 == sleepTime.count()/10);
-    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[1]).count()/10 == sleepTime.count()/10);
-    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[0]).count()/10 == sleepTime.count()/10);
-    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[1]).count()/10 == sleepTime.count()/10);
-
-
+    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[0]).count() / 10 == sleepTime.count() / 10);
+    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[1]).count() / 10 == sleepTime.count() / 10);
+    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[0]).count() / 10 == sleepTime.count() / 10);
+    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[1]).count() / 10 == sleepTime.count() / 10);
 }
