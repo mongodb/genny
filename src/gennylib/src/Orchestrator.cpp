@@ -115,8 +115,9 @@ void Orchestrator::abort() {
     this->_errors = true;
 }
 
+// TODO: should this be a ref?
 V1::OrchestratorLoop Orchestrator::loop(std::unordered_map<long, bool> blockingPhases) {
-    return V1::OrchestratorLoop(*this, blockingPhases);
+    return V1::OrchestratorLoop(*this, std::move(blockingPhases));
 }
 
 V1::OrchestratorLoop::OrchestratorLoop(Orchestrator &orchestrator, std::unordered_map<long, bool> blockingPhases)
@@ -131,10 +132,12 @@ V1::OrchestratorIterator V1::OrchestratorLoop::begin() {
     return V1::OrchestratorIterator{*this, false};
 }
 
+// TODO: make type of phase a consistent type - maybe struct Phase { operator int() {} }?
 bool V1::OrchestratorLoop::doesBlockOn(int phase) const {
     if (auto it = _blockingPhases.find(phase); it != _blockingPhases.end()) {
         return it->second;
     }
+    // TODO: is this the right default?
     return false;
 }
 
@@ -154,6 +157,8 @@ operator++ calls awaitPhaseEnd   (but not if blocking)
 
 std::atomic<int> opStar = 0;
 
+// TODO: handle multiple calls to operator*() without calls to operator++() between??
+
 int V1::OrchestratorIterator::operator*() {
     ++opStar;
     BOOST_LOG_TRIVIAL(info) << "operator*" << opStar << " awaitPhaseStart";
@@ -169,6 +174,7 @@ int V1::OrchestratorIterator::operator*() {
 
 std::atomic<int> opPlus = 0;
 
+// TODO: handle multiple calls to operator++() without calls to operator*() between?
 V1::OrchestratorIterator &V1::OrchestratorIterator::operator++() {
     ++opPlus;
     BOOST_LOG_TRIVIAL(info) << "operator++" << opPlus << " with phase=" << _currentPhase << " blocks=" << this->_loop->doesBlockOn(_currentPhase);
@@ -181,7 +187,8 @@ V1::OrchestratorIterator &V1::OrchestratorIterator::operator++() {
 
 std::atomic<int>  opEq = 0;
 
-
+// TODO: handle self-equality
+// TODO: handle created from different _loops
 bool V1::OrchestratorIterator::operator==(const V1::OrchestratorIterator &other) const {
     ++opEq;
     auto out = (other._isEnd && !_loop->morePhases());
