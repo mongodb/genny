@@ -324,6 +324,12 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                 // blocks t2 from progressing
                 std::this_thread::sleep_for(sleepTime);
             }
+
+            if (phase == 0) {
+                while(o.currentPhaseNumber() == 0) {
+                    // nop
+                }
+            }
         }
         if (prevPhase != 1) {
             ++failures;
@@ -352,6 +358,12 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             }
             prevPhase = phase;
 
+            if (phase == 1) {
+                while(o.currentPhaseNumber() == 1) {
+                    // nop
+                }
+            }
+
             if (phase == 0) {
                 BOOST_LOG_TRIVIAL(info) << "t2 blocking in phase 0";
                 // blocks t1 from progressing
@@ -367,8 +379,10 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     t1.join();
     t2.join();
 
-    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[0]).count() == sleepTime.count());
-    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[1]).count() == sleepTime.count());
-//    REQUIRE(t2TimePerPhase[0] == sleepTime);
-//    REQUIRE(t2TimePerPhase[1] == sleepTime);
+    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[0]).count()/10 == sleepTime.count()/10);
+    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[1]).count()/10 == sleepTime.count()/10);
+    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[0]).count()/10 == sleepTime.count()/10);
+    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[1]).count()/10 == sleepTime.count()/10);
+
+
 }
