@@ -1,50 +1,116 @@
+#include <algorithm>  // std::max
+#include <cassert>
+#include <iostream>
+#include <shared_mutex>
+
 #include <gennylib/Orchestrator.hpp>
+
+namespace {
+
+// so we can call morePhases() in awaitPhaseEnd.
+inline constexpr bool morePhaseLogic(int currentPhase, int maxPhase, bool errors) {
+    return currentPhase <= maxPhase && !errors;
+}
+
+}  // namespace
+
 
 namespace genny {
 
+/*
+ * Multiple readers can access at same time, but only one writer.
+ * Use reader when only reading internal state, but use writer whenever changing it.
+ */
+using reader = std::shared_lock<std::shared_mutex>;
+using writer = std::unique_lock<std::shared_mutex>;
+
 unsigned int Orchestrator::currentPhaseNumber() const {
-    std::lock_guard lk(this->_lock);
+    reader lock{_mutex};
+
     return this->_phase;
 }
 
 bool Orchestrator::morePhases() const {
-    std::lock_guard lk(this->_lock);
-    return this->_phase <= 1 && !this->_errors;
+    reader lock{_mutex};
+
+    return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
 }
 
-void Orchestrator::awaitPhaseStart() {
-    std::unique_lock lck{_lock};
+// we start once we have required number of tokens
+unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
+    writer lock{_mutex};
     assert(state == State::PhaseEnded);
-    ++_running;
-    if (_running == _numActors) {
-        _cv.notify_all();
+
+    _currentTokens += addTokens;
+
+    unsigned int currentPhase = this->_phase;
+    if (_currentTokens >= _requireTokens) {
+        _phaseChange.notify_all();
         state = State::PhaseStarted;
     } else {
-        _cv.wait(lck);
+        if (block) {
+            while (state != State::PhaseStarted) {
+                _phaseChange.wait(lock);
+            }
+        }
     }
+    return currentPhase;
 }
 
-void Orchestrator::awaitPhaseEnd() {
-    std::unique_lock<std::mutex> lck{_lock};
+void Orchestrator::addRequiredTokens(int tokens) {
+    writer lock{_mutex};
+
+    this->_requireTokens += tokens;
+}
+
+void Orchestrator::phasesAtLeastTo(unsigned int minPhase) {
+    writer lock{_mutex};
+    this->_maxPhase = std::max(this->_maxPhase, minPhase);
+}
+
+// we end once no more tokens left
+bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
+    writer lock{_mutex};
     assert(State::PhaseStarted == state);
-    --_running;
-    if (_running == 0) {
+
+    _currentTokens -= removeTokens;
+
+    // Not clear if we should allow _currentTokens to drop below zero
+    // and if below check should be `if (_currentTokens == 0)`.
+    //
+    // - defensive programming says that a bug could cause it to go below zero
+    //   and if that happens and we're comparing == 0, then the workload will
+    //   block forever
+    //
+    // - an Actor could get clever by wanting the tokens to dip below zero if
+    //   it knows it will level-them out or whatever in the future
+    //
+    // - BUT: there's no real existing good reason why an actor would
+    //   want to do this, so it's likely an error. Presumably such errors
+    //   will be caught in automated testing, though, so adding a runtime
+    //   check seems to limit the functionality unnecessarily.
+    //
+    // Similar thing applies to the block in awaitPhaseStart() where we
+    // compare with >= rather than ==.
+
+    if (_currentTokens <= 0) {
         ++_phase;
-        _cv.notify_all();
+        _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {
-        _cv.wait(lck);
+        if (block) {
+            while (state != State::PhaseEnded) {
+                _phaseChange.wait(lock);
+            }
+        }
     }
+    return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
 }
 
 void Orchestrator::abort() {
-    std::unique_lock<std::mutex> lck{_lock};
-    this->_errors = true;
-}
+    writer lock{_mutex};
 
-void Orchestrator::setActors(const genny::ActorVector& actors) {
-    std::unique_lock<std::mutex> lck{_lock};
-    this->_numActors = actors.size();
+    this->_errors = true;
 }
 
 }  // namespace genny

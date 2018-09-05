@@ -8,17 +8,17 @@
 namespace YAML {
 
 
-template<>
+template <>
 struct convert<std::chrono::milliseconds> {
     // For now only accept `Duration: 300` for 300 milliseconds.
     // Future change will parse this as a string e.g. `Duration: 300 milliseconds`.
 
     static Node encode(const std::chrono::milliseconds& rhs) {
-        return Node { rhs.count() };
+        return Node{rhs.count()};
     }
 
     static bool decode(const Node& node, std::chrono::milliseconds& rhs) {
-        if(node.IsSequence() || node.IsMap()) {
+        if (node.IsSequence() || node.IsMap()) {
             return false;
         }
         rhs = std::chrono::milliseconds{node.as<int>()};
