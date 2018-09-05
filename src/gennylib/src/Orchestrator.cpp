@@ -75,6 +75,24 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
     _currentTokens -= removeTokens;
 
+    // Not clear if we should allow _currentTokens to drop below zero
+    // and if below check should be `if (_currentTokens == 0)`.
+    //
+    // - defensive programming says that a bug could cause it to go below zero
+    //   and if that happens and we're comparing == 0, then the workload will
+    //   block forever
+    //
+    // - an Actor could get clever by wanting the tokens to dip below zero if
+    //   it knows it will level-them out or whatever in the future
+    //
+    // - BUT: there's no real existing good reason why an actor would
+    //   want to do this, so it's likely an error. Presumably such errors
+    //   will be caught in automated testing, though, so adding a runtime
+    //   check seems to limit the functionality unnecessarily.
+    //
+    // Similar thing applies to the block in awaitPhaseStart() where we
+    // compare with >= rather than ==.
+
     if (_currentTokens <= 0) {
         ++_phase;
         _phaseChange.notify_all();
