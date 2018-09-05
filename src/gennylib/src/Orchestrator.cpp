@@ -39,16 +39,19 @@ bool Orchestrator::morePhases() const {
 // we start once we have required number of tokens
 unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     writer lock{_mutex};
-
     assert(state == State::PhaseEnded);
+
     _currentTokens += addTokens;
+
     unsigned int currentPhase = this->_phase;
     if (_currentTokens >= _requireTokens) {
         _phaseChange.notify_all();
         state = State::PhaseStarted;
     } else {
         if (block) {
-            _phaseChange.wait(lock);
+            while (state != State::PhaseStarted) {
+                _phaseChange.wait(lock);
+            }
         }
     }
     return currentPhase;
@@ -68,16 +71,19 @@ void Orchestrator::phasesAtLeastTo(unsigned int minPhase) {
 // we end once no more tokens left
 bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
     writer lock{_mutex};
-
     assert(State::PhaseStarted == state);
+
     _currentTokens -= removeTokens;
+
     if (_currentTokens <= 0) {
         ++_phase;
         _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {
         if (block) {
-            _phaseChange.wait(lock);
+            while (state != State::PhaseEnded) {
+                _phaseChange.wait(lock);
+            }
         }
     }
     return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
