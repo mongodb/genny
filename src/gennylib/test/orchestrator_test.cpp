@@ -9,6 +9,8 @@
 
 #include <gennylib/Orchestrator.hpp>
 
+#include <gennylib/Orchestrator.hpp>
+
 using namespace genny;
 using namespace std::chrono;
 
