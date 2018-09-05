@@ -298,7 +298,6 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     std::atomic_int failures = 0;
 
     auto t1 = std::thread([&]() {
-        BOOST_LOG_TRIVIAL(info) << "t1=" << std::this_thread::get_id();
         std::unordered_map<long, bool> blocking = {
                 {0, false},
                 {1, true}
@@ -320,7 +319,6 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             prevPhase = phase;
 
             if (phase == 1) {
-                BOOST_LOG_TRIVIAL(info) << "t1 blocking in phase 1";
                 // blocks t2 from progressing
                 std::this_thread::sleep_for(sleepTime);
             }
@@ -337,7 +335,6 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
     auto t2 = std::thread([&]() {
-        BOOST_LOG_TRIVIAL(info) << "t2=" << std::this_thread::get_id();
         std::unordered_map<long, bool> blocking = {
                 {0, true},
                 {1, false}
@@ -365,7 +362,6 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             }
 
             if (phase == 0) {
-                BOOST_LOG_TRIVIAL(info) << "t2 blocking in phase 0";
                 // blocks t1 from progressing
                 std::this_thread::sleep_for(sleepTime);
             }
@@ -379,6 +375,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     t1.join();
     t2.join();
 
+    // don't care about 1s place, so just int-divide to kill it :)
     REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[0]).count()/10 == sleepTime.count()/10);
     REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[1]).count()/10 == sleepTime.count()/10);
     REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[0]).count()/10 == sleepTime.count()/10);
