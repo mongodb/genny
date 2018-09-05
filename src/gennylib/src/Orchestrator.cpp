@@ -42,7 +42,7 @@ unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
 
     assert(state == State::PhaseEnded);
     _currentTokens += addTokens;
-    unsigned int out = this->_phase;
+    unsigned int currentPhase = this->_phase;
     if (_currentTokens >= _requireTokens) {
         _cv.notify_all();
         state = State::PhaseStarted;
@@ -51,7 +51,7 @@ unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
             _cv.wait(lock);
         }
     }
-    return out;
+    return currentPhase;
 }
 
 void Orchestrator::addRequiredTokens(int tokens) {
