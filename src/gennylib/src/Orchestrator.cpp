@@ -44,11 +44,11 @@ unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     _currentTokens += addTokens;
     unsigned int currentPhase = this->_phase;
     if (_currentTokens >= _requireTokens) {
-        _cv.notify_all();
+        _phaseChange.notify_all();
         state = State::PhaseStarted;
     } else {
         if (block) {
-            _cv.wait(lock);
+            _phaseChange.wait(lock);
         }
     }
     return currentPhase;
@@ -73,11 +73,11 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
     _currentTokens -= removeTokens;
     if (_currentTokens <= 0) {
         ++_phase;
-        _cv.notify_all();
+        _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {
         if (block) {
-            _cv.wait(lock);
+            _phaseChange.wait(lock);
         }
     }
     return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
