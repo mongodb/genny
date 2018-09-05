@@ -1,4 +1,4 @@
-#include <algorithm> // std::max
+#include <algorithm>  // std::max
 #include <cassert>
 #include <iostream>
 #include <shared_mutex>

@@ -67,7 +67,7 @@ public:
      * }
      * ```
      */
-    bool awaitPhaseEnd(bool block=true, int removeTokens=1);
+    bool awaitPhaseEnd(bool block = true, int removeTokens = 1);
 
     void addRequiredTokens(int tokens);
 

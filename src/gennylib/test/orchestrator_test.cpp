@@ -32,7 +32,7 @@ std::thread end(Orchestrator& o,
 
 bool advancePhase(Orchestrator& o) {
     bool out = true;
-    auto t = std::thread([&](){
+    auto t = std::thread([&]() {
         o.awaitPhaseStart();
         out = o.awaitPhaseEnd();
     });
@@ -105,23 +105,23 @@ TEST_CASE("Set minimum number of phases") {
     auto o = Orchestrator{};
     REQUIRE(o.currentPhaseNumber() == 0);
     o.phasesAtLeastTo(1);
-    REQUIRE(advancePhase(o)); // 0->1
+    REQUIRE(advancePhase(o));  // 0->1
 
     REQUIRE(o.currentPhaseNumber() == 1);
     REQUIRE(o.morePhases());
-    REQUIRE(!advancePhase(o)); //1->2
+    REQUIRE(!advancePhase(o));  // 1->2
 
     REQUIRE(!o.morePhases());
     REQUIRE(o.currentPhaseNumber() == 2);
 
-    o.phasesAtLeastTo(0); // effectively nop, can't set lower than what it currently is
+    o.phasesAtLeastTo(0);  // effectively nop, can't set lower than what it currently is
     REQUIRE(!o.morePhases());
-    REQUIRE(o.currentPhaseNumber() == 2); // still
+    REQUIRE(o.currentPhaseNumber() == 2);  // still
 
     o.phasesAtLeastTo(2);
     REQUIRE(o.morePhases());
 
-    REQUIRE(!advancePhase(o)); // 2->3
+    REQUIRE(!advancePhase(o));  // 2->3
     REQUIRE(!o.morePhases());
     REQUIRE(o.currentPhaseNumber() == 3);
 }
