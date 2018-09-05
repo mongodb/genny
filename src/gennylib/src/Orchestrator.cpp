@@ -25,20 +25,20 @@ using reader = std::shared_lock<std::shared_mutex>;
 using writer = std::unique_lock<std::shared_mutex>;
 
 unsigned int Orchestrator::currentPhaseNumber() const {
-    reader lk{_mutex};
+    reader lock{_mutex};
 
     return this->_phase;
 }
 
 bool Orchestrator::morePhases() const {
-    reader lk{_mutex};
+    reader lock{_mutex};
 
     return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
 }
 
 // we start once we have required number of tokens
 unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
-    writer lk{_mutex};
+    writer lock{_mutex};
 
     assert(state == State::PhaseEnded);
     _currentTokens += addTokens;
@@ -48,26 +48,26 @@ unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
         state = State::PhaseStarted;
     } else {
         if (block) {
-            _cv.wait(lk);
+            _cv.wait(lock);
         }
     }
     return out;
 }
 
 void Orchestrator::addRequiredTokens(int tokens) {
-    writer lk{_mutex};
+    writer lock{_mutex};
 
     this->_requireTokens += tokens;
 }
 
 void Orchestrator::phasesAtLeastTo(unsigned int minPhase) {
-    writer lk{_mutex};
+    writer lock{_mutex};
     this->_maxPhase = std::max(this->_maxPhase, minPhase);
 }
 
 // we end once no more tokens left
 bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
-    writer lk{_mutex};
+    writer lock{_mutex};
 
     assert(State::PhaseStarted == state);
     _currentTokens -= removeTokens;
@@ -77,14 +77,14 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
         state = State::PhaseEnded;
     } else {
         if (block) {
-            _cv.wait(lk);
+            _cv.wait(lock);
         }
     }
     return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
 }
 
 void Orchestrator::abort() {
-    writer lk{_mutex};
+    writer lock{_mutex};
 
     this->_errors = true;
 }
