@@ -33,7 +33,7 @@ genny::ActorContext::constructPhaseContexts(const YAML::Node&, genny::ActorConte
 
     int index = 0;
     for (const auto& phase : *phases) {
-        out.emplace(phase["Phase"].as<int>(index),
+        out.emplace(phase["PhaseNumber"].as<int>(index),
                     std::make_unique<genny::PhaseContext>(phase, *actorContext));
         ++index;
     }

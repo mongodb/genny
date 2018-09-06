@@ -17,21 +17,21 @@ using namespace std::chrono;
 namespace {
 
 std::thread start(Orchestrator& o,
-                  const int phase,
+                  PhaseNumber phase,
                   const bool block = true,
                   const int addTokens = 1) {
     return std::thread{[&o, phase, block, addTokens]() {
         REQUIRE(o.awaitPhaseStart(block, addTokens) == phase);
-        REQUIRE(o.currentPhaseNumber() == phase);
+        REQUIRE(o.currentPhase() == phase);
     }};
 }
 
 std::thread end(Orchestrator& o,
-                const int phase,
+                PhaseNumber phase,
                 const bool block = true,
                 const int removeTokens = 1) {
     return std::thread{[&o, phase, block, removeTokens]() {
-        REQUIRE(o.currentPhaseNumber() == phase);
+        REQUIRE(o.currentPhase() == phase);
         o.awaitPhaseEnd(block, removeTokens);
     }};
 }
@@ -67,7 +67,7 @@ TEST_CASE("Non-Blocking end (background progression)") {
     auto t1 = std::thread([&]() {
         auto phase = o.awaitPhaseStart();
         o.awaitPhaseEnd(false);
-        while (phase == o.currentPhaseNumber()) {
+        while (phase == o.currentPhase()) {
             ++bgIters;
             std::this_thread::sleep_for(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{1}));
@@ -96,47 +96,47 @@ TEST_CASE("Can add more tokens at start") {
     auto t1 = start(o, 0, false, 2);
     t1.join();
 
-    REQUIRE(o.currentPhaseNumber() == 0);
+    REQUIRE(o.currentPhase() == 0);
 
     auto t2 = end(o, 0);
     auto t3 = end(o, 0);
     t2.join();
     t3.join();
 
-    REQUIRE(o.currentPhaseNumber() == 1);
+    REQUIRE(o.currentPhase() == 1);
 }
 
 
 TEST_CASE("Set minimum number of phases") {
     auto o = Orchestrator{};
-    REQUIRE(o.currentPhaseNumber() == 0);
+    REQUIRE(o.currentPhase() == 0);
     o.phasesAtLeastTo(1);
     REQUIRE(advancePhase(o));  // 0->1
 
-    REQUIRE(o.currentPhaseNumber() == 1);
+    REQUIRE(o.currentPhase() == 1);
     REQUIRE(o.morePhases());
     REQUIRE(!advancePhase(o));  // 1->2
 
     REQUIRE(!o.morePhases());
-    REQUIRE(o.currentPhaseNumber() == 2);
+    REQUIRE(o.currentPhase() == 2);
 
     o.phasesAtLeastTo(0);  // effectively nop, can't set lower than what it currently is
     REQUIRE(!o.morePhases());
-    REQUIRE(o.currentPhaseNumber() == 2);  // still
+    REQUIRE(o.currentPhase() == 2);  // still
 
     o.phasesAtLeastTo(2);
     REQUIRE(o.morePhases());
 
     REQUIRE(!advancePhase(o));  // 2->3
     REQUIRE(!o.morePhases());
-    REQUIRE(o.currentPhaseNumber() == 3);
+    REQUIRE(o.currentPhase() == 3);
 }
 
 TEST_CASE("Orchestrator") {
     auto o = Orchestrator{};
     o.addRequiredTokens(2);
 
-    REQUIRE(o.currentPhaseNumber() == 0);
+    REQUIRE(o.currentPhase() == 0);
     REQUIRE(o.morePhases());
 
     auto t1 = start(o, 0);
@@ -144,7 +144,7 @@ TEST_CASE("Orchestrator") {
     t1.join();
     t2.join();
 
-    REQUIRE(o.currentPhaseNumber() == 0);
+    REQUIRE(o.currentPhase() == 0);
     REQUIRE(o.morePhases());
 
     auto t3 = end(o, 0);
@@ -152,7 +152,7 @@ TEST_CASE("Orchestrator") {
     t3.join();
     t4.join();
 
-    REQUIRE(o.currentPhaseNumber() == 1);
+    REQUIRE(o.currentPhase() == 1);
     REQUIRE(o.morePhases());
 
     // now all wait for phase 1
@@ -162,7 +162,7 @@ TEST_CASE("Orchestrator") {
     t5.join();
     t6.join();
 
-    REQUIRE(o.currentPhaseNumber() == 1);
+    REQUIRE(o.currentPhase() == 1);
     REQUIRE(o.morePhases());
 
     SECTION("Default has phases 0 and 1") {
@@ -171,7 +171,7 @@ TEST_CASE("Orchestrator") {
         t7.join();
         t8.join();
 
-        REQUIRE(o.currentPhaseNumber() == 2);
+        REQUIRE(o.currentPhase() == 2);
         REQUIRE(!o.morePhases());
     }
 
@@ -181,7 +181,7 @@ TEST_CASE("Orchestrator") {
         o.phasesAtLeastTo(2);
         t7.join();
         t8.join();
-        REQUIRE(o.currentPhaseNumber() == 2);
+        REQUIRE(o.currentPhase() == 2);
         REQUIRE(o.morePhases());
     }
 }
@@ -196,15 +196,15 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_map<long, bool> blocking{{0L, true}, {1L, true}, {2L, true}};
+    std::unordered_map<PhaseNumber, bool> blocking{{0L, true}, {1L, true}, {2L, true}};
 
-    std::unordered_set<long> seen;
+    std::unordered_set<PhaseNumber> seen;
 
-    for (long phase : o.loop(blocking)) {
+    for (PhaseNumber phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
-    REQUIRE(seen == std::unordered_set<long>{0L, 1L, 2L});
+    REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L, 2L});
 }
 
 TEST_CASE("single-threaded range-based for loops no phases blocking") {
@@ -212,69 +212,69 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_map<long, bool> blocking{{0L, false}, {1L, false}, {2L, false}};
+    std::unordered_map<PhaseNumber, bool> blocking{{0L, false}, {1L, false}, {2L, false}};
 
-    std::unordered_set<long> seen;
+    std::unordered_set<PhaseNumber> seen;
 
     for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
-    REQUIRE(seen == std::unordered_set<long>{0L, 1L, 2L});
+    REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L, 2L});
 }
 
 TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<long, bool> blocking{
+    std::unordered_map<PhaseNumber, bool> blocking{
         {0L, false},
         {1L, true},
     };
 
-    std::unordered_set<long> seen;
+    std::unordered_set<PhaseNumber> seen;
 
     for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
-    REQUIRE(seen == std::unordered_set<long>{0L, 1L});
+    REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
 }
 
 TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<long, bool> blocking{
+    std::unordered_map<PhaseNumber, bool> blocking{
         {0L, true},
         {1L, false},
     };
 
-    std::unordered_set<long> seen;
+    std::unordered_set<PhaseNumber> seen;
 
     for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
-    REQUIRE(seen == std::unordered_set<long>{0L, 1L});
+    REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
 }
 
 TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<long, bool> blocking{
+    std::unordered_map<PhaseNumber, bool> blocking{
         {0L, true},
         {1L, true},
     };
 
-    std::unordered_set<long> seen;
+    std::unordered_set<PhaseNumber> seen;
 
     for (long phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
-    REQUIRE(seen == std::unordered_set<long>{0L, 1L});
+    REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
 }
 
 TEST_CASE("Multi-threaded Range-based for loops") {
@@ -290,7 +290,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     std::atomic_int failures = 0;
 
     auto t1 = std::thread([&]() {
-        std::unordered_map<long, bool> blocking = {{0, false}, {1, true}};
+        std::unordered_map<PhaseNumber, bool> blocking = {{0, false}, {1, true}};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
@@ -313,7 +313,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             }
 
             if (phase == 0) {
-                while (o.currentPhaseNumber() == 0) {
+                while (o.currentPhase() == 0) {
                     // nop
                 }
             }
@@ -324,7 +324,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
     auto t2 = std::thread([&]() {
-        std::unordered_map<long, bool> blocking = {{0, true}, {1, false}};
+        std::unordered_map<PhaseNumber, bool> blocking = {{0, true}, {1, false}};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
@@ -342,7 +342,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             prevPhase = phase;
 
             if (phase == 1) {
-                while (o.currentPhaseNumber() == 1) {
+                while (o.currentPhase() == 1) {
                     // nop
                 }
             }

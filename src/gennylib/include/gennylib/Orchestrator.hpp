@@ -10,7 +10,10 @@
 #include <unordered_map>
 #include <utility>
 
+
 namespace genny {
+
+using PhaseNumber = unsigned int;
 
 namespace V1 {
 class OrchestratorLoop;
@@ -31,7 +34,7 @@ public:
     /**
      * @return the current phase number
      */
-    unsigned int currentPhaseNumber() const;
+    PhaseNumber currentPhase() const;
 
     /**
      * @return if there are any more phases.
@@ -41,7 +44,7 @@ public:
     /**
      * @param minPhase the minimum phase number that the Orchestrator should run to.
      */
-    void phasesAtLeastTo(unsigned int minPhase);
+    void phasesAtLeastTo(PhaseNumber minPhase);
 
     /**
      * Signal from an actor that it is ready to start the next phase.
@@ -54,7 +57,7 @@ public:
      * @param addTokens the number of tokens added by this call.
      * @return the phase that has just started.
      */
-    unsigned int awaitPhaseStart(bool block = true, int addTokens = 1);
+    PhaseNumber awaitPhaseStart(bool block = true, int addTokens = 1);
 
     /**
      * Signal from an actor that it is done with the current phase.
@@ -67,9 +70,9 @@ public:
      *
      * ```c++
      * while (orchestrator.morePhases()) {
-     *     int phase = orchestrator.awaitPhaseStart();
+     *     auto phase = orchestrator.awaitPhaseStart();
      *     orchestrator.awaitPhaseEnd(false);
-     *     while(phase == orchestrator.currentPhaseNumber()) {
+     *     while(phase == orchestrator.currentPhase()) {
      *         // do operation
      *     }
      * }
@@ -81,7 +84,7 @@ public:
 
     void abort();
 
-    V1::OrchestratorLoop loop(std::unordered_map<long, bool> blockingPhases);
+    V1::OrchestratorLoop loop(std::unordered_map<PhaseNumber, bool> blockingPhases);
 
 private:
     mutable std::shared_mutex _mutex;
@@ -90,8 +93,8 @@ private:
     int _requireTokens = 0;
     int _currentTokens = 0;
 
-    unsigned int _maxPhase = 1;
-    unsigned int _phase = 0;
+    PhaseNumber _max = 1;
+    PhaseNumber _current = 0;
 
     bool _errors = false;
 
@@ -110,7 +113,7 @@ class OrchestratorIterator;
 class OrchestratorLoop {
 public:
     explicit OrchestratorLoop(Orchestrator& orchestrator,
-                              std::unordered_map<long, bool> blockingPhases);
+                              std::unordered_map<PhaseNumber, bool> blockingPhases);
     OrchestratorIterator begin();
     OrchestratorIterator end();
 
@@ -121,10 +124,10 @@ public:
 private:
     friend OrchestratorIterator;
     bool morePhases() const;
-    bool doesBlockOn(int phase) const;
+    bool doesBlockOn(PhaseNumber phase) const;
 
     Orchestrator* _orchestrator;
-    std::unordered_map<long, bool> _blockingPhases;
+    std::unordered_map<PhaseNumber, bool> _blockingPhases;
 };
 
 // returned from orchestrator.loop().begin()
@@ -133,9 +136,9 @@ class OrchestratorIterator {
 public:
     // <iterator-concept>
     typedef std::forward_iterator_tag iterator_category;
-    typedef int value_type;
-    typedef int reference;
-    typedef int pointer;
+    typedef PhaseNumber value_type;
+    typedef PhaseNumber reference;
+    typedef PhaseNumber pointer;
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
@@ -144,14 +147,14 @@ public:
     bool operator!=(const OrchestratorIterator& other) const {
         return !(*this == other);
     }
-    int operator*();
+    PhaseNumber operator*();
     OrchestratorIterator& operator++();
 
 private:
     friend OrchestratorLoop;
     OrchestratorLoop* _loop;
     bool _isEnd;
-    int _currentPhase;
+    PhaseNumber _currentPhase;
 };
 
 

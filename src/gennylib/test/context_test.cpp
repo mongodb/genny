@@ -186,9 +186,9 @@ TEST_CASE("PhaseContexts constructed as expected") {
       - Operation: One
         Foo: Baz
       - Operation: Two
-        Phase: 2 # intentionally out of order for testing
+        PhaseNumber: 2 # intentionally out of order for testing
       - Operation: Three
-        Phase: 1 # intentionally out of order for testing
+        PhaseNumber: 1 # intentionally out of order for testing
         Extra: [1,2]
     )");
 
@@ -200,14 +200,14 @@ TEST_CASE("PhaseContexts constructed as expected") {
         REQUIRE(calls == 1);
     }
 
-    SECTION("One Phase per block") {
+    SECTION("One PhaseNumber per block") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             const auto& ph = ctx.phases();
             REQUIRE(ph.size() == 3);
         };
         onContext(yaml, op);
     }
-    SECTION("Phase index is defaulted") {
+    SECTION("PhaseNumber index is defaulted") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE(ctx.phases().at(0)->get<std::string>("Operation") == "One");
             REQUIRE(ctx.phases().at(1)->get<std::string>("Operation") == "Three");
@@ -215,7 +215,7 @@ TEST_CASE("PhaseContexts constructed as expected") {
         };
         onContext(yaml, op);
     }
-    SECTION("Phase values can override parent values") {
+    SECTION("PhaseNumber values can override parent values") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE(ctx.phases().at(0)->get<std::string>("Foo") == "Baz");
             REQUIRE(ctx.phases().at(1)->get<std::string>("Foo") == "Bar");

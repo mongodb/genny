@@ -10,7 +10,7 @@ void genny::PhasedActor::run() {
         _context.awaitPhaseStart();
 
         try {
-            this->phase(_context.currentPhaseNumber());
+            this->phase(_context.currentPhase());
         } catch (const std::exception& ex) {
             BOOST_LOG_TRIVIAL(error) << "Exception " << ex.what();
             _context.abort();

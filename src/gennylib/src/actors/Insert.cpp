@@ -30,9 +30,9 @@ struct genny::actor::Insert::Config {
     std::vector<PhaseConfig> phases;
 };
 
-void genny::actor::Insert::doPhase(int currentPhase) {
+void genny::actor::Insert::doPhase(PhaseNumber currentPhase) {
     auto op = _outputTimer.raii();
-    auto& phase = _config->phases[currentPhase];
+    auto& phase = _config->phases[int(currentPhase)];
     bsoncxx::builder::stream::document mydoc{};
     auto view = phase.json_document->view(mydoc);
     BOOST_LOG_TRIVIAL(info) << _fullName << " Inserting " << bsoncxx::to_json(view);

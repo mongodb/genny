@@ -8,7 +8,9 @@
 namespace {
 
 // so we can call morePhases() in awaitPhaseEnd.
-inline constexpr bool morePhaseLogic(int currentPhase, int maxPhase, bool errors) {
+inline constexpr bool morePhaseLogic(genny::PhaseNumber currentPhase,
+                                     genny::PhaseNumber maxPhase,
+                                     bool errors) {
     return currentPhase <= maxPhase && !errors;
 }
 
@@ -24,26 +26,26 @@ namespace genny {
 using reader = std::shared_lock<std::shared_mutex>;
 using writer = std::unique_lock<std::shared_mutex>;
 
-unsigned int Orchestrator::currentPhaseNumber() const {
+PhaseNumber Orchestrator::currentPhase() const {
     reader lock{_mutex};
 
-    return this->_phase;
+    return this->_current;
 }
 
 bool Orchestrator::morePhases() const {
     reader lock{_mutex};
 
-    return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
+    return morePhaseLogic(this->_current, this->_max, this->_errors);
 }
 
 // we start once we have required number of tokens
-unsigned int Orchestrator::awaitPhaseStart(bool block, int addTokens) {
+PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     writer lock{_mutex};
     assert(state == State::PhaseEnded);
 
     _currentTokens += addTokens;
 
-    unsigned int currentPhase = this->_phase;
+    auto currentPhase = this->_current;
     if (_currentTokens >= _requireTokens) {
         _phaseChange.notify_all();
         state = State::PhaseStarted;
@@ -63,9 +65,9 @@ void Orchestrator::addRequiredTokens(int tokens) {
     this->_requireTokens += tokens;
 }
 
-void Orchestrator::phasesAtLeastTo(unsigned int minPhase) {
+void Orchestrator::phasesAtLeastTo(PhaseNumber minPhase) {
     writer lock{_mutex};
-    this->_maxPhase = std::max(this->_maxPhase, minPhase);
+    this->_max = std::max(this->_max, minPhase);
 }
 
 // we end once no more tokens left
@@ -94,7 +96,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
     // compare with >= rather than ==.
 
     if (_currentTokens <= 0) {
-        ++_phase;
+        ++_current;
         _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {
@@ -104,7 +106,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
             }
         }
     }
-    return morePhaseLogic(this->_phase, this->_maxPhase, this->_errors);
+    return morePhaseLogic(this->_current, this->_max, this->_errors);
 }
 
 void Orchestrator::abort() {
@@ -114,12 +116,12 @@ void Orchestrator::abort() {
 }
 
 // TODO: should this be a ref?
-V1::OrchestratorLoop Orchestrator::loop(std::unordered_map<long, bool> blockingPhases) {
+V1::OrchestratorLoop Orchestrator::loop(std::unordered_map<PhaseNumber, bool> blockingPhases) {
     return V1::OrchestratorLoop(*this, std::move(blockingPhases));
 }
 
 V1::OrchestratorLoop::OrchestratorLoop(Orchestrator& orchestrator,
-                                       std::unordered_map<long, bool> blockingPhases)
+                                       std::unordered_map<PhaseNumber, bool> blockingPhases)
     : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{std::move(blockingPhases)} {}
 
 V1::OrchestratorIterator V1::OrchestratorLoop::end() {
@@ -130,8 +132,8 @@ V1::OrchestratorIterator V1::OrchestratorLoop::begin() {
     return V1::OrchestratorIterator{*this, false};
 }
 
-// TODO: make type of phase a consistent type - maybe struct Phase { operator int() {} }?
-bool V1::OrchestratorLoop::doesBlockOn(int phase) const {
+// TODO: make type of phase a consistent type - maybe struct PhaseNumber { operator int() {} }?
+bool V1::OrchestratorLoop::doesBlockOn(PhaseNumber phase) const {
     if (auto it = _blockingPhases.find(phase); it != _blockingPhases.end()) {
         return it->second;
     }
@@ -152,7 +154,7 @@ operator++ calls awaitPhaseEnd   (but not if blocking)
 */
 
 // TODO: handle multiple calls to operator*() without calls to operator++() between??
-int V1::OrchestratorIterator::operator*() {
+PhaseNumber V1::OrchestratorIterator::operator*() {
     _currentPhase = this->_loop->_orchestrator->awaitPhaseStart();
     if (!this->_loop->doesBlockOn(_currentPhase)) {
         this->_loop->_orchestrator->awaitPhaseEnd(false);

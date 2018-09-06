@@ -35,10 +35,10 @@ public:
      * before/after behavior in the future. See the documentation for
      * {@code doPhase()}.
      *
-     * @param currentPhaseNumber the current phase number.
+     * @param current the current phase.
      */
-    void phase(const int currentPhaseNumber) {
-        this->doPhase(currentPhaseNumber);
+    void phase(PhaseNumber current) {
+        this->doPhase(current);
     }
 
     /**
@@ -57,9 +57,9 @@ protected:
 private:
     /**
      * An actor must implement this method.
-     * @param currentPhaseNumber the current phase number
+     * @param currentPhase the current phase
      */
-    virtual void doPhase(int currentPhaseNumber) = 0;
+    virtual void doPhase(PhaseNumber currentPhase) = 0;
 };
 
 
