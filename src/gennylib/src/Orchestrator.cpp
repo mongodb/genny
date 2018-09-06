@@ -132,7 +132,6 @@ V1::OrchestratorIterator V1::OrchestratorLoop::begin() {
     return V1::OrchestratorIterator{*this, false};
 }
 
-// TODO: make type of phase a consistent type - maybe struct PhaseNumber { operator int() {} }?
 bool V1::OrchestratorLoop::doesBlockOn(PhaseNumber phase) const {
     if (auto it = _blockingPhases.find(phase); it != _blockingPhases.end()) {
         return it->second;
@@ -148,13 +147,15 @@ bool V1::OrchestratorLoop::morePhases() const {
 V1::OrchestratorIterator::OrchestratorIterator(V1::OrchestratorLoop& orchestratorLoop, bool isEnd)
     : _loop{std::addressof(orchestratorLoop)}, _isEnd{isEnd}, _currentPhase{0} {}
 
-/*
-operator*  calls awaitPhaseStart (and immediately awaitEnd if non-blocking)
-operator++ calls awaitPhaseEnd   (but not if blocking)
-*/
 
-// TODO: handle multiple calls to operator*() without calls to operator++() between??
 PhaseNumber V1::OrchestratorIterator::operator*() {
+    // Intentionally don't bother with cases where user didn't call operator++()
+    // between invocations of operator*() and vice-versa.
+    //
+    //
+    // This type is only intended to be used by range-based for-loops
+    // and their equivalent expanded definitions
+    // https://en.cppreference.com/w/cpp/language/range-for
     _currentPhase = this->_loop->_orchestrator->awaitPhaseStart();
     if (!this->_loop->doesBlockOn(_currentPhase)) {
         this->_loop->_orchestrator->awaitPhaseEnd(false);
@@ -163,17 +164,26 @@ PhaseNumber V1::OrchestratorIterator::operator*() {
 }
 
 
-// TODO: handle multiple calls to operator++() without calls to operator*() between?
 V1::OrchestratorIterator& V1::OrchestratorIterator::operator++() {
+    // Intentionally don't bother with cases where user didn't call operator++()
+    // between invocations of operator*() and vice-versa.
+    //
+    // This type is only intended to be used by range-based for-loops
+    // and their equivalent expanded definitions
+    // https://en.cppreference.com/w/cpp/language/range-for
     if (this->_loop->doesBlockOn(_currentPhase)) {
         this->_loop->_orchestrator->awaitPhaseEnd(true);
     }
     return *this;
 }
 
-// TODO: handle self-equality
-// TODO: handle created from different _loops
 bool V1::OrchestratorIterator::operator==(const V1::OrchestratorIterator& other) const {
+    // Intentionally don't handle self-equality or other "normal" cases.
+    //
+    //
+    // This type is only intended to be used by range-based for-loops
+    // and their equivalent expanded definitions
+    // https://en.cppreference.com/w/cpp/language/range-for
     auto out = (other._isEnd && !_loop->morePhases());
     return out;
 }
