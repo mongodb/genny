@@ -133,6 +133,7 @@ TEST_CASE("Set minimum number of phases") {
 TEST_CASE("Orchestrator") {
     auto o = Orchestrator{};
     o.addRequiredTokens(2);
+    o.phasesAtLeastTo(1);
 
     REQUIRE(o.currentPhase() == 0);
     REQUIRE(o.morePhases());
@@ -188,6 +189,10 @@ TEST_CASE("Orchestrator") {
 // TODO: case when mix/match blocking
 // TODO: case when map doesn't define a phase to block
 
+TEST_CASE("No Phases") {
+    Orchestrator o;
+}
+
 TEST_CASE("single-threaded range-based for loops all phases blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
@@ -223,6 +228,7 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
+    o.phasesAtLeastTo(1);
 
     std::unordered_set<PhaseNumber> blocking {1};
 
@@ -238,6 +244,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
 TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
+    o.phasesAtLeastTo(1);
 
     std::unordered_set<PhaseNumber> blocking {0};
 
@@ -253,6 +260,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
+    o.phasesAtLeastTo(1);
 
     std::unordered_set<PhaseNumber> blocking {0, 1};
 

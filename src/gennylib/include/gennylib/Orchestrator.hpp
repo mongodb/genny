@@ -133,7 +133,7 @@ private:
     int _requireTokens = 0;
     int _currentTokens = 0;
 
-    PhaseNumber _max = 1;
+    PhaseNumber _max = 0;
     PhaseNumber _current = 0;
 
     bool _errors = false;
