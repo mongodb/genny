@@ -116,13 +116,13 @@ void Orchestrator::abort() {
 }
 
 // TODO: should this be a ref?
-V1::OrchestratorLoop Orchestrator::loop(std::unordered_map<PhaseNumber, bool> blockingPhases) {
-    return V1::OrchestratorLoop(*this, std::move(blockingPhases));
+V1::OrchestratorLoop Orchestrator::loop(const std::unordered_map<PhaseNumber, bool>& blockingPhases) {
+    return V1::OrchestratorLoop(*this, blockingPhases);
 }
 
 V1::OrchestratorLoop::OrchestratorLoop(Orchestrator& orchestrator,
-                                       std::unordered_map<PhaseNumber, bool> blockingPhases)
-    : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{std::move(blockingPhases)} {}
+                                       const std::unordered_map<PhaseNumber, bool>& blockingPhases)
+    : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
 
 V1::OrchestratorIterator V1::OrchestratorLoop::end() {
     return V1::OrchestratorIterator{*this, true};
@@ -179,7 +179,6 @@ V1::OrchestratorIterator& V1::OrchestratorIterator::operator++() {
 
 bool V1::OrchestratorIterator::operator==(const V1::OrchestratorIterator& other) const {
     // Intentionally don't handle self-equality or other "normal" cases.
-    //
     //
     // This type is only intended to be used by range-based for-loops
     // and their equivalent expanded definitions

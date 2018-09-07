@@ -10,12 +10,13 @@
 #include <unordered_map>
 #include <utility>
 
-
 namespace genny {
 
+// May eventually want a proper type for Phase, but for now just a typedef is sufficient.
 using PhaseNumber = unsigned int;
 
 namespace V1 {
+// needs to be pre-declared here; see usage in Orchestrator for details
 class OrchestratorLoop;
 }  // namespace V1
 
@@ -84,7 +85,7 @@ public:
 
     void abort();
 
-    V1::OrchestratorLoop loop(std::unordered_map<PhaseNumber, bool> blockingPhases);
+    V1::OrchestratorLoop loop(const std::unordered_map<PhaseNumber, bool>& blockingPhases);
 
 private:
     mutable std::shared_mutex _mutex;
@@ -112,8 +113,9 @@ class OrchestratorIterator;
 // returned from orchestrator.loop()
 class OrchestratorLoop {
 public:
+    // TODO: private ctor and friend Orchestrator
     explicit OrchestratorLoop(Orchestrator& orchestrator,
-                              std::unordered_map<PhaseNumber, bool> blockingPhases);
+                              const std::unordered_map<PhaseNumber, bool>& blockingPhases);
     OrchestratorIterator begin();
     OrchestratorIterator end();
 
@@ -127,9 +129,13 @@ private:
     bool doesBlockOn(PhaseNumber phase) const;
 
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, bool> _blockingPhases;
+    const std::unordered_map<PhaseNumber, bool>& _blockingPhases;
 };
 
+/**
+ * Support class for OrchestratorLoop.
+ * Only intended to be used by OrchestratorLoop.
+ */
 // returned from orchestrator.loop().begin()
 // and           orchestrator.loop().end()
 class OrchestratorIterator {
@@ -142,7 +148,6 @@ public:
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    explicit OrchestratorIterator(OrchestratorLoop&, bool);
     bool operator==(const OrchestratorIterator&) const;
     bool operator!=(const OrchestratorIterator& other) const {
         return !(*this == other);
@@ -151,6 +156,8 @@ public:
     OrchestratorIterator& operator++();
 
 private:
+    explicit OrchestratorIterator(OrchestratorLoop&, bool);
+
     friend OrchestratorLoop;
     OrchestratorLoop* _loop;
     bool _isEnd;
