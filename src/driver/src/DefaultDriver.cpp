@@ -59,8 +59,8 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
 
     orchestrator.addRequiredTokens(
-            int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
-    orchestrator.phasesAtLeastTo(1); // will later come from reading the yaml!
+        int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
+    orchestrator.phasesAtLeastTo(1);  // will later come from reading the yaml!
 
     stopwatch.report();
 

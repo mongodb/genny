@@ -4,7 +4,8 @@
 
 void genny::actor::HelloWorld::doPhase(PhaseNumber currentPhase) {
     auto op = _outputTimer.raii();
-    BOOST_LOG_TRIVIAL(info) << _fullName << " Doing PhaseNumber " << currentPhase << " " << _message;
+    BOOST_LOG_TRIVIAL(info) << _fullName << " Doing PhaseNumber " << currentPhase << " "
+                            << _message;
     _operations.incr();
 }
 

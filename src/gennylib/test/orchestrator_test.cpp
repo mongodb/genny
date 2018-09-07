@@ -190,10 +190,10 @@ TEST_CASE("Two non-blocking Phases") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_set<PhaseNumber> seen {};
+    std::unordered_set<PhaseNumber> seen{};
     std::unordered_set<PhaseNumber> blocking;
 
-    for(auto&& p : o.loop(blocking)) {
+    for (auto&& p : o.loop(blocking)) {
         seen.insert(p);
     }
 
@@ -204,10 +204,10 @@ TEST_CASE("Single Blocking Phase") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_set<PhaseNumber> seen {};
-    std::unordered_set<PhaseNumber> blocking {0};
+    std::unordered_set<PhaseNumber> seen{};
+    std::unordered_set<PhaseNumber> blocking{0};
 
-    for(auto&& p : o.loop(blocking)) {
+    for (auto&& p : o.loop(blocking)) {
         seen.insert(p);
     }
 
@@ -219,7 +219,7 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_set<PhaseNumber> blocking {0, 1, 2};
+    std::unordered_set<PhaseNumber> blocking{0, 1, 2};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -235,7 +235,7 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_set<PhaseNumber> blocking; // none
+    std::unordered_set<PhaseNumber> blocking;  // none
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -251,7 +251,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_set<PhaseNumber> blocking {1};
+    std::unordered_set<PhaseNumber> blocking{1};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -267,7 +267,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_set<PhaseNumber> blocking {0};
+    std::unordered_set<PhaseNumber> blocking{0};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -283,7 +283,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_set<PhaseNumber> blocking {0, 1};
+    std::unordered_set<PhaseNumber> blocking{0, 1};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -307,7 +307,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     std::atomic_int failures = 0;
 
     auto t1 = std::thread([&]() {
-        std::unordered_set<PhaseNumber> blocking {1};
+        std::unordered_set<PhaseNumber> blocking{1};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
@@ -341,7 +341,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
     auto t2 = std::thread([&]() {
-        std::unordered_set<PhaseNumber> blocking {0};
+        std::unordered_set<PhaseNumber> blocking{0};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
