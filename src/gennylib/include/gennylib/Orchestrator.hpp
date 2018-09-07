@@ -124,7 +124,7 @@ public:
      *      and will support automatically doing this check if required.
      *
      */
-    V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases = {});
+    V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
 
 private:
     mutable std::shared_mutex _mutex;
@@ -201,6 +201,8 @@ public:
     bool operator!=(const OrchestratorLoopIterator& other) const;
 
     PhaseNumber operator*();
+
+    // TODO: add boolean to check if being used correctly
 
     OrchestratorLoopIterator& operator++();
 

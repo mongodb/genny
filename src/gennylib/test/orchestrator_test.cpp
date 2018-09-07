@@ -185,12 +185,33 @@ TEST_CASE("Orchestrator") {
     }
 }
 
-// TODO: case when no phases
-// TODO: case when mix/match blocking
-// TODO: case when map doesn't define a phase to block
-
-TEST_CASE("No Phases") {
+TEST_CASE("Two non-blocking Phases") {
     Orchestrator o;
+    o.addRequiredTokens(1);
+    o.phasesAtLeastTo(1);
+
+    std::unordered_set<PhaseNumber> seen {};
+    std::unordered_set<PhaseNumber> blocking;
+
+    for(auto&& p : o.loop(blocking)) {
+        seen.insert(p);
+    }
+
+    REQUIRE(seen == std::unordered_set<PhaseNumber>{0, 1});
+}
+
+TEST_CASE("Single Blocking Phase") {
+    Orchestrator o;
+    o.addRequiredTokens(1);
+
+    std::unordered_set<PhaseNumber> seen {};
+    std::unordered_set<PhaseNumber> blocking {0};
+
+    for(auto&& p : o.loop(blocking)) {
+        seen.insert(p);
+    }
+
+    REQUIRE(seen == std::unordered_set<PhaseNumber>{0});
 }
 
 TEST_CASE("single-threaded range-based for loops all phases blocking") {
@@ -218,7 +239,7 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (long phase : o.loop(blocking)) {
+    for (auto phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
@@ -234,7 +255,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (long phase : o.loop(blocking)) {
+    for (auto phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
@@ -250,7 +271,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (long phase : o.loop(blocking)) {
+    for (auto phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
@@ -266,7 +287,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (long phase : o.loop(blocking)) {
+    for (auto phase : o.loop(blocking)) {
         seen.insert(phase);
     }
 
