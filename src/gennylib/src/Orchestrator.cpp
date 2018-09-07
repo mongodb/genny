@@ -172,14 +172,13 @@ V1::OrchestratorLoopIterator& V1::OrchestratorLoopIterator::operator++() {
     return *this;
 }
 
-bool V1::OrchestratorLoopIterator::operator==(const V1::OrchestratorLoopIterator& other) const {
+bool V1::OrchestratorLoopIterator::operator!=(const V1::OrchestratorLoopIterator& other) const {
     // Intentionally don't handle self-equality or other "normal" cases.
     //
     // This type is only intended to be used by range-based for-loops
     // and their equivalent expanded definitions
     // https://en.cppreference.com/w/cpp/language/range-for
-    auto out = (other._isEnd && !_loop->morePhases());
-    return out;
+    return !(other._isEnd && !_loop->morePhases());
 }
 
 }  // namespace genny

@@ -180,12 +180,10 @@ public:
     //    typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    // TODO: don't support ==
-    bool operator==(const OrchestratorLoopIterator&) const;
-    bool operator!=(const OrchestratorLoopIterator& other) const {
-        return !(*this == other);
-    }
+    bool operator!=(const OrchestratorLoopIterator& other) const;
+
     PhaseNumber operator*();
+
     OrchestratorLoopIterator& operator++();
 
 private:
