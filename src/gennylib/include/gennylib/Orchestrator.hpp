@@ -95,7 +95,9 @@ public:
      * ```c++
      * void run() {
      *     for(auto phase : orchestrator.loop({})) {
-     *         doOperation(phase);
+     *         while(phase == orchestrator.currentPhase() {
+     *             doOperation(phase);
+     *         }
      *     }
      * }
      * ```
@@ -104,9 +106,25 @@ public:
      * the implementation relies on callers alternating between
      * `operator*()` and `operator++()` to indicate the caller's
      * done-ness or readiness of the current/next phase.
+     *
+     * @param blockingPhases
+     *      Which Phases should "block".
+     *      Non-blocking means that the iterator will immediately call
+     *      awaitPhaseEnd() right after calling awaitPhaseStart(). This
+     *      will prevent the Orchestrator from waiting for this Actor
+     *      to complete its operations in the current Phase.
+     *
+     *      Note that the Actor still needs to wait for the next Phase
+     *      to start before going on to the next iteration of the loop.
+     *      The common way to do this is to periodically check that
+     *      the current Phase number (`Orchestrator::currentPhase()`)
+     *      hasn't changed.
+     *
+     *      The `PhaseLoop` type will soon be incorporated into this type
+     *      and will support automatically doing this check if required.
+     *
      */
-    // TODO: use an unordered_set<PhaseNumber> and doc the param
-    V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
+    V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases = {});
 
 private:
     mutable std::shared_mutex _mutex;

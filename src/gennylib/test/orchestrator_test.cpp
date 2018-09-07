@@ -184,7 +184,6 @@ TEST_CASE("Orchestrator") {
     }
 }
 
-// TODO: case when all blocking
 // TODO: case when no phases
 // TODO: case when mix/match blocking
 // TODO: case when map doesn't define a phase to block
