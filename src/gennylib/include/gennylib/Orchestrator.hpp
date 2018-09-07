@@ -3,12 +3,10 @@
 
 #include <cassert>
 #include <condition_variable>
-#include <iterator>
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
 #include <unordered_set>
-#include <utility>
 
 namespace genny {
 
@@ -95,7 +93,7 @@ public:
      * ```c++
      * void run() {
      *     for(auto phase : orchestrator.loop({})) {
-     *         while(phase == orchestrator.currentPhase() {
+     *         while(phase == orchestrator.currentPhase()) {
      *             doOperation(phase);
      *         }
      *     }
