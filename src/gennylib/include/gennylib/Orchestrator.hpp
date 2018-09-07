@@ -7,7 +7,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
-#include <unordered_map>
+#include <unordered_set>
 #include <utility>
 
 namespace genny {
@@ -106,7 +106,7 @@ public:
      * done-ness or readiness of the current/next phase.
      */
     // TODO: use an unordered_set<PhaseNumber> and doc the param
-    V1::OrchestratorLoop loop(const std::unordered_map<PhaseNumber, bool>& blockingPhases);
+    V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
 
 private:
     mutable std::shared_mutex _mutex;
@@ -123,7 +123,6 @@ private:
     enum class State { PhaseEnded, PhaseStarted };
 
     State state = State::PhaseEnded;
-
 };
 
 
@@ -148,14 +147,13 @@ private:
     friend OrchestratorLoopIterator;
 
     OrchestratorLoop(Orchestrator& orchestrator,
-                     const std::unordered_map<PhaseNumber, bool>& blockingPhases);
+                     const std::unordered_set<PhaseNumber>& blockingPhases);
 
     bool morePhases() const;
     bool doesBlockOn(PhaseNumber phase) const;
 
     Orchestrator* _orchestrator;
-    const std::unordered_map<PhaseNumber, bool>& _blockingPhases;
-
+    const std::unordered_set<PhaseNumber>& _blockingPhases;
 };
 
 
@@ -186,7 +184,6 @@ private:
     OrchestratorLoop* _loop;
     bool _isEnd;
     PhaseNumber _currentPhase;
-
 };
 
 

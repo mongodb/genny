@@ -9,8 +9,6 @@
 
 #include <gennylib/Orchestrator.hpp>
 
-#include <gennylib/Orchestrator.hpp>
-
 using namespace genny;
 using namespace std::chrono;
 
@@ -196,7 +194,7 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_map<PhaseNumber, bool> blocking{{0L, true}, {1L, true}, {2L, true}};
+    std::unordered_set<PhaseNumber> blocking {0, 1, 2};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -212,7 +210,7 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_map<PhaseNumber, bool> blocking{{0L, false}, {1L, false}, {2L, false}};
+    std::unordered_set<PhaseNumber> blocking; // none
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -227,10 +225,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<PhaseNumber, bool> blocking{
-        {0L, false},
-        {1L, true},
-    };
+    std::unordered_set<PhaseNumber> blocking {1};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -245,10 +240,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<PhaseNumber, bool> blocking{
-        {0L, true},
-        {1L, false},
-    };
+    std::unordered_set<PhaseNumber> blocking {0};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -263,10 +255,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     Orchestrator o;
     o.addRequiredTokens(1);
 
-    std::unordered_map<PhaseNumber, bool> blocking{
-        {0L, true},
-        {1L, true},
-    };
+    std::unordered_set<PhaseNumber> blocking {0, 1};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -290,7 +279,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     std::atomic_int failures = 0;
 
     auto t1 = std::thread([&]() {
-        std::unordered_map<PhaseNumber, bool> blocking = {{0, false}, {1, true}};
+        std::unordered_set<PhaseNumber> blocking {1};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
@@ -324,7 +313,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
     auto t2 = std::thread([&]() {
-        std::unordered_map<PhaseNumber, bool> blocking = {{0, true}, {1, false}};
+        std::unordered_set<PhaseNumber> blocking {0};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;

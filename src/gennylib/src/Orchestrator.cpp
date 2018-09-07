@@ -1,7 +1,6 @@
 #include <algorithm>  // std::max
 #include <cassert>
 #include <iostream>
-#include <shared_mutex>
 
 #include <gennylib/Orchestrator.hpp>
 
@@ -115,13 +114,12 @@ void Orchestrator::abort() {
     this->_errors = true;
 }
 
-V1::OrchestratorLoop Orchestrator::loop(
-    const std::unordered_map<PhaseNumber, bool>& blockingPhases) {
+V1::OrchestratorLoop Orchestrator::loop(const std::unordered_set<PhaseNumber>& blockingPhases) {
     return V1::OrchestratorLoop(*this, blockingPhases);
 }
 
 V1::OrchestratorLoop::OrchestratorLoop(Orchestrator& orchestrator,
-                                       const std::unordered_map<PhaseNumber, bool>& blockingPhases)
+                                       const std::unordered_set<PhaseNumber>& blockingPhases)
     : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
 
 V1::OrchestratorLoopIterator V1::OrchestratorLoop::end() {
@@ -133,11 +131,7 @@ V1::OrchestratorLoopIterator V1::OrchestratorLoop::begin() {
 }
 
 bool V1::OrchestratorLoop::doesBlockOn(PhaseNumber phase) const {
-    if (auto it = _blockingPhases.find(phase); it != _blockingPhases.end()) {
-        return it->second;
-    }
-    // TODO: is this the right default?
-    return false;
+    return _blockingPhases.find(phase) != _blockingPhases.end();
 }
 
 bool V1::OrchestratorLoop::morePhases() const {
