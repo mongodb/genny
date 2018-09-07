@@ -157,15 +157,27 @@ private:
 };
 
 
+// Only usable in range-based for loops.
 class OrchestratorLoopIterator {
 
 public:
+    // These are intentionally commented-out because this type
+    // should not be used by any std algorithms that may rely on them.
+    // This type should only be used by range-based for loops (which doesn't
+    // rely on these typedefs). This should *hopefully* prevent some cases of
+    // accidental mis-use.
+    //
+    // Decided to leave this code commented-out rather than deleting it
+    // partially to document this shortcoming explicitly but also in case
+    // we want to support the full concept in the future.
+    // https://en.cppreference.com/w/cpp/named_req/InputIterator
+    //
     // <iterator-concept>
-    typedef std::forward_iterator_tag iterator_category;
-    typedef PhaseNumber value_type;
-    typedef PhaseNumber reference;
-    typedef PhaseNumber pointer;
-    typedef std::ptrdiff_t difference_type;
+    //    typedef std::forward_iterator_tag iterator_category;
+    //    typedef PhaseNumber value_type;
+    //    typedef PhaseNumber reference;
+    //    typedef PhaseNumber pointer;
+    //    typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
     // TODO: don't support ==
