@@ -115,8 +115,8 @@ void Orchestrator::abort() {
     this->_errors = true;
 }
 
-// TODO: should this be a ref?
-V1::OrchestratorLoop Orchestrator::loop(const std::unordered_map<PhaseNumber, bool>& blockingPhases) {
+V1::OrchestratorLoop Orchestrator::loop(
+    const std::unordered_map<PhaseNumber, bool>& blockingPhases) {
     return V1::OrchestratorLoop(*this, blockingPhases);
 }
 
@@ -124,12 +124,12 @@ V1::OrchestratorLoop::OrchestratorLoop(Orchestrator& orchestrator,
                                        const std::unordered_map<PhaseNumber, bool>& blockingPhases)
     : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
 
-V1::OrchestratorIterator V1::OrchestratorLoop::end() {
-    return V1::OrchestratorIterator{*this, true};
+V1::OrchestratorLoopIterator V1::OrchestratorLoop::end() {
+    return V1::OrchestratorLoopIterator{*this, true};
 }
 
-V1::OrchestratorIterator V1::OrchestratorLoop::begin() {
-    return V1::OrchestratorIterator{*this, false};
+V1::OrchestratorLoopIterator V1::OrchestratorLoop::begin() {
+    return V1::OrchestratorLoopIterator{*this, false};
 }
 
 bool V1::OrchestratorLoop::doesBlockOn(PhaseNumber phase) const {
@@ -144,11 +144,12 @@ bool V1::OrchestratorLoop::morePhases() const {
     return this->_orchestrator->morePhases();
 }
 
-V1::OrchestratorIterator::OrchestratorIterator(V1::OrchestratorLoop& orchestratorLoop, bool isEnd)
+V1::OrchestratorLoopIterator::OrchestratorLoopIterator(V1::OrchestratorLoop& orchestratorLoop,
+                                                       bool isEnd)
     : _loop{std::addressof(orchestratorLoop)}, _isEnd{isEnd}, _currentPhase{0} {}
 
 
-PhaseNumber V1::OrchestratorIterator::operator*() {
+PhaseNumber V1::OrchestratorLoopIterator::operator*() {
     // Intentionally don't bother with cases where user didn't call operator++()
     // between invocations of operator*() and vice-versa.
     //
@@ -164,7 +165,7 @@ PhaseNumber V1::OrchestratorIterator::operator*() {
 }
 
 
-V1::OrchestratorIterator& V1::OrchestratorIterator::operator++() {
+V1::OrchestratorLoopIterator& V1::OrchestratorLoopIterator::operator++() {
     // Intentionally don't bother with cases where user didn't call operator++()
     // between invocations of operator*() and vice-versa.
     //
@@ -177,7 +178,7 @@ V1::OrchestratorIterator& V1::OrchestratorIterator::operator++() {
     return *this;
 }
 
-bool V1::OrchestratorIterator::operator==(const V1::OrchestratorIterator& other) const {
+bool V1::OrchestratorLoopIterator::operator==(const V1::OrchestratorLoopIterator& other) const {
     // Intentionally don't handle self-equality or other "normal" cases.
     //
     // This type is only intended to be used by range-based for-loops

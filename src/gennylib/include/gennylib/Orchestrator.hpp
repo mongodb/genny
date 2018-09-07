@@ -85,6 +85,27 @@ public:
 
     void abort();
 
+    /**
+     * @attention Only use this in range-based for loops.
+     *
+     * Iterates over all phases and will correctly call
+     * `awaitPhaseStart()` and `awaitPhaseEnd()` in the
+     * correct operators.
+     *
+     * ```c++
+     * void run() {
+     *     for(auto phase : orchestrator.loop({})) {
+     *         doOperation(phase);
+     *     }
+     * }
+     * ```
+     *
+     * This should **only** be used by range-based for loops because
+     * the implementation relies on callers alternating between
+     * `operator*()` and `operator++()` to indicate the caller's
+     * done-ness or readiness of the current/next phase.
+     */
+    // TODO: use an unordered_set<PhaseNumber> and doc the param
     V1::OrchestratorLoop loop(const std::unordered_map<PhaseNumber, bool>& blockingPhases);
 
 private:
@@ -102,43 +123,44 @@ private:
     enum class State { PhaseEnded, PhaseStarted };
 
     State state = State::PhaseEnded;
+
 };
 
 
+/*
+ * Reminder: the V1 namespace types are *not* intended to be used directly.
+ */
 namespace V1 {
 
 
-class OrchestratorIterator;
+class OrchestratorLoopIterator;
+
 
 // returned from orchestrator.loop()
 class OrchestratorLoop {
-public:
-    // TODO: private ctor and friend Orchestrator
-    explicit OrchestratorLoop(Orchestrator& orchestrator,
-                              const std::unordered_map<PhaseNumber, bool>& blockingPhases);
-    OrchestratorIterator begin();
-    OrchestratorIterator end();
 
-    // no copy
-    OrchestratorLoop(OrchestratorLoop&) = delete;
-    void operator=(OrchestratorLoop&) = delete;
+public:
+    OrchestratorLoopIterator begin();
+    OrchestratorLoopIterator end();
 
 private:
-    friend OrchestratorIterator;
+    friend Orchestrator;
+    friend OrchestratorLoopIterator;
+
+    OrchestratorLoop(Orchestrator& orchestrator,
+                     const std::unordered_map<PhaseNumber, bool>& blockingPhases);
+
     bool morePhases() const;
     bool doesBlockOn(PhaseNumber phase) const;
 
     Orchestrator* _orchestrator;
     const std::unordered_map<PhaseNumber, bool>& _blockingPhases;
+
 };
 
-/**
- * Support class for OrchestratorLoop.
- * Only intended to be used by OrchestratorLoop.
- */
-// returned from orchestrator.loop().begin()
-// and           orchestrator.loop().end()
-class OrchestratorIterator {
+
+class OrchestratorLoopIterator {
+
 public:
     // <iterator-concept>
     typedef std::forward_iterator_tag iterator_category;
@@ -148,20 +170,23 @@ public:
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    bool operator==(const OrchestratorIterator&) const;
-    bool operator!=(const OrchestratorIterator& other) const {
+    // TODO: don't support ==
+    bool operator==(const OrchestratorLoopIterator&) const;
+    bool operator!=(const OrchestratorLoopIterator& other) const {
         return !(*this == other);
     }
     PhaseNumber operator*();
-    OrchestratorIterator& operator++();
+    OrchestratorLoopIterator& operator++();
 
 private:
-    explicit OrchestratorIterator(OrchestratorLoop&, bool);
-
     friend OrchestratorLoop;
+
+    explicit OrchestratorLoopIterator(OrchestratorLoop&, bool);
+
     OrchestratorLoop* _loop;
     bool _isEnd;
     PhaseNumber _currentPhase;
+
 };
 
 
