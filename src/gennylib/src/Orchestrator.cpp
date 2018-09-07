@@ -140,10 +140,15 @@ bool V1::OrchestratorLoop::morePhases() const {
 
 V1::OrchestratorLoopIterator::OrchestratorLoopIterator(V1::OrchestratorLoop& orchestratorLoop,
                                                        bool isEnd)
-    : _loop{std::addressof(orchestratorLoop)}, _isEnd{isEnd}, _currentPhase{0} {}
+    : _loop{std::addressof(orchestratorLoop)},
+      _isEnd{isEnd},
+      _currentPhase{0},
+      _awaitingPlusPlus{false} {}
 
 
 PhaseNumber V1::OrchestratorLoopIterator::operator*() {
+    assert(!_awaitingPlusPlus);
+
     // Intentionally don't bother with cases where user didn't call operator++()
     // between invocations of operator*() and vice-versa.
     //
@@ -155,11 +160,14 @@ PhaseNumber V1::OrchestratorLoopIterator::operator*() {
     if (!this->_loop->doesBlockOn(_currentPhase)) {
         this->_loop->_orchestrator->awaitPhaseEnd(false);
     }
+
+    _awaitingPlusPlus = true;
     return _currentPhase;
 }
 
 
 V1::OrchestratorLoopIterator& V1::OrchestratorLoopIterator::operator++() {
+    assert(_awaitingPlusPlus);
     // Intentionally don't bother with cases where user didn't call operator++()
     // between invocations of operator*() and vice-versa.
     //
@@ -169,6 +177,8 @@ V1::OrchestratorLoopIterator& V1::OrchestratorLoopIterator::operator++() {
     if (this->_loop->doesBlockOn(_currentPhase)) {
         this->_loop->_orchestrator->awaitPhaseEnd(true);
     }
+
+    _awaitingPlusPlus = false;
     return *this;
 }
 

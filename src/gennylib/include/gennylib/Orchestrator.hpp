@@ -200,8 +200,6 @@ public:
 
     PhaseNumber operator*();
 
-    // TODO: add boolean to check if being used correctly
-
     OrchestratorLoopIterator& operator++();
 
 private:
@@ -212,6 +210,15 @@ private:
     OrchestratorLoop* _loop;
     bool _isEnd;
     PhaseNumber _currentPhase;
+
+    // helps detect accidental mis-use. General contract
+    // of this iterator (as used by range-based for) is that
+    // the user will alternate between operator*() and operator++()
+    // (starting with operator*()), so we flip this back-and-forth
+    // in operator*() and operator++() and assert the correct value.
+    // If the user calls operator*() twice without calling operator++()
+    // between, we'll fail (and similarly for operator++()).
+    bool _awaitingPlusPlus;
 };
 
 
