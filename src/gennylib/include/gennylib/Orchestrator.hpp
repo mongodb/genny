@@ -91,12 +91,14 @@ public:
      * correct operators.
      *
      * ```c++
-     * void run() {
-     *     for(auto phase : orchestrator.loop({})) {
-     *         while(phase == orchestrator.currentPhase()) {
-     *             doOperation(phase);
-     *         }
-     *     }
+     * class MyActor : Actor {
+     *   std::unordered_set<PhaseNumber> blocking;
+     *   ...
+     *   void run() override {
+     *     for(auto&& phase : orchestrator.loop(blocking))
+     *       while(phase == orchestrator.currentPhase())
+     *         doOperation(phase);
+     *   }
      * }
      * ```
      *
