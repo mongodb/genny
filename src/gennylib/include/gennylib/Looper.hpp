@@ -6,6 +6,7 @@
 #include <iterator>
 #include <optional>
 #include <sstream>
+#include <unordered_map>
 #include <utility>
 
 #include <gennylib/InvalidConfigurationException.hpp>
@@ -37,19 +38,19 @@ public:
                                    bool isEnd,
                                    std::optional<int> maxIters,
                                    std::optional<std::chrono::milliseconds> maxDuration)
-            : _isEndIterator{isEnd},
-              _minDuration{std::move(maxDuration)},
-              _minIterations{std::move(maxIters)},
-              _currentIteration{0},
-              _startedAt{_minDuration ? std::chrono::steady_clock::now()
-                                      : std::chrono::time_point<std::chrono::steady_clock>::min()},
-              _orchestrator{orchestrator} {
+        : _isEndIterator{isEnd},
+          _minDuration{std::move(maxDuration)},
+          _minIterations{std::move(maxIters)},
+          _currentIteration{0},
+          _startedAt{_minDuration ? std::chrono::steady_clock::now()
+                                  : std::chrono::time_point<std::chrono::steady_clock>::min()},
+          _orchestrator{orchestrator} {
         // invariant checked in OperationLoop
         assert(isEnd || _minDuration || _minIterations);
     }
 
     explicit OperationLoopIterator(Orchestrator& orchestrator, bool isEnd)
-            : OperationLoopIterator{orchestrator, isEnd, std::nullopt, std::nullopt} {}
+        : OperationLoopIterator{orchestrator, isEnd, std::nullopt, std::nullopt} {}
 
     Value operator*() const {
         return Value();
@@ -115,6 +116,45 @@ private:
     unsigned int _currentIteration;
 };
 
+template <class T>
+class PhaseHolder {
+
+public:
+    PhaseHolder(Orchestrator& _orchestrator,
+                PhaseNumber _number,
+                const std::unique_ptr<T>& _value,
+                const std::optional<int>& _maxIters,
+                const std::optional<std::chrono::milliseconds>& _maxDuration)
+        : _orchestrator(_orchestrator),
+          _number(_number),
+          _value(_value),
+          _maxIters(_maxIters),
+          _maxDuration(_maxDuration) {}
+
+    OperationLoopIterator begin() {
+        return OperationLoopIterator{_orchestrator, false, _maxIters, _maxDuration};
+    }
+    OperationLoopIterator end() {
+        return OperationLoopIterator{_orchestrator, true};
+    };
+
+    bool doesBlock() const {
+        return _maxIters || _maxDuration;
+    }
+
+    T& operator->() {
+        return _value.operator->();
+    }
+
+private:
+    Orchestrator& _orchestrator;
+    PhaseNumber _number;
+    std::unique_ptr<T> _value;
+
+    std::optional<int> _maxIters;
+    std::optional<std::chrono::milliseconds> _maxDuration;
+};
+
 // Only usable in range-based for loops.
 template <class T>
 class OrchestratorLoopIterator {
@@ -148,7 +188,7 @@ public:
         return !(other._isEnd && !this->morePhases());
     }
 
-    PhaseNumber operator*() {
+    std::pair<PhaseNumber,PhaseHolder<T>&> operator*() {
         assert(!_awaitingPlusPlus);
 
         // Intentionally don't bother with cases where user didn't call operator++()
@@ -164,7 +204,7 @@ public:
         }
 
         _awaitingPlusPlus = true;
-        return _currentPhase;
+        return std::make_pair(_currentPhase, _holders.find(_currentPhase)->second);
     }
 
     OrchestratorLoopIterator& operator++() {
@@ -183,11 +223,12 @@ public:
         return *this;
     }
 
-    explicit OrchestratorLoopIterator(Orchestrator* orchestrator,
-                                      const std::unordered_set<PhaseNumber>& blockingPhases,
-                                      bool isEnd)
+    explicit OrchestratorLoopIterator(
+        Orchestrator* orchestrator,
+        const std::unordered_map<PhaseNumber, PhaseHolder<T>>& holders,
+        bool isEnd)
         : _orchestrator{orchestrator},
-          _blockingPhases{blockingPhases},
+          _holders{holders},
           _isEnd{isEnd},
           _currentPhase{0},
           _awaitingPlusPlus{false} {}
@@ -198,11 +239,15 @@ private:
     }
 
     bool doesBlockOn(PhaseNumber phase) const {
-        return _blockingPhases.find(phase) != _blockingPhases.end();
+        if (auto h = _holders.find(phase); h != _holders.end()) {
+            return h->second.doesBlock();
+        }
+        return true;
     }
 
     Orchestrator* _orchestrator;
-    const std::unordered_set<PhaseNumber>& _blockingPhases;
+    const std::unordered_map<PhaseNumber, PhaseHolder<T>>& _holders;
+    //    const std::unordered_set<PhaseNumber>& _blockingPhases;
 
     bool _isEnd;
     PhaseNumber _currentPhase;
@@ -223,20 +268,20 @@ class OrchestratorLoop {
 
 public:
     OrchestratorLoopIterator<T> begin() {
-        return V1::OrchestratorLoopIterator<T>{this->_orchestrator, this->_blockingPhases, false};
+        return V1::OrchestratorLoopIterator<T>{this->_orchestrator, this->_holders, false};
     }
 
     OrchestratorLoopIterator<T> end() {
-        return V1::OrchestratorLoopIterator<T>{this->_orchestrator, this->_blockingPhases, true};
+        return V1::OrchestratorLoopIterator<T>{this->_orchestrator, this->_holders, true};
     }
 
     OrchestratorLoop(Orchestrator& orchestrator,
-                     const std::unordered_set<PhaseNumber>& blockingPhases)
-        : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
+                     const std::unordered_map<PhaseNumber, PhaseHolder<T>>& holders)
+        : _orchestrator{std::addressof(orchestrator)}, _holders{holders} {}
 
 private:
     Orchestrator* _orchestrator;
-    const std::unordered_set<PhaseNumber>& _blockingPhases;
+    const std::unordered_map<PhaseNumber, PhaseHolder<T>>& _holders;
 };
 
 
