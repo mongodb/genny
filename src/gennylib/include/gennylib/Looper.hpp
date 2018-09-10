@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iterator>
 #include <optional>
+#include <utility>
 #include <sstream>
 
 #include <gennylib/InvalidConfigurationException.hpp>
@@ -23,17 +24,28 @@ class OrchestratorLoopIterator;
 class OrchestratorLoop {
 
 public:
-    OrchestratorLoopIterator begin();
-    OrchestratorLoopIterator end();
+    OrchestratorLoopIterator begin() {
+        return V1::OrchestratorLoopIterator{*this, false};
+    }
+
+    OrchestratorLoopIterator end() {
+        return V1::OrchestratorLoopIterator{*this, true};
+    }
 
     OrchestratorLoop(Orchestrator& orchestrator,
-                     const std::unordered_set<PhaseNumber>& blockingPhases);
+                     const std::unordered_set<PhaseNumber>& blockingPhases)
+            : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
 
 private:
     friend OrchestratorLoopIterator;
 
-    bool morePhases() const;
-    bool doesBlockOn(PhaseNumber phase) const;
+    bool morePhases() const {
+        return this->_orchestrator->morePhases();
+    }
+
+    bool doesBlockOn(PhaseNumber phase) const {
+        return _blockingPhases.find(phase) != _blockingPhases.end();
+    }
 
     Orchestrator* _orchestrator;
     const std::unordered_set<PhaseNumber>& _blockingPhases;
@@ -108,16 +120,58 @@ public:
     //    typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    bool operator!=(const OrchestratorLoopIterator& other) const;
+    bool operator!=(const OrchestratorLoopIterator& other)  const {
+        // Intentionally don't handle self-equality or other "normal" cases.
+        //
+        // This type is only intended to be used by range-based for-loops
+        // and their equivalent expanded definitions
+        // https://en.cppreference.com/w/cpp/language/range-for
+        return !(other._isEnd && !_loop->morePhases());
+    }
 
-    PhaseNumber operator*();
+    PhaseNumber operator*() {
+        assert(!_awaitingPlusPlus);
 
-    OrchestratorLoopIterator& operator++();
+        // Intentionally don't bother with cases where user didn't call operator++()
+        // between invocations of operator*() and vice-versa.
+        //
+        //
+        // This type is only intended to be used by range-based for-loops
+        // and their equivalent expanded definitions
+        // https://en.cppreference.com/w/cpp/language/range-for
+        _currentPhase = this->_loop->_orchestrator->awaitPhaseStart();
+        if (!this->_loop->doesBlockOn(_currentPhase)) {
+            this->_loop->_orchestrator->awaitPhaseEnd(false);
+        }
+
+        _awaitingPlusPlus = true;
+        return _currentPhase;
+    }
+
+    OrchestratorLoopIterator& operator++() {
+        assert(_awaitingPlusPlus);
+        // Intentionally don't bother with cases where user didn't call operator++()
+        // between invocations of operator*() and vice-versa.
+        //
+        // This type is only intended to be used by range-based for-loops
+        // and their equivalent expanded definitions
+        // https://en.cppreference.com/w/cpp/language/range-for
+        if (this->_loop->doesBlockOn(_currentPhase)) {
+            this->_loop->_orchestrator->awaitPhaseEnd(true);
+        }
+
+        _awaitingPlusPlus = false;
+        return *this;
+    }
 
 private:
     friend OrchestratorLoop;
 
-    explicit OrchestratorLoopIterator(OrchestratorLoop&, bool);
+    explicit OrchestratorLoopIterator(OrchestratorLoop& orchestratorLoop, bool isEnd)
+            : _loop{std::addressof(orchestratorLoop)},
+              _isEnd{isEnd},
+              _currentPhase{0},
+              _awaitingPlusPlus{false} {}
 
     OrchestratorLoop* _loop;
     bool _isEnd;
