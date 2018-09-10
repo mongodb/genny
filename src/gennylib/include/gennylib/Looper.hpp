@@ -5,8 +5,8 @@
 #include <chrono>
 #include <iterator>
 #include <optional>
-#include <utility>
 #include <sstream>
+#include <utility>
 
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
@@ -17,7 +17,7 @@
 namespace genny::V1 {
 
 // Only usable in range-based for loops.
-template<class T>
+template <class T>
 class OrchestratorLoopIterator {
 
 public:
@@ -40,7 +40,7 @@ public:
     //    typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    bool operator!=(const OrchestratorLoopIterator& other)  const {
+    bool operator!=(const OrchestratorLoopIterator& other) const {
         // Intentionally don't handle self-equality or other "normal" cases.
         //
         // This type is only intended to be used by range-based for-loops
@@ -84,12 +84,14 @@ public:
         return *this;
     }
 
-    explicit OrchestratorLoopIterator(Orchestrator* orchestrator, const std::unordered_set<PhaseNumber>& blockingPhases, bool isEnd)
-            : _orchestrator{orchestrator},
-              _blockingPhases{blockingPhases},
-              _isEnd{isEnd},
-              _currentPhase{0},
-              _awaitingPlusPlus{false} {}
+    explicit OrchestratorLoopIterator(Orchestrator* orchestrator,
+                                      const std::unordered_set<PhaseNumber>& blockingPhases,
+                                      bool isEnd)
+        : _orchestrator{orchestrator},
+          _blockingPhases{blockingPhases},
+          _isEnd{isEnd},
+          _currentPhase{0},
+          _awaitingPlusPlus{false} {}
 
 private:
     bool morePhases() const {
@@ -117,8 +119,7 @@ private:
 };
 
 
-
-template<class T>
+template <class T>
 class OrchestratorLoop {
 
 public:
@@ -132,7 +133,7 @@ public:
 
     OrchestratorLoop(Orchestrator& orchestrator,
                      const std::unordered_set<PhaseNumber>& blockingPhases)
-            : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
+        : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
 
 private:
     Orchestrator* _orchestrator;
