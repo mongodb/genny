@@ -134,7 +134,7 @@ private:
 };
 
 
-}  // namespace V1
+}  // namespace genny::V1
 
 
 namespace genny {
@@ -157,20 +157,23 @@ public:
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    explicit OperationLoopIterator(bool isEnd,
-                               std::optional<int> maxIters,
-                               std::optional<std::chrono::milliseconds> maxDuration)
+    explicit OperationLoopIterator(Orchestrator& orchestrator,
+                                   bool isEnd,
+                                   std::optional<int> maxIters,
+                                   std::optional<std::chrono::milliseconds> maxDuration)
         : _isEndIterator{isEnd},
           _minDuration{std::move(maxDuration)},
           _minIterations{std::move(maxIters)},
           _currentIteration{0},
           _startedAt{_minDuration ? std::chrono::steady_clock::now()
-                                  : std::chrono::time_point<std::chrono::steady_clock>::min()} {
+                                  : std::chrono::time_point<std::chrono::steady_clock>::min()},
+          _orchestrator{orchestrator} {
         // invariant checked in OperationLoop
         assert(isEnd || _minDuration || _minIterations);
     }
 
-    explicit OperationLoopIterator(bool isEnd) : OperationLoopIterator{isEnd, std::nullopt, std::nullopt} {}
+    explicit OperationLoopIterator(Orchestrator& orchestrator, bool isEnd)
+        : OperationLoopIterator{orchestrator, isEnd, std::nullopt, std::nullopt} {}
 
     Value operator*() const {
         return Value();
@@ -231,6 +234,7 @@ private:
     const std::optional<std::chrono::milliseconds> _minDuration;
     std::chrono::steady_clock::time_point _startedAt;
 
+    Orchestrator& _orchestrator;
     const std::optional<int> _minIterations;
     unsigned int _currentIteration;
 };
@@ -252,10 +256,14 @@ class Looper {
 
 public:
     // Ctor is ideally only called during Actor constructors so fine to take our time here.
-    explicit Looper(std::optional<int> minIterations,
-                           std::optional<std::chrono::milliseconds> minDuration)
-        : _minIterations{std::move(minIterations)}, _minDuration{std::move(minDuration)} {
+    explicit Looper(Orchestrator& orchestrator,
+                    std::optional<int> minIterations,
+                    std::optional<std::chrono::milliseconds> minDuration)
+        : _orchestrator{orchestrator},
+          _minIterations{std::move(minIterations)},
+          _minDuration{std::move(minDuration)} {
 
+        // TODO: kill this check; no longer valid since we can be non-blocking
         // both optionals empty (no termination condition; we'd iterate forever
         //   (or not at all depending on how you interpret it)
         if (!_minIterations && !_minDuration) {
@@ -278,14 +286,15 @@ public:
     }
 
     V1::OperationLoopIterator begin() {
-        return V1::OperationLoopIterator{false, _minIterations, _minDuration};
+        return V1::OperationLoopIterator{_orchestrator, false, _minIterations, _minDuration};
     }
 
     V1::OperationLoopIterator end() {
-        return V1::OperationLoopIterator{true};
+        return V1::OperationLoopIterator{_orchestrator, true};
     }
 
 private:
+    Orchestrator& _orchestrator;
     std::optional<int> _minIterations;
     std::optional<std::chrono::milliseconds> _minDuration;
 };

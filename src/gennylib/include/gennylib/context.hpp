@@ -583,10 +583,11 @@ public:
      *
      * This Actor code is simplified to show the usage of `PhaseLoop`.
      */
-    Looper loop() const {
-        return Looper{this->get<int, false>("Repeat"),
-                             this->get<std::chrono::milliseconds, false>("Duration")};
-    }
+     // TODO
+//    Looper loop() const {
+//        return Looper{this->get<int, false>("Repeat"),
+//                             this->get<std::chrono::milliseconds, false>("Duration")};
+//    }
 
 private:
     YAML::Node _node;

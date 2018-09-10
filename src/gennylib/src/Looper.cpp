@@ -4,7 +4,7 @@ using namespace genny;
 
 V1::OrchestratorLoop::OrchestratorLoop(genny::Orchestrator& orchestrator,
                                        const std::unordered_set<genny::PhaseNumber>& blockingPhases)
-        : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
+    : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
 
 V1::OrchestratorLoopIterator V1::OrchestratorLoop::end() {
     return V1::OrchestratorLoopIterator{*this, true};
@@ -24,10 +24,10 @@ bool V1::OrchestratorLoop::morePhases() const {
 
 V1::OrchestratorLoopIterator::OrchestratorLoopIterator(V1::OrchestratorLoop& orchestratorLoop,
                                                        bool isEnd)
-        : _loop{std::addressof(orchestratorLoop)},
-          _isEnd{isEnd},
-          _currentPhase{0},
-          _awaitingPlusPlus{false} {}
+    : _loop{std::addressof(orchestratorLoop)},
+      _isEnd{isEnd},
+      _currentPhase{0},
+      _awaitingPlusPlus{false} {}
 
 
 PhaseNumber V1::OrchestratorLoopIterator::operator*() {
