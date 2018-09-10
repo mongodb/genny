@@ -17,6 +17,7 @@
 namespace genny::V1 {
 
 // Only usable in range-based for loops.
+template<class T>
 class OrchestratorLoopIterator {
 
 public:
@@ -117,16 +118,16 @@ private:
 
 
 
-// returned from orchestrator.loop()
+template<class T>
 class OrchestratorLoop {
 
 public:
-    OrchestratorLoopIterator begin() {
-        return V1::OrchestratorLoopIterator{this->_orchestrator, this->_blockingPhases, false};
+    OrchestratorLoopIterator<T> begin() {
+        return V1::OrchestratorLoopIterator<T>{this->_orchestrator, this->_blockingPhases, false};
     }
 
-    OrchestratorLoopIterator end() {
-        return V1::OrchestratorLoopIterator{this->_orchestrator, this->_blockingPhases, true};
+    OrchestratorLoopIterator<T> end() {
+        return V1::OrchestratorLoopIterator<T>{this->_orchestrator, this->_blockingPhases, true};
     }
 
     OrchestratorLoop(Orchestrator& orchestrator,

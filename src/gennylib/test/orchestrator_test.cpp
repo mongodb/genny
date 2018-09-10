@@ -194,7 +194,7 @@ TEST_CASE("Two non-blocking Phases") {
     std::unordered_set<PhaseNumber> seen{};
     std::unordered_set<PhaseNumber> blocking;
 
-    for (auto&& p : V1::OrchestratorLoop{o, blocking}) {
+    for (auto&& p : V1::OrchestratorLoop<int>{o, blocking}) {
         seen.insert(p);
     }
 
@@ -208,7 +208,7 @@ TEST_CASE("Single Blocking Phase") {
     std::unordered_set<PhaseNumber> seen{};
     std::unordered_set<PhaseNumber> blocking{0};
 
-    for (auto&& p : V1::OrchestratorLoop{o, blocking}) {
+    for (auto&& p : V1::OrchestratorLoop<int>{o, blocking}) {
         seen.insert(p);
     }
 
@@ -224,7 +224,7 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (PhaseNumber phase : V1::OrchestratorLoop{o, blocking}) {
+    for (PhaseNumber phase : V1::OrchestratorLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -240,7 +240,7 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto phase : V1::OrchestratorLoop{o, blocking}) {
+    for (auto phase : V1::OrchestratorLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -256,7 +256,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto phase : V1::OrchestratorLoop{o, blocking}) {
+    for (auto phase : V1::OrchestratorLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -272,7 +272,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto phase : V1::OrchestratorLoop{o, blocking}) {
+    for (auto phase : V1::OrchestratorLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -288,7 +288,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto phase : V1::OrchestratorLoop{o, blocking}) {
+    for (auto phase : V1::OrchestratorLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -313,7 +313,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (int phase : V1::OrchestratorLoop{o, blocking}) {
+        for (int phase : V1::OrchestratorLoop<int>{o, blocking}) {
             if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
@@ -347,7 +347,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (int phase : V1::OrchestratorLoop{o, blocking}) {
+        for (int phase : V1::OrchestratorLoop<int>{o, blocking}) {
             if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
