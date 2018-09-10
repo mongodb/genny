@@ -16,8 +16,6 @@
  */
 namespace genny::V1 {
 
-class OrchestratorLoop;
-
 // Only usable in range-based for loops.
 class OrchestratorLoopIterator {
 
@@ -85,9 +83,14 @@ public:
         return *this;
     }
 
-private:
-    friend OrchestratorLoop;
+    explicit OrchestratorLoopIterator(Orchestrator* orchestrator, const std::unordered_set<PhaseNumber>& blockingPhases, bool isEnd)
+            : _orchestrator{orchestrator},
+              _blockingPhases{blockingPhases},
+              _isEnd{isEnd},
+              _currentPhase{0},
+              _awaitingPlusPlus{false} {}
 
+private:
     bool morePhases() const {
         return this->_orchestrator->morePhases();
     }
@@ -95,13 +98,6 @@ private:
     bool doesBlockOn(PhaseNumber phase) const {
         return _blockingPhases.find(phase) != _blockingPhases.end();
     }
-
-    explicit OrchestratorLoopIterator(Orchestrator* orchestrator, const std::unordered_set<PhaseNumber>& blockingPhases, bool isEnd)
-            : _orchestrator{orchestrator},
-             _blockingPhases{blockingPhases},
-              _isEnd{isEnd},
-              _currentPhase{0},
-              _awaitingPlusPlus{false} {}
 
     Orchestrator* _orchestrator;
     const std::unordered_set<PhaseNumber>& _blockingPhases;
@@ -138,8 +134,6 @@ public:
             : _orchestrator{std::addressof(orchestrator)}, _blockingPhases{blockingPhases} {}
 
 private:
-    friend OrchestratorLoopIterator;
-
     Orchestrator* _orchestrator;
     const std::unordered_set<PhaseNumber>& _blockingPhases;
 };
@@ -189,13 +183,6 @@ private:
 // TODO
 // V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
 
-
-}  // namespace genny::V1
-
-
-namespace genny {
-
-namespace V1 {
 
 /**
  * Tracks the iteration-state of a `OperationLoop`.
@@ -295,8 +282,10 @@ private:
     unsigned int _currentIteration;
 };
 
-}  // namespace V1
+}  // namespace genny::V1
 
+
+namespace genny {
 
 /**
  * Configured with an optional<min#iterations> and/or optional<min duration>. The
