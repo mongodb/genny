@@ -4,7 +4,7 @@
 #include <iostream>
 #include <optional>
 
-#include <gennylib/OperationLoop.hpp>
+#include <gennylib/Looper.hpp>
 
 
 using namespace genny;
@@ -25,21 +25,21 @@ optional<chrono::milliseconds> operator"" _ms(unsigned long long int v) {
 
 TEST_CASE("Correctness for N iterations") {
     SECTION("Loops 0 Times") {
-        OperationLoop loop{0_i, nullopt};
+        Looper loop{0_i, nullopt};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 0);
     }
     SECTION("Loops 1 Time") {
-        OperationLoop loop{1_i, nullopt};
+        Looper loop{1_i, nullopt};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 1);
     }
     SECTION("Loops 113 Times") {
-        OperationLoop loop{113_i, nullopt};
+        Looper loop{113_i, nullopt};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -47,14 +47,14 @@ TEST_CASE("Correctness for N iterations") {
     }
 
     SECTION("Configured for -1 Times barfs") {
-        REQUIRE_THROWS_WITH((OperationLoop{make_optional(-1), nullopt}),
+        REQUIRE_THROWS_WITH((Looper{make_optional(-1), nullopt}),
                             Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
 
 TEST_CASE("Correctness for N milliseconds") {
     SECTION("Loops 0 milliseconds so zero times") {
-        OperationLoop loop{nullopt, 0_ms};
+        Looper loop{nullopt, 0_ms};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -63,7 +63,7 @@ TEST_CASE("Correctness for N milliseconds") {
     SECTION("Looping for 10 milliseconds takes between 10 and 11 milliseconds") {
         // we nop in the loop so ideally it should take exactly 10ms, but don't want spurious
         // failures
-        OperationLoop loop{nullopt, 10_ms};
+        Looper loop{nullopt, 10_ms};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -79,14 +79,14 @@ TEST_CASE("Correctness for N milliseconds") {
 
 TEST_CASE("Combinations of duration and iterations") {
     SECTION("Loops 0 milliseconds but 100 times") {
-        OperationLoop loop{100_i, 0_ms};
+        Looper loop{100_i, 0_ms};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 100);
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
-        OperationLoop loop{100_i, 5_ms};
+        Looper loop{100_i, 5_ms};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -106,18 +106,18 @@ TEST_CASE("Combinations of duration and iterations") {
     // combinations of the other tests 🙈
 
     SECTION("Configured for -1 milliseconds barfs") {
-        REQUIRE_THROWS_WITH((OperationLoop{nullopt, make_optional(chrono::milliseconds{-1})}),
+        REQUIRE_THROWS_WITH((Looper{nullopt, make_optional(chrono::milliseconds{-1})}),
                             Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
 
 TEST_CASE("Need either iterations or duration") {
-    REQUIRE_THROWS_WITH((OperationLoop{nullopt, nullopt}),
+    REQUIRE_THROWS_WITH((Looper{nullopt, nullopt}),
                         Catch::Contains("Need to specify either min iterations or min duration"));
 }
 
 TEST_CASE("Iterator concept correctness") {
-    OperationLoop loop{1_i, nullopt};
+    Looper loop{1_i, nullopt};
 
     // can deref
     SECTION("Deref and advance works") {

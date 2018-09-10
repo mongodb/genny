@@ -29,7 +29,8 @@ add_library(gennylib SHARED
     include/gennylib/ActorProducer.hpp
     include/gennylib/ActorVector.hpp
 
-        include/gennylib/OperationLoop.hpp
+    include/gennylib/Looper.hpp
+                 src/Looper.cpp
 
         include/gennylib/PhasedActor.hpp
                  src/PhasedActor.cpp

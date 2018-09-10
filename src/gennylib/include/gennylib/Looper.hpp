@@ -8,6 +8,134 @@
 #include <sstream>
 
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/Orchestrator.hpp>
+
+/*
+ * Reminder: the V1 namespace types are *not* intended to be used directly.
+ */
+namespace genny::V1 {
+
+
+class OrchestratorLoopIterator;
+
+
+// returned from orchestrator.loop()
+class OrchestratorLoop {
+
+public:
+    OrchestratorLoopIterator begin();
+    OrchestratorLoopIterator end();
+
+    OrchestratorLoop(Orchestrator& orchestrator,
+                     const std::unordered_set<PhaseNumber>& blockingPhases);
+
+private:
+    friend OrchestratorLoopIterator;
+
+    bool morePhases() const;
+    bool doesBlockOn(PhaseNumber phase) const;
+
+    Orchestrator* _orchestrator;
+    const std::unordered_set<PhaseNumber>& _blockingPhases;
+};
+
+
+/**
+ * @attention Only use this in range-based for loops.
+ *
+ * Iterates over all phases and will correctly call
+ * `awaitPhaseStart()` and `awaitPhaseEnd()` in the
+ * correct operators.
+ *
+ * ```c++
+ * class MyActor : Actor {
+ *   std::unordered_set<PhaseNumber> blocking;
+ *   ...
+ *   void run() override {
+ *     for(auto&& phase : orchestrator.loop(blocking))
+ *       while(phase == orchestrator.currentPhase())
+ *         doOperation(phase);
+ *   }
+ * }
+ * ```
+ *
+ * This should **only** be used by range-based for loops because
+ * the implementation relies on callers alternating between
+ * `operator*()` and `operator++()` to indicate the caller's
+ * done-ness or readiness of the current/next phase.
+ *
+ * @param blockingPhases
+ *      Which Phases should "block".
+ *      Non-blocking means that the iterator will immediately call
+ *      awaitPhaseEnd() right after calling awaitPhaseStart(). This
+ *      will prevent the Orchestrator from waiting for this Actor
+ *      to complete its operations in the current Phase.
+ *
+ *      Note that the Actor still needs to wait for the next Phase
+ *      to start before going on to the next iteration of the loop.
+ *      The common way to do this is to periodically check that
+ *      the current Phase number (`Orchestrator::currentPhase()`)
+ *      hasn't changed.
+ *
+ *      The `PhaseLoop` type will soon be incorporated into this type
+ *      and will support automatically doing this check if required.
+ *
+ */
+// TODO
+// V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
+
+
+// Only usable in range-based for loops.
+class OrchestratorLoopIterator {
+
+public:
+    // These are intentionally commented-out because this type
+    // should not be used by any std algorithms that may rely on them.
+    // This type should only be used by range-based for loops (which doesn't
+    // rely on these typedefs). This should *hopefully* prevent some cases of
+    // accidental mis-use.
+    //
+    // Decided to leave this code commented-out rather than deleting it
+    // partially to document this shortcoming explicitly but also in case
+    // we want to support the full concept in the future.
+    // https://en.cppreference.com/w/cpp/named_req/InputIterator
+    //
+    // <iterator-concept>
+    //    typedef std::forward_iterator_tag iterator_category;
+    //    typedef PhaseNumber value_type;
+    //    typedef PhaseNumber reference;
+    //    typedef PhaseNumber pointer;
+    //    typedef std::ptrdiff_t difference_type;
+    // </iterator-concept>
+
+    bool operator!=(const OrchestratorLoopIterator& other) const;
+
+    PhaseNumber operator*();
+
+    OrchestratorLoopIterator& operator++();
+
+private:
+    friend OrchestratorLoop;
+
+    explicit OrchestratorLoopIterator(OrchestratorLoop&, bool);
+
+    OrchestratorLoop* _loop;
+    bool _isEnd;
+    PhaseNumber _currentPhase;
+
+    // helps detect accidental mis-use. General contract
+    // of this iterator (as used by range-based for) is that
+    // the user will alternate between operator*() and operator++()
+    // (starting with operator*()), so we flip this back-and-forth
+    // in operator*() and operator++() and assert the correct value.
+    // If the user calls operator*() twice without calling operator++()
+    // between, we'll fail (and similarly for operator++()).
+    bool _awaitingPlusPlus;
+};
+
+
+}  // namespace V1
+
 
 namespace genny {
 
@@ -120,11 +248,11 @@ private:
  *
  * See extended example in `PhaseContext.loop()`.
  */
-class OperationLoop {
+class Looper {
 
 public:
     // Ctor is ideally only called during Actor constructors so fine to take our time here.
-    explicit OperationLoop(std::optional<int> minIterations,
+    explicit Looper(std::optional<int> minIterations,
                            std::optional<std::chrono::milliseconds> minDuration)
         : _minIterations{std::move(minIterations)}, _minDuration{std::move(minDuration)} {
 
