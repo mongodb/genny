@@ -14,10 +14,10 @@ namespace genny {
 namespace V1 {
 
 /**
- * Tracks the iteration-state of a `PhaseLoop`.
+ * Tracks the iteration-state of a `OperationLoop`.
  */
 // This is intentionally header-only to help avoid doing unnecessary function-calls.
-class LoopIterator {
+class OperationLoopIterator {
 
 public:
     // <iterator-concept>
@@ -29,32 +29,32 @@ public:
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    explicit LoopIterator(bool isEnd,
-                          std::optional<int> maxIters,
-                          std::optional<std::chrono::milliseconds> maxDuration)
+    explicit OperationLoopIterator(bool isEnd,
+                               std::optional<int> maxIters,
+                               std::optional<std::chrono::milliseconds> maxDuration)
         : _isEndIterator{isEnd},
           _minDuration{std::move(maxDuration)},
           _minIterations{std::move(maxIters)},
           _currentIteration{0},
           _startedAt{_minDuration ? std::chrono::steady_clock::now()
                                   : std::chrono::time_point<std::chrono::steady_clock>::min()} {
-        // invariant checked in PhaseLoop
+        // invariant checked in OperationLoop
         assert(isEnd || _minDuration || _minIterations);
     }
 
-    explicit LoopIterator(bool isEnd) : LoopIterator{isEnd, std::nullopt, std::nullopt} {}
+    explicit OperationLoopIterator(bool isEnd) : OperationLoopIterator{isEnd, std::nullopt, std::nullopt} {}
 
     Value operator*() const {
         return Value();
     }
 
-    LoopIterator& operator++() {
+    OperationLoopIterator& operator++() {
         ++_currentIteration;
         return *this;
     }
 
     // clang-format off
-    bool operator==(const LoopIterator& rhs) const {
+    bool operator==(const OperationLoopIterator& rhs) const {
         // I heard you like terse, short-circuiting business-logic, bro, so I wrote you a love-letter to || ❤️
         return
             // Comparing this == .end(). This is most common call in range-based for-loops, so do it first.
@@ -93,7 +93,7 @@ public:
 
     // Iterator concepts only require !=, but the logic is much easier to reason about
     // for ==, so just negate that logic 😎 (compiler should inline it)
-    bool operator!=(const LoopIterator& rhs) const {
+    bool operator!=(const OperationLoopIterator& rhs) const {
         return !(*this == rhs);
     }
 
@@ -120,12 +120,12 @@ private:
  *
  * See extended example in `PhaseContext.loop()`.
  */
-class PhaseLoop {
+class OperationLoop {
 
 public:
     // Ctor is ideally only called during Actor constructors so fine to take our time here.
-    explicit PhaseLoop(std::optional<int> minIterations,
-                       std::optional<std::chrono::milliseconds> minDuration)
+    explicit OperationLoop(std::optional<int> minIterations,
+                           std::optional<std::chrono::milliseconds> minDuration)
         : _minIterations{std::move(minIterations)}, _minDuration{std::move(minDuration)} {
 
         // both optionals empty (no termination condition; we'd iterate forever
@@ -149,12 +149,12 @@ public:
         }
     }
 
-    V1::LoopIterator begin() {
-        return V1::LoopIterator{false, _minIterations, _minDuration};
+    V1::OperationLoopIterator begin() {
+        return V1::OperationLoopIterator{false, _minIterations, _minDuration};
     }
 
-    V1::LoopIterator end() {
-        return V1::LoopIterator{true};
+    V1::OperationLoopIterator end() {
+        return V1::OperationLoopIterator{true};
     }
 
 private:
