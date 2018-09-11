@@ -13,6 +13,20 @@
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 
+/**
+ * General TODO:
+ * - see what can be pushed into a cpp
+ * - see what ctors can be hidden or private
+ * - fix remaining orchestrator_test tests
+ * - static_assert on the T value that it has to have the right ctor?
+ * - try to make the T ctor only take a PhaseContext ref
+ * - doc everything (like it's hot).
+ * - Doc interactions with this in context.hpp
+ * - better name for ItersAndDuration
+ * - maybe track Iters and StartedAt in ItersAndDuration?
+ * - move tests from Orchestrator test into PhaseLoop tests
+ * - Kill PhasedActor
+ */
 
 /*
  * Reminder: the V1 namespace types are *not* intended to be used directly.
@@ -113,6 +127,7 @@ public:
 
     // clang-format off
     bool operator==(const ActorPhaseIterator& rhs) const {
+        // TODO: check orchestrator if non-blocking
         return
                 (rhs._isEndIterator && _itersAndDuration.isDone(_currentIteration, _startedAt))
 
@@ -194,10 +209,12 @@ public:
         return _itersAndDuration.doesBlock();
     }
 
+    // TODO: don't expose unique_ptr() here; have our own strict return type
     auto operator-> () const {
         return _value.operator->();
     }
 
+    // TODO: don't expose unique_ptr() here; have our own strict return type
     auto operator*() const {
         return _value.operator*();
     }
@@ -253,7 +270,7 @@ public:
 
         auto&& found = _phaseMap.find(_currentPhase);
 
-        // XXX: we can detect this at setup time
+        // TODO: we can detect this at setup time - worth doing now?
         if (found == _phaseMap.end()) {
             std::stringstream msg;
             msg << "No phase config found for PhaseNumber=[" << _currentPhase << "]";
@@ -275,6 +292,7 @@ public:
         return *this;
     }
 
+    // TODO: ensure consistent ordering per CONTRIBUTING.md
     explicit PhaseLoopIterator(Orchestrator& orchestrator,
                                std::unordered_map<PhaseNumber, ActorPhase<T>>& phaseMap,
                                bool isEnd)
@@ -316,7 +334,7 @@ private:
 
 }  // namespace genny::V1
 
-
+// TODO: nest namespaces rather than starting separate block
 namespace genny {
 
 /**
@@ -373,6 +391,7 @@ public:
         return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
     }
 
+    // TODO: should this be private?
     PhaseLoop(Orchestrator& orchestrator, PhaseMap&& phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
