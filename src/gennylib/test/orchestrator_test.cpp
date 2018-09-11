@@ -236,7 +236,7 @@ struct IncrementsTwoRefs : public Actor {
 TEST_CASE("Actual Actor Example", "[real]") {
     Orchestrator o;
     o.addRequiredTokens(1);
-    o.phasesAtLeastTo(1);
+    o.phasesAtLeastTo(0);  // we don't set this; rely on actor to do so
 
     metrics::Registry reg;
 

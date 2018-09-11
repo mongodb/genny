@@ -316,7 +316,11 @@ public:
     }
 
     PhaseLoop(Orchestrator& orchestrator, PhaseMap&& holders)
-        : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {}
+        : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {
+        for(auto&& [phaseNum, actorPhase] : _phaseMap) {
+            orchestrator.phasesAtLeastTo(phaseNum);
+        }
+    }
 
     PhaseLoop(genny::ActorContext& context)
         : PhaseLoop(context.orchestrator(), constructPhaseMap(context)) {}
@@ -326,7 +330,6 @@ private:
         PhaseMap out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
             auto&& deref = phaseContext;
-            //            TD<decltype(deref)> derefTyp;
             out.try_emplace(num, actorContext.orchestrator(), deref, std::make_unique<T>(deref));
         }
         return out;
