@@ -120,14 +120,33 @@ template <class T>
 class PhaseHolder {
 
 public:
+    PhaseHolder(PhaseHolder&) = delete;
+    void operator=(PhaseHolder&) = delete;
+
+    PhaseHolder(PhaseHolder&& other)
+    : _orchestrator{other._orchestrator},
+      _value{std::move(other._value)},
+      _number{other._number},
+      _maxIters{other._maxIters},
+      _maxDuration{other._maxDuration} {}
+
+    PhaseHolder& operator=(PhaseHolder&& other) {
+        this->_orchestrator = other._orchestrator;
+        this->_value = std::move(other._value);
+        this->_number = other._number;
+        this->_maxIters = other._maxIters;
+        this->_maxDuration = other._maxDuration;
+        return *this;
+    }
+
     PhaseHolder(Orchestrator& _orchestrator,
                 PhaseNumber _number,
-                const std::unique_ptr<T>& _value,
-                const std::optional<int>& _maxIters,
-                const std::optional<std::chrono::milliseconds>& _maxDuration)
+                std::unique_ptr<T> _value,
+                std::optional<int> _maxIters,
+                std::optional<std::chrono::milliseconds> _maxDuration)
         : _orchestrator(_orchestrator),
           _number(_number),
-          _value(_value),
+          _value(std::move(_value)),
           _maxIters(_maxIters),
           _maxDuration(_maxDuration) {}
 
@@ -204,7 +223,7 @@ public:
         }
 
         _awaitingPlusPlus = true;
-        return std::make_pair(_currentPhase, _holders.find(_currentPhase)->second);
+        return {_currentPhase, _holders.find(_currentPhase)->second};
     }
 
     OrchestratorLoopIterator& operator++() {
@@ -225,7 +244,7 @@ public:
 
     explicit OrchestratorLoopIterator(
         Orchestrator* orchestrator,
-        const std::unordered_map<PhaseNumber, PhaseHolder<T>>& holders,
+        std::unordered_map<PhaseNumber, PhaseHolder<T>&>& holders,
         bool isEnd)
         : _orchestrator{orchestrator},
           _holders{holders},
@@ -246,7 +265,7 @@ private:
     }
 
     Orchestrator* _orchestrator;
-    const std::unordered_map<PhaseNumber, PhaseHolder<T>>& _holders;
+    std::unordered_map<PhaseNumber, PhaseHolder<T>&>& _holders;
     //    const std::unordered_set<PhaseNumber>& _blockingPhases;
 
     bool _isEnd;
@@ -276,12 +295,12 @@ public:
     }
 
     OrchestratorLoop(Orchestrator& orchestrator,
-                     const std::unordered_map<PhaseNumber, PhaseHolder<T>>& holders)
+                     std::unordered_map<PhaseNumber, PhaseHolder<T>&>& holders)
         : _orchestrator{std::addressof(orchestrator)}, _holders{holders} {}
 
 private:
     Orchestrator* _orchestrator;
-    const std::unordered_map<PhaseNumber, PhaseHolder<T>>& _holders;
+    std::unordered_map<PhaseNumber, PhaseHolder<T>&>& _holders;
 };
 
 
