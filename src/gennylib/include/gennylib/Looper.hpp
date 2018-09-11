@@ -44,8 +44,7 @@ public:
           _currentIteration{0},
           _startedAt{_minDuration ? std::chrono::steady_clock::now()
                                   : std::chrono::time_point<std::chrono::steady_clock>::min()},
-          _orchestrator{orchestrator} {
-    }
+          _orchestrator{orchestrator} {}
 
     explicit OperationLoopIterator(Orchestrator& orchestrator, bool isEnd)
         : OperationLoopIterator{orchestrator, isEnd, std::nullopt, std::nullopt} {}
@@ -118,7 +117,8 @@ template <class T>
 class ActorPhase {
 
 public:
-    // can't copy anyway due to unique_ptr but may as well be explicit (may make error messages better)
+    // can't copy anyway due to unique_ptr but may as well be explicit (may make error messages
+    // better)
     ActorPhase(ActorPhase&) = delete;
     void operator=(ActorPhase&) = delete;
 
@@ -139,10 +139,10 @@ public:
     }
 
     ActorPhase(Orchestrator& _orchestrator,
-                PhaseNumber _number,
-                std::unique_ptr<T> _value,
-                std::optional<int> _maxIters,
-                std::optional<std::chrono::milliseconds> _maxDuration)
+               PhaseNumber _number,
+               std::unique_ptr<T> _value,
+               std::optional<int> _maxIters,
+               std::optional<std::chrono::milliseconds> _maxDuration)
         : _orchestrator(_orchestrator),
           _number(_number),
           _value(std::move(_value)),
@@ -161,7 +161,7 @@ public:
         return _maxIters || _maxDuration;
     }
 
-    auto operator->() {
+    auto operator-> () {
         return _value.operator->();
     }
 
