@@ -189,41 +189,79 @@ TEST_CASE("Orchestrator") {
     }
 }
 
-// TODO
-//static int cnt = 0;
-//
-//namespace genny {
-//
-//class PrintingActor : Actor {
-//
-//    struct PhaseConfig {
-//        int value;
-//        PhaseConfig(PhaseContext& ctx)
-//                : value{++cnt} {}
-//    };
-//
-//    // TODO: not V1
-//    V1::PhaseLoopIterator<PhaseConfig> _loop;
-//
-//    PrintingActor(ActorContext& actorContext)
-//            : _loop{actorContext} {}
-//
-//    void run() override {
-//        for(auto&& [num, cfg] : _loop) {
-//            for(auto&& _ : cfg) {
-//                printf("PrintingActor operating with value %i", cfg->value);
-//            }
-//        }
-//    }
-//};
-//
-//}
-//
-//TEST_CASE("Actual Actor Example") {
-//    Orchestrator o;
-//    o.addRequiredTokens(1);
-//    o.phasesAtLeastTo(1);
-//}
+static int cnt = 0;
+
+namespace genny {
+
+struct IncrementsTwoRefs : public Actor {
+
+    struct IncrPhaseConfig {
+        int value;
+        IncrPhaseConfig(const std::unique_ptr<PhaseContext>& ctx)
+        : value{++cnt} {}
+    };
+
+    // TODO: not V1
+    V1::PhaseLoop<IncrPhaseConfig> _loop;
+    int&phaseZero;
+    int&phaseOne;
+
+    IncrementsTwoRefs(ActorContext& actorContext, int&phaseZero, int&phaseOne)
+    : _loop{actorContext},
+      phaseZero{phaseZero},
+      phaseOne{phaseOne} {}
+
+    void run() override {
+        for(auto&& [num, cfg] : _loop) {
+            int iter = 0;
+            for(auto&& _ : cfg) {
+                if (num == 0) { ++phaseZero; }
+                else if (num == 1 ) { ++phaseOne; }
+                else { throw InvalidConfigurationException("what?"); }
+            }
+        }
+    }
+
+    static auto producer(int& phaseZero, int& phaseOne) {
+        return [&](ActorContext& actorContext) {
+            auto out = std::vector<std::unique_ptr<genny::Actor>>{};
+            out.push_back(std::make_unique<IncrementsTwoRefs>(actorContext, phaseZero, phaseOne));
+            return out;
+        };
+    }
+};
+
+}
+
+TEST_CASE("Actual Actor Example", "[real]") {
+    Orchestrator o;
+    o.addRequiredTokens(1);
+    o.phasesAtLeastTo(1);
+
+    metrics::Registry reg;
+
+    YAML::Node doc = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+MongoUri: mongodb://localhost:27017
+Actors:
+- Phases:
+  - Phase: 0
+    Repeat: 100
+  - Phase: 1
+    Repeat: 3
+)");
+
+    int phaseZeroCalls = 0;
+    int phaseOneCalls =  0;
+
+    std::vector<ActorProducer> producers = {IncrementsTwoRefs::producer(phaseZeroCalls, phaseOneCalls)};
+    WorkloadContext wl {doc, reg, o, producers};
+
+    wl.actors()[0]->run();
+
+    REQUIRE(phaseZeroCalls == 100);
+    REQUIRE(phaseOneCalls  == 3);
+}
 
 TEST_CASE("Two non-blocking Phases") {
     Orchestrator o;

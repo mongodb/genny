@@ -9,10 +9,9 @@
 #include <unordered_map>
 #include <utility>
 
-#include <gennylib/context.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include "context.hpp"
+#include <gennylib/context.hpp>
 
 
 /*
@@ -140,13 +139,21 @@ public:
     }
 
     ActorPhase(Orchestrator& _orchestrator,
-               std::unique_ptr<T> _value,
+               std::unique_ptr<T>&& _value,
                std::optional<int> _maxIters,
                std::optional<std::chrono::milliseconds> _maxDuration)
         : _orchestrator(_orchestrator),
           _value(std::move(_value)),
           _maxIters(_maxIters),
           _maxDuration(std::move(_maxDuration)) {}
+
+    ActorPhase(Orchestrator& orchestrator,
+               const std::unique_ptr<PhaseContext>& phaseContext,
+               std::unique_ptr<T>&& value)
+        : ActorPhase(orchestrator,
+                     std::move(value),
+                     phaseContext->get<int, false>("Repeat"),
+                     phaseContext->get<std::chrono::milliseconds, false>("Duration")) {}
 
     OperationLoopIterator begin() {
         return OperationLoopIterator{_orchestrator, false, _maxIters, _maxDuration};
@@ -290,6 +297,9 @@ private:
     bool _awaitingPlusPlus;
 };
 
+template <class V>
+class TD;
+
 
 template <class T>
 class PhaseLoop {
@@ -308,13 +318,18 @@ public:
     PhaseLoop(Orchestrator& orchestrator, PhaseMap&& holders)
         : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {}
 
-    PhaseLoop(genny::ActorContext& context) {}
+    PhaseLoop(genny::ActorContext& context)
+        : PhaseLoop(context.orchestrator(), constructPhaseMap(context)) {}
 
 private:
-
-    // TODO: cpp
-    static PhaseMap constructPhaseMap(genny::ActorContext& context) {
-        
+    static PhaseMap constructPhaseMap(ActorContext& actorContext) {
+        PhaseMap out;
+        for (auto&& [num, phaseContext] : actorContext.phases()) {
+            auto&& deref = phaseContext;
+            //            TD<decltype(deref)> derefTyp;
+            out.try_emplace(num, actorContext.orchestrator(), deref, std::make_unique<T>(deref));
+        }
+        return out;
     }
 
     Orchestrator* _orchestrator;

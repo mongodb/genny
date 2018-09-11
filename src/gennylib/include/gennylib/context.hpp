@@ -17,7 +17,6 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/OperationLoop.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/metrics.hpp>
@@ -199,6 +198,7 @@ public:
         : _node{std::move(node)},
           _registry{&registry},
           _orchestrator{&orchestrator},
+          // TODO: make this optional and default to mongodb://localhost:27017
           _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}},
           _done{false} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
@@ -392,6 +392,10 @@ public:
      */
     WorkloadContext& workload() {
         return *this->_workload;
+    }
+
+    Orchestrator& orchestrator() {
+        return *this->_workload->_orchestrator;
     }
 
     /**
