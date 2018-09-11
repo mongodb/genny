@@ -119,8 +119,8 @@ class ActorPhase {
 public:
     // can't copy anyway due to unique_ptr but may as well be explicit (may make error messages
     // better)
-    ActorPhase(ActorPhase&) = delete;
-    void operator=(ActorPhase&) = delete;
+    ActorPhase(const ActorPhase&) = delete;
+    void operator=(const ActorPhase&) = delete;
 
     ActorPhase(ActorPhase&& other) noexcept
         : _orchestrator{other._orchestrator},
@@ -251,7 +251,7 @@ public:
     }
 
     explicit PhaseLoopIterator(Orchestrator* orchestrator,
-                               std::unordered_map<PhaseNumber, ActorPhase<T>&>& holders,
+                               std::unordered_map<PhaseNumber, ActorPhase<T>>& holders,
                                bool isEnd)
         : _orchestrator{orchestrator},
           _holders{holders},
@@ -272,7 +272,7 @@ private:
     }
 
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, ActorPhase<T>&>& _holders;
+    std::unordered_map<PhaseNumber, ActorPhase<T>>& _holders;
     //    const std::unordered_set<PhaseNumber>& _blockingPhases;
 
     bool _isEnd;
@@ -301,12 +301,12 @@ public:
         return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_holders, true};
     }
 
-    PhaseLoop(Orchestrator& orchestrator, std::unordered_map<PhaseNumber, ActorPhase<T>&>& holders)
+    PhaseLoop(Orchestrator& orchestrator, std::unordered_map<PhaseNumber, ActorPhase<T>>& holders)
         : _orchestrator{std::addressof(orchestrator)}, _holders{holders} {}
 
 private:
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, ActorPhase<T>&>& _holders;
+    std::unordered_map<PhaseNumber, ActorPhase<T>>& _holders;
 };
 
 
