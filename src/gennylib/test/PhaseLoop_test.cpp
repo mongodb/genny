@@ -8,6 +8,7 @@
 #include <gennylib/Orchestrator.hpp>
 
 using namespace genny;
+using namespace genny::V1;
 using namespace std;
 
 

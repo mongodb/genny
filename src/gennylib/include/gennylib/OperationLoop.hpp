@@ -19,7 +19,6 @@
  */
 namespace genny::V1 {
 
-
 /**
  * Tracks the iteration-state of a `OperationLoop`.
  */
@@ -299,17 +298,21 @@ private:
     bool _awaitingPlusPlus;
 };
 
+}  // namespace genny::V1
+
+namespace genny {
+
 template <class T>
 class PhaseLoop {
 
-    using PhaseMap = std::unordered_map<PhaseNumber, ActorPhase<T>>;
+    using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
 
 public:
-    PhaseLoopIterator<T> begin() {
+    V1::PhaseLoopIterator<T> begin() {
         return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
     }
 
-    PhaseLoopIterator<T> end() {
+    V1::PhaseLoopIterator<T> end() {
         return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
     }
 
@@ -383,10 +386,10 @@ private:
 // TODO
 // V1::PhaseLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
 
-}  // namespace genny::V1
+}  // namespace genny
 
 
-namespace genny {
+namespace genny::V1 {
 
 /**
  * Configured with an optional<min#iterations> and/or optional<min duration>. The
@@ -445,6 +448,6 @@ private:
     const std::optional<std::chrono::milliseconds> _minDuration;
 };
 
-}  // namespace genny
+}  // namespace genny::V1
 
 #endif  // HEADER_10276107_F885_4F2C_B99B_014AF3B4504A_INCLUDED
