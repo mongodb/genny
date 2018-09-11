@@ -125,26 +125,22 @@ public:
     ActorPhase(ActorPhase&& other) noexcept
         : _orchestrator{other._orchestrator},
           _value{std::move(other._value)},
-          _number{other._number},
           _maxIters{other._maxIters},
           _maxDuration{other._maxDuration} {}
 
     ActorPhase& operator=(ActorPhase&& other) noexcept {
         this->_orchestrator = other._orchestrator;
         this->_value = std::move(other._value);
-        this->_number = other._number;
         this->_maxIters = other._maxIters;
         this->_maxDuration = other._maxDuration;
         return *this;
     }
 
     ActorPhase(Orchestrator& _orchestrator,
-               PhaseNumber _number,
                std::unique_ptr<T> _value,
                std::optional<int> _maxIters,
                std::optional<std::chrono::milliseconds> _maxDuration)
         : _orchestrator(_orchestrator),
-          _number(_number),
           _value(std::move(_value)),
           _maxIters(_maxIters),
           _maxDuration(std::move(_maxDuration)) {}
@@ -171,7 +167,6 @@ public:
 
 private:
     Orchestrator& _orchestrator;
-    PhaseNumber _number;
     std::unique_ptr<T> _value;
 
     std::optional<int> _maxIters;

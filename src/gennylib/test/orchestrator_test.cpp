@@ -191,8 +191,8 @@ TEST_CASE("Two non-blocking Phases") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    V1::ActorPhase<int> p0{o, 0, std::make_unique<int>(7), std::make_optional(2), std::nullopt};
-    V1::ActorPhase<int> p1{o, 0, std::make_unique<int>(9), std::make_optional(2), std::nullopt};
+    V1::ActorPhase<int> p0{o, std::make_unique<int>(7), std::make_optional(2), std::nullopt};
+    V1::ActorPhase<int> p1{o, std::make_unique<int>(9), std::make_optional(2), std::nullopt};
 
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>&> blocking{{0, p0}, {1, p1}};
 
