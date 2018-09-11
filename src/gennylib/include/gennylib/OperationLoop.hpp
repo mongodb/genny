@@ -12,6 +12,7 @@
 #include <gennylib/context.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include "context.hpp"
 
 
 /*
@@ -225,9 +226,9 @@ public:
 
         _awaitingPlusPlus = true;
 
-        auto&& found = _holders.find(_currentPhase);
+        auto&& found = _phaseMap.find(_currentPhase);
 
-        if (found == _holders.end()) {
+        if (found == _phaseMap.end()) {
             std::stringstream msg;
             msg << "No phase config found for PhaseNumber=[" << _currentPhase << "]";
             throw InvalidConfigurationException(msg.str());
@@ -256,7 +257,7 @@ public:
                                std::unordered_map<PhaseNumber, ActorPhase<T>>& holders,
                                bool isEnd)
         : _orchestrator{orchestrator},
-          _holders{holders},
+          _phaseMap{holders},
           _isEnd{isEnd},
           _currentPhase{0},
           _awaitingPlusPlus{false} {}
@@ -267,14 +268,14 @@ private:
     }
 
     bool doesBlockOn(PhaseNumber phase) const {
-        if (auto h = _holders.find(phase); h != _holders.end()) {
+        if (auto h = _phaseMap.find(phase); h != _phaseMap.end()) {
             return h->second.doesBlock();
         }
         return true;
     }
 
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, ActorPhase<T>>& _holders;
+    std::unordered_map<PhaseNumber, ActorPhase<T>>& _phaseMap;
 
     bool _isEnd;
     PhaseNumber _currentPhase;
@@ -293,21 +294,31 @@ private:
 template <class T>
 class PhaseLoop {
 
+    using PhaseMap = std::unordered_map<PhaseNumber, ActorPhase<T>>;
+
 public:
     PhaseLoopIterator<T> begin() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_holders, false};
+        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
     }
 
     PhaseLoopIterator<T> end() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_holders, true};
+        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
     }
 
-    PhaseLoop(Orchestrator& orchestrator, std::unordered_map<PhaseNumber, ActorPhase<T>>&& holders)
-        : _orchestrator{std::addressof(orchestrator)}, _holders{std::move(holders)} {}
+    PhaseLoop(Orchestrator& orchestrator, PhaseMap&& holders)
+        : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {}
+
+    PhaseLoop(genny::ActorContext& context) {}
 
 private:
+
+    // TODO: cpp
+    static PhaseMap constructPhaseMap(genny::ActorContext& context) {
+        
+    }
+
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, ActorPhase<T>> _holders;
+    PhaseMap _phaseMap;
 };
 
 
