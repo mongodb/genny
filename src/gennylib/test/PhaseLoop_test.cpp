@@ -4,7 +4,7 @@
 #include <iostream>
 #include <optional>
 
-#include <gennylib/Looper.hpp>
+#include <gennylib/OperationLoop.hpp>
 #include <gennylib/Orchestrator.hpp>
 
 using namespace genny;
@@ -27,21 +27,21 @@ TEST_CASE("Correctness for N iterations") {
     Orchestrator o;
 
     SECTION("Loops 0 Times") {
-        Looper loop{o, 0_i, nullopt};
+        OperationLoop loop{o, 0_i, nullopt};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 0);
     }
     SECTION("Loops 1 Time") {
-        Looper loop{o, 1_i, nullopt};
+        OperationLoop loop{o, 1_i, nullopt};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 1);
     }
     SECTION("Loops 113 Times") {
-        Looper loop{o, 113_i, nullopt};
+        OperationLoop loop{o, 113_i, nullopt};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -49,7 +49,7 @@ TEST_CASE("Correctness for N iterations") {
     }
 
     SECTION("Configured for -1 Times barfs") {
-        REQUIRE_THROWS_WITH((Looper{o, make_optional(-1), nullopt}),
+        REQUIRE_THROWS_WITH((OperationLoop{o, make_optional(-1), nullopt}),
                             Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
@@ -57,7 +57,7 @@ TEST_CASE("Correctness for N iterations") {
 TEST_CASE("Correctness for N milliseconds") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds so zero times") {
-        Looper loop{o, nullopt, 0_ms};
+        OperationLoop loop{o, nullopt, 0_ms};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -66,7 +66,7 @@ TEST_CASE("Correctness for N milliseconds") {
     SECTION("Looping for 10 milliseconds takes between 10 and 11 milliseconds") {
         // we nop in the loop so ideally it should take exactly 10ms, but don't want spurious
         // failures
-        Looper loop{o, nullopt, 10_ms};
+        OperationLoop loop{o, nullopt, 10_ms};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -83,14 +83,14 @@ TEST_CASE("Correctness for N milliseconds") {
 TEST_CASE("Combinations of duration and iterations") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds but 100 times") {
-        Looper loop{o, 100_i, 0_ms};
+        OperationLoop loop{o, 100_i, 0_ms};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 100);
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
-        Looper loop{o, 100_i, 5_ms};
+        OperationLoop loop{o, 100_i, 5_ms};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -110,20 +110,20 @@ TEST_CASE("Combinations of duration and iterations") {
     // combinations of the other tests 🙈
 
     SECTION("Configured for -1 milliseconds barfs") {
-        REQUIRE_THROWS_WITH((Looper{o, nullopt, make_optional(chrono::milliseconds{-1})}),
+        REQUIRE_THROWS_WITH((OperationLoop{o, nullopt, make_optional(chrono::milliseconds{-1})}),
                             Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
 
 TEST_CASE("Need either iterations or duration") {
     Orchestrator o;
-    REQUIRE_THROWS_WITH((Looper{o, nullopt, nullopt}),
+    REQUIRE_THROWS_WITH((OperationLoop{o, nullopt, nullopt}),
                         Catch::Contains("Need to specify either min iterations or min duration"));
 }
 
 TEST_CASE("Iterator concept correctness") {
     Orchestrator o;
-    Looper loop{o, 1_i, nullopt};
+    OperationLoop loop{o, 1_i, nullopt};
 
     // can deref
     SECTION("Deref and advance works") {

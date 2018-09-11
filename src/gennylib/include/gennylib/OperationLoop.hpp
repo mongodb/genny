@@ -175,7 +175,7 @@ private:
 
 // Only usable in range-based for loops.
 template <class T>
-class OrchestratorLoopIterator {
+class PhaseLoopIterator {
 
 public:
     // These are intentionally commented-out because this type
@@ -197,7 +197,7 @@ public:
     //    typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 
-    bool operator!=(const OrchestratorLoopIterator& other) const {
+    bool operator!=(const PhaseLoopIterator& other) const {
         // Intentionally don't handle self-equality or other "normal" cases.
         //
         // This type is only intended to be used by range-based for-loops
@@ -234,7 +234,7 @@ public:
         return {_currentPhase, found->second};
     }
 
-    OrchestratorLoopIterator& operator++() {
+    PhaseLoopIterator& operator++() {
         assert(_awaitingPlusPlus);
         // Intentionally don't bother with cases where user didn't call operator++()
         // between invocations of operator*() and vice-versa.
@@ -250,9 +250,9 @@ public:
         return *this;
     }
 
-    explicit OrchestratorLoopIterator(Orchestrator* orchestrator,
-                                      std::unordered_map<PhaseNumber, ActorPhase<T>&>& holders,
-                                      bool isEnd)
+    explicit PhaseLoopIterator(Orchestrator* orchestrator,
+                               std::unordered_map<PhaseNumber, ActorPhase<T>&>& holders,
+                               bool isEnd)
         : _orchestrator{orchestrator},
           _holders{holders},
           _isEnd{isEnd},
@@ -290,19 +290,18 @@ private:
 
 
 template <class T>
-class OrchestratorLoop {
+class PhaseLoop {
 
 public:
-    OrchestratorLoopIterator<T> begin() {
-        return V1::OrchestratorLoopIterator<T>{this->_orchestrator, this->_holders, false};
+    PhaseLoopIterator<T> begin() {
+        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_holders, false};
     }
 
-    OrchestratorLoopIterator<T> end() {
-        return V1::OrchestratorLoopIterator<T>{this->_orchestrator, this->_holders, true};
+    PhaseLoopIterator<T> end() {
+        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_holders, true};
     }
 
-    OrchestratorLoop(Orchestrator& orchestrator,
-                     std::unordered_map<PhaseNumber, ActorPhase<T>&>& holders)
+    PhaseLoop(Orchestrator& orchestrator, std::unordered_map<PhaseNumber, ActorPhase<T>&>& holders)
         : _orchestrator{std::addressof(orchestrator)}, _holders{holders} {}
 
 private:
@@ -353,7 +352,7 @@ private:
  *
  */
 // TODO
-// V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
+// V1::PhaseLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
 
 }  // namespace genny::V1
 
@@ -370,13 +369,13 @@ namespace genny {
  *
  * See extended example in `PhaseContext.loop()`.
  */
-class Looper {
+class OperationLoop {
 
 public:
     // Ctor is ideally only called during Actor constructors so fine to take our time here.
-    explicit Looper(Orchestrator& orchestrator,
-                    std::optional<int> minIterations,
-                    std::optional<std::chrono::milliseconds> minDuration)
+    explicit OperationLoop(Orchestrator& orchestrator,
+                           std::optional<int> minIterations,
+                           std::optional<std::chrono::milliseconds> minDuration)
         : _orchestrator{orchestrator},
           _minIterations{std::move(minIterations)},
           _minDuration{std::move(minDuration)} {

@@ -7,8 +7,10 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/Looper.hpp>
+#include <gennylib/OperationLoop.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/Actor.hpp>
+#include <gennylib/context.hpp>
 
 using namespace genny;
 using namespace std::chrono;
@@ -186,6 +188,42 @@ TEST_CASE("Orchestrator") {
     }
 }
 
+// TODO
+//static int cnt = 0;
+//
+//namespace genny {
+//
+//class PrintingActor : Actor {
+//
+//    struct PhaseConfig {
+//        int value;
+//        PhaseConfig(PhaseContext& ctx)
+//                : value{++cnt} {}
+//    };
+//
+//    // TODO: not V1
+//    V1::PhaseLoopIterator<PhaseConfig> _loop;
+//
+//    PrintingActor(ActorContext& actorContext)
+//            : _loop{actorContext} {}
+//
+//    void run() override {
+//        for(auto&& [num, cfg] : _loop) {
+//            for(auto&& _ : cfg) {
+//                printf("PrintingActor operating with value %i", cfg->value);
+//            }
+//        }
+//    }
+//};
+//
+//}
+//
+//TEST_CASE("Actual Actor Example") {
+//    Orchestrator o;
+//    o.addRequiredTokens(1);
+//    o.phasesAtLeastTo(1);
+//}
+
 TEST_CASE("Two non-blocking Phases") {
     Orchestrator o;
     o.addRequiredTokens(1);
@@ -200,7 +238,7 @@ TEST_CASE("Two non-blocking Phases") {
     std::unordered_set<int> seenActorPhaseValues;
 
     auto count = 0;
-    for (auto&& [p, h] : V1::OrchestratorLoop<int>{o, blocking}) {
+    for (auto&& [p, h] : V1::PhaseLoop<int>{o, blocking}) {
         seenPhases.insert(p);
         for (auto&& _ : h) {
             seenActorPhaseValues.insert(*h);
@@ -222,7 +260,7 @@ TEST_CASE("Single Blocking Phase") {
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>&> blocking;
 
 
-    for (auto&& [p, h] : V1::OrchestratorLoop<int>{o, blocking}) {
+    for (auto&& [p, h] : V1::PhaseLoop<int>{o, blocking}) {
         seen.insert(p);
     }
 
@@ -239,7 +277,7 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::OrchestratorLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -255,7 +293,7 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::OrchestratorLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -272,7 +310,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::OrchestratorLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -289,7 +327,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::OrchestratorLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -306,7 +344,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::OrchestratorLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
         seen.insert(phase);
     }
 
@@ -332,7 +370,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (auto&& [phase, holder] : V1::OrchestratorLoop<int>{o, blocking}) {
+        for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
             if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
@@ -367,7 +405,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (auto&& [phase, holder] : V1::OrchestratorLoop<int>{o, blocking}) {
+        for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
             if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }

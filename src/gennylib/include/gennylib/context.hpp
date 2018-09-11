@@ -17,7 +17,7 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/Looper.hpp>
+#include <gennylib/OperationLoop.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/metrics.hpp>
@@ -584,8 +584,8 @@ public:
      * This Actor code is simplified to show the usage of `PhaseLoop`.
      */
      // TODO
-//    Looper loop() const {
-//        return Looper{this->get<int, false>("Repeat"),
+//    OperationLoop loop() const {
+//        return OperationLoop{this->get<int, false>("Repeat"),
 //                             this->get<std::chrono::milliseconds, false>("Duration")};
 //    }
 
