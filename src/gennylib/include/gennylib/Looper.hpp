@@ -40,7 +40,7 @@ public:
                                    std::optional<std::chrono::milliseconds> maxDuration)
         : _isEndIterator{isEnd},
           _minDuration{std::move(maxDuration)},
-          _minIterations{std::move(maxIters)},
+          _minIterations{maxIters},
           _currentIteration{0},
           _startedAt{_minDuration ? std::chrono::steady_clock::now()
                                   : std::chrono::time_point<std::chrono::steady_clock>::min()},
@@ -120,17 +120,18 @@ template <class T>
 class PhaseHolder {
 
 public:
+    // can't copy anyway due to unique_ptr but may as well be explicit (may make error messages better)
     PhaseHolder(PhaseHolder&) = delete;
     void operator=(PhaseHolder&) = delete;
 
-    PhaseHolder(PhaseHolder&& other)
-    : _orchestrator{other._orchestrator},
-      _value{std::move(other._value)},
-      _number{other._number},
-      _maxIters{other._maxIters},
-      _maxDuration{other._maxDuration} {}
+    PhaseHolder(PhaseHolder&& other) noexcept
+        : _orchestrator{other._orchestrator},
+          _value{std::move(other._value)},
+          _number{other._number},
+          _maxIters{other._maxIters},
+          _maxDuration{other._maxDuration} {}
 
-    PhaseHolder& operator=(PhaseHolder&& other) {
+    PhaseHolder& operator=(PhaseHolder&& other) noexcept {
         this->_orchestrator = other._orchestrator;
         this->_value = std::move(other._value);
         this->_number = other._number;
@@ -148,11 +149,12 @@ public:
           _number(_number),
           _value(std::move(_value)),
           _maxIters(_maxIters),
-          _maxDuration(_maxDuration) {}
+          _maxDuration(std::move(_maxDuration)) {}
 
     OperationLoopIterator begin() {
         return OperationLoopIterator{_orchestrator, false, _maxIters, _maxDuration};
     }
+
     OperationLoopIterator end() {
         return OperationLoopIterator{_orchestrator, true};
     };
@@ -207,7 +209,7 @@ public:
         return !(other._isEnd && !this->morePhases());
     }
 
-    std::pair<PhaseNumber,PhaseHolder<T>&> operator*() {
+    std::pair<PhaseNumber, PhaseHolder<T>&> operator*() {
         assert(!_awaitingPlusPlus);
 
         // Intentionally don't bother with cases where user didn't call operator++()
@@ -242,10 +244,9 @@ public:
         return *this;
     }
 
-    explicit OrchestratorLoopIterator(
-        Orchestrator* orchestrator,
-        std::unordered_map<PhaseNumber, PhaseHolder<T>&>& holders,
-        bool isEnd)
+    explicit OrchestratorLoopIterator(Orchestrator* orchestrator,
+                                      std::unordered_map<PhaseNumber, PhaseHolder<T>&>& holders,
+                                      bool isEnd)
         : _orchestrator{orchestrator},
           _holders{holders},
           _isEnd{isEnd},
