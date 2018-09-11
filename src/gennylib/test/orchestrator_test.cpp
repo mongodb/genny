@@ -269,8 +269,8 @@ TEST_CASE("Two non-blocking Phases") {
     o.phasesAtLeastTo(1);
 
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking{};
-    blocking.try_emplace(0, o, std::make_unique<int>(7), std::make_optional(2), std::nullopt);
-    blocking.try_emplace(1, o, std::make_unique<int>(9), std::make_optional(2), std::nullopt);
+    blocking.try_emplace(0, o, std::make_unique<int>(7), V1::ItersAndDuration{std::make_optional(2), std::nullopt});
+    blocking.try_emplace(1, o, std::make_unique<int>(9), V1::ItersAndDuration{std::make_optional(2), std::nullopt});
 
     std::unordered_set<PhaseNumber> seenPhases{};
     std::unordered_set<int> seenActorPhaseValues;

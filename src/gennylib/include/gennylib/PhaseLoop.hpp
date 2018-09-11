@@ -19,6 +19,60 @@
  */
 namespace genny::V1 {
 
+class ItersAndDuration {
+
+public:
+    explicit ItersAndDuration() : ItersAndDuration(std::nullopt, std::nullopt) {}
+
+    ItersAndDuration(std::optional<int> _minIterations,
+                     std::optional<std::chrono::milliseconds> _minDuration)
+        : _minDuration(_minDuration), _minIterations(_minIterations) {
+
+        if (_minIterations && *_minIterations < 0) {
+            std::stringstream str;
+            str << "Need non-negative number of iterations. Gave " << *_minIterations;
+            throw InvalidConfigurationException(str.str());
+        }
+        if (_minDuration && _minDuration->count() < 0) {
+            std::stringstream str;
+            str << "Need non-negative duration. Gave " << _minDuration->count() << " milliseconds";
+            throw InvalidConfigurationException(str.str());
+        }
+    }
+
+    ItersAndDuration(const std::unique_ptr<PhaseContext>& phaseContext)
+        : ItersAndDuration(phaseContext->get<int, false>("Repeat"),
+                           phaseContext->get<std::chrono::milliseconds, false>("Duration")) {}
+
+    std::chrono::steady_clock::time_point startedAt() const {
+        return _minDuration ? std::chrono::steady_clock::now()
+                            : std::chrono::time_point<std::chrono::steady_clock>::min();
+    }
+
+    bool doneIterations(int currentIteration) const {
+        return !_minIterations || currentIteration >= *_minIterations;
+    }
+
+    bool doneDuration(std::chrono::steady_clock::time_point startedAt) const {
+        return !_minDuration ||
+            // check is last in chain to avoid doing now() call unnecessarily
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                                  startedAt) >= *_minDuration;
+    }
+
+    bool operator==(const ItersAndDuration& other) const {
+        return _minDuration == other._minDuration && _minIterations == other._minIterations;
+    }
+
+    bool doesBlock() const {
+        return _minIterations || _minDuration;
+    }
+
+private:
+    const std::optional<std::chrono::milliseconds> _minDuration;
+    const std::optional<int> _minIterations;
+};
+
 /**
  * Tracks the iteration-state of a `OperationLoop`.
  */
@@ -37,18 +91,15 @@ public:
 
     explicit OperationLoopIterator(Orchestrator& orchestrator,
                                    bool isEnd,
-                                   std::optional<int> maxIters,
-                                   std::optional<std::chrono::milliseconds> maxDuration)
+                                   ItersAndDuration itersAndDuration)
         : _isEndIterator{isEnd},
-          _minDuration{std::move(maxDuration)},
-          _minIterations{maxIters},
           _currentIteration{0},
-          _startedAt{_minDuration ? std::chrono::steady_clock::now()
-                                  : std::chrono::time_point<std::chrono::steady_clock>::min()},
-          _orchestrator{orchestrator} {}
+          _orchestrator{orchestrator},
+          _itersAndDuration{itersAndDuration},
+          _startedAt{_itersAndDuration.startedAt()} {}
 
     explicit OperationLoopIterator(Orchestrator& orchestrator, bool isEnd)
-        : OperationLoopIterator{orchestrator, isEnd, std::nullopt, std::nullopt} {}
+        : OperationLoopIterator{orchestrator, isEnd, ItersAndDuration{}} {}
 
     Value operator*() const {
         return Value();
@@ -67,13 +118,9 @@ public:
                 (rhs._isEndIterator
                  // Need to see if this is in end state. There are two conditions
                  // 1. minIterations is empty-optional or we're at or past minIterations
-                 && (!_minIterations ||
-                     _currentIteration >= *_minIterations)
+                 && (_itersAndDuration.doneIterations(_currentIteration))
                  // 2. minDuration is empty-optional or we've exceeded minDuration
-                 && (!_minDuration ||
-                     // check is last in chain to avoid doing now() call unnecessarily
-                     std::chrono::duration_cast<std::chrono::milliseconds>(
-                             std::chrono::steady_clock::now() - _startedAt) >= *_minDuration))
+                 && (_itersAndDuration.doneDuration(_startedAt)))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
@@ -84,10 +131,9 @@ public:
 
                 // neither is end iterator but have same fields
                 || (!rhs._isEndIterator && !_isEndIterator
-                    && _minDuration      == rhs._minDuration
                     && _startedAt        == rhs._startedAt
-                    && _minIterations    == rhs._minIterations
-                    && _currentIteration == rhs._currentIteration)
+                    && _currentIteration == rhs._currentIteration
+                    && _itersAndDuration == rhs._itersAndDuration)
 
                 // both .end() iterators (all .end() iterators are ==)
                 || (_isEndIterator && rhs._isEndIterator)
@@ -105,12 +151,10 @@ public:
 
 private:
     const bool _isEndIterator;
+    const ItersAndDuration _itersAndDuration;
 
-    const std::optional<std::chrono::milliseconds> _minDuration;
     std::chrono::steady_clock::time_point _startedAt;
-
     Orchestrator& _orchestrator;
-    const std::optional<int> _minIterations;
     unsigned int _currentIteration;
 };
 
@@ -126,36 +170,22 @@ public:
     ActorPhase(ActorPhase&& other) noexcept
         : _orchestrator{other._orchestrator},
           _value{std::move(other._value)},
-          _maxIters{other._maxIters},
-          _maxDuration{other._maxDuration} {}
-
-    ActorPhase& operator=(ActorPhase&& other) noexcept {
-        this->_orchestrator = other._orchestrator;
-        this->_value = std::move(other._value);
-        this->_maxIters = other._maxIters;
-        this->_maxDuration = other._maxDuration;
-        return *this;
-    }
+          _itersAndDuration{std::move(other._itersAndDuration)} {}
 
     ActorPhase(Orchestrator& _orchestrator,
                std::unique_ptr<T>&& _value,
-               std::optional<int> _maxIters,
-               std::optional<std::chrono::milliseconds> _maxDuration)
+               ItersAndDuration itersAndDuration)
         : _orchestrator(_orchestrator),
           _value(std::move(_value)),
-          _maxIters(_maxIters),
-          _maxDuration(std::move(_maxDuration)) {}
+          _itersAndDuration(itersAndDuration) {}
 
     ActorPhase(Orchestrator& orchestrator,
                const std::unique_ptr<PhaseContext>& phaseContext,
                std::unique_ptr<T>&& value)
-        : ActorPhase(orchestrator,
-                     std::move(value),
-                     phaseContext->get<int, false>("Repeat"),
-                     phaseContext->get<std::chrono::milliseconds, false>("Duration")) {}
+        : ActorPhase(orchestrator, std::move(value), ItersAndDuration{phaseContext}) {}
 
     OperationLoopIterator begin() {
-        return OperationLoopIterator{_orchestrator, false, _maxIters, _maxDuration};
+        return OperationLoopIterator{_orchestrator, false, _itersAndDuration};
     }
 
     OperationLoopIterator end() {
@@ -163,7 +193,7 @@ public:
     };
 
     bool doesBlock() const {
-        return _maxIters || _maxDuration;
+        return _itersAndDuration.doesBlock();
     }
 
     auto operator-> () const {
@@ -178,8 +208,7 @@ private:
     Orchestrator& _orchestrator;
     std::unique_ptr<T> _value;
 
-    const std::optional<int> _maxIters;
-    const std::optional<std::chrono::milliseconds> _maxDuration;
+    const ItersAndDuration _itersAndDuration;
 };
 
 // Only usable in range-based for loops.
@@ -283,7 +312,7 @@ private:
     }
 
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, ActorPhase<T>>& _phaseMap; // cannot be const
+    std::unordered_map<PhaseNumber, ActorPhase<T>>& _phaseMap;  // cannot be const
 
     const bool _isEnd;
     PhaseNumber _currentPhase;
@@ -311,38 +340,13 @@ private:
 class OperationLoop {
 
 public:
-    // Ctor is ideally only called during Actor constructors so fine to take our time here.
-    explicit OperationLoop(Orchestrator& orchestrator,
-                           std::optional<int> minIterations,
-                           std::optional<std::chrono::milliseconds> minDuration)
-        : _orchestrator{orchestrator},
-          _minIterations{std::move(minIterations)},
-          _minDuration{std::move(minDuration)} {
+    template <class... Args>
+    explicit OperationLoop(Orchestrator& orchestrator, Args&&... args)
+        : _orchestrator{orchestrator}, _itersAndDuration{std::forward<Args>(args)...} {}
 
-        // TODO: kill this check; no longer valid since we can be non-blocking
-        // both optionals empty (no termination condition; we'd iterate forever
-        //   (or not at all depending on how you interpret it)
-        if (!_minIterations && !_minDuration) {
-            // May want to support this in the future once there's better support for Actors to run
-            // in the "background" forever / for the duration of a phase. For now it's likely a
-            // configuration error.
-            throw InvalidConfigurationException(
-                "Need to specify either min iterations or min duration");
-        }
-        if (_minIterations && *_minIterations < 0) {
-            std::stringstream str;
-            str << "Need non-negative number of iterations. Gave " << *_minIterations;
-            throw InvalidConfigurationException(str.str());
-        }
-        if (_minDuration && _minDuration->count() < 0) {
-            std::stringstream str;
-            str << "Need non-negative duration. Gave " << _minDuration->count() << " milliseconds";
-            throw InvalidConfigurationException(str.str());
-        }
-    }
 
     V1::OperationLoopIterator begin() {
-        return V1::OperationLoopIterator{_orchestrator, false, _minIterations, _minDuration};
+        return V1::OperationLoopIterator{_orchestrator, false, _itersAndDuration};
     }
 
     V1::OperationLoopIterator end() {
@@ -351,8 +355,7 @@ public:
 
 private:
     Orchestrator& _orchestrator;
-    const std::optional<int> _minIterations;
-    const std::optional<std::chrono::milliseconds> _minDuration;
+    const ItersAndDuration _itersAndDuration;
 };
 
 }  // namespace genny::V1
@@ -414,15 +417,15 @@ public:
     }
 
     PhaseLoop(Orchestrator& orchestrator, PhaseMap&& holders)
-            : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {
+        : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
-        for(auto&& [phaseNum, actorPhase] : _phaseMap) {
+        for (auto&& [phaseNum, actorPhase] : _phaseMap) {
             orchestrator.phasesAtLeastTo(phaseNum);
         }
     }
 
     PhaseLoop(genny::ActorContext& context)
-            : PhaseLoop(context.orchestrator(), constructPhaseMap(context)) {}
+        : PhaseLoop(context.orchestrator(), constructPhaseMap(context)) {}
 
 private:
     static PhaseMap constructPhaseMap(ActorContext& actorContext) {
