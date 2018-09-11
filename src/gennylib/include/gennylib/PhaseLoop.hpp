@@ -298,99 +298,6 @@ private:
     bool _awaitingPlusPlus;
 };
 
-}  // namespace genny::V1
-
-namespace genny {
-
-template <class T>
-class PhaseLoop {
-
-    using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
-
-public:
-    V1::PhaseLoopIterator<T> begin() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
-    }
-
-    V1::PhaseLoopIterator<T> end() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
-    }
-
-    PhaseLoop(Orchestrator& orchestrator, PhaseMap&& holders)
-        : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {
-        // propagate this Actor's set up PhaseNumbers to Orchestrator
-        for(auto&& [phaseNum, actorPhase] : _phaseMap) {
-            orchestrator.phasesAtLeastTo(phaseNum);
-        }
-    }
-
-    PhaseLoop(genny::ActorContext& context)
-        : PhaseLoop(context.orchestrator(), constructPhaseMap(context)) {}
-
-private:
-    static PhaseMap constructPhaseMap(ActorContext& actorContext) {
-        PhaseMap out;
-        for (auto&& [num, phaseContext] : actorContext.phases()) {
-            auto&& deref = phaseContext;
-            out.try_emplace(num, actorContext.orchestrator(), deref, std::make_unique<T>(deref));
-        }
-        return out;
-    }
-
-    Orchestrator* const _orchestrator;
-    PhaseMap _phaseMap;
-};
-
-
-/**
- * @attention Only use this in range-based for loops.
- *
- * Iterates over all phases and will correctly call
- * `awaitPhaseStart()` and `awaitPhaseEnd()` in the
- * correct operators.
- *
- * ```c++
- * class MyActor : Actor {
- *   std::unordered_set<PhaseNumber> blocking;
- *   ...
- *   void run() override {
- *     for(auto&& phase : orchestrator.loop(blocking))
- *       while(phase == orchestrator.currentPhase())
- *         doOperation(phase);
- *   }
- * }
- * ```
- *
- * This should **only** be used by range-based for loops because
- * the implementation relies on callers alternating between
- * `operator*()` and `operator++()` to indicate the caller's
- * done-ness or readiness of the current/next phase.
- *
- * @param blockingPhases
- *      Which Phases should "block".
- *      Non-blocking means that the iterator will immediately call
- *      awaitPhaseEnd() right after calling awaitPhaseStart(). This
- *      will prevent the Orchestrator from waiting for this Actor
- *      to complete its operations in the current Phase.
- *
- *      Note that the Actor still needs to wait for the next Phase
- *      to start before going on to the next iteration of the loop.
- *      The common way to do this is to periodically check that
- *      the current Phase number (`Orchestrator::currentPhase()`)
- *      hasn't changed.
- *
- *      The `PhaseLoop` type will soon be incorporated into this type
- *      and will support automatically doing this check if required.
- *
- */
-// TODO
-// V1::PhaseLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
-
-}  // namespace genny
-
-
-namespace genny::V1 {
-
 /**
  * Configured with an optional<min#iterations> and/or optional<min duration>. The
  * returned .begin() iterators will not == .end() until both the # iterations and
@@ -449,5 +356,88 @@ private:
 };
 
 }  // namespace genny::V1
+
+namespace genny {
+
+/**
+ * @attention Only use this in range-based for loops.
+ *
+ * Iterates over all phases and will correctly call
+ * `awaitPhaseStart()` and `awaitPhaseEnd()` in the
+ * correct operators.
+ *
+ * ```c++
+ * class MyActor : Actor {
+ *   // TODO: update example
+ *   void run() override {
+ *     for(auto&& phase : orchestrator.loop(blocking))
+ *       while(phase == orchestrator.currentPhase())
+ *         doOperation(phase);
+ *   }
+ * }
+ * ```
+ *
+ * This should **only** be used by range-based for loops because
+ * the implementation relies on callers alternating between
+ * `operator*()` and `operator++()` to indicate the caller's
+ * done-ness or readiness of the current/next phase.
+ *
+ * TODO: incorporate into description of how Phases blocks are read:
+ *
+ *      Non-blocking means that the iterator will immediately call
+ *      awaitPhaseEnd() right after calling awaitPhaseStart(). This
+ *      will prevent the Orchestrator from waiting for this Actor
+ *      to complete its operations in the current Phase.
+ *
+ *      Note that the Actor still needs to wait for the next Phase
+ *      to start before going on to the next iteration of the loop.
+ *      The common way to do this is to periodically check that
+ *      the current Phase number (`Orchestrator::currentPhase()`)
+ *      hasn't changed.
+ *
+ *      The `PhaseLoop` type will soon be incorporated into this type
+ *      and will support automatically doing this check if required.
+ *
+ */
+template <class T>
+class PhaseLoop {
+
+    using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
+
+public:
+    V1::PhaseLoopIterator<T> begin() {
+        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
+    }
+
+    V1::PhaseLoopIterator<T> end() {
+        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
+    }
+
+    PhaseLoop(Orchestrator& orchestrator, PhaseMap&& holders)
+            : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {
+        // propagate this Actor's set up PhaseNumbers to Orchestrator
+        for(auto&& [phaseNum, actorPhase] : _phaseMap) {
+            orchestrator.phasesAtLeastTo(phaseNum);
+        }
+    }
+
+    PhaseLoop(genny::ActorContext& context)
+            : PhaseLoop(context.orchestrator(), constructPhaseMap(context)) {}
+
+private:
+    static PhaseMap constructPhaseMap(ActorContext& actorContext) {
+        PhaseMap out;
+        for (auto&& [num, phaseContext] : actorContext.phases()) {
+            auto&& deref = phaseContext;
+            out.try_emplace(num, actorContext.orchestrator(), deref, std::make_unique<T>(deref));
+        }
+        return out;
+    }
+
+    Orchestrator* const _orchestrator;
+    PhaseMap _phaseMap;
+};
+
+}  // namespace genny
 
 #endif  // HEADER_10276107_F885_4F2C_B99B_014AF3B4504A_INCLUDED
