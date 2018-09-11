@@ -29,7 +29,7 @@ add_library(gennylib SHARED
     include/gennylib/ActorProducer.hpp
     include/gennylib/ActorVector.hpp
 
-        include/gennylib/OperationLoop.hpp
+    include/gennylib/PhaseLoop.hpp
 
         include/gennylib/PhasedActor.hpp
                  src/PhasedActor.cpp

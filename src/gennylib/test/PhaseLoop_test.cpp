@@ -4,7 +4,7 @@
 #include <iostream>
 #include <optional>
 
-#include <gennylib/OperationLoop.hpp>
+#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/Orchestrator.hpp>
 
 using namespace genny;

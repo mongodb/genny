@@ -8,7 +8,7 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/OperationLoop.hpp>
+#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/Actor.hpp>
 #include <gennylib/context.hpp>
@@ -201,7 +201,6 @@ struct IncrementsTwoRefs : public Actor {
         : value{++cnt} {}
     };
 
-    // TODO: not V1
     PhaseLoop<IncrPhaseConfig> _loop;
     int&phaseZero;
     int&phaseOne;
@@ -233,6 +232,7 @@ struct IncrementsTwoRefs : public Actor {
 
 }
 
+// TODO: move to PhaseLoop test
 TEST_CASE("Actual Actor Example", "[real]") {
     Orchestrator o;
     o.addRequiredTokens(1);
