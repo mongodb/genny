@@ -73,10 +73,6 @@ private:
     const std::optional<int> _minIterations;
 };
 
-/**
- * Tracks the iteration-state of a `OperationLoop`.
- */
-// This is intentionally header-only to help avoid doing unnecessary function-calls.
 class OperationLoopIterator {
 
 public:
@@ -91,7 +87,7 @@ public:
 
     explicit OperationLoopIterator(Orchestrator& orchestrator,
                                    bool isEnd,
-                                   ItersAndDuration itersAndDuration)
+                                   const ItersAndDuration& itersAndDuration)
         : _isEndIterator{isEnd},
           _currentIteration{0},
           _orchestrator{orchestrator},
@@ -151,7 +147,7 @@ public:
 
 private:
     const bool _isEndIterator;
-    const ItersAndDuration _itersAndDuration;
+    const ItersAndDuration& _itersAndDuration;
 
     std::chrono::steady_clock::time_point _startedAt;
     Orchestrator& _orchestrator;
@@ -327,37 +323,6 @@ private:
     bool _awaitingPlusPlus;
 };
 
-/**
- * Configured with an optional<min#iterations> and/or optional<min duration>. The
- * returned .begin() iterators will not == .end() until both the # iterations and
- * duration requirements are met.
- *
- * Can be used as-is but intended to be used from `context.hpp` classes and
- * configured from conventions.
- *
- * See extended example in `PhaseContext.loop()`.
- */
-class OperationLoop {
-
-public:
-    template <class... Args>
-    explicit OperationLoop(Orchestrator& orchestrator, Args&&... args)
-        : _orchestrator{orchestrator}, _itersAndDuration{std::forward<Args>(args)...} {}
-
-
-    V1::OperationLoopIterator begin() {
-        return V1::OperationLoopIterator{_orchestrator, false, _itersAndDuration};
-    }
-
-    V1::OperationLoopIterator end() {
-        return V1::OperationLoopIterator{_orchestrator, true};
-    }
-
-private:
-    Orchestrator& _orchestrator;
-    const ItersAndDuration _itersAndDuration;
-};
-
 }  // namespace genny::V1
 
 namespace genny {
@@ -431,8 +396,7 @@ private:
     static PhaseMap constructPhaseMap(ActorContext& actorContext) {
         PhaseMap out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
-            auto&& deref = phaseContext;
-            out.try_emplace(num, actorContext.orchestrator(), deref, std::make_unique<T>(deref));
+            out.try_emplace(num, actorContext.orchestrator(), phaseContext, std::make_unique<T>(phaseContext));
         }
         return out;
     }

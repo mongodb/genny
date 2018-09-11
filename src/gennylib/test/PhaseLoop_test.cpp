@@ -4,8 +4,8 @@
 #include <iostream>
 #include <optional>
 
-#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/PhaseLoop.hpp>
 
 using namespace genny;
 using namespace genny::V1;
@@ -28,21 +28,21 @@ TEST_CASE("Correctness for N iterations") {
     Orchestrator o;
 
     SECTION("Loops 0 Times") {
-        OperationLoop loop{o, 0_i, nullopt};
+        V1::ActorPhase<int> loop{o, make_unique<int>(1), {0_i, nullopt}};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 0);
     }
     SECTION("Loops 1 Time") {
-        OperationLoop loop{o, 1_i, nullopt};
+        V1::ActorPhase<int> loop{o, make_unique<int>(1), {1_i, nullopt}};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 1);
     }
     SECTION("Loops 113 Times") {
-        OperationLoop loop{o, 113_i, nullopt};
+        V1::ActorPhase<int> loop{o, make_unique<int>(1), {113_i, nullopt}};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -50,15 +50,16 @@ TEST_CASE("Correctness for N iterations") {
     }
 
     SECTION("Configured for -1 Times barfs") {
-        REQUIRE_THROWS_WITH((OperationLoop{o, make_optional(-1), nullopt}),
-                            Catch::Contains("Need non-negative number of iterations. Gave -1"));
+        REQUIRE_THROWS_WITH(
+            (V1::ActorPhase<int>{o, make_unique<int>(1), {make_optional(-1), nullopt}}),
+            Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
 
 TEST_CASE("Correctness for N milliseconds") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds so zero times") {
-        OperationLoop loop{o, nullopt, 0_ms};
+        V1::ActorPhase<int> loop{o, make_unique<int>(1), {nullopt, 0_ms}};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -67,7 +68,7 @@ TEST_CASE("Correctness for N milliseconds") {
     SECTION("Looping for 10 milliseconds takes between 10 and 11 milliseconds") {
         // we nop in the loop so ideally it should take exactly 10ms, but don't want spurious
         // failures
-        OperationLoop loop{o, nullopt, 10_ms};
+        V1::ActorPhase<int> loop{o, make_unique<int>(1), {nullopt, 10_ms}};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -84,14 +85,14 @@ TEST_CASE("Correctness for N milliseconds") {
 TEST_CASE("Combinations of duration and iterations") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds but 100 times") {
-        OperationLoop loop{o, 100_i, 0_ms};
+        V1::ActorPhase<int> loop{o, make_unique<int>(1), {100_i, 0_ms}};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 100);
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
-        OperationLoop loop{o, 100_i, 5_ms};
+        V1::ActorPhase<int> loop{o, make_unique<int>(1), {100_i, 5_ms}};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -111,20 +112,22 @@ TEST_CASE("Combinations of duration and iterations") {
     // combinations of the other tests 🙈
 
     SECTION("Configured for -1 milliseconds barfs") {
-        REQUIRE_THROWS_WITH((OperationLoop{o, nullopt, make_optional(chrono::milliseconds{-1})}),
-                            Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
+        REQUIRE_THROWS_WITH(
+            (V1::ActorPhase<int>{
+                o, make_unique<int>(1), {nullopt, make_optional(chrono::milliseconds{-1})}}),
+            Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
 
-TEST_CASE("Need either iterations or duration") {
+TEST_CASE("Can do without either iterations or duration") {
     Orchestrator o;
-    REQUIRE_THROWS_WITH((OperationLoop{o, nullopt, nullopt}),
-                        Catch::Contains("Need to specify either min iterations or min duration"));
+    V1::ActorPhase<int>{o, make_unique<int>(1), {nullopt, nullopt}};
+    // TODO: assert behavior with Orchestrator here
 }
 
 TEST_CASE("Iterator concept correctness") {
     Orchestrator o;
-    OperationLoop loop{o, 1_i, nullopt};
+    V1::ActorPhase<int> loop{o, make_unique<int>(1), {1_i, nullopt}};
 
     // can deref
     SECTION("Deref and advance works") {
