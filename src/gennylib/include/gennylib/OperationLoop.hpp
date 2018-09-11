@@ -167,11 +167,11 @@ public:
         return _maxIters || _maxDuration;
     }
 
-    auto operator-> () {
+    auto operator-> () const {
         return _value.operator->();
     }
 
-    auto operator*() {
+    auto operator*() const {
         return _value.operator*();
     }
 
@@ -179,8 +179,8 @@ private:
     Orchestrator& _orchestrator;
     std::unique_ptr<T> _value;
 
-    std::optional<int> _maxIters;
-    std::optional<std::chrono::milliseconds> _maxDuration;
+    const std::optional<int> _maxIters;
+    const std::optional<std::chrono::milliseconds> _maxDuration;
 };
 
 // Only usable in range-based for loops.
@@ -216,6 +216,7 @@ public:
         return !(other._isEnd && !this->morePhases());
     }
 
+    // intentionally non-const
     std::pair<PhaseNumber, ActorPhase<T>&> operator*() {
         assert(!_awaitingPlusPlus);
 
@@ -235,6 +236,7 @@ public:
 
         auto&& found = _phaseMap.find(_currentPhase);
 
+        // XXX: we can detect this at setup time
         if (found == _phaseMap.end()) {
             std::stringstream msg;
             msg << "No phase config found for PhaseNumber=[" << _currentPhase << "]";
@@ -282,9 +284,9 @@ private:
     }
 
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, ActorPhase<T>>& _phaseMap;
+    std::unordered_map<PhaseNumber, ActorPhase<T>>& _phaseMap; // cannot be const
 
-    bool _isEnd;
+    const bool _isEnd;
     PhaseNumber _currentPhase;
 
     // helps detect accidental mis-use. General contract
@@ -296,10 +298,6 @@ private:
     // between, we'll fail (and similarly for operator++()).
     bool _awaitingPlusPlus;
 };
-
-template <class V>
-class TD;
-
 
 template <class T>
 class PhaseLoop {
@@ -317,6 +315,7 @@ public:
 
     PhaseLoop(Orchestrator& orchestrator, PhaseMap&& holders)
         : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {
+        // propagate this Actor's set up PhaseNumbers to Orchestrator
         for(auto&& [phaseNum, actorPhase] : _phaseMap) {
             orchestrator.phasesAtLeastTo(phaseNum);
         }
@@ -335,7 +334,7 @@ private:
         return out;
     }
 
-    Orchestrator* _orchestrator;
+    Orchestrator* const _orchestrator;
     PhaseMap _phaseMap;
 };
 
@@ -442,8 +441,8 @@ public:
 
 private:
     Orchestrator& _orchestrator;
-    std::optional<int> _minIterations;
-    std::optional<std::chrono::milliseconds> _minDuration;
+    const std::optional<int> _minIterations;
+    const std::optional<std::chrono::milliseconds> _minDuration;
 };
 
 }  // namespace genny
