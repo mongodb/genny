@@ -45,8 +45,6 @@ public:
           _startedAt{_minDuration ? std::chrono::steady_clock::now()
                                   : std::chrono::time_point<std::chrono::steady_clock>::min()},
           _orchestrator{orchestrator} {
-        // invariant checked in OperationLoop
-        assert(isEnd || _minDuration || _minIterations);
     }
 
     explicit OperationLoopIterator(Orchestrator& orchestrator, bool isEnd)
@@ -117,21 +115,21 @@ private:
 };
 
 template <class T>
-class PhaseHolder {
+class ActorPhase {
 
 public:
     // can't copy anyway due to unique_ptr but may as well be explicit (may make error messages better)
-    PhaseHolder(PhaseHolder&) = delete;
-    void operator=(PhaseHolder&) = delete;
+    ActorPhase(ActorPhase&) = delete;
+    void operator=(ActorPhase&) = delete;
 
-    PhaseHolder(PhaseHolder&& other) noexcept
+    ActorPhase(ActorPhase&& other) noexcept
         : _orchestrator{other._orchestrator},
           _value{std::move(other._value)},
           _number{other._number},
           _maxIters{other._maxIters},
           _maxDuration{other._maxDuration} {}
 
-    PhaseHolder& operator=(PhaseHolder&& other) noexcept {
+    ActorPhase& operator=(ActorPhase&& other) noexcept {
         this->_orchestrator = other._orchestrator;
         this->_value = std::move(other._value);
         this->_number = other._number;
@@ -140,7 +138,7 @@ public:
         return *this;
     }
 
-    PhaseHolder(Orchestrator& _orchestrator,
+    ActorPhase(Orchestrator& _orchestrator,
                 PhaseNumber _number,
                 std::unique_ptr<T> _value,
                 std::optional<int> _maxIters,
@@ -163,8 +161,12 @@ public:
         return _maxIters || _maxDuration;
     }
 
-    T& operator->() {
+    auto operator->() {
         return _value.operator->();
+    }
+
+    auto operator*() {
+        return _value.operator*();
     }
 
 private:
@@ -209,7 +211,7 @@ public:
         return !(other._isEnd && !this->morePhases());
     }
 
-    std::pair<PhaseNumber, PhaseHolder<T>&> operator*() {
+    std::pair<PhaseNumber, ActorPhase<T>&> operator*() {
         assert(!_awaitingPlusPlus);
 
         // Intentionally don't bother with cases where user didn't call operator++()
@@ -225,7 +227,16 @@ public:
         }
 
         _awaitingPlusPlus = true;
-        return {_currentPhase, _holders.find(_currentPhase)->second};
+
+        auto&& found = _holders.find(_currentPhase);
+
+        if (found == _holders.end()) {
+            std::stringstream msg;
+            msg << "No phase config found for PhaseNumber=[" << _currentPhase << "]";
+            throw InvalidConfigurationException(msg.str());
+        }
+
+        return {_currentPhase, found->second};
     }
 
     OrchestratorLoopIterator& operator++() {
@@ -245,7 +256,7 @@ public:
     }
 
     explicit OrchestratorLoopIterator(Orchestrator* orchestrator,
-                                      std::unordered_map<PhaseNumber, PhaseHolder<T>&>& holders,
+                                      std::unordered_map<PhaseNumber, ActorPhase<T>&>& holders,
                                       bool isEnd)
         : _orchestrator{orchestrator},
           _holders{holders},
@@ -266,7 +277,7 @@ private:
     }
 
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, PhaseHolder<T>&>& _holders;
+    std::unordered_map<PhaseNumber, ActorPhase<T>&>& _holders;
     //    const std::unordered_set<PhaseNumber>& _blockingPhases;
 
     bool _isEnd;
@@ -296,12 +307,12 @@ public:
     }
 
     OrchestratorLoop(Orchestrator& orchestrator,
-                     std::unordered_map<PhaseNumber, PhaseHolder<T>&>& holders)
+                     std::unordered_map<PhaseNumber, ActorPhase<T>&>& holders)
         : _orchestrator{std::addressof(orchestrator)}, _holders{holders} {}
 
 private:
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, PhaseHolder<T>&>& _holders;
+    std::unordered_map<PhaseNumber, ActorPhase<T>&>& _holders;
 };
 
 
