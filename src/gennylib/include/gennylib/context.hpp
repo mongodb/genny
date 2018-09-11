@@ -432,7 +432,7 @@ public:
      * configuration in other mechanisms if desired. The `Phases:` structure and
      * related PhaseContext type are purely for conventional convenience.
      */
-    const std::unordered_map<int, std::unique_ptr<PhaseContext>>& phases() const {
+    const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
         return _phaseContexts;
     };
 
@@ -489,11 +489,11 @@ public:
     // </Forwarding to delegates>
 
 private:
-    static std::unordered_map<int, std::unique_ptr<PhaseContext>> constructPhaseContexts(
+    static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>> constructPhaseContexts(
         const YAML::Node&, ActorContext*);
     YAML::Node _node;
     WorkloadContext* _workload;
-    std::unordered_map<int, std::unique_ptr<PhaseContext>> _phaseContexts;
+    std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
 
 
