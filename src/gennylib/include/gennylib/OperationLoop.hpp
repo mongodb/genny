@@ -9,8 +9,10 @@
 #include <unordered_map>
 #include <utility>
 
+#include <gennylib/context.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
+
 
 /*
  * Reminder: the V1 namespace types are *not* intended to be used directly.
@@ -273,7 +275,6 @@ private:
 
     Orchestrator* _orchestrator;
     std::unordered_map<PhaseNumber, ActorPhase<T>>& _holders;
-    //    const std::unordered_set<PhaseNumber>& _blockingPhases;
 
     bool _isEnd;
     PhaseNumber _currentPhase;
@@ -301,12 +302,12 @@ public:
         return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_holders, true};
     }
 
-    PhaseLoop(Orchestrator& orchestrator, std::unordered_map<PhaseNumber, ActorPhase<T>>& holders)
-        : _orchestrator{std::addressof(orchestrator)}, _holders{holders} {}
+    PhaseLoop(Orchestrator& orchestrator, std::unordered_map<PhaseNumber, ActorPhase<T>>&& holders)
+        : _orchestrator{std::addressof(orchestrator)}, _holders{std::move(holders)} {}
 
 private:
     Orchestrator* _orchestrator;
-    std::unordered_map<PhaseNumber, ActorPhase<T>>& _holders;
+    std::unordered_map<PhaseNumber, ActorPhase<T>> _holders;
 };
 
 

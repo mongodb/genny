@@ -238,7 +238,7 @@ TEST_CASE("Two non-blocking Phases") {
     std::unordered_set<int> seenActorPhaseValues;
 
     auto count = 0;
-    for (auto&& [p, h] : V1::PhaseLoop<int>{o, blocking}) {
+    for (auto&& [p, h] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
         seenPhases.insert(p);
         for (auto&& _ : h) {
             seenActorPhaseValues.insert(*h);
@@ -260,7 +260,7 @@ TEST_CASE("Single Blocking Phase") {
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
 
 
-    for (auto&& [p, h] : V1::PhaseLoop<int>{o, blocking}) {
+    for (auto&& [p, h] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
         seen.insert(p);
     }
 
@@ -277,7 +277,7 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
         seen.insert(phase);
     }
 
@@ -293,7 +293,7 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
         seen.insert(phase);
     }
 
@@ -310,7 +310,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
         seen.insert(phase);
     }
 
@@ -327,7 +327,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
         seen.insert(phase);
     }
 
@@ -344,7 +344,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
+    for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
         seen.insert(phase);
     }
 
@@ -370,7 +370,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
+        for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
             if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
@@ -405,7 +405,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, blocking}) {
+        for (auto&& [phase, holder] : V1::PhaseLoop<int>{o, std::move(blocking)}) {
             if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
