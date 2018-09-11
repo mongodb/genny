@@ -49,15 +49,8 @@ public:
                             : std::chrono::time_point<std::chrono::steady_clock>::min();
     }
 
-    bool doneIterations(int currentIteration) const {
-        return !_minIterations || currentIteration >= *_minIterations;
-    }
-
-    bool doneDuration(std::chrono::steady_clock::time_point startedAt) const {
-        return !_minDuration ||
-            // check is last in chain to avoid doing now() call unnecessarily
-            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
-                                                                  startedAt) >= *_minDuration;
+    bool isDone(unsigned int currentIteration, std::chrono::steady_clock::time_point startedAt) const {
+        return doneIterations(currentIteration) && doneDuration(startedAt);
     }
 
     bool operator==(const ItersAndDuration& other) const {
@@ -69,6 +62,18 @@ public:
     }
 
 private:
+
+    bool doneIterations(unsigned int currentIteration) const {
+        return !_minIterations || currentIteration >= *_minIterations;
+    }
+
+    bool doneDuration(std::chrono::steady_clock::time_point startedAt) const {
+        return !_minDuration ||
+               // check is last in chain to avoid doing now() call unnecessarily
+               std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                                     startedAt) >= *_minDuration;
+    }
+
     const std::optional<std::chrono::milliseconds> _minDuration;
     const std::optional<int> _minIterations;
 };
@@ -108,15 +113,8 @@ public:
 
     // clang-format off
     bool operator==(const ActorPhaseIterator& rhs) const {
-        // I heard you like terse, short-circuiting business-logic, bro, so I wrote you a love-letter to || ❤️
         return
-            // Comparing this == .end(). This is most common call in range-based for-loops, so do it first.
-                (rhs._isEndIterator
-                 // Need to see if this is in end state. There are two conditions
-                 // 1. minIterations is empty-optional or we're at or past minIterations
-                 && (_itersAndDuration.doneIterations(_currentIteration))
-                 // 2. minDuration is empty-optional or we've exceeded minDuration
-                 && (_itersAndDuration.doneDuration(_startedAt)))
+                (rhs._isEndIterator && _itersAndDuration.isDone(_currentIteration, _startedAt))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
@@ -209,9 +207,10 @@ private:
     std::unique_ptr<T> _value;
 
     const ItersAndDuration _itersAndDuration;
-};
 
-// Only usable in range-based for loops.
+};  // class ActorPhase
+
+
 template <class T>
 class PhaseLoopIterator {
 
@@ -245,9 +244,9 @@ public:
         assert(!_awaitingPlusPlus);
         // Intentionally don't bother with cases where user didn't call operator++()
         // between invocations of operator*() and vice-versa.
-        _currentPhase = this->_orchestrator->awaitPhaseStart();
+        _currentPhase = this->_orchestrator.awaitPhaseStart();
         if (!this->doesBlockOn(_currentPhase)) {
-            this->_orchestrator->awaitPhaseEnd(false);
+            this->_orchestrator.awaitPhaseEnd(false);
         }
 
         _awaitingPlusPlus = true;
@@ -269,25 +268,25 @@ public:
         // Intentionally don't bother with cases where user didn't call operator++()
         // between invocations of operator*() and vice-versa.
         if (this->doesBlockOn(_currentPhase)) {
-            this->_orchestrator->awaitPhaseEnd(true);
+            this->_orchestrator.awaitPhaseEnd(true);
         }
 
         _awaitingPlusPlus = false;
         return *this;
     }
 
-    explicit PhaseLoopIterator(Orchestrator* orchestrator,
-                               std::unordered_map<PhaseNumber, ActorPhase<T>>& holders,
+    explicit PhaseLoopIterator(Orchestrator& orchestrator,
+                               std::unordered_map<PhaseNumber, ActorPhase<T>>& phaseMap,
                                bool isEnd)
         : _orchestrator{orchestrator},
-          _phaseMap{holders},
+          _phaseMap{phaseMap},
           _isEnd{isEnd},
           _currentPhase{0},
           _awaitingPlusPlus{false} {}
 
 private:
     bool morePhases() const {
-        return this->_orchestrator->morePhases();
+        return this->_orchestrator.morePhases();
     }
 
     bool doesBlockOn(PhaseNumber phase) const {
@@ -297,7 +296,7 @@ private:
         return true;
     }
 
-    Orchestrator* _orchestrator;
+    Orchestrator& _orchestrator;
     std::unordered_map<PhaseNumber, ActorPhase<T>>& _phaseMap;  // cannot be const
 
     const bool _isEnd;
@@ -311,7 +310,9 @@ private:
     // If the user calls operator*() twice without calling operator++()
     // between, we'll fail (and similarly for operator++()).
     bool _awaitingPlusPlus;
-};
+
+};  // class PhaseLoopIterator
+
 
 }  // namespace genny::V1
 
@@ -372,8 +373,8 @@ public:
         return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
     }
 
-    PhaseLoop(Orchestrator& orchestrator, PhaseMap&& holders)
-        : _orchestrator{std::addressof(orchestrator)}, _phaseMap{std::move(holders)} {
+    PhaseLoop(Orchestrator& orchestrator, PhaseMap&& phaseMap)
+        : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
         for (auto&& [phaseNum, actorPhase] : _phaseMap) {
             orchestrator.phasesAtLeastTo(phaseNum);
@@ -394,9 +395,11 @@ private:
         return out;
     }
 
-    Orchestrator* const _orchestrator;
-    PhaseMap _phaseMap;
-};
+    Orchestrator& _orchestrator;
+    PhaseMap _phaseMap; // we own it
+
+};  // class PhaseLoop
+
 
 }  // namespace genny
 
