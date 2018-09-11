@@ -40,7 +40,7 @@ public:
         }
     }
 
-    ItersAndDuration(const std::unique_ptr<PhaseContext>& phaseContext)
+    explicit ItersAndDuration(const std::unique_ptr<PhaseContext>& phaseContext)
         : ItersAndDuration(phaseContext->get<int, false>("Repeat"),
                            phaseContext->get<std::chrono::milliseconds, false>("Duration")) {}
 
@@ -73,41 +73,41 @@ private:
     const std::optional<int> _minIterations;
 };
 
-class OperationLoopIterator {
+/**
+ * Configured with {@link ItersAndDuration} and will continue
+ * iterating until configured #iterations or duration are done
+ * or, if non-blocking, when Orchestrator says phase has changed.
+ */
+class ActorPhaseIterator {
 
 public:
-    // <iterator-concept>
-    struct Value {};  // intentionally empty; most compilers will elide any actual storage
-    typedef std::forward_iterator_tag iterator_category;
-    typedef Value value_type;
-    typedef Value reference;
-    typedef Value pointer;
-    typedef std::ptrdiff_t difference_type;
-    // </iterator-concept>
+    // iterator concept value-type
+    // intentionally empty; most compilers will elide any actual storage
+    struct Value {};
 
-    explicit OperationLoopIterator(Orchestrator& orchestrator,
-                                   bool isEnd,
-                                   const ItersAndDuration& itersAndDuration)
+    explicit ActorPhaseIterator(Orchestrator& orchestrator,
+                                bool isEnd,
+                                const ItersAndDuration& itersAndDuration)
         : _isEndIterator{isEnd},
           _currentIteration{0},
           _orchestrator{orchestrator},
           _itersAndDuration{itersAndDuration},
           _startedAt{_itersAndDuration.startedAt()} {}
 
-    explicit OperationLoopIterator(Orchestrator& orchestrator, bool isEnd)
-        : OperationLoopIterator{orchestrator, isEnd, ItersAndDuration{}} {}
+    explicit ActorPhaseIterator(Orchestrator& orchestrator, bool isEnd)
+        : ActorPhaseIterator{orchestrator, isEnd, ItersAndDuration{}} {}
 
     Value operator*() const {
         return Value();
     }
 
-    OperationLoopIterator& operator++() {
+    ActorPhaseIterator& operator++() {
         ++_currentIteration;
         return *this;
     }
 
     // clang-format off
-    bool operator==(const OperationLoopIterator& rhs) const {
+    bool operator==(const ActorPhaseIterator& rhs) const {
         // I heard you like terse, short-circuiting business-logic, bro, so I wrote you a love-letter to || ❤️
         return
             // Comparing this == .end(). This is most common call in range-based for-loops, so do it first.
@@ -141,7 +141,7 @@ public:
 
     // Iterator concepts only require !=, but the logic is much easier to reason about
     // for ==, so just negate that logic 😎 (compiler should inline it)
-    bool operator!=(const OperationLoopIterator& rhs) const {
+    bool operator!=(const ActorPhaseIterator& rhs) const {
         return !(*this == rhs);
     }
 
@@ -152,6 +152,15 @@ private:
     std::chrono::steady_clock::time_point _startedAt;
     Orchestrator& _orchestrator;
     unsigned int _currentIteration;
+
+public:
+    // <iterator-concept>
+    typedef std::forward_iterator_tag iterator_category;
+    typedef Value value_type;
+    typedef Value reference;
+    typedef Value pointer;
+    typedef std::ptrdiff_t difference_type;
+    // </iterator-concept>
 };
 
 template <class T>
@@ -163,29 +172,24 @@ public:
     ActorPhase(const ActorPhase&) = delete;
     void operator=(const ActorPhase&) = delete;
 
-    ActorPhase(ActorPhase&& other) noexcept
-        : _orchestrator{other._orchestrator},
-          _value{std::move(other._value)},
-          _itersAndDuration{std::move(other._itersAndDuration)} {}
-
     ActorPhase(Orchestrator& _orchestrator,
                std::unique_ptr<T>&& _value,
                ItersAndDuration itersAndDuration)
         : _orchestrator(_orchestrator),
           _value(std::move(_value)),
-          _itersAndDuration(itersAndDuration) {}
+          _itersAndDuration(std::move(itersAndDuration)) {}
 
     ActorPhase(Orchestrator& orchestrator,
                const std::unique_ptr<PhaseContext>& phaseContext,
                std::unique_ptr<T>&& value)
         : ActorPhase(orchestrator, std::move(value), ItersAndDuration{phaseContext}) {}
 
-    OperationLoopIterator begin() {
-        return OperationLoopIterator{_orchestrator, false, _itersAndDuration};
+    ActorPhaseIterator begin() {
+        return ActorPhaseIterator{_orchestrator, false, _itersAndDuration};
     }
 
-    OperationLoopIterator end() {
-        return OperationLoopIterator{_orchestrator, true};
+    ActorPhaseIterator end() {
+        return ActorPhaseIterator{_orchestrator, true};
     };
 
     bool doesBlock() const {
@@ -213,7 +217,7 @@ class PhaseLoopIterator {
 
 public:
     // These are intentionally commented-out because this type
-    // should not be used by any std algorithms that may rely on them.
+    // should not be used by any    std algorithms that may rely on them.
     // This type should only be used by range-based for loops (which doesn't
     // rely on these typedefs). This should *hopefully* prevent some cases of
     // accidental mis-use.
@@ -233,24 +237,14 @@ public:
 
     bool operator!=(const PhaseLoopIterator& other) const {
         // Intentionally don't handle self-equality or other "normal" cases.
-        //
-        // This type is only intended to be used by range-based for-loops
-        // and their equivalent expanded definitions
-        // https://en.cppreference.com/w/cpp/language/range-for
         return !(other._isEnd && !this->morePhases());
     }
 
     // intentionally non-const
     std::pair<PhaseNumber, ActorPhase<T>&> operator*() {
         assert(!_awaitingPlusPlus);
-
         // Intentionally don't bother with cases where user didn't call operator++()
         // between invocations of operator*() and vice-versa.
-        //
-        //
-        // This type is only intended to be used by range-based for-loops
-        // and their equivalent expanded definitions
-        // https://en.cppreference.com/w/cpp/language/range-for
         _currentPhase = this->_orchestrator->awaitPhaseStart();
         if (!this->doesBlockOn(_currentPhase)) {
             this->_orchestrator->awaitPhaseEnd(false);
@@ -274,10 +268,6 @@ public:
         assert(_awaitingPlusPlus);
         // Intentionally don't bother with cases where user didn't call operator++()
         // between invocations of operator*() and vice-versa.
-        //
-        // This type is only intended to be used by range-based for-loops
-        // and their equivalent expanded definitions
-        // https://en.cppreference.com/w/cpp/language/range-for
         if (this->doesBlockOn(_currentPhase)) {
             this->_orchestrator->awaitPhaseEnd(true);
         }
@@ -324,6 +314,7 @@ private:
 };
 
 }  // namespace genny::V1
+
 
 namespace genny {
 
@@ -396,7 +387,9 @@ private:
     static PhaseMap constructPhaseMap(ActorContext& actorContext) {
         PhaseMap out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
-            out.try_emplace(num, actorContext.orchestrator(), phaseContext, std::make_unique<T>(phaseContext));
+            out.try_emplace(
+                // key, (args-to-value-ctor => args-to-ActorPhase<T> ctor)
+                num, actorContext.orchestrator(), phaseContext, std::make_unique<T>(phaseContext));
         }
         return out;
     }
