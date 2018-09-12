@@ -341,11 +341,10 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
                                      {// block then block
                                       {0, 7, 1_i, nullopt},
                                       {1, 9, 1_i, nullopt}})};
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(blocking)}) {
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
     }
 
