@@ -14,13 +14,24 @@
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 
-/**
+/*
  * General TODO:
- * - doc everything (like it's hot).
- * - Doc interactions with this in context.hpp
- * - maybe track Iters and StartedAt in IterationCompletionCheck?
- * - move tests from Orchestrator test into PhaseLoop tests
- * - Kill PhasedActor
+ *
+ * - doc it like it's hot
+ *   - each class here, even the dumb helper ones
+ *   - some connection with context.hpp to make this class discoverable
+ *
+ * - can PhaseLoop be pre-declared or something such that the user can
+ *   actually do something like `PhaseLoop<MyStruct> loop = actorContext.loop<MyStruct>()`?
+ *
+ * - Run everything thru the sanitizers
+ *
+ * - Ensure these classes all follow guidelines in CONTRIBUTING.md
+ *
+ * - Next ticket
+ *   - kill PhasedActor
+ *   - Maybe: only check orchestrator.currentPhase() == currentPhase every N iterations since
+ *     overhead could be kinda high (like 1/2 as slow in casual observations)
  */
 
 namespace genny {
@@ -30,6 +41,10 @@ namespace genny {
  */
 namespace V1 {
 
+
+// Debatable about whether this should also track the current iteration and startedAt time
+// (versus having those in the ActorPhaseIterator).
+// BUT: even the .end() iterator needs an instance of this, so it's weird
 class IterationCompletionCheck {
 
 public:
@@ -75,6 +90,7 @@ public:
         return _minDuration == other._minDuration && _minIterations == other._minIterations;
     }
 
+    // TODO: compute at ctor time
     bool doesBlock() const {
         return _minIterations || _minDuration;
     }
@@ -123,11 +139,11 @@ public:
     bool operator==(const ActorPhaseIterator& rhs) const {
         return
                 // we're comparing against the .end() iterator (the common case)
-                    (rhs._isEndIterator &&
-                       // if we block, then check to see if we're done in current phase
-                       // else check to see if current phase has expired
-                       (_iterCheck.doesBlock() ? _iterCheck.isDone(_currentIteration, _startedAt)
-                                               : _orchestrator.currentPhase() != _inPhase))
+                (rhs._isEndIterator &&
+                   // if we block, then check to see if we're done in current phase
+                   // else check to see if current phase has expired
+                   (_iterCheck.doesBlock() ? _iterCheck.isDone(_currentIteration, _startedAt)
+                                           : _orchestrator.currentPhase() != _inPhase))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus

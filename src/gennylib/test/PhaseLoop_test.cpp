@@ -11,18 +11,23 @@ using namespace genny;
 using namespace genny::V1;
 using namespace std;
 
+namespace {
 
 //
 // Cute convenience operators -
 //  100_i   gives optional<int>     holding 100
 //  100_ms  gives optional<millis>  holding 100
 //
+// TODO: these are copy/pasta in PhaseLoop_test and orchestrator_test. Refactor.
 optional<int> operator"" _i(unsigned long long int v) {
     return make_optional(v);
 }
+
 optional<chrono::milliseconds> operator"" _ms(unsigned long long int v) {
     return make_optional(chrono::milliseconds{v});
 }
+
+}  // namespace
 
 TEST_CASE("Correctness for N iterations") {
     Orchestrator o;
