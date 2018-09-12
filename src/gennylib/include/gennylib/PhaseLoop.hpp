@@ -63,7 +63,11 @@ public:
 
     bool isDone(unsigned int currentIteration,
                 std::chrono::steady_clock::time_point startedAt) const {
-        return doneIterations(currentIteration) && doneDuration(startedAt);
+        return (!_minIterations || currentIteration >= *_minIterations) &&
+            (!_minDuration ||
+             // check is last to avoid doing now() call unnecessarily
+             std::chrono::duration_cast<std::chrono::milliseconds>(
+                 std::chrono::steady_clock::now() - startedAt) >= *_minDuration);
     }
 
     bool operator==(const IterationCompletionCheck& other) const {
@@ -75,18 +79,6 @@ public:
     }
 
 private:
-    // TODO: inline these two 'done' fns
-    bool doneIterations(unsigned int currentIteration) const {
-        return !_minIterations || currentIteration >= *_minIterations;
-    }
-
-    bool doneDuration(std::chrono::steady_clock::time_point startedAt) const {
-        return !_minDuration ||
-            // check is last in chain to avoid doing now() call unnecessarily
-            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
-                                                                  startedAt) >= *_minDuration;
-    }
-
     const std::optional<std::chrono::milliseconds> _minDuration;
     const std::optional<int> _minIterations;
 };
