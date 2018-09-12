@@ -22,8 +22,7 @@
  * - try to make the T ctor only take a PhaseContext ref
  * - doc everything (like it's hot).
  * - Doc interactions with this in context.hpp
- * - better name for ItersAndDuration
- * - maybe track Iters and StartedAt in ItersAndDuration?
+ * - maybe track Iters and StartedAt in IterationCompletionCheck?
  * - move tests from Orchestrator test into PhaseLoop tests
  * - Kill PhasedActor
  */
@@ -33,13 +32,13 @@
  */
 namespace genny::V1 {
 
-class ItersAndDuration {
+class IterationCompletionCheck {
 
 public:
-    explicit ItersAndDuration() : ItersAndDuration(std::nullopt, std::nullopt) {}
+    explicit IterationCompletionCheck() : IterationCompletionCheck(std::nullopt, std::nullopt) {}
 
-    ItersAndDuration(std::optional<int> _minIterations,
-                     std::optional<std::chrono::milliseconds> _minDuration)
+    IterationCompletionCheck(std::optional<int> _minIterations,
+                             std::optional<std::chrono::milliseconds> _minDuration)
         : _minDuration(_minDuration), _minIterations(_minIterations) {
 
         if (_minIterations && *_minIterations < 0) {
@@ -54,20 +53,22 @@ public:
         }
     }
 
-    explicit ItersAndDuration(const std::unique_ptr<PhaseContext>& phaseContext)
-        : ItersAndDuration(phaseContext->get<int, false>("Repeat"),
-                           phaseContext->get<std::chrono::milliseconds, false>("Duration")) {}
+    explicit IterationCompletionCheck(const std::unique_ptr<PhaseContext>& phaseContext)
+        : IterationCompletionCheck(
+              phaseContext->get<int, false>("Repeat"),
+              phaseContext->get<std::chrono::milliseconds, false>("Duration")) {}
 
     std::chrono::steady_clock::time_point startedAt() const {
         return _minDuration ? std::chrono::steady_clock::now()
                             : std::chrono::time_point<std::chrono::steady_clock>::min();
     }
 
-    bool isDone(unsigned int currentIteration, std::chrono::steady_clock::time_point startedAt) const {
+    bool isDone(unsigned int currentIteration,
+                std::chrono::steady_clock::time_point startedAt) const {
         return doneIterations(currentIteration) && doneDuration(startedAt);
     }
 
-    bool operator==(const ItersAndDuration& other) const {
+    bool operator==(const IterationCompletionCheck& other) const {
         return _minDuration == other._minDuration && _minIterations == other._minIterations;
     }
 
@@ -76,16 +77,15 @@ public:
     }
 
 private:
-
     bool doneIterations(unsigned int currentIteration) const {
         return !_minIterations || currentIteration >= *_minIterations;
     }
 
     bool doneDuration(std::chrono::steady_clock::time_point startedAt) const {
         return !_minDuration ||
-               // check is last in chain to avoid doing now() call unnecessarily
-               std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
-                                                                     startedAt) >= *_minDuration;
+            // check is last in chain to avoid doing now() call unnecessarily
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
+                                                                  startedAt) >= *_minDuration;
     }
 
     const std::optional<std::chrono::milliseconds> _minDuration;
@@ -93,7 +93,7 @@ private:
 };
 
 /**
- * Configured with {@link ItersAndDuration} and will continue
+ * Configured with {@link IterationCompletionCheck} and will continue
  * iterating until configured #iterations or duration are done
  * or, if non-blocking, when Orchestrator says phase has changed.
  */
@@ -106,15 +106,15 @@ public:
 
     explicit ActorPhaseIterator(Orchestrator& orchestrator,
                                 bool isEnd,
-                                const ItersAndDuration& itersAndDuration)
+                                const IterationCompletionCheck& iterCheck)
         : _isEndIterator{isEnd},
           _currentIteration{0},
           _orchestrator{orchestrator},
-          _itersAndDuration{itersAndDuration},
-          _startedAt{_itersAndDuration.startedAt()} {}
+          _iterCheck{iterCheck},
+          _startedAt{_iterCheck.startedAt()} {}
 
     explicit ActorPhaseIterator(Orchestrator& orchestrator, bool isEnd)
-        : ActorPhaseIterator{orchestrator, isEnd, ItersAndDuration{}} {}
+        : ActorPhaseIterator{orchestrator, isEnd, IterationCompletionCheck{}} {}
 
     Value operator*() const {
         return Value();
@@ -129,7 +129,7 @@ public:
     bool operator==(const ActorPhaseIterator& rhs) const {
         // TODO: check orchestrator if non-blocking
         return
-                (rhs._isEndIterator && _itersAndDuration.isDone(_currentIteration, _startedAt))
+                (rhs._isEndIterator && _iterCheck.isDone(_currentIteration, _startedAt))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
@@ -142,7 +142,7 @@ public:
                 || (!rhs._isEndIterator && !_isEndIterator
                     && _startedAt        == rhs._startedAt
                     && _currentIteration == rhs._currentIteration
-                    && _itersAndDuration == rhs._itersAndDuration)
+                    && _iterCheck        == rhs._iterCheck)
 
                 // both .end() iterators (all .end() iterators are ==)
                 || (_isEndIterator && rhs._isEndIterator)
@@ -160,9 +160,9 @@ public:
 
 private:
     const bool _isEndIterator;
-    const ItersAndDuration& _itersAndDuration;
+    const IterationCompletionCheck& _iterCheck;
 
-    std::chrono::steady_clock::time_point _startedAt;
+    const std::chrono::steady_clock::time_point _startedAt;
     Orchestrator& _orchestrator;
     unsigned int _currentIteration;
 
@@ -185,20 +185,20 @@ public:
     ActorPhase(const ActorPhase&) = delete;
     void operator=(const ActorPhase&) = delete;
 
-    ActorPhase(Orchestrator& _orchestrator,
-               std::unique_ptr<T>&& _value,
-               ItersAndDuration itersAndDuration)
-        : _orchestrator(_orchestrator),
-          _value(std::move(_value)),
-          _itersAndDuration(std::move(itersAndDuration)) {}
+    ActorPhase(Orchestrator& orchestrator,
+               std::unique_ptr<T>&& value,
+               IterationCompletionCheck iterCheck)
+        : _orchestrator(orchestrator),
+          _value(std::move(value)),
+          _iterCheck(std::move(iterCheck)) {}
 
     ActorPhase(Orchestrator& orchestrator,
                const std::unique_ptr<PhaseContext>& phaseContext,
                std::unique_ptr<T>&& value)
-        : ActorPhase(orchestrator, std::move(value), ItersAndDuration{phaseContext}) {}
+        : ActorPhase(orchestrator, std::move(value), IterationCompletionCheck{phaseContext}) {}
 
     ActorPhaseIterator begin() {
-        return ActorPhaseIterator{_orchestrator, false, _itersAndDuration};
+        return ActorPhaseIterator{_orchestrator, false, _iterCheck};
     }
 
     ActorPhaseIterator end() {
@@ -206,7 +206,7 @@ public:
     };
 
     bool doesBlock() const {
-        return _itersAndDuration.doesBlock();
+        return _iterCheck.doesBlock();
     }
 
     // TODO: don't expose unique_ptr() here; have our own strict return type
@@ -223,7 +223,7 @@ private:
     Orchestrator& _orchestrator;
     std::unique_ptr<T> _value;
 
-    const ItersAndDuration _itersAndDuration;
+    const IterationCompletionCheck _iterCheck;
 
 };  // class ActorPhase
 
@@ -410,13 +410,16 @@ private:
         for (auto&& [num, phaseContext] : actorContext.phases()) {
             out.try_emplace(
                 // key, (args-to-value-ctor => args-to-ActorPhase<T> ctor)
-                num, actorContext.orchestrator(), phaseContext, std::make_unique<T>(phaseContext));
+                num,
+                actorContext.orchestrator(),
+                phaseContext,
+                std::make_unique<T>(phaseContext));
         }
         return out;
     }
 
     Orchestrator& _orchestrator;
-    PhaseMap _phaseMap; // we own it
+    PhaseMap _phaseMap;  // we own it
 
 };  // class PhaseLoop
 
