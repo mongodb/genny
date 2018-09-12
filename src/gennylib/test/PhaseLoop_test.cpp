@@ -189,7 +189,8 @@ TEST_CASE("Iterator concept correctness") {
 
 TEST_CASE("Actual Actor Example", "[real]") {
 
-    struct IncrementsMapValues : public Actor {
+    class IncrementsMapValues : public Actor {
+    private:
         struct IncrPhaseConfig {
             int _key;
             IncrPhaseConfig(PhaseContext& ctx) : _key{ctx.get<int>("Key")} {}
@@ -198,6 +199,7 @@ TEST_CASE("Actual Actor Example", "[real]") {
         PhaseLoop<IncrPhaseConfig> _loop;
         std::unordered_map<int, int>& _counters;
 
+    public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
             : _loop{actorContext}, _counters{counters} {}
 
@@ -209,6 +211,8 @@ TEST_CASE("Actual Actor Example", "[real]") {
             }
         }
 
+        // An ActorProducer can do whatever it wants.
+        // Here it passes in a stack-variable ref to the Actor(s) it creates.
         static auto producer(std::unordered_map<int, int>& counters) {
             return [&](ActorContext& actorContext) {
                 ActorVector out;
@@ -218,15 +222,13 @@ TEST_CASE("Actual Actor Example", "[real]") {
         }
     };
 
-    Orchestrator o;
-    o.addRequiredTokens(1);
-    o.phasesAtLeastTo(0);  // this will need to be 2, but we don't set it; rely on actor to do so
+    std::unordered_map<int, int> counters;
 
-    metrics::Registry reg;
-
+    // ////////
+    // setup and run (bypass the driver)
     YAML::Node doc = YAML::Load(R"(
         SchemaVersion: 2018-07-01
-        MongoUri: mongodb://localhost:27017
+        MongoUri: mongodb://example # unused but ctors currently require that it's syntactically valid
         Actors:
         - Phases:
           - Repeat: 100
@@ -235,14 +237,16 @@ TEST_CASE("Actual Actor Example", "[real]") {
             Key: 93
     )");
 
-    std::unordered_map<int, int> counters;
+    Orchestrator o;
+    o.addRequiredTokens(1);
 
-    std::vector<ActorProducer> producers = {IncrementsMapValues::producer(counters)};
-    WorkloadContext wl{doc, reg, o, producers};
-    REQUIRE(wl.actors().size() == 1);
-
+    metrics::Registry reg;
+    WorkloadContext wl{doc, reg, o, {IncrementsMapValues::producer(counters)}};
     wl.actors()[0]->run();
+    // end
+    // ////////
+
     REQUIRE(counters ==
-            std::unordered_map<int, int>{{71, 100},  // keys came from yaml config
+            std::unordered_map<int, int>{{71, 100},  // keys & vals came from yaml config
                                          {93, 3}});
 }
