@@ -23,10 +23,12 @@
  * - Kill PhasedActor
  */
 
+namespace genny {
+
 /*
  * Reminder: the V1 namespace types are *not* intended to be used directly.
  */
-namespace genny::V1 {
+namespace V1 {
 
 class IterationCompletionCheck {
 
@@ -315,11 +317,8 @@ private:
 
 };  // class PhaseLoopIterator
 
+}  // namespace V1
 
-}  // namespace genny::V1
-
-// TODO: nest namespaces rather than starting separate block
-namespace genny {
 
 /**
  * @attention Only use this in range-based for loops.
@@ -365,7 +364,7 @@ template <class T>
 class PhaseLoop {
 
 public:
-    explicit PhaseLoop(genny::ActorContext& context)
+    explicit PhaseLoop(ActorContext& context)
         : PhaseLoop(context.orchestrator(), std::move(constructPhaseMap(context))) {}
 
     // Only visible for testing
