@@ -122,12 +122,18 @@ public:
     // clang-format off
     bool operator==(const ActorPhaseIterator& rhs) const {
         return
-                   (rhs._isEndIterator && !_iterCheck.doesBlock() && _orchestrator.currentPhase() != _inPhase)
-                || (rhs._isEndIterator &&  _iterCheck.doesBlock() && _iterCheck.isDone(_currentIteration, _startedAt))
+                // we're comparing against the .end() iterator (the common case)
+                    (rhs._isEndIterator &&
+                       // if we block, then check to see if we're done in current phase
+                       // else check to see if current phase has expired
+                       (_iterCheck.doesBlock() ? _iterCheck.isDone(_currentIteration, _startedAt)
+                                               : _orchestrator.currentPhase() != _inPhase))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
                 //   never use these conditions.
+                //
+                //   Could probably put these checks under a debug-build flag or something?
 
                 // this == this
                 || (this == &rhs)
