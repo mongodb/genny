@@ -52,9 +52,9 @@ public:
     }
 
     explicit IterationCompletionCheck(PhaseContext& phaseContext)
-        : IterationCompletionCheck(
-              phaseContext.get<int, false>("Repeat"),
-              phaseContext.get<std::chrono::milliseconds, false>("Duration")) {}
+        : IterationCompletionCheck(phaseContext.get<int, false>("Repeat"),
+                                   phaseContext.get<std::chrono::milliseconds, false>("Duration")) {
+    }
 
     std::chrono::steady_clock::time_point startedAt() const {
         return _minDuration ? std::chrono::steady_clock::now()
@@ -186,9 +186,7 @@ public:
           _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
 
     template <class... Args>
-    ActorPhase(Orchestrator& orchestrator,
-               PhaseContext& phaseContext,
-               Args&&... args)
+    ActorPhase(Orchestrator& orchestrator, PhaseContext& phaseContext, Args&&... args)
         : _orchestrator{orchestrator},
           _iterCheck{phaseContext},
           _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
@@ -224,12 +222,14 @@ private:
 
 
 template <class T>
+using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
+
+
+template <class T>
 class PhaseLoopIterator {
 
 public:
-    PhaseLoopIterator(Orchestrator& orchestrator,
-                      std::unordered_map<PhaseNumber, ActorPhase<T>>& phaseMap,
-                      bool isEnd)
+    PhaseLoopIterator(Orchestrator& orchestrator, PhaseMap<T>& phaseMap, bool isEnd)
         : _orchestrator{orchestrator},
           _phaseMap{phaseMap},
           _isEnd{isEnd},
@@ -289,9 +289,7 @@ private:
     }
 
     Orchestrator& _orchestrator;
-    // TODO: use PhaseMap typedef
-    std::unordered_map<PhaseNumber, ActorPhase<T>>&
-        _phaseMap;  // cannot be const; owned by PhaseLoop
+    PhaseMap<T>& _phaseMap;  // cannot be const; owned by PhaseLoop
 
     const bool _isEnd;
     PhaseNumber _currentPhase;
@@ -375,11 +373,9 @@ namespace genny {
 template <class T>
 class PhaseLoop {
 
-    using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
-
 public:
     // TODO: should this be private?
-    PhaseLoop(Orchestrator& orchestrator, PhaseMap phaseMap)
+    PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
         for (auto&& [phaseNum, actorPhase] : _phaseMap) {
@@ -400,25 +396,30 @@ public:
     }
 
 private:
-    static PhaseMap constructPhaseMap(ActorContext& actorContext) {
+    static V1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext) {
         // TODO: helpful message here
         static_assert(std::is_constructible_v<T, PhaseContext&>);
+        static_assert(
+            std::
+                is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseContext&>);
 
-        PhaseMap out;
+        V1::PhaseMap<T> out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
             out.try_emplace(
-                // key, (args-to-value-ctor => args-to-ActorPhase<T> ctor)
+                // key
                 num,
+                // args to ActorPhase<T> ctor:
                 actorContext.orchestrator(),
                 *phaseContext,
+                // last arg gets forwarded to T ctor (via forward inside of make_unique)
                 *phaseContext);
         }
         return out;
     }
 
     Orchestrator& _orchestrator;
-    PhaseMap _phaseMap;  // we own it
-    // _PhaseMap cannot be const since we don't want to enforce that the wrapped u_p<T> is const
+    V1::PhaseMap<T> _phaseMap;  // we own it
+    // _phaseMap cannot be const since we don't want to enforce that the wrapped u_p<T> is const
 
 };  // class PhaseLoop
 
