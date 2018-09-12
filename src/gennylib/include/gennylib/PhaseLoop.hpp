@@ -186,12 +186,14 @@ public:
     void operator=(const ActorPhase&) = delete;
 
     ActorPhase(Orchestrator& orchestrator,
+                // TODO: forward args to make_unique here
                std::unique_ptr<T>&& value,
                IterationCompletionCheck iterCheck)
         : _orchestrator(orchestrator),
           _value(std::move(value)),
           _iterCheck(std::move(iterCheck)) {}
 
+    // TODO: forward args to make_unique
     ActorPhase(Orchestrator& orchestrator,
                const std::unique_ptr<PhaseContext>& phaseContext,
                std::unique_ptr<T>&& value)
@@ -392,8 +394,7 @@ public:
     }
 
     // TODO: should this be private?
-    // TODO: this can just take PhaseMap by value with note that it should probably be moved
-    PhaseLoop(Orchestrator& orchestrator, PhaseMap&& phaseMap)
+    PhaseLoop(Orchestrator& orchestrator, PhaseMap phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
         for (auto&& [phaseNum, actorPhase] : _phaseMap) {
@@ -420,6 +421,7 @@ private:
 
     Orchestrator& _orchestrator;
     PhaseMap _phaseMap;  // we own it
+    // _PhaseMap cannot be const since we don't want to enforce that the wrapped u_p<T> is const
 
 };  // class PhaseLoop
 
