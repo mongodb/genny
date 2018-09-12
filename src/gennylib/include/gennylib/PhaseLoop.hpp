@@ -21,6 +21,8 @@
  *   - each class here, even the dumb helper ones
  *   - some connection with context.hpp to make this class discoverable
  *
+ * - make most (all?) of these types final. They're not intended to be base-classes.
+ * 
  * - can PhaseLoop be pre-declared or something such that the user can
  *   actually do something like `PhaseLoop<MyStruct> loop = actorContext.loop<MyStruct>()`?
  *
