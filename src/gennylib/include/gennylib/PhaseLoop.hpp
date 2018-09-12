@@ -106,16 +106,16 @@ public:
     // intentionally empty; most compilers will elide any actual storage
     struct Value {};
 
-    explicit ActorPhaseIterator(Orchestrator& orchestrator,
-                                const IterationCompletionCheck& iterCheck,
-                                bool isEndIterator)
+    ActorPhaseIterator(Orchestrator& orchestrator,
+                       const IterationCompletionCheck& iterCheck,
+                       bool isEndIterator)
         : _orchestrator{orchestrator},
           _iterCheck{iterCheck},
           _startedAt{_iterCheck.startedAt()},
           _isEndIterator{isEndIterator},
           _currentIteration{0} {}
 
-    explicit ActorPhaseIterator(Orchestrator& orchestrator, bool isEnd)
+    ActorPhaseIterator(Orchestrator& orchestrator, bool isEnd)
         : ActorPhaseIterator{orchestrator, IterationCompletionCheck{}, isEnd} {}
 
     Value operator*() const {
@@ -182,14 +182,7 @@ template <class T>
 class ActorPhase {
 
 public:
-    // can't copy anyway due to unique_ptr but may as well be explicit (may make error messages
-    // better)
-    ActorPhase(const ActorPhase&) = delete;
-    void operator=(const ActorPhase&) = delete;
-
     template <class... Args>
-    // TODO: construct & declare in same order
-    // TODO: doc it
     ActorPhase(Orchestrator& orchestrator, IterationCompletionCheck iterCheck, Args... args)
         : _orchestrator{orchestrator},
           _iterCheck{std::move(iterCheck)},
@@ -237,32 +230,16 @@ template <class T>
 class PhaseLoopIterator {
 
 public:
-    // These are intentionally commented-out because this type
-    // should not be used by any    std algorithms that may rely on them.
-    // This type should only be used by range-based for loops (which doesn't
-    // rely on these typedefs). This should *hopefully* prevent some cases of
-    // accidental mis-use.
-    //
-    // Decided to leave this code commented-out rather than deleting it
-    // partially to document this shortcoming explicitly but also in case
-    // we want to support the full concept in the future.
-    // https://en.cppreference.com/w/cpp/named_req/InputIterator
-    //
-    // <iterator-concept>
-    //    typedef std::forward_iterator_tag iterator_category;
-    //    typedef PhaseNumber value_type;
-    //    typedef PhaseNumber reference;
-    //    typedef PhaseNumber pointer;
-    //    typedef std::ptrdiff_t difference_type;
-    // </iterator-concept>
+    PhaseLoopIterator(Orchestrator& orchestrator,
+                      std::unordered_map<PhaseNumber, ActorPhase<T>>& phaseMap,
+                      bool isEnd)
+        : _orchestrator{orchestrator},
+          _phaseMap{phaseMap},
+          _isEnd{isEnd},
+          _currentPhase{0},
+          _awaitingPlusPlus{false} {}
 
-    bool operator!=(const PhaseLoopIterator& other) const {
-        // Intentionally don't handle self-equality or other "normal" cases.
-        return !(other._isEnd && !this->morePhases());
-    }
-
-    // intentionally non-const
-    std::pair<PhaseNumber, ActorPhase<T>&> operator*() {
+    std::pair<PhaseNumber, ActorPhase<T>&> operator*() /* cannot be const */ {
         assert(!_awaitingPlusPlus);
         // Intentionally don't bother with cases where user didn't call operator++()
         // between invocations of operator*() and vice-versa.
@@ -297,15 +274,10 @@ public:
         return *this;
     }
 
-    // TODO: ensure consistent ordering per CONTRIBUTING.md
-    explicit PhaseLoopIterator(Orchestrator& orchestrator,
-                               std::unordered_map<PhaseNumber, ActorPhase<T>>& phaseMap,
-                               bool isEnd)
-        : _orchestrator{orchestrator},
-          _phaseMap{phaseMap},
-          _isEnd{isEnd},
-          _currentPhase{0},
-          _awaitingPlusPlus{false} {}
+    bool operator!=(const PhaseLoopIterator& other) const {
+        // Intentionally don't handle self-equality or other "normal" cases.
+        return !(other._isEnd && !this->morePhases());
+    }
 
 private:
     bool morePhases() const {
@@ -335,6 +307,25 @@ private:
     // If the user calls operator*() twice without calling operator++()
     // between, we'll fail (and similarly for operator++()).
     bool _awaitingPlusPlus;
+
+    // These are intentionally commented-out because this type
+    // should not be used by any std algorithms that may rely on them.
+    // This type should only be used by range-based for loops (which doesn't
+    // rely on these typedefs). This should *hopefully* prevent some cases of
+    // accidental mis-use.
+    //
+    // Decided to leave this code commented-out rather than deleting it
+    // partially to document this shortcoming explicitly but also in case
+    // we want to support the full concept in the future.
+    // https://en.cppreference.com/w/cpp/named_req/InputIterator
+    //
+    // <iterator-concept>
+    //    typedef std::forward_iterator_tag iterator_category;
+    //    typedef PhaseNumber value_type;
+    //    typedef PhaseNumber reference;
+    //    typedef PhaseNumber pointer;
+    //    typedef std::ptrdiff_t difference_type;
+    // </iterator-concept>
 
 };  // class PhaseLoopIterator
 
@@ -390,14 +381,6 @@ class PhaseLoop {
     using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
 
 public:
-    V1::PhaseLoopIterator<T> begin() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
-    }
-
-    V1::PhaseLoopIterator<T> end() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
-    }
-
     // TODO: should this be private?
     PhaseLoop(Orchestrator& orchestrator, PhaseMap phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
@@ -407,8 +390,17 @@ public:
         }
     }
 
-    PhaseLoop(genny::ActorContext& context)
+    explicit PhaseLoop(genny::ActorContext& context)
         : PhaseLoop(context.orchestrator(), std::move(constructPhaseMap(context))) {}
+
+
+    V1::PhaseLoopIterator<T> begin() {
+        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
+    }
+
+    V1::PhaseLoopIterator<T> end() {
+        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
+    }
 
 private:
     static PhaseMap constructPhaseMap(ActorContext& actorContext) {
