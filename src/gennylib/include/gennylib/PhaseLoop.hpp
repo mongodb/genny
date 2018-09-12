@@ -57,6 +57,7 @@ public:
     }
 
     std::chrono::steady_clock::time_point startedAt() const {
+        // avoid doing now() if no minDuration configured
         return _minDuration ? std::chrono::steady_clock::now()
                             : std::chrono::time_point<std::chrono::steady_clock>::min();
     }
@@ -195,13 +196,13 @@ public:
         return _iterCheck.doesBlock();
     }
 
-    // TODO: don't expose unique_ptr() here; have our own strict return type
-    auto operator-> () const {
+    // could use `auto` for return-type of operator-> and operator*, but
+    // IDE auto-completion likes it more if it's spelled out.
+    typename std::add_pointer_t<std::remove_reference_t<T>> operator-> () const noexcept {
         return _value.operator->();
     }
 
-    // TODO: don't expose unique_ptr() here; have our own strict return type
-    auto operator*() const {
+    typename std::add_lvalue_reference_t<T> operator*() const {
         return _value.operator*();
     }
 
