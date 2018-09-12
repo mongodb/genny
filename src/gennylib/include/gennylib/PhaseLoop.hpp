@@ -98,15 +98,17 @@ public:
 
     ActorPhaseIterator(Orchestrator& orchestrator,
                        const IterationCompletionCheck& iterCheck,
-                       bool isEndIterator)
+                       bool isEndIterator,
+                       PhaseNumber inPhase)
         : _orchestrator{orchestrator},
           _iterCheck{iterCheck},
           _startedAt{_iterCheck.startedAt()},
           _isEndIterator{isEndIterator},
-          _currentIteration{0} {}
+          _currentIteration{0},
+          _inPhase{inPhase} {}
 
-    ActorPhaseIterator(Orchestrator& orchestrator, bool isEnd)
-        : ActorPhaseIterator{orchestrator, IterationCompletionCheck{}, isEnd} {}
+    ActorPhaseIterator(Orchestrator& orchestrator, bool isEnd, PhaseNumber inPhase)
+        : ActorPhaseIterator{orchestrator, IterationCompletionCheck{}, isEnd, inPhase} {}
 
     Value operator*() const {
         return Value();
@@ -156,6 +158,7 @@ private:
     const std::chrono::steady_clock::time_point _startedAt;
     const bool _isEndIterator;
     unsigned int _currentIteration;
+    const PhaseNumber _inPhase;
 
 public:
     // <iterator-concept>
@@ -173,23 +176,26 @@ class ActorPhase {
 
 public:
     template <class... Args>
-    ActorPhase(Orchestrator& orchestrator, IterationCompletionCheck iterCheck, Args... args)
+    ActorPhase(Orchestrator& orchestrator, IterationCompletionCheck iterCheck, PhaseNumber inPhase, Args... args)
         : _orchestrator{orchestrator},
           _iterCheck{std::move(iterCheck)},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
+          _value{std::make_unique<T>(std::forward<Args>(args)...)},
+          _inPhase{inPhase} {}
 
     template <class... Args>
-    ActorPhase(Orchestrator& orchestrator, PhaseContext& phaseContext, Args&&... args)
+    ActorPhase(Orchestrator& orchestrator, PhaseContext& phaseContext, PhaseNumber inPhase, Args&&... args)
         : _orchestrator{orchestrator},
           _iterCheck{phaseContext},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
+          _value{std::make_unique<T>(std::forward<Args>(args)...)},
+          _inPhase{inPhase} {}
 
     ActorPhaseIterator begin() {
-        return ActorPhaseIterator{_orchestrator, _iterCheck, false};
+        return ActorPhaseIterator{_orchestrator, _iterCheck, false, _inPhase};
     }
 
     ActorPhaseIterator end() {
-        return ActorPhaseIterator{_orchestrator, true};
+        // TODO: change order; _inPhase should be right below isEnd (probably)
+        return ActorPhaseIterator{_orchestrator, true, _inPhase};
     };
 
     bool doesBlock() const {
@@ -210,6 +216,7 @@ private:
     Orchestrator& _orchestrator;
     const IterationCompletionCheck _iterCheck;
     std::unique_ptr<T> _value;
+    const PhaseNumber _inPhase;
 
 };  // class ActorPhase
 
@@ -389,7 +396,7 @@ private:
 
         // clang-format off
         static_assert(std::is_constructible_v<T, PhaseContext&>);
-        static_assert(std::is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseContext&>);
+        static_assert(std::is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&>);
         // clang-format on
 
         V1::PhaseMap<T> out;
@@ -400,6 +407,7 @@ private:
                 // args to ActorPhase<T> ctor:
                 actorContext.orchestrator(),
                 *phaseContext,
+                num,
                 // last arg gets forwarded to T ctor (via forward inside of make_unique)
                 *phaseContext);
         }
