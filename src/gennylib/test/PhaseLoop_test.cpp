@@ -6,6 +6,7 @@
 
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
+#include <log.hh>
 
 using namespace genny;
 using namespace genny::V1;
@@ -188,44 +189,30 @@ TEST_CASE("Iterator concept correctness") {
 
 TEST_CASE("Actual Actor Example", "[real]") {
 
-    struct IncrementsTwoRefs : public Actor {
+    struct IncrementsMapValues : public Actor {
         struct IncrPhaseConfig {
-            // In reality this would do something like
-            // construct a bson doc or a valuegenerator
-            // for use in the below loop.
-            IncrPhaseConfig(PhaseContext& ctx) {
-                // TODO: store the y value from the ctx and use it!
-            }
-            int y = 7;
+            int _key;
+            IncrPhaseConfig(PhaseContext& ctx) : _key{ctx.get<int>("Key")} {}
         };
 
         PhaseLoop<IncrPhaseConfig> _loop;
-        int& _phaseZeroInvocations;
-        int& _phaseOneInvocations;
+        std::unordered_map<int, int>& _counters;
 
-        IncrementsTwoRefs(ActorContext& actorContext, int& phaseZero, int& phaseOne)
-            : _loop{actorContext},
-              _phaseZeroInvocations{phaseZero},
-              _phaseOneInvocations{phaseOne} {}
+        IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
+            : _loop{actorContext}, _counters{counters} {}
 
         void run() override {
             for (auto&& [num, cfg] : _loop) {
-                REQUIRE(cfg->y == 7); // just for sanity on types etc
-                for (auto &&_ : cfg)
-                    if (num == 0)
-                        ++_phaseZeroInvocations;
-                    else if (num == 1)
-                        ++_phaseOneInvocations;
-                    else
-                        throw InvalidConfigurationException("wat?");
+                for (auto&& _ : cfg) {
+                    ++this->_counters[cfg->_key];
+                }
             }
         }
 
-        static auto producer(int& phaseZero, int& phaseOne) {
+        static auto producer(std::unordered_map<int, int>& counters) {
             return [&](ActorContext& actorContext) {
-                auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-                out.push_back(
-                    std::make_unique<IncrementsTwoRefs>(actorContext, phaseZero, phaseOne));
+                ActorVector out;
+                out.push_back(std::make_unique<IncrementsMapValues>(actorContext, counters));
                 return out;
             };
         }
@@ -242,24 +229,20 @@ TEST_CASE("Actual Actor Example", "[real]") {
         MongoUri: mongodb://localhost:27017
         Actors:
         - Phases:
-          - Phase: 0
-            Repeat: 100
-          - Phase: 1
-            Repeat: 3
+          - Repeat: 100
+            Key: 71
+          - Repeat: 3
+            Key: 93
     )");
 
-    int phaseZeroCalls = 0;
-    int phaseOneCalls = 0;
+    std::unordered_map<int, int> counters;
 
-    std::vector<ActorProducer> producers = {
-        IncrementsTwoRefs::producer(phaseZeroCalls, phaseOneCalls)};
+    std::vector<ActorProducer> producers = {IncrementsMapValues::producer(counters)};
     WorkloadContext wl{doc, reg, o, producers};
-
-    // test of the test
     REQUIRE(wl.actors().size() == 1);
 
     wl.actors()[0]->run();
-
-    REQUIRE(phaseZeroCalls == 100);
-    REQUIRE(phaseOneCalls == 3);
+    REQUIRE(counters ==
+            std::unordered_map<int, int>{{71, 100},  // keys came from yaml config
+                                         {93, 3}});
 }
