@@ -351,6 +351,42 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
 }
 
+TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
+    Orchestrator o;
+    o.addRequiredTokens(2);
+
+    // not blocking
+    auto a1Config {makePhaseConfig(o, {{0, 0, nullopt, nullopt}})};
+
+    // runs for 150ms
+    auto a2Config {makePhaseConfig(o, {{0, 0, nullopt, 150_ms}})};
+
+    auto start = system_clock::now();
+
+    chrono::duration d1 = start - start;
+    chrono::duration d2 = start - start;
+
+    auto t1 = std::thread([&](){
+        for(auto&& [p, h] : PhaseLoop<int>{o, std::move(a1Config)}) {
+            for(auto _ : h) { } // nop
+        }
+        d1 = system_clock::now() - start;
+    });
+
+    auto t2 = std::thread([&](){
+        for(auto&& [p, h] : PhaseLoop<int>{o, std::move(a1Config)}) {
+            for(auto _ : h) { } // nop
+        }
+        d2 = system_clock::now() - start;
+    });
+
+    t1.join();
+    t2.join();
+
+    REQUIRE( d1 >= d2 );
+    REQUIRE( d2 >= chrono::milliseconds{150} );
+}
+
 TEST_CASE("Multi-threaded Range-based for loops") {
     Orchestrator o;
     o.addRequiredTokens(2);
