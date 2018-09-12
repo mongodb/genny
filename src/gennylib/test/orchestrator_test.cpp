@@ -364,13 +364,15 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     std::atomic_int failures = 0;
 
     auto t1 = std::thread([&]() {
-        //        std::unordered_set<PhaseNumber> blocking{1};
-        std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
+        auto phaseConfig{makePhaseConfig(o,
+                                         {// non-block then block
+                                          {0, 7, nullopt, nullopt},
+                                          {1, 9, 1_i, nullopt}})};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(blocking)}) {
+        for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
             if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
@@ -399,13 +401,15 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
     auto t2 = std::thread([&]() {
-        //        std::unordered_set<PhaseNumber> blocking{0};
-        std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
+        auto phaseConfig{makePhaseConfig(o,
+                                         {// non-block then block
+                                          {0, 7, 1_i, nullopt},
+                                          {1, 9, nullopt, nullopt}})};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(blocking)}) {
+        for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
             if (!(phase == 1 || phase == 0)) {
                 ++failures;
             }
