@@ -16,8 +16,6 @@
 
 /**
  * General TODO:
- * - see what can be pushed into a cpp
- * - see what ctors can be hidden or private
  * - doc everything (like it's hot).
  * - Doc interactions with this in context.hpp
  * - maybe track Iters and StartedAt in IterationCompletionCheck?
@@ -198,7 +196,7 @@ public:
 
     // could use `auto` for return-type of operator-> and operator*, but
     // IDE auto-completion likes it more if it's spelled out.
-    typename std::add_pointer_t<std::remove_reference_t<T>> operator-> () const noexcept {
+    typename std::add_pointer_t<std::remove_reference_t<T>> operator->() const noexcept {
         return _value.operator->();
     }
 
@@ -367,7 +365,10 @@ template <class T>
 class PhaseLoop {
 
 public:
-    // TODO: should this be private?
+    explicit PhaseLoop(genny::ActorContext& context)
+        : PhaseLoop(context.orchestrator(), std::move(constructPhaseMap(context))) {}
+
+    // Only visible for testing
     PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
@@ -375,10 +376,6 @@ public:
             orchestrator.phasesAtLeastTo(phaseNum);
         }
     }
-
-    explicit PhaseLoop(genny::ActorContext& context)
-        : PhaseLoop(context.orchestrator(), std::move(constructPhaseMap(context))) {}
-
 
     V1::PhaseLoopIterator<T> begin() {
         return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
@@ -390,11 +387,11 @@ public:
 
 private:
     static V1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext) {
-        // TODO: helpful message here
+
+        // clang-format off
         static_assert(std::is_constructible_v<T, PhaseContext&>);
-        static_assert(
-            std::
-                is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseContext&>);
+        static_assert(std::is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseContext&>);
+        // clang-format on
 
         V1::PhaseMap<T> out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
