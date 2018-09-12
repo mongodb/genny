@@ -212,7 +212,7 @@ std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>> out;
     for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
         out.try_emplace(
-            phaseNum, orchestrator, V1::IterationCompletionCheck{iters, dur}, make_unique<int>(phaseVal));
+            phaseNum, orchestrator, V1::IterationCompletionCheck{iters, dur}, phaseVal);
     }
     return out;
 };

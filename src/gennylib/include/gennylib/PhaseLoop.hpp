@@ -185,16 +185,21 @@ public:
     ActorPhase(const ActorPhase&) = delete;
     void operator=(const ActorPhase&) = delete;
 
-    ActorPhase(Orchestrator &orchestrator, IterationCompletionCheck iterCheck, std::unique_ptr<T> &&value)
-        : _orchestrator(orchestrator),
-          _value(std::move(value)),
-          _iterCheck(std::move(iterCheck)) {}
+    template <class... Args>
+    // TODO: construct & declare in same order
+    // TODO: doc it
+    ActorPhase(Orchestrator& orchestrator, IterationCompletionCheck iterCheck, Args... args)
+        : _orchestrator{orchestrator},
+          _iterCheck{std::move(iterCheck)},
+          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
 
-    // TODO: forward args to make_unique
+    template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
                const std::unique_ptr<PhaseContext>& phaseContext,
-               std::unique_ptr<T>&& value)
-        : ActorPhase(orchestrator, IterationCompletionCheck{phaseContext}, std::move(value)) {}
+               Args&&... args)
+        : _orchestrator{orchestrator},
+          _iterCheck{phaseContext},
+          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
 
     ActorPhaseIterator begin() {
         return ActorPhaseIterator{_orchestrator, false, _iterCheck};
@@ -314,7 +319,9 @@ private:
     }
 
     Orchestrator& _orchestrator;
-    std::unordered_map<PhaseNumber, ActorPhase<T>>& _phaseMap;  // cannot be const
+    // TODO: use PhaseMap typedef
+    std::unordered_map<PhaseNumber, ActorPhase<T>>&
+        _phaseMap;  // cannot be const; owned by PhaseLoop
 
     const bool _isEnd;
     PhaseNumber _currentPhase;
@@ -400,7 +407,7 @@ public:
     }
 
     PhaseLoop(genny::ActorContext& context)
-        : PhaseLoop(context.orchestrator(), constructPhaseMap(context)) {}
+        : PhaseLoop(context.orchestrator(), std::move(constructPhaseMap(context))) {}
 
 private:
     static PhaseMap constructPhaseMap(ActorContext& actorContext) {
@@ -411,7 +418,7 @@ private:
                 num,
                 actorContext.orchestrator(),
                 phaseContext,
-                std::make_unique<T>(phaseContext));
+                phaseContext);
         }
         return out;
     }
