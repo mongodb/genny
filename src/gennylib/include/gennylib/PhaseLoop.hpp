@@ -37,22 +37,23 @@ class IterationCompletionCheck {
 public:
     explicit IterationCompletionCheck() : IterationCompletionCheck(std::nullopt, std::nullopt) {}
 
-    IterationCompletionCheck(std::optional<int> _minIterations,
-                             std::optional<std::chrono::milliseconds> _minDuration)
-        : _minDuration(_minDuration), _minIterations(_minIterations) {
+    IterationCompletionCheck(std::optional<int> minIterations,
+                             std::optional<std::chrono::milliseconds> minDuration)
+        : _minDuration{minDuration}, _minIterations{minIterations} {
 
-        if (_minIterations && *_minIterations < 0) {
+        if (minIterations && *minIterations < 0) {
             std::stringstream str;
-            str << "Need non-negative number of iterations. Gave " << *_minIterations;
+            str << "Need non-negative number of iterations. Gave " << *minIterations;
             throw InvalidConfigurationException(str.str());
         }
-        if (_minDuration && _minDuration->count() < 0) {
+        if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
-            str << "Need non-negative duration. Gave " << _minDuration->count() << " milliseconds";
+            str << "Need non-negative duration. Gave " << minDuration->count() << " milliseconds";
             throw InvalidConfigurationException(str.str());
         }
     }
 
+    // TODO: can we use a ref here?
     explicit IterationCompletionCheck(const std::unique_ptr<PhaseContext>& phaseContext)
         : IterationCompletionCheck(
               phaseContext->get<int, false>("Repeat"),
@@ -77,6 +78,7 @@ public:
     }
 
 private:
+    // TODO: inline these two 'done' fns
     bool doneIterations(unsigned int currentIteration) const {
         return !_minIterations || currentIteration >= *_minIterations;
     }
@@ -105,16 +107,16 @@ public:
     struct Value {};
 
     explicit ActorPhaseIterator(Orchestrator& orchestrator,
-                                bool isEnd,
-                                const IterationCompletionCheck& iterCheck)
-        : _isEndIterator{isEnd},
-          _currentIteration{0},
-          _orchestrator{orchestrator},
+                                const IterationCompletionCheck& iterCheck,
+                                bool isEndIterator)
+        : _orchestrator{orchestrator},
           _iterCheck{iterCheck},
-          _startedAt{_iterCheck.startedAt()} {}
+          _startedAt{_iterCheck.startedAt()},
+          _isEndIterator{isEndIterator},
+          _currentIteration{0} {}
 
     explicit ActorPhaseIterator(Orchestrator& orchestrator, bool isEnd)
-        : ActorPhaseIterator{orchestrator, isEnd, IterationCompletionCheck{}} {}
+        : ActorPhaseIterator{orchestrator, IterationCompletionCheck{}, isEnd} {}
 
     Value operator*() const {
         return Value();
@@ -159,11 +161,10 @@ public:
     }
 
 private:
-    const bool _isEndIterator;
-    const IterationCompletionCheck& _iterCheck;
-
-    const std::chrono::steady_clock::time_point _startedAt;
     Orchestrator& _orchestrator;
+    const IterationCompletionCheck& _iterCheck;
+    const std::chrono::steady_clock::time_point _startedAt;
+    const bool _isEndIterator;
     unsigned int _currentIteration;
 
 public:
@@ -175,6 +176,7 @@ public:
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
 };
+
 
 template <class T>
 class ActorPhase {
@@ -202,7 +204,7 @@ public:
           _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
 
     ActorPhaseIterator begin() {
-        return ActorPhaseIterator{_orchestrator, false, _iterCheck};
+        return ActorPhaseIterator{_orchestrator, _iterCheck, false};
     }
 
     ActorPhaseIterator end() {
@@ -225,9 +227,8 @@ public:
 
 private:
     Orchestrator& _orchestrator;
-    std::unique_ptr<T> _value;
-
     const IterationCompletionCheck _iterCheck;
+    std::unique_ptr<T> _value;
 
 };  // class ActorPhase
 
