@@ -6,6 +6,7 @@
 #include <iterator>
 #include <optional>
 #include <sstream>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
@@ -17,9 +18,6 @@
  * General TODO:
  * - see what can be pushed into a cpp
  * - see what ctors can be hidden or private
- * - fix remaining orchestrator_test tests
- * - static_assert on the T value that it has to have the right ctor?
- * - try to make the T ctor only take a PhaseContext ref
  * - doc everything (like it's hot).
  * - Doc interactions with this in context.hpp
  * - maybe track Iters and StartedAt in IterationCompletionCheck?
@@ -403,6 +401,9 @@ public:
 
 private:
     static PhaseMap constructPhaseMap(ActorContext& actorContext) {
+        // TODO: helpful message here
+        static_assert(std::is_constructible_v<T, PhaseContext&>);
+
         PhaseMap out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
             out.try_emplace(
