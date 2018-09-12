@@ -121,9 +121,9 @@ public:
 
     // clang-format off
     bool operator==(const ActorPhaseIterator& rhs) const {
-        // TODO: check orchestrator if non-blocking
         return
-                (rhs._isEndIterator && _iterCheck.isDone(_currentIteration, _startedAt))
+                   (rhs._isEndIterator && !_iterCheck.doesBlock() && _orchestrator.currentPhase() != _inPhase)
+                || (rhs._isEndIterator &&  _iterCheck.doesBlock() && _iterCheck.isDone(_currentIteration, _startedAt))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
