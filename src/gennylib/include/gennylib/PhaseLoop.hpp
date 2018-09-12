@@ -392,6 +392,7 @@ public:
     }
 
     // TODO: should this be private?
+    // TODO: this can just take PhaseMap by value with note that it should probably be moved
     PhaseLoop(Orchestrator& orchestrator, PhaseMap&& phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator

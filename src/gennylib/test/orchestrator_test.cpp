@@ -2,21 +2,36 @@
 
 #include <chrono>
 #include <iostream>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
-#include <thread>
+#include <utility>
 
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/PhaseLoop.hpp>
-#include <gennylib/Orchestrator.hpp>
 #include <gennylib/Actor.hpp>
+#include <gennylib/Orchestrator.hpp>
+#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
 using namespace genny;
 using namespace std::chrono;
+using namespace std;
 
 namespace {
+
+//
+// Cute convenience operators -
+//  100_i   gives optional<int>     holding 100
+//  100_ms  gives optional<millis>  holding 100
+//
+optional<int> operator"" _i(unsigned long long int v) {
+    return make_optional(v);
+}
+optional<chrono::milliseconds> operator"" _ms(unsigned long long int v) {
+    return make_optional(chrono::milliseconds{v});
+}
+
 
 std::thread start(Orchestrator& o,
                   PhaseNumber phase,
@@ -189,20 +204,31 @@ TEST_CASE("Orchestrator") {
     }
 }
 
+// more easily construct V1::ActorPhase instances
+using PhaseConfig =
+    std::tuple<PhaseNumber, int, std::optional<int>, std::optional<std::chrono::milliseconds>>;
+std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
+    Orchestrator& orchestrator, const std::vector<PhaseConfig>& phaseConfigs) {
+    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> out;
+    for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
+        out.try_emplace(
+            phaseNum, orchestrator, make_unique<int>(phaseVal), V1::ItersAndDuration{iters, dur});
+    }
+    return out;
+};
+
 TEST_CASE("Two non-blocking Phases") {
     Orchestrator o;
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking{};
-    blocking.try_emplace(0, o, std::make_unique<int>(7), V1::ItersAndDuration{std::make_optional(2), std::nullopt});
-    blocking.try_emplace(1, o, std::make_unique<int>(9), V1::ItersAndDuration{std::make_optional(2), std::nullopt});
-
     std::unordered_set<PhaseNumber> seenPhases{};
     std::unordered_set<int> seenActorPhaseValues;
 
+    auto phaseConfig{makePhaseConfig(o, {{0, 7, 2_i, nullopt}, {1, 9, 2_i, nullopt}})};
+
     auto count = 0;
-    for (auto&& [p, h] : PhaseLoop<int>{o, std::move(blocking)}) {
+    for (auto&& [p, h] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seenPhases.insert(p);
         for (auto&& _ : h) {
             seenActorPhaseValues.insert(*h);
@@ -220,11 +246,9 @@ TEST_CASE("Single Blocking Phase") {
     o.addRequiredTokens(1);
 
     std::unordered_set<PhaseNumber> seen{};
-    //    std::unordered_set<PhaseNumber> blocking{0};
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
 
-
-    for (auto&& [p, h] : PhaseLoop<int>{o, std::move(blocking)}) {
+    auto phaseConfig{makePhaseConfig(o, {{0, 7, 1_i, nullopt}})};
+    for (auto&& [p, h] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(p);
     }
 
@@ -236,12 +260,15 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    //    std::unordered_set<PhaseNumber> blocking{0, 1, 2};
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// all blocking on # iterations
+                                      {0, 7, 1_i, nullopt},
+                                      {1, 9, 2_i, nullopt},
+                                      {2, 11, 3_i, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(blocking)}) {
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
     }
 
@@ -253,11 +280,15 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;  // none
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// none blocking
+                                      {0, 7, nullopt, nullopt},
+                                      {1, 9, nullopt, nullopt},
+                                      {2, 11, nullopt, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(blocking)}) {
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
     }
 
@@ -269,12 +300,13 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    //    std::unordered_set<PhaseNumber> blocking{1};
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
-
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// non-block then block
+                                      {0, 7, nullopt, nullopt},
+                                      {1, 9, 1_i, nullopt}})};
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(blocking)}) {
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
     }
 
@@ -286,12 +318,14 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    //    std::unordered_set<PhaseNumber> blocking{0};
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// block then non-block
+                                      {0, 7, 1_i, nullopt},
+                                      {1, 9, nullopt, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(blocking)}) {
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
     }
 
@@ -303,7 +337,10 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    //    std::unordered_set<PhaseNumber> blocking{0, 1};
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// block then block
+                                      {0, 7, 1_i, nullopt},
+                                      {1, 9, 1_i, nullopt}})};
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>> blocking;
 
     std::unordered_set<PhaseNumber> seen;
