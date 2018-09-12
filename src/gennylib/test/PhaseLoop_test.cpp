@@ -190,7 +190,13 @@ TEST_CASE("Actual Actor Example", "[real]") {
 
     struct IncrementsTwoRefs : public Actor {
         struct IncrPhaseConfig {
-            IncrPhaseConfig(PhaseContext& ctx) {}
+            // In reality this would do something like
+            // construct a bson doc or a valuegenerator
+            // for use in the below loop.
+            IncrPhaseConfig(PhaseContext& ctx) {
+                // TODO: store the y value from the ctx and use it!
+            }
+            int y = 7;
         };
 
         PhaseLoop<IncrPhaseConfig> _loop;
@@ -203,14 +209,16 @@ TEST_CASE("Actual Actor Example", "[real]") {
               _phaseOneInvocations{phaseOne} {}
 
         void run() override {
-            for (auto&& [num, cfg] : _loop)
-                for (auto&& _ : cfg)
+            for (auto&& [num, cfg] : _loop) {
+                REQUIRE(cfg->y == 7); // just for sanity on types etc
+                for (auto &&_ : cfg)
                     if (num == 0)
                         ++_phaseZeroInvocations;
                     else if (num == 1)
                         ++_phaseOneInvocations;
                     else
                         throw InvalidConfigurationException("wat?");
+            }
         }
 
         static auto producer(int& phaseZero, int& phaseOne) {
