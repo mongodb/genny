@@ -28,21 +28,21 @@ TEST_CASE("Correctness for N iterations") {
     Orchestrator o;
 
     SECTION("Loops 0 Times") {
-        V1::ActorPhase<int> loop{o, make_unique<int>(1), {0_i, nullopt}};
+        V1::ActorPhase<int> loop{o, {0_i, nullopt}, make_unique<int>(1)};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 0);
     }
     SECTION("Loops 1 Time") {
-        V1::ActorPhase<int> loop{o, make_unique<int>(1), {1_i, nullopt}};
+        V1::ActorPhase<int> loop{o, {1_i, nullopt}, make_unique<int>(1)};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 1);
     }
     SECTION("Loops 113 Times") {
-        V1::ActorPhase<int> loop{o, make_unique<int>(1), {113_i, nullopt}};
+        V1::ActorPhase<int> loop{o, {113_i, nullopt}, make_unique<int>(1)};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -51,7 +51,7 @@ TEST_CASE("Correctness for N iterations") {
 
     SECTION("Configured for -1 Times barfs") {
         REQUIRE_THROWS_WITH(
-            (V1::ActorPhase<int>{o, make_unique<int>(1), {make_optional(-1), nullopt}}),
+            (V1::ActorPhase<int>{o, {make_optional(-1), nullopt}, make_unique<int>(1)}),
             Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
@@ -59,7 +59,7 @@ TEST_CASE("Correctness for N iterations") {
 TEST_CASE("Correctness for N milliseconds") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds so zero times") {
-        V1::ActorPhase<int> loop{o, make_unique<int>(1), {nullopt, 0_ms}};
+        V1::ActorPhase<int> loop{o, {nullopt, 0_ms}, make_unique<int>(1)};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -68,7 +68,7 @@ TEST_CASE("Correctness for N milliseconds") {
     SECTION("Looping for 10 milliseconds takes between 10 and 11 milliseconds") {
         // we nop in the loop so ideally it should take exactly 10ms, but don't want spurious
         // failures
-        V1::ActorPhase<int> loop{o, make_unique<int>(1), {nullopt, 10_ms}};
+        V1::ActorPhase<int> loop{o, {nullopt, 10_ms}, make_unique<int>(1)};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -85,14 +85,14 @@ TEST_CASE("Correctness for N milliseconds") {
 TEST_CASE("Combinations of duration and iterations") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds but 100 times") {
-        V1::ActorPhase<int> loop{o, make_unique<int>(1), {100_i, 0_ms}};
+        V1::ActorPhase<int> loop{o, {100_i, 0_ms}, make_unique<int>(1)};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 100);
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
-        V1::ActorPhase<int> loop{o, make_unique<int>(1), {100_i, 5_ms}};
+        V1::ActorPhase<int> loop{o, {100_i, 5_ms}, make_unique<int>(1)};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -114,20 +114,20 @@ TEST_CASE("Combinations of duration and iterations") {
     SECTION("Configured for -1 milliseconds barfs") {
         REQUIRE_THROWS_WITH(
             (V1::ActorPhase<int>{
-                o, make_unique<int>(1), {nullopt, make_optional(chrono::milliseconds{-1})}}),
+                o, {nullopt, make_optional(chrono::milliseconds{-1})}, make_unique<int>(1)}),
             Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
 
 TEST_CASE("Can do without either iterations or duration") {
     Orchestrator o;
-    V1::ActorPhase<int>{o, make_unique<int>(1), {nullopt, nullopt}};
+    V1::ActorPhase<int>{o, {nullopt, nullopt}, make_unique<int>(1)};
     // TODO: assert behavior with Orchestrator here
 }
 
 TEST_CASE("Iterator concept correctness") {
     Orchestrator o;
-    V1::ActorPhase<int> loop{o, make_unique<int>(1), {1_i, nullopt}};
+    V1::ActorPhase<int> loop{o, {1_i, nullopt}, make_unique<int>(1)};
 
     // can deref
     SECTION("Deref and advance works") {

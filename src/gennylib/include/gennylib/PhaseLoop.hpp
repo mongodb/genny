@@ -185,10 +185,7 @@ public:
     ActorPhase(const ActorPhase&) = delete;
     void operator=(const ActorPhase&) = delete;
 
-    ActorPhase(Orchestrator& orchestrator,
-                // TODO: forward args to make_unique here
-               std::unique_ptr<T>&& value,
-               IterationCompletionCheck iterCheck)
+    ActorPhase(Orchestrator &orchestrator, IterationCompletionCheck iterCheck, std::unique_ptr<T> &&value)
         : _orchestrator(orchestrator),
           _value(std::move(value)),
           _iterCheck(std::move(iterCheck)) {}
@@ -197,7 +194,7 @@ public:
     ActorPhase(Orchestrator& orchestrator,
                const std::unique_ptr<PhaseContext>& phaseContext,
                std::unique_ptr<T>&& value)
-        : ActorPhase(orchestrator, std::move(value), IterationCompletionCheck{phaseContext}) {}
+        : ActorPhase(orchestrator, IterationCompletionCheck{phaseContext}, std::move(value)) {}
 
     ActorPhaseIterator begin() {
         return ActorPhaseIterator{_orchestrator, false, _iterCheck};
