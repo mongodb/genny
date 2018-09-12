@@ -53,11 +53,10 @@ public:
         }
     }
 
-    // TODO: can we use a ref here?
-    explicit IterationCompletionCheck(const std::unique_ptr<PhaseContext>& phaseContext)
+    explicit IterationCompletionCheck(PhaseContext& phaseContext)
         : IterationCompletionCheck(
-              phaseContext->get<int, false>("Repeat"),
-              phaseContext->get<std::chrono::milliseconds, false>("Duration")) {}
+              phaseContext.get<int, false>("Repeat"),
+              phaseContext.get<std::chrono::milliseconds, false>("Duration")) {}
 
     std::chrono::steady_clock::time_point startedAt() const {
         return _minDuration ? std::chrono::steady_clock::now()
@@ -190,7 +189,7 @@ public:
 
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
-               const std::unique_ptr<PhaseContext>& phaseContext,
+               PhaseContext& phaseContext,
                Args&&... args)
         : _orchestrator{orchestrator},
           _iterCheck{phaseContext},
@@ -410,8 +409,8 @@ private:
                 // key, (args-to-value-ctor => args-to-ActorPhase<T> ctor)
                 num,
                 actorContext.orchestrator(),
-                phaseContext,
-                phaseContext);
+                *phaseContext,
+                *phaseContext);
         }
         return out;
     }

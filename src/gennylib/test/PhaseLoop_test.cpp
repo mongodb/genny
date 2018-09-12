@@ -191,7 +191,7 @@ struct IncrementsTwoRefs : public Actor {
 
     struct IncrPhaseConfig {
         int value;
-        IncrPhaseConfig(const std::unique_ptr<PhaseContext>& ctx)
+        IncrPhaseConfig(PhaseContext& ctx)
                 : value{++cnt} {}
     };
 
