@@ -50,9 +50,8 @@ TEST_CASE("Correctness for N iterations") {
     }
 
     SECTION("Configured for -1 Times barfs") {
-        REQUIRE_THROWS_WITH(
-            (V1::ActorPhase<int>{o, {make_optional(-1), nullopt}, 1}),
-            Catch::Contains("Need non-negative number of iterations. Gave -1"));
+        REQUIRE_THROWS_WITH((V1::ActorPhase<int>{o, {make_optional(-1), nullopt}, 1}),
+                            Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
 
@@ -113,8 +112,7 @@ TEST_CASE("Combinations of duration and iterations") {
 
     SECTION("Configured for -1 milliseconds barfs") {
         REQUIRE_THROWS_WITH(
-            (V1::ActorPhase<int>{
-                o, {nullopt, make_optional(chrono::milliseconds{-1})}, 0}),
+            (V1::ActorPhase<int>{o, {nullopt, make_optional(chrono::milliseconds{-1})}, 0}),
             Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
@@ -183,75 +181,72 @@ TEST_CASE("Iterator concept correctness") {
 }
 
 
-static int cnt = 0;
+TEST_CASE("Actual Actor Example", "[real]") {
 
-namespace genny {
+    struct IncrementsTwoRefs : public Actor {
+        struct IncrPhaseConfig {
+            IncrPhaseConfig(PhaseContext& ctx) {}
+        };
 
-struct IncrementsTwoRefs : public Actor {
+        PhaseLoop<IncrPhaseConfig> _loop;
+        int& _phaseZeroInvocations;
+        int& _phaseOneInvocations;
 
-    struct IncrPhaseConfig {
-        int value;
-        IncrPhaseConfig(PhaseContext& ctx)
-                : value{++cnt} {}
+        IncrementsTwoRefs(ActorContext& actorContext, int& phaseZero, int& phaseOne)
+            : _loop{actorContext},
+              _phaseZeroInvocations{phaseZero},
+              _phaseOneInvocations{phaseOne} {}
+
+        void run() override {
+            for (auto&& [num, cfg] : _loop)
+                for (auto&& _ : cfg)
+                    if (num == 0)
+                        ++_phaseZeroInvocations;
+                    else if (num == 1)
+                        ++_phaseOneInvocations;
+                    else
+                        throw InvalidConfigurationException("wat?");
+        }
+
+        static auto producer(int& phaseZero, int& phaseOne) {
+            return [&](ActorContext& actorContext) {
+                auto out = std::vector<std::unique_ptr<genny::Actor>>{};
+                out.push_back(
+                    std::make_unique<IncrementsTwoRefs>(actorContext, phaseZero, phaseOne));
+                return out;
+            };
+        }
     };
 
-    PhaseLoop<IncrPhaseConfig> _loop;
-    int&phaseZero;
-    int&phaseOne;
-
-    IncrementsTwoRefs(ActorContext& actorContext, int&phaseZero, int&phaseOne)
-            : _loop{actorContext},
-              phaseZero{phaseZero},
-              phaseOne{phaseOne} {}
-
-    void run() override {
-        for(auto&& [num, cfg] : _loop) {
-            int iter = 0;
-            for(auto&& _ : cfg) {
-                if (num == 0) { ++phaseZero; }
-                else if (num == 1 ) { ++phaseOne; }
-                else { throw InvalidConfigurationException("what?"); }
-            }
-        }
-    }
-
-    static auto producer(int& phaseZero, int& phaseOne) {
-        return [&](ActorContext& actorContext) {
-            auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-            out.push_back(std::make_unique<IncrementsTwoRefs>(actorContext, phaseZero, phaseOne));
-            return out;
-        };
-    }
-};
-
-}
-
-TEST_CASE("Actual Actor Example", "[real]") {
     Orchestrator o;
     o.addRequiredTokens(1);
-    o.phasesAtLeastTo(0);  // we don't set this; rely on actor to do so
+    o.phasesAtLeastTo(0);  // this will need to be 2, but we don't set it; rely on actor to do so
 
     metrics::Registry reg;
 
     YAML::Node doc = YAML::Load(R"(
-SchemaVersion: 2018-07-01
-MongoUri: mongodb://localhost:27017
-Actors:
-- Phases:
-  - Phase: 0
-    Repeat: 100
-  - Phase: 1
-    Repeat: 3
-)");
+        SchemaVersion: 2018-07-01
+        MongoUri: mongodb://localhost:27017
+        Actors:
+        - Phases:
+          - Phase: 0
+            Repeat: 100
+          - Phase: 1
+            Repeat: 3
+    )");
 
     int phaseZeroCalls = 0;
-    int phaseOneCalls =  0;
+    int phaseOneCalls = 0;
 
-    std::vector<ActorProducer> producers = {IncrementsTwoRefs::producer(phaseZeroCalls, phaseOneCalls)};
-    WorkloadContext wl {doc, reg, o, producers};
+    std::vector<ActorProducer> producers = {
+        IncrementsTwoRefs::producer(phaseZeroCalls, phaseOneCalls)};
+    WorkloadContext wl{doc, reg, o, producers};
+
+    // test of the test
+    REQUIRE(wl.actors().size() == 1);
 
     wl.actors()[0]->run();
 
     REQUIRE(phaseZeroCalls == 100);
-    REQUIRE(phaseOneCalls  == 3);
+    REQUIRE(phaseOneCalls == 3);
 }
