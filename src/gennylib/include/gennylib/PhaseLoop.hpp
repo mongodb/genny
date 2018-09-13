@@ -47,28 +47,27 @@ class IterationCompletionCheck final {
 public:
     explicit IterationCompletionCheck() : IterationCompletionCheck(std::nullopt, std::nullopt) {}
 
-    IterationCompletionCheck(std::optional<int> minIterations,
-                             std::optional<std::chrono::milliseconds> minDuration)
+    IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
+                             std::optional<int> minIterations)
         : _minDuration{minDuration},
           _minIterations{minIterations},
           _doesBlock{_minIterations || _minDuration} {
 
-        if (minIterations && *minIterations < 0) {
-            std::stringstream str;
-            str << "Need non-negative number of iterations. Gave " << *minIterations;
-            throw InvalidConfigurationException(str.str());
-        }
         if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
             str << "Need non-negative duration. Gave " << minDuration->count() << " milliseconds";
             throw InvalidConfigurationException(str.str());
         }
+        if (minIterations && *minIterations < 0) {
+            std::stringstream str;
+            str << "Need non-negative number of iterations. Gave " << *minIterations;
+            throw InvalidConfigurationException(str.str());
+        }
     }
 
     explicit IterationCompletionCheck(PhaseContext& phaseContext)
-        : IterationCompletionCheck(phaseContext.get<int, false>("Repeat"),
-                                   phaseContext.get<std::chrono::milliseconds, false>("Duration")) {
-    }
+        : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
+                                   phaseContext.get<int, false>("Repeat")) {}
 
     std::chrono::steady_clock::time_point startedAt() const {
         // avoid doing now() if no minDuration configured
@@ -76,8 +75,8 @@ public:
                             : std::chrono::time_point<std::chrono::steady_clock>::min();
     }
 
-    bool isDone(unsigned int currentIteration,
-                std::chrono::steady_clock::time_point startedAt) const {
+    bool isDone(std::chrono::steady_clock::time_point startedAt,
+                unsigned int currentIteration) const {
         return (!_minIterations || currentIteration >= *_minIterations) &&
             (!_minDuration ||
              // check is last to avoid doing now() call unnecessarily
@@ -100,7 +99,7 @@ private:
 
     const std::optional<std::chrono::milliseconds> _minDuration;
     const std::optional<int> _minIterations;
-    const bool _doesBlock; // Computed/cached value. Computed at ctor time.
+    const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
 };
 
 /**
@@ -117,17 +116,17 @@ public:
 
     ActorPhaseIterator(Orchestrator& orchestrator,
                        const IterationCompletionCheck& iterCheck,
-                       bool isEndIterator,
-                       PhaseNumber inPhase)
+                       PhaseNumber inPhase,
+                       bool isEndIterator)
         : _orchestrator{orchestrator},
           _iterCheck{iterCheck},
           _startedAt{_iterCheck.startedAt()},
+          _inPhase{inPhase},
           _isEndIterator{isEndIterator},
-          _currentIteration{0},
-          _inPhase{inPhase} {}
+          _currentIteration{0} {}
 
-    ActorPhaseIterator(Orchestrator& orchestrator, bool isEnd, PhaseNumber inPhase)
-        : ActorPhaseIterator{orchestrator, IterationCompletionCheck{}, isEnd, inPhase} {}
+    ActorPhaseIterator(Orchestrator& orchestrator, PhaseNumber inPhase, bool isEnd)
+        : ActorPhaseIterator{orchestrator, IterationCompletionCheck{}, inPhase, isEnd} {}
 
     Value operator*() const {
         return Value();
@@ -145,7 +144,7 @@ public:
                 (rhs._isEndIterator &&
                    // if we block, then check to see if we're done in current phase
                    // else check to see if current phase has expired
-                   (_iterCheck.doesBlock() ? _iterCheck.isDone(_currentIteration, _startedAt)
+                   (_iterCheck.doesBlock() ? _iterCheck.isDone(_startedAt, _currentIteration)
                                            : _orchestrator.currentPhase() != _inPhase))
 
                 // Below checks are mostly for pure correctness;
@@ -181,9 +180,9 @@ private:
     Orchestrator& _orchestrator;
     const IterationCompletionCheck& _iterCheck;
     const std::chrono::steady_clock::time_point _startedAt;
+    const PhaseNumber _inPhase;
     const bool _isEndIterator;
     unsigned int _currentIteration;
-    const PhaseNumber _inPhase;
 
 public:
     // <iterator-concept>
@@ -207,8 +206,9 @@ public:
                Args... args)
         : _orchestrator{orchestrator},
           _iterCheck{std::move(iterCheck)},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)},
-          _inPhase{inPhase} {}
+          _inPhase{inPhase},
+          _value{std::make_unique<T>(std::forward<Args>(args)...)}
+        {}
 
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
@@ -217,16 +217,16 @@ public:
                Args&&... args)
         : _orchestrator{orchestrator},
           _iterCheck{phaseContext},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)},
-          _inPhase{inPhase} {}
+          _inPhase{inPhase},
+          _value{std::make_unique<T>(std::forward<Args>(args)...)}
+          {}
 
     ActorPhaseIterator begin() {
-        return ActorPhaseIterator{_orchestrator, _iterCheck, false, _inPhase};
+        return ActorPhaseIterator{_orchestrator, _iterCheck, _inPhase, false};
     }
 
     ActorPhaseIterator end() {
-        // TODO: change order; _inPhase should be right below isEnd (probably)
-        return ActorPhaseIterator{_orchestrator, true, _inPhase};
+        return ActorPhaseIterator{_orchestrator, _inPhase, true};
     };
 
     // Used by PhaseLoopIterator::doesBlock()
@@ -247,8 +247,8 @@ public:
 private:
     Orchestrator& _orchestrator;
     const IterationCompletionCheck _iterCheck;
-    std::unique_ptr<T> _value;
     const PhaseNumber _inPhase;
+    std::unique_ptr<T> _value;
 
 };  // class ActorPhase
 

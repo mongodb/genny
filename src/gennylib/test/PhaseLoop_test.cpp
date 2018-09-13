@@ -34,21 +34,21 @@ TEST_CASE("Correctness for N iterations") {
     Orchestrator o;
 
     SECTION("Loops 0 Times") {
-        V1::ActorPhase<int> loop{o, {0_i, nullopt}, 1};
+        V1::ActorPhase<int> loop{o, {nullopt, 0_i}, 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 0);
     }
     SECTION("Loops 1 Time") {
-        V1::ActorPhase<int> loop{o, {1_i, nullopt}, 1};
+        V1::ActorPhase<int> loop{o, {nullopt, 1_i}, 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 1);
     }
     SECTION("Loops 113 Times") {
-        V1::ActorPhase<int> loop{o, {113_i, nullopt}, 1};
+        V1::ActorPhase<int> loop{o, {nullopt, 113_i}, 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -56,7 +56,7 @@ TEST_CASE("Correctness for N iterations") {
     }
 
     SECTION("Configured for -1 Times barfs") {
-        REQUIRE_THROWS_WITH((V1::ActorPhase<int>{o, {make_optional(-1), nullopt}, 1}),
+        REQUIRE_THROWS_WITH((V1::ActorPhase<int>{o, {nullopt, make_optional(-1)}, 1}),
                             Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
@@ -64,7 +64,7 @@ TEST_CASE("Correctness for N iterations") {
 TEST_CASE("Correctness for N milliseconds") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds so zero times") {
-        V1::ActorPhase<int> loop{o, {nullopt, 0_ms}, 0};
+        V1::ActorPhase<int> loop{o, {0_ms, nullopt}, 0};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -73,7 +73,7 @@ TEST_CASE("Correctness for N milliseconds") {
     SECTION("Looping for 10 milliseconds takes between 10 and 11 milliseconds") {
         // we nop in the loop so ideally it should take exactly 10ms, but don't want spurious
         // failures
-        V1::ActorPhase<int> loop{o, {nullopt, 10_ms}, 0};
+        V1::ActorPhase<int> loop{o, {10_ms, nullopt}, 0};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -90,14 +90,14 @@ TEST_CASE("Correctness for N milliseconds") {
 TEST_CASE("Combinations of duration and iterations") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds but 100 times") {
-        V1::ActorPhase<int> loop{o, {100_i, 0_ms}, 0};
+        V1::ActorPhase<int> loop{o, {0_ms, 100_i}, 0};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 100);
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
-        V1::ActorPhase<int> loop{o, {100_i, 5_ms}, 0};
+        V1::ActorPhase<int> loop{o, {5_ms, 100_i}, 0};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -118,7 +118,7 @@ TEST_CASE("Combinations of duration and iterations") {
 
     SECTION("Configured for -1 milliseconds barfs") {
         REQUIRE_THROWS_WITH(
-            (V1::ActorPhase<int>{o, {nullopt, make_optional(chrono::milliseconds{-1})}, 0}),
+            (V1::ActorPhase<int>{o, {make_optional(chrono::milliseconds{-1}), nullopt}, 0}),
             Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
@@ -131,7 +131,7 @@ TEST_CASE("Can do without either iterations or duration") {
 
 TEST_CASE("Iterator concept correctness") {
     Orchestrator o;
-    V1::ActorPhase<int> loop{o, {1_i, nullopt}, 0};
+    V1::ActorPhase<int> loop{o, {nullopt, 1_i}, 0};
 
     // can deref
     SECTION("Deref and advance works") {
