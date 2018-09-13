@@ -215,8 +215,11 @@ std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
     Orchestrator& orchestrator, const std::vector<PhaseConfig>& phaseConfigs) {
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>> out;
     for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
-        out.try_emplace(
-            phaseNum, orchestrator, V1::IterationCompletionCheck{iters, dur}, phaseVal);
+        auto [it, success] = out.try_emplace(
+            phaseNum, orchestrator, V1::IterationCompletionCheck{iters, dur}, phaseNum, phaseVal);
+        // prevent misconfiguration within test (dupe phaseNum vals)
+        REQUIRE(success);
+        REQUIRE(*(it->second) == phaseVal);
     }
     return out;
 };
