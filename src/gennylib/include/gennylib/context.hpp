@@ -493,8 +493,8 @@ public:
     // </Forwarding to delegates>
 
 private:
-    static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>> constructPhaseContexts(
-        const YAML::Node&, ActorContext*);
+    static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
+    constructPhaseContexts(const YAML::Node&, ActorContext*);
     YAML::Node _node;
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
@@ -540,62 +540,10 @@ public:
         return this->_actor->get<T, Required>(std::forward<Args>(args)...);
     };
 
-    /**
-     * @return an object that can iterate either `Repeat` times or for `Duration` time-units.
-     * Note that `PhaseLoop`s are relatively expensive to construct and should be constructed
-     * at actor-constructor time. Once constructed they can be iterated-over multiple times.
-     * The internal iteration-state is held in the iterator returned by PhaseLoop::begin().
-     *
-     * Example usage:
-     *   Imagine wanting to run an operation 100 times during phase 0
-     *   and run for 100 millseconds in phase 1.
-     *
-     *
-     * Configuration:
-     *
-     * ```yaml
-     * Actors:
-     * - Type: MyActor
-     *   Phases:
-     *   - Repeat: 100
-     *   - Duration: 100 milliseconds
-     * ```
-     *
-     * Actor Code:
-     *
-     * ```c++
-     * struct MyActor : public PhasedActor {
-     *   PhaseLoop loopOne;
-     *   PhaseLoop loopTwo;
-     *   MyActor(ActorContext& ctx)
-     *   : PhasedActor(ctx),
-     *     loopOne{ctx.phases().at(0).loop()},
-     *     loopOne{ctx.phases().at(1).loop()} {}
-     *
-     *   void doMyOperation();
-     *
-     *   void doPhase(int phaseNumber) {
-     *     PhaseLoop phaseLoop = phaseNumber == 0 ? loopOne : loopTwo;
-     *
-     *     for(auto _ : phaseLoop) {
-     *       doMyOperation();
-     *     }
-     *
-     *   }
-     * }
-     * ```
-     *
-     * This Actor code is simplified to show the usage of `PhaseLoop`.
-     */
-     // TODO
-//    OperationLoop loop() const {
-//        return OperationLoop{this->get<int, false>("Repeat"),
-//                             this->get<std::chrono::milliseconds, false>("Duration")};
-//    }
-
 private:
     YAML::Node _node;
     const ActorContext* _actor;
+
 };
 
 }  // namespace genny

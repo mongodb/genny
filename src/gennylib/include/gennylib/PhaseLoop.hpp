@@ -207,8 +207,7 @@ public:
         : _orchestrator{orchestrator},
           _iterCheck{std::move(iterCheck)},
           _inPhase{inPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)}
-        {}
+          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
 
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
@@ -218,8 +217,7 @@ public:
         : _orchestrator{orchestrator},
           _iterCheck{phaseContext},
           _inPhase{inPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)}
-          {}
+          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
 
     ActorPhaseIterator begin() {
         return ActorPhaseIterator{_orchestrator, _iterCheck, _inPhase, false};
@@ -398,6 +396,54 @@ private:
  *      The `PhaseLoop` type will soon be incorporated into this type
  *      and will support automatically doing this check if required.
  *
+ */
+/**
+ * TODO: revamp this a bit; stolen from context.hpp
+ * @return an object that can iterate either `Repeat` times or for `Duration` time-units.
+ * Note that `PhaseLoop`s are relatively expensive to construct and should be constructed
+ * at actor-constructor time. Once constructed they can be iterated-over multiple times.
+ * The internal iteration-state is held in the iterator returned by PhaseLoop::begin().
+ *
+ * Example usage:
+ *   Imagine wanting to run an operation 100 times during phase 0
+ *   and run for 100 millseconds in phase 1.
+ *
+ *
+ * Configuration:
+ *
+ * ```yaml
+ * Actors:
+ * - Type: MyActor
+ *   Phases:
+ *   - Repeat: 100
+ *   - Duration: 100 milliseconds
+ * ```
+ *
+ * Actor Code:
+ *
+ * ```c++
+ * struct MyActor : public PhasedActor {
+ *   PhaseLoop loopOne;
+ *   PhaseLoop loopTwo;
+ *   MyActor(ActorContext& ctx)
+ *   : PhasedActor(ctx),
+ *     loopOne{ctx.phases().at(0).loop()},
+ *     loopOne{ctx.phases().at(1).loop()} {}
+ *
+ *   void doMyOperation();
+ *
+ *   void doPhase(int phaseNumber) {
+ *     PhaseLoop phaseLoop = phaseNumber == 0 ? loopOne : loopTwo;
+ *
+ *     for(auto _ : phaseLoop) {
+ *       doMyOperation();
+ *     }
+ *
+ *   }
+ * }
+ * ```
+ *
+ * This Actor code is simplified to show the usage of `PhaseLoop`.
  */
 template <class T>
 class PhaseLoop final {
