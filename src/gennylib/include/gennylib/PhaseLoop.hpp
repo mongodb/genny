@@ -42,9 +42,7 @@ namespace genny {
 namespace V1 {
 
 
-// Debatable about whether this should also track the current iteration and startedAt time
-// (versus having those in the ActorPhaseIterator).
-// BUT: even the .end() iterator needs an instance of this, so it's weird
+
 class IterationCompletionCheck final {
 
 public:
@@ -96,6 +94,10 @@ public:
     }
 
 private:
+    // Debatable about whether this should also track the current iteration and startedAt time
+    // (versus having those in the ActorPhaseIterator).
+    // BUT: even the .end() iterator needs an instance of this, so it's weird
+
     const std::optional<std::chrono::milliseconds> _minDuration;
     const std::optional<int> _minIterations;
 };
@@ -221,6 +223,7 @@ public:
         return ActorPhaseIterator{_orchestrator, true, _inPhase};
     };
 
+    // Used by PhaseLoopIterator::doesBlock()
     bool doesBlock() const {
         return _iterCheck.doesBlock();
     }
