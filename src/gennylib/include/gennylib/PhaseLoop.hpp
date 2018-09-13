@@ -42,7 +42,6 @@ namespace genny {
 namespace V1 {
 
 
-
 class IterationCompletionCheck final {
 
 public:
@@ -50,7 +49,9 @@ public:
 
     IterationCompletionCheck(std::optional<int> minIterations,
                              std::optional<std::chrono::milliseconds> minDuration)
-        : _minDuration{minDuration}, _minIterations{minIterations} {
+        : _minDuration{minDuration},
+          _minIterations{minIterations},
+          _doesBlock{_minIterations || _minDuration} {
 
         if (minIterations && *minIterations < 0) {
             std::stringstream str;
@@ -88,9 +89,8 @@ public:
         return _minDuration == other._minDuration && _minIterations == other._minIterations;
     }
 
-    // TODO: compute at ctor time
     bool doesBlock() const {
-        return _minIterations || _minDuration;
+        return _doesBlock;
     }
 
 private:
@@ -100,6 +100,7 @@ private:
 
     const std::optional<std::chrono::milliseconds> _minDuration;
     const std::optional<int> _minIterations;
+    const bool _doesBlock; // Computed/cached value. Computed at ctor time.
 };
 
 /**
@@ -192,7 +193,6 @@ public:
     typedef Value pointer;
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
-
 };
 
 
@@ -201,14 +201,20 @@ class ActorPhase final {
 
 public:
     template <class... Args>
-    ActorPhase(Orchestrator& orchestrator, IterationCompletionCheck iterCheck, PhaseNumber inPhase, Args... args)
+    ActorPhase(Orchestrator& orchestrator,
+               IterationCompletionCheck iterCheck,
+               PhaseNumber inPhase,
+               Args... args)
         : _orchestrator{orchestrator},
           _iterCheck{std::move(iterCheck)},
           _value{std::make_unique<T>(std::forward<Args>(args)...)},
           _inPhase{inPhase} {}
 
     template <class... Args>
-    ActorPhase(Orchestrator& orchestrator, PhaseContext& phaseContext, PhaseNumber inPhase, Args&&... args)
+    ActorPhase(Orchestrator& orchestrator,
+               PhaseContext& phaseContext,
+               PhaseNumber inPhase,
+               Args&&... args)
         : _orchestrator{orchestrator},
           _iterCheck{phaseContext},
           _value{std::make_unique<T>(std::forward<Args>(args)...)},
