@@ -21,8 +21,6 @@
  *   - each class here, even the dumb helper ones
  *   - some connection with context.hpp to make this class discoverable
  *
- * - make most (all?) of these types final. They're not intended to be base-classes.
- * 
  * - can PhaseLoop be pre-declared or something such that the user can
  *   actually do something like `PhaseLoop<MyStruct> loop = actorContext.loop<MyStruct>()`?
  *
@@ -47,7 +45,7 @@ namespace V1 {
 // Debatable about whether this should also track the current iteration and startedAt time
 // (versus having those in the ActorPhaseIterator).
 // BUT: even the .end() iterator needs an instance of this, so it's weird
-class IterationCompletionCheck {
+class IterationCompletionCheck final {
 
 public:
     explicit IterationCompletionCheck() : IterationCompletionCheck(std::nullopt, std::nullopt) {}
@@ -107,7 +105,7 @@ private:
  * iterating until configured #iterations or duration are done
  * or, if non-blocking, when Orchestrator says phase has changed.
  */
-class ActorPhaseIterator {
+class ActorPhaseIterator final {
 
 public:
     // iterator concept value-type
@@ -192,11 +190,12 @@ public:
     typedef Value pointer;
     typedef std::ptrdiff_t difference_type;
     // </iterator-concept>
+
 };
 
 
 template <class T>
-class ActorPhase {
+class ActorPhase final {
 
 public:
     template <class... Args>
@@ -250,7 +249,7 @@ using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
 
 
 template <class T>
-class PhaseLoopIterator {
+class PhaseLoopIterator final {
 
 public:
     PhaseLoopIterator(Orchestrator& orchestrator, PhaseMap<T>& phaseMap, bool isEnd)
@@ -392,7 +391,7 @@ private:
  *
  */
 template <class T>
-class PhaseLoop {
+class PhaseLoop final {
 
 public:
     explicit PhaseLoop(ActorContext& context)
