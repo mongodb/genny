@@ -26,7 +26,7 @@ namespace {
 //  100_i   gives optional<int>     holding 100
 //  100_ms  gives optional<millis>  holding 100
 //
-// TODO: these are copy/pasta in PhaseLoop_test and orchestrator_test. Refactor.
+// These are copy/pasta in PhaseLoop_test and orchestrator_test. Refactor.
 optional<int> operator"" _i(unsigned long long int v) {
     return make_optional(v);
 }

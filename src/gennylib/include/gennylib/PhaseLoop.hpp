@@ -14,8 +14,10 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 
-/*
- * TODO: update Orchestrator_test to use this
+/**
+ * @file
+ * This file provides the `PhaseLoop<T>` type and the collaborator classes that make it iterable.
+ * See extended example on the PhaseLoop class docs.
  */
 
 namespace genny {

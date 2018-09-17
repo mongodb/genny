@@ -404,6 +404,7 @@ public:
      * If you want per-Phase configuration, consider using `PhaseLoop<T>` which
      * will let you construct a `T` for each Phase at constructor-time and will
      * automatically coordinate with the `Orchestrator`.
+     *   ** See extended example on the `PhaseLoop` class. **
      *
      * Keys are phase numbers and values are the Phase blocks associated with them.
      * Empty if there are no configured Phases.
