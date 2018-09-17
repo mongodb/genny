@@ -95,9 +95,9 @@ public:
     }
 
 private:
-    // Debatable about whether this should also track the current iteration and referenceStartingPoint time
-    // (versus having those in the ActorPhaseIterator).
-    // BUT: even the .end() iterator needs an instance of this, so it's weird
+    // Debatable about whether this should also track the current iteration and
+    // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
+    // .end() iterator needs an instance of this, so it's weird
 
     const std::optional<std::chrono::milliseconds> _minDuration;
     const std::optional<int> _minIterations;
@@ -117,18 +117,20 @@ public:
     struct Value {};
 
     ActorPhaseIterator(Orchestrator& orchestrator,
-                       const IterationCompletionCheck& iterCheck,
+                       const IterationCompletionCheck* iterCheck,
                        PhaseNumber inPhase,
                        bool isEndIterator)
         : _orchestrator{std::addressof(orchestrator)},
           _iterCheck{iterCheck},
-          _referenceStartingPoint{_iterCheck.referenceStartingPoint()},
+          _referenceStartingPoint{isEndIterator
+                                      ? std::chrono::time_point<std::chrono::steady_clock>::min()
+                                      : _iterCheck->referenceStartingPoint()},
           _inPhase{inPhase},
           _isEndIterator{isEndIterator},
           _currentIteration{0} {}
 
     ActorPhaseIterator(Orchestrator& orchestrator, PhaseNumber inPhase, bool isEnd)
-        : ActorPhaseIterator{orchestrator, IterationCompletionCheck{}, inPhase, isEnd} {}
+        : ActorPhaseIterator{orchestrator, nullptr, inPhase, isEnd} {}
 
     Value operator*() const {
         return Value();
@@ -143,11 +145,11 @@ public:
     bool operator==(const ActorPhaseIterator& rhs) const {
         return
                 // we're comparing against the .end() iterator (the common case)
-                (rhs._isEndIterator &&
+                (rhs._isEndIterator && !this->_isEndIterator &&
                    // if we block, then check to see if we're done in current phase
                    // else check to see if current phase has expired
-                   (_iterCheck.doesBlock() ? _iterCheck.isDone(_referenceStartingPoint, _currentIteration)
-                                           : _orchestrator->currentPhase() != _inPhase))
+                   (_iterCheck->doesBlock() ? _iterCheck->isDone(_referenceStartingPoint, _currentIteration)
+                                            : _orchestrator->currentPhase() != _inPhase))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
@@ -160,9 +162,9 @@ public:
 
                 // neither is end iterator but have same fields
                 || (!rhs._isEndIterator && !_isEndIterator
-                    && _referenceStartingPoint        == rhs._referenceStartingPoint
-                    && _currentIteration == rhs._currentIteration
-                    && _iterCheck        == rhs._iterCheck)
+                    && _referenceStartingPoint  == rhs._referenceStartingPoint
+                    && _currentIteration        == rhs._currentIteration
+                    && _iterCheck               == rhs._iterCheck)
 
                 // both .end() iterators (all .end() iterators are ==)
                 || (_isEndIterator && rhs._isEndIterator)
@@ -180,7 +182,7 @@ public:
 
 private:
     Orchestrator* _orchestrator;
-    const IterationCompletionCheck& _iterCheck;
+    const IterationCompletionCheck* _iterCheck;
     const std::chrono::steady_clock::time_point _referenceStartingPoint;
     const PhaseNumber _inPhase;
     const bool _isEndIterator;
@@ -203,7 +205,7 @@ class ActorPhase final {
 public:
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
-               IterationCompletionCheck iterCheck,
+               std::unique_ptr<const IterationCompletionCheck> iterCheck,
                PhaseNumber inPhase,
                Args... args)
         : _orchestrator{orchestrator},
@@ -217,12 +219,12 @@ public:
                PhaseNumber inPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
-          _iterCheck{phaseContext},
+          _iterCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
           _inPhase{inPhase},
           _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
 
     ActorPhaseIterator begin() {
-        return ActorPhaseIterator{_orchestrator, _iterCheck, _inPhase, false};
+        return ActorPhaseIterator{_orchestrator, _iterCheck.get(), _inPhase, false};
     }
 
     ActorPhaseIterator end() {
@@ -231,7 +233,7 @@ public:
 
     // Used by PhaseLoopIterator::doesBlock()
     bool doesBlock() const {
-        return _iterCheck.doesBlock();
+        return _iterCheck->doesBlock();
     }
 
     // could use `auto` for return-type of operator-> and operator*, but
@@ -246,7 +248,7 @@ public:
 
 private:
     Orchestrator& _orchestrator;
-    const IterationCompletionCheck _iterCheck;
+    std::unique_ptr<const IterationCompletionCheck> _iterCheck;
     const PhaseNumber _inPhase;
     std::unique_ptr<T> _value;
 

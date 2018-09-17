@@ -216,7 +216,7 @@ std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>> out;
     for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
         auto [it, success] = out.try_emplace(
-            phaseNum, orchestrator, V1::IterationCompletionCheck{dur, iters}, phaseNum, phaseVal);
+            phaseNum, orchestrator, std::make_unique<const V1::IterationCompletionCheck>(dur, iters), phaseNum, phaseVal);
         // prevent misconfiguration within test (dupe phaseNum vals)
         REQUIRE(success);
         REQUIRE(*(it->second) == phaseVal);
