@@ -291,11 +291,17 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
+    auto iters = 0;
+
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for(auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L, 2L});
+    REQUIRE(iters == 6);
 }
 
 TEST_CASE("single-threaded range-based for loops no phases blocking") {
@@ -311,11 +317,17 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
+    auto iters = 0;
+
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for(auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L, 2L});
+    REQUIRE(iters == 0); // all non-blocking
 }
 
 TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
@@ -329,11 +341,16 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
                                       {1, 9, 1_i, nullopt}})};
     std::unordered_set<PhaseNumber> seen;
 
+    auto iters = 0;
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for(auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
+    REQUIRE(iters == 1);
 }
 
 TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
@@ -348,11 +365,17 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
+    auto iters = 0;
+
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for(auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
+    REQUIRE(iters == 1);
 }
 
 TEST_CASE("single-threaded range-based for loops blocking then blocking") {
@@ -367,11 +390,17 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
     std::unordered_set<PhaseNumber> seen;
 
+    auto iters = 0;
+
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for(auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
+    REQUIRE(iters == 2);
 }
 
 TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
@@ -439,10 +468,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                 // blocks t2 from progressing
                 std::this_thread::sleep_for(sleepTime);
             } else if (phase == 0) {
-                // TODO: iterate over holder
-                while (o.currentPhase() == 0) {
-                    // nop
-                }
+                for(auto&& _ : holder) { } // nop
             } else {
                 ++failures;
             }
@@ -470,9 +496,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             prevPhase = phase;
 
             if (phase == 1) {
-                while (o.currentPhase() == 1) {
-                    // nop
-                }
+                for(auto&& _ : holder) { } // nop
             } else  if (phase == 0) {
                 // blocks t1 from progressing
                 std::this_thread::sleep_for(sleepTime);
