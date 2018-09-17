@@ -41,7 +41,9 @@ namespace genny {
  */
 namespace V1 {
 
-
+/**
+ * Determine if we're done iterating for a given Phase.
+ */
 class IterationCompletionCheck final {
 
 public:
@@ -69,7 +71,7 @@ public:
         : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
                                    phaseContext.get<int, false>("Repeat")) {}
 
-    std::chrono::steady_clock::time_point startedAt() const {
+    std::chrono::steady_clock::time_point referenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
         return _minDuration ? std::chrono::steady_clock::now()
                             : std::chrono::time_point<std::chrono::steady_clock>::min();
@@ -93,7 +95,7 @@ public:
     }
 
 private:
-    // Debatable about whether this should also track the current iteration and startedAt time
+    // Debatable about whether this should also track the current iteration and referenceStartingPoint time
     // (versus having those in the ActorPhaseIterator).
     // BUT: even the .end() iterator needs an instance of this, so it's weird
 
@@ -118,9 +120,9 @@ public:
                        const IterationCompletionCheck& iterCheck,
                        PhaseNumber inPhase,
                        bool isEndIterator)
-        : _orchestrator{orchestrator},
+        : _orchestrator{std::addressof(orchestrator)},
           _iterCheck{iterCheck},
-          _startedAt{_iterCheck.startedAt()},
+          _referenceStartingPoint{_iterCheck.referenceStartingPoint()},
           _inPhase{inPhase},
           _isEndIterator{isEndIterator},
           _currentIteration{0} {}
@@ -144,8 +146,8 @@ public:
                 (rhs._isEndIterator &&
                    // if we block, then check to see if we're done in current phase
                    // else check to see if current phase has expired
-                   (_iterCheck.doesBlock() ? _iterCheck.isDone(_startedAt, _currentIteration)
-                                           : _orchestrator.currentPhase() != _inPhase))
+                   (_iterCheck.doesBlock() ? _iterCheck.isDone(_referenceStartingPoint, _currentIteration)
+                                           : _orchestrator->currentPhase() != _inPhase))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
@@ -158,7 +160,7 @@ public:
 
                 // neither is end iterator but have same fields
                 || (!rhs._isEndIterator && !_isEndIterator
-                    && _startedAt        == rhs._startedAt
+                    && _referenceStartingPoint        == rhs._referenceStartingPoint
                     && _currentIteration == rhs._currentIteration
                     && _iterCheck        == rhs._iterCheck)
 
@@ -177,9 +179,9 @@ public:
     }
 
 private:
-    Orchestrator& _orchestrator;
+    Orchestrator* _orchestrator;
     const IterationCompletionCheck& _iterCheck;
-    const std::chrono::steady_clock::time_point _startedAt;
+    const std::chrono::steady_clock::time_point _referenceStartingPoint;
     const PhaseNumber _inPhase;
     const bool _isEndIterator;
     unsigned int _currentIteration;
