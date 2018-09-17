@@ -15,16 +15,7 @@
 #include <gennylib/context.hpp>
 
 /*
- * General TODO:
- *
- * - Run everything thru the sanitizers
- *
- * - Ensure these classes all follow guidelines in CONTRIBUTING.md
- *
- * - Next ticket
- *   - kill PhasedActor
- *   - Maybe: only check orchestrator.currentPhase() == currentPhase every N iterations since
- *     overhead could be kinda high (like 1/2 as slow in casual observations)
+ * TODO: Ensure these classes all follow guidelines in CONTRIBUTING.md
  */
 
 namespace genny {
