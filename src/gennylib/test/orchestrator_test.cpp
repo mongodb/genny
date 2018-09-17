@@ -2,6 +2,8 @@
 
 #include <chrono>
 #include <iostream>
+#include <mutex>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -14,13 +16,21 @@ using namespace std::chrono;
 
 namespace {
 
+// Catch2's REQUIRE etc macros are not thread-safe, so need to unique_lock on this
+// mutex whenever calling assertion macros inside a thread.
+std::mutex asserting;
+
 std::thread start(Orchestrator& o,
                   PhaseNumber phase,
                   const bool block = true,
                   const int addTokens = 1) {
     return std::thread{[&o, phase, block, addTokens]() {
-        REQUIRE(o.awaitPhaseStart(block, addTokens) == phase);
-        REQUIRE(o.currentPhase() == phase);
+        auto result = o.awaitPhaseStart(block, addTokens);
+        {
+            std::unique_lock<std::mutex> lk(asserting);
+            REQUIRE(result == phase);
+            REQUIRE(o.currentPhase() == phase);
+        }
     }};
 }
 
@@ -29,7 +39,11 @@ std::thread end(Orchestrator& o,
                 const bool block = true,
                 const int removeTokens = 1) {
     return std::thread{[&o, phase, block, removeTokens]() {
-        REQUIRE(o.currentPhase() == phase);
+        auto current = o.currentPhase();
+        {
+            std::unique_lock<std::mutex> lk(asserting);
+            REQUIRE(current == phase);
+        }
         o.awaitPhaseEnd(block, removeTokens);
     }};
 }
