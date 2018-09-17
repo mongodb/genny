@@ -17,9 +17,6 @@
 /*
  * General TODO:
  *
- * - doc it like it's hot
- *   - some connection with context.hpp to make this class discoverable
- *
  * - Run everything thru the sanitizers
  *
  * - Ensure these classes all follow guidelines in CONTRIBUTING.md
@@ -99,6 +96,7 @@ private:
     const std::optional<int> _minIterations;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
 };
+
 
 /**
  * The iterator used in `for(auto _ : phase)` and returned from
@@ -274,49 +272,14 @@ using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
 /**
  * The iterator used by `for(auto&& [p,h] : phaseLoop)`.
  *
- * **This type is only intended to be used by range-based for loops
- * and other STL algorithms like `std::advance` etc. are not supported to work.**
+ * @attention This type is only intended to be used by range-based for loops.
+ *            Other STL algorithms like `std::advance` etc. are not supported to work.
  *
  * @tparam T the per-Phase type that will be exposed for each Phase.
- *
- * @attention Only use this in range-based for loops.
  *
  * Iterates over all phases and will correctly call
  * `awaitPhaseStart()` and `awaitPhaseEnd()` in the
  * correct operators.
- *
- * ```c++
- * class MyActor : Actor {
- *   // TODO: update example
- *   void run() override {
- *     for(auto&& phase : orchestrator.loop(blocking))
- *       while(phase == orchestrator.currentPhase())
- *         doOperation(phase);
- *   }
- * }
- * ```
- *
- * This should **only** be used by range-based for loops because
- * the implementation relies on callers alternating between
- * `operator*()` and `operator++()` to indicate the caller's
- * done-ness or readiness of the current/next phase.
- *
- * TODO: incorporate into description of how Phases blocks are read:
- *
- *      Non-blocking means that the iterator will immediately call
- *      awaitPhaseEnd() right after calling awaitPhaseStart(). This
- *      will prevent the Orchestrator from waiting for this Actor
- *      to complete its operations in the current Phase.
- *
- *      Note that the Actor still needs to wait for the next Phase
- *      to start before going on to the next iteration of the loop.
- *      The common way to do this is to periodically check that
- *      the current Phase number (`Orchestrator::currentPhase()`)
- *      hasn't changed.
- *
- *      The `PhaseLoop` type will soon be incorporated into this type
- *      and will support automatically doing this check if required.
- *
  */
 template <class T>
 class PhaseLoopIterator final {
@@ -421,51 +384,57 @@ private:
 
 
 /**
- * @return an object that can iterate either `Repeat` times or for `Duration` time-units.
+ * @return an object that iterates over all configured Phases, calling `awaitPhaseStart()`
+ *         and `awaitPhaseEnd()` at the appropriate times. The value-type, `ActorPhase`
+ *         is also iterable so your Actor can loop for the entire duration of the Phase.
+ *
  * Note that `PhaseLoop`s are relatively expensive to construct and should be constructed
- * at actor-constructor time. Once constructed they can be iterated-over multiple times.
- * The internal iteration-state is held in the iterator returned by PhaseLoop::begin().
+ * at actor-constructor time.
  *
  * Example usage:
- *   Imagine wanting to run an operation 100 times during phase 0
- *   and run for 100 millseconds in phase 1.
- *
- *
- * Configuration:
- *
- * ```yaml
- * Actors:
- * - Type: MyActor
- *   Phases:
- *   - Repeat: 100
- *   - Duration: 100 milliseconds
- * ```
- *
- * Actor Code:
  *
  * ```c++
- * struct MyActor : public PhasedActor {
- *   PhaseLoop loopOne;
- *   PhaseLoop loopTwo;
- *   MyActor(ActorContext& ctx)
- *   : PhasedActor(ctx),
- *     loopOne{ctx.phases().at(0).loop()},
- *     loopOne{ctx.phases().at(1).loop()} {}
+ *     struct MyActor : public Actor {
  *
- *   void doMyOperation();
+ *     private:
+ *         // Actor-private struct that the Actor uses to determine what
+ *         // to do for each Phase. Likely holds ValueGenerators or other
+ *         // expensive-to-construct objects. PhaseLoop will construct these
+ *         // at Actor setup time rather than at runtime.
+ *         struct MyActorConfig {
+ *             int _index;
+ *             // Must have a ctor that takes a PhaseConfig&
+ *             MyActorConfig(PhaseConfig& phaseConfig)
+ *             : _index{phaseConfig.get<int>("Index")} {}
+ *         };
  *
- *   void doPhase(int phaseNumber) {
- *     PhaseLoop phaseLoop = phaseNumber == 0 ? loopOne : loopTwo;
+ *         PhaseLoop<MyActorConfig> _loop;
  *
- *     for(auto _ : phaseLoop) {
- *       doMyOperation();
- *     }
+ *     public:
+ *         MyActor(ActorContext& actorContext)
+ *         : _loop{actorContext} {}
  *
- *   }
- * }
+ *         void run() {
+ *             for(auto&& [phaseNum, actorPhase] : _loop) {     // (1)
+ *                 // Access the MyActorConfig for the Phase
+ *                 // by using operator->() or operator*().
+ *                 auto index = actorPhase->_index;
+ *
+ *                 // The actorPhase itself is iterable
+ *                 // this loop will continue running as long
+ *                 // as required per configuration conventions.
+ *                 for(auto&& _ : actorPhase) {                 // (2)
+ *                     doOperation(actorPhase);
+ *                 }
+ *             }
+ *         }
+ *     };
  * ```
  *
- * This Actor code is simplified to show the usage of `PhaseLoop`.
+ * Internal note:
+ * (1) is implemented using PhaseLoop and PhaseLoopIterator.
+ * (2) is implemented using ActorPhase and ActorPhaseIterator.
+ *
  */
 template <class T>
 class PhaseLoop final {
