@@ -18,11 +18,7 @@
  * General TODO:
  *
  * - doc it like it's hot
- *   - each class here, even the dumb helper ones
  *   - some connection with context.hpp to make this class discoverable
- *
- * - can PhaseLoop be pre-declared or something such that the user can
- *   actually do something like `PhaseLoop<MyStruct> loop = actorContext.loop<MyStruct>()`?
  *
  * - Run everything thru the sanitizers
  *
@@ -105,6 +101,9 @@ private:
 };
 
 /**
+ * The iterator used in `for(auto _ : phase)` and returned from
+ * `ActorPhase::begin()` and `ActorPhase::end()`.
+ *
  * Configured with {@link IterationCompletionCheck} and will continue
  * iterating until configured #iterations or duration are done
  * or, if non-blocking, when Orchestrator says phase has changed.
@@ -199,6 +198,16 @@ public:
 };
 
 
+/**
+ * Represents an Actor's configuration for a particular Phase.
+ *
+ * Its iterator, `ActorPhaseIterator`, lets Actors do an operation in a loop
+ * for a pre-determined number of iterations or duration or,
+ * if the Phase is non-blocking for the Actor, as long as the
+ * Phase is held open by other Actors.
+ *
+ * This is intended to be used via `PhaseLoop` below.
+ */
 template <class T>
 class ActorPhase final {
 
@@ -255,10 +264,60 @@ private:
 };  // class ActorPhase
 
 
+/**
+ * Maps from PhaseNumber to the ActorPhase<T> to be used in that PhaseNumber.
+ */
 template <class T>
 using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
 
 
+/**
+ * The iterator used by `for(auto&& [p,h] : phaseLoop)`.
+ *
+ * **This type is only intended to be used by range-based for loops
+ * and other STL algorithms like `std::advance` etc. are not supported to work.**
+ *
+ * @tparam T the per-Phase type that will be exposed for each Phase.
+ *
+ * @attention Only use this in range-based for loops.
+ *
+ * Iterates over all phases and will correctly call
+ * `awaitPhaseStart()` and `awaitPhaseEnd()` in the
+ * correct operators.
+ *
+ * ```c++
+ * class MyActor : Actor {
+ *   // TODO: update example
+ *   void run() override {
+ *     for(auto&& phase : orchestrator.loop(blocking))
+ *       while(phase == orchestrator.currentPhase())
+ *         doOperation(phase);
+ *   }
+ * }
+ * ```
+ *
+ * This should **only** be used by range-based for loops because
+ * the implementation relies on callers alternating between
+ * `operator*()` and `operator++()` to indicate the caller's
+ * done-ness or readiness of the current/next phase.
+ *
+ * TODO: incorporate into description of how Phases blocks are read:
+ *
+ *      Non-blocking means that the iterator will immediately call
+ *      awaitPhaseEnd() right after calling awaitPhaseStart(). This
+ *      will prevent the Orchestrator from waiting for this Actor
+ *      to complete its operations in the current Phase.
+ *
+ *      Note that the Actor still needs to wait for the next Phase
+ *      to start before going on to the next iteration of the loop.
+ *      The common way to do this is to periodically check that
+ *      the current Phase number (`Orchestrator::currentPhase()`)
+ *      hasn't changed.
+ *
+ *      The `PhaseLoop` type will soon be incorporated into this type
+ *      and will support automatically doing this check if required.
+ *
+ */
 template <class T>
 class PhaseLoopIterator final {
 
@@ -362,47 +421,6 @@ private:
 
 
 /**
- * @attention Only use this in range-based for loops.
- *
- * Iterates over all phases and will correctly call
- * `awaitPhaseStart()` and `awaitPhaseEnd()` in the
- * correct operators.
- *
- * ```c++
- * class MyActor : Actor {
- *   // TODO: update example
- *   void run() override {
- *     for(auto&& phase : orchestrator.loop(blocking))
- *       while(phase == orchestrator.currentPhase())
- *         doOperation(phase);
- *   }
- * }
- * ```
- *
- * This should **only** be used by range-based for loops because
- * the implementation relies on callers alternating between
- * `operator*()` and `operator++()` to indicate the caller's
- * done-ness or readiness of the current/next phase.
- *
- * TODO: incorporate into description of how Phases blocks are read:
- *
- *      Non-blocking means that the iterator will immediately call
- *      awaitPhaseEnd() right after calling awaitPhaseStart(). This
- *      will prevent the Orchestrator from waiting for this Actor
- *      to complete its operations in the current Phase.
- *
- *      Note that the Actor still needs to wait for the next Phase
- *      to start before going on to the next iteration of the loop.
- *      The common way to do this is to periodically check that
- *      the current Phase number (`Orchestrator::currentPhase()`)
- *      hasn't changed.
- *
- *      The `PhaseLoop` type will soon be incorporated into this type
- *      and will support automatically doing this check if required.
- *
- */
-/**
- * TODO: revamp this a bit; stolen from context.hpp
  * @return an object that can iterate either `Repeat` times or for `Duration` time-units.
  * Note that `PhaseLoop`s are relatively expensive to construct and should be constructed
  * at actor-constructor time. Once constructed they can be iterated-over multiple times.
