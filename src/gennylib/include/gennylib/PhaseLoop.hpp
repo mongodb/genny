@@ -10,12 +10,14 @@
 #include <unordered_map>
 #include <utility>
 
+#include <gennylib/context.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/context.hpp>
 
 /*
  * TODO: Ensure these classes all follow guidelines in CONTRIBUTING.md
+ * TODO: update tests to use this
+ * TODO: update Orchestrator_test to use this
  */
 
 namespace genny {
@@ -100,10 +102,6 @@ private:
 class ActorPhaseIterator final {
 
 public:
-    // iterator concept value-type
-    // intentionally empty; most compilers will elide any actual storage
-    struct Value {};
-
     ActorPhaseIterator(Orchestrator& orchestrator,
                        const IterationCompletionCheck* iterCheck,
                        PhaseNumber inPhase,
@@ -119,6 +117,10 @@ public:
 
     ActorPhaseIterator(Orchestrator& orchestrator, PhaseNumber inPhase, bool isEnd)
         : ActorPhaseIterator{orchestrator, nullptr, inPhase, isEnd} {}
+
+    // iterator concept value-type
+    // intentionally empty; most compilers will elide any actual storage
+    struct Value {};
 
     Value operator*() const {
         return Value();
