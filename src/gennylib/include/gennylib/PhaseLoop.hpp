@@ -15,8 +15,6 @@
 #include <gennylib/Orchestrator.hpp>
 
 /*
- * TODO: Ensure these classes all follow guidelines in CONTRIBUTING.md
- * TODO: update tests to use this
  * TODO: update Orchestrator_test to use this
  */
 
@@ -298,8 +296,10 @@ public:
 
         auto&& found = _phaseMap.find(_currentPhase);
 
-        // TODO: we can detect this at setup time - worth doing now?
         if (found == _phaseMap.end()) {
+            // We're (incorrectly) constructed outside of the conventional flow,
+            // i.e., the `PhaseLoop(ActorContext&)` ctor. Could also happen if Actors
+            // are configured with different sets of Phase numbers.
             std::stringstream msg;
             msg << "No phase config found for PhaseNumber=[" << _currentPhase << "]";
             throw InvalidConfigurationException(msg.str());
