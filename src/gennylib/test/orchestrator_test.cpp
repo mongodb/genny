@@ -218,18 +218,21 @@ TEST_CASE("Orchestrator") {
     }
 }
 
-// TODO: does this all belong in PhaseLoop_test instead?
-
-// TODO: simplify; this isn't a pleasant ocean of tokens 🌊💸
 // more easily construct V1::ActorPhase instances
 using PhaseConfig =
     std::tuple<PhaseNumber, int, std::optional<int>, std::optional<std::chrono::milliseconds>>;
+
 std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
     Orchestrator& orchestrator, const std::vector<PhaseConfig>& phaseConfigs) {
+
     std::unordered_map<PhaseNumber, V1::ActorPhase<int>> out;
     for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
-        auto [it, success] = out.try_emplace(
-            phaseNum, orchestrator, std::make_unique<const V1::IterationCompletionCheck>(dur, iters), phaseNum, phaseVal);
+        auto [it, success] =
+            out.try_emplace(phaseNum,
+                            orchestrator,
+                            std::make_unique<const V1::IterationCompletionCheck>(dur, iters),
+                            phaseNum,
+                            phaseVal);
         // prevent misconfiguration within test (dupe phaseNum vals)
         {
             std::unique_lock<mutex> lk(asserting);
@@ -295,7 +298,7 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
 
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
-        for(auto&& _ : holder) {
+        for (auto&& _ : holder) {
             ++iters;
         }
     }
@@ -321,13 +324,13 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
-        for(auto&& _ : holder) {
+        for (auto&& _ : holder) {
             ++iters;
         }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L, 2L});
-    REQUIRE(iters == 0); // all non-blocking
+    REQUIRE(iters == 0);  // all non-blocking
 }
 
 TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
@@ -344,7 +347,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     auto iters = 0;
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
-        for(auto&& _ : holder) {
+        for (auto&& _ : holder) {
             ++iters;
         }
     }
@@ -369,7 +372,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
-        for(auto&& _ : holder) {
+        for (auto&& _ : holder) {
             ++iters;
         }
     }
@@ -394,7 +397,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
     for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
-        for(auto&& _ : holder) {
+        for (auto&& _ : holder) {
             ++iters;
         }
     }
@@ -411,17 +414,19 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
     chrono::duration d1 = start - start;
     chrono::duration d2 = start - start;
 
-    auto t1 = std::thread([&](){
+    auto t1 = std::thread([&]() {
         // blocks for a number of ms
-        for(auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ms}})})
-            for(auto _ : h) { } // nop
+        for (auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ms}})})
+            for (auto _ : h) {
+            }  // nop
         d1 = system_clock::now() - start;
     });
 
-    auto t2 = std::thread([&](){
+    auto t2 = std::thread([&]() {
         // does not block
-        for(auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, nullopt}})})
-            for(auto _ : h)  { } // nop
+        for (auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, nullopt}})})
+            for (auto _ : h) {
+            }  // nop
         d2 = system_clock::now() - start;
     });
 
@@ -430,9 +435,9 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
 
     // TODO: add some commentary here
 
-    REQUIRE( d2.count()/10 >= d1.count()/10 );
-    REQUIRE( d1 >= chrono::milliseconds{75} );
-    REQUIRE( d1 <= chrono::milliseconds{80} );
+    REQUIRE(d2.count() / 10 >= d1.count() / 10);
+    REQUIRE(d1 >= chrono::milliseconds{75});
+    REQUIRE(d1 <= chrono::milliseconds{80});
 }
 
 TEST_CASE("Multi-threaded Range-based for loops") {
@@ -468,7 +473,8 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                 // blocks t2 from progressing
                 std::this_thread::sleep_for(sleepTime);
             } else if (phase == 0) {
-                for(auto&& _ : holder) { } // nop
+                for (auto&& _ : holder) {
+                }  // nop
             } else {
                 ++failures;
             }
@@ -496,8 +502,9 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             prevPhase = phase;
 
             if (phase == 1) {
-                for(auto&& _ : holder) { } // nop
-            } else  if (phase == 0) {
+                for (auto&& _ : holder) {
+                }  // nop
+            } else if (phase == 0) {
                 // blocks t1 from progressing
                 std::this_thread::sleep_for(sleepTime);
             } else {
