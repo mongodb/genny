@@ -313,10 +313,6 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         int prevPhase = -1;
 
         for (int phase : o.loop(blocking)) {
-            if (!(phase == 1 || phase == 0)) {
-                ++failures;
-            }
-
             if (prevPhase != -1) {
                 auto now = system_clock::now();
                 t1TimePerPhase[prevPhase] = now - prevPhaseStart;
@@ -327,12 +323,12 @@ TEST_CASE("Multi-threaded Range-based for loops") {
             if (phase == 1) {
                 // blocks t2 from progressing
                 std::this_thread::sleep_for(sleepTime);
-            }
-
-            if (phase == 0) {
+            } else if (phase == 0) {
                 while (o.currentPhase() == 0) {
                     // nop
                 }
+            } else {
+                ++failures;
             }
         }
         if (prevPhase != 1) {
@@ -347,10 +343,6 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         int prevPhase = -1;
 
         for (int phase : o.loop(blocking)) {
-            if (!(phase == 1 || phase == 0)) {
-                ++failures;
-            }
-
             if (prevPhase != -1) {
                 auto now = system_clock::now();
                 t2TimePerPhase[prevPhase] = now - prevPhaseStart;
@@ -362,21 +354,20 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                 while (o.currentPhase() == 1) {
                     // nop
                 }
-            }
-
-            if (phase == 0) {
+            } else  if (phase == 0) {
                 // blocks t1 from progressing
                 std::this_thread::sleep_for(sleepTime);
+            } else {
+                ++failures;
             }
-        }
-        if (prevPhase != 1) {
-            ++failures;
         }
         t2TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
 
     t1.join();
     t2.join();
+
+    REQUIRE(failures == 0);
 
     // don't care about 1s place, so just int-divide to kill it :)
     REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[0]).count() / 10 == sleepTime.count() / 10);
