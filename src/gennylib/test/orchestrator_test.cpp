@@ -445,12 +445,15 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     o.addRequiredTokens(2);
     o.phasesAtLeastTo(1);
 
-    std::unordered_map<int, system_clock::duration> t1TimePerPhase;
-    std::unordered_map<int, system_clock::duration> t2TimePerPhase;
-
-    const duration sleepTime = milliseconds{100};
+    const duration sleepTime = milliseconds{50};
 
     std::atomic_int failures = 0;
+
+    // have we completed the sleep in phase 0?
+    std::atomic_bool phaseZeroSlept = false;
+
+    // have we completed the sleep in phase 1?
+    std::atomic_bool phaseOneSlept = false;
 
     auto t1 = std::thread([&]() {
         auto phaseConfig{makePhaseConfig(o,
@@ -458,32 +461,28 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                                           {0, 7, nullopt, nullopt},
                                           {1, 9, 1_i, nullopt}})};
 
-        auto prevPhaseStart = system_clock::now();
-        int prevPhase = -1;
-
         for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-            if (prevPhase != -1) {
-                auto now = system_clock::now();
-                t1TimePerPhase[prevPhase] = now - prevPhaseStart;
-                prevPhaseStart = now;
-            }
-            prevPhase = phase;
-
-            if (phase == 1) {
-                // blocks t2 from progressing
-                std::this_thread::sleep_for(sleepTime);
-            } else if (phase == 0) {
-                for (auto&& _ : holder) {
-                }  // nop
-            } else {
-                ++failures;
+            switch (phase) {
+                case 0:
+                    for (auto&& _ : holder) {
+                    }  // nop
+                    // is set after nop
+                    if (!phaseZeroSlept) {
+                        BOOST_LOG_TRIVIAL(error) << "Prematurely advanced from phase 0";
+                        ++failures;
+                    }
+                    break;
+                case 1:
+                    std::this_thread::sleep_for(sleepTime);
+                    phaseOneSlept = true;
+                    break;
+                default:
+                    BOOST_LOG_TRIVIAL(error) << "Unknown phase " << phase;
+                    ++failures;
             }
         }
-        if (prevPhase != 1) {
-            ++failures;
-        }
-        t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
+    // similar to t1 but swapped zeroes and ones
     auto t2 = std::thread([&]() {
         auto phaseConfig{makePhaseConfig(o,
                                          {// non-block then block
@@ -494,34 +493,28 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         int prevPhase = -1;
 
         for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-            if (prevPhase != -1) {
-                auto now = system_clock::now();
-                t2TimePerPhase[prevPhase] = now - prevPhaseStart;
-                prevPhaseStart = now;
-            }
-            prevPhase = phase;
-
-            if (phase == 1) {
-                for (auto&& _ : holder) {
-                }  // nop
-            } else if (phase == 0) {
-                // blocks t1 from progressing
-                std::this_thread::sleep_for(sleepTime);
-            } else {
-                ++failures;
+            switch (phase) {
+                case 0:
+                    std::this_thread::sleep_for(sleepTime);
+                    phaseZeroSlept = true;
+                    break;
+                case 1:
+                    for (auto&& _ : holder) {
+                    }  // nop
+                    if (!phaseOneSlept) {
+                        BOOST_LOG_TRIVIAL(error) << "Prematurely advanced from phase 1";
+                        ++failures;
+                    }
+                    break;
+                default:
+                    BOOST_LOG_TRIVIAL(error) << "Unknown phase " << phase;
+                    ++failures;
             }
         }
-        t2TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
 
     t1.join();
     t2.join();
 
     REQUIRE(failures == 0);
-
-    // don't care about 1s place, so just int-divide to kill it :)
-    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[0]).count() / 10 == sleepTime.count() / 10);
-    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[1]).count() / 10 == sleepTime.count() / 10);
-    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[0]).count() / 10 == sleepTime.count() / 10);
-    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[1]).count() / 10 == sleepTime.count() / 10);
 }
