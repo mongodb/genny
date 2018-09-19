@@ -316,15 +316,17 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                 case 0:
                     while (o.currentPhase() == 0) {}
                     // is set after nop
-                    if (!phaseZeroSlept)
-                        // failure to wait for t2
+                    if (!phaseZeroSlept) {
+                        BOOST_LOG_TRIVIAL(error) << "Prematurely advanced from phase 0";
                         ++failures;
+                    }
                     break;
                 case 1:
                     std::this_thread::sleep_for(sleepTime);
                     phaseOneSlept = true;
                     break;
                 default:
+                    BOOST_LOG_TRIVIAL(error) << "Unknown phase " << phase;
                     ++failures;
             }
         }
@@ -344,10 +346,13 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                     break;
                 case 1:
                     while (o.currentPhase() == 1) {}
-                    if (!phaseOneSlept)
+                    if (!phaseOneSlept) {
+                        BOOST_LOG_TRIVIAL(error) << "Prematurely advanced from phase 1";
                         ++failures;
+                    }
                     break;
                 default:
+                    BOOST_LOG_TRIVIAL(error) << "Unknown phase " << phase;
                     ++failures;
             }
         }
