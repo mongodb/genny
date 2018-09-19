@@ -10,9 +10,9 @@
 #include <unordered_map>
 #include <utility>
 
-#include <gennylib/context.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/context.hpp>
 
 /**
  * @file
@@ -435,8 +435,10 @@ template <class T>
 class PhaseLoop final {
 
 public:
-    explicit PhaseLoop(ActorContext& context)
-        : PhaseLoop(context.orchestrator(), std::move(constructPhaseMap(context))) {}
+    template <class... Args>
+    explicit PhaseLoop(ActorContext& context, Args&&... args)
+        : PhaseLoop(context.orchestrator(),
+                    std::move(constructPhaseMap(context, std::forward<Args>(args)...))) {}
 
     // Only visible for testing
     PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)
@@ -456,11 +458,12 @@ public:
     }
 
 private:
-    static V1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext) {
+    template <class... Args>
+    static V1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext, Args&&... args) {
 
         // clang-format off
-        static_assert(std::is_constructible_v<T, PhaseContext&>);
-        static_assert(std::is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&>);
+        static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
+        static_assert(std::is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&, Args...>);
         // clang-format on
 
         V1::PhaseMap<T> out;
@@ -472,8 +475,9 @@ private:
                 actorContext.orchestrator(),
                 *phaseContext,
                 num,
-                // last arg gets forwarded to T ctor (via forward inside of make_unique)
-                *phaseContext);
+                // last arg(s) get forwarded to T ctor (via forward inside of make_unique)
+                *phaseContext,
+                std::forward<Args>(args)...);
         }
         return out;
     }

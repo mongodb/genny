@@ -213,7 +213,8 @@ TEST_CASE("Actual Actor Example") {
     private:
         struct IncrPhaseConfig {
             int _key;
-            IncrPhaseConfig(PhaseContext& ctx) : _key{ctx.get<int>("Key")} {}
+            IncrPhaseConfig(PhaseContext& ctx, int keyOffset)
+                : _key{ctx.get<int>("Key") + keyOffset} {}
         };
 
         PhaseLoop<IncrPhaseConfig> _loop;
@@ -221,7 +222,7 @@ TEST_CASE("Actual Actor Example") {
 
     public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
-            : _loop{actorContext}, _counters{counters} {}
+            : _loop{actorContext, 1}, _counters{counters} {}
 
         void run() override {
             for (auto&& [num, cfg] : _loop) {
@@ -267,6 +268,6 @@ TEST_CASE("Actual Actor Example") {
     // ////////
 
     REQUIRE(counters ==
-            std::unordered_map<int, int>{{71, 100},  // keys & vals came from yaml config
-                                         {93, 3}});
+            std::unordered_map<int, int>{{72, 100},  // keys & vals came from yaml config
+                                         {94, 3}});
 }
