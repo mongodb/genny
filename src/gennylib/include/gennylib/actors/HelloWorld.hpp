@@ -21,11 +21,7 @@ public:
     static ActorVector producer(ActorContext& context);
 
 private:
-    struct PhaseConfig {
-        metrics::Timer _outputTimer;
-        metrics::Counter _operations;
-        std::string _message;
-    };
+    struct PhaseConfig;
     genny::PhaseLoop<PhaseConfig> _loop;
     mongocxx::client_session* session;
 };

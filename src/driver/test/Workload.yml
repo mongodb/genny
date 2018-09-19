@@ -6,8 +6,9 @@ Actors:
   - Name: HelloTest
     Type: HelloWorld
     Threads: 1
-    Parameters:
-      Message: Hello World!
+    Phases:
+    - Message: Hello, World!
+    - Message: Goodbye, World!
   - Name: InsertTest
     Type: Insert
     Threads: 1

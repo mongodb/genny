@@ -2,13 +2,24 @@
 
 #include <gennylib/actors/HelloWorld.hpp>
 
-//void genny::actor::HelloWorld::run() {
-//
-//    auto op = _outputTimer.raii();
-//    BOOST_LOG_TRIVIAL(info) << _fullName << " Doing PhaseNumber " << currentPhase << " "
-//                            << _message;
-//    _operations.incr();
-//}
+struct genny::actor::HelloWorld::PhaseConfig {
+    // TODO: need better metrics API
+    //    metrics::Timer _outputTimer;
+    //    metrics::Counter _operations;
+    std::string _message;
+    PhaseConfig(PhaseContext& phaseContext, unsigned int thread)
+        : _message{phaseContext.get<std::string>("Message")} {}
+};
+
+void genny::actor::HelloWorld::run() {
+    for (auto&& [p, h] : _loop) {
+        for (auto _ : h) {
+            //            auto op = h->_outputTimer.raii();
+            BOOST_LOG_TRIVIAL(info) << "Doing PhaseNumber " << p << " " << h->_message;
+            //            h->_operations.incr();
+        }
+    }
+}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
@@ -22,5 +33,5 @@ genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& conte
     return out;
 }
 
-genny::actor::HelloWorld::HelloWorld(genny::ActorContext &context, unsigned int thread)
-: _loop{context} {}
+genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, unsigned int thread)
+    : _loop{context, thread} {}
