@@ -299,43 +299,37 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     o.addRequiredTokens(2);
     o.phasesAtLeastTo(1);
 
-    std::unordered_map<int, system_clock::duration> t1TimePerPhase;
-    std::unordered_map<int, system_clock::duration> t2TimePerPhase;
-
-    const duration sleepTime = milliseconds{100};
+    const duration sleepTime = milliseconds{50};
 
     std::atomic_int failures = 0;
 
+    // have we completed the sleep in phase 0?
+    std::atomic_bool phaseZeroSlept = false;
+
+    // have we completed the sleep in phase 1?
+    std::atomic_bool phaseOneSlept = false;
+
     auto t1 = std::thread([&]() {
         std::unordered_set<PhaseNumber> blocking{1};
-
-        auto prevPhaseStart = system_clock::now();
-        int prevPhase = -1;
-
         for (int phase : o.loop(blocking)) {
-            if (prevPhase != -1) {
-                auto now = system_clock::now();
-                t1TimePerPhase[prevPhase] = now - prevPhaseStart;
-                prevPhaseStart = now;
-            }
-            prevPhase = phase;
-
-            if (phase == 1) {
-                // blocks t2 from progressing
-                std::this_thread::sleep_for(sleepTime);
-            } else if (phase == 0) {
-                while (o.currentPhase() == 0) {
-                    // nop
-                }
-            } else {
-                ++failures;
+            switch (phase) {
+                case 0:
+                    while (o.currentPhase() == 0) {}
+                    // is set after nop
+                    if (!phaseZeroSlept)
+                        // failure to wait for t2
+                        ++failures;
+                    break;
+                case 1:
+                    std::this_thread::sleep_for(sleepTime);
+                    phaseOneSlept = true;
+                    break;
+                default:
+                    ++failures;
             }
         }
-        if (prevPhase != 1) {
-            ++failures;
-        }
-        t1TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
+    // similar to t1 but swapped zeroes and ones
     auto t2 = std::thread([&]() {
         std::unordered_set<PhaseNumber> blocking{0};
 
@@ -343,35 +337,24 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         int prevPhase = -1;
 
         for (int phase : o.loop(blocking)) {
-            if (prevPhase != -1) {
-                auto now = system_clock::now();
-                t2TimePerPhase[prevPhase] = now - prevPhaseStart;
-                prevPhaseStart = now;
-            }
-            prevPhase = phase;
-
-            if (phase == 1) {
-                while (o.currentPhase() == 1) {
-                    // nop
-                }
-            } else  if (phase == 0) {
-                // blocks t1 from progressing
-                std::this_thread::sleep_for(sleepTime);
-            } else {
-                ++failures;
+            switch (phase) {
+                case 0:
+                    std::this_thread::sleep_for(sleepTime);
+                    phaseZeroSlept = true;
+                    break;
+                case 1:
+                    while (o.currentPhase() == 1) {}
+                    if (!phaseOneSlept)
+                        ++failures;
+                    break;
+                default:
+                    ++failures;
             }
         }
-        t2TimePerPhase[prevPhase] = system_clock::now() - prevPhaseStart;
     });
 
     t1.join();
     t2.join();
 
     REQUIRE(failures == 0);
-
-    // don't care about 1s place, so just int-divide to kill it :)
-    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[0]).count() / 10 == sleepTime.count() / 10);
-    REQUIRE(duration_cast<milliseconds>(t1TimePerPhase[1]).count() / 10 == sleepTime.count() / 10);
-    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[0]).count() / 10 == sleepTime.count() / 10);
-    REQUIRE(duration_cast<milliseconds>(t2TimePerPhase[1]).count() / 10 == sleepTime.count() / 10);
 }
