@@ -507,6 +507,8 @@ private:
                 *phaseContext,
                 std::forward<Args>(args)...);
             if (!success) {
+                // This should never happen because genny::ActorContext::constructPhaseContexts
+                // ensures we can't configure duplicate Phases.
                 std::stringstream msg;
                 msg << "Duplicate phase " << num;
                 throw InvalidConfigurationException(msg.str());
