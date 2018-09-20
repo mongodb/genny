@@ -354,6 +354,12 @@ private:
     PhaseMap<T>& _phaseMap;  // cannot be const; owned by PhaseLoop
 
     const bool _isEnd;
+
+    // can't just always look this up from the Orchestrator. When we're
+    // doing operator++*() we need to know what the value of the phase
+    // was during operator*() so we can check if it was blocking or not.
+    // If we don't store the value during operator*() the Phase value
+    // may have changed already.
     PhaseNumber _currentPhase;
 
     // helps detect accidental mis-use. General contract
@@ -391,7 +397,7 @@ private:
 
 /**
  * @return an object that iterates over all configured Phases, calling `awaitPhaseStart()`
- *         and `awaitPhaseEnd()` at the appropriate times. The value-type, `ActorPhase`
+ *         and `awaitPhaseEnd()` at the appropriate times. The value-type, `ActorPhase`,
  *         is also iterable so your Actor can loop for the entire duration of the Phase.
  *
  * Note that `PhaseLoop`s are relatively expensive to construct and should be constructed
@@ -409,8 +415,9 @@ private:
  *         // at Actor setup time rather than at runtime.
  *         struct MyActorConfig {
  *             int _index;
- *             // Must have a ctor that takes a PhaseConfig&
- *             MyActorConfig(PhaseConfig& phaseConfig)
+ *             // Must have a ctor that takes a PhaseContext& as first arg.
+ *             // Other ctor args are forwarded from PhaseLoop ctor.
+ *             MyActorConfig(PhaseContext& phaseConfig)
  *             : _index{phaseConfig.get<int>("Index")} {}
  *         };
  *
@@ -419,6 +426,8 @@ private:
  *     public:
  *         MyActor(ActorContext& actorContext)
  *         : _loop{actorContext} {}
+ *         // if your MyActorConfig takes other ctor args, pass them through
+ *         // here e.g. _loop{actorContext, someOtherParam]
  *
  *         void run() {
  *             for(auto&& [phaseNum, actorPhase] : _loop) {     // (1)
@@ -449,7 +458,14 @@ public:
     template <class... Args>
     explicit PhaseLoop(ActorContext& context, Args&&... args)
         : PhaseLoop(context.orchestrator(),
-                    std::move(constructPhaseMap(context, std::forward<Args>(args)...))) {}
+                    std::move(constructPhaseMap(context, std::forward<Args>(args)...))) {
+            // Some of these static_assert() calls are redundant. This is to help
+            // users more easily track down compiler errors.
+            //
+            // Don't do this at the class level because tests want to be able to
+            // construct a simple PhaseLoop<int>.
+            static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
+        }
 
     // Only visible for testing
     PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)
