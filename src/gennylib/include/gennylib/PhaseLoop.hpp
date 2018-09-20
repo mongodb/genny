@@ -356,7 +356,7 @@ private:
     const bool _isEnd;
 
     // can't just always look this up from the Orchestrator. When we're
-    // doing operator++*() we need to know what the value of the phase
+    // doing operator++() we need to know what the value of the phase
     // was during operator*() so we can check if it was blocking or not.
     // If we don't store the value during operator*() the Phase value
     // may have changed already.

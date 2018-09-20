@@ -408,34 +408,34 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
     Orchestrator o;
     o.addRequiredTokens(2);
 
-    auto start = system_clock::now();
-    chrono::duration d1 = start - start;
-    chrono::duration d2 = start - start;
+    std::atomic_bool blockingDone = false;
 
+    auto start = std::chrono::system_clock::now();
+
+    // t1 blocks for 75ms in Phase 0
     auto t1 = std::thread([&]() {
-        // blocks for a number of ms
         for (auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ms}})})
             for (auto _ : h) {
             }  // nop
-        d1 = system_clock::now() - start;
+        blockingDone = true;
     });
 
+    // t2 does not block
     auto t2 = std::thread([&]() {
-        // does not block
         for (auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, nullopt}})})
             for (auto _ : h) {
             }  // nop
-        d2 = system_clock::now() - start;
+        {
+            std::lock_guard lk{asserting};
+            REQUIRE(blockingDone);
+        }
     });
 
     t1.join();
     t2.join();
 
-    // TODO: add some commentary here
-
-    REQUIRE(d2.count() / 10 >= d1.count() / 10);
-    REQUIRE(d1 >= chrono::milliseconds{75});
-    REQUIRE(d1 <= chrono::milliseconds{80});
+    // test of the test kinda: we should have blocked at least as long as t1
+    REQUIRE(std::chrono::system_clock::now() - start >= chrono::milliseconds{75});
 }
 
 TEST_CASE("Multi-threaded Range-based for loops") {
