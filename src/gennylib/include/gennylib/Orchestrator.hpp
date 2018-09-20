@@ -90,7 +90,6 @@ private:
     State state = State::PhaseEnded;
 };
 
-
 }  // namespace genny
 
 #endif  // HEADER_8615FA7A_9344_43E1_A102_889F47CCC1A6_INCLUDED

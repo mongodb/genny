@@ -6,7 +6,8 @@
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
-#include <utility>
+
+#include <boost/log/trivial.hpp>
 
 #include <boost/log/trivial.hpp>
 
@@ -21,6 +22,10 @@ using namespace std;
 
 namespace {
 
+// Catch2's REQUIRE etc macros are not thread-safe, so need to unique_lock on this
+// mutex whenever calling assertion macros inside a thread.
+std::mutex asserting;
+
 //
 // Cute convenience operators -
 //  100_i   gives optional<int>     holding 100
@@ -34,11 +39,6 @@ optional<chrono::milliseconds> operator"" _ms(unsigned long long int v) {
     return make_optional(chrono::milliseconds{v});
 }
 
-
-// Catch2's REQUIRE etc macros are not thread-safe, so need to unique_lock on this
-// mutex whenever calling assertion macros inside a thread.
-std::mutex asserting;
-
 std::thread start(Orchestrator& o,
                   PhaseNumber phase,
                   const bool block = true,
@@ -46,7 +46,7 @@ std::thread start(Orchestrator& o,
     return std::thread{[&o, phase, block, addTokens]() {
         auto result = o.awaitPhaseStart(block, addTokens);
         {
-            std::unique_lock<mutex> lk(asserting);
+            std::unique_lock<std::mutex> lk(asserting);
             REQUIRE(result == phase);
             REQUIRE(o.currentPhase() == phase);
         }
@@ -60,7 +60,7 @@ std::thread end(Orchestrator& o,
     return std::thread{[&o, phase, block, removeTokens]() {
         auto current = o.currentPhase();
         {
-            std::unique_lock<mutex> lk(asserting);
+            std::unique_lock<std::mutex> lk(asserting);
             REQUIRE(current == phase);
         }
         o.awaitPhaseEnd(block, removeTokens);
