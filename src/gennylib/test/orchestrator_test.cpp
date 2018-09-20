@@ -9,8 +9,6 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <boost/log/trivial.hpp>
-
 #include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
@@ -485,7 +483,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     // similar to t1 but swapped zeroes and ones
     auto t2 = std::thread([&]() {
         auto phaseConfig{makePhaseConfig(o,
-                                         {// non-block then block
+                                         {// block then non-block
                                           {0, 7, 1_i, nullopt},
                                           {1, 9, nullopt, nullopt}})};
 
