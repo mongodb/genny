@@ -215,8 +215,13 @@ public:
         : _orchestrator{orchestrator},
           _iterCheck{std::move(iterCheck)},
           _inPhase{inPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
+          _value{std::make_unique<T>(std::forward<Args>(args)...)} {
+        static_assert(std::is_constructible_v<T, Args...>);
+    }
 
+    /**
+     * `args` are the T value's constructor
+     */
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
                PhaseContext& phaseContext,
@@ -225,7 +230,9 @@ public:
         : _orchestrator{orchestrator},
           _iterCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
           _inPhase{inPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
+          _value{std::make_unique<T>(std::forward<Args>(args)...)} {
+        static_assert(std::is_constructible_v<T, Args...>);
+    }
 
     ActorPhaseIterator begin() {
         return ActorPhaseIterator{_orchestrator, _iterCheck.get(), _inPhase, false};
@@ -252,9 +259,9 @@ public:
 
 private:
     Orchestrator& _orchestrator;
-    std::unique_ptr<const IterationCompletionCheck> _iterCheck;
+    const std::unique_ptr<const IterationCompletionCheck> _iterCheck;
     const PhaseNumber _inPhase;
-    std::unique_ptr<T> _value;
+    const std::unique_ptr<T> _value;
 
 };  // class ActorPhase
 
