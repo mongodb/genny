@@ -30,7 +30,7 @@ struct genny::actor::Insert::Config {
     std::vector<PhaseConfig> phases;
 };
 
-void genny::actor::Insert::doPhase(int currentPhase) {
+void genny::actor::Insert::doPhase(PhaseNumber currentPhase) {
     auto op = _outputTimer.raii();
     auto& phase = _config->phases[currentPhase];
     bsoncxx::builder::stream::document mydoc{};

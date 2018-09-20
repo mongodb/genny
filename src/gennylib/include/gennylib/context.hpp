@@ -470,8 +470,8 @@ public:
         return this->_workload->_orchestrator->morePhases();
     }
 
-    auto currentPhaseNumber() {
-        return this->_workload->_orchestrator->currentPhaseNumber();
+    auto currentPhase() {
+        return this->_workload->_orchestrator->currentPhase();
     }
     auto awaitPhaseStart() {
         return this->_workload->_orchestrator->awaitPhaseStart();

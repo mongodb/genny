@@ -6,8 +6,18 @@
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
+#include <unordered_set>
 
 namespace genny {
+
+// May eventually want a proper type for Phase, but for now just a typedef is sufficient.
+using PhaseNumber = unsigned int;
+
+namespace V1 {
+// needs to be pre-declared here; see usage in Orchestrator for details
+class OrchestratorLoop;
+}  // namespace V1
+
 
 /**
  * Responsible for the synchronization of actors
@@ -23,7 +33,7 @@ public:
     /**
      * @return the current phase number
      */
-    unsigned int currentPhaseNumber() const;
+    PhaseNumber currentPhase() const;
 
     /**
      * @return if there are any more phases.
@@ -33,7 +43,7 @@ public:
     /**
      * @param minPhase the minimum phase number that the Orchestrator should run to.
      */
-    void phasesAtLeastTo(unsigned int minPhase);
+    void phasesAtLeastTo(PhaseNumber minPhase);
 
     /**
      * Signal from an actor that it is ready to start the next phase.
@@ -46,7 +56,7 @@ public:
      * @param addTokens the number of tokens added by this call.
      * @return the phase that has just started.
      */
-    unsigned int awaitPhaseStart(bool block = true, int addTokens = 1);
+    PhaseNumber awaitPhaseStart(bool block = true, int addTokens = 1);
 
     /**
      * Signal from an actor that it is done with the current phase.
@@ -59,9 +69,9 @@ public:
      *
      * ```c++
      * while (orchestrator.morePhases()) {
-     *     int phase = orchestrator.awaitPhaseStart();
+     *     auto phase = orchestrator.awaitPhaseStart();
      *     orchestrator.awaitPhaseEnd(false);
-     *     while(phase == orchestrator.currentPhaseNumber()) {
+     *     while(phase == orchestrator.currentPhase()) {
      *         // do operation
      *     }
      * }
@@ -73,6 +83,49 @@ public:
 
     void abort();
 
+    /**
+     * @attention Only use this in range-based for loops.
+     *
+     * Iterates over all phases and will correctly call
+     * `awaitPhaseStart()` and `awaitPhaseEnd()` in the
+     * correct operators.
+     *
+     * ```c++
+     * class MyActor : Actor {
+     *   std::unordered_set<PhaseNumber> blocking;
+     *   ...
+     *   void run() override {
+     *     for(auto&& phase : orchestrator.loop(blocking))
+     *       while(phase == orchestrator.currentPhase())
+     *         doOperation(phase);
+     *   }
+     * }
+     * ```
+     *
+     * This should **only** be used by range-based for loops because
+     * the implementation relies on callers alternating between
+     * `operator*()` and `operator++()` to indicate the caller's
+     * done-ness or readiness of the current/next phase.
+     *
+     * @param blockingPhases
+     *      Which Phases should "block".
+     *      Non-blocking means that the iterator will immediately call
+     *      awaitPhaseEnd() right after calling awaitPhaseStart(). This
+     *      will prevent the Orchestrator from waiting for this Actor
+     *      to complete its operations in the current Phase.
+     *
+     *      Note that the Actor still needs to wait for the next Phase
+     *      to start before going on to the next iteration of the loop.
+     *      The common way to do this is to periodically check that
+     *      the current Phase number (`Orchestrator::currentPhase()`)
+     *      hasn't changed.
+     *
+     *      The `PhaseLoop` type will soon be incorporated into this type
+     *      and will support automatically doing this check if required.
+     *
+     */
+    V1::OrchestratorLoop loop(const std::unordered_set<PhaseNumber>& blockingPhases);
+
 private:
     mutable std::shared_mutex _mutex;
     std::condition_variable_any _phaseChange;
@@ -80,8 +133,8 @@ private:
     int _requireTokens = 0;
     int _currentTokens = 0;
 
-    unsigned int _maxPhase = 1;
-    unsigned int _phase = 0;
+    PhaseNumber _max = 0;
+    PhaseNumber _current = 0;
 
     bool _errors = false;
 
@@ -89,6 +142,89 @@ private:
 
     State state = State::PhaseEnded;
 };
+
+
+/*
+ * Reminder: the V1 namespace types are *not* intended to be used directly.
+ */
+namespace V1 {
+
+
+class OrchestratorLoopIterator;
+
+
+// returned from orchestrator.loop()
+class OrchestratorLoop {
+
+public:
+    OrchestratorLoopIterator begin();
+    OrchestratorLoopIterator end();
+
+private:
+    friend Orchestrator;
+    friend OrchestratorLoopIterator;
+
+    OrchestratorLoop(Orchestrator& orchestrator,
+                     const std::unordered_set<PhaseNumber>& blockingPhases);
+
+    bool morePhases() const;
+    bool doesBlockOn(PhaseNumber phase) const;
+
+    Orchestrator* _orchestrator;
+    const std::unordered_set<PhaseNumber>& _blockingPhases;
+};
+
+
+// Only usable in range-based for loops.
+class OrchestratorLoopIterator {
+
+public:
+    // These are intentionally commented-out because this type
+    // should not be used by any std algorithms that may rely on them.
+    // This type should only be used by range-based for loops (which doesn't
+    // rely on these typedefs). This should *hopefully* prevent some cases of
+    // accidental mis-use.
+    //
+    // Decided to leave this code commented-out rather than deleting it
+    // partially to document this shortcoming explicitly but also in case
+    // we want to support the full concept in the future.
+    // https://en.cppreference.com/w/cpp/named_req/InputIterator
+    //
+    // <iterator-concept>
+    //    typedef std::forward_iterator_tag iterator_category;
+    //    typedef PhaseNumber value_type;
+    //    typedef PhaseNumber reference;
+    //    typedef PhaseNumber pointer;
+    //    typedef std::ptrdiff_t difference_type;
+    // </iterator-concept>
+
+    bool operator!=(const OrchestratorLoopIterator& other) const;
+
+    PhaseNumber operator*();
+
+    OrchestratorLoopIterator& operator++();
+
+private:
+    friend OrchestratorLoop;
+
+    explicit OrchestratorLoopIterator(OrchestratorLoop&, bool);
+
+    OrchestratorLoop* _loop;
+    bool _isEnd;
+    PhaseNumber _currentPhase;
+
+    // helps detect accidental mis-use. General contract
+    // of this iterator (as used by range-based for) is that
+    // the user will alternate between operator*() and operator++()
+    // (starting with operator*()), so we flip this back-and-forth
+    // in operator*() and operator++() and assert the correct value.
+    // If the user calls operator*() twice without calling operator++()
+    // between, we'll fail (and similarly for operator++()).
+    bool _awaitingPlusPlus;
+};
+
+
+}  // namespace V1
 
 
 }  // namespace genny

@@ -69,9 +69,9 @@ TEST_CASE("Orchestrator Perf", "[perf]") {
                 if (i == 0) {
                     // checking the phase # is also what dominates the loop
                     // we get to "cheat" above by only checking current time every 1000 iterations,
-                    // so same cheat here is to only call (expensive) currentPhaseNumber() every 100
+                    // so same cheat here is to only call (expensive) currentPhase() every 100
                     // iterations
-                    done = phase != o.currentPhaseNumber();
+                    done = phase != o.currentPhase();
                 }
             }
         }};

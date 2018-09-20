@@ -19,7 +19,7 @@ public:
     static ActorVector producer(ActorContext& context);
 
 private:
-    void doPhase(int phase);
+    void doPhase(PhaseNumber phase);
 
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
