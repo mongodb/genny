@@ -102,6 +102,10 @@ private:
 class ActorPhaseIterator final {
 
 public:
+    // Normally we'd use const IterationCompletionCheck& (ref rather than *)
+    // but we actually *want* nullptr for the end iterator. This is a bit of
+    // an over-optimization, but it adds very little complexity at the benefit
+    // of not having to construct a useless object.
     ActorPhaseIterator(Orchestrator& orchestrator,
                        const IterationCompletionCheck* iterCheck,
                        PhaseNumber inPhase,
@@ -113,10 +117,10 @@ public:
                                       : _iterCheck->referenceStartingPoint()},
           _inPhase{inPhase},
           _isEndIterator{isEndIterator},
-          _currentIteration{0} {}
-
-    ActorPhaseIterator(Orchestrator& orchestrator, PhaseNumber inPhase, bool isEnd)
-        : ActorPhaseIterator{orchestrator, nullptr, inPhase, isEnd} {}
+          _currentIteration{0} {
+        // iterCheck should only be null if we're end() iterator.
+        assert(isEndIterator == (iterCheck == nullptr));
+    }
 
     // iterator concept value-type
     // intentionally empty; most compilers will elide any actual storage
@@ -228,7 +232,7 @@ public:
     }
 
     ActorPhaseIterator end() {
-        return ActorPhaseIterator{_orchestrator, _inPhase, true};
+        return ActorPhaseIterator{_orchestrator, nullptr, _inPhase, true};
     };
 
     // Used by PhaseLoopIterator::doesBlock()
