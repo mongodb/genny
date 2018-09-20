@@ -267,14 +267,10 @@ TEST_CASE("Duplicate Phase Numbers") {
 
     metrics::Registry metrics;
     Orchestrator orchestrator;
-    ActorProducer producer = [&](ActorContext& context) -> ActorVector {
-        return {};
-    };
+    ActorProducer producer = [&](ActorContext& context) -> ActorVector { return {}; };
 
-    REQUIRE_THROWS_WITH(
-        (WorkloadContext{yaml, metrics, orchestrator, {producer}}),
-        Catch::Matches("Duplicate phase 0"));
-
+    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, {producer}}),
+                        Catch::Matches("Duplicate phase 0"));
 }
 
 TEST_CASE("No PhaseContexts") {

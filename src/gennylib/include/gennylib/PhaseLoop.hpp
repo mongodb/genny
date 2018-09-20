@@ -459,13 +459,13 @@ public:
     explicit PhaseLoop(ActorContext& context, Args&&... args)
         : PhaseLoop(context.orchestrator(),
                     std::move(constructPhaseMap(context, std::forward<Args>(args)...))) {
-            // Some of these static_assert() calls are redundant. This is to help
-            // users more easily track down compiler errors.
-            //
-            // Don't do this at the class level because tests want to be able to
-            // construct a simple PhaseLoop<int>.
-            static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
-        }
+        // Some of these static_assert() calls are redundant. This is to help
+        // users more easily track down compiler errors.
+        //
+        // Don't do this at the class level because tests want to be able to
+        // construct a simple PhaseLoop<int>.
+        static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
+    }
 
     // Only visible for testing
     PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)

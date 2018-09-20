@@ -34,8 +34,8 @@ genny::ActorContext::constructPhaseContexts(const YAML::Node&, genny::ActorConte
     int index = 0;
     for (const auto& phase : *phases) {
         auto configuredIndex = phase["Phase"].as<genny::PhaseNumber>(index);
-        auto [it, success] = out.try_emplace(configuredIndex,
-                        std::make_unique<genny::PhaseContext>(phase, *actorContext));
+        auto [it, success] = out.try_emplace(
+            configuredIndex, std::make_unique<genny::PhaseContext>(phase, *actorContext));
         if (!success) {
             std::stringstream msg;
             msg << "Duplicate phase " << configuredIndex;
