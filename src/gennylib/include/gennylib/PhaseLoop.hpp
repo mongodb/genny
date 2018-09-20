@@ -496,7 +496,7 @@ private:
 
         V1::PhaseMap<T> out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
-            out.try_emplace(
+            auto [it, success] = out.try_emplace(
                 // key
                 num,
                 // args to ActorPhase<T> ctor:
@@ -506,6 +506,11 @@ private:
                 // last arg(s) get forwarded to T ctor (via forward inside of make_unique)
                 *phaseContext,
                 std::forward<Args>(args)...);
+            if (!success) {
+                std::stringstream msg;
+                msg << "Duplicate phase " << num;
+                throw InvalidConfigurationException(msg.str());
+            }
         }
         return out;
     }
