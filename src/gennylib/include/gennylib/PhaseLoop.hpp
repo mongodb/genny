@@ -225,7 +225,7 @@ public:
     ActorPhase(Orchestrator& orchestrator,
                std::unique_ptr<const IterationCompletionCheck> iterationCheck,
                PhaseNumber currentPhase,
-               Args... args)
+               Args&&... args)
         : _orchestrator{orchestrator},
           _iterationCheck{std::move(iterationCheck)},
           _currentPhase{currentPhase},
