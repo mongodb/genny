@@ -217,6 +217,10 @@ template <class T>
 class ActorPhase final {
 
 public:
+
+    /**
+     * `args` are forwarded as the T value's constructor-args
+     */
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
                std::unique_ptr<const IterationCompletionCheck> iterationCheck,
@@ -230,7 +234,7 @@ public:
     }
 
     /**
-     * `args` are the T value's constructor
+     * `args` are forwarded as the T value's constructor-args
      */
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
