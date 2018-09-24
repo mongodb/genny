@@ -358,8 +358,8 @@ private:
     }
 
     bool doesBlockOn(PhaseNumber phase) const {
-        if (auto h = _phaseMap.find(phase); h != _phaseMap.end()) {
-            return h->second.doesBlock();
+        if (auto item = _phaseMap.find(phase); item != _phaseMap.end()) {
+            return item->second.doesBlock();
         }
         return true;
     }
