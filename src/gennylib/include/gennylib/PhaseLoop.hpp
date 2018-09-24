@@ -220,11 +220,11 @@ public:
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
                std::unique_ptr<const IterationCompletionCheck> iterationCheck,
-               PhaseNumber inPhase,
+               PhaseNumber currentPhase,
                Args... args)
         : _orchestrator{orchestrator},
           _iterationCheck{std::move(iterationCheck)},
-          _inPhase{inPhase},
+          _currentPhase{currentPhase},
           _value{std::make_unique<T>(std::forward<Args>(args)...)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
@@ -235,21 +235,21 @@ public:
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
                PhaseContext& phaseContext,
-               PhaseNumber inPhase,
+               PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
           _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
-          _inPhase{inPhase},
+          _currentPhase{currentPhase},
           _value{std::make_unique<T>(std::forward<Args>(args)...)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
     ActorPhaseIterator begin() {
-        return ActorPhaseIterator{_orchestrator, _iterationCheck.get(), _inPhase, false};
+        return ActorPhaseIterator{_orchestrator, _iterationCheck.get(), _currentPhase, false};
     }
 
     ActorPhaseIterator end() {
-        return ActorPhaseIterator{_orchestrator, nullptr, _inPhase, true};
+        return ActorPhaseIterator{_orchestrator, nullptr, _currentPhase, true};
     };
 
     // Used by PhaseLoopIterator::doesBlock()
@@ -270,7 +270,7 @@ public:
 private:
     Orchestrator& _orchestrator;
     const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
-    const PhaseNumber _inPhase;
+    const PhaseNumber _currentPhase;
     const std::unique_ptr<T> _value;
 
 };  // class ActorPhase
