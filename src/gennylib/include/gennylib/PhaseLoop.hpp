@@ -290,7 +290,7 @@ using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
 /**
  * The iterator used by `for(auto&& [p,h] : phaseLoop)`.
  *
- * @attention This type is only intended to be used by range-based for loops.
+ * @attention Don't use this outside of range-based for loops.
  *            Other STL algorithms like `std::advance` etc. are not supported to work.
  *
  * @tparam T the per-Phase type that will be exposed for each Phase.
