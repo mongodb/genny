@@ -59,20 +59,32 @@ public:
      *            data-points to this ostream.
      */
     void report(std::ostream& out, V1::Permission perm = {}) const {
-        out << "counters" << std::endl;
+        auto systemTime = std::chrono::system_clock::now().time_since_epoch().count();
+        auto reportTime = _registry->now({}).time_since_epoch().count();
+
+        out << "Header" << std::endl;
+        doHeader(out, systemTime, reportTime);
+        out << std::endl;
+
+        out << "Counters" << std::endl;
         doReport(out, _registry->getCounters(perm), perm);
         out << std::endl;
 
-        out << "gauges" << std::endl;
+        out << "Gauges" << std::endl;
         doReport(out, _registry->getGauges(perm), perm);
         out << std::endl;
 
-        out << "timers" << std::endl;
+        out << "Timers" << std::endl;
         doReport(out, _registry->getTimers(perm), perm);
         out << std::endl;
     }
 
 private:
+    void doHeader(std::ostream& out, long long int systemTime, long long int reportTime) const {
+        out << "SystemTime" << "," << systemTime << std::endl;
+        out << "ReportTime" << "," << reportTime << std::endl;
+    }
+
     /**
      * Prints a map<string,X> where X is a CounterImpl, GaugeImpl, etc.
      * @tparam X is a map<string,V> where V has getTimeSeries() that exposes a metrics::TimeSeries

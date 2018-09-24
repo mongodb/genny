@@ -445,6 +445,10 @@ public:
         return this->_gauges;
     };
 
+    const time_point now(V1::Permission) const {
+        return metrics::clock::now();
+    }
+
 private:
     std::unordered_map<std::string, V1::CounterImpl> _counters;
     std::unordered_map<std::string, V1::TimerImpl> _timers;
