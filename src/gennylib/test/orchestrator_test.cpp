@@ -410,7 +410,7 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
 
     std::atomic_bool blockingDone = false;
 
-    auto start = std::chrono::system_clock::now();
+    auto start = std::chrono::steady_clock::now();
 
     // t1 blocks for 75ms in Phase 0
     auto t1 = std::thread([&]() {
@@ -435,7 +435,7 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
     t2.join();
 
     // test of the test kinda: we should have blocked at least as long as t1
-    REQUIRE(std::chrono::system_clock::now() - start >= chrono::milliseconds{75});
+    REQUIRE(std::chrono::steady_clock::now() - start >= chrono::milliseconds{75});
 }
 
 TEST_CASE("Multi-threaded Range-based for loops") {
