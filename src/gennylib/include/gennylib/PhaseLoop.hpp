@@ -29,6 +29,16 @@ namespace V1 {
 
 /**
  * Determine if we're done iterating for a given Phase.
+ *
+ * One of these is constructed for each `ActorPhase<T>` (below)
+ * using a PhaseContext's `Repeat` and `Duration` keys. It is
+ * then passed to the downstream `ActorPhaseIterator` which
+ * actually keeps track of the current state of the iteration in
+ * `for(auto _ : phase)` loops. The `ActorPhaseIterator` keeps track
+ * of how many iterations have been completed and, if necessary,
+ * when the iterations started. These two values (# iterations and
+ * iteration start time) are passed into the IterationCompletionCheck
+ * to determine if the loop should continue iterating.
  */
 class IterationCompletionCheck final {
 
