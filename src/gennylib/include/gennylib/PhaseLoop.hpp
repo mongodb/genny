@@ -57,7 +57,7 @@ public:
         : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
                                    phaseContext.get<int, false>("Repeat")) {}
 
-    std::chrono::steady_clock::time_point referenceStartingPoint() const {
+    std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
         return _minDuration ? std::chrono::steady_clock::now()
                             : std::chrono::time_point<std::chrono::steady_clock>::min();
@@ -114,7 +114,7 @@ public:
           _iterCheck{iterCheck},
           _referenceStartingPoint{isEndIterator
                                       ? std::chrono::time_point<std::chrono::steady_clock>::min()
-                                      : _iterCheck->referenceStartingPoint()},
+                                      : _iterCheck->computeReferenceStartingPoint()},
           _inPhase{inPhase},
           _isEndIterator{isEndIterator},
           _currentIteration{0} {
