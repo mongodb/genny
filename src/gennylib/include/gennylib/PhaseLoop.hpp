@@ -518,8 +518,9 @@ private:
     }
 
     Orchestrator& _orchestrator;
-    V1::PhaseMap<T> _phaseMap;  // we own it
-    // _phaseMap cannot be const since we don't want to enforce that the wrapped u_p<T> is const
+    V1::PhaseMap<T> _phaseMap;
+    // _phaseMap cannot be const since we don't want to enforce
+    // the wrapped unique_ptr<T> in ActorPhase<T> to be const.
 
 };  // class PhaseLoop
 
