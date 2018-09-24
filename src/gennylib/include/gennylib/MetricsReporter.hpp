@@ -60,7 +60,7 @@ public:
      */
     void report(std::ostream& out, V1::Permission perm = {}) const {
         auto systemTime = std::chrono::system_clock::now().time_since_epoch().count();
-        auto metricsTime = _registry->now({}).time_since_epoch().count();
+        auto metricsTime = _registry->now(perm).time_since_epoch().count();
 
         out << "Clocks" << std::endl;
         doClocks(out, systemTime, metricsTime);
