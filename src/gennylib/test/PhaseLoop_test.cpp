@@ -223,6 +223,7 @@ TEST_CASE("Actual Actor Example") {
     public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
             : _loop{actorContext, 1}, _counters{counters} {}
+            //                    ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset param.
 
         void run() override {
             for (auto&& [num, cfg] : _loop) {
@@ -247,7 +248,7 @@ TEST_CASE("Actual Actor Example") {
 
     // ////////
     // setup and run (bypass the driver)
-    YAML::Node doc = YAML::Load(R"(
+    YAML::Node config = YAML::Load(R"(
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://example # unused but ctors currently require that it's syntactically valid
         Actors:
@@ -258,11 +259,11 @@ TEST_CASE("Actual Actor Example") {
             Key: 93
     )");
 
-    Orchestrator o;
-    o.addRequiredTokens(1);
+    Orchestrator orchestrator;
+    orchestrator.addRequiredTokens(1);
 
-    metrics::Registry reg;
-    WorkloadContext wl{doc, reg, o, {IncrementsMapValues::producer(counters)}};
+    metrics::Registry registry;
+    WorkloadContext wl{config, registry, orchestrator, {IncrementsMapValues::producer(counters)}};
     wl.actors()[0]->run();
     // end
     // ////////
