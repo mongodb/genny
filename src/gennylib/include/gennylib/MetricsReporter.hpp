@@ -60,10 +60,10 @@ public:
      */
     void report(std::ostream& out, V1::Permission perm = {}) const {
         auto systemTime = std::chrono::system_clock::now().time_since_epoch().count();
-        auto reportTime = _registry->now({}).time_since_epoch().count();
+        auto metricsTime = _registry->now({}).time_since_epoch().count();
 
-        out << "Header" << std::endl;
-        doHeader(out, systemTime, reportTime);
+        out << "Clocks" << std::endl;
+        doClocks(out, systemTime, metricsTime);
         out << std::endl;
 
         out << "Counters" << std::endl;
@@ -80,9 +80,9 @@ public:
     }
 
 private:
-    void doHeader(std::ostream& out, long long int systemTime, long long int reportTime) const {
+    void doClocks(std::ostream &out, long long int systemTime, long long int metricsTime) const {
         out << "SystemTime" << "," << systemTime << std::endl;
-        out << "ReportTime" << "," << reportTime << std::endl;
+        out << "MetricsTime" << "," << metricsTime << std::endl;
     }
 
     /**
