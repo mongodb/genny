@@ -268,6 +268,7 @@ TEST_CASE("Actual Actor Example") {
     // ////////
 
     REQUIRE(counters ==
-            std::unordered_map<int, int>{{72, 100},  // keys & vals came from yaml config
-                                         {94, 3}});
+            std::unordered_map<int, int>{
+                {72, 100},  // keys & vals came from yaml config. Keys have a +1 offset.
+                {94, 3}});
 }
