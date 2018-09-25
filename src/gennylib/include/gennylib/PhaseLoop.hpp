@@ -442,11 +442,11 @@ private:
  *         // expensive-to-construct objects. PhaseLoop will construct these
  *         // at Actor setup time rather than at runtime.
  *         struct MyActorConfig {
- *             int _index;
+ *             int _myImportantThing;
  *             // Must have a ctor that takes a PhaseContext& as first arg.
  *             // Other ctor args are forwarded from PhaseLoop ctor.
  *             MyActorConfig(PhaseContext& phaseConfig)
- *             : _index{phaseConfig.get<int>("Index")} {}
+ *             : _myImportantThing{phaseConfig.get<int>("ImportantThing")} {}
  *         };
  *
  *         PhaseLoop<MyActorConfig> _loop;
@@ -455,13 +455,13 @@ private:
  *         MyActor(ActorContext& actorContext)
  *         : _loop{actorContext} {}
  *         // if your MyActorConfig takes other ctor args, pass them through
- *         // here e.g. _loop{actorContext, someOtherParam]
+ *         // here e.g. _loop{actorContext, someOtherParam}
  *
  *         void run() {
  *             for(auto&& [phaseNum, actorPhase] : _loop) {     // (1)
  *                 // Access the MyActorConfig for the Phase
  *                 // by using operator->() or operator*().
- *                 auto index = actorPhase->_index;
+ *                 auto importantThingForThisPhase = actorPhase->_myImportantThing;
  *
  *                 // The actorPhase itself is iterable
  *                 // this loop will continue running as long
