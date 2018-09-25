@@ -153,7 +153,7 @@ public:
                    // if we block, then check to see if we're done in current phase
                    // else check to see if current phase has expired
                    (_iterationCheck->doesBlock() ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration)
-                                            : _orchestrator->currentPhase() != _inPhase))
+                                                 : _orchestrator->currentPhase() != _inPhase))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
@@ -168,7 +168,7 @@ public:
                 || (!rhs._isEndIterator && !_isEndIterator
                     && _referenceStartingPoint  == rhs._referenceStartingPoint
                     && _currentIteration        == rhs._currentIteration
-                    && _iterationCheck               == rhs._iterationCheck)
+                    && _iterationCheck          == rhs._iterationCheck)
 
                 // both .end() iterators (all .end() iterators are ==)
                 || (_isEndIterator && rhs._isEndIterator)
