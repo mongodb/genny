@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <boost/log/trivial.hpp>
+#include <boost/program_options.hpp>
 
 #include <mongocxx/instance.hpp>
 
@@ -35,12 +36,7 @@ YAML::Node loadConfig(const std::string& fileName) {
 }  // namespace
 
 
-int genny::driver::DefaultDriver::run(int argc, char** argv) const {
-
-    if (argc < 2) {
-        BOOST_LOG_TRIVIAL(fatal) << "Usage: " << argv[0] << " WORKLOAD_FILE.yml";
-        return EXIT_FAILURE;
-    }
+int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
 
     genny::metrics::Registry metrics;
 
@@ -50,7 +46,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     auto threadCounter = metrics.counter("threadCounter");
 
     auto stopwatch = actorSetupTimer.start();
-    auto yaml = loadConfig(argv[1]);
+    auto yaml = loadConfig(options.workloadFileName);
     auto registry = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
@@ -90,4 +86,44 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
     reporter.report(std::cout);
 
     return 0;
+}
+
+genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
+    namespace po = boost::program_options;
+
+    po::options_description description{u8"🧞‍ Allowed Options 🧞‍"};
+    po::positional_options_description positional;
+
+    // clang-format off
+    description.add_options()
+        ("help",
+            "show help message")
+        ("workload-file",
+            po::value<std::string>(),
+            "path to workload configuration yaml file. "
+            "Can also specify as first positional argument.")
+        ("metrics-format",
+            po::value<std::string>()->default_value("csv"),
+            "metrics format to use")
+    ;
+
+    positional.add("workload-file", -1);
+
+    auto run = po::command_line_parser(argc, argv)
+        .options(description)
+        .positional(positional)
+        .run();
+    // clang-format on
+
+    po::variables_map vm;
+    po::store(run, vm);
+    po::notify(vm);
+
+    if (vm.count("help") || !vm.count("workload-file")) {
+        std::cout << description << std::endl;
+        throw std::logic_error("Help");
+    }
+
+    this->metricsFormat = vm["metrics-format"].as<std::string>();
+    this->workloadFileName = vm["workload-file"].as<std::string>();
 }
