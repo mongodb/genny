@@ -76,8 +76,13 @@ public:
     }
 
 private:
-    void reportSysperf(std::ostream& out, long long int systemTime, long long int metricsTime, const V1::Permission& perm) const {
-        // TODO
+    void reportSysperf(std::ostream& out, long long int, long long int, const V1::Permission&) const {
+        // TODO: Followup from TIG-1070, make this report real data
+        out << R"({"storageEngine":"wiredTiger", "results":[{
+ "name":"dummy_inserts", "workload":"genny_dummy_workload",
+ "start":1537815283.968272, "end":1537817860.423682,
+ "results":{"4":{"ops_per_sec":1500, "ops_per_sec_values":[1500]}}}]}
+)";
     }
     void reportCsv(std::ostream& out, long long int systemTime, long long int metricsTime, const V1::Permission& perm) const {
         out << "Clocks" << std::endl;
