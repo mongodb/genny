@@ -40,25 +40,25 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
 
     genny::metrics::Registry metrics;
 
+    auto actorSetup = metrics.timer("Genny.Setup");
+    auto setupTimer = actorSetup.start();
+
     mongocxx::instance instance{};
 
-    auto actorSetupTimer = metrics.timer("actorSetup");
-    auto threadCounter = metrics.counter("threadCounter");
-
-    auto stopwatch = actorSetupTimer.start();
     auto yaml = loadConfig(options.workloadFileName);
-    auto registry = genny::metrics::Registry{};
     auto orchestrator = Orchestrator{};
 
     auto producers = std::vector<genny::ActorProducer>{&genny::actor::HelloWorld::producer,
                                                        &genny::actor::Insert::producer};
-    auto workloadContext = WorkloadContext{yaml, registry, orchestrator, producers};
+    auto workloadContext = WorkloadContext{yaml, metrics, orchestrator, producers};
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
     orchestrator.phasesAtLeastTo(1);  // will later come from reading the yaml!
 
-    stopwatch.report();
+    setupTimer.report();
+
+    auto activeActors = metrics.counter("Genny.ActiveActors");
 
     std::mutex lock;
     std::vector<std::thread> threads;
@@ -68,13 +68,13 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
                    [&](const auto& actor) {
                        return std::thread{[&]() {
                            lock.lock();
-                           threadCounter.incr();
+                           activeActors.incr();
                            lock.unlock();
 
                            actor->run();
 
                            lock.lock();
-                           threadCounter.decr();
+                           activeActors.decr();
                            lock.unlock();
                        }};
                    });
@@ -82,7 +82,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     for (auto& thread : threads)
         thread.join();
 
-    const auto reporter = genny::metrics::Reporter{registry};
+    const auto reporter = genny::metrics::Reporter{metrics};
 
     std::ofstream metricsOutput;
     metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::app);
