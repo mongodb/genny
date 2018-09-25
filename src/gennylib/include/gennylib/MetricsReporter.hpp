@@ -58,10 +58,28 @@ public:
      * @param out print a human-readable listing of all
      *            data-points to this ostream.
      */
-    void report(std::ostream& out, V1::Permission perm = {}) const {
+    void report(std::ostream& out, const std::string& metricsFormat, V1::Permission perm = {}) const {
+        // should these values come from the registry, and should they be recorded at
+        // time of registry-creation?
         auto systemTime = std::chrono::system_clock::now().time_since_epoch().count();
         auto metricsTime = _registry->now(perm).time_since_epoch().count();
 
+        // if this lives more than a hot-second, put the formats into an enum and do this
+        // check & throw in the driver/main program
+        if (metricsFormat == "csv") {
+            return reportCsv(out, systemTime, metricsTime, perm);
+        } else if (metricsFormat == "sys-perf") {
+            return reportSysperf(out, systemTime, metricsTime, perm);
+        } else {
+            throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
+        }
+    }
+
+private:
+    void reportSysperf(std::ostream& out, long long int systemTime, long long int metricsTime, const V1::Permission& perm) const {
+        // TODO
+    }
+    void reportCsv(std::ostream& out, long long int systemTime, long long int metricsTime, const V1::Permission& perm) const {
         out << "Clocks" << std::endl;
         doClocks(out, systemTime, metricsTime);
         out << std::endl;
@@ -79,7 +97,6 @@ public:
         out << std::endl;
     }
 
-private:
     void doClocks(std::ostream &out, long long int systemTime, long long int metricsTime) const {
         out << "SystemTime" << "," << systemTime << std::endl;
         out << "MetricsTime" << "," << metricsTime << std::endl;

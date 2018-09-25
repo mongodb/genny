@@ -39,7 +39,7 @@ TEST_CASE("example metrics usage") {
 
     // would be done by framework / outside code:
     auto reporter = genny::metrics::Reporter(metrics);
-    reporter.report(std::cout);
+    reporter.report(std::cout, "csv");
 
     REQUIRE(reporter.getGaugeCount() == 1);
     REQUIRE(reporter.getTimerCount() == 2);
@@ -62,7 +62,7 @@ TEST_CASE("metrics reporter") {
         REQUIRE(reporter.getGaugePointsCount() == 0);
         REQUIRE(reporter.getTimerPointsCount() == 0);
         REQUIRE(reporter.getCounterPointsCount() == 0);
-        reporter.report(std::cout);
+        reporter.report(std::cout, "csv");
     }
 
 
@@ -221,5 +221,5 @@ TEST_CASE("metrics tests") {
     REQUIRE(reporter.getTimerPointsCount() == 51);
     REQUIRE(reporter.getCounterPointsCount() == 40);
 
-    reporter.report(std::cout);
+    reporter.report(std::cout, "csv");
 }

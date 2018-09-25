@@ -83,7 +83,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
         thread.join();
 
     const auto reporter = genny::metrics::Reporter{registry};
-    reporter.report(std::cout);
+    reporter.report(std::cout, options.metricsFormat);
 
     return 0;
 }
