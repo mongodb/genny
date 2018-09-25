@@ -83,7 +83,11 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
         thread.join();
 
     const auto reporter = genny::metrics::Reporter{registry};
-    reporter.report(std::cout, options.metricsFormat);
+
+    std::ofstream metricsOutput;
+    metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::app);
+    reporter.report(metricsOutput, options.metricsFormat);
+    metricsOutput.close();
 
     return 0;
 }
@@ -101,6 +105,9 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         ("metrics-format",
              po::value<std::string>()->default_value("csv"),
              "metrics format to use")
+        ("metrics-output-file",
+            po::value<std::string>()->default_value("/dev/stdout"),
+            "save metrics data to this file")
         ("workload-file",
             po::value<std::string>(),
             "path to workload configuration yaml file. "
@@ -125,5 +132,6 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     }
 
     this->metricsFormat = vm["metrics-format"].as<std::string>();
+    this->metricsOutputFileName = vm["metrics-output-file"].as<std::string>();
     this->workloadFileName = vm["workload-file"].as<std::string>();
 }

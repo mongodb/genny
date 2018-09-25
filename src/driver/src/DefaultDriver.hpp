@@ -16,6 +16,7 @@ struct ProgramOptions {
 
     std::string workloadFileName;
     std::string metricsFormat;
+    std::string metricsOutputFileName;
 };
 
 /**
