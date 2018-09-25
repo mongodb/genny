@@ -217,7 +217,6 @@ template <class T>
 class ActorPhase final {
 
 public:
-
     /**
      * `args` are forwarded as the T value's constructor-args
      */
@@ -261,12 +260,27 @@ public:
         return _iterationCheck->doesBlock();
     }
 
-    // could use `auto` for return-type of operator-> and operator*, but
+    // Could use `auto` for return-type of operator-> and operator*, but
     // IDE auto-completion likes it more if it's spelled out.
+    //
+    // - `remove_reference_t` is to handle the case when it's `T&`
+    //   (which it theoretically can be in deduced contexts).
+    // - `remove_reference_t` is idempotent so it's also just defensive-programming
+    // - `add_pointer_t` ensures it's a pointer :)
+    //
+    // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator->()`
+    //      so we trust the STL to do the right thing™️
     typename std::add_pointer_t<std::remove_reference_t<T>> operator->() const noexcept {
         return _value.operator->();
     }
 
+    // Could use `auto` for return-type of operator-> and operator*, but
+    // IDE auto-completion likes it more if it's spelled out.
+    //
+    // - `add_lvalue_reference_t` to ensure that we indicate we're a ref not a value
+    //
+    // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator*()`
+    //      so we trust the STL to do the right thing™️
     typename std::add_lvalue_reference_t<T> operator*() const {
         return _value.operator*();
     }
