@@ -98,13 +98,13 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     description.add_options()
         ("help",
             "show help message")
+        ("metrics-format",
+             po::value<std::string>()->default_value("csv"),
+             "metrics format to use")
         ("workload-file",
             po::value<std::string>(),
             "path to workload configuration yaml file. "
             "Can also specify as first positional argument.")
-        ("metrics-format",
-            po::value<std::string>()->default_value("csv"),
-            "metrics format to use")
     ;
 
     positional.add("workload-file", -1);
