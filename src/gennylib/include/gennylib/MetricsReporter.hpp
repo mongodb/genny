@@ -76,12 +76,21 @@ public:
     }
 
 private:
-    void reportSysperf(std::ostream& out, long long int, long long int, const V1::Permission&) const {
-        // TODO: Followup from TIG-1070, make this report real data
+    void reportSysperf(std::ostream& out, long long int, long long int, const V1::Permission& perm) const {
+
+        // TODO: Followup from TIG-1070, make this report real data; for now just report
+        //       the number of timer data-points that we saw.
+
+        auto count = 0;
+        for(const auto& [name,timer] : _registry->getTimers(perm)) {
+            auto& vals = timer.getTimeSeries(perm).getVals(perm);
+            count += std::distance(vals.begin(), vals.end());
+        }
+
         out << R"({"storageEngine":"wiredTiger", "results":[{
  "name":"dummy_inserts", "workload":"genny_dummy_workload",
  "start":1537815283.968272, "end":1537817860.423682,
- "results":{"4":{"ops_per_sec":1500, "ops_per_sec_values":[1500]}}}]}
+ "results":{"4":{"ops_per_sec":)" << count << R"(, "ops_per_sec_values":[)" << count << R"(]}}}]}
 )";
     }
     void reportCsv(std::ostream& out, long long int systemTime, long long int metricsTime, const V1::Permission& perm) const {
