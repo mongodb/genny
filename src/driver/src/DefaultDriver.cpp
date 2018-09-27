@@ -92,6 +92,28 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     return 0;
 }
 
+
+namespace {
+
+/**
+ * Normalize the metrics output file command-line option.
+ *
+ * @param str the input option value from the command-lien
+ * @return the file-path that should be used to open the output stream.
+ */
+// There may be a more conventional way to define conversion/normalization
+// functions for use with boost::program_options. The tutorial isn't the
+// clearest thing. If we need to do more than 1-2, look into that further.
+std::string normalizeOutputFile(const std::string& str) {
+    if (str == "-") {
+        return std::string("/dev/stdout");
+    }
+    return str;
+}
+
+}  // namespace
+
+
 genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     namespace po = boost::program_options;
 
@@ -100,17 +122,18 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
 
     // clang-format off
     description.add_options()
-        ("help",
-            "show help message")
-        ("metrics-format",
+        ("help,h",
+            "Show help message")
+        ("metrics-format,m",
              po::value<std::string>()->default_value("csv"),
-             "metrics format to use")
-        ("metrics-output-file",
+             "Metrics format to use")
+        ("metrics-output-file,o",
             po::value<std::string>()->default_value("/dev/stdout"),
-            "save metrics data to this file")
-        ("workload-file",
+            "Save metrics data to this file. Use `-` or `/dev/stdout` for stdout.")
+        ("workload-file,w",
             po::value<std::string>(),
-            "path to workload configuration yaml file. "
+            "Path to workload configuration yaml file. "
+            "Paths are relative to the program's cwd. "
             "Can also specify as first positional argument.")
     ;
 
@@ -132,6 +155,6 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     }
 
     this->metricsFormat = vm["metrics-format"].as<std::string>();
-    this->metricsOutputFileName = vm["metrics-output-file"].as<std::string>();
+    this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->workloadFileName = vm["workload-file"].as<std::string>();
 }
