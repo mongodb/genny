@@ -9,16 +9,33 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
 
 using namespace genny;
 using namespace std::chrono;
+using namespace std;
 
 namespace {
 
 // Catch2's REQUIRE etc macros are not thread-safe, so need to unique_lock on this
 // mutex whenever calling assertion macros inside a thread.
 std::mutex asserting;
+
+//
+// Cute convenience operators -
+//  100_i   gives optional<int>     holding 100
+//  100_ms  gives optional<millis>  holding 100
+//
+// These are copy/pasta in PhaseLoop_test and orchestrator_test. Refactor.
+optional<int> operator"" _i(unsigned long long int v) {
+    return make_optional(v);
+}
+optional<chrono::milliseconds> operator"" _ms(unsigned long long int v) {
+    return make_optional(chrono::milliseconds{v});
+}
 
 std::thread start(Orchestrator& o,
                   PhaseNumber phase,
@@ -199,19 +216,53 @@ TEST_CASE("Orchestrator") {
     }
 }
 
+// more easily construct V1::ActorPhase instances
+using PhaseConfig =
+    std::tuple<PhaseNumber, int, std::optional<int>, std::optional<std::chrono::milliseconds>>;
+
+std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
+    Orchestrator& orchestrator, const std::vector<PhaseConfig>& phaseConfigs) {
+
+    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> out;
+    for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
+        auto [it, success] =
+            out.try_emplace(phaseNum,
+                            orchestrator,
+                            std::make_unique<const V1::IterationCompletionCheck>(dur, iters),
+                            phaseNum,
+                            phaseVal);
+        // prevent misconfiguration within test (dupe phaseNum vals)
+        {
+            std::unique_lock<mutex> lk(asserting);
+            REQUIRE(success);
+            REQUIRE(*(it->second) == phaseVal);
+        }
+    }
+    return out;
+};
+
 TEST_CASE("Two non-blocking Phases") {
     Orchestrator o;
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_set<PhaseNumber> seen{};
-    std::unordered_set<PhaseNumber> blocking;
+    std::unordered_set<PhaseNumber> seenPhases{};
+    std::unordered_set<int> seenActorPhaseValues;
 
-    for (auto&& p : o.loop(blocking)) {
-        seen.insert(p);
+    auto phaseConfig{makePhaseConfig(o, {{0, 7, 2_i, nullopt}, {1, 9, 2_i, nullopt}})};
+
+    auto count = 0;
+    for (auto&& [p, h] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+        seenPhases.insert(p);
+        for (auto&& _ : h) {
+            seenActorPhaseValues.insert(*h);
+            ++count;
+        }
     }
 
-    REQUIRE(seen == std::unordered_set<PhaseNumber>{0, 1});
+    REQUIRE(count == 4);
+    REQUIRE(seenPhases == std::unordered_set<PhaseNumber>{0, 1});
+    REQUIRE(seenActorPhaseValues == std::unordered_set<int>{7, 9});
 }
 
 TEST_CASE("Single Blocking Phase") {
@@ -219,9 +270,9 @@ TEST_CASE("Single Blocking Phase") {
     o.addRequiredTokens(1);
 
     std::unordered_set<PhaseNumber> seen{};
-    std::unordered_set<PhaseNumber> blocking{0};
 
-    for (auto&& p : o.loop(blocking)) {
+    auto phaseConfig{makePhaseConfig(o, {{0, 7, 1_i, nullopt}})};
+    for (auto&& [p, h] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(p);
     }
 
@@ -233,15 +284,25 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_set<PhaseNumber> blocking{0, 1, 2};
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// all blocking on # iterations
+                                      {0, 7, 1_i, nullopt},
+                                      {1, 9, 2_i, nullopt},
+                                      {2, 11, 3_i, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (PhaseNumber phase : o.loop(blocking)) {
+    auto iters = 0;
+
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for (auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L, 2L});
+    REQUIRE(iters == 6);
 }
 
 TEST_CASE("single-threaded range-based for loops no phases blocking") {
@@ -249,15 +310,25 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
-    std::unordered_set<PhaseNumber> blocking;  // none
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// none blocking
+                                      {0, 7, nullopt, nullopt},
+                                      {1, 9, nullopt, nullopt},
+                                      {2, 11, nullopt, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto phase : o.loop(blocking)) {
+    auto iters = 0;
+
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for (auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L, 2L});
+    REQUIRE(iters == 0);  // all non-blocking
 }
 
 TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
@@ -265,15 +336,22 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_set<PhaseNumber> blocking{1};
-
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// non-block then block
+                                      {0, 7, nullopt, nullopt},
+                                      {1, 9, 1_i, nullopt}})};
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto phase : o.loop(blocking)) {
+    auto iters = 0;
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for (auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
+    REQUIRE(iters == 1);
 }
 
 TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
@@ -281,15 +359,24 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_set<PhaseNumber> blocking{0};
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// block then non-block
+                                      {0, 7, 1_i, nullopt},
+                                      {1, 9, nullopt, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto phase : o.loop(blocking)) {
+    auto iters = 0;
+
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for (auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
+    REQUIRE(iters == 1);
 }
 
 TEST_CASE("single-threaded range-based for loops blocking then blocking") {
@@ -297,15 +384,58 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
-    std::unordered_set<PhaseNumber> blocking{0, 1};
+    auto phaseConfig{makePhaseConfig(o,
+                                     {// block then block
+                                      {0, 7, 1_i, nullopt},
+                                      {1, 9, 1_i, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
-    for (auto phase : o.loop(blocking)) {
+    auto iters = 0;
+
+    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(phase);
+        for (auto&& _ : holder) {
+            ++iters;
+        }
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0L, 1L});
+    REQUIRE(iters == 2);
+}
+
+TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
+    Orchestrator o;
+    o.addRequiredTokens(2);
+
+    std::atomic_bool blockingDone = false;
+
+    auto start = std::chrono::steady_clock::now();
+
+    // t1 blocks for 75ms in Phase 0
+    auto t1 = std::thread([&]() {
+        for (auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ms}})})
+            for (auto _ : h) {
+            }  // nop
+        blockingDone = true;
+    });
+
+    // t2 does not block
+    auto t2 = std::thread([&]() {
+        for (auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, nullopt}})})
+            for (auto _ : h) {
+            }  // nop
+        {
+            std::lock_guard lk{asserting};
+            REQUIRE(blockingDone);
+        }
+    });
+
+    t1.join();
+    t2.join();
+
+    // test of the test kinda: we should have blocked at least as long as t1
+    REQUIRE(std::chrono::steady_clock::now() - start >= chrono::milliseconds{75});
 }
 
 TEST_CASE("Multi-threaded Range-based for loops") {
@@ -324,11 +454,16 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     std::atomic_bool phaseOneSlept = false;
 
     auto t1 = std::thread([&]() {
-        std::unordered_set<PhaseNumber> blocking{1};
-        for (int phase : o.loop(blocking)) {
+        auto phaseConfig{makePhaseConfig(o,
+                                         {// non-block then block
+                                          {0, 7, nullopt, nullopt},
+                                          {1, 9, 1_i, nullopt}})};
+
+        for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
             switch (phase) {
                 case 0:
-                    while (o.currentPhase() == 0) {}
+                    for (auto&& _ : holder) {
+                    }  // nop
                     // is set after nop
                     if (!phaseZeroSlept) {
                         BOOST_LOG_TRIVIAL(error) << "Prematurely advanced from phase 0";
@@ -347,19 +482,23 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     });
     // similar to t1 but swapped zeroes and ones
     auto t2 = std::thread([&]() {
-        std::unordered_set<PhaseNumber> blocking{0};
+        auto phaseConfig{makePhaseConfig(o,
+                                         {// block then non-block
+                                          {0, 7, 1_i, nullopt},
+                                          {1, 9, nullopt, nullopt}})};
 
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (int phase : o.loop(blocking)) {
+        for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
             switch (phase) {
                 case 0:
                     std::this_thread::sleep_for(sleepTime);
                     phaseZeroSlept = true;
                     break;
                 case 1:
-                    while (o.currentPhase() == 1) {}
+                    for (auto&& _ : holder) {
+                    }  // nop
                     if (!phaseOneSlept) {
                         BOOST_LOG_TRIVIAL(error) << "Prematurely advanced from phase 1";
                         ++failures;

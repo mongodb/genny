@@ -16,11 +16,10 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
-#include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/Orchestrator.hpp>
-#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/conventions.hpp>
+#include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/metrics.hpp>
+#include <gennylib/Orchestrator.hpp>
 
 /**
  * This file defines `WorkloadContext`, `ActorContext`, and `PhaseContext` which provide access
@@ -199,6 +198,7 @@ public:
         : _node{std::move(node)},
           _registry{&registry},
           _orchestrator{&orchestrator},
+          // TODO: make this optional and default to mongodb://localhost:27017
           _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}},
           _done{false} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
@@ -394,8 +394,18 @@ public:
         return *this->_workload;
     }
 
+    Orchestrator& orchestrator() {
+        return *this->_workload->_orchestrator;
+    }
+
     /**
      * @return a structure representing the `Phases:` block in the Actor config.
+     *
+     * If you want per-Phase configuration, consider using `PhaseLoop<T>` which
+     * will let you construct a `T` for each Phase at constructor-time and will
+     * automatically coordinate with the `Orchestrator`.
+     *   ** See extended example on the `PhaseLoop` class. **
+     *
      * Keys are phase numbers and values are the Phase blocks associated with them.
      * Empty if there are no configured Phases.
      *
@@ -432,7 +442,7 @@ public:
      * configuration in other mechanisms if desired. The `Phases:` structure and
      * related PhaseContext type are purely for conventional convenience.
      */
-    const std::unordered_map<int, std::unique_ptr<PhaseContext>>& phases() const {
+    const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
         return _phaseContexts;
     };
 
@@ -489,11 +499,11 @@ public:
     // </Forwarding to delegates>
 
 private:
-    static std::unordered_map<int, std::unique_ptr<PhaseContext>> constructPhaseContexts(
-        const YAML::Node&, ActorContext*);
+    static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
+    constructPhaseContexts(const YAML::Node&, ActorContext*);
     YAML::Node _node;
     WorkloadContext* _workload;
-    std::unordered_map<int, std::unique_ptr<PhaseContext>> _phaseContexts;
+    std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
 
 
@@ -535,58 +545,6 @@ public:
         // fallback to actor node
         return this->_actor->get<T, Required>(std::forward<Args>(args)...);
     };
-
-    /**
-     * @return an object that can iterate either `Repeat` times or for `Duration` time-units.
-     * Note that `PhaseLoop`s are relatively expensive to construct and should be constructed
-     * at actor-constructor time. Once constructed they can be iterated-over multiple times.
-     * The internal iteration-state is held in the iterator returned by PhaseLoop::begin().
-     *
-     * Example usage:
-     *   Imagine wanting to run an operation 100 times during phase 0
-     *   and run for 100 millseconds in phase 1.
-     *
-     *
-     * Configuration:
-     *
-     * ```yaml
-     * Actors:
-     * - Type: MyActor
-     *   Phases:
-     *   - Repeat: 100
-     *   - Duration: 100 milliseconds
-     * ```
-     *
-     * Actor Code:
-     *
-     * ```c++
-     * struct MyActor : public PhasedActor {
-     *   PhaseLoop loopOne;
-     *   PhaseLoop loopTwo;
-     *   MyActor(ActorContext& ctx)
-     *   : PhasedActor(ctx),
-     *     loopOne{ctx.phases().at(0).loop()},
-     *     loopOne{ctx.phases().at(1).loop()} {}
-     *
-     *   void doMyOperation();
-     *
-     *   void doPhase(int phaseNumber) {
-     *     PhaseLoop phaseLoop = phaseNumber == 0 ? loopOne : loopTwo;
-     *
-     *     for(auto _ : phaseLoop) {
-     *       doMyOperation();
-     *     }
-     *
-     *   }
-     * }
-     * ```
-     *
-     * This Actor code is simplified to show the usage of `PhaseLoop`.
-     */
-    PhaseLoop loop() const {
-        return PhaseLoop{this->get<int, false>("Repeat"),
-                         this->get<std::chrono::milliseconds, false>("Duration")};
-    }
 
 private:
     YAML::Node _node;

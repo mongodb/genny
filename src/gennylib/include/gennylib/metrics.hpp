@@ -37,6 +37,10 @@ private:
 public:
     period() = default;
 
+    operator clock::duration() const {
+        return duration;
+    }
+
     // recursive case
     template <typename Arg0, typename... Args>
     period(Arg0 arg0, Args&&... args)
