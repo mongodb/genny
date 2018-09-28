@@ -13,19 +13,19 @@ struct genny::actor::InsertRemove::Config {
     struct PhaseConfig {
         PhaseConfig(const std::string collection_name,
                     std::mt19937_64& rng,
-                    const mongocxx::database& db)
+                    const mongocxx::database& db, int thread)
             : collection{db[collection_name]}, myDoc(
                                                      bsoncxx::builder::stream::document{} << 
-                                                     "_id" <<  1 << bsoncxx::builder::stream::finalize)
+                                                     "_id" <<  thread << bsoncxx::builder::stream::finalize)
         {}
         mongocxx::collection collection;
         bsoncxx::document::value myDoc;
     };
 
-    Config(const genny::ActorContext& context, const mongocxx::database& db, std::mt19937_64& rng) {
+    Config(const genny::ActorContext& context, const mongocxx::database& db, std::mt19937_64& rng, int thread) {
         for (const auto& node : context.get("Phases")) {
             const auto& collection_name = node["Collection"].as<std::string>();
-            phases.emplace_back(collection_name, rng, db);
+            phases.emplace_back(collection_name, rng, db, thread);
         }
     }
     std::vector<PhaseConfig> phases;
@@ -51,7 +51,7 @@ genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context, const uns
       _removeTimer{context.timer(_fullName + ".remove")},
       _client{std::move(context.client())},
       _config{std::make_unique<Config>(
-          context, (*_client)[context.get<std::string>("Database")], _rng)} {}
+                                       context, (*_client)[context.get<std::string>("Database")], _rng, thread)} {}
 
 genny::ActorVector genny::actor::InsertRemove::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
