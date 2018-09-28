@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <boost/log/trivial.hpp>
+#include <boost/program_options.hpp>
 
 #include <mongocxx/instance.hpp>
 
@@ -35,12 +36,7 @@ YAML::Node loadConfig(const std::string& fileName) {
 }  // namespace
 
 
-int genny::driver::DefaultDriver::run(int argc, char** argv) const {
-
-    if (argc < 2) {
-        BOOST_LOG_TRIVIAL(fatal) << "Usage: " << argv[0] << " WORKLOAD_FILE.yml";
-        return EXIT_FAILURE;
-    }
+int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
 
     genny::metrics::Registry metrics;
 
@@ -49,7 +45,7 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
 
     mongocxx::instance instance{};
 
-    auto yaml = loadConfig(argv[1]);
+    auto yaml = loadConfig(options.workloadFileName);
     auto orchestrator = Orchestrator{};
 
     auto producers = std::vector<genny::ActorProducer>{&genny::actor::HelloWorld::producer,
@@ -87,7 +83,78 @@ int genny::driver::DefaultDriver::run(int argc, char** argv) const {
         thread.join();
 
     const auto reporter = genny::metrics::Reporter{metrics};
-    reporter.report(std::cout);
+
+    std::ofstream metricsOutput;
+    metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::app);
+    reporter.report(metricsOutput, options.metricsFormat);
+    metricsOutput.close();
 
     return 0;
+}
+
+
+namespace {
+
+/**
+ * Normalize the metrics output file command-line option.
+ *
+ * @param str the input option value from the command-lien
+ * @return the file-path that should be used to open the output stream.
+ */
+// There may be a more conventional way to define conversion/normalization
+// functions for use with boost::program_options. The tutorial isn't the
+// clearest thing. If we need to do more than 1-2, look into that further.
+std::string normalizeOutputFile(const std::string& str) {
+    if (str == "-") {
+        return std::string("/dev/stdout");
+    }
+    return str;
+}
+
+}  // namespace
+
+
+genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
+    namespace po = boost::program_options;
+
+    po::options_description description{u8"🧞‍ Allowed Options 🧞‍"};
+    po::positional_options_description positional;
+
+    // clang-format off
+    description.add_options()
+        ("help,h",
+            "Show help message")
+        ("metrics-format,m",
+             po::value<std::string>()->default_value("csv"),
+             "Metrics format to use")
+        ("metrics-output-file,o",
+            po::value<std::string>()->default_value("/dev/stdout"),
+            "Save metrics data to this file. Use `-` or `/dev/stdout` for stdout.")
+        ("workload-file,w",
+            po::value<std::string>(),
+            "Path to workload configuration yaml file. "
+            "Paths are relative to the program's cwd. "
+            "Can also specify as first positional argument.")
+    ;
+
+    positional.add("workload-file", -1);
+
+    auto run = po::command_line_parser(argc, argv)
+        .options(description)
+        .positional(positional)
+        .run();
+    // clang-format on
+
+    po::variables_map vm;
+    po::store(run, vm);
+    po::notify(vm);
+
+    if (vm.count("help") || !vm.count("workload-file")) {
+        std::cout << description << std::endl;
+        throw std::logic_error("Help");
+    }
+
+    this->metricsFormat = vm["metrics-format"].as<std::string>();
+    this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
+    this->workloadFileName = vm["workload-file"].as<std::string>();
 }

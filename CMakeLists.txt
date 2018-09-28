@@ -22,6 +22,7 @@ find_package(
         COMPONENTS
         log_setup
         log
+        program_options
 )
 add_library(boost INTERFACE IMPORTED)
 set_property(TARGET boost PROPERTY
