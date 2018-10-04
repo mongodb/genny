@@ -4,7 +4,6 @@
 
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
-//#include <mongocxx/database.hpp>
 #include <yaml-cpp/yaml.h>
 
 #include "log.hh"
