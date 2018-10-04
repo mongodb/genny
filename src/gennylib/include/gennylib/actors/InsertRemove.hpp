@@ -5,11 +5,13 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <gennylib/PhasedActor.hpp>
+#include <gennylib/Actor.hpp>
+#include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
 
 namespace genny::actor {
 
-class InsertRemove : public genny::PhasedActor {
+class InsertRemove : public Actor {
 
 public:
     explicit InsertRemove(ActorContext& context, const unsigned int thread);
@@ -17,17 +19,16 @@ public:
     ~InsertRemove() = default;
 
     static ActorVector producer(ActorContext& context);
-
+    void run() override;
+    
 private:
-    struct Config;
-
-    void doPhase(PhaseNumber phase);
+    struct PhaseConfig;
     std::mt19937_64 _rng;
 
     metrics::Timer _insertTimer;
     metrics::Timer _removeTimer;
     mongocxx::pool::entry _client;
-    std::unique_ptr<Config> _config;
+    PhaseLoop<PhaseConfig> _loop;
 };
 
 }  // namespace genny::actor
