@@ -20,7 +20,7 @@ public:
 
     static ActorVector producer(ActorContext& context);
     void run() override;
-    
+
 private:
     struct PhaseConfig;
     std::mt19937_64 _rng;
