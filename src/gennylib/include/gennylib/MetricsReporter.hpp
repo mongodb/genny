@@ -92,7 +92,7 @@ private:
         genny::metrics::clock::duration total;
         for (const auto& [name, timer] : _registry->getTimers(perm)) {
             auto& vals = timer.getTimeSeries(perm).getVals(perm);
-            for(const auto& [when,dur] : vals) {
+            for (const auto& [when, dur] : vals) {
                 total += dur;
             }
         }
