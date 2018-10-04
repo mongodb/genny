@@ -3,6 +3,7 @@
 #include <memory>
 
 #include <mongocxx/client.hpp>
+#include <mongocxx/pool.hpp>
 //#include <mongocxx/database.hpp>
 #include <yaml-cpp/yaml.h>
 
@@ -11,14 +12,16 @@
 #include <gennylib/value_generators.hpp>
 
 struct genny::actor::InsertRemove::PhaseConfig {
-    PhaseConfig(const std::string collection_name,
+    PhaseConfig(mongocxx::database db, 
+                const std::string collection_name,
                 std::mt19937_64& rng,
-                mongocxx::database db, int thread)
+                int thread)
         : database{db}, collection{db[collection_name]}, myDoc(
                                                  bsoncxx::builder::stream::document{} << 
                                                  "_id" <<  thread << bsoncxx::builder::stream::finalize)
     {}
-    PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::database db, int thread) : PhaseConfig(context.get<std::string>("Collection"), rng, db, thread) 
+    PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client, int thread) :
+        PhaseConfig((*client)[context.get<std::string>("Database")], context.get<std::string>("Collection"), rng, thread) 
     {}
     mongocxx::database database;
     mongocxx::collection collection;
@@ -48,7 +51,7 @@ genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context, const uns
       _insertTimer{context.timer("insert")}, // TODO: Actor specific names and thread
       _removeTimer{context.timer("remove")},
       _client{std::move(context.client())},
-      _loop{context, _rng, (*_client)[context.get<std::string>("Database")], thread}
+      _loop{context, _rng, _client, thread}
 {}
 
 genny::ActorVector genny::actor::InsertRemove::producer(genny::ActorContext& context) {

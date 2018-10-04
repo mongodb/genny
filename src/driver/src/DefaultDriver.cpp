@@ -16,6 +16,7 @@
 #include <gennylib/PhasedActor.hpp>
 #include <gennylib/actors/HelloWorld.hpp>
 #include <gennylib/actors/Insert.hpp>
+#include <gennylib/actors/InsertRemove.hpp>
 #include <gennylib/context.hpp>
 
 
@@ -49,7 +50,8 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     auto orchestrator = Orchestrator{};
 
     auto producers = std::vector<genny::ActorProducer>{&genny::actor::HelloWorld::producer,
-                                                       &genny::actor::Insert::producer};
+                                                       &genny::actor::Insert::producer,
+                                                       &genny::actor::InsertRemove::producer};
     auto workloadContext = WorkloadContext{yaml, metrics, orchestrator, producers};
 
     orchestrator.addRequiredTokens(

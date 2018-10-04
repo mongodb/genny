@@ -1,0 +1,14 @@
+SchemaVersion: 2018-07-01
+
+MongoUri: "mongodb://localhost:27017"
+
+Actors:
+  - Name: InsertRemoveTest
+    Type: InsertRemove
+    Threads: 2
+    Database: "test"
+    Phases:
+      - Collection: "inserts"
+        Duration: 100
+      - Collection: "inserts"
+        Count: 13
