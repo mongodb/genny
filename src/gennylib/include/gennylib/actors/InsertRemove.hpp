@@ -11,15 +11,21 @@
 
 namespace genny::actor {
 
+/**
+ * InsertRemove is a simple actor that inserts and then removes the same document from a
+ * collection. It uses {@code PhaseLoop} for looping.  Each instance of the actor uses a
+ * different document, indexed by an integer _id field. The actor records the latency of each
+ * insert and each remove.
+ */
 class InsertRemove : public Actor {
 
 public:
     explicit InsertRemove(ActorContext& context, const unsigned int thread);
-
     ~InsertRemove() = default;
 
-    static ActorVector producer(ActorContext& context);
     void run() override;
+
+    static ActorVector producer(ActorContext& context);
 
 private:
     struct PhaseConfig;
