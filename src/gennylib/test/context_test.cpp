@@ -255,6 +255,24 @@ TEST_CASE("PhaseContexts constructed as expected") {
     }
 }
 
+TEST_CASE("Duplicate Phase Numbers") {
+    auto yaml = YAML::Load(R"(
+    SchemaVersion: 2018-07-01
+    MongoUri: mongodb://localhost:27017
+    Actors:
+    - Phases:
+      - Phase: 0
+      - Phase: 0
+    )");
+
+    metrics::Registry metrics;
+    Orchestrator orchestrator;
+    ActorProducer producer = [&](ActorContext& context) -> ActorVector { return {}; };
+
+    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, {producer}}),
+                        Catch::Matches("Duplicate phase 0"));
+}
+
 TEST_CASE("No PhaseContexts") {
     auto yaml = YAML::Load(R"(
     SchemaVersion: 2018-07-01

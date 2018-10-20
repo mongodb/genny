@@ -37,6 +37,10 @@ private:
 public:
     period() = default;
 
+    operator clock::duration() const {
+        return duration;
+    }
+
     // recursive case
     template <typename Arg0, typename... Args>
     period(Arg0 arg0, Args&&... args)
@@ -444,6 +448,10 @@ public:
     const std::unordered_map<std::string, V1::GaugeImpl>& getGauges(V1::Permission) const {
         return this->_gauges;
     };
+
+    const time_point now(V1::Permission) const {
+        return metrics::clock::now();
+    }
 
 private:
     std::unordered_map<std::string, V1::CounterImpl> _counters;

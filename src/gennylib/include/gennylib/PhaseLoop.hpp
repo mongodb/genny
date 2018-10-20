@@ -29,6 +29,16 @@ namespace V1 {
 
 /**
  * Determine if we're done iterating for a given Phase.
+ *
+ * One of these is constructed for each `ActorPhase<T>` (below)
+ * using a PhaseContext's `Repeat` and `Duration` keys. It is
+ * then passed to the downstream `ActorPhaseIterator` which
+ * actually keeps track of the current state of the iteration in
+ * `for(auto _ : phase)` loops. The `ActorPhaseIterator` keeps track
+ * of how many iterations have been completed and, if necessary,
+ * when the iterations started. These two values (# iterations and
+ * iteration start time) are passed into the IterationCompletionCheck
+ * to determine if the loop should continue iterating.
  */
 class IterationCompletionCheck final {
 
@@ -57,7 +67,7 @@ public:
         : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
                                    phaseContext.get<int, false>("Repeat")) {}
 
-    std::chrono::steady_clock::time_point referenceStartingPoint() const {
+    std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
         return _minDuration ? std::chrono::steady_clock::now()
                             : std::chrono::time_point<std::chrono::steady_clock>::min();
@@ -102,21 +112,25 @@ private:
 class ActorPhaseIterator final {
 
 public:
+    // Normally we'd use const IterationCompletionCheck& (ref rather than *)
+    // but we actually *want* nullptr for the end iterator. This is a bit of
+    // an over-optimization, but it adds very little complexity at the benefit
+    // of not having to construct a useless object.
     ActorPhaseIterator(Orchestrator& orchestrator,
-                       const IterationCompletionCheck* iterCheck,
+                       const IterationCompletionCheck* iterationCheck,
                        PhaseNumber inPhase,
                        bool isEndIterator)
         : _orchestrator{std::addressof(orchestrator)},
-          _iterCheck{iterCheck},
+          _iterationCheck{iterationCheck},
           _referenceStartingPoint{isEndIterator
                                       ? std::chrono::time_point<std::chrono::steady_clock>::min()
-                                      : _iterCheck->referenceStartingPoint()},
+                                      : _iterationCheck->computeReferenceStartingPoint()},
           _inPhase{inPhase},
           _isEndIterator{isEndIterator},
-          _currentIteration{0} {}
-
-    ActorPhaseIterator(Orchestrator& orchestrator, PhaseNumber inPhase, bool isEnd)
-        : ActorPhaseIterator{orchestrator, nullptr, inPhase, isEnd} {}
+          _currentIteration{0} {
+        // iterationCheck should only be null if we're end() iterator.
+        assert(isEndIterator == (iterationCheck == nullptr));
+    }
 
     // iterator concept value-type
     // intentionally empty; most compilers will elide any actual storage
@@ -138,8 +152,8 @@ public:
                 (rhs._isEndIterator && !this->_isEndIterator &&
                    // if we block, then check to see if we're done in current phase
                    // else check to see if current phase has expired
-                   (_iterCheck->doesBlock() ? _iterCheck->isDone(_referenceStartingPoint, _currentIteration)
-                                            : _orchestrator->currentPhase() != _inPhase))
+                   (_iterationCheck->doesBlock() ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration)
+                                                 : _orchestrator->currentPhase() != _inPhase))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
@@ -154,7 +168,7 @@ public:
                 || (!rhs._isEndIterator && !_isEndIterator
                     && _referenceStartingPoint  == rhs._referenceStartingPoint
                     && _currentIteration        == rhs._currentIteration
-                    && _iterCheck               == rhs._iterCheck)
+                    && _iterationCheck          == rhs._iterationCheck)
 
                 // both .end() iterators (all .end() iterators are ==)
                 || (_isEndIterator && rhs._isEndIterator)
@@ -172,7 +186,7 @@ public:
 
 private:
     Orchestrator* _orchestrator;
-    const IterationCompletionCheck* _iterCheck;
+    const IterationCompletionCheck* _iterationCheck;
     const std::chrono::steady_clock::time_point _referenceStartingPoint;
     const PhaseNumber _inPhase;
     const bool _isEndIterator;
@@ -203,54 +217,79 @@ template <class T>
 class ActorPhase final {
 
 public:
+    /**
+     * `args` are forwarded as the T value's constructor-args
+     */
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
-               std::unique_ptr<const IterationCompletionCheck> iterCheck,
-               PhaseNumber inPhase,
-               Args... args)
+               std::unique_ptr<const IterationCompletionCheck> iterationCheck,
+               PhaseNumber currentPhase,
+               Args&&... args)
         : _orchestrator{orchestrator},
-          _iterCheck{std::move(iterCheck)},
-          _inPhase{inPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
+          _iterationCheck{std::move(iterationCheck)},
+          _currentPhase{currentPhase},
+          _value{std::make_unique<T>(std::forward<Args>(args)...)} {
+        static_assert(std::is_constructible_v<T, Args...>);
+    }
 
+    /**
+     * `args` are forwarded as the T value's constructor-args
+     */
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
                PhaseContext& phaseContext,
-               PhaseNumber inPhase,
+               PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
-          _iterCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
-          _inPhase{inPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
+          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
+          _currentPhase{currentPhase},
+          _value{std::make_unique<T>(std::forward<Args>(args)...)} {
+        static_assert(std::is_constructible_v<T, Args...>);
+    }
 
     ActorPhaseIterator begin() {
-        return ActorPhaseIterator{_orchestrator, _iterCheck.get(), _inPhase, false};
+        return ActorPhaseIterator{_orchestrator, _iterationCheck.get(), _currentPhase, false};
     }
 
     ActorPhaseIterator end() {
-        return ActorPhaseIterator{_orchestrator, _inPhase, true};
+        return ActorPhaseIterator{_orchestrator, nullptr, _currentPhase, true};
     };
 
     // Used by PhaseLoopIterator::doesBlock()
     bool doesBlock() const {
-        return _iterCheck->doesBlock();
+        return _iterationCheck->doesBlock();
     }
 
-    // could use `auto` for return-type of operator-> and operator*, but
+    // Could use `auto` for return-type of operator-> and operator*, but
     // IDE auto-completion likes it more if it's spelled out.
+    //
+    // - `remove_reference_t` is to handle the case when it's `T&`
+    //   (which it theoretically can be in deduced contexts).
+    // - `remove_reference_t` is idempotent so it's also just defensive-programming
+    // - `add_pointer_t` ensures it's a pointer :)
+    //
+    // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator->()`
+    //      so we trust the STL to do the right thing™️
     typename std::add_pointer_t<std::remove_reference_t<T>> operator->() const noexcept {
         return _value.operator->();
     }
 
+    // Could use `auto` for return-type of operator-> and operator*, but
+    // IDE auto-completion likes it more if it's spelled out.
+    //
+    // - `add_lvalue_reference_t` to ensure that we indicate we're a ref not a value
+    //
+    // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator*()`
+    //      so we trust the STL to do the right thing™️
     typename std::add_lvalue_reference_t<T> operator*() const {
         return _value.operator*();
     }
 
 private:
     Orchestrator& _orchestrator;
-    std::unique_ptr<const IterationCompletionCheck> _iterCheck;
-    const PhaseNumber _inPhase;
-    std::unique_ptr<T> _value;
+    const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
+    const PhaseNumber _currentPhase;
+    const std::unique_ptr<T> _value;
 
 };  // class ActorPhase
 
@@ -265,7 +304,7 @@ using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
 /**
  * The iterator used by `for(auto&& [p,h] : phaseLoop)`.
  *
- * @attention This type is only intended to be used by range-based for loops.
+ * @attention Don't use this outside of range-based for loops.
  *            Other STL algorithms like `std::advance` etc. are not supported to work.
  *
  * @tparam T the per-Phase type that will be exposed for each Phase.
@@ -333,8 +372,8 @@ private:
     }
 
     bool doesBlockOn(PhaseNumber phase) const {
-        if (auto h = _phaseMap.find(phase); h != _phaseMap.end()) {
-            return h->second.doesBlock();
+        if (auto item = _phaseMap.find(phase); item != _phaseMap.end()) {
+            return item->second.doesBlock();
         }
         return true;
     }
@@ -343,6 +382,12 @@ private:
     PhaseMap<T>& _phaseMap;  // cannot be const; owned by PhaseLoop
 
     const bool _isEnd;
+
+    // can't just always look this up from the Orchestrator. When we're
+    // doing operator++() we need to know what the value of the phase
+    // was during operator*() so we can check if it was blocking or not.
+    // If we don't store the value during operator*() the Phase value
+    // may have changed already.
     PhaseNumber _currentPhase;
 
     // helps detect accidental mis-use. General contract
@@ -380,7 +425,7 @@ private:
 
 /**
  * @return an object that iterates over all configured Phases, calling `awaitPhaseStart()`
- *         and `awaitPhaseEnd()` at the appropriate times. The value-type, `ActorPhase`
+ *         and `awaitPhaseEnd()` at the appropriate times. The value-type, `ActorPhase`,
  *         is also iterable so your Actor can loop for the entire duration of the Phase.
  *
  * Note that `PhaseLoop`s are relatively expensive to construct and should be constructed
@@ -397,10 +442,11 @@ private:
  *         // expensive-to-construct objects. PhaseLoop will construct these
  *         // at Actor setup time rather than at runtime.
  *         struct MyActorConfig {
- *             int _index;
- *             // Must have a ctor that takes a PhaseConfig&
- *             MyActorConfig(PhaseConfig& phaseConfig)
- *             : _index{phaseConfig.get<int>("Index")} {}
+ *             int _myImportantThing;
+ *             // Must have a ctor that takes a PhaseContext& as first arg.
+ *             // Other ctor args are forwarded from PhaseLoop ctor.
+ *             MyActorConfig(PhaseContext& phaseConfig)
+ *             : _myImportantThing{phaseConfig.get<int>("ImportantThing")} {}
  *         };
  *
  *         PhaseLoop<MyActorConfig> _loop;
@@ -408,12 +454,14 @@ private:
  *     public:
  *         MyActor(ActorContext& actorContext)
  *         : _loop{actorContext} {}
+ *         // if your MyActorConfig takes other ctor args, pass them through
+ *         // here e.g. _loop{actorContext, someOtherParam}
  *
  *         void run() {
  *             for(auto&& [phaseNum, actorPhase] : _loop) {     // (1)
  *                 // Access the MyActorConfig for the Phase
  *                 // by using operator->() or operator*().
- *                 auto index = actorPhase->_index;
+ *                 auto importantThingForThisPhase = actorPhase->_myImportantThing;
  *
  *                 // The actorPhase itself is iterable
  *                 // this loop will continue running as long
@@ -438,7 +486,14 @@ public:
     template <class... Args>
     explicit PhaseLoop(ActorContext& context, Args&&... args)
         : PhaseLoop(context.orchestrator(),
-                    std::move(constructPhaseMap(context, std::forward<Args>(args)...))) {}
+                    std::move(constructPhaseMap(context, std::forward<Args>(args)...))) {
+        // Some of these static_assert() calls are redundant. This is to help
+        // users more easily track down compiler errors.
+        //
+        // Don't do this at the class level because tests want to be able to
+        // construct a simple PhaseLoop<int>.
+        static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
+    }
 
     // Only visible for testing
     PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)
@@ -463,12 +518,13 @@ private:
 
         // clang-format off
         static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
+        // kinda redundant with ↑ but may help error-handling
         static_assert(std::is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&, Args...>);
         // clang-format on
 
         V1::PhaseMap<T> out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
-            out.try_emplace(
+            auto [it, success] = out.try_emplace(
                 // key
                 num,
                 // args to ActorPhase<T> ctor:
@@ -478,13 +534,21 @@ private:
                 // last arg(s) get forwarded to T ctor (via forward inside of make_unique)
                 *phaseContext,
                 std::forward<Args>(args)...);
+            if (!success) {
+                // This should never happen because genny::ActorContext::constructPhaseContexts
+                // ensures we can't configure duplicate Phases.
+                std::stringstream msg;
+                msg << "Duplicate phase " << num;
+                throw InvalidConfigurationException(msg.str());
+            }
         }
         return out;
     }
 
     Orchestrator& _orchestrator;
-    V1::PhaseMap<T> _phaseMap;  // we own it
-    // _phaseMap cannot be const since we don't want to enforce that the wrapped u_p<T> is const
+    V1::PhaseMap<T> _phaseMap;
+    // _phaseMap cannot be const since we don't want to enforce
+    // the wrapped unique_ptr<T> in ActorPhase<T> to be const.
 
 };  // class PhaseLoop
 

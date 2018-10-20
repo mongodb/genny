@@ -16,6 +16,8 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
+#include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/metrics.hpp>

@@ -2,14 +2,12 @@
 
 #include <gennylib/actors/HelloWorld.hpp>
 
-struct genny::actor::HelloWorld::PhaseConfig {
-    // TODO: need better metrics API
-    //    metrics::Timer _outputTimer;
-    //    metrics::Counter _operations;
-    std::string _message;
-    PhaseConfig(PhaseContext& phaseContext, unsigned int thread)
-        : _message{phaseContext.get<std::string>("Message")} {}
-};
+void genny::actor::HelloWorld::doPhase(PhaseNumber currentPhase) {
+    auto op = _outputTimer.raii();
+    BOOST_LOG_TRIVIAL(info) << _fullName << " Doing PhaseNumber " << currentPhase << " "
+                            << _message;
+    _operations.incr();
+}
 
 void genny::actor::HelloWorld::run() {
     for (auto&& [p, h] : _loop) {

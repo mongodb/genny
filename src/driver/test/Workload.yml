@@ -5,13 +5,12 @@ MongoUri: "mongodb://localhost:27017"
 Actors:
   - Name: HelloTest
     Type: HelloWorld
-    Threads: 1
-    Phases:
-    - Message: Hello, World!
-    - Message: Goodbye, World!
+    Threads: 2
+    Parameters:
+      Message: Hello World!
   - Name: InsertTest
     Type: Insert
-    Threads: 1
+    Threads: 2
     Database: "test"
     Phases:
       - Collection: "inserts"

@@ -58,21 +58,82 @@ public:
      * @param out print a human-readable listing of all
      *            data-points to this ostream.
      */
-    void report(std::ostream& out, V1::Permission perm = {}) const {
-        out << "counters" << std::endl;
+    void report(std::ostream& out,
+                const std::string& metricsFormat,
+                V1::Permission perm = {}) const {
+        // should these values come from the registry, and should they be recorded at
+        // time of registry-creation?
+        auto systemTime = std::chrono::system_clock::now().time_since_epoch().count();
+        auto metricsTime = _registry->now(perm).time_since_epoch().count();
+
+        // if this lives more than a hot-second, put the formats into an enum and do this
+        // check & throw in the driver/main program
+        if (metricsFormat == "csv") {
+            return reportCsv(out, systemTime, metricsTime, perm);
+        } else if (metricsFormat == "sys-perf") {
+            return reportSysperf(out, systemTime, metricsTime, perm);
+        } else {
+            throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
+        }
+    }
+
+private:
+    template <class T>
+    class TD;
+
+    void reportSysperf(std::ostream& out,
+                       long long int,
+                       long long int,
+                       const V1::Permission& perm) const {
+
+        // TODO: Followup from TIG-1070, make this report real data; for now just report
+        //       the number of timer data-points that we saw.
+
+        genny::metrics::clock::duration total;
+        for (const auto& [name, timer] : _registry->getTimers(perm)) {
+            auto& vals = timer.getTimeSeries(perm).getVals(perm);
+            for (const auto& [when, dur] : vals) {
+                total += dur;
+            }
+        }
+
+        auto micros = std::chrono::duration_cast<std::chrono::microseconds>(total);
+
+        out << R"({"storageEngine":"wiredTiger", "results":[{
+ "name":"dummy_inserts", "workload":"genny_dummy_workload",
+ "start":1537815283.968272, "end":1537817860.423682,
+ "results":{"4":{"ops_per_sec":)"
+            << micros.count() << R"(, "ops_per_sec_values":[)" << micros.count() << R"(]}}}]}
+)";
+    }
+    void reportCsv(std::ostream& out,
+                   long long int systemTime,
+                   long long int metricsTime,
+                   const V1::Permission& perm) const {
+        out << "Clocks" << std::endl;
+        doClocks(out, systemTime, metricsTime);
+        out << std::endl;
+
+        out << "Counters" << std::endl;
         doReport(out, _registry->getCounters(perm), perm);
         out << std::endl;
 
-        out << "gauges" << std::endl;
+        out << "Gauges" << std::endl;
         doReport(out, _registry->getGauges(perm), perm);
         out << std::endl;
 
-        out << "timers" << std::endl;
+        out << "Timers" << std::endl;
         doReport(out, _registry->getTimers(perm), perm);
         out << std::endl;
     }
 
-private:
+    void doClocks(std::ostream& out, long long int systemTime, long long int metricsTime) const {
+        out << "SystemTime"
+            << "," << systemTime << std::endl;
+        out << "MetricsTime"
+            << "," << metricsTime << std::endl;
+    }
+
     /**
      * Prints a map<string,X> where X is a CounterImpl, GaugeImpl, etc.
      * @tparam X is a map<string,V> where V has getTimeSeries() that exposes a metrics::TimeSeries

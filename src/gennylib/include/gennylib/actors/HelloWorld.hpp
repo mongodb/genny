@@ -21,8 +21,11 @@ public:
     static ActorVector producer(ActorContext& context);
 
 private:
-    struct PhaseConfig;
-    genny::PhaseLoop<PhaseConfig> _loop;
+    void doPhase(PhaseNumber phase);
+
+    metrics::Timer _outputTimer;
+    metrics::Counter _operations;
+    // TODO: for now this is dummy / smoke-test that we have the driver
     mongocxx::client_session* session;
 };
 
