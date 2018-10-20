@@ -455,25 +455,25 @@ public:
     /**
      * Convenience method for creating a metrics::Timer.
      */
-    template <class... Args>
-    constexpr auto timer(Args&&... args) const {
-        return this->_workload->_registry->timer(std::forward<Args>(args)...);
+    auto timer(const std::string& operationName, unsigned int thread = 0) const {
+        auto name = this->metricsName(operationName, thread);
+        return this->_workload->_registry->timer(name);
     }
 
     /**
      * Convenience method for creating a metrics::Gauge.
      */
-    template <class... Args>
-    constexpr auto gauge(Args&&... args) const {
-        return this->_workload->_registry->gauge(std::forward<Args>(args)...);
+    auto gauge(const std::string& operationName, unsigned int thread = 0) const {
+        auto name = this->metricsName(operationName, thread);
+        return this->_workload->_registry->gauge(name);
     }
 
     /**
      * Convenience method for creating a metrics::Counter.
      */
-    template <class... Args>
-    constexpr auto counter(Args&&... args) const {
-        return this->_workload->_registry->counter(std::forward<Args>(args)...);
+    auto counter(const std::string& operationName, unsigned int thread = 0) const {
+        auto name = this->metricsName(operationName, thread);
+        return this->_workload->_registry->counter(name);
     }
 
     auto morePhases() {
@@ -499,6 +499,10 @@ public:
     // </Forwarding to delegates>
 
 private:
+    std::string metricsName(const std::string& operation, unsigned int thread) const {
+        return this->get<std::string>("Name") + "." + std::to_string(thread) + "." + operation;
+    }
+
     static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
     constructPhaseContexts(const YAML::Node&, ActorContext*);
     YAML::Node _node;
