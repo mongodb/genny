@@ -116,9 +116,9 @@ recreate_driver_file() {
     actor_name="$2"
     driver_file="$(dirname "$0")/src/driver/src/DefaultDriver.cpp"
 
-    cat "$driver_file" \
-    | perl -pe "s|(// NextActorHeaderHere)|#include <gennylib/actors/${actor_name}.hpp>\n\$1|" \
-    | perl -pe "s|((\s+)// NextActorProducerHere)|\$2,&genny::actor::${actor_name}::producer\n\$1|" \
+    < "$driver_file" \
+      perl -pe "s|(// NextActorHeaderHere)|#include <gennylib/actors/${actor_name}.hpp>\\n\$1|" \
+    | perl -pe "s|((\\s+)// NextActorProducerHere)|\$2,&genny::actor::${actor_name}::producer\\n\$1|" \
     > "$$.driver.cpp"
 
     mv "$$.driver.cpp" "$driver_file"
@@ -132,8 +132,8 @@ recreate_gennylib_cmake_file() {
     actor_name="$2"
     cmake_file="$(dirname "$0")/src/gennylib/CMakeLists.txt"
 
-    cat "$cmake_file" \
-    | perl -pe "s|((\s+)# NextActorHere)|\$2include/gennylib/actors/${actor_name}.hpp\n\$2             src/actors/${actor_name}.cpp\n\$1|" \
+    < "$cmake_file" \
+    perl -pe "s|((\\s+)# NextActorHere)|\$2include/gennylib/actors/${actor_name}.hpp\\n\$2             src/actors/${actor_name}.cpp\\n\$1|" \
     > "$$.cmake.txt"
 
     mv "$$.cmake.txt" "$cmake_file"
