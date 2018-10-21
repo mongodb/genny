@@ -97,7 +97,7 @@ create_impl() {
     local uuid="$1"
     local actor_name="$2"
 
-    create_header_text "$@" > "$(dirname "$0")/src/gennylib/src/actors/${actor_name}.cpp"
+    create_impl_text "$@" > "$(dirname "$0")/src/gennylib/src/actors/${actor_name}.cpp"
 }
 
 recreate_driver_file() {
@@ -106,7 +106,7 @@ recreate_driver_file() {
     local driver_file="$(dirname "$0")/src/driver/src/DefaultDriver.cpp"
 
     cat "$driver_file" \
-    | perl -pe "s|(// NextActorHeaderHere)|#include <gennylib/Actors/${actor_name}.hpp>\n\$1|" \
+    | perl -pe "s|(// NextActorHeaderHere)|#include <gennylib/actors/${actor_name}.hpp>\n\$1|" \
     | perl -pe "s|((\s+)// NextActorProducerHere)|\$2,&genny::actor::${actor_name}::producer\n\$1|" \
     > "$$.driver.cpp"
 
