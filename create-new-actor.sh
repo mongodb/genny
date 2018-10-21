@@ -10,8 +10,10 @@ usage() {
 }
 
 create_header_text() {
-    local uuid="$1"
-    local actor_name="$2"
+    local uuid
+    local actor_name
+    uuid="$1"
+    actor_name="$2"
 
     echo "#ifndef HEADER_$uuid"
     echo "#define HEADER_$uuid"
@@ -46,8 +48,10 @@ create_header_text() {
 }
 
 create_impl_text() {
-    local uuid="$1"
-    local actor_name="$2"
+    local uuid
+    local actor_name
+    uuid="$1"
+    actor_name="$2"
 
     echo "#include <memory>"
     echo ""
@@ -87,23 +91,30 @@ create_impl_text() {
 }
 
 create_header() {
-    local uuid="$1"
-    local actor_name="$2"
+    local uuid
+    local actor_name
+    uuid="$1"
+    actor_name="$2"
 
     create_header_text "$@" > "$(dirname "$0")/src/gennylib/include/gennylib/actors/${actor_name}.hpp"
 }
 
 create_impl() {
-    local uuid="$1"
-    local actor_name="$2"
+    local uuid
+    local actor_name
+    uuid="$1"
+    actor_name="$2"
 
     create_impl_text "$@" > "$(dirname "$0")/src/gennylib/src/actors/${actor_name}.cpp"
 }
 
 recreate_driver_file() {
-    local uuid="$1"
-    local actor_name="$2"
-    local driver_file="$(dirname "$0")/src/driver/src/DefaultDriver.cpp"
+    local uuid
+    local actor_name
+    local driver_file
+    uuid="$1"
+    actor_name="$2"
+    driver_file="$(dirname "$0")/src/driver/src/DefaultDriver.cpp"
 
     cat "$driver_file" \
     | perl -pe "s|(// NextActorHeaderHere)|#include <gennylib/actors/${actor_name}.hpp>\n\$1|" \
@@ -114,9 +125,12 @@ recreate_driver_file() {
 }
 
 recreate_gennylib_cmake_file() {
-    local uuid="$1"
-    local actor_name="$2"
-    local cmake_file="$(dirname "$0")/src/gennylib/CMakeLists.txt"
+    local uuid
+    local actor_name
+    local cmake_file
+    uuid="$1"
+    actor_name="$2"
+    cmake_file="$(dirname "$0")/src/gennylib/CMakeLists.txt"
 
     cat "$cmake_file" \
     | perl -pe "s|((\s+)# NextActorHere)|\$2include/gennylib/actors/${actor_name}.hpp\n\$2             src/actors/${actor_name}.cpp\n\$1|" \
