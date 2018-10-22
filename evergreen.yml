@@ -142,7 +142,7 @@ functions:
         make test
 
   ##
-  # Runs python tests via `python setup.py`.
+  # Runs python nosetests.
   #
   # Expansions:
   #  path: prepended to $PATH
@@ -154,7 +154,7 @@ functions:
       script: |
         export PATH="${path}:$PATH"
         cd src/python
-        python setup.py test
+        python setup.py nosetests
 
   ##
   # Reports test results to evergreen API.
@@ -163,3 +163,6 @@ functions:
   - command: attach.xunit_results
     params:
       file: ./src/build/src/*/*.junit.xml
+  - command: attach.xunit_results
+    params:
+      file: ./src/python/nosetests.xml

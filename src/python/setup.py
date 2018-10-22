@@ -7,7 +7,6 @@ setup(name='genny',
           'nose==1.3.7',
           'yapf==0.24.0',
       ],
-      test_suite='tests',
       entry_points={
           'console_scripts': [
               'genny-metrics-summarize = genny.metrics_output_parser:summarize',
