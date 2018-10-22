@@ -2,6 +2,7 @@
 
 import json
 
+
 class ParserResults(object):
     def __init__(self):
         self.sections = {}
@@ -100,6 +101,5 @@ def parse(path):
 
 def summarize():
     timers = parse('/dev/stdin').timers()
-    out = json.dumps(timers, sort_keys=True,
-        indent=4, separators=(',', ': '))
+    out = json.dumps(timers, sort_keys=True, indent=4, separators=(',', ': '))
     print(out)
