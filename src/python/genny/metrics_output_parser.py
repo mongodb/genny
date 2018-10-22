@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 
 class ParserResults(object):
     def __init__(self):
@@ -98,4 +99,7 @@ def parse(path):
 
 
 def summarize():
-    print(parse('/dev/stdin').timers())
+    timers = parse('/dev/stdin').timers()
+    out = json.dumps(timers, sort_keys=True,
+        indent=4, separators=(',', ': '))
+    print(out)
