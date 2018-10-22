@@ -153,7 +153,7 @@ functions:
       continue_on_err: true
       script: |
         export PATH="${path}:$PATH"
-        cd src/python
+        cd src/src/python
         python setup.py nosetests
 
   ##
@@ -165,4 +165,4 @@ functions:
       file: ./src/build/src/*/*.junit.xml
   - command: attach.xunit_results
     params:
-      file: ./src/python/nosetests.xml
+      file: ./src/src/python/nosetests.xml
