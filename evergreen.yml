@@ -77,7 +77,8 @@ tasks:
   commands:
     - func: f_fetch_source
     - func: f_compile
-    - func: f_test
+    - func: f_cmake_test
+    - func: f_python_test
 
 
 ##                ⚡️ Pre/Post ⚡️
@@ -131,7 +132,7 @@ functions:
   # Expansions:
   #  path: prepended to $PATH
   ##
-  f_test:
+  f_cmake_test:
   - command: shell.exec
     params:
       continue_on_err: true
@@ -139,6 +140,21 @@ functions:
         export PATH="${path}:$PATH"
         cd src/build
         make test
+
+  ##
+  # Runs python tests via `python setup.py`.
+  #
+  # Expansions:
+  #  path: prepended to $PATH
+  ##
+  f_python_test:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      script: |
+        export PATH="${path}:$PATH"
+        cd src/python
+        python setup.py test
 
   ##
   # Reports test results to evergreen API.
