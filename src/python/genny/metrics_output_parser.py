@@ -50,8 +50,13 @@ class ParserResults(object):
         duration = int(timer_line[2])
 
         event_parts = full_event.split('.')
-        event_name = event_parts[0] + '.' + event_parts[2]
-        thread = int(event_parts[1]) + 1  # zero-based indexing
+        if len(event_parts) < 3:
+            # for Genny.Setup and the like
+            event_name = event_parts[0] + '.' + event_parts[1]
+            thread = 1
+        else:
+            event_name = event_parts[0] + '.' + event_parts[2]
+            thread = int(event_parts[1]) + 1  # zero-based indexing
 
         # first time we've seen data for this metrics-name
         if event_name not in self._timers:
