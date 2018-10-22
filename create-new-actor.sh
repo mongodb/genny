@@ -5,7 +5,9 @@ set -eou pipefail
 usage() {
     echo "Usage:"
     echo ""
-    echo "$0 ActorName"
+    echo "    $0 ActorName"
+    echo ""
+    echo "Creates and modifies boiler-plate necessary to create a new Actor."
     echo ""
 }
 
