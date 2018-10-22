@@ -18,17 +18,17 @@ class GennyOutputParserTest(unittest.TestCase):
         self.assertEqual(
             actual.timers(), {
                 'InsertTest.output': {
-                    'started': 1537814143293070,
-                    'ended': 1537814143687260,
+                    'mean': 1252307.75,
                     'n': 4,
                     'threads': 2,
-                    'mean': 1252307
+                    'started': 1537814143293070,
+                    'ended': 1537814143687260
                 },
                 'HelloTest.output': {
-                    'started': 1537814141128934,
-                    'ended': 1537814143457943,
+                    'mean': 55527.25,
                     'n': 4,
                     'threads': 2,
-                    'mean': 55526
+                    'started': 1537814141128934,
+                    'ended': 1537814143457943
                 }
             })
