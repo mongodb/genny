@@ -454,6 +454,12 @@ public:
 
     /**
      * Convenience method for creating a metrics::Timer.
+     *
+     * @param operationName
+     *   the name of the thing being timed.
+     *   Will automatically add prefixes to make the full name unique
+     *   across Actors and threads.
+     * @param thread the thread number of this Actor, if any.
      */
     auto timer(const std::string& operationName, unsigned int thread = 0) const {
         auto name = this->metricsName(operationName, thread);
@@ -462,14 +468,27 @@ public:
 
     /**
      * Convenience method for creating a metrics::Gauge.
+     *
+     * @param operationName
+     *   the name of the thing being gauged.
+     *   Will automatically add prefixes to make the full name unique
+     *   across Actors and threads.
+     * @param thread the thread number of this Actor, if any.
      */
-    auto gauge(const std::string& operationName, unsigned int thread = 0) const {
-        auto name = this->metricsName(operationName, thread);
+    auto gauge(const std::string& name, unsigned int thread = 0) const {
+        auto name = this->metricsName(name, thread);
         return this->_workload->_registry->gauge(name);
     }
 
     /**
      * Convenience method for creating a metrics::Counter.
+     *
+     *
+     * @param operationName
+     *   the name of the thing being counted.
+     *   Will automatically add prefixes to make the full name unique
+     *   across Actors and threads.
+     * @param thread the thread number of this Actor, if any.
      */
     auto counter(const std::string& operationName, unsigned int thread = 0) const {
         auto name = this->metricsName(operationName, thread);
@@ -499,6 +518,13 @@ public:
     // </Forwarding to delegates>
 
 private:
+    /**
+     * Apply metrics names conventions based on configuration.
+     *
+     * @param operation base name of a metrics object e.g. "inserts"
+     * @param thread the thread number of the Actor owning the object.
+     * @return the fully-qualified metrics name e.g. "MyActor.0.inserts".
+     */
     std::string metricsName(const std::string& operation, unsigned int thread) const {
         return this->get<std::string>("Name") + "." + std::to_string(thread) + "." + operation;
     }
