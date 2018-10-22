@@ -73,6 +73,8 @@ class ParserResults(object):
         event = self._timers[event_name]
 
         event['threads'] = max(thread, event['threads'])
+
+        # the started/ended keys aren't super well-defined
         event['started'] = min(when, event['started'])
         event['ended'] = max(when, event['ended'])
 

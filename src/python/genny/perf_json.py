@@ -18,10 +18,7 @@ def translate(parser_results):
                 }
             }
         })
-    return {
-        'storageEngine': 'wiredTiger',
-        'results': out
-    }
+    return {'storageEngine': 'wiredTiger', 'results': out}
 
 
 def main():
