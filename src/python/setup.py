@@ -13,6 +13,7 @@ setup(name='genny',
       entry_points={
           'console_scripts': [
               'genny-metrics-summarize = genny.metrics_output_parser:summarize',
+              'genny-metrics-to-perf-json = genny.perf_json:main',
           ]
       },
 )
