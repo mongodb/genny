@@ -43,8 +43,8 @@ void genny::actor::Insert::doPhase(PhaseNumber currentPhase) {
 genny::actor::Insert::Insert(genny::ActorContext& context, const unsigned int thread)
     : PhasedActor(context, thread),
       _rng{context.workload().createRNG()},
-      _outputTimer{context.timer(_fullName + ".output")},
-      _operations{context.counter(_fullName + ".operations")},
+      _outputTimer{context.timer("output", thread)},
+      _operations{context.counter("operations", thread)},
       _client{std::move(context.client())},
       _config{std::make_unique<Config>(
           context, (*_client)[context.get<std::string>("Database")], _rng)} {}
