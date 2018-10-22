@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+
 class ParserResults(object):
     def __init__(self):
         self.sections = {}
@@ -28,9 +29,9 @@ class ParserResults(object):
         self.section_lines = []
         self.section_name = None
 
-    def _system_time(self, metricsTime):
+    def _system_time(self, metrics_time):
         if self.clock_delta is not None:
-            return metricsTime + self.clock_delta
+            return metrics_time + self.clock_delta
 
         clocks = {}
         for clock in self.sections['Clocks']:
@@ -38,7 +39,7 @@ class ParserResults(object):
             clocks[name] = time
 
         self.clock_delta = clocks['SystemTime'] - clocks['MetricsTime']
-        return self._system_time(metricsTime)
+        return self._system_time(metrics_time)
 
     def timers(self):
         return self._timers

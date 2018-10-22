@@ -1,10 +1,10 @@
 """Tests for metrics_output_parser"""
 
 import os
-import sys
 import unittest
 
 import genny.metrics_output_parser as parser
+
 
 class GennyOutputParserTest(unittest.TestCase):
     def parse(self, path):
