@@ -79,7 +79,9 @@ class ParserResults(object):
         :return: None
         """
         # only care about Clocks and Timers for now
-        if self.section_name == 'Clocks':
+        if self.section_name is None:
+            raise ParseError("Unknown section", file_name, line_number)
+        elif self.section_name == 'Clocks':
             self.section_lines.append(line)
         elif self.section_name == 'Timers':
             # metrics csv files are likely to be huge and we don't
@@ -152,6 +154,10 @@ class ParserResults(object):
         for clock in self.sections['Clocks']:
             name, time = clock[0], int(clock[1])
             clocks[name] = time
+
+        if 'SystemTime' not in clocks or 'MetricsTime' not in clocks:
+            raise ParseError('Missing SystemTime or MetricsTime from Clocks', file_name,
+                             line_number)
 
         self.clock_delta = clocks['SystemTime'] - clocks['MetricsTime']
         return self._system_time(metrics_time)
