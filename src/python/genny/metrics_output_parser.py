@@ -188,12 +188,12 @@ class ParserResults(object):
             # for Genny.Setup and the like: event_parts is like
             #    [Genny, Setup]
             event_name = event_parts[0] + '.' + event_parts[1]
-            thread = 1
+            thread = 0
         elif len(event_parts) == 3:
             # For regular (multi-threaded) cases, event_parts is like
             #    [MyActor, 1,
             event_name = event_parts[0] + '.' + event_parts[2]
-            thread = int(event_parts[1]) + 1  # zero-based indexing
+            thread = int(event_parts[1])
         else:
             raise ParseError("Invalid event given: [{}]".format(event_parts), file_name,
                              line_number)
@@ -203,14 +203,14 @@ class ParserResults(object):
             self._timers[event_name] = {
                 'mean': 0,
                 'n': 0,
-                'threads': thread,
+                'threads': {thread},
                 'started': started,
                 'ended': when,
             }
 
         event = self._timers[event_name]
 
-        event['threads'] = max(thread, event['threads'])
+        event['threads'].add(thread)
 
         # the started/ended keys aren't super well-defined
         event['started'] = min(started, event['started'])

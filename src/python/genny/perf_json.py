@@ -12,7 +12,7 @@ def translate(parser_results):
             'start': timer['started'] / 100000,
             'end': timer['ended'] / 100000,
             'results': {
-                timer['threads']: {
+                len(timer['threads']): {
                     'ops_per_sec': timer['mean'],
                     'ops_per_sec_values': [timer['mean']]
                 }
