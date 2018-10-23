@@ -16,4 +16,4 @@ setup(name='genny',
               'genny-metrics-to-perf-json = genny.perf_json:main',
           ]
       },
-)
+      )
