@@ -8,12 +8,13 @@ import genny.metrics_output_parser as parser
 
 def parse_string(input_str):
     lines = [line.strip() for line in input_str.split("\n")]
-    return parser._process_lines(lines, "InputString").timers()
+    return parser.parse(lines, "InputString").timers()
 
 
 def parse_file(path):
     full_path = os.path.join('.', 'tests', 'fixtures', 'metrics_output_parser-' + path + '.txt')
-    return parser.parse(full_path).timers()
+    with open(full_path, 'r') as f:
+        return parser.parse(f, full_path).timers()
 
 
 class GennyOutputParserTest(unittest.TestCase):

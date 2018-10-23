@@ -221,7 +221,12 @@ class ParserResults(object):
         event['mean'] = new_mean
 
 
-def _process_lines(source, file_name):
+def parse(source, file_name):
+    """
+    :param source: iterable source of lines to read
+    :param file_name: file name (etc) read from (used for error diagnostics reporting)
+    :return: a ParserResults representing the parsed data from the source.
+    """
     out = ParserResults()
     line_number = 0
     for line in source:
@@ -240,16 +245,6 @@ def _process_lines(source, file_name):
     return out
 
 
-# TODO: put this into summarize and rename _process_lines to parse
-def parse(path):
-    """
-    :param path: path to metrics csv file
-    :return: the `ParserResults`
-    """
-    with open(path, 'r') as f:
-        return _process_lines(f, path)
-
-
 def summarize():
     """
     Reads metrics CSV from stdin and prints a summary json document to stdout.
@@ -257,6 +252,7 @@ def summarize():
     Entry-point (see setup.py).
     :return: None
     """
-    timers = parse('/dev/stdin').timers()
-    out = json.dumps(timers, sort_keys=True, indent=4, separators=(',', ': '))
-    print(out)
+    with open('/dev/stdin', 'r') as f:
+        timers = parse(f, '/dev/stdin').timers()
+        out = json.dumps(timers, sort_keys=True, indent=4, separators=(',', ': '))
+        print(out)
