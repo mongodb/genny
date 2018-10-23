@@ -160,7 +160,7 @@ class ParserResults(object):
                              line_number)
 
         self.clock_delta = clocks['SystemTime'] - clocks['MetricsTime']
-        return self._system_time(metrics_time)
+        return self._system_time(metrics_time, file_name, line_number)
 
     def timers(self):
         """
@@ -178,7 +178,7 @@ class ParserResults(object):
                            or [metrics-timestamp, Actor.Operation, DurationMicroseconds].
         :return:
         """
-        when = self._system_time(int(timer_line[0]))
+        when = self._system_time(int(timer_line[0]), file_name, line_number)
         full_event = timer_line[1]
         duration = int(timer_line[2])
 
@@ -221,31 +221,32 @@ class ParserResults(object):
         event['mean'] = new_mean
 
 
+def _process_lines(source, file_name):
+    out = ParserResults()
+    line_number = 0
+    for line in source:
+        line_number = line_number + 1
+        items = line.strip().split(',')
+        if len(items) == 0:
+            # blank line
+            pass
+        elif len(items) == 1:
+            # section header
+            out.start_section(items[0])
+        else:
+            # add line to current section
+            out.add_line(items, file_name, line_number)
+    out.end()
+    return out
+
+
 def parse(path):
     """
     :param path: path to metrics csv file
     :return: the `ParserResults`
     """
-    out = ParserResults()
-
-    line_number = 0
     with open(path, 'r') as f:
-        line_number = line_number + 1
-        for line in f:
-            items = line.strip().split(',')
-            if len(items) == 0:
-                # blank line
-                pass
-            elif len(items) == 1:
-                # section header
-                out.start_section(items[0])
-            else:
-                # add line to current section
-                out.add_line(items, path, line_number)
-
-    out.end()
-
-    return out
+        return _process_lines(f, path)
 
 
 def summarize():
