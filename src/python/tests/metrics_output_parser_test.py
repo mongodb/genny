@@ -45,13 +45,13 @@ class GennyOutputParserTest(unittest.TestCase):
         Counters
         
         Timers
-        """), {})
+        """).timers(), {})
 
     def test_empty_input(self):
-        self.assertEqual(test_lib.parse_string(""), {})
+        self.assertEqual(test_lib.parse_string("").timers(), {})
 
     def test_fixture1(self):
-        actual = test_lib.parse_fixture('csvoutput1')
+        actual = test_lib.parse_fixture('csvoutput1').timers()
         self.assertEqual(
             actual, {
                 'InsertTest.output': {
@@ -71,7 +71,7 @@ class GennyOutputParserTest(unittest.TestCase):
             })
 
     def test_fixture2(self):
-        actual = test_lib.parse_fixture('csvoutput2')
+        actual = test_lib.parse_fixture('csvoutput2').timers()
         self.assertEqual(
             actual, {
                 'InsertRemoveTest.remove': {
