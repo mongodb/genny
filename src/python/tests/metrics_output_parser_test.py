@@ -12,7 +12,7 @@ def parse_string(input_str):
 
 
 def parse_file(path):
-    full_path = os.path.join('.', 'tests', 'fixtures', 'metrics_output_parser-' + path + '.txt')
+    full_path = os.path.join('.', 'tests', 'fixtures', path + '.txt')
     with open(full_path, 'r') as f:
         return parser.parse(f, full_path).timers()
 
@@ -62,8 +62,7 @@ class GennyOutputParserTest(unittest.TestCase):
         self.assertEqual(parse_string(""), {})
 
     def test_fixture1(self):
-        actual = parse_file('fixture1')
-        print(actual)
+        actual = parse_file('csvoutput1')
         self.assertEqual(
             actual, {
                 'InsertTest.output': {
@@ -83,8 +82,7 @@ class GennyOutputParserTest(unittest.TestCase):
             })
 
     def test_fixture2(self):
-        actual = parse_file('fixture2')
-        print(actual)
+        actual = parse_file('csvoutput2')
         self.assertEqual(
             actual, {
                 'InsertRemoveTest.remove': {
