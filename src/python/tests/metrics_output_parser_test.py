@@ -7,15 +7,46 @@ import genny.metrics_output_parser as parser
 
 
 class GennyOutputParserTest(unittest.TestCase):
-    def parse(self, path):
+    def raises_parse_error(self, input_str):
+        with self.assertRaises(parser.ParseError):
+            self.parse_string(input_str)
+
+    def parse_string(self, input_str):
+        lines = [line.strip() for line in input_str.split("\n")]
+        return parser._process_lines(lines, "InputString").timers()
+
+    def parse_file(self, path):
         full_path = os.path.join('.', 'tests', 'fixtures', 'metrics_output_parser-' + path + '.txt')
-        print(os.path.realpath(full_path))
-        return parser.parse(full_path)
+        return parser.parse(full_path).timers()
+
+    def test_no_clocks(self):
+        self.raises_parse_error("""
+        Timers
+        1234,A.0.o,345
+        """)
+
+    def test_missing_clocks(self):
+        self.raises_parse_error("""
+        Clocks
+
+        Timers
+        1234,A.0.o,345
+        """)
+
+    def test_timers_before_clocks(self):
+        self.raises_parse_error("""
+        Timers
+        1234,A.0.o,345
+
+        Clocks
+        SystemTime,23439048
+        MetricsTime,303947
+        """)
 
     def test_fixture1(self):
-        actual = self.parse('fixture1')
+        actual = self.parse_file('fixture1')
         self.assertEqual(
-            actual.timers(), {
+            actual, {
                 'InsertTest.output': {
                     'mean': 1252307.75,
                     'n': 4,
@@ -33,10 +64,9 @@ class GennyOutputParserTest(unittest.TestCase):
             })
 
     def test_fixture2(self):
-        actual = self.parse('fixture2')
-        print(actual.timers())
+        actual = self.parse_file('fixture2')
         self.assertEqual(
-            actual.timers(), {
+            actual, {
                 'InsertRemoveTest.remove': {
                     'mean': 4297048.190765498,
                     'n': 823,

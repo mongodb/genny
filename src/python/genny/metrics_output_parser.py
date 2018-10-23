@@ -146,8 +146,8 @@ class ParserResults(object):
             return metrics_time + self.clock_delta
 
         if 'Clocks' not in self.sections:
-            msg = "Can only call _system_time after we've seen the Clocks section." +\
-                  "We've seen {}".format(self.sections.keys())
+            msg = "Can only call _system_time after we've seen the Clocks section. " +\
+                  "We've seen sections {}".format(set(self.sections.keys()))
             raise ParseError(msg, file_name, line_number)
 
         clocks = {}
@@ -226,11 +226,11 @@ def _process_lines(source, file_name):
     line_number = 0
     for line in source:
         line_number = line_number + 1
-        items = line.strip().split(',')
-        if len(items) == 0:
+        if line == '':
             # blank line
             pass
-        elif len(items) == 1:
+        items = line.strip().split(',')
+        if len(items) == 1:
             # section header
             out.start_section(items[0])
         else:
