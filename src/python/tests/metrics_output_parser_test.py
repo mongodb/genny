@@ -1,26 +1,15 @@
 """Tests for metrics_output_parser"""
 
-import os
 import unittest
 
 import genny.metrics_output_parser as parser
-
-
-def parse_string(input_str):
-    lines = [line.strip() for line in input_str.split("\n")]
-    return parser.parse(lines, "InputString").timers()
-
-
-def parse_file(path):
-    full_path = os.path.join('.', 'tests', 'fixtures', path + '.txt')
-    with open(full_path, 'r') as f:
-        return parser.parse(f, full_path).timers()
+import tests.parser_test_lib as test_lib
 
 
 class GennyOutputParserTest(unittest.TestCase):
     def raises_parse_error(self, input_str):
         with self.assertRaises(parser.ParseError):
-            parse_string(input_str)
+            test_lib.parse_string(input_str)
 
     def test_no_clocks(self):
         self.raises_parse_error("""
@@ -48,7 +37,7 @@ class GennyOutputParserTest(unittest.TestCase):
 
     def test_csv_no_sections_have_data(self):
         self.assertEqual(
-            parse_string("""
+            test_lib.parse_string("""
         Clocks
         
         Gauges
@@ -59,10 +48,10 @@ class GennyOutputParserTest(unittest.TestCase):
         """), {})
 
     def test_empty_input(self):
-        self.assertEqual(parse_string(""), {})
+        self.assertEqual(test_lib.parse_string(""), {})
 
     def test_fixture1(self):
-        actual = parse_file('csvoutput1')
+        actual = test_lib.parse_fixture('csvoutput1')
         self.assertEqual(
             actual, {
                 'InsertTest.output': {
@@ -82,7 +71,7 @@ class GennyOutputParserTest(unittest.TestCase):
             })
 
     def test_fixture2(self):
-        actual = parse_file('csvoutput2')
+        actual = test_lib.parse_fixture('csvoutput2')
         self.assertEqual(
             actual, {
                 'InsertRemoveTest.remove': {
