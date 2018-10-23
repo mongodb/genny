@@ -181,6 +181,7 @@ class ParserResults(object):
         when = self._system_time(int(timer_line[0]), file_name, line_number)
         full_event = timer_line[1]
         duration = int(timer_line[2])
+        started = when - duration
 
         event_parts = full_event.split('.')
         if len(event_parts) == 2:
@@ -203,7 +204,7 @@ class ParserResults(object):
                 'mean': 0,
                 'n': 0,
                 'threads': thread,
-                'started': when,
+                'started': started,
                 'ended': when,
             }
 
@@ -212,7 +213,7 @@ class ParserResults(object):
         event['threads'] = max(thread, event['threads'])
 
         # the started/ended keys aren't super well-defined
-        event['started'] = min(when, event['started'])
+        event['started'] = min(started, event['started'])
         event['ended'] = max(when, event['ended'])
 
         # compute as streaming mean

@@ -47,7 +47,8 @@ class GennyOutputParserTest(unittest.TestCase):
         """)
 
     def test_csv_no_sections_have_data(self):
-        self.assertEqual(parse_string("""
+        self.assertEqual(
+            parse_string("""
         Clocks
         
         Gauges
@@ -68,14 +69,14 @@ class GennyOutputParserTest(unittest.TestCase):
                     'mean': 1252307.75,
                     'n': 4,
                     'threads': 2,
-                    'started': 1537814143293070,
+                    'started': 1537814141061109,
                     'ended': 1537814143687260
                 },
                 'HelloTest.output': {
                     'mean': 55527.25,
                     'n': 4,
                     'threads': 2,
-                    'started': 1537814141128934,
+                    'started': 1537814141061476,
                     'ended': 1537814143457943
                 }
             })
@@ -88,21 +89,21 @@ class GennyOutputParserTest(unittest.TestCase):
                     'mean': 4297048.190765498,
                     'n': 823,
                     'threads': 100,
-                    'started': 1540233110801455,
+                    'started': 1540233103870294,
                     'ended': 1540233383199723
                 },
                 'InsertRemoveTest.insert': {
                     'mean': 8656706.697448373,
                     'n': 823,
                     'threads': 100,
-                    'started': 1540233103851535,
+                    'started': 1540233073074953,
                     'ended': 1540233380763649
                 },
                 'Genny.Setup': {
                     'mean': 8694761.0,
                     'n': 1,
                     'threads': 1,
-                    'started': 1540233044288445,
+                    'started': 1540233035593684,
                     'ended': 1540233044288445
                 }
             })
