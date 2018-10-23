@@ -191,7 +191,7 @@ class ParserResults(object):
             thread = 0
         elif len(event_parts) == 3:
             # For regular (multi-threaded) cases, event_parts is like
-            #    [MyActor, 1,
+            #    [MyActor, 1, operation]
             event_name = event_parts[0] + '.' + event_parts[2]
             thread = int(event_parts[1])
         else:
