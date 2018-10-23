@@ -5,10 +5,38 @@ import tests.parser_test_lib as test_lib
 
 
 class PerfJsonTests(unittest.TestCase):
+    def test_hole_in_thread_numbers(self):
+        parsed = test_lib.parse_string("""
+        Clocks
+        SystemTime,1
+        MetricsTime,2
+
+        Timers
+        12,A.0.o,50
+        13,A.3.o,50
+        """)
+        actual = perf_json.translate(parsed)
+        self.assertEqual(
+            actual, {
+                'results': [{
+                    'end': 0.00012,
+                    'name': 'A.o',
+                    'results': {
+                        2: {
+                            'ops_per_sec': 50.0,
+                            'ops_per_sec_values': [50.0]
+                        }
+                    },
+                    'start': -0.00039,
+                    'workload': 'A.o'
+                }],
+                'storageEngine':
+                    'wiredTiger'
+            })
+
     def test_fixture2(self):
         parsed = test_lib.parse_fixture('csvoutput2')
         actual = perf_json.translate(parsed)
-        print(actual)
         self.assertEqual(
             actual, {
                 'storageEngine':
