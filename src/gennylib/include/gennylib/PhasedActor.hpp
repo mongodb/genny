@@ -18,10 +18,9 @@
 namespace genny {
 
 /**
- * The basic extension point for actors that want to vary
- * their behavior over the course of a workload.
- *
- * Please see additional documentation in the Actor class.
+ * DEPRECATED
+ * Use PhaseLoop and inherit from Actor directly.
+ * See the InsertRemove Actor as an example.
  */
 class PhasedActor : public Actor {
 

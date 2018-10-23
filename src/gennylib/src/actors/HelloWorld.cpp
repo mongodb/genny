@@ -11,8 +11,8 @@ void genny::actor::HelloWorld::doPhase(PhaseNumber currentPhase) {
 
 genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
     : PhasedActor(context, thread),
-      _outputTimer{context.timer(_fullName + ".output")},
-      _operations{context.counter(_fullName + ".operations")},
+      _outputTimer{context.timer("output", thread)},
+      _operations{context.counter("operations", thread)},
       _message{context.get<std::string>("Parameters", "Message")} {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {

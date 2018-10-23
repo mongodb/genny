@@ -454,26 +454,45 @@ public:
 
     /**
      * Convenience method for creating a metrics::Timer.
+     *
+     * @param operationName
+     *   the name of the thing being timed.
+     *   Will automatically add prefixes to make the full name unique
+     *   across Actors and threads.
+     * @param thread the thread number of this Actor, if any.
      */
-    template <class... Args>
-    constexpr auto timer(Args&&... args) const {
-        return this->_workload->_registry->timer(std::forward<Args>(args)...);
+    auto timer(const std::string& operationName, unsigned int thread = 0) const {
+        auto name = this->metricsName(operationName, thread);
+        return this->_workload->_registry->timer(name);
     }
 
     /**
      * Convenience method for creating a metrics::Gauge.
+     *
+     * @param operationName
+     *   the name of the thing being gauged.
+     *   Will automatically add prefixes to make the full name unique
+     *   across Actors and threads.
+     * @param thread the thread number of this Actor, if any.
      */
-    template <class... Args>
-    constexpr auto gauge(Args&&... args) const {
-        return this->_workload->_registry->gauge(std::forward<Args>(args)...);
+    auto gauge(const std::string& operationName, unsigned int thread = 0) const {
+        auto name = this->metricsName(operationName, thread);
+        return this->_workload->_registry->gauge(name);
     }
 
     /**
      * Convenience method for creating a metrics::Counter.
+     *
+     *
+     * @param operationName
+     *   the name of the thing being counted.
+     *   Will automatically add prefixes to make the full name unique
+     *   across Actors and threads.
+     * @param thread the thread number of this Actor, if any.
      */
-    template <class... Args>
-    constexpr auto counter(Args&&... args) const {
-        return this->_workload->_registry->counter(std::forward<Args>(args)...);
+    auto counter(const std::string& operationName, unsigned int thread = 0) const {
+        auto name = this->metricsName(operationName, thread);
+        return this->_workload->_registry->counter(name);
     }
 
     auto morePhases() {
@@ -499,6 +518,17 @@ public:
     // </Forwarding to delegates>
 
 private:
+    /**
+     * Apply metrics names conventions based on configuration.
+     *
+     * @param operation base name of a metrics object e.g. "inserts"
+     * @param thread the thread number of the Actor owning the object.
+     * @return the fully-qualified metrics name e.g. "MyActor.0.inserts".
+     */
+    std::string metricsName(const std::string& operation, unsigned int thread) const {
+        return this->get<std::string>("Name") + "." + std::to_string(thread) + "." + operation;
+    }
+
     static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
     constructPhaseContexts(const YAML::Node&, ActorContext*);
     YAML::Node _node;

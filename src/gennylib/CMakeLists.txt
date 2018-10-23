@@ -44,6 +44,8 @@ add_library(gennylib SHARED
                  src/actors/Insert.cpp
     include/gennylib/actors/InsertRemove.hpp
                  src/actors/InsertRemove.cpp
+
+    # NextActorHere
 )
 
 # Define headers for this library. PUBLIC headers are used for
