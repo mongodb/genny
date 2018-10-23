@@ -240,6 +240,7 @@ def _process_lines(source, file_name):
     return out
 
 
+# TODO: put this into summarize and rename _process_lines to parse
 def parse(path):
     """
     :param path: path to metrics csv file

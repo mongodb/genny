@@ -6,18 +6,20 @@ import unittest
 import genny.metrics_output_parser as parser
 
 
+def parse_string(input_str):
+    lines = [line.strip() for line in input_str.split("\n")]
+    return parser._process_lines(lines, "InputString").timers()
+
+
+def parse_file(path):
+    full_path = os.path.join('.', 'tests', 'fixtures', 'metrics_output_parser-' + path + '.txt')
+    return parser.parse(full_path).timers()
+
+
 class GennyOutputParserTest(unittest.TestCase):
     def raises_parse_error(self, input_str):
         with self.assertRaises(parser.ParseError):
-            self.parse_string(input_str)
-
-    def parse_string(self, input_str):
-        lines = [line.strip() for line in input_str.split("\n")]
-        return parser._process_lines(lines, "InputString").timers()
-
-    def parse_file(self, path):
-        full_path = os.path.join('.', 'tests', 'fixtures', 'metrics_output_parser-' + path + '.txt')
-        return parser.parse(full_path).timers()
+            parse_string(input_str)
 
     def test_no_clocks(self):
         self.raises_parse_error("""
@@ -43,8 +45,22 @@ class GennyOutputParserTest(unittest.TestCase):
         MetricsTime,303947
         """)
 
+    def test_csv_no_sections_have_data(self):
+        self.assertEqual(parse_string("""
+        Clocks
+        
+        Gauges
+        
+        Counters
+        
+        Timers
+        """), {})
+
+    def test_empty_input(self):
+        self.assertEqual(parse_string(""), {})
+
     def test_fixture1(self):
-        actual = self.parse_file('fixture1')
+        actual = parse_file('fixture1')
         self.assertEqual(
             actual, {
                 'InsertTest.output': {
@@ -64,7 +80,7 @@ class GennyOutputParserTest(unittest.TestCase):
             })
 
     def test_fixture2(self):
-        actual = self.parse_file('fixture2')
+        actual = parse_file('fixture2')
         self.assertEqual(
             actual, {
                 'InsertRemoveTest.remove': {
