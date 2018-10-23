@@ -22,6 +22,7 @@ def translate(parser_results):
 
 
 def main():
+    # TODO: file.open
     results = output_parser.parse('/dev/stdin')
     translated = translate(results)
     out = json.dumps(translated, sort_keys=True, indent=4, separators=(',', ': '))

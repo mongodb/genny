@@ -11,5 +11,4 @@ def parse_string(input_str):
 def parse_fixture(path):
     full_path = os.path.join('.', 'tests', 'fixtures', path + '.txt')
     with open(full_path, 'r') as f:
-        return parser.parse(f, full_path).timers()
-
+        return parser.parse(f, full_path)
