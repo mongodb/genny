@@ -6,8 +6,8 @@ C++17.
 
 **Quick-Start on OS X**:
 
-1. [Download XCode 10 Beta](https://developer.apple.com/download/) (around 10GB) and install.
-2. Drag `Xcode-beta.app` into `Applications`. For some reason the installer puts it in `~/Downloads`.
+1. [Download XCode 10](https://developer.apple.com/download/) (around 10GB) and install.
+2. Drag `Xcode.app` into `Applications`. For some reason the installer may put it in `~/Downloads`.
 3. Run the below shell (requires [`brew`](https://brew.sh/))
 
 ```sh
@@ -18,6 +18,8 @@ brew install cmake
 brew install icu4c
 brew install mongo-cxx-driver
 brew install yaml-cpp
+brew install boost --build-from-source \
+    --include-test --with-icu4c --without-static
 
 cd build
 cmake ..
