@@ -11,7 +11,7 @@ C++17.
 3. Run the below shell (requires [`brew`](https://brew.sh/))
 
 ```sh
-sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
 # install third-party packages and build-tools
 brew install cmake
