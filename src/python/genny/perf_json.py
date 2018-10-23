@@ -22,12 +22,8 @@ def translate(parser_results):
 
 
 def main():
-    # TODO: file.open
-    results = output_parser.parse('/dev/stdin')
-    translated = translate(results)
-    out = json.dumps(translated, sort_keys=True, indent=4, separators=(',', ': '))
-    print(out)
-
-
-if __name__ == '__main__':
-    main()
+    with open('/dev/stdin', 'r') as f:
+        results = output_parser.parse(f, '/dev/stdin')
+        translated = translate(results)
+        out = json.dumps(translated, sort_keys=True, indent=4, separators=(',', ': '))
+        print(out)
