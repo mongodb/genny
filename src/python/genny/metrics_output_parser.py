@@ -48,6 +48,11 @@ not in any rolled-up/summarized form.
 """
 
 
+class ParseError(Exception):
+    def __init__(self, message, file_name, line_number):
+        super().__init__("[{}:{}] {}".format(file_name, line_number, message))
+
+
 class ParserResults(object):
     """
     Represents the parsed Genny metrics CSV.
@@ -64,11 +69,13 @@ class ParserResults(object):
         self.section_name = None
         self.done_timers = False
 
-    def add_line(self, line):
+    def add_line(self, line, file_name, line_number):
         """
         Add a line within the current section. See `start_section()`.
 
         :param list line: already tokenized (split on commas). list of string
+        :param line_number: line number from the input file (used for error diagnostics)
+        :param file_name: file name of the input file (used for error diagnostics)
         :return: None
         """
         # only care about Clocks and Timers for now
@@ -79,7 +86,7 @@ class ParserResults(object):
             # need to store the full data-set in-memory, at least
             # not yet. Instead just stream the line to the event-style
             # method _on_timer_line().
-            self._on_timer_line(line)
+            self._on_timer_line(line, file_name, line_number)
 
     def start_section(self, name):
         """
@@ -107,7 +114,7 @@ class ParserResults(object):
         self.section_lines = []
         self.section_name = None
 
-    def _system_time(self, metrics_time):
+    def _system_time(self, metrics_time, file_name, line_number):
         """
         Only valid to be called *after* the Clocks section
         has been ended.
@@ -139,7 +146,7 @@ class ParserResults(object):
         if 'Clocks' not in self.sections:
             msg = "Can only call _system_time after we've seen the Clocks section." +\
                   "We've seen {}".format(self.sections.keys())
-            raise KeyError(msg)
+            raise ParseError(msg, file_name, line_number)
 
         clocks = {}
         for clock in self.sections['Clocks']:
@@ -159,8 +166,7 @@ class ParserResults(object):
         """
         return self._timers
 
-    # TODO: record input line number and report in exceptions
-    def _on_timer_line(self, timer_line):
+    def _on_timer_line(self, timer_line, file_name, line_number):
         """
         :param timer_line: either [metrics-timestamp, Actor.Thread.Operation, DurationMicroseconds]
                            or [metrics-timestamp, Actor.Operation, DurationMicroseconds].
@@ -182,7 +188,8 @@ class ParserResults(object):
             event_name = event_parts[0] + '.' + event_parts[2]
             thread = int(event_parts[1]) + 1  # zero-based indexing
         else:
-            raise Exception("Invalid event given: [{}]".format(event_parts))
+            raise ParseError("Invalid event given: [{}]".format(event_parts), file_name,
+                             line_number)
 
         # first time we've seen data for this timer
         if event_name not in self._timers:
@@ -215,7 +222,9 @@ def parse(path):
     """
     out = ParserResults()
 
+    line_number = 0
     with open(path, 'r') as f:
+        line_number = line_number + 1
         for line in f:
             items = line.strip().split(',')
             if len(items) == 0:
@@ -223,11 +232,10 @@ def parse(path):
                 pass
             elif len(items) == 1:
                 # section header
-                # TODO: ensure started section
                 out.start_section(items[0])
             else:
                 # add line to current section
-                out.add_line(items)
+                out.add_line(items, path, line_number)
 
     out.end()
 
