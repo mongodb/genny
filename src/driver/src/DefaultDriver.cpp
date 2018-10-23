@@ -50,11 +50,10 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     auto yaml = loadConfig(options.workloadFileName);
     auto orchestrator = Orchestrator{};
 
-    // clang-format off
     auto producers = std::vector<genny::ActorProducer>{
-        &genny::actor::HelloWorld::producer
-        ,&genny::actor::Insert::producer
-        ,&genny::actor::InsertRemove::producer
+        &genny::actor::HelloWorld::producer,
+        &genny::actor::Insert::producer,
+        &genny::actor::InsertRemove::producer,
         // NextActorProducerHere
     };
     // clang-format on

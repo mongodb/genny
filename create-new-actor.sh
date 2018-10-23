@@ -120,7 +120,7 @@ recreate_driver_file() {
 
     < "$driver_file" \
       perl -pe "s|(// NextActorHeaderHere)|#include <gennylib/actors/${actor_name}.hpp>\\n\$1|" \
-    | perl -pe "s|((\\s+)// NextActorProducerHere)|\$2,&genny::actor::${actor_name}::producer\\n\$1|" \
+    | perl -pe "s|((\\s+)// NextActorProducerHere)|\$2&genny::actor::${actor_name}::producer,\\n\$1|" \
     > "$$.driver.cpp"
 
     mv "$$.driver.cpp" "$driver_file"
