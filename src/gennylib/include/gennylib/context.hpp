@@ -477,8 +477,8 @@ public:
      *   across Actors and threads.
      * @param thread the thread number of this Actor, if any.
      */
-    auto gauge(const std::string& name, unsigned int thread = 0) const {
-        auto name = this->metricsName(name, thread);
+    auto gauge(const std::string& operationName, unsigned int thread = 0) const {
+        auto name = this->metricsName(operationName, thread);
         return this->_workload->_registry->gauge(name);
     }
 
