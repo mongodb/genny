@@ -57,7 +57,8 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     };
     // clang-format on
 
-    auto workloadContext = WorkloadContext{yaml, metrics, orchestrator, producers};
+    auto workloadContext =
+        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
@@ -142,6 +143,9 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
             "Path to workload configuration yaml file. "
             "Paths are relative to the program's cwd. "
             "Can also specify as first positional argument.")
+        ("mongo-uri,u",
+            po::value<std::string>()->default_value("mongodb://localhost:27017"),
+            "Mongo URI to use for the default connection-pool.")
     ;
 
     positional.add("workload-file", -1);
@@ -164,4 +168,5 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->workloadFileName = vm["workload-file"].as<std::string>();
+    this->mongoUri = vm["mongo-uri"].as<std::string>();
 }

@@ -194,12 +194,13 @@ public:
     WorkloadContext(YAML::Node node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
+                    const std::string& mongoUri,
                     const std::vector<ActorProducer>& producers)
         : _node{std::move(node)},
           _registry{&registry},
           _orchestrator{&orchestrator},
           // TODO: make this optional and default to mongodb://localhost:27017
-          _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}},
+          _clientPool{mongocxx::uri{mongoUri}},
           _done{false} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.

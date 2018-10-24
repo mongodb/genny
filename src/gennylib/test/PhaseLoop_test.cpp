@@ -251,7 +251,6 @@ TEST_CASE("Actual Actor Example") {
     // setup and run (bypass the driver)
     YAML::Node config = YAML::Load(R"(
         SchemaVersion: 2018-07-01
-        MongoUri: mongodb://example # unused but ctors currently require that it's syntactically valid
         Actors:
         - Phases:
           - Repeat: 100
@@ -264,7 +263,11 @@ TEST_CASE("Actual Actor Example") {
     orchestrator.addRequiredTokens(1);
 
     metrics::Registry registry;
-    WorkloadContext wl{config, registry, orchestrator, {IncrementsMapValues::producer(counters)}};
+    WorkloadContext wl{config,
+                       registry,
+                       orchestrator,
+                       "mongodb://localhost:27017",
+                       {IncrementsMapValues::producer(counters)}};
     wl.actors()[0]->run();
     // end
     // ////////
