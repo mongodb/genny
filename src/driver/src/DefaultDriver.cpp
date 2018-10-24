@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -157,17 +158,21 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         .run();
     // clang-format on
 
+    {
+        auto stream = std::ostringstream();
+        stream << description;
+        this->description = stream.str();
+    }
+
     po::variables_map vm;
     po::store(run, vm);
     po::notify(vm);
 
-    if (vm.count("help") || !vm.count("workload-file")) {
-        std::cout << description << std::endl;
-        throw std::logic_error("Help");
-    }
-
+    this->isHelp = vm.count("help") >= 1;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
-    this->workloadFileName = vm["workload-file"].as<std::string>();
     this->mongoUri = vm["mongo-uri"].as<std::string>();
+
+    if (vm.count("workload-file") > 0)
+        this->workloadFileName = vm["workload-file"].as<std::string>();
 }
