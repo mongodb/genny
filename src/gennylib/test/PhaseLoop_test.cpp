@@ -223,7 +223,8 @@ TEST_CASE("Actual Actor Example") {
     public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
             : _loop{actorContext, 1}, _counters{counters} {}
-        //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset param.
+        //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset
+        //                        param.
 
         void run() override {
             for (auto&& [num, cfg] : _loop) {
@@ -262,7 +263,11 @@ TEST_CASE("Actual Actor Example") {
     orchestrator.addRequiredTokens(1);
 
     metrics::Registry registry;
-    WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", {IncrementsMapValues::producer(counters)}};
+    WorkloadContext wl{config,
+                       registry,
+                       orchestrator,
+                       "mongodb://localhost:27017",
+                       {IncrementsMapValues::producer(counters)}};
     wl.actors()[0]->run();
     // end
     // ////////

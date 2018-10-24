@@ -27,8 +27,7 @@ template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
-    string modified =
-        "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
+    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, mongoUri, {}};
@@ -43,8 +42,7 @@ template <class Out,
 void gives(const string& yaml, OutV expect, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
-    string modified =
-        "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
+    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, mongoUri, {}};
@@ -68,8 +66,7 @@ Actors:
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = YAML::Load(
-            "SchemaVersion: 2018-06-27\nActors: []");
+        auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
 
         auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, mongoUri, {}); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));

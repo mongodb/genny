@@ -58,7 +58,8 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     };
     // clang-format on
 
-    auto workloadContext = WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
+    auto workloadContext =
+        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
