@@ -7,7 +7,7 @@
 struct genny::actor::HelloWorld::PhaseConfig {
     std::string message;
     explicit PhaseConfig(PhaseContext& context)
-    : message{context.get<std::string,false>("Message").value_or("Hello, World!")} {}
+        : message{context.get<std::string, false>("Message").value_or("Hello, World!")} {}
 };
 
 void genny::actor::HelloWorld::run() {
@@ -21,8 +21,7 @@ void genny::actor::HelloWorld::run() {
 genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
     : _outputTimer{context.timer("output", thread)},
       _operations{context.counter("operations", thread)},
-      _loop{context}
-      {}
+      _loop{context} {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
