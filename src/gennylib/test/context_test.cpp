@@ -18,15 +18,19 @@ using namespace std;
 using Catch::Matchers::Matches;
 using Catch::Matchers::StartsWith;
 
+// The driver checks the passed-in mongo uri for accuracy but doesn't actually
+// initiate a connection until a connection is retrieved from
+// the connection-pool
+const std::string mongoUri = "mongodb://localhost:27017";
+
 template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
-    string modified =
-        "SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27017\nActors: []\n" + yaml;
+    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, {}};
+        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri, {}};
         return context.get<Out>(std::forward<Args>(args)...);
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -38,11 +42,10 @@ template <class Out,
 void gives(const string& yaml, OutV expect, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator;
-    string modified =
-        "SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27107\nActors: []\n" + yaml;
+    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, {}};
+        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri, {}};
         return context.get<Out, Required>(std::forward<Args>(args)...);
     };
     REQUIRE(test() == expect);
@@ -54,20 +57,18 @@ TEST_CASE("loads configuration okay") {
     SECTION("Valid YAML") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
-MongoUri: mongodb://localhost:27017
 Actors:
 - Name: HelloWorld
   Count: 7
         )");
-        WorkloadContext w{yaml, metrics, orchestrator, {}};
+        WorkloadContext w{yaml, metrics, orchestrator, mongoUri, {}};
         auto actors = w.get("Actors");
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = YAML::Load(
-            "SchemaVersion: 2018-06-27\nMongoUri: mongodb://localhost:27017\nActors: []");
+        auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
 
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, mongoUri, {}); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
     }
 
@@ -112,30 +113,24 @@ Actors:
     }
 
     SECTION("Empty Yaml") {
-        auto yaml = YAML::Load("MongoUri: mongodb://localhost:27017\nActors: []");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        auto yaml = YAML::Load("Actors: []");
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, mongoUri, {}); };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
     }
     SECTION("No Actors") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27017");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        auto yaml = YAML::Load("SchemaVersion: 2018-07-01");
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, mongoUri, {}); };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path(.*\n*)*)"));
     }
-    SECTION("No MongoUri") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nActors: []");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(bad conversion)"));
-    }
     SECTION("Invalid MongoUri") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nMongoUri: notValid\nActors: []");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nActors: []");
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, "notValid", {}); };
         REQUIRE_THROWS_WITH(test(), Matches(R"(an invalid MongoDB URI was provided)"));
     }
 
     SECTION("Can call two actor producers") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
-MongoUri: mongodb://localhost:27017
 Actors:
 - Name: One
   SomeList: [100, 2, 3]
@@ -157,7 +152,7 @@ Actors:
             return ActorVector{};
         });
 
-        auto context = WorkloadContext{yaml, metrics, orchestrator, producers};
+        auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri, producers};
         REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
     }
 }
@@ -171,7 +166,7 @@ void onContext(YAML::Node& yaml, std::function<void(ActorContext&)>& op) {
         return {};
     };
 
-    WorkloadContext{yaml, metrics, orchestrator, {producer}};
+    WorkloadContext{yaml, metrics, orchestrator, mongoUri, {producer}};
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
@@ -269,7 +264,7 @@ TEST_CASE("Duplicate Phase Numbers") {
     Orchestrator orchestrator;
     ActorProducer producer = [&](ActorContext& context) -> ActorVector { return {}; };
 
-    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, {producer}}),
+    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri, {producer}}),
                         Catch::Matches("Duplicate phase 0"));
 }
 
