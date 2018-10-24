@@ -19,9 +19,7 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
-#include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/metrics.hpp>
-#include <gennylib/Orchestrator.hpp>
 
 /**
  * This file defines `WorkloadContext`, `ActorContext`, and `PhaseContext` which provide access
