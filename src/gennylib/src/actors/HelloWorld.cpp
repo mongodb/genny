@@ -11,10 +11,10 @@ struct genny::actor::HelloWorld::PhaseConfig {
 };
 
 void genny::actor::HelloWorld::run() {
-    for (auto&& [p, h] : _loop) {
-        for (auto _ : h) {
+    for (auto&& [phase, config] : _loop) {
+        for (auto _ : config) {
             auto op = this->_outputTimer.raii();
-            BOOST_LOG_TRIVIAL(info) << h->message;
+            BOOST_LOG_TRIVIAL(info) << config->message;
         }
     }
 }

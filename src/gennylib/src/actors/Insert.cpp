@@ -23,13 +23,13 @@ struct genny::actor::Insert::PhaseConfig {
 };
 
 void genny::actor::Insert::run() {
-    for (auto&& [p, h] : _loop) {
-        for (const auto&& _ : h) {
+    for (auto&& [phase, config] : _loop) {
+        for (const auto&& _ : config) {
             auto op = _insertTimer.raii();
             bsoncxx::builder::stream::document mydoc{};
-            auto view = h->json_document->view(mydoc);
+            auto view = config->json_document->view(mydoc);
             BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(view);
-            h->collection.insert_one(view);
+            config->collection.insert_one(view);
             _operations.incr();
         }
     }
