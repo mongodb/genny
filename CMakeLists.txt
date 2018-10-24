@@ -51,6 +51,10 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH      false)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true)
 set(CMAKE_MACOSX_RPATH                  1) # Ensure that RPATH is used on OSX
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE PATH "")
+
 # Help spot unknown compilers and versions.
 # Other compilers are probably supported just fine but aren't officially checked
 if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
