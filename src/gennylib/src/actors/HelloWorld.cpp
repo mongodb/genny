@@ -4,7 +4,7 @@
 
 #include <gennylib/actors/HelloWorld.hpp>
 
-struct genny::Actor::HelloWorld::PhaseConfig {
+struct genny::actor::HelloWorld::PhaseConfig {
     std::string message;
     explicit PhaseConfig(PhaseContext& context)
     : message{context.get<std::string,false>("Message").value_or("Hello, World!")} {}
@@ -14,15 +14,14 @@ void genny::actor::HelloWorld::run() {
     for (auto&& [p, h] : _loop) {
         for (auto _ : h) {
             auto op = this->_outputTimer.raii();
-            BOOST_LOG_TRIVIAL(info) << "Doing PhaseNumber " << p << " " << h->_message;
-            //            h->_operations.incr();
+            BOOST_LOG_TRIVIAL(info) << h->message;
         }
     }
 }
 genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
     : _outputTimer{context.timer("output", thread)},
       _operations{context.counter("operations", thread)},
-      _loop{context, thread}
+      _loop{context}
       {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
