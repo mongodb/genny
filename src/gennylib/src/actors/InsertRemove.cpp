@@ -50,10 +50,8 @@ void genny::actor::InsertRemove::run() {
 
 genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context, const unsigned int thread)
     : _rng{context.workload().createRNG()},
-      _insertTimer{context.timer(context.get<std::string>("Name") + "." + std::to_string(thread) +
-                                 ".insert")},
-      _removeTimer{context.timer(context.get<std::string>("Name") + "." + std::to_string(thread) +
-                                 ".remove")},
+      _insertTimer{context.timer("insert", thread)},
+      _removeTimer{context.timer("remove", thread)},
       _client{std::move(context.client())},
       _loop{context, _rng, _client, thread} {}
 

@@ -57,16 +57,17 @@ buildvariants:
   tasks:
   - name: t_test
 
-- name: macos-1012
-  display_name: OS X Sierra
-  modules: ~
-  run_on:
-  - macos-1012
-  expansions:
-    path: "/Applications/CMake.app/Contents/bin"
-    cmake_cxx_flags: ""
-  tasks:
-  - name: t_test
+# TODO: TIG-1056 the OS X image doesn't have a recent CMake or C++ compiler
+# - name: macos-1012
+#   display_name: OS X Sierra
+#   modules: ~
+#   run_on:
+#   - macos-1012
+#   expansions:
+#     path: "/Applications/CMake.app/Contents/bin"
+#     cmake_cxx_flags: ""
+#   tasks:
+#   - name: t_test
 
 
 ##                ⚡️ Tasks ⚡️

@@ -13,12 +13,17 @@ struct genny::Actor::HelloWorld::PhaseConfig {
 void genny::actor::HelloWorld::run() {
     for (auto&& [p, h] : _loop) {
         for (auto _ : h) {
-                        auto op = h->_outputTimer.raii();
+            auto op = this->_outputTimer.raii();
             BOOST_LOG_TRIVIAL(info) << "Doing PhaseNumber " << p << " " << h->_message;
             //            h->_operations.incr();
         }
     }
 }
+genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
+    : _outputTimer{context.timer("output", thread)},
+      _operations{context.counter("operations", thread)},
+      _loop{context, thread}
+      {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
@@ -31,7 +36,3 @@ genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& conte
     }
     return out;
 }
-
-genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, unsigned int thread)
-    : _loop{context, thread},
-    _outputTimer{context.timer(context.get<std::string>("Name") + "." + std::to_string)} {}
