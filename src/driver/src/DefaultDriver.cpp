@@ -13,7 +13,6 @@
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/MetricsReporter.hpp>
-#include <gennylib/PhasedActor.hpp>
 #include <gennylib/context.hpp>
 
 #include <gennylib/actors/HelloWorld.hpp>

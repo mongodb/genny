@@ -25,7 +25,7 @@ struct genny::actor::Insert::PhaseConfig {
 void genny::actor::Insert::run() {
     for (auto&& [p, h] : _loop) {
         for (const auto&& _ : h) {
-            auto op = _outputTimer.raii();
+            auto op = _insertTimer.raii();
             bsoncxx::builder::stream::document mydoc{};
             auto view = h->json_document->view(mydoc);
             BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(view);
@@ -38,7 +38,7 @@ void genny::actor::Insert::run() {
 
 genny::actor::Insert::Insert(genny::ActorContext& context, const unsigned int thread)
     : _rng{context.workload().createRNG()},
-      _outputTimer{context.timer("output", thread)},
+      _insertTimer{context.timer("insert", thread)},
       _operations{context.counter("operations", thread)},
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}

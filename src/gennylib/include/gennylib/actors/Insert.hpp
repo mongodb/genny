@@ -28,7 +28,7 @@ public:
 
 private:
     std::mt19937_64 _rng;
-    metrics::Timer _outputTimer;
+    metrics::Timer _insertTimer;
     metrics::Counter _operations;
     mongocxx::pool::entry _client;
 
