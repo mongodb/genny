@@ -75,7 +75,6 @@ class GennyOutputParserTest(unittest.TestCase):
         self.assertEqual(
             actual, {
                 'InsertRemoveTest.remove': {
-                    'mean': 4297048.190765498,
                     'n': 823,
                     'threads': {
                         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -86,10 +85,10 @@ class GennyOutputParserTest(unittest.TestCase):
                         97, 98, 99
                     },
                     'started': 1540233103870294,
-                    'ended': 1540233383199723
+                    'ended': 1540233383199723,
+                    'mean': 4297048.190765492
                 },
                 'InsertRemoveTest.insert': {
-                    'mean': 8656706.697448373,
                     'n': 823,
                     'threads': {
                         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -100,13 +99,14 @@ class GennyOutputParserTest(unittest.TestCase):
                         97, 98, 99
                     },
                     'started': 1540233073074953,
-                    'ended': 1540233380763649
+                    'ended': 1540233380763649,
+                    'mean': 8656706.69744836
                 },
                 'Genny.Setup': {
-                    'mean': 8694761.0,
                     'n': 1,
                     'threads': {0},
                     'started': 1540233035593684,
-                    'ended': 1540233044288445
+                    'ended': 1540233044288445,
+                    'mean': 8694761.0
                 }
             })

@@ -115,6 +115,7 @@ class ParserResults(object):
             self.sections[self.section_name] = self.section_lines
             if self.section_name == 'Timers':
                 self.done_timers = True
+                self._on_timer_section_end()
         self.section_lines = []
         self.section_name = None
 
@@ -174,6 +175,17 @@ class ParserResults(object):
         """
         return self._timers
 
+    def _on_timer_section_end(self):
+        """
+        Post-process self._timers once we're done reading all the Timers section lines.
+        :return: None
+        """
+        if not self.done_timers:
+            raise RuntimeError("Called _on_timer_section_end before done reading Timers section")
+        for timer in self._timers.values():
+            timer['mean'] = timer['duration_sum'] / timer['n']
+            del (timer['duration_sum'])
+
     def _on_timer_line(self, timer_line, file_name, line_number):
         """
         :param timer_line: either [metrics-timestamp, Actor.Thread.Operation, DurationMicroseconds]
@@ -203,7 +215,7 @@ class ParserResults(object):
         # first time we've seen data for this timer
         if event_name not in self._timers:
             self._timers[event_name] = {
-                'mean': 0,
+                'duration_sum': 0,
                 'n': 0,
                 'threads': {thread},
                 'started': started,
@@ -214,14 +226,10 @@ class ParserResults(object):
 
         event['threads'].add(thread)
 
-        # the started/ended keys aren't super well-defined
         event['started'] = min(started, event['started'])
         event['ended'] = max(when, event['ended'])
-
-        # compute as streaming mean
-        new_mean = ((event['mean'] * event['n']) + duration) / (event['n'] + 1)
+        event['duration_sum'] = event['duration_sum'] + duration
         event['n'] = event['n'] + 1
-        event['mean'] = new_mean
 
 
 def parse(source, file_name):

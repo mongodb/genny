@@ -37,6 +37,7 @@ class PerfJsonTests(unittest.TestCase):
     def test_fixture2(self):
         parsed = test_lib.parse_fixture('csvoutput2')
         actual = perf_json.translate(parsed)
+        print(actual)
         self.assertEqual(
             actual, {
                 'storageEngine':
@@ -48,8 +49,8 @@ class PerfJsonTests(unittest.TestCase):
                     'end': 15402333831.99723,
                     'results': {
                         100: {
-                            'ops_per_sec': 4297048.190765498,
-                            'ops_per_sec_values': [4297048.190765498]
+                            'ops_per_sec': 4297048.190765492,
+                            'ops_per_sec_values': [4297048.190765492]
                         }
                     }
                 },
@@ -60,8 +61,8 @@ class PerfJsonTests(unittest.TestCase):
                                 'end': 15402333807.63649,
                                 'results': {
                                     100: {
-                                        'ops_per_sec': 8656706.697448373,
-                                        'ops_per_sec_values': [8656706.697448373]
+                                        'ops_per_sec': 8656706.69744836,
+                                        'ops_per_sec_values': [8656706.69744836]
                                     }
                                 }
                             },
