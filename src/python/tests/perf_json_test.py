@@ -30,8 +30,6 @@ class PerfJsonTests(unittest.TestCase):
                     'start': -0.00039,
                     'workload': 'A.o'
                 }],
-                'storageEngine':
-                    'wiredTiger'
             })
 
     def test_fixture2(self):
@@ -40,8 +38,6 @@ class PerfJsonTests(unittest.TestCase):
         print(actual)
         self.assertEqual(
             actual, {
-                'storageEngine':
-                    'wiredTiger',
                 'results': [{
                     'name': 'InsertRemoveTest.remove',
                     'workload': 'InsertRemoveTest.remove',
@@ -85,8 +81,6 @@ class PerfJsonTests(unittest.TestCase):
         actual = perf_json.translate(parsed)
         self.assertEqual(
             actual, {
-                'storageEngine':
-                    'wiredTiger',
                 'results': [{
                     'name': 'InsertTest.output',
                     'workload': 'InsertTest.output',

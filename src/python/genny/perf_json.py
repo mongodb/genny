@@ -22,7 +22,7 @@ def translate(parser_results):
                 }
             }
         })
-    return {'storageEngine': 'wiredTiger', 'results': out}
+    return {'results': out}
 
 
 def main__summarize_translate():
