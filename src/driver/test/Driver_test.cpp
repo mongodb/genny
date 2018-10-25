@@ -15,6 +15,7 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
+#include <gennylib/Cast.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -43,18 +44,7 @@ bool hasMetrics(DefaultDriver::ProgramOptions& options) {
     return !metricsContents(options).empty();
 }
 
-template <class F>
-auto onActorContext(F&& callback) {
-    return [&](genny::ActorContext& context) {
-        genny::ActorVector vec;
-        callback(context, vec);
-        return vec;
-    };
-}
-
-
 class SomeException : public virtual boost::exception, public virtual std::exception {};
-
 
 class StaticFailsInfo {
 public:
@@ -85,7 +75,7 @@ struct Fails : public genny::Actor {
     genny::PhaseLoop<PhaseConfig> loop;
     static StaticFailsInfo state;
 
-    explicit Fails(genny::ActorContext& ctx) : loop{ctx} {}
+    explicit Fails(genny::ActorContext& ctx, int) : loop{ctx} {}
 
     void run() override {
         for (auto&& [phase, config] : loop) {
@@ -108,6 +98,10 @@ struct Fails : public genny::Actor {
     }
 };
 
+namespace {
+auto registerFails = genny::Cast::makeDefaultRegistration<Fails>("Fails");
+} // namespace
+
 // initialize static member of Fails
 StaticFailsInfo Fails::state = {};
 
@@ -118,12 +112,6 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     auto metricsOutputFileName = (ph / "metrics.csv").string();
 
     DefaultDriver::ProgramOptions opts;
-
-    opts.otherProducers.emplace_back(onActorContext([&](auto& context, auto& vec) {
-        for (auto i = 0; i < context.template get<int, false>("Threads").value_or(1); ++i) {
-            vec.push_back(std::make_unique<Fails>(context));
-        }
-    }));
 
     opts.metricsFormat = "csv";
     opts.metricsOutputFileName = metricsOutputFileName;

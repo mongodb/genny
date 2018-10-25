@@ -7,6 +7,8 @@
 #include <yaml-cpp/yaml.h>
 
 #include "log.hh"
+
+#include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
@@ -55,14 +57,7 @@ genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context, const uns
       _client{std::move(context.client())},
       _loop{context, _rng, _client, thread} {}
 
-genny::ActorVector genny::actor::InsertRemove::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    if (context.get<std::string>("Type") != "InsertRemove") {
-        return out;
-    }
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::InsertRemove>(context, i));
-    }
-    return out;
+namespace {
+auto registerInsertRemove =
+    genny::Cast::makeDefaultRegistration<genny::actor::InsertRemove>("InsertRemove");
 }

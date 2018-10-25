@@ -24,8 +24,6 @@ public:
 
     virtual void run() override;
 
-    static ActorVector producer(ActorContext& context);
-
 private:
     std::mt19937_64 _rng;
     metrics::Timer _insertTimer;

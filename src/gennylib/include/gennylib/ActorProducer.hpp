@@ -1,14 +1,18 @@
 #ifndef HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 #define HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 
-#include <functional>
+#include <memory>
+#include <string>
+#include <map>
 
 #include <gennylib/ActorVector.hpp>
 
 namespace genny {
 
+class ActorContext;
+
 /**
- * An ActorProducer maps from ActorContext -> vector of Actors.
+ * ActorProducer.produce() maps from ActorContext -> vector of Actors.
  *
  * For the following YAML,
  *
@@ -31,7 +35,51 @@ namespace genny {
  * call context.get(...) only during their constructors and retain
  * refs or copies of config objects
  */
-using ActorProducer = typename std::function<ActorVector(class ActorContext&)>;
+class ActorProducer {
+public:
+    ActorProducer(std::string name) : _name{name} {}
+    ActorProducer(const ActorProducer&) = delete;
+    ActorProducer& operator=(const ActorProducer&) = delete;
+    ActorProducer(ActorProducer&&) = default;
+    ActorProducer& operator=(ActorProducer&&) = default;
+
+    const std::string& name() const {
+        return _name;
+    }
+
+    virtual ActorVector produce(ActorContext &) = 0;
+
+private:
+    std::string _name;
+};
+
+template <class ActorT>
+class DefaultActorProducer : public ActorProducer {
+public:
+    DefaultActorProducer(const std::string& name) : ActorProducer(name) {}
+
+    ActorVector produce(ActorContext& context) override {
+        ActorVector out;
+        out.emplace_back(std::make_unique<ActorT>(context));
+        return out;
+    }
+};
+
+template <class ActorT>
+class DefaultThreadedActorProducer : public ActorProducer {
+public:
+    DefaultThreadedActorProducer(const std::string& name) : ActorProducer(name) {}
+
+    ActorVector produce(ActorContext& context) override {
+        static int threadMock = 0;
+
+        ActorVector out;
+        out.emplace_back(std::make_unique<ActorT>(context, threadMock++));
+        return out;
+    }
+};
+
+using ActorProducerMap = std::map<std::string, std::shared_ptr<ActorProducer>>;
 
 }  // namespace genny
 

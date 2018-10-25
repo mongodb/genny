@@ -9,7 +9,9 @@
 #include <mongocxx/database.hpp>
 
 #include "log.hh"
+
 #include <bsoncxx/json.hpp>
+#include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
@@ -43,14 +45,6 @@ genny::actor::Insert::Insert(genny::ActorContext& context, const unsigned int th
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 
-genny::ActorVector genny::actor::Insert::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    if (context.get<std::string>("Type") != "Insert") {
-        return out;
-    }
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::Insert>(context, i));
-    }
-    return out;
+namespace {
+auto registerInsert = genny::Cast::makeDefaultRegistration<genny::actor::Insert>("Insert");
 }

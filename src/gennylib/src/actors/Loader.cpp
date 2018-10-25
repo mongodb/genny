@@ -9,9 +9,10 @@
 #include <yaml-cpp/yaml.h>
 
 #include "log.hh"
+
+#include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
-
 
 namespace {}  // namespace
 
@@ -88,12 +89,6 @@ genny::actor::Loader::Loader(genny::ActorContext& context, const unsigned int th
       _client{context.client()},
       _loop{context, _rng, _client} {}
 
-genny::ActorVector genny::actor::Loader::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    if (context.get<std::string>("Type") != "Loader") {
-        return out;
-    }
-    // Loader is single threaded for now
-    out.push_back(std::make_unique<genny::actor::Loader>(context, 0));
-    return out;
+namespace {
+auto registerLoader = genny::Cast::makeDefaultRegistration<genny::actor::Loader>("Loader");
 }

@@ -18,8 +18,6 @@ public:
 
     ~HelloWorld() = default;
 
-    static ActorVector producer(ActorContext& context);
-
 private:
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;

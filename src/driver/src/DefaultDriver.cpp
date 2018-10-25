@@ -12,23 +12,13 @@
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
-#include <mongocxx/instance.hpp>
-
 #include <yaml-cpp/yaml.h>
 
+#include <gennylib/Cast.hpp>
 #include <gennylib/MetricsReporter.hpp>
 #include <gennylib/context.hpp>
 
-#include <gennylib/actors/HelloWorld.hpp>
-#include <gennylib/actors/Insert.hpp>
-#include <gennylib/actors/InsertRemove.hpp>
-#include <gennylib/actors/Loader.hpp>
-#include <gennylib/actors/MultiCollectionQuery.hpp>
-#include <gennylib/actors/MultiCollectionUpdate.hpp>
-// NextActorHeaderHere
-
 #include "DefaultDriver.hpp"
-
 
 namespace {
 
@@ -72,35 +62,24 @@ void runActor(Actor&& actor,
 
 genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     const genny::driver::DefaultDriver::ProgramOptions& options) {
+    if(options.shouldListActors){
+        for(const auto & pair : getCast().getProducers()){
+            std::cout << pair.first << " is " << pair.second->name() << std::endl;
+        }
+        return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
+    }
+
     genny::metrics::Registry metrics;
 
     auto actorSetup = metrics.timer("Genny.Setup");
     auto setupTimer = actorSetup.start();
     auto phaseNumberGauge = metrics.gauge("Genny.PhaseNumber");
 
-    mongocxx::instance::current();
-
     auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
     auto orchestrator = Orchestrator{phaseNumberGauge};
 
-    auto producers = std::vector<genny::ActorProducer>{
-        &genny::actor::HelloWorld::producer,
-        &genny::actor::Insert::producer,
-        &genny::actor::InsertRemove::producer,
-        &genny::actor::MultiCollectionUpdate::producer,
-        &genny::actor::Loader::producer,
-        &genny::actor::MultiCollectionQuery::producer,
-        // NextActorProducerHere
-    };
-    // clang-format on
-
-    // The ProgramOptions struct can add some more ActorProducers.
-    // Add them at then end so they will produce Actors last.
-    // This is used primarily for testing so tests can inject test-only Actors.
-    producers.insert(producers.end(), options.otherProducers.begin(), options.otherProducers.end());
-
     auto workloadContext =
-        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
+        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, getCast()};
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
@@ -191,6 +170,8 @@ genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** ar
     description.add_options()
         ("help,h",
             "Show help message")
+        ("list-actors",
+            "List all actors available for use")
         ("metrics-format,m",
              po::value<std::string>()->default_value("csv"),
              "Metrics format to use")
@@ -226,6 +207,7 @@ genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** ar
     po::notify(vm);
 
     this->isHelp = vm.count("help") >= 1;
+    this->shouldListActors = vm.count("list-actors") >= 1;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();

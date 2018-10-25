@@ -23,14 +23,6 @@ add_library(gennylib SHARED
     src/value_generators/value_generators.cpp
     src/value_generators/generators-private.cpp
 
-    # ActorsStart
-    src/actors/HelloWorld.cpp
-    src/actors/Insert.cpp
-    src/actors/InsertRemove.cpp
-    src/actors/Loader.cpp
-    src/actors/MultiCollectionQuery.cpp
-    src/actors/MultiCollectionUpdate.cpp
-    # ActorsEnd
 )
 
 add_subdirectory(jasper)
@@ -63,8 +55,31 @@ target_link_libraries(gennylib
         jasperlib
 )
 
+add_library(gennylib_actors SHARED
+    # ActorsStart
+    src/actors/HelloWorld.cpp
+    src/actors/Insert.cpp
+    src/actors/InsertRemove.cpp
+    src/actors/Loader.cpp
+    src/actors/MultiCollectionQuery.cpp
+    src/actors/MultiCollectionUpdate.cpp
+    # ActorsEnd
+)
+
+target_include_directories(gennylib_actors
+    PRIVATE
+        jasper
+        src
+        src/value_generators
+)
+
+target_link_libraries(gennylib_actors
+    PUBLIC
+        gennylib
+)
+
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib EXPORT GennyLibraryConfig
+install(TARGETS  gennylib gennylib_actors EXPORT GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
@@ -107,7 +122,7 @@ target_include_directories(test_gennylib
         ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
 target_link_libraries(test_gennylib
-    PUBLIC ${Boost_LIBRARIES} gennylib
+    PUBLIC ${Boost_LIBRARIES} gennylib gennylib_actors
 )
 
 add_test(

@@ -1,8 +1,10 @@
+#include <gennylib/actors/HelloWorld.hpp>
+
 #include <string>
 
 #include "log.hh"
 
-#include <gennylib/actors/HelloWorld.hpp>
+#include <gennylib/Cast.hpp>
 
 struct genny::actor::HelloWorld::PhaseConfig {
     std::string message;
@@ -23,14 +25,7 @@ genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigne
       _operations{context.counter("operations", thread)},
       _loop{context} {}
 
-genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    if (context.get<std::string>("Type") != "HelloWorld") {
-        return out;
-    }
-    const auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(context, i));
-    }
-    return out;
+namespace {
+auto registerHelloWorld =
+    genny::Cast::makeDefaultRegistration<genny::actor::HelloWorld>("HelloWorld");
 }
