@@ -11,13 +11,15 @@ project(genny VERSION 0.0.1 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 
+find_package(Threads REQUIRED)
+
 # <Boost>
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(
         Boost
-        1.58 # only 1.58 because that's the version apt-get installs on ubuntu 16.04
+        1.58 # Minimum version, vetted via Ubuntu 16.04
         REQUIRED
         COMPONENTS
         log_setup
