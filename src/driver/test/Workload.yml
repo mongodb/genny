@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 
-MongoUri: "mongodb://localhost:27017"
-
 Actors:
   - Name: HelloTest
     Type: HelloWorld

@@ -67,6 +67,7 @@ target_include_directories(gennylib
 # Depend on libraries that we defined in the top-level CMakeLists.txt file
 target_link_libraries(gennylib
     PUBLIC
+        ${CMAKE_THREAD_LIBS_INIT}
         ${Boost_LIBRARIES}
         ${YAML_CPP_LIBRARIES}
         ${LIBMONGOCXX_LIBRARIES}
