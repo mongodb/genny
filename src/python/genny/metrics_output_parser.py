@@ -28,7 +28,9 @@ There are 4 "sections": Clocks, Counters, Gauges, and Timers.
 Clocks gives the correspondence between time-points measured
 using the Metrics clock and the System clock. Counters, Gauges,
 and Timers all record values for their respective metrics objects
-(see metrics.hpp in the Genny C++ codebase).
+(see metrics.hpp in the Genny C++ codebase [1]).
+
+[1]: https://github.com/10gen/genny/blob/master/src/gennylib/include/gennylib/metrics.hpp
 
 The format for Counters, Gauges, and Timers is:
 
