@@ -242,9 +242,7 @@ class ParserResults(object):
         :param source: iterable source of lines to read
         :param file_name: file name (etc) read from (used for error diagnostics reporting)
         """
-        line_number = 0
-        for line in source:
-            line_number = line_number + 1
+        for line_number, line in enumerate(source):
             if line == '':
                 # blank line
                 pass
@@ -267,5 +265,4 @@ def main__sumarize():
     """
     with open('/dev/stdin', 'r') as f:
         timers = ParserResults(f, '/dev/stdin').timers()
-        out = json.dumps(timers, sort_keys=True, indent=4, separators=(',', ': '))
-        print(out)
+        print(json.dumps(timers, sort_keys=True, indent=4, separators=(',', ': ')))

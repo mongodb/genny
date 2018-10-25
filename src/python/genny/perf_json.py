@@ -1,3 +1,7 @@
+"""
+Module for interacting with the (legacy) perf.json output format for metrics data.
+"""
+
 import json
 
 import genny.metrics_output_parser as output_parser
@@ -30,5 +34,4 @@ def main__summarize_translate():
     with open('/dev/stdin', 'r') as f:
         results = output_parser.ParserResults(f, '/dev/stdin')
         translated = translate(results)
-        out = json.dumps(translated, sort_keys=True, indent=4, separators=(',', ': '))
-        print(out)
+        print(json.dumps(translated, sort_keys=True, indent=4, separators=(',', ': ')))
