@@ -4,8 +4,11 @@ Actors:
   - Name: HelloTest
     Type: HelloWorld
     Threads: 2
-    Parameters:
-      Message: Hello World!
+    Phases:
+    - Message: Hello Phase 0 🐳
+      Duration: 50
+    - Message: Hello Phase 1 👬
+      Repeat: 100
   - Name: InsertTest
     Type: Insert
     Threads: 2
