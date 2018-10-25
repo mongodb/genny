@@ -17,8 +17,14 @@
 int main(int argc, char** argv) {
     // basically just a test that we're using c++17
     auto v = std::make_optional(genny::getVersion());
-    auto opts = genny::driver::ProgramOptions(argc, argv);
+
     std::cout << u8"🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔" << std::endl;
+
+    auto opts = genny::driver::ProgramOptions(argc, argv);
+    if(opts.isHelp){
+        std::cout << opts.description << std::endl;
+        return 0;
+    }
 
     // do this based on -v flag or something
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
