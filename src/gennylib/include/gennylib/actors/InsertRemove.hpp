@@ -20,7 +20,7 @@ namespace genny::actor {
 class InsertRemove : public Actor {
 
 public:
-    explicit InsertRemove(ActorContext& context, const unsigned int thread);
+    explicit InsertRemove(ActorContext& context);
     ~InsertRemove() = default;
 
     void run() override;
@@ -28,12 +28,15 @@ public:
     static ActorVector producer(ActorContext& context);
 
 private:
-    struct PhaseConfig;
     std::mt19937_64 _rng;
+
+    const ActorId _id;
 
     metrics::Timer _insertTimer;
     metrics::Timer _removeTimer;
     mongocxx::pool::entry _client;
+
+    struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
 };
 

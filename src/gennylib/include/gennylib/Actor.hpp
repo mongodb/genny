@@ -50,6 +50,17 @@ public:
     virtual void run() = 0;
 };
 
+using ActorId = unsigned int;
+
+/**
+ * Increment the nextActorId and return the original value.
+ * This is not thread safe and is intended solely for single-threaded Actor ctoring
+ * @return  unsigned int    The next sequential id
+ */
+inline ActorId nextActorId() {
+    static ActorId nextActorId = 0u;
+    return nextActorId++;
+}
 
 }  // namespace genny
 

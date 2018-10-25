@@ -18,19 +18,19 @@ void genny::actor::HelloWorld::run() {
         }
     }
 }
-genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
-    : _outputTimer{context.timer("output", thread)},
-      _operations{context.counter("operations", thread)},
+
+genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context)
+    : _id{nextActorId()},
+      _outputTimer{context.timer("output", _id)},
+      _operations{context.counter("operations", _id)},
       _loop{context} {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     if (context.get<std::string>("Type") != "HelloWorld") {
-        return out;
+        return {};
     }
-    const auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(context, i));
-    }
+
+    ActorVector out;
+    out.emplace_back(std::make_unique<actor::HelloWorld>(context));
     return out;
 }

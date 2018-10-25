@@ -14,19 +14,19 @@ struct genny::actor::InsertRemove::PhaseConfig {
     PhaseConfig(mongocxx::database db,
                 const std::string collection_name,
                 std::mt19937_64& rng,
-                int thread)
+                int id)
         : database{db},
           collection{db[collection_name]},
-          myDoc(bsoncxx::builder::stream::document{} << "_id" << thread
+          myDoc(bsoncxx::builder::stream::document{} << "_id" << id
                                                      << bsoncxx::builder::stream::finalize) {}
     PhaseConfig(PhaseContext& context,
                 std::mt19937_64& rng,
                 mongocxx::pool::entry& client,
-                int thread)
+                int id)
         : PhaseConfig((*client)[context.get<std::string>("Database")],
                       context.get<std::string>("Collection"),
                       rng,
-                      thread) {}
+                      id) {}
     mongocxx::database database;
     mongocxx::collection collection;
     bsoncxx::document::value myDoc;
@@ -48,21 +48,20 @@ void genny::actor::InsertRemove::run() {
     }
 }
 
-genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context, const unsigned int thread)
+genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context)
     : _rng{context.workload().createRNG()},
-      _insertTimer{context.timer("insert", thread)},
-      _removeTimer{context.timer("remove", thread)},
+      _id{nextActorId()},
+      _insertTimer{context.timer("insert", _id)},
+      _removeTimer{context.timer("remove", _id)},
       _client{std::move(context.client())},
-      _loop{context, _rng, _client, thread} {}
+      _loop{context, _rng, _client, _id} {}
 
 genny::ActorVector genny::actor::InsertRemove::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     if (context.get<std::string>("Type") != "InsertRemove") {
-        return out;
+        return {};
     }
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::InsertRemove>(context, i));
-    }
+
+    ActorVector out;
+    out.emplace_back(std::make_unique<actor::InsertRemove>(context));
     return out;
 }
