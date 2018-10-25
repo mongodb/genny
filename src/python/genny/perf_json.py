@@ -21,9 +21,14 @@ def translate(parser_results):
     return {'storageEngine': 'wiredTiger', 'results': out}
 
 
-def main():
+def main__summarize_translate():
+    """
+    Entry point to translate genny csv to (summarized) perf.json
+    Entry point: see setup.py
+    :return: None
+    """
     with open('/dev/stdin', 'r') as f:
-        results = output_parser.parse(f, '/dev/stdin')
+        results = output_parser.ParserResults(f, '/dev/stdin')
         translated = translate(results)
         out = json.dumps(translated, sort_keys=True, indent=4, separators=(',', ': '))
         print(out)

@@ -60,7 +60,11 @@ class ParserResults(object):
     Represents the parsed Genny metrics CSV.
     """
 
-    def __init__(self):
+    def __init__(self, source, file_name):
+        """
+        :param source: iterable source of lines to read
+        :param file_name: file name (etc) read from (used for error diagnostics reporting)
+        """
         self.sections = {}
         self.clock_delta = None
 
@@ -70,6 +74,8 @@ class ParserResults(object):
         self.section_lines = []
         self.section_name = None
         self.done_timers = False
+
+        self._parse(source, file_name)
 
     def add_line(self, line, file_name, line_number):
         """
@@ -231,32 +237,28 @@ class ParserResults(object):
         event['duration_sum'] = event['duration_sum'] + duration
         event['n'] = event['n'] + 1
 
-
-def parse(source, file_name):
-    """
-    :param source: iterable source of lines to read
-    :param file_name: file name (etc) read from (used for error diagnostics reporting)
-    :return: a ParserResults representing the parsed data from the source.
-    """
-    out = ParserResults()
-    line_number = 0
-    for line in source:
-        line_number = line_number + 1
-        if line == '':
-            # blank line
-            pass
-        items = line.strip().split(',')
-        if len(items) == 1:
-            # section header
-            out.start_section(items[0])
-        else:
-            # add line to current section
-            out.add_line(items, file_name, line_number)
-    out.end()
-    return out
+    def _parse(self, source, file_name):
+        """
+        :param source: iterable source of lines to read
+        :param file_name: file name (etc) read from (used for error diagnostics reporting)
+        """
+        line_number = 0
+        for line in source:
+            line_number = line_number + 1
+            if line == '':
+                # blank line
+                pass
+            items = line.strip().split(',')
+            if len(items) == 1:
+                # section header
+                self.start_section(items[0])
+            else:
+                # add line to current section
+                self.add_line(items, file_name, line_number)
+        self.end()
 
 
-def summarize():
+def main__sumarize():
     """
     Reads metrics CSV from stdin and prints a summary json document to stdout.
 
@@ -264,6 +266,6 @@ def summarize():
     :return: None
     """
     with open('/dev/stdin', 'r') as f:
-        timers = parse(f, '/dev/stdin').timers()
+        timers = ParserResults(f, '/dev/stdin').timers()
         out = json.dumps(timers, sort_keys=True, indent=4, separators=(',', ': '))
         print(out)
