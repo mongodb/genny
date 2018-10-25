@@ -116,6 +116,9 @@ target_link_libraries(test_gennylib
     PUBLIC ${Boost_LIBRARIES} gennylib
 )
 
+install(TARGETS  test_gennylib
+        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 add_test(
     NAME    test_gennylib
     COMMAND test_gennylib

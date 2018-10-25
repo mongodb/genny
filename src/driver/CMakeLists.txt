@@ -6,3 +6,6 @@ add_executable(genny
 
 # Define the libraries this project depends upon
 target_link_libraries(genny gennylib)
+
+install(TARGETS  genny
+        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})

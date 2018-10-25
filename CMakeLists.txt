@@ -5,6 +5,12 @@ if(POLICY CMP0025)
     cmake_policy(SET CMP0025 NEW)
 endif()
 
+# Set the default output paths/prefixes
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/bin CACHE PATH "")
+set(CMAKE_INSTALL_PREFIX            ${CMAKE_SOURCE_DIR}/dist CACHE PATH "")
+
 # NB: this version number is duplicated in
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(genny VERSION 0.0.1 LANGUAGES CXX)
@@ -50,10 +56,7 @@ set(CMAKE_SKIP_BUILD_RPATH              false)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH      false)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true)
 set(CMAKE_MACOSX_RPATH                  1) # Ensure that RPATH is used on OSX
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin CACHE PATH "")
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
 # Help spot unknown compilers and versions.
 # Other compilers are probably supported just fine but aren't officially checked
