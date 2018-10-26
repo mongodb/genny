@@ -75,6 +75,44 @@ emacs, vim, etc.). Before doing anything cute (see
 [CONTRIBUTING.md](./CONTRIBUTING.md)), please do due-diligence to ensure
 it's not going to make common editing environments go wonky.
 
+Running Genny Workloads
+-----------------------
+
+First install mongodb and start a mongod process:
+
+```sh
+brew install mongodb
+mongod --dbpath=/tmp
+```
+
+Then build Genny (see above for more):
+
+```sh
+cd build
+cmake ..
+make -j8
+make test
+cd ..
+```
+
+And then run a workload:
+
+```sh
+cd build
+./src/driver/genny                                            \
+    --workload-file       ../src/driver/test/InsertRemove.yml \
+    --metrics-format      csv                                 \
+    --metrics-output-file ./genny-metrics.csv                 \
+    --mongo-uri           'mongodb://localhost:27017'
+```
+
+Logging currently goes to stdout, and time-series metrics data is
+written to the file indicated by the `-o` flag (`./genny-metrics.csv`
+in the above example).
+
+Post-processing of metrics data is done by Python scripts in the
+`src/python` directory. See [the README there](./src/python/README.md).
+
 Code Style and Limitations
 ---------------------------
 
