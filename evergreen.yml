@@ -52,7 +52,6 @@ buildvariants:
   run_on:
   - archlinux-test
   expansions:
-    path: ""
     cmake_cxx_flags: -pthread
   tasks:
   - name: t_test
@@ -64,7 +63,6 @@ buildvariants:
 #   run_on:
 #   - macos-1012
 #   expansions:
-#     path: "/Applications/CMake.app/Contents/bin"
 #     cmake_cxx_flags: ""
 #   tasks:
 #   - name: t_test
@@ -77,6 +75,7 @@ tasks:
 - name: t_test
   commands:
     - func: f_fetch_source
+    - func: f_build_grpc
     - func: f_compile
     - func: f_cmake_test
     - func: f_python_test
@@ -111,50 +110,71 @@ functions:
       directory: src
 
   ##
+  # Compile gRPC. This script should be synchronized with DSI's compilation sript for Genny:
+  # https://github.com/10gen/dsi/blob/master/configurations/workload_setup/workload_setup.common.yml
+  # (URL valid as of 11/2018)
+  ##
+  f_build_grpc:
+  - command: shell.exec
+    params:
+      working_dir: src/build
+      script: |
+        git clone --recurse-submodules https://github.com/grpc/grpc.git
+        git checkout b79462f186cc22550bc8d53a00ae751f50d194f5
+
+        pushd grpc
+
+        # Work around https://github.com/grpc/grpc/issues/16675 by checking out a newer commit.
+        pushd third_party/boringssl
+        git checkout 9edbc7ff9f56dff801a49f5ecb15ee06718b995c
+        popd
+
+        mkdir cmake-build
+        pushd cmake-build
+        cmake ..
+        make
+
+  ##
   # Compile the project in src/build.
   #
   # Expansions:
-  #  path: prepended to $PATH
   #  cmake_cxx_flags: sent to cmake as `-DCMAKE_CXX_FLAGS`
   ###
   f_compile:
   - command: shell.exec
     params:
+      working_dir: src/build
       script: |
-        export PATH="${path}:$PATH"
-        cd src/build
+
+        # Add paths to gRPC and protobuf.
+        cwd=$(pwd)
+        export LIBRARY_PATH="$cwd/grpc/cmake-build/:$cwd/grpc/cmake-build/third_party/protobuf:$LIBRARY_PATH"
+        export CPLUS_INCLUDE_PATH="$cwd/grpc/include:$cwd/grpc/third_party/protobuf/src:$CPLUS_INCLUDE_PATH"
+
         cmake -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" ..
         make
 
   ##
   # Runs tests via `make test`.
   # Requires f_compile to have been run first.
-  #
-  # Expansions:
-  #  path: prepended to $PATH
   ##
   f_cmake_test:
   - command: shell.exec
     params:
       continue_on_err: true
+      working_dir: src/build
       script: |
-        export PATH="${path}:$PATH"
-        cd src/build
         make test
 
   ##
   # Runs python nosetests.
-  #
-  # Expansions:
-  #  path: prepended to $PATH
   ##
   f_python_test:
   - command: shell.exec
     params:
       continue_on_err: true
+      working_dir: src/src/python
       script: |
-        export PATH="${path}:$PATH"
-        cd src/src/python
         python setup.py nosetests
 
   ##
