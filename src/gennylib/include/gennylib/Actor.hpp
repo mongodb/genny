@@ -19,8 +19,8 @@ namespace genny {
  *
  * When writing a new actor, there are two steps:
  *
- * 1.  Write the actor subclass itself. Most actors should try to use
- *     PhasedActor as a base-class since it provides simple flow-control
+ * 1.  Write the Actor subclass itself. Most actors should consider
+ *     having a PhaseLoop member variable that they use for flow-control
  *     logic to collaborate cleanly with other actors.
  *
  * 2.  Write an ActorProducer that can produce an ActorVector from an
@@ -28,6 +28,10 @@ namespace genny {
  *     read and validated and passed into the Actor implementations.
  *     Typically ActorProducers will simply be a static method on an Actor
  *     subclass.
+ *
+ * See other Actor implementations as an example. In addition there is the
+ * `create-new-actor` script that assists with the boilerplate necessary to
+ * create a new Actor instance.
  *
  * Actors may retain a reference to the ActorContext and/or parent
  * WorkloadContext, but it is recommended for performance that they

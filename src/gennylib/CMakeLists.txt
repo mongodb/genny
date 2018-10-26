@@ -31,10 +31,7 @@ add_library(gennylib SHARED
 
     include/gennylib/PhaseLoop.hpp
 
-        include/gennylib/PhasedActor.hpp
-                 src/PhasedActor.cpp
-
-    include/gennylib/Orchestrator.hpp
+        include/gennylib/Orchestrator.hpp
                  src/Orchestrator.cpp
 
     include/gennylib/actors/HelloWorld.hpp

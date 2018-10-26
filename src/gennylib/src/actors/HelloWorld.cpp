@@ -1,19 +1,27 @@
+#include <string>
+
 #include "log.hh"
 
 #include <gennylib/actors/HelloWorld.hpp>
 
-void genny::actor::HelloWorld::doPhase(PhaseNumber currentPhase) {
-    auto op = _outputTimer.raii();
-    BOOST_LOG_TRIVIAL(info) << _fullName << " Doing PhaseNumber " << currentPhase << " "
-                            << _message;
-    _operations.incr();
-}
+struct genny::actor::HelloWorld::PhaseConfig {
+    std::string message;
+    explicit PhaseConfig(PhaseContext& context)
+        : message{context.get<std::string, false>("Message").value_or("Hello, World!")} {}
+};
 
+void genny::actor::HelloWorld::run() {
+    for (auto&& [phase, config] : _loop) {
+        for (auto _ : config) {
+            auto op = this->_outputTimer.raii();
+            BOOST_LOG_TRIVIAL(info) << config->message;
+        }
+    }
+}
 genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
-    : PhasedActor(context, thread),
-      _outputTimer{context.timer("output", thread)},
+    : _outputTimer{context.timer("output", thread)},
       _operations{context.counter("operations", thread)},
-      _message{context.get<std::string>("Parameters", "Message")} {}
+      _loop{context} {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
