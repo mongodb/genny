@@ -35,7 +35,6 @@ class PerfJsonTests(unittest.TestCase):
     def test_fixture2(self):
         parsed = test_lib.parse_fixture('csvoutput2')
         actual = perf_json.translate(parsed)
-        print(actual)
         self.assertEqual(
             actual, {
                 'results': [{
