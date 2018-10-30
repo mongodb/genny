@@ -42,6 +42,8 @@ add_library(gennylib SHARED
     include/gennylib/actors/InsertRemove.hpp
                  src/actors/InsertRemove.cpp
 
+    include/gennylib/actors/BigUpdate.hpp
+                 src/actors/BigUpdate.cpp
     # NextActorHere
 )
 
