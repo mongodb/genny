@@ -19,6 +19,7 @@
 #include <gennylib/actors/HelloWorld.hpp>
 #include <gennylib/actors/Insert.hpp>
 #include <gennylib/actors/InsertRemove.hpp>
+#include <gennylib/actors/BigUpdate.hpp>
 // NextActorHeaderHere
 
 #include "DefaultDriver.hpp"
@@ -54,6 +55,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
         &genny::actor::HelloWorld::producer,
         &genny::actor::Insert::producer,
         &genny::actor::InsertRemove::producer,
+        &genny::actor::BigUpdate::producer,
         // NextActorProducerHere
     };
     // clang-format on
