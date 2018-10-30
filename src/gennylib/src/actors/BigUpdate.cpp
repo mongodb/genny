@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 
+#include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 #include <yaml-cpp/yaml.h>
@@ -38,7 +39,9 @@ struct genny::actor::BigUpdate::PhaseConfig {
 };
 
 void genny::actor::BigUpdate::run() {
+    BOOST_LOG_TRIVIAL(info) << "In BigUpdate run";
     for (auto&& [phase, config] : _loop) {
+        BOOST_LOG_TRIVIAL(info) << "In BigUpdate run. Phase: " << phase;
         for (auto&& _ : config) {
             // Select a collection
             auto collectionNumber = config->uniformDistribution(_rng);
@@ -50,6 +53,9 @@ void genny::actor::BigUpdate::run() {
             bsoncxx::builder::stream::document update{};
             auto filterView = config->queryDocument->view(updateFilter);
             auto updateView = config->updateDocument->view(update);
+            BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filterView);
+            BOOST_LOG_TRIVIAL(info) << "Update is " << bsoncxx::to_json(updateView);
+            BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
                 // Only time the actual update, not the setup of arguments
                 auto op = _updateTimer.raii();
@@ -73,6 +79,7 @@ genny::ActorVector genny::actor::BigUpdate::producer(genny::ActorContext& contex
         return out;
     }
     auto threads = context.get<int>("Threads");
+    BOOST_LOG_TRIVIAL(info) << "Found BigUpdate and making threads: " << threads;
     for (int i = 0; i < threads; ++i) {
         out.push_back(std::make_unique<genny::actor::BigUpdate>(context, i));
     }
