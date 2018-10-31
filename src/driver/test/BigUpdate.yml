@@ -7,8 +7,8 @@ Actors:
     Type: Loader
     Threads: 1
     Database: &DB test
-    CollectionCount: &NumCollections 10
-    DocumentCount: 1000
+    CollectionCount: &NumCollections 100
+    DocumentCount: 10000
     Document:
       x: 0
       y: {$randomint: {min: 0, max: 1000}}
@@ -29,4 +29,4 @@ Actors:
         Repeat: 0
       - UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
         Update: {"$inc": {"x": 1}}
-        Duration: 1000
+        Duration: 60000

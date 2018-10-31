@@ -22,7 +22,7 @@ struct genny::actor::Loader::PhaseConfig {
           numCollections{context.get<uint>("CollectionCount")},
           numDocuments{context.get<uint>("DocumentCount")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)} {
-              // how do I parse an initialize the indexes?
+              // how do I parse an initialize the indexes? I want to pass in a list
           }
 
     mongocxx::database database;
@@ -30,13 +30,13 @@ struct genny::actor::Loader::PhaseConfig {
     uint numDocuments;
     std::unique_ptr<value_generators::DocumentGenerator> documentTemplate;
     std::vector<std::unique_ptr<value_generators::DocumentGenerator>> indexes;
-    
+
 };
 
 void genny::actor::Loader::run() {
     for (auto&& [phase, config] : _loop) {
         if (phase == 0) {
-            // Only operates in phase 0. This should be generalized. 
+            // Only operates in phase 0. This should be generalized.
             // TODO: main logic
             // For each collection
             config->database.drop();
