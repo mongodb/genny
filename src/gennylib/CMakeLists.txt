@@ -44,6 +44,8 @@ add_library(gennylib SHARED
 
     include/gennylib/actors/BigUpdate.hpp
                  src/actors/BigUpdate.cpp
+    include/gennylib/actors/Loader.hpp
+                 src/actors/Loader.cpp
     # NextActorHere
 )
 

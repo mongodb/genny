@@ -20,6 +20,7 @@
 #include <gennylib/actors/Insert.hpp>
 #include <gennylib/actors/InsertRemove.hpp>
 #include <gennylib/actors/BigUpdate.hpp>
+#include <gennylib/actors/Loader.hpp>
 // NextActorHeaderHere
 
 #include "DefaultDriver.hpp"
@@ -56,6 +57,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
         &genny::actor::Insert::producer,
         &genny::actor::InsertRemove::producer,
         &genny::actor::BigUpdate::producer,
+        &genny::actor::Loader::producer,
         // NextActorProducerHere
     };
     // clang-format on
