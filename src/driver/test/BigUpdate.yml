@@ -3,15 +3,27 @@ SchemaVersion: 2018-07-01
 # Demonstrate the BigUpdate actor.
 
 Actors:
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Database: &DB test
+    CollectionCount: &NumCollections 10
+    DocumentCount: 1000
+    Document:
+      x: 0
+      y: {$randomint: {min: 0, max: 1000}}
+      string: {$randomstring: {length: {$randomint: {min: 5, max: 15}}}}
+    Indexes:
+      - {y: 1}
   - Name: BigUpdate
     Type: BigUpdate
     Threads: 1
-    Database: test
-    CollectionCount: 10
+    Database: *DB
+    CollectionCount: *NumCollections
     Phases:
       - UpdateFilter: {}
-        Update: {"$inc": {"x": 1}}
-        Duration: 10
+        Update: {}
+        Repeat: 0
       - UpdateFilter: {}
         Update: {"$inc": {"x": 1}}
         Repeat: 10
