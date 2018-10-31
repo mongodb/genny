@@ -15,6 +15,9 @@ Actors:
       string: {$randomstring: {length: {$randomint: {min: 5, max: 15}}}}
     Indexes:
       - {y: 1}
+    Phases:
+      - Repeat: 1
+      - Repeat: 0
   - Name: BigUpdate
     Type: BigUpdate
     Threads: 1
@@ -24,6 +27,6 @@ Actors:
       - UpdateFilter: {}
         Update: {}
         Repeat: 0
-      - UpdateFilter: {}
+      - UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
         Update: {"$inc": {"x": 1}}
-        Repeat: 10
+        Duration: 1000

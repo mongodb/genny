@@ -21,7 +21,7 @@ struct genny::actor::Loader::PhaseConfig {
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           numDocuments{context.get<uint>("DocumentCount")},
-          documentTemplate{value_generators::makeDoc(context.get("UpdateFilter"), rng)} {
+          documentTemplate{value_generators::makeDoc(context.get("Document"), rng)} {
               // how do I parse an initialize the indexes?
           }
 
@@ -39,6 +39,7 @@ void genny::actor::Loader::run() {
             // Only operates in phase 0. This should be generalized. 
             // TODO: main logic
             // For each collection
+            config->database.drop();
             for (uint i = 0; i < config->numCollections; i++) {
                 auto collectionName = "Collection" + std::to_string(i);
                 auto collection = config->database[collectionName];
