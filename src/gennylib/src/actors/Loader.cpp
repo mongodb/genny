@@ -47,7 +47,6 @@ void genny::actor::Loader::run() {
                 auto collectionName = "Collection" + std::to_string(i);
                 auto collection = config->database[collectionName];
                 // Insert the documents
-                // TODO: Add a batch size argument and use bulk writes
                 uint remainingInserts = config->numDocuments;
                 while (remainingInserts > 0) {
                     // insert the next batch
