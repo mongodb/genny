@@ -9,6 +9,7 @@ Actors:
     Database: &DB test
     CollectionCount: &NumCollections 100
     DocumentCount: 10000
+    BatchSize: 1000
     Document:
       x: 0
       y: {$randomint: {min: 0, max: 1000}}
