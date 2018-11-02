@@ -1,5 +1,6 @@
 #include <gennylib/actors/Loader.hpp>
 
+#include <algorithm>
 #include <memory>
 
 #include <bsoncxx/json.hpp>
@@ -21,6 +22,7 @@ struct genny::actor::Loader::PhaseConfig {
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           numDocuments{context.get<uint>("DocumentCount")},
+          batchSize{context.get<uint>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)} {
               // how do I parse an initialize the indexes? I want to pass in a list
           }
@@ -28,6 +30,7 @@ struct genny::actor::Loader::PhaseConfig {
     mongocxx::database database;
     uint numCollections;
     uint numDocuments;
+    uint batchSize;
     std::unique_ptr<value_generators::DocumentGenerator> documentTemplate;
     std::vector<std::unique_ptr<value_generators::DocumentGenerator>> indexes;
 
@@ -45,10 +48,18 @@ void genny::actor::Loader::run() {
                 auto collection = config->database[collectionName];
                 // Insert the documents
                 // TODO: Add a batch size argument and use bulk writes
-                for (uint j = 0; j < config->numDocuments; j++) {
-                    bsoncxx::builder::stream::document doc;
-                    auto docView = config->documentTemplate->view(doc);
-                    collection.insert_one(docView);
+                uint remainingInserts = config->numDocuments;
+                while (remainingInserts > 0) {
+                    // insert the next batch
+                    uint numberToInsert = std::max(config->batchSize, remainingInserts);
+                    std::vector<bsoncxx::builder::stream::document> docs(numberToInsert);
+                    std::vector<bsoncxx::document::view> views;
+                    auto newDoc = docs.begin();
+                    for (uint j = 0; j < numberToInsert; j++, newDoc++) {
+                        views.push_back(config->documentTemplate->view(*newDoc));
+                    }
+                    auto result = collection.insert_many(views);
+                    remainingInserts -= result->inserted_count();
                 }
                 // For each index
                 for (auto& index : config->indexes) {
@@ -58,6 +69,7 @@ void genny::actor::Loader::run() {
                     collection.create_index(keyView);
                 }
             }
+            BOOST_LOG_TRIVIAL(info) << "Done with load phase. All documents loaded";
         }
     }
 }
