@@ -43,5 +43,6 @@ genny::ActorContext::constructPhaseContexts(const YAML::Node&, genny::ActorConte
         }
         ++index;
     }
+    actorContext->orchestrator().phasesAtLeastTo(out.size() - 1);
     return out;
 }

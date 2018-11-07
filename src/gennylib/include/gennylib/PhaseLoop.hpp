@@ -499,9 +499,6 @@ public:
     PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
-        for (auto&& [phaseNum, actorPhase] : _phaseMap) {
-            orchestrator.phasesAtLeastTo(phaseNum);
-        }
     }
 
     V1::PhaseLoopIterator<T> begin() {

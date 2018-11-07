@@ -63,7 +63,6 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
-    orchestrator.phasesAtLeastTo(1);  // will later come from reading the yaml!
 
     setupTimer.report();
 
