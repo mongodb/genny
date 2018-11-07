@@ -7,7 +7,7 @@ Actors:
     Type: Loader
     Threads: 1
     Database: &DB test
-    CollectionCount: &NumCollections 100
+    CollectionCount: &CollectionCount 10
     DocumentCount: 10000
     BatchSize: 1000
     Document:
@@ -16,6 +16,7 @@ Actors:
       string: {$randomstring: {length: {$randomint: {min: 5, max: 15}}}}
     Indexes:
       - {y: 1}
+      - {string: 1}
     Phases:
       - Repeat: 1
       - Repeat: 0
@@ -23,11 +24,11 @@ Actors:
     Type: BigUpdate
     Threads: 1
     Database: *DB
-    CollectionCount: *NumCollections
+    CollectionCount: *CollectionCount
     Phases:
       - UpdateFilter: {}
         Update: {}
         Repeat: 0
       - UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
-        Update: {"$inc": {"x": 1}}
+        Update: {$inc: {x: 1}}
         Duration: 60000

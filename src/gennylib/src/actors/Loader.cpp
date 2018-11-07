@@ -24,7 +24,10 @@ struct genny::actor::Loader::PhaseConfig {
           numDocuments{context.get<uint>("DocumentCount")},
           batchSize{context.get<uint>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)} {
-              // how do I parse an initialize the indexes? I want to pass in a list
+              auto indexNodes = context.get<std::vector<YAML::Node>>("Indexes");
+              for (auto indexNode: indexNodes) {
+                  indexes.push_back(value_generators::makeDoc(indexNode, rng));
+              }
           }
 
     mongocxx::database database;
@@ -65,6 +68,7 @@ void genny::actor::Loader::run() {
                     // Make the index
                     bsoncxx::builder::stream::document keys;
                     auto keyView = index->view(keys);
+                    //BOOST_LOG_TRIVIAL(info) << "Building index " << bsoncxx::to_json(keyView);
                     collection.create_index(keyView);
                 }
             }
