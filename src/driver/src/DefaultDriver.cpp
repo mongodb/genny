@@ -21,7 +21,7 @@
 #include <gennylib/actors/InsertRemove.hpp>
 #include <gennylib/actors/MultiCollectionUpdate.hpp>
 #include <gennylib/actors/Loader.hpp>
-#include <gennylib/actors/BigQuery.hpp>
+#include <gennylib/actors/MultiCollectionQuery.hpp>
 // NextActorHeaderHere
 
 #include "DefaultDriver.hpp"
@@ -59,7 +59,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
         &genny::actor::InsertRemove::producer,
         &genny::actor::MultiCollectionUpdate::producer,
         &genny::actor::Loader::producer,
-        &genny::actor::BigQuery::producer,
+        &genny::actor::MultiCollectionQuery::producer,
         // NextActorProducerHere
     };
     // clang-format on

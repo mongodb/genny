@@ -10,11 +10,11 @@ namespace genny::actor {
 /**
  * TODO: document me
  */
-class BigQuery : public Actor {
+class MultiCollectionQuery : public Actor {
 
 public:
-    explicit BigQuery(ActorContext& context, const unsigned int thread);
-    ~BigQuery() = default;
+    explicit MultiCollectionQuery(ActorContext& context, const unsigned int thread);
+    ~MultiCollectionQuery() = default;
 
     void run() override;
 

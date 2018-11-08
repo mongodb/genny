@@ -1,6 +1,4 @@
-#include <gennylib/actors/BigQuery.hpp>
-
-#include <gennylib/actors/BigUpdate.hpp>
+#include <gennylib/actors/MultiCollectionQuery.hpp>
 
 #include <string>
 #include <memory>
@@ -18,14 +16,14 @@ namespace {
 
 }  // namespace
 
-struct genny::actor::BigQuery::PhaseConfig {
+struct genny::actor::MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 std::mt19937_64& rng,
                 mongocxx::pool::entry& client,
                 int thread)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
-          filterDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
+          filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
           limit{context.get<uint>("Limit")}, // TODO this should be optional
           uniformDistribution{0, numCollections} {}
 
@@ -38,7 +36,7 @@ struct genny::actor::BigQuery::PhaseConfig {
 
 };
 
-void genny::actor::BigQuery::run() {
+void genny::actor::MultiCollectionQuery::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
             // Select a collection
@@ -62,21 +60,21 @@ void genny::actor::BigQuery::run() {
     }
 }
 
-genny::actor::BigQuery::BigQuery(genny::ActorContext& context, const unsigned int thread)
+genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context, const unsigned int thread)
     : _rng{context.workload().createRNG()},
       _queryTimer{context.timer("queryTime", thread)},
       _documentCount{context.counter("returnedDocuments", thread)},
       _client{std::move(context.client())},
       _loop{context, _rng, _client, thread} {}
 
-genny::ActorVector genny::actor::BigQuery::producer(genny::ActorContext& context) {
+genny::ActorVector genny::actor::MultiCollectionQuery::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    if (context.get<std::string>("Type") != "BigQuery") {
+    if (context.get<std::string>("Type") != "MultiCollectionQuery") {
         return out;
     }
     auto threads = context.get<int>("Threads");
     for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::BigQuery>(context, i));
+        out.push_back(std::make_unique<genny::actor::MultiCollectionQuery>(context, i));
     }
     return out;
 }

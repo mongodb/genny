@@ -1,7 +1,5 @@
 SchemaVersion: 2018-07-01
 
-# Demonstrate the BigUpdate actor.
-
 Actors:
   - Name: Loader
     Type: Loader
@@ -20,8 +18,8 @@ Actors:
     Phases:
       - Repeat: 1
       - Repeat: 0
-  - Name: BigUpdate
-    Type: BigUpdate
+  - Name: MultiCollectionUpdate
+    Type: MultiCollectionUpdate
     Threads: 1
     Database: *DB
     CollectionCount: *CollectionCount
@@ -32,8 +30,8 @@ Actors:
       - UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
         Update: {$inc: {x: 1}}
         Duration: 60000
-  - Name: BigQuery
-    Type: BigQuery
+  - Name: MultiCollectionQuery
+    Type: MultiCollectionQuery
     Threads: 1
     Database: *DB
     CollectionCount: *CollectionCount
