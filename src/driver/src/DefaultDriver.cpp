@@ -21,6 +21,7 @@
 #include <gennylib/actors/InsertRemove.hpp>
 #include <gennylib/actors/BigUpdate.hpp>
 #include <gennylib/actors/Loader.hpp>
+#include <gennylib/actors/BigQuery.hpp>
 // NextActorHeaderHere
 
 #include "DefaultDriver.hpp"
@@ -58,6 +59,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
         &genny::actor::InsertRemove::producer,
         &genny::actor::BigUpdate::producer,
         &genny::actor::Loader::producer,
+        &genny::actor::BigQuery::producer,
         // NextActorProducerHere
     };
     // clang-format on

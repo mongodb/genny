@@ -46,6 +46,8 @@ add_library(gennylib SHARED
                  src/actors/BigUpdate.cpp
     include/gennylib/actors/Loader.hpp
                  src/actors/Loader.cpp
+    include/gennylib/actors/BigQuery.hpp
+                 src/actors/BigQuery.cpp
     # NextActorHere
 )
 
