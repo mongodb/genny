@@ -22,6 +22,10 @@ public:
 
 private:
     struct PhaseConfig;
+    std::mt19937_64 _rng;
+    metrics::Timer _queryTimer;
+    metrics::Counter _documentCount;
+    mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
 };
 

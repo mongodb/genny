@@ -32,3 +32,14 @@ Actors:
       - UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
         Update: {$inc: {x: 1}}
         Duration: 60000
+  - Name: BigQuery
+    Type: BigQuery
+    Threads: 1
+    Database: *DB
+    CollectionCount: *CollectionCount
+    Phases:
+      - Filter: {}
+        Repeat: 0
+      - Filter: {y: {$randomint: {min: 0, max: 1000}}}
+        Limit: 20
+        Duration: 60000
