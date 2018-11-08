@@ -19,7 +19,7 @@
 #include <gennylib/actors/HelloWorld.hpp>
 #include <gennylib/actors/Insert.hpp>
 #include <gennylib/actors/InsertRemove.hpp>
-#include <gennylib/actors/BigUpdate.hpp>
+#include <gennylib/actors/MultiCollectionUpdate.hpp>
 #include <gennylib/actors/Loader.hpp>
 #include <gennylib/actors/BigQuery.hpp>
 // NextActorHeaderHere
@@ -57,7 +57,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
         &genny::actor::HelloWorld::producer,
         &genny::actor::Insert::producer,
         &genny::actor::InsertRemove::producer,
-        &genny::actor::BigUpdate::producer,
+        &genny::actor::MultiCollectionUpdate::producer,
         &genny::actor::Loader::producer,
         &genny::actor::BigQuery::producer,
         // NextActorProducerHere

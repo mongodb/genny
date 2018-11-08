@@ -1,4 +1,4 @@
-#include <gennylib/actors/BigUpdate.hpp>
+#include <gennylib/actors/MultiCollectionUpdate.hpp>
 
 #include <string>
 #include <memory>
@@ -16,7 +16,7 @@ namespace {
 
 }  // namespace
 
-struct genny::actor::BigUpdate::PhaseConfig {
+struct genny::actor::MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 std::mt19937_64& rng,
                 mongocxx::pool::entry& client,
@@ -39,7 +39,7 @@ struct genny::actor::BigUpdate::PhaseConfig {
 
 };
 
-void genny::actor::BigUpdate::run() {
+void genny::actor::MultiCollectionUpdate::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
             // Select a collection
@@ -65,21 +65,21 @@ void genny::actor::BigUpdate::run() {
     }
 }
 
-genny::actor::BigUpdate::BigUpdate(genny::ActorContext& context, const unsigned int thread)
+genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context, const unsigned int thread)
     : _rng{context.workload().createRNG()},
       _updateTimer{context.timer("updateTime", thread)},
       _updateCount{context.counter("updatedDocuments", thread)},
       _client{std::move(context.client())},
       _loop{context, _rng, _client, thread} {}
 
-genny::ActorVector genny::actor::BigUpdate::producer(genny::ActorContext& context) {
+genny::ActorVector genny::actor::MultiCollectionUpdate::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    if (context.get<std::string>("Type") != "BigUpdate") {
+    if (context.get<std::string>("Type") != "MultiCollectionUpdate") {
         return out;
     }
     auto threads = context.get<int>("Threads");
     for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::BigUpdate>(context, i));
+        out.push_back(std::make_unique<genny::actor::MultiCollectionUpdate>(context, i));
     }
     return out;
 }

@@ -8,13 +8,15 @@
 namespace genny::actor {
 
 /**
- * TODO: document me
+ * MultiCollectionUpdate is an actor the performs updates across parameterizable number of collections. Updates
+ * are performed in a loop using {@code PhaseLoop} and each iteration picks a random collection to
+ * update. The actor records the ltency of each update, and the total number of documents updated. 
  */
-class BigUpdate : public Actor {
+class MultiCollectionUpdate : public Actor {
 
 public:
-    explicit BigUpdate(ActorContext& context, const unsigned int thread);
-    ~BigUpdate() = default;
+    explicit MultiCollectionUpdate(ActorContext& context, const unsigned int thread);
+    ~MultiCollectionUpdate() = default;
 
     void run() override;
 

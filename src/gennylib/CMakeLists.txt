@@ -42,8 +42,8 @@ add_library(gennylib SHARED
     include/gennylib/actors/InsertRemove.hpp
                  src/actors/InsertRemove.cpp
 
-    include/gennylib/actors/BigUpdate.hpp
-                 src/actors/BigUpdate.cpp
+    include/gennylib/actors/MultiCollectionUpdate.hpp
+                 src/actors/MultiCollectionUpdate.cpp
     include/gennylib/actors/Loader.hpp
                  src/actors/Loader.cpp
     include/gennylib/actors/BigQuery.hpp
