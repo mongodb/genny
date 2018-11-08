@@ -20,7 +20,7 @@ Actors:
       - Repeat: 0
   - Name: MultiCollectionUpdate
     Type: MultiCollectionUpdate
-    Threads: 1
+    Threads: 10
     Database: *DB
     CollectionCount: *CollectionCount
     Phases:
@@ -33,7 +33,7 @@ Actors:
         MinDelay: 1000 # This should be replaced with Rate with TIG-1155.
   - Name: MultiCollectionQuery
     Type: MultiCollectionQuery
-    Threads: 1
+    Threads: 10
     Database: *DB
     CollectionCount: *CollectionCount
     Phases:
