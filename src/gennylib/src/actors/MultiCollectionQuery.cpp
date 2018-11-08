@@ -24,22 +24,28 @@ struct genny::actor::MultiCollectionQuery::PhaseConfig {
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
-          limit{context.get<uint>("Limit")}, // TODO this should be optional
-          uniformDistribution{0, numCollections} {}
+          uniformDistribution{0, numCollections} {
+              // Set up the options. All options are optional
+              auto limit = context.get<int32_t, false>("Limit");
+              if (limit)
+                  options.limit(*limit);
+}
 
     mongocxx::database database;
     uint numCollections;
     std::unique_ptr<value_generators::DocumentGenerator> filterDocument;
-    uint limit;
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<uint> uniformDistribution;
-
+    mongocxx::options::find options;
 };
 
 void genny::actor::MultiCollectionQuery::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
             // Select a collection
+            // This area is ripe for defining a collection generator, based off a string generator. It could look like:
+            // collection: {@concat: [Collection, @randomint: {min: 0, max: *CollectionCount]}
+            // Requires a string concat generator, and a translation of a string to a collection
             auto collectionNumber = config->uniformDistribution(_rng);
             auto collectionName = "Collection" + std::to_string(collectionNumber);
             auto collection = config->database[collectionName];
@@ -52,9 +58,14 @@ void genny::actor::MultiCollectionQuery::run() {
             {
                 // Only time the actual update, not the setup of arguments
                 auto op = _queryTimer.raii();
-                auto cursor = collection.find(filterView);
+                auto cursor = collection.find(filterView, config->options);
                 // exhaust the cursor
-                //_documentCount.incr(result->modified_count());
+                uint count = 0;
+                for (auto&& doc: cursor) {
+                    doc.length();
+                    count++;
+                }
+                _documentCount.incr(count);
             }
         }
     }
