@@ -1,7 +1,9 @@
 #include <gennylib/actors/MultiCollectionQuery.hpp>
 
-#include <string>
+#include <chrono>
 #include <memory>
+#include <string>
+#include <thread>
 
 #include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
@@ -25,6 +27,10 @@ struct genny::actor::MultiCollectionQuery::PhaseConfig {
           numCollections{context.get<uint>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
           uniformDistribution{0, numCollections} {
+              minDelay = std::chrono::milliseconds(0);
+              auto delay = context.get<std::chrono::milliseconds, false>("MinDelay");
+              if (delay)
+                  minDelay = *delay;
               // Set up the options. All options are optional
               auto limit = context.get<int32_t, false>("Limit");
               if (limit)
@@ -36,12 +42,16 @@ struct genny::actor::MultiCollectionQuery::PhaseConfig {
     std::unique_ptr<value_generators::DocumentGenerator> filterDocument;
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<uint> uniformDistribution;
+    std::chrono::milliseconds minDelay;
     mongocxx::options::find options;
 };
 
 void genny::actor::MultiCollectionQuery::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
+            // Take a timestamp -- remove after TIG-1155
+            auto startTime = std::chrono::steady_clock::now();
+
             // Select a collection
             // This area is ripe for defining a collection generator, based off a string generator. It could look like:
             // collection: {@concat: [Collection, @randomint: {min: 0, max: *CollectionCount]}
@@ -67,6 +77,10 @@ void genny::actor::MultiCollectionQuery::run() {
                 }
                 _documentCount.incr(count);
             }
+            // make sure enough time has passed. Sleep if needed -- remove after TIG-1155
+            auto elapsedTime = std::chrono::steady_clock::now() - startTime;
+            if (elapsedTime < config->minDelay)
+                std::this_thread::sleep_for(config->minDelay - elapsedTime);
         }
     }
 }

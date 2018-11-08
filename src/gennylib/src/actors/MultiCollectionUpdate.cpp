@@ -1,7 +1,9 @@
 #include <gennylib/actors/MultiCollectionUpdate.hpp>
 
-#include <string>
+#include <chrono>
 #include <memory>
+#include <string>
+#include <thread>
 
 #include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
@@ -25,7 +27,13 @@ struct genny::actor::MultiCollectionUpdate::PhaseConfig {
           numCollections{context.get<uint>("CollectionCount")},
           queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
           updateDocument{value_generators::makeDoc(context.get("Update"), rng)},
-          uniformDistribution{0, numCollections} {}
+          uniformDistribution{0, numCollections} {
+              minDelay = std::chrono::milliseconds(0);
+              auto delay = context.get<std::chrono::milliseconds, false>("MinDelay");
+              if (delay)
+                  minDelay = *delay;
+
+          }
 
     mongocxx::database database;
     uint numCollections;
@@ -36,12 +44,15 @@ struct genny::actor::MultiCollectionUpdate::PhaseConfig {
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<uint> uniformDistribution;
-
+    std::chrono::milliseconds minDelay;
 };
 
 void genny::actor::MultiCollectionUpdate::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
+            // Take a timestamp -- remove after TIG-1155
+            auto startTime = std::chrono::steady_clock::now();
+
             // Select a collection
             auto collectionNumber = config->uniformDistribution(_rng);
             auto collectionName = "Collection" + std::to_string(collectionNumber);
@@ -61,6 +72,10 @@ void genny::actor::MultiCollectionUpdate::run() {
                 auto result = collection.update_many(filterView, updateView);
                 _updateCount.incr(result->modified_count());
             }
+            // make sure enough time has passed. Sleep if needed -- remove after TIG-1155
+            auto elapsedTime = std::chrono::steady_clock::now() - startTime;
+            if (elapsedTime < config->minDelay)
+                std::this_thread::sleep_for(config->minDelay - elapsedTime);
         }
     }
 }
