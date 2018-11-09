@@ -135,7 +135,7 @@ recreate_gennylib_cmake_file() {
     cmake_file="$(dirname "$0")/src/gennylib/CMakeLists.txt"
 
     < "$cmake_file" \
-    perl -pe "s|((\\s+)# NextActorHere)|\$2include/gennylib/actors/${actor_name}.hpp\\n\$2             src/actors/${actor_name}.cpp\\n\$1|" \
+    perl -pe "s|((\\s+)# ActorsEnd)|\$2src/actors/${actor_name}.cpp\\n\$1|" \
     > "$$.cmake.txt"
 
     mv "$$.cmake.txt" "$cmake_file"
