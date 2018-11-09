@@ -74,7 +74,7 @@ void genny::actor::Loader::run() {
 
 genny::actor::Loader::Loader(genny::ActorContext& context, const unsigned int thread)
     : _rng{context.workload().createRNG()},
-      _client{std::move(context.client())},
+      _client{context.client()},
       _loop{context, _rng, _client} {}
 
 genny::ActorVector genny::actor::Loader::producer(genny::ActorContext& context) {

@@ -29,7 +29,7 @@ Actors:
         Repeat: 0
       - UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
         Update: {$inc: {x: 1}}
-        Duration: 60000
+        Duration: 60000 # TODO: TIG-1154
         MinDelay: 1000 # This should be replaced with Rate with TIG-1155.
   - Name: MultiCollectionQuery
     Type: MultiCollectionQuery
@@ -41,5 +41,5 @@ Actors:
         Repeat: 0
       - Filter: {y: {$randomint: {min: 0, max: 1000}}}
         Limit: 20
-        Duration: 60000
+        Duration: 60000 # TODO: TIG-1154
         MinDelay: 1000 # This should be replaced with Rate with TIG-1155.

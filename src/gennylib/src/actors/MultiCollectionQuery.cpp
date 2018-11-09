@@ -24,16 +24,9 @@ struct genny::actor::MultiCollectionQuery::PhaseConfig {
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
-          uniformDistribution{0, numCollections} {
-        minDelay = std::chrono::milliseconds(0);
-        auto delay = context.get<std::chrono::milliseconds, false>("MinDelay");
-        if (delay)
-            minDelay = *delay;
-        // Set up the options. All options are optional
-        auto limit = context.get<int32_t, false>("Limit");
-        if (limit)
-            options.limit(*limit);
-    }
+          uniformDistribution{0, numCollections},
+          minDelay{context.get<std::chrono::milliseconds, false>("MinDelay")
+                       .value_or(std::chrono::milliseconds(0))} {}
 
     mongocxx::database database;
     uint numCollections;
@@ -89,7 +82,7 @@ genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& co
     : _rng{context.workload().createRNG()},
       _queryTimer{context.timer("queryTime", thread)},
       _documentCount{context.counter("returnedDocuments", thread)},
-      _client{std::move(context.client())},
+      _client{context.client()},
       _loop{context, _rng, _client, thread} {}
 
 genny::ActorVector genny::actor::MultiCollectionQuery::producer(genny::ActorContext& context) {

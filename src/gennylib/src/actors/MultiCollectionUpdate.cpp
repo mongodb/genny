@@ -25,12 +25,9 @@ struct genny::actor::MultiCollectionUpdate::PhaseConfig {
           numCollections{context.get<uint>("CollectionCount")},
           queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
           updateDocument{value_generators::makeDoc(context.get("Update"), rng)},
-          uniformDistribution{0, numCollections} {
-        minDelay = std::chrono::milliseconds(0);
-        auto delay = context.get<std::chrono::milliseconds, false>("MinDelay");
-        if (delay)
-            minDelay = *delay;
-    }
+          uniformDistribution{0, numCollections},
+          minDelay{context.get<std::chrono::milliseconds, false>("MinDelay")
+                       .value_or(std::chrono::milliseconds(0))} {}
 
     mongocxx::database database;
     uint numCollections;
@@ -42,7 +39,7 @@ struct genny::actor::MultiCollectionUpdate::PhaseConfig {
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<uint> uniformDistribution;
     std::chrono::milliseconds minDelay;
-};
+    };
 
 void genny::actor::MultiCollectionUpdate::run() {
     for (auto&& [phase, config] : _loop) {
@@ -82,7 +79,7 @@ genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& 
     : _rng{context.workload().createRNG()},
       _updateTimer{context.timer("updateTime", thread)},
       _updateCount{context.counter("updatedDocuments", thread)},
-      _client{std::move(context.client())},
+      _client{context.client()},
       _loop{context, _rng, _client, thread} {}
 
 genny::ActorVector genny::actor::MultiCollectionUpdate::producer(genny::ActorContext& context) {
