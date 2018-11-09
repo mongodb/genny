@@ -39,7 +39,7 @@ struct genny::actor::MultiCollectionUpdate::PhaseConfig {
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<uint> uniformDistribution;
     std::chrono::milliseconds minDelay;
-    };
+};
 
 void genny::actor::MultiCollectionUpdate::run() {
     for (auto&& [phase, config] : _loop) {
