@@ -13,9 +13,7 @@
 #include <gennylib/value_generators.hpp>
 
 
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 struct genny::actor::Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client)
@@ -24,11 +22,11 @@ struct genny::actor::Loader::PhaseConfig {
           numDocuments{context.get<uint>("DocumentCount")},
           batchSize{context.get<uint>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)} {
-              auto indexNodes = context.get<std::vector<YAML::Node>>("Indexes");
-              for (auto indexNode: indexNodes) {
-                  indexes.push_back(value_generators::makeDoc(indexNode, rng));
-              }
-          }
+        auto indexNodes = context.get<std::vector<YAML::Node>>("Indexes");
+        for (auto indexNode : indexNodes) {
+            indexes.push_back(value_generators::makeDoc(indexNode, rng));
+        }
+    }
 
     mongocxx::database database;
     uint numCollections;
@@ -36,7 +34,6 @@ struct genny::actor::Loader::PhaseConfig {
     uint batchSize;
     std::unique_ptr<value_generators::DocumentGenerator> documentTemplate;
     std::vector<std::unique_ptr<value_generators::DocumentGenerator>> indexes;
-
 };
 
 void genny::actor::Loader::run() {

@@ -14,9 +14,7 @@
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 struct genny::actor::MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context,
@@ -28,12 +26,11 @@ struct genny::actor::MultiCollectionUpdate::PhaseConfig {
           queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
           updateDocument{value_generators::makeDoc(context.get("Update"), rng)},
           uniformDistribution{0, numCollections} {
-              minDelay = std::chrono::milliseconds(0);
-              auto delay = context.get<std::chrono::milliseconds, false>("MinDelay");
-              if (delay)
-                  minDelay = *delay;
-
-          }
+        minDelay = std::chrono::milliseconds(0);
+        auto delay = context.get<std::chrono::milliseconds, false>("MinDelay");
+        if (delay)
+            minDelay = *delay;
+    }
 
     mongocxx::database database;
     uint numCollections;
@@ -80,7 +77,8 @@ void genny::actor::MultiCollectionUpdate::run() {
     }
 }
 
-genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context, const unsigned int thread)
+genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context,
+                                                           const unsigned int thread)
     : _rng{context.workload().createRNG()},
       _updateTimer{context.timer("updateTime", thread)},
       _updateCount{context.counter("updatedDocuments", thread)},

@@ -14,9 +14,7 @@
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 struct genny::actor::MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context,
@@ -27,15 +25,15 @@ struct genny::actor::MultiCollectionQuery::PhaseConfig {
           numCollections{context.get<uint>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
           uniformDistribution{0, numCollections} {
-              minDelay = std::chrono::milliseconds(0);
-              auto delay = context.get<std::chrono::milliseconds, false>("MinDelay");
-              if (delay)
-                  minDelay = *delay;
-              // Set up the options. All options are optional
-              auto limit = context.get<int32_t, false>("Limit");
-              if (limit)
-                  options.limit(*limit);
-}
+        minDelay = std::chrono::milliseconds(0);
+        auto delay = context.get<std::chrono::milliseconds, false>("MinDelay");
+        if (delay)
+            minDelay = *delay;
+        // Set up the options. All options are optional
+        auto limit = context.get<int32_t, false>("Limit");
+        if (limit)
+            options.limit(*limit);
+    }
 
     mongocxx::database database;
     uint numCollections;
@@ -53,9 +51,10 @@ void genny::actor::MultiCollectionQuery::run() {
             auto startTime = std::chrono::steady_clock::now();
 
             // Select a collection
-            // This area is ripe for defining a collection generator, based off a string generator. It could look like:
-            // collection: {@concat: [Collection, @randomint: {min: 0, max: *CollectionCount]}
-            // Requires a string concat generator, and a translation of a string to a collection
+            // This area is ripe for defining a collection generator, based off a string generator.
+            // It could look like: collection: {@concat: [Collection, @randomint: {min: 0, max:
+            // *CollectionCount]} Requires a string concat generator, and a translation of a string
+            // to a collection
             auto collectionNumber = config->uniformDistribution(_rng);
             auto collectionName = "Collection" + std::to_string(collectionNumber);
             auto collection = config->database[collectionName];
@@ -71,7 +70,7 @@ void genny::actor::MultiCollectionQuery::run() {
                 auto cursor = collection.find(filterView, config->options);
                 // exhaust the cursor
                 uint count = 0;
-                for (auto&& doc: cursor) {
+                for (auto&& doc : cursor) {
                     doc.length();
                     count++;
                 }
@@ -85,7 +84,8 @@ void genny::actor::MultiCollectionQuery::run() {
     }
 }
 
-genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context, const unsigned int thread)
+genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context,
+                                                         const unsigned int thread)
     : _rng{context.workload().createRNG()},
       _queryTimer{context.timer("queryTime", thread)},
       _documentCount{context.counter("returnedDocuments", thread)},

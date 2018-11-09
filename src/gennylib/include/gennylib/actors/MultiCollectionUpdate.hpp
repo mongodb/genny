@@ -8,9 +8,10 @@
 namespace genny::actor {
 
 /**
- * MultiCollectionUpdate is an actor the performs updates across parameterizable number of collections. Updates
- * are performed in a loop using {@code PhaseLoop} and each iteration picks a random collection to
- * update. The actor records the ltency of each update, and the total number of documents updated. 
+ * MultiCollectionUpdate is an actor the performs updates across parameterizable number of
+ * collections. Updates are performed in a loop using {@code PhaseLoop} and each iteration picks a
+ * random collection to update. The actor records the ltency of each update, and the total number of
+ * documents updated.
  */
 class MultiCollectionUpdate : public Actor {
 

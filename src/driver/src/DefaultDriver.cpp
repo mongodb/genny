@@ -19,9 +19,9 @@
 #include <gennylib/actors/HelloWorld.hpp>
 #include <gennylib/actors/Insert.hpp>
 #include <gennylib/actors/InsertRemove.hpp>
-#include <gennylib/actors/MultiCollectionUpdate.hpp>
 #include <gennylib/actors/Loader.hpp>
 #include <gennylib/actors/MultiCollectionQuery.hpp>
+#include <gennylib/actors/MultiCollectionUpdate.hpp>
 // NextActorHeaderHere
 
 #include "DefaultDriver.hpp"
