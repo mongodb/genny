@@ -1,4 +1,6 @@
 #include <string>
+#include <fstream>
+#include <streambuf>
 
 #include <boost/exception/exception.hpp>
 #include <boost/log/trivial.hpp>
@@ -14,6 +16,16 @@
 
 using namespace genny::driver;
 
+namespace {
+
+std::string readFile(const std::string& fileName) {
+    std::ifstream t("file.txt");
+    std::string str((std::istreambuf_iterator<char>(t)),
+                    std::istreambuf_iterator<char>());
+    return str;
+}
+
+}
 
 template <class F>
 auto onActorContext(F&& callback) {
@@ -67,7 +79,7 @@ TEST_CASE("Normal Execution") {
         [&](auto& context, auto& vec) { vec.push_back(std::make_unique<Fails>(context)); }));
 
     opts.metricsFormat = "csv";
-    opts.metricsOutputFileName = "-";
+    opts.metricsOutputFileName = "metrics.csv";
     opts.mongoUri = "mongodb://localhost:27017";
     opts.sourceType = ProgramOptions::YamlSource::STRING;
     opts.workloadSource = R"(
