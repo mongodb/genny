@@ -1,0 +1,47 @@
+SchemaVersion: 2018-07-01
+
+Actors:
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Database: &DB test
+    CollectionCount: &CollectionCount 10
+    DocumentCount: 10000
+    BatchSize: 1000
+    Document:
+      x: 0
+      y: {$randomint: {min: 0, max: 1000}}
+      z: {$randomint: {min: 0, max: 2000}}
+      string: {$randomstring: {length: {$randomint: {min: 5, max: 15}}}}
+      string2: {$randomstring: {length: {$randomint: {min: 7, max: 20}}}}
+    Indexes:
+      - {y: 1}
+      - {string: 1}
+    Phases:
+      - Repeat: 1
+      - Repeat: 0
+  - Name: MultiCollectionUpdate
+    Type: MultiCollectionUpdate
+    Threads: 10
+    Database: *DB
+    CollectionCount: *CollectionCount
+    Phases:
+      - UpdateFilter: {}
+        Update: {}
+        Repeat: 0
+      - UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
+        Update: {$inc: {x: 1}}
+        Duration: 60000 # TODO: TIG-1154
+        MinDelay: 1000 # This should be replaced with Rate with TIG-1155.
+  - Name: MultiCollectionQuery
+    Type: MultiCollectionQuery
+    Threads: 10
+    Database: *DB
+    CollectionCount: *CollectionCount
+    Phases:
+      - Filter: {}
+        Repeat: 0
+      - Filter: {y: {$randomint: {min: 0, max: 1000}}}
+        Limit: 20
+        Duration: 60000 # TODO: TIG-1154
+        MinDelay: 1000 # This should be replaced with Rate with TIG-1155.

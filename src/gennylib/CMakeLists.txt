@@ -28,6 +28,9 @@ add_library(gennylib SHARED
     src/actors/HelloWorld.cpp
     src/actors/Insert.cpp
     src/actors/InsertRemove.cpp
+    src/actors/Loader.cpp
+    src/actors/MultiCollectionQuery.cpp
+    src/actors/MultiCollectionUpdate.cpp
     # ActorsEnd
 )
 
