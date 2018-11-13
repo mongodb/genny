@@ -38,8 +38,7 @@ struct genny::actor::Loader::PhaseConfig {
 
 void genny::actor::Loader::run() {
     for (auto&& [phase, config] : _loop) {
-        if (phase == 0) {
-            // Only operates in phase 0. This should be generalized.
+        for (auto&& _ : config) {
             config->database.drop();
             for (uint i = 0; i < config->numCollections; i++) {
                 auto collectionName = "Collection" + std::to_string(i);
