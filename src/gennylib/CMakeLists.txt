@@ -16,7 +16,6 @@ add_library(gennylib_headers SHARED
 # Eventually will move gennylib/actors into its own lib so keep those files together
 add_library(gennylib SHARED
     src/version.cpp
-
     src/context.cpp
     src/Orchestrator.cpp
 
@@ -34,6 +33,8 @@ add_library(gennylib SHARED
     # ActorsEnd
 )
 
+add_subdirectory(jasper)
+
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
 # paths.
@@ -45,6 +46,7 @@ target_include_directories(gennylib
         ${YAML_CPP_INCLUDE_DIR}
         ${LIBMONGOCXX_INCLUDE_DIRS}
     PRIVATE
+        jasper
         src
         src/value_generators
 )
@@ -57,6 +59,8 @@ target_link_libraries(gennylib
         ${Boost_LIBRARIES}
         ${YAML_CPP_LIBRARIES}
         ${LIBMONGOCXX_LIBRARIES}
+    PRIVATE
+        jasperlib
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
