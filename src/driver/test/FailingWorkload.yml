@@ -1,0 +1,15 @@
+SchemaVersion: 2018-07-01
+
+Actors:
+  - Name: Actor1
+    Type: Actor1
+    Threads: 2
+    Phases:
+      - Repeat: 1
+      - Repeat: 0
+  - Name: Actor2
+    Type: Actor2
+    Threads: 2
+    Phases:
+      - Repeat: 0
+      - Repeat: 1
