@@ -1,9 +1,59 @@
-#include <helpers.hpp>
-#include <DefaultDriver.hpp>
+#include <string>
+
+#include <boost/exception/exception.hpp>
 #include <boost/log/trivial.hpp>
+
+#include <DefaultDriver.hpp>
+#include <helpers.hpp>
+
+#include <gennylib/Actor.hpp>
+#include <gennylib/ActorProducer.hpp>
+#include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
 
 
 using namespace genny::driver;
+
+
+template <class F>
+auto onActorContext(F&& callback) {
+    return [&](genny::ActorContext& context) {
+        genny::ActorVector vec;
+        callback(context, vec);
+        return vec;
+    };
+}
+
+class SomeException : public boost::exception {};
+
+struct Fails : public genny::Actor {
+    struct PhaseConfig {
+        std::string mode;
+        PhaseConfig(genny::PhaseContext& phaseContext)
+            : mode{phaseContext.get<std::string>("Mode")} {}
+    };
+    genny::PhaseLoop<PhaseConfig> loop;
+
+    explicit Fails(genny::ActorContext& ctx) : loop{ctx} {}
+
+    void run() override {
+        for (auto&& [phase, config] : loop) {
+            for (auto&& _ : config) {
+                if (config->mode == "None") {
+                    continue;
+                } else if (config->mode == "BoostException") {
+                    throw SomeException{};
+                } else if (config->mode == "StdException") {
+                    throw std::exception{};
+                } else if (config->mode == "OtherThrowable") {
+                    throw "SomethingElse";
+                } else {
+                    BOOST_LOG_TRIVIAL(error) << "Bad Mode " << config->mode;
+                }
+            }
+        }
+    }
+};
 
 
 TEST_CASE("Normal Execution") {
@@ -12,25 +62,24 @@ TEST_CASE("Normal Execution") {
     BOOST_LOG_TRIVIAL(info) << cwd();
 
     ProgramOptions opts;
+
+    opts.otherProducers.emplace_back(onActorContext(
+        [&](auto& context, auto& vec) { vec.push_back(std::make_unique<Fails>(context)); }));
+
     opts.metricsFormat = "csv";
+    opts.metricsOutputFileName = "-";
     opts.mongoUri = "mongodb://localhost:27017";
     opts.sourceType = ProgramOptions::YamlSource::STRING;
     opts.workloadSource = R"(
 SchemaVersion: 2018-07-01
 
 Actors:
-  - Name: Actor1
-    Type: Actor1
+  - Type: Fails
     Threads: 2
     Phases:
       - Repeat: 1
-      - Repeat: 0
-  - Name: Actor2
-    Type: Actor2
-    Threads: 2
-    Phases:
-      - Repeat: 0
-      - Repeat: 1
+        Mode: BoostException
 )";
     auto outcome = driver.run(opts);
+    REQUIRE(outcome == 10);
 }
