@@ -45,17 +45,23 @@ void genny::actor::Loader::run() {
                 auto collection = config->database[collectionName];
                 // Insert the documents
                 uint remainingInserts = config->numDocuments;
-                while (remainingInserts > 0) {
-                    // insert the next batch
-                    uint numberToInsert = std::max(config->batchSize, remainingInserts);
-                    std::vector<bsoncxx::builder::stream::document> docs(numberToInsert);
-                    std::vector<bsoncxx::document::view> views;
-                    auto newDoc = docs.begin();
-                    for (uint j = 0; j < numberToInsert; j++, newDoc++) {
-                        views.push_back(config->documentTemplate->view(*newDoc));
+                {
+                    auto totalOp = _totalBulkLoadTimer.raii();
+                    while (remainingInserts > 0) {
+                        // insert the next batch
+                        uint numberToInsert = std::max(config->batchSize, remainingInserts);
+                        std::vector<bsoncxx::builder::stream::document> docs(numberToInsert);
+                        std::vector<bsoncxx::document::view> views;
+                        auto newDoc = docs.begin();
+                        for (uint j = 0; j < numberToInsert; j++, newDoc++) {
+                            views.push_back(config->documentTemplate->view(*newDoc));
+                        }
+                        {
+                            auto individualOp = _individualBulkLoadTimer.raii();
+                            auto result = collection.insert_many(views);
+                            remainingInserts -= result->inserted_count();
+                        }
                     }
-                    auto result = collection.insert_many(views);
-                    remainingInserts -= result->inserted_count();
                 }
                 // For each index
                 for (auto& index : config->indexes) {
@@ -63,7 +69,10 @@ void genny::actor::Loader::run() {
                     bsoncxx::builder::stream::document keys;
                     auto keyView = index->view(keys);
                     // BOOST_LOG_TRIVIAL(info) << "Building index " << bsoncxx::to_json(keyView);
-                    collection.create_index(keyView);
+                    {
+                        auto op = _indexBuildTimer.raii();
+                        collection.create_index(keyView);
+                    }
                 }
             }
             BOOST_LOG_TRIVIAL(info) << "Done with load phase. All documents loaded";
@@ -73,6 +82,9 @@ void genny::actor::Loader::run() {
 
 genny::actor::Loader::Loader(genny::ActorContext& context, const unsigned int thread)
     : _rng{context.workload().createRNG()},
+      _totalBulkLoadTimer{context.timer("totalBulkInsertTime", thread)},
+      _individualBulkLoadTimer{context.timer("individualBulkInsertTime", thread)},
+      _indexBuildTimer{context.timer("indexBuildTime", thread)},
       _client{context.client()},
       _loop{context, _rng, _client} {}
 

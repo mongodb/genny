@@ -26,6 +26,9 @@ public:
 private:
     struct PhaseConfig;
     std::mt19937_64 _rng;
+    metrics::Timer _totalBulkLoadTimer;
+    metrics::Timer _individualBulkLoadTimer;
+    metrics::Timer _indexBuildTimer;
     mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
 };
