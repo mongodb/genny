@@ -32,11 +32,15 @@
 
 namespace {
 
-YAML::Node loadConfig(const std::string& fileName) {
+YAML::Node loadConfig(const std::string& source,
+                      genny::driver::ProgramOptions::YamlSource sourceType) {
+    if (sourceType == genny::driver::ProgramOptions::YamlSource::STRING) {
+        return YAML::Load(source);
+    }
     try {
-        return YAML::LoadFile(fileName);
+        return YAML::LoadFile(source);
     } catch (const std::exception& ex) {
-        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << fileName << ": " << ex.what();
+        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
         throw;
     }
 }
@@ -53,7 +57,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
 
     mongocxx::instance instance{};
 
-    auto yaml = loadConfig(options.workloadFileName);
+    auto yaml = loadConfig(options.workloadSource, options.sourceType);
     auto orchestrator = Orchestrator{};
 
     auto producers = std::vector<genny::ActorProducer>{
@@ -67,64 +71,73 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     };
     // clang-format on
 
-    auto workloadContext =
-        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
+    producers.insert(producers.end(), options.otherProducers.begin(), options.otherProducers.end());
 
-    orchestrator.addRequiredTokens(
-        int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
+    try {
+        auto workloadContext =
+            WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
 
-    setupTimer.report();
+        orchestrator.addRequiredTokens(
+            int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
-    auto activeActors = metrics.counter("Genny.ActiveActors");
+        setupTimer.report();
 
-    std::atomic_int outcomeCode;
+        auto activeActors = metrics.counter("Genny.ActiveActors");
 
-    std::mutex lock;
-    std::vector<std::thread> threads;
-    std::transform(cbegin(workloadContext.actors()),
-                   cend(workloadContext.actors()),
-                   std::back_inserter(threads),
-                   [&](const auto& actor) {
-                       return std::thread{[&]() {
-                           lock.lock();
-                           activeActors.incr();
-                           lock.unlock();
+        std::atomic_int outcomeCode;
 
-                           try {
-                               actor->run();
-                           } catch (const boost::exception& x) {
-                               BOOST_LOG_TRIVIAL(error)
-                                   << "boost::exception: " << boost::diagnostic_information(x, true);
-                               outcomeCode = 10;
-                               orchestrator.abort();
-                           } catch (const std::exception& x) {
-                               BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
-                               outcomeCode = 11;
-                               orchestrator.abort();
-                           } catch (...) {
-                               BOOST_LOG_TRIVIAL(error) << "Unknown error";
-                               orchestrator.abort();
-                               // Don't try to handle unknown errors, let us crash ungracefully
-                               throw;
-                           }
+        std::mutex lock;
+        std::vector<std::thread> threads;
+        std::transform(cbegin(workloadContext.actors()),
+                       cend(workloadContext.actors()),
+                       std::back_inserter(threads),
+                       [&](const auto& actor) {
+                           return std::thread{[&]() {
+                               lock.lock();
+                               activeActors.incr();
+                               lock.unlock();
 
-                           lock.lock();
-                           activeActors.decr();
-                           lock.unlock();
-                       }};
-                   });
+                               try {
+                                   actor->run();
+                               } catch (const boost::exception& x) {
+                                   BOOST_LOG_TRIVIAL(error)
+                                       << "boost::exception: "
+                                       << boost::diagnostic_information(x, true);
+                                   outcomeCode = 10;
+                                   orchestrator.abort();
+                               } catch (const std::exception& x) {
+                                   BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
+                                   outcomeCode = 11;
+                                   orchestrator.abort();
+                               } catch (...) {
+                                   BOOST_LOG_TRIVIAL(error) << "Unknown error";
+                                   orchestrator.abort();
+                                   // Don't try to handle unknown errors, let us crash ungracefully
+                                   throw;
+                               }
 
-    for (auto& thread : threads)
-        thread.join();
+                               lock.lock();
+                               activeActors.decr();
+                               lock.unlock();
+                           }};
+                       });
 
-    const auto reporter = genny::metrics::Reporter{metrics};
+        for (auto& thread : threads)
+            thread.join();
 
-    std::ofstream metricsOutput;
-    metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::app);
-    reporter.report(metricsOutput, options.metricsFormat);
-    metricsOutput.close();
+        const auto reporter = genny::metrics::Reporter{metrics};
 
-    return outcomeCode;
+        std::ofstream metricsOutput;
+        metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::app);
+        reporter.report(metricsOutput, options.metricsFormat);
+        metricsOutput.close();
+
+        return outcomeCode;
+    } catch (const std::exception& x) {
+        BOOST_LOG_TRIVIAL(error) << "Caught exception " << x.what();
+    }
+
+    return 500;  // unknown
 }
 
 
@@ -199,5 +212,5 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 
     if (vm.count("workload-file") > 0)
-        this->workloadFileName = vm["workload-file"].as<std::string>();
+        this->workloadSource = vm["workload-file"].as<std::string>();
 }
