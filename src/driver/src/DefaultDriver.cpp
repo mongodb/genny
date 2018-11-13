@@ -6,6 +6,9 @@
 #include <thread>
 #include <vector>
 
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/exception.hpp>
+
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
@@ -74,6 +77,8 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
 
     auto activeActors = metrics.counter("Genny.ActiveActors");
 
+    std::atomic_int outcomeCode;
+
     std::mutex lock;
     std::vector<std::thread> threads;
     std::transform(cbegin(workloadContext.actors()),
@@ -85,7 +90,23 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
                            activeActors.incr();
                            lock.unlock();
 
-                           actor->run();
+                           try {
+                               actor->run();
+                           } catch (const boost::exception& x) {
+                               BOOST_LOG_TRIVIAL(error)
+                                   << "boost::exception: " << boost::diagnostic_information(x, true);
+                               outcomeCode = 10;
+                               orchestrator.abort();
+                           } catch (const std::exception& x) {
+                               BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
+                               outcomeCode = 11;
+                               orchestrator.abort();
+                           } catch (...) {
+                               BOOST_LOG_TRIVIAL(error) << "Unknown error";
+                               orchestrator.abort();
+                               // Don't try to handle unknown errors, let us crash ungracefully
+                               throw;
+                           }
 
                            lock.lock();
                            activeActors.decr();
@@ -103,7 +124,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     reporter.report(metricsOutput, options.metricsFormat);
     metricsOutput.close();
 
-    return 0;
+    return outcomeCode;
 }
 
 

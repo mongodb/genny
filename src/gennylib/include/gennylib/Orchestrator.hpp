@@ -73,6 +73,12 @@ public:
 
     void abort();
 
+    /**
+     * @return whether the workload should continue running. This is true as long as
+     * no calls to abort() have been made.
+     */
+    bool continueRunning() const;
+
 private:
     mutable std::shared_mutex _mutex;
     std::condition_variable_any _phaseChange;
