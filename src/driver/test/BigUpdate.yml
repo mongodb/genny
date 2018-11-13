@@ -11,7 +11,9 @@ Actors:
     Document:
       x: 0
       y: {$randomint: {min: 0, max: 1000}}
+      z: {$randomint: {min: 0, max: 2000}}
       string: {$randomstring: {length: {$randomint: {min: 5, max: 15}}}}
+      string2: {$randomstring: {length: {$randomint: {min: 7, max: 20}}}}
     Indexes:
       - {y: 1}
       - {string: 1}
