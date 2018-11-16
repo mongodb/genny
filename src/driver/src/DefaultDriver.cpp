@@ -47,6 +47,28 @@ YAML::Node loadConfig(const std::string& source,
     }
 }
 
+template<typename Actor>
+void runActor(Actor&& actor, std::atomic_int& outcomeCode, Orchestrator& orchestrator) {
+    try {
+        actor->run();
+    } catch (const boost::exception& x) {
+        BOOST_LOG_TRIVIAL(error)
+            << "boost::exception: "
+            << boost::diagnostic_information(x, true);
+        outcomeCode = 10;
+        orchestrator.abort();
+    } catch (const std::exception& x) {
+        BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
+        outcomeCode = 11;
+        orchestrator.abort();
+    } catch (...) {
+        BOOST_LOG_TRIVIAL(error) << "Unknown error";
+        orchestrator.abort();
+        // Don't try to handle unknown errors, let us crash ungracefully
+        throw;
+    }
+}
+
 int doRunLogic(const genny::driver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
 
@@ -94,24 +116,7 @@ int doRunLogic(const genny::driver::ProgramOptions& options) {
                            activeActors.incr();
                            lock.unlock();
 
-                           try {
-                               actor->run();
-                           } catch (const boost::exception& x) {
-                               BOOST_LOG_TRIVIAL(error)
-                                   << "boost::exception: "
-                                   << boost::diagnostic_information(x, true);
-                               outcomeCode = 10;
-                               orchestrator.abort();
-                           } catch (const std::exception& x) {
-                               BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
-                               outcomeCode = 11;
-                               orchestrator.abort();
-                           } catch (...) {
-                               BOOST_LOG_TRIVIAL(error) << "Unknown error";
-                               orchestrator.abort();
-                               // Don't try to handle unknown errors, let us crash ungracefully
-                               throw;
-                           }
+                           runActor(actor, outcomeCode, orchestrator);
 
                            lock.lock();
                            activeActors.decr();
