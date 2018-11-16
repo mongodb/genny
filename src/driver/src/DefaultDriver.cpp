@@ -55,7 +55,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     auto actorSetup = metrics.timer("Genny.Setup");
     auto setupTimer = actorSetup.start();
 
-    mongocxx::instance instance{};
+    mongocxx::instance::current();
 
     auto yaml = loadConfig(options.workloadSource, options.sourceType);
     auto orchestrator = Orchestrator{};
@@ -84,7 +84,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
 
         auto activeActors = metrics.counter("Genny.ActiveActors");
 
-        std::atomic_int outcomeCode;
+        std::atomic_int outcomeCode = 0;
 
         std::mutex lock;
         std::vector<std::thread> threads;
