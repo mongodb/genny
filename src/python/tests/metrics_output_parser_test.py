@@ -39,11 +39,11 @@ class GennyOutputParserTest(unittest.TestCase):
         self.assertEqual(
             test_lib.parse_string("""
         Clocks
-        
+
         Gauges
-        
+
         Counters
-        
+
         Timers
         """).timers(), {})
 
