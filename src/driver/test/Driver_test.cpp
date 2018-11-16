@@ -1,6 +1,8 @@
 #include <string>
 #include <fstream>
 #include <streambuf>
+#include <set>
+#include <mutex>
 
 #include <boost/exception/exception.hpp>
 #include <boost/log/trivial.hpp>
@@ -48,27 +50,36 @@ struct Fails : public genny::Actor {
             : mode{phaseContext.get<std::string>("Mode")} {}
     };
     genny::PhaseLoop<PhaseConfig> loop;
+    static std::multiset<int> phaseCalls;
+    static std::mutex mutex;
 
     explicit Fails(genny::ActorContext& ctx) : loop{ctx} {}
 
     void run() override {
         for (auto&& [phase, config] : loop) {
             for (auto&& _ : config) {
+                {
+                    std::lock_guard<std::mutex> lock(mutex);
+                    this->phaseCalls.insert(phase);
+                }
+
                 if (config->mode == "None") {
                     continue;
                 } else if (config->mode == "BoostException") {
                     throw SomeException{};
                 } else if (config->mode == "StdException") {
                     throw std::exception{};
-                } else if (config->mode == "OtherThrowable") {
-                    throw "SomethingElse";
                 } else {
                     BOOST_LOG_TRIVIAL(error) << "Bad Mode " << config->mode;
                 }
             }
         }
+        // TODO: simple way to assert the phaseCalls value
     }
 };
+
+std::multiset<int> Fails::phaseCalls = {};
+std::mutex Fails::mutex = {};
 
 
 ProgramOptions create(const std::string& yaml) {
@@ -106,6 +117,7 @@ TEST_CASE("Normal Execution") {
       - Mode: None
     )");
     REQUIRE(code == 0);
+
 }
 
 TEST_CASE("Boost exception") {
