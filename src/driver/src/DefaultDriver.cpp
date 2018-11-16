@@ -32,6 +32,8 @@
 
 namespace {
 
+using namespace genny;
+
 YAML::Node loadConfig(const std::string& source,
                       genny::driver::ProgramOptions::YamlSource sourceType) {
     if (sourceType == genny::driver::ProgramOptions::YamlSource::STRING) {
@@ -45,11 +47,7 @@ YAML::Node loadConfig(const std::string& source,
     }
 }
 
-}  // namespace
-
-
-int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
-
+int doRunLogic(const genny::driver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
 
     auto actorSetup = metrics.timer("Genny.Setup");
@@ -61,83 +59,90 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     auto orchestrator = Orchestrator{};
 
     auto producers = std::vector<genny::ActorProducer>{
-        &genny::actor::HelloWorld::producer,
-        &genny::actor::Insert::producer,
-        &genny::actor::InsertRemove::producer,
-        &genny::actor::MultiCollectionUpdate::producer,
-        &genny::actor::Loader::producer,
-        &genny::actor::MultiCollectionQuery::producer,
-        // NextActorProducerHere
+            &genny::actor::HelloWorld::producer,
+            &genny::actor::Insert::producer,
+            &genny::actor::InsertRemove::producer,
+            &genny::actor::MultiCollectionUpdate::producer,
+            &genny::actor::Loader::producer,
+            &genny::actor::MultiCollectionQuery::producer,
+            // NextActorProducerHere
     };
     // clang-format on
 
     producers.insert(producers.end(), options.otherProducers.begin(), options.otherProducers.end());
 
-    try {
-        auto workloadContext =
+    auto workloadContext =
             WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
 
-        orchestrator.addRequiredTokens(
+    orchestrator.addRequiredTokens(
             int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
-        setupTimer.report();
+    setupTimer.report();
 
-        auto activeActors = metrics.counter("Genny.ActiveActors");
+    auto activeActors = metrics.counter("Genny.ActiveActors");
 
-        std::atomic_int outcomeCode = 0;
+    std::atomic_int outcomeCode = 0;
 
-        std::mutex lock;
-        std::vector<std::thread> threads;
-        std::transform(cbegin(workloadContext.actors()),
-                       cend(workloadContext.actors()),
-                       std::back_inserter(threads),
-                       [&](const auto& actor) {
-                           return std::thread{[&]() {
-                               lock.lock();
-                               activeActors.incr();
-                               lock.unlock();
+    std::mutex lock;
+    std::vector<std::thread> threads;
+    std::transform(cbegin(workloadContext.actors()),
+                   cend(workloadContext.actors()),
+                   std::back_inserter(threads),
+                   [&](const auto& actor) {
+                       return std::thread{[&]() {
+                           lock.lock();
+                           activeActors.incr();
+                           lock.unlock();
 
-                               try {
-                                   actor->run();
-                               } catch (const boost::exception& x) {
-                                   BOOST_LOG_TRIVIAL(error)
-                                       << "boost::exception: "
-                                       << boost::diagnostic_information(x, true);
-                                   outcomeCode = 10;
-                                   orchestrator.abort();
-                               } catch (const std::exception& x) {
-                                   BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
-                                   outcomeCode = 11;
-                                   orchestrator.abort();
-                               } catch (...) {
-                                   BOOST_LOG_TRIVIAL(error) << "Unknown error";
-                                   orchestrator.abort();
-                                   // Don't try to handle unknown errors, let us crash ungracefully
-                                   throw;
-                               }
+                           try {
+                               actor->run();
+                           } catch (const boost::exception& x) {
+                               BOOST_LOG_TRIVIAL(error)
+                                   << "boost::exception: "
+                                   << boost::diagnostic_information(x, true);
+                               outcomeCode = 10;
+                               orchestrator.abort();
+                           } catch (const std::exception& x) {
+                               BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
+                               outcomeCode = 11;
+                               orchestrator.abort();
+                           } catch (...) {
+                               BOOST_LOG_TRIVIAL(error) << "Unknown error";
+                               orchestrator.abort();
+                               // Don't try to handle unknown errors, let us crash ungracefully
+                               throw;
+                           }
 
-                               lock.lock();
-                               activeActors.decr();
-                               lock.unlock();
-                           }};
-                       });
+                           lock.lock();
+                           activeActors.decr();
+                           lock.unlock();
+                       }};
+                   });
 
-        for (auto& thread : threads)
-            thread.join();
+    for (auto& thread : threads)
+        thread.join();
 
-        const auto reporter = genny::metrics::Reporter{metrics};
+    const auto reporter = genny::metrics::Reporter{metrics};
 
-        std::ofstream metricsOutput;
-        metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::app);
-        reporter.report(metricsOutput, options.metricsFormat);
-        metricsOutput.close();
+    std::ofstream metricsOutput;
+    metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::app);
+    reporter.report(metricsOutput, options.metricsFormat);
+    metricsOutput.close();
 
-        return outcomeCode;
+    return outcomeCode;
+}
+
+}  // namespace
+
+
+int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
+    try {
+        return doRunLogic(options);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Caught exception " << x.what();
     }
-
-    return 500;  // unknown
+    // unknown
+    return 500;
 }
 
 
