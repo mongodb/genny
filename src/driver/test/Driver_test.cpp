@@ -27,6 +27,9 @@ std::string readFile(const std::string& fileName) {
 
 }
 
+// TODO: Can you benchmark the impact of calling orchestrator.isError at every iteration, particularly as the thread count goes up?
+
+
 template <class F>
 auto onActorContext(F&& callback) {
     return [&](genny::ActorContext& context) {
@@ -36,7 +39,7 @@ auto onActorContext(F&& callback) {
     };
 }
 
-class SomeException : public boost::exception {};
+class SomeException : public virtual boost::exception {};
 
 struct Fails : public genny::Actor {
     struct PhaseConfig {
@@ -68,30 +71,52 @@ struct Fails : public genny::Actor {
 };
 
 
-TEST_CASE("Normal Execution") {
-    DefaultDriver driver;
-
-    BOOST_LOG_TRIVIAL(info) << cwd();
-
+ProgramOptions create(const std::string& yaml) {
     ProgramOptions opts;
 
     opts.otherProducers.emplace_back(onActorContext(
-        [&](auto& context, auto& vec) { vec.push_back(std::make_unique<Fails>(context)); }));
+            [&](auto& context, auto& vec) {
+                for (auto i=0; i < context.template get<int,false>("Threads").value_or(1); ++i) {
+                    vec.push_back(std::make_unique<Fails>(context));
+                }
+            }));
 
     opts.metricsFormat = "csv";
     opts.metricsOutputFileName = "metrics.csv";
     opts.mongoUri = "mongodb://localhost:27017";
     opts.sourceType = ProgramOptions::YamlSource::STRING;
-    opts.workloadSource = R"(
-SchemaVersion: 2018-07-01
+    opts.workloadSource = yaml;
 
-Actors:
-  - Type: Fails
-    Threads: 2
-    Phases:
-      - Repeat: 1
-        Mode: BoostException
-)";
-    auto outcome = driver.run(opts);
-    REQUIRE(outcome == 10);
+    return opts;
+}
+
+int outcome(const std::string &yaml) {
+    DefaultDriver driver;
+    auto opts = create(yaml);
+    return driver.run(opts);
+}
+
+TEST_CASE("Normal Execution") {
+    auto code = outcome(R"(
+    SchemaVersion: 2018-07-01
+    Actors:
+    - Type: Fails
+      Threads: 1
+      Phases:
+      - Mode: None
+    )");
+    REQUIRE(code == 0);
+}
+
+TEST_CASE("Boost exception") {
+    auto code = outcome(R"(
+    SchemaVersion: 2018-07-01
+    Actors:
+      - Type: Fails
+        Threads: 2
+        Phases:
+          - Repeat: 1
+            Mode: BoostException
+    )");
+    REQUIRE(code == 10);
 }
