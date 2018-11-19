@@ -140,6 +140,92 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
     }
 
+    SECTION("Boost Exception") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 1
+          Phases:
+            - Repeat: 1
+              Mode: BoostException
+        )");
+        REQUIRE(code == 10);
+        REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
+    }
+
+    SECTION("Std Exception") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 1
+          Phases:
+            - Repeat: 1
+              Mode: StdException
+        )");
+        REQUIRE(code == 11);
+        REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
+    }
+
+
+    SECTION("Boost Exception in phase 2 by 2 threads") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 2
+          Phases:
+            - Repeat: 1
+              Mode: None
+            - Repeat: 1
+              Mode: BoostException
+        )");
+        REQUIRE(code == 10);
+        REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0, 1, 1});
+    }
+
+    SECTION("Exception prevents other Phases") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 1
+          Phases:
+            - Repeat: 1
+              Mode: BoostException
+            - Repeat: 1
+              Mode: None
+        )");
+        REQUIRE(code == 10);
+        REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
+    }
+
+    // TODO: handle deadlock with not getting through awaitPhaseEnd
+    SECTION("Two Actors simultaneously throw different exceptions") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 1
+          Phases:
+            - Repeat: 1
+              Mode: BoostException
+        - Type: Fails
+          Threads: 1
+          Phases:
+            - Repeat: 1
+              Mode: StdException
+        )");
+
+        // we set the outcome code atomically so
+        // either the boost::exception or the
+        // std::exception may get thrown/handled first
+        REQUIRE((code == 10 || code == 11));
+
+        REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
+    }
+
     SECTION("Boost exception by two threads") {
         auto code = outcome(R"(
         SchemaVersion: 2018-07-01
