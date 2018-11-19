@@ -115,7 +115,8 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
 void Orchestrator::abort() {
     writer lock{_mutex};
-
+//    state = State::PhaseEnded;
+//    _phaseChange.notify_all();
     this->_errors = true;
 }
 
