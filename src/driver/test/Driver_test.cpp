@@ -1,9 +1,9 @@
-#include <string>
 #include <fstream>
-#include <streambuf>
-#include <set>
 #include <mutex>
+#include <set>
 #include <stdio.h>
+#include <streambuf>
+#include <string>
 
 #include <boost/exception/exception.hpp>
 #include <boost/log/trivial.hpp>
@@ -21,13 +21,12 @@ using namespace genny::driver;
 
 namespace {
 
-std::string readFile(const std::string &fileName) {
+std::string readFile(const std::string& fileName) {
     std::ifstream t(fileName);
     if (!t) {
         return "";
     }
-    std::string str((std::istreambuf_iterator<char>(t)),
-                    std::istreambuf_iterator<char>());
+    std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
     return str;
 }
 
@@ -39,9 +38,9 @@ bool hasMetrics() {
     return !metricsContents().empty();
 }
 
-template<class F>
-auto onActorContext(F &&callback) {
-    return [&](genny::ActorContext &context) {
+template <class F>
+auto onActorContext(F&& callback) {
+    return [&](genny::ActorContext& context) {
         genny::ActorVector vec;
         callback(context, vec);
         return vec;
@@ -49,7 +48,8 @@ auto onActorContext(F &&callback) {
 }
 
 
-// TODO: Can you benchmark the impact of calling orchestrator.isError at every iteration, particularly as the thread count goes up?
+// TODO: Can you benchmark the impact of calling orchestrator.isError at every iteration,
+// particularly as the thread count goes up?
 
 class SomeException : public virtual boost::exception {};
 
@@ -57,7 +57,7 @@ struct Fails : public genny::Actor {
     struct PhaseConfig {
         std::string mode;
         PhaseConfig(genny::PhaseContext& phaseContext)
-                : mode{phaseContext.get<std::string>("Mode")} {}
+            : mode{phaseContext.get<std::string>("Mode")} {}
     };
     genny::PhaseLoop<PhaseConfig> loop;
     static std::multiset<int> phaseCalls;
@@ -69,7 +69,6 @@ struct Fails : public genny::Actor {
         for (auto&& [phase, config] : loop) {
             for (auto&& _ : config) {
                 {
-                // TODO: put back once deadlock fixed
                     std::lock_guard<std::mutex> lock(mutex);
                     Fails::phaseCalls.insert(phase);
                 }
@@ -96,12 +95,11 @@ std::mutex Fails::mutex = {};
 ProgramOptions create(const std::string& yaml) {
     ProgramOptions opts;
 
-    opts.otherProducers.emplace_back(onActorContext(
-            [&](auto& context, auto& vec) {
-                for (auto i=0; i < context.template get<int,false>("Threads").value_or(1); ++i) {
-                    vec.push_back(std::make_unique<Fails>(context));
-                }
-            }));
+    opts.otherProducers.emplace_back(onActorContext([&](auto& context, auto& vec) {
+        for (auto i = 0; i < context.template get<int, false>("Threads").value_or(1); ++i) {
+            vec.push_back(std::make_unique<Fails>(context));
+        }
+    }));
 
     opts.metricsFormat = "csv";
     opts.metricsOutputFileName = "metrics.csv";
@@ -112,7 +110,7 @@ ProgramOptions create(const std::string& yaml) {
     return opts;
 }
 
-int outcome(const std::string &yaml) {
+int outcome(const std::string& yaml) {
     DefaultDriver driver;
     auto opts = create(yaml);
     return driver.run(opts);
@@ -200,9 +198,8 @@ TEST_CASE("Various Actor Behaviors") {
               Mode: BoostException
         )");
         REQUIRE(code == 10);
-        REQUIRE(
-        (Fails::phaseCalls == std::multiset<int>{0, 0, 1, 1} ||
-                Fails::phaseCalls == std::multiset<int>{0, 0, 1}));
+        REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0, 1, 1} ||
+                 Fails::phaseCalls == std::multiset<int>{0, 0, 1}));
         REQUIRE(hasMetrics());
     }
 
@@ -278,9 +275,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == 10);
         REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0} ||
-                        Fails::phaseCalls == std::multiset<int>{0}));
+                 Fails::phaseCalls == std::multiset<int>{0}));
         REQUIRE(hasMetrics());
     }
-
 }
-

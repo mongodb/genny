@@ -47,14 +47,12 @@ YAML::Node loadConfig(const std::string& source,
     }
 }
 
-template<typename Actor>
+template <typename Actor>
 void runActor(Actor&& actor, std::atomic_int& outcomeCode, Orchestrator& orchestrator) {
     try {
         actor->run();
     } catch (const boost::exception& x) {
-        BOOST_LOG_TRIVIAL(error)
-            << "boost::exception: "
-            << boost::diagnostic_information(x, true);
+        BOOST_LOG_TRIVIAL(error) << "boost::exception: " << boost::diagnostic_information(x, true);
         outcomeCode = 10;
         orchestrator.abort();
     } catch (const std::exception& x) {
@@ -81,23 +79,23 @@ int doRunLogic(const genny::driver::ProgramOptions& options) {
     auto orchestrator = Orchestrator{};
 
     auto producers = std::vector<genny::ActorProducer>{
-            &genny::actor::HelloWorld::producer,
-            &genny::actor::Insert::producer,
-            &genny::actor::InsertRemove::producer,
-            &genny::actor::MultiCollectionUpdate::producer,
-            &genny::actor::Loader::producer,
-            &genny::actor::MultiCollectionQuery::producer,
-            // NextActorProducerHere
+        &genny::actor::HelloWorld::producer,
+        &genny::actor::Insert::producer,
+        &genny::actor::InsertRemove::producer,
+        &genny::actor::MultiCollectionUpdate::producer,
+        &genny::actor::Loader::producer,
+        &genny::actor::MultiCollectionQuery::producer,
+        // NextActorProducerHere
     };
     // clang-format on
 
     producers.insert(producers.end(), options.otherProducers.begin(), options.otherProducers.end());
 
     auto workloadContext =
-            WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
+        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
 
     orchestrator.addRequiredTokens(
-            int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
+        int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
     setupTimer.report();
 
