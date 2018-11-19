@@ -48,9 +48,6 @@ auto onActorContext(F&& callback) {
 }
 
 
-// TODO: Can you benchmark the impact of calling orchestrator.isError at every iteration,
-// particularly as the thread count goes up?
-
 class SomeException : public virtual boost::exception {};
 
 struct Fails : public genny::Actor {
