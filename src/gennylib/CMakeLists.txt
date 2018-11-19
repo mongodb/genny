@@ -95,7 +95,7 @@ add_executable(test_gennylib
     test/document_test.cpp
     test/orchestrator_perf_test.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
-)
+        test/PhaseLoop_perf_test.cpp)
 
 target_include_directories(test_gennylib
     PUBLIC
