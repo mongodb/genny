@@ -3,6 +3,7 @@
 #include <streambuf>
 #include <set>
 #include <mutex>
+#include <stdio.h>
 
 #include <boost/exception/exception.hpp>
 #include <boost/log/trivial.hpp>
@@ -21,10 +22,21 @@ using namespace genny::driver;
 namespace {
 
 std::string readFile(const std::string &fileName) {
-    std::ifstream t("file.txt");
+    std::ifstream t(fileName);
+    if (!t) {
+        return "";
+    }
     std::string str((std::istreambuf_iterator<char>(t)),
                     std::istreambuf_iterator<char>());
     return str;
+}
+
+std::string metricsContents() {
+    return readFile("metrics.csv");
+}
+
+bool hasMetrics() {
+    return !metricsContents().empty();
 }
 
 template<class F>
@@ -111,6 +123,7 @@ int outcome(const std::string &yaml) {
 TEST_CASE("Various Actor Behaviors") {
 
     Fails::phaseCalls.clear();
+    remove("metrics.csv");
 
     SECTION("Normal Execution") {
         auto code = outcome(R"(
@@ -124,6 +137,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == 0);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
+        REQUIRE(hasMetrics());
     }
 
     SECTION("Normal Execution: Two Repeat") {
@@ -138,6 +152,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == 0);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
+        REQUIRE(hasMetrics());
     }
 
     SECTION("Boost Exception") {
@@ -152,6 +167,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == 10);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
+        REQUIRE(hasMetrics());
     }
 
     SECTION("Std Exception") {
@@ -166,6 +182,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == 11);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
+        REQUIRE(hasMetrics());
     }
 
 
@@ -183,6 +200,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == 10);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0, 1, 1});
+        REQUIRE(hasMetrics());
     }
 
     SECTION("Exception prevents other Phases") {
@@ -199,6 +217,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == 10);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
+        REQUIRE(hasMetrics());
     }
 
     // TODO: handle deadlock with not getting through awaitPhaseEnd
@@ -224,6 +243,7 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE((code == 10 || code == 11));
 
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
+        REQUIRE(hasMetrics());
     }
 
     SECTION("Boost exception by two threads") {
@@ -238,6 +258,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == 10);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
+        REQUIRE(hasMetrics());
     }
 
 }
