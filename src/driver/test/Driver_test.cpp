@@ -223,7 +223,23 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE(hasMetrics());
     }
 
-    // TODO: handle deadlock with not getting through awaitPhaseEnd
+    SECTION("200 Actors simultaneously throw") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 200
+          Phases:
+            - Repeat: 1
+              Mode: StdException
+        )");
+
+        REQUIRE(code == 11);
+
+        REQUIRE(Fails::phaseCalls.size() > 0);
+        REQUIRE(hasMetrics());
+    }
+
     SECTION("Two Actors simultaneously throw different exceptions") {
         auto code = outcome(R"(
         SchemaVersion: 2018-07-01
