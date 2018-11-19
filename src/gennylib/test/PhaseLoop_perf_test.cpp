@@ -110,7 +110,7 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
     auto actorDur = duration_cast<nanoseconds>(steady_clock::now() - actorStart).count();
     std::cout << "Took " << actorDur << " nanoseconds for PhaseLoop loop" << std::endl;
 
-
+    REQUIRE(increments == 500*10000);
     increments = 0;
 
     boost::barrier regBarrier(1);
@@ -129,7 +129,7 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
     // keep the compiler from being clever about
     // removing check to `if(!stop)`
     auto stopper = std::thread([&](){
-        std::this_thread::sleep_for(milliseconds{5000});
+        std::this_thread::sleep_for(seconds{2});
         IncrementsRunnable::stop = true;
     });
 
@@ -139,6 +139,10 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
         reg.join();
     auto regDur = duration_cast<nanoseconds>(steady_clock::now() - regStart).count();
     std::cout << "Took " << regDur << " nanoseconds for regular for loop" << std::endl;
+    REQUIRE(increments == 500*10000);
 
     stopper.join();
+
+    // we're no less than 100 times worse
+    REQUIRE(actorDur <= regDur * 100);
 }
