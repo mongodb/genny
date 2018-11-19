@@ -43,7 +43,6 @@ namespace V1 {
 class IterationCompletionCheck final {
 
 public:
-
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations)
         : _minDuration{minDuration},
