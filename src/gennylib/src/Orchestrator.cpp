@@ -50,7 +50,6 @@ PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     _currentTokens += addTokens;
 
     auto currentPhase = this->_current;
-    // TODO: || errors?
     if (_currentTokens >= _requireTokens) {
         _phaseChange.notify_all();
         state = State::PhaseStarted;
