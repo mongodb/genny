@@ -38,11 +38,8 @@ struct Increments : public Actor {
     Increments(ActorContext& ctx) : _loop{ctx} {}
 
     void run() override {
-        long long iter = 0;
         for (auto&& [phase, config] : _loop) {
             for (auto&& _ : config) {
-//                ++iter;
-//                std::cout << iter << std::endl;
                 ++increments;
             }
         }
@@ -97,14 +94,24 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
     std::cout << "Took " << actorDur << " milliseconds for PhaseLoop loop" << std::endl;
 
 
-    std::shared_mutex mutex;
+    increments = 0;
+
+    std::atomic_bool stop = false;
 
     auto fn = [&]() {
         for(int j=0; j<10000; ++j) {
-            std::shared_lock<std::shared_mutex> reader{mutex};
-            ++increments;
+            if (!stop) {
+                ++increments;
+            }
         }
     };
+
+    // keep the compiler from being clever about
+    // removing check to `if(!stop)`
+    auto stopper = std::thread([&](){
+        std::this_thread::sleep_for(milliseconds{5000});
+        stop = true;
+    });
 
     boost::barrier regBarrier(1);
     std::vector<std::thread> regulars;
@@ -122,4 +129,5 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
     auto regDur = duration_cast<milliseconds>(steady_clock::now() - regStart).count();
     std::cout << "Took " << regDur << " milliseconds for regular for loop" << std::endl;
 
+    stopper.join();
 }

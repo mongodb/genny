@@ -3,6 +3,7 @@
 
 #include <condition_variable>
 #include <shared_mutex>
+#include <atomic>
 
 namespace genny {
 
@@ -89,7 +90,7 @@ private:
     PhaseNumber _max = 0;
     PhaseNumber _current = 0;
 
-    bool _errors = false;
+    std::atomic_bool _errors = false;
 
     enum class State { PhaseEnded, PhaseStarted };
 

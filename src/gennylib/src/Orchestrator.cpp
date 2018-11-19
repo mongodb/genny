@@ -32,7 +32,6 @@ PhaseNumber Orchestrator::currentPhase() const {
 }
 
 bool Orchestrator::continueRunning() const {
-    reader lock{_mutex};
     return !this->_errors;
 }
 
