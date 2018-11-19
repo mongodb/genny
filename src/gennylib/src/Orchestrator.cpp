@@ -45,17 +45,18 @@ bool Orchestrator::morePhases() const {
 // we start once we have required number of tokens
 PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     writer lock{_mutex};
-    assert(state == State::PhaseEnded);
+    assert(state == State::PhaseEnded || this->_errors);
 
     _currentTokens += addTokens;
 
     auto currentPhase = this->_current;
+    // TODO: || errors?
     if (_currentTokens >= _requireTokens) {
         _phaseChange.notify_all();
         state = State::PhaseStarted;
     } else {
         if (block) {
-            while (state != State::PhaseStarted) {
+            while (state != State::PhaseStarted && !this->_errors) {
                 _phaseChange.wait(lock);
             }
         }
@@ -77,7 +78,7 @@ void Orchestrator::phasesAtLeastTo(PhaseNumber minPhase) {
 // we end once no more tokens left
 bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
     writer lock{_mutex};
-    assert(State::PhaseStarted == state);
+    assert(State::PhaseStarted == state || this->_errors);
 
     _currentTokens -= removeTokens;
 
@@ -105,7 +106,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
         state = State::PhaseEnded;
     } else {
         if (block) {
-            while (state != State::PhaseEnded) {
+            while (state != State::PhaseEnded && !this->_errors) {
                 _phaseChange.wait(lock);
             }
         }
@@ -115,9 +116,8 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
 void Orchestrator::abort() {
     writer lock{_mutex};
-//    state = State::PhaseEnded;
-//    _phaseChange.notify_all();
     this->_errors = true;
+    _phaseChange.notify_all();
 }
 
 }  // namespace genny

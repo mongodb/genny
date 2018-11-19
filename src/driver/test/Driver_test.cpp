@@ -70,7 +70,7 @@ struct Fails : public genny::Actor {
             for (auto&& _ : config) {
                 {
                 // TODO: put back once deadlock fixed
-//                    std::lock_guard<std::mutex> lock(mutex);
+                    std::lock_guard<std::mutex> lock(mutex);
                     Fails::phaseCalls.insert(phase);
                 }
 
@@ -200,7 +200,9 @@ TEST_CASE("Various Actor Behaviors") {
               Mode: BoostException
         )");
         REQUIRE(code == 10);
-        REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0, 1, 1});
+        REQUIRE(
+        (Fails::phaseCalls == std::multiset<int>{0, 0, 1, 1} ||
+                Fails::phaseCalls == std::multiset<int>{0, 0, 1}));
         REQUIRE(hasMetrics());
     }
 
@@ -243,7 +245,8 @@ TEST_CASE("Various Actor Behaviors") {
         // std::exception may get thrown/handled first
         REQUIRE((code == 10 || code == 11));
 
-        REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
+        REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0} ||
+                 Fails::phaseCalls == std::multiset<int>{0}));
         REQUIRE(hasMetrics());
     }
 
