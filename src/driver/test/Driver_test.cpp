@@ -20,26 +20,24 @@ using namespace genny::driver;
 
 namespace {
 
-std::string readFile(const std::string& fileName) {
+std::string readFile(const std::string &fileName) {
     std::ifstream t("file.txt");
     std::string str((std::istreambuf_iterator<char>(t)),
                     std::istreambuf_iterator<char>());
     return str;
 }
 
-}
-
-// TODO: Can you benchmark the impact of calling orchestrator.isError at every iteration, particularly as the thread count goes up?
-
-
-template <class F>
-auto onActorContext(F&& callback) {
-    return [&](genny::ActorContext& context) {
+template<class F>
+auto onActorContext(F &&callback) {
+    return [&](genny::ActorContext &context) {
         genny::ActorVector vec;
         callback(context, vec);
         return vec;
     };
 }
+
+
+// TODO: Can you benchmark the impact of calling orchestrator.isError at every iteration, particularly as the thread count goes up?
 
 class SomeException : public virtual boost::exception {};
 
@@ -47,7 +45,7 @@ struct Fails : public genny::Actor {
     struct PhaseConfig {
         std::string mode;
         PhaseConfig(genny::PhaseContext& phaseContext)
-            : mode{phaseContext.get<std::string>("Mode")} {}
+                : mode{phaseContext.get<std::string>("Mode")} {}
     };
     genny::PhaseLoop<PhaseConfig> loop;
     static std::multiset<int> phaseCalls;
@@ -60,7 +58,7 @@ struct Fails : public genny::Actor {
             for (auto&& _ : config) {
                 {
                     std::lock_guard<std::mutex> lock(mutex);
-                    this->phaseCalls.insert(phase);
+                    Fails::phaseCalls.insert(phase);
                 }
 
                 if (config->mode == "None") {
@@ -74,10 +72,10 @@ struct Fails : public genny::Actor {
                 }
             }
         }
-        // TODO: simple way to assert the phaseCalls value
     }
 };
 
+// initialize static members of Fails
 std::multiset<int> Fails::phaseCalls = {};
 std::mutex Fails::mutex = {};
 
@@ -107,28 +105,54 @@ int outcome(const std::string &yaml) {
     return driver.run(opts);
 }
 
-TEST_CASE("Normal Execution") {
-    auto code = outcome(R"(
-    SchemaVersion: 2018-07-01
-    Actors:
-    - Type: Fails
-      Threads: 1
-      Phases:
-      - Mode: None
-    )");
-    REQUIRE(code == 0);
+}  // namespace
+
+
+TEST_CASE("Various Actor Behaviors") {
+
+    Fails::phaseCalls.clear();
+
+    SECTION("Normal Execution") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 1
+          Phases:
+          - Mode: None
+            Repeat: 1
+        )");
+        REQUIRE(code == 0);
+        REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
+    }
+
+    SECTION("Normal Execution: Two Repeat") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 1
+          Phases:
+          - Mode: None
+            Repeat: 2
+        )");
+        REQUIRE(code == 0);
+        REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
+    }
+
+    SECTION("Boost exception by two threads") {
+        auto code = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 2
+            Phases:
+              - Repeat: 1
+                Mode: BoostException
+        )");
+        REQUIRE(code == 10);
+        REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
+    }
 
 }
 
-TEST_CASE("Boost exception") {
-    auto code = outcome(R"(
-    SchemaVersion: 2018-07-01
-    Actors:
-      - Type: Fails
-        Threads: 2
-        Phases:
-          - Repeat: 1
-            Mode: BoostException
-    )");
-    REQUIRE(code == 10);
-}
