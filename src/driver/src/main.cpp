@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     std::cout << u8"🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔" << std::endl;
 
     auto opts = genny::driver::ProgramOptions(argc, argv);
-    if(opts.isHelp){
+    if (opts.isHelp) {
         std::cout << opts.description << std::endl;
         return 0;
     }
