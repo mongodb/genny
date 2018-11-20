@@ -89,6 +89,9 @@ int doRunLogic(const genny::driver::ProgramOptions& options) {
     };
     // clang-format on
 
+    // The ProgramOptions struct can add some more ActorProducers.
+    // Add them at then end so they will produce Actors last.
+    // This is used primarily for testing so tests can inject test-only Actors.
     producers.insert(producers.end(), options.otherProducers.begin(), options.otherProducers.end());
 
     auto workloadContext =
