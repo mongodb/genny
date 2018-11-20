@@ -244,7 +244,7 @@ public:
         : _orchestrator{orchestrator},
           _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
           _currentPhase{currentPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {
+          _value{(!phaseContext.get<std::string, false>("Operation") || phaseContext.get<std::string>("Operation") != "nop") ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...)) : std::nullopt} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
@@ -261,6 +261,10 @@ public:
         return _iterationCheck->doesBlock();
     }
 
+    bool isNullOpt() const {
+        return !_value.has_value();
+    }
+
     // Could use `auto` for return-type of operator-> and operator*, but
     // IDE auto-completion likes it more if it's spelled out.
     //
@@ -272,7 +276,7 @@ public:
     // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator->()`
     //      so we trust the STL to do the right thing™️
     typename std::add_pointer_t<std::remove_reference_t<T>> operator->() const noexcept {
-        return _value.operator->();
+        return (*_value).operator->();
     }
 
     // Could use `auto` for return-type of operator-> and operator*, but
@@ -283,14 +287,14 @@ public:
     // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator*()`
     //      so we trust the STL to do the right thing™️
     typename std::add_lvalue_reference_t<T> operator*() const {
-        return _value.operator*();
+        return (*_value).operator*();
     }
 
 private:
     Orchestrator& _orchestrator;
     const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
     const PhaseNumber _currentPhase;
-    const std::unique_ptr<T> _value;
+    const std::optional<std::unique_ptr<T>> _value;
 
 };  // class ActorPhase
 
@@ -346,7 +350,6 @@ public:
             msg << "No phase config found for PhaseNumber=[" << _currentPhase << "]";
             throw InvalidConfigurationException(msg.str());
         }
-
         return {_currentPhase, found->second};
     }
 

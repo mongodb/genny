@@ -34,15 +34,17 @@ struct genny::actor::InsertRemove::PhaseConfig {
 
 void genny::actor::InsertRemove::run() {
     for (auto&& [phase, config] : _loop) {
-        for (auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
-            {
-                auto op = _insertTimer.raii();
-                config->collection.insert_one(config->myDoc.view());
-            }
-            {
-                auto op = _removeTimer.raii();
-                config->collection.delete_many(config->myDoc.view());
+        if (!config.isNullOpt()) {
+            for (auto&& _ : config) {
+                BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
+                {
+                    auto op = _insertTimer.raii();
+                    config->collection.insert_one(config->myDoc.view());
+                }
+                {
+                    auto op = _removeTimer.raii();
+                    config->collection.delete_many(config->myDoc.view());
+                }
             }
         }
     }

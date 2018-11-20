@@ -10,6 +10,7 @@ Actors:
     Threads: 100
     Database: test
     Phases:
+      # - Operation: nop
       - Collection: inserts
         Duration: 100
       - Collection: inserts
