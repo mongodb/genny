@@ -99,7 +99,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     const auto reporter = genny::metrics::Reporter{metrics};
 
     std::ofstream metricsOutput;
-    metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::app);
+    metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::trunc);
     reporter.report(metricsOutput, options.metricsFormat);
     metricsOutput.close();
 
