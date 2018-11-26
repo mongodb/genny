@@ -77,6 +77,25 @@ atomic_bool IncrementsRunnable::stop = false;
 atomic_int IncrementsActor::increments = 0;
 atomic_int IncrementsRunnable::increments = 0;
 
+
+template<typename Runnables>
+auto timedRun(Runnables&& runnables) {
+    std::vector<std::thread> threads;
+    boost::barrier barrier(1);
+    for (auto& runnable : runnables) {
+        threads.emplace_back([&]() {
+            barrier.wait();
+            runnable->run();
+        });
+    }
+    auto start = std::chrono::steady_clock::now();
+    barrier.count_down_and_wait();
+    for (auto& thread : threads)
+        thread.join();
+    auto duration = duration_cast<nanoseconds>(steady_clock::now() - start).count();
+    return duration;
+}
+
 }  // namespace
 
 
@@ -98,19 +117,7 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
 
     o.addRequiredTokens(500);
 
-    std::vector<std::thread> actors;
-    boost::barrier actorBarrier(1);
-    for (auto& actor : workloadContext.actors()) {
-        actors.emplace_back([&]() {
-            actorBarrier.wait();
-            actor->run();
-        });
-    }
-    auto actorStart = std::chrono::steady_clock::now();
-    actorBarrier.count_down_and_wait();
-    for (auto& actor : actors)
-        actor.join();
-    auto actorDur = duration_cast<nanoseconds>(steady_clock::now() - actorStart).count();
+    auto actorDur = timedRun(workloadContext.actors());
     std::cout << "Took " << actorDur << " nanoseconds for PhaseLoop loop" << std::endl;
 
     REQUIRE(IncrementsActor::increments == 500 * 10000);
@@ -120,30 +127,10 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
     for (int i = 0; i < 500; ++i) {
         runners.emplace_back(std::make_unique<IncrementsRunnable>());
     }
-    std::vector<std::thread> regulars;
-    for (auto& runnable : runners) {
-        regulars.emplace_back([&]() {
-            regBarrier.wait();
-            runnable->run();
-        });
-    }
 
-    // keep the compiler from being clever about
-    // removing check to `if(!stop)`
-    auto stopper = std::thread([&]() {
-        std::this_thread::sleep_for(seconds{2});
-        IncrementsRunnable::stop = true;
-    });
-
-    auto regStart = std::chrono::steady_clock::now();
-    regBarrier.count_down_and_wait();
-    for (auto& reg : regulars)
-        reg.join();
-    auto regDur = duration_cast<nanoseconds>(steady_clock::now() - regStart).count();
+    auto regDur = timedRun(runners);
     std::cout << "Took " << regDur << " nanoseconds for regular for loop" << std::endl;
     REQUIRE(IncrementsRunnable::increments == 500 * 10000);
-
-    stopper.join();
 
     // we're no less than 100 times worse
     // INFO(double(regDur) / double(actorDur));
