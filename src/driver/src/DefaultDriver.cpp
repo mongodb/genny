@@ -48,7 +48,9 @@ YAML::Node loadConfig(const std::string& source,
 }
 
 template <typename Actor>
-void runActor(Actor&& actor, std::atomic<driver::DefaultDriver::OutcomeCode>& outcomeCode, Orchestrator& orchestrator) {
+void runActor(Actor&& actor,
+              std::atomic<driver::DefaultDriver::OutcomeCode>& outcomeCode,
+              Orchestrator& orchestrator) {
     try {
         actor->run();
     } catch (const boost::exception& x) {
@@ -104,7 +106,8 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::Progra
 
     auto activeActors = metrics.counter("Genny.ActiveActors");
 
-    std::atomic<driver::DefaultDriver::OutcomeCode> outcomeCode = driver::DefaultDriver::OutcomeCode::kSuccess;
+    std::atomic<driver::DefaultDriver::OutcomeCode> outcomeCode =
+        driver::DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex lock;
     std::vector<std::thread> threads;
@@ -141,7 +144,8 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::Progra
 }  // namespace
 
 
-genny::driver::DefaultDriver::OutcomeCode genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
+genny::driver::DefaultDriver::OutcomeCode genny::driver::DefaultDriver::run(
+    const genny::driver::ProgramOptions& options) const {
     try {
         // Wrap doRunLogic in another catch block in case it throws an exception of its own e.g.
         // file not found or io errors etc - exceptions not thrown by ActorProducers.
