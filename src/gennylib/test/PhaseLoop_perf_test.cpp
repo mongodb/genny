@@ -10,6 +10,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <boost/format.hpp>
 #include <boost/thread/barrier.hpp>
 
 #include <gennylib/Orchestrator.hpp>
@@ -121,15 +122,15 @@ auto runRegularThreads(int threads, long iterations) {
 TEST_CASE("PhaseLoop performance", "[perf]") {
     Orchestrator o;
     metrics::Registry registry;
-    auto yamlString = R"(
+    auto yamlString = boost::format(R"(
     SchemaVersion: 2018-07-01
     Actors:
     - Type: Increments
-      Threads: 500
+      Threads: %i
       Phases:
-      - Repeat: 10000
-    )";
-    auto yaml = YAML::Load(yamlString);
+      - Repeat: %i
+    )") % 500 % 10000;
+    auto yaml = YAML::Load(yamlString.str());
     WorkloadContext workloadContext{
         yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
     o.addRequiredTokens(500);
