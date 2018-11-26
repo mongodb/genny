@@ -110,7 +110,7 @@ auto timedRun(Runnables&& runnables) {
 auto runRegularThreads(int threads, long iterations) {
     IncrementsRunnable::increments = 0;
     std::vector<std::unique_ptr<IncrementsRunnable>> runners;
-    for (int i = 0; i < 500; ++i)
+    for (int i = 0; i < threads; ++i)
         runners.emplace_back(std::make_unique<IncrementsRunnable>(iterations));
     auto regDur = timedRun(runners);
     REQUIRE(IncrementsRunnable::increments == threads * iterations);
@@ -150,6 +150,6 @@ void comparePerformance(int threads, long iterations, int tolerance) {
 
 
 TEST_CASE("PhaseLoop performance", "[perf]") {
-    comparePerformance(500, 10000, 100);
+    comparePerformance(50,  10000, 3);
     comparePerformance(500, 10000, 100);
 }
