@@ -62,7 +62,7 @@ public:
         phaseCalls.insert(phase);
     }
 
-    const std::multiset<int>& reachedPhases() const {
+    const std::multiset<genny::PhaseNumber>& reachedPhases() const {
         return this->phaseCalls;
     }
 
@@ -71,7 +71,7 @@ public:
     }
 
 private:
-    std::multiset<int> phaseCalls;
+    std::multiset<genny::PhaseNumber> phaseCalls;
     std::mutex mutex;
 };
 
@@ -154,7 +154,7 @@ TEST_CASE("Various Actor Behaviors") {
             Repeat: 1
         )");
         REQUIRE((code == DefaultDriver::OutcomeCode::kSuccess));
-        REQUIRE(Fails::state.reachedPhases() == std::multiset<int>{0});
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
         REQUIRE(hasMetrics(opts));
     }
 
@@ -169,7 +169,7 @@ TEST_CASE("Various Actor Behaviors") {
             Repeat: 2
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
-        REQUIRE(Fails::state.reachedPhases() == std::multiset<int>{0, 0});
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0});
         REQUIRE(hasMetrics(opts));
     }
 
@@ -184,7 +184,7 @@ TEST_CASE("Various Actor Behaviors") {
               Mode: BoostException
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
-        REQUIRE(Fails::state.reachedPhases() == std::multiset<int>{0});
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
         REQUIRE(hasMetrics(opts));
     }
 
@@ -199,7 +199,7 @@ TEST_CASE("Various Actor Behaviors") {
               Mode: StdException
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kStandardException);
-        REQUIRE(Fails::state.reachedPhases() == std::multiset<int>{0});
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
         REQUIRE(hasMetrics(opts));
     }
 
@@ -217,8 +217,8 @@ TEST_CASE("Various Actor Behaviors") {
               Mode: BoostException
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
-        REQUIRE((Fails::state.reachedPhases() == std::multiset<int>{0, 0, 1, 1} ||
-                 Fails::state.reachedPhases() == std::multiset<int>{0, 0, 1}));
+        REQUIRE((Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0, 1, 1} ||
+                 Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0, 1}));
         REQUIRE(hasMetrics(opts));
     }
 
@@ -235,7 +235,7 @@ TEST_CASE("Various Actor Behaviors") {
               Mode: None
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
-        REQUIRE(Fails::state.reachedPhases() == std::multiset<int>{0});
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
         REQUIRE(hasMetrics(opts));
     }
 
@@ -278,8 +278,8 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE((code == DefaultDriver::OutcomeCode::kStandardException ||
                  code == DefaultDriver::OutcomeCode::kBoostException));
 
-        REQUIRE((Fails::state.reachedPhases() == std::multiset<int>{0, 0} ||
-                 Fails::state.reachedPhases() == std::multiset<int>{0}));
+        REQUIRE((Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0} ||
+                 Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0}));
         REQUIRE(hasMetrics(opts));
     }
 
@@ -294,8 +294,8 @@ TEST_CASE("Various Actor Behaviors") {
                 Mode: BoostException
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
-        REQUIRE((Fails::state.reachedPhases() == std::multiset<int>{0, 0} ||
-                 Fails::state.reachedPhases() == std::multiset<int>{0}));
+        REQUIRE((Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0} ||
+                 Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0}));
         REQUIRE(hasMetrics(opts));
     }
 }
