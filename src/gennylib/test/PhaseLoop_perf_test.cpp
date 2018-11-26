@@ -116,10 +116,7 @@ auto runRegularThreads(int threads, long iterations) {
     return regDur;
 }
 
-}  // namespace
-
-
-TEST_CASE("PhaseLoop performance", "[perf]") {
+auto runActors(int threads, long iterations) {
     Orchestrator o;
     metrics::Registry registry;
     auto yamlString = boost::format(R"(
@@ -129,16 +126,22 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
       Threads: %i
       Phases:
       - Repeat: %i
-    )") % 500 % 10000;
+    )") % threads % iterations;
     auto yaml = YAML::Load(yamlString.str());
     WorkloadContext workloadContext{
-        yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
-    o.addRequiredTokens(500);
+            yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
+    o.addRequiredTokens(threads);
     auto actorDur = timedRun(workloadContext.actors());
-    REQUIRE(IncrementsActor::increments == 500 * 10000);
+    REQUIRE(IncrementsActor::increments == threads * iterations);
+    return actorDur;
+}
 
+}  // namespace
+
+
+TEST_CASE("PhaseLoop performance", "[perf]") {
     auto regDur = runRegularThreads(500, 10000);
-
+    auto actorDur = runActors(500, 1000);
     // we're no less than 100 times worse
     // INFO(double(regDur) / double(actorDur));
     REQUIRE(actorDur <= regDur * 100);
