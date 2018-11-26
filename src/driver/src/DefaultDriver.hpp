@@ -20,7 +20,7 @@ struct ProgramOptions {
     ProgramOptions(int argc, char** argv);
 
     enum class YamlSource { kFile, kString };
-    YamlSource workloadSourceType;
+    YamlSource workloadSourceType = YamlSource::kFile;
     std::string workloadSource;  // either file name or yaml
 
     std::string metricsFormat;
