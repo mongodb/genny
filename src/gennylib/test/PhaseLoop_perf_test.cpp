@@ -139,17 +139,41 @@ auto runActors(int threads, long iterations) {
 }
 
 void comparePerformance(int threads, long iterations, int tolerance) {
-    auto regDur = runRegularThreads(threads, iterations);
-    auto actorDur = runActors(threads, iterations);
+    // just do the stupid simple thing and run it 5 times and take the mean, no need to make it fancy...
+
+    auto reg1 = runRegularThreads(threads, iterations);
+    auto act1 = runActors(threads, iterations);
+
+    // but run in different orders so the CPU caches don't affect too much
+
+    auto act2 = runActors(threads, iterations);
+    auto reg2 = runRegularThreads(threads, iterations);
+
+    auto act3 = runActors(threads, iterations);
+    auto reg3 = runRegularThreads(threads, iterations);
+
+    auto act4 = runActors(threads, iterations);
+    auto act5 = runActors(threads, iterations);
+
+    auto reg4 = runRegularThreads(threads, iterations);
+    auto reg5 = runRegularThreads(threads, iterations);
+
+    auto regMean = double(reg1 + reg2 + reg3 + reg4 + reg5) / 5.;
+    auto actMean = double(act1 + act2 + act3 + act4 + act5) / 5.;
+
     // we're no less than tolerance times worse
-    // INFO(double(regDur) / double(actorDur));
-    REQUIRE(actorDur <= regDur * tolerance);
+    INFO("threads=" << threads << ",iterations=" << iterations << ", actor mean " << actMean << " <= regular mean " << regMean << " * " << tolerance << "(" << (regMean*tolerance) << "). Ratio = " << double(actMean)/double(regMean));
+
+    REQUIRE(actMean <= regMean * tolerance);
 }
 
 }  // namespace
 
 
 TEST_CASE("PhaseLoop performance", "[perf]") {
-    comparePerformance(50,  10000, 3);
+    // low tolerance for added latency with few threads
+    comparePerformance(50,  10000,  5);
+    comparePerformance(10,  100000, 10);
+    // higher tolerance for added latency with more threads
     comparePerformance(500, 10000, 100);
 }
