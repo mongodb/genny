@@ -143,11 +143,13 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::Progra
 
 genny::driver::DefaultDriver::OutcomeCode genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
     try {
+        // Wrap doRunLogic in another catch block in case it throws an exception of its own e.g.
+        // file not found or io errors etc - exceptions not thrown by ActorProducers.
         return doRunLogic(options);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Caught exception " << x.what();
     }
-    return genny::driver::DefaultDriver::OutcomeCode::kUnknownException;
+    return genny::driver::DefaultDriver::OutcomeCode::kInternalException;
 }
 
 

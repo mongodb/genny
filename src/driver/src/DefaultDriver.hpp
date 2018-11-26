@@ -44,6 +44,7 @@ public:
         kSuccess = 0,
         kStandardException = 1,
         kBoostException = 2,
+        kInternalException = 3,
         kUnknownException = 10,
     };
 
