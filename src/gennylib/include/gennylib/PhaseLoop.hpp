@@ -43,11 +43,22 @@ namespace V1 {
 class IterationCompletionCheck final {
 
 public:
+    explicit IterationCompletionCheck() : IterationCompletionCheck(std::nullopt, std::nullopt, std::nullopt) {}
+
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations)
+        : IterationCompletionCheck(minDuration, minIterations, std::nullopt) {}
+
+    IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
+                             std::optional<int> minIterations,
+                             std::optional<std::string> isNullOp)
         : _minDuration{minDuration},
-          _minIterations{minIterations},
+          _minIterations{(!minIterations && isNullOp && isNullOp == "nop") ? 0 : minIterations},
           _doesBlock{_minIterations || _minDuration} {
+        
+        if (isNullOp && isNullOp == "nop") {
+            std::cout << "Performing NullOp" << std::endl;
+        }
 
         if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
@@ -63,7 +74,8 @@ public:
 
     explicit IterationCompletionCheck(PhaseContext& phaseContext)
         : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
-                                   phaseContext.get<int, false>("Repeat")) {}
+                                   phaseContext.get<int, false>("Repeat"),
+                                   phaseContext.get<std::string, false>("Operation")) {}
 
     std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
@@ -259,10 +271,6 @@ public:
     // Used by PhaseLoopIterator::doesBlock()
     bool doesBlock() const {
         return _iterationCheck->doesBlock();
-    }
-
-    bool isNullOpt() const {
-        return !_value.has_value();
     }
 
     // Could use `auto` for return-type of operator-> and operator*, but
