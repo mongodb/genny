@@ -30,12 +30,12 @@ std::string readFile(const std::string& fileName) {
     return str;
 }
 
-std::string metricsContents() {
-    return readFile("metrics.csv");
+std::string metricsContents(DefaultDriver::ProgramOptions& options) {
+    return readFile(options.metricsOutputFileName);
 }
 
-bool hasMetrics() {
-    return !metricsContents().empty();
+bool hasMetrics(DefaultDriver::ProgramOptions& options) {
+    return !metricsContents(options).empty();
 }
 
 template <class F>
@@ -107,10 +107,10 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     return opts;
 }
 
-DefaultDriver::OutcomeCode outcome(const std::string& yaml) {
+std::pair<DefaultDriver::OutcomeCode,DefaultDriver::ProgramOptions> outcome(const std::string& yaml) {
     DefaultDriver driver;
     auto opts = create(yaml);
-    return driver.run(opts);
+    return {driver.run(opts), opts};
 }
 
 }  // namespace
@@ -122,7 +122,7 @@ TEST_CASE("Various Actor Behaviors") {
     remove("metrics.csv");
 
     SECTION("Normal Execution") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
@@ -133,11 +133,11 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE((code == DefaultDriver::OutcomeCode::kSuccess));
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 
     SECTION("Normal Execution: Two Repeat") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
@@ -148,11 +148,11 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 
     SECTION("Boost Exception") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
@@ -163,11 +163,11 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 
     SECTION("Std Exception") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
@@ -178,12 +178,12 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kStandardException);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 
 
     SECTION("Boost Exception in phase 2 by 2 threads") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
@@ -197,11 +197,11 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0, 1, 1} ||
                  Fails::phaseCalls == std::multiset<int>{0, 0, 1}));
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 
     SECTION("Exception prevents other Phases") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
@@ -214,11 +214,11 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 
     SECTION("200 Actors simultaneously throw") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
@@ -231,11 +231,11 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE(code == DefaultDriver::OutcomeCode::kStandardException);
 
         REQUIRE(Fails::phaseCalls.size() > 0);
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 
     SECTION("Two Actors simultaneously throw different exceptions") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
@@ -258,11 +258,11 @@ TEST_CASE("Various Actor Behaviors") {
 
         REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0} ||
                  Fails::phaseCalls == std::multiset<int>{0}));
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 
     SECTION("Boost exception by two threads") {
-        auto code = outcome(R"(
+        auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
@@ -274,6 +274,6 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0} ||
                  Fails::phaseCalls == std::multiset<int>{0}));
-        REQUIRE(hasMetrics());
+        REQUIRE(hasMetrics(opts));
     }
 }
