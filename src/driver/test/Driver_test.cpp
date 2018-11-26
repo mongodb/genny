@@ -179,6 +179,21 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE(hasMetrics(opts));
     }
 
+    SECTION("Std Exception: Two Repeat") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Type: Fails
+          Threads: 1
+          Phases:
+          - Mode: StdException
+            Repeat: 2
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kStandardException);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
+        REQUIRE(hasMetrics(opts));
+    }
+
     SECTION("Boost Exception") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
