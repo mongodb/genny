@@ -24,11 +24,11 @@ using namespace std::chrono;
 
 namespace {
 
-struct PhaseConfig {
-    PhaseConfig(PhaseContext& phaseContext) {}
-};
-
 struct IncrementsActor : public Actor {
+
+    struct PhaseConfig {
+        PhaseConfig(PhaseContext& phaseContext) {}
+    };
 
     static atomic_int increments;
 
@@ -63,8 +63,12 @@ struct IncrementsRunnable : public VirtualRunnable {
     static atomic_bool stop;
     static atomic_int increments;
 
+    // virtual method just like Actor::run()
     void run() override {
         for (int j = 0; j < 10000; ++j) {
+            // check an atomic_bool at each iteration just like
+            // we do in Orchestrator+PhaseLoop. Don't want that
+            // impact to be considered.
             if (!stop) {
                 ++increments;
             }
@@ -78,7 +82,7 @@ atomic_int IncrementsActor::increments = 0;
 atomic_int IncrementsRunnable::increments = 0;
 
 
-template<typename Runnables>
+template <typename Runnables>
 auto timedRun(Runnables&& runnables) {
     std::vector<std::thread> threads;
     boost::barrier barrier(1);
@@ -102,7 +106,6 @@ auto timedRun(Runnables&& runnables) {
 TEST_CASE("PhaseLoop performance", "[perf]") {
     Orchestrator o;
     metrics::Registry registry;
-
     auto yaml = YAML::Load(R"(
     SchemaVersion: 2018-07-01
     Actors:
@@ -111,25 +114,16 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
       Phases:
       - Repeat: 10000
     )");
-
     WorkloadContext workloadContext{
         yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
-
     o.addRequiredTokens(500);
-
     auto actorDur = timedRun(workloadContext.actors());
-    std::cout << "Took " << actorDur << " nanoseconds for PhaseLoop loop" << std::endl;
-
     REQUIRE(IncrementsActor::increments == 500 * 10000);
 
-    boost::barrier regBarrier(1);
     std::vector<std::unique_ptr<IncrementsRunnable>> runners;
-    for (int i = 0; i < 500; ++i) {
+    for (int i = 0; i < 500; ++i)
         runners.emplace_back(std::make_unique<IncrementsRunnable>());
-    }
-
     auto regDur = timedRun(runners);
-    std::cout << "Took " << regDur << " nanoseconds for regular for loop" << std::endl;
     REQUIRE(IncrementsRunnable::increments == 500 * 10000);
 
     // we're no less than 100 times worse
