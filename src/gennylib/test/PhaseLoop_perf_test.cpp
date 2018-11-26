@@ -63,9 +63,14 @@ struct IncrementsRunnable : public VirtualRunnable {
     static atomic_bool stop;
     static atomic_int increments;
 
+    const long iterations;
+
+    explicit IncrementsRunnable(long iters)
+    : iterations{iters} {}
+
     // virtual method just like Actor::run()
     void run() override {
-        for (int j = 0; j < 10000; ++j) {
+        for (int j = 0; j < iterations; ++j) {
             // check an atomic_bool at each iteration just like
             // we do in Orchestrator+PhaseLoop. Don't want that
             // impact to be considered.
@@ -100,6 +105,16 @@ auto timedRun(Runnables&& runnables) {
     return duration;
 }
 
+
+auto runRegularThreads(int threads, long iterations) {
+    std::vector<std::unique_ptr<IncrementsRunnable>> runners;
+    for (int i = 0; i < 500; ++i)
+        runners.emplace_back(std::make_unique<IncrementsRunnable>(iterations));
+    auto regDur = timedRun(runners);
+    REQUIRE(IncrementsRunnable::increments == threads * iterations);
+    return regDur;
+}
+
 }  // namespace
 
 
@@ -120,11 +135,7 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
     auto actorDur = timedRun(workloadContext.actors());
     REQUIRE(IncrementsActor::increments == 500 * 10000);
 
-    std::vector<std::unique_ptr<IncrementsRunnable>> runners;
-    for (int i = 0; i < 500; ++i)
-        runners.emplace_back(std::make_unique<IncrementsRunnable>());
-    auto regDur = timedRun(runners);
-    REQUIRE(IncrementsRunnable::increments == 500 * 10000);
+    auto regDur = runRegularThreads(500, 10000);
 
     // we're no less than 100 times worse
     // INFO(double(regDur) / double(actorDur));
