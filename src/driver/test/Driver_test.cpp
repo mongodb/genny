@@ -6,6 +6,7 @@
 #include <string>
 
 #include <boost/exception/exception.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -112,6 +113,10 @@ StaticFailsInfo Fails::state = {};
 
 
 DefaultDriver::ProgramOptions create(const std::string& yaml) {
+    boost::filesystem::path ph = boost::filesystem::unique_path();
+    boost::filesystem::create_directories(ph);
+    auto metricsOutputFileName = (ph / "metrics.csv").string();
+
     DefaultDriver::ProgramOptions opts;
 
     opts.otherProducers.emplace_back(onActorContext([&](auto& context, auto& vec) {
@@ -121,7 +126,7 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     }));
 
     opts.metricsFormat = "csv";
-    opts.metricsOutputFileName = "metrics.csv";
+    opts.metricsOutputFileName = metricsOutputFileName;
     opts.mongoUri = "mongodb://localhost:27017";
     opts.workloadSourceType = DefaultDriver::ProgramOptions::YamlSource::kString;
     opts.workloadSource = yaml;
