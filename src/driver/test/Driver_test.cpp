@@ -7,6 +7,7 @@
 
 #include <boost/exception/exception.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <DefaultDriver.hpp>
 #include <helpers.hpp>
@@ -34,6 +35,9 @@ std::string metricsContents(DefaultDriver::ProgramOptions& options) {
     return readFile(options.metricsOutputFileName);
 }
 
+// Ideally this would use std::filesystem::file_size but
+// <filesystem> isn't yet available on all the platforms
+// we support (I'm looking at you, Apple Clang).
 bool hasMetrics(DefaultDriver::ProgramOptions& options) {
     return !metricsContents(options).empty();
 }
@@ -48,7 +52,7 @@ auto onActorContext(F&& callback) {
 }
 
 
-class SomeException : public virtual boost::exception {};
+class SomeException : public virtual boost::exception, public virtual std::exception {};
 
 struct Fails : public genny::Actor {
     struct PhaseConfig {
@@ -73,7 +77,8 @@ struct Fails : public genny::Actor {
                 if (config->mode == "None") {
                     continue;
                 } else if (config->mode == "BoostException") {
-                    throw SomeException{};
+                    auto x = SomeException{};
+                    BOOST_THROW_EXCEPTION(x);
                 } else if (config->mode == "StdException") {
                     throw std::exception{};
                 } else {
