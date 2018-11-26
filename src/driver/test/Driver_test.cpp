@@ -131,8 +131,11 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
 
 std::pair<DefaultDriver::OutcomeCode, DefaultDriver::ProgramOptions> outcome(
     const std::string& yaml) {
+    Fails::state.clear();
+
     DefaultDriver driver;
     auto opts = create(yaml);
+    remove(opts.metricsOutputFileName.c_str());
     return {driver.run(opts), opts};
 }
 
@@ -140,9 +143,6 @@ std::pair<DefaultDriver::OutcomeCode, DefaultDriver::ProgramOptions> outcome(
 
 
 TEST_CASE("Various Actor Behaviors") {
-
-    Fails::state.clear();
-    remove("metrics.csv");
 
     SECTION("Normal Execution") {
         auto [code, opts] = outcome(R"(
