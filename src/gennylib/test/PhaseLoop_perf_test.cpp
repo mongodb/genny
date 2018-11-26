@@ -86,6 +86,7 @@ atomic_bool IncrementsRunnable::stop = false;
 atomic_int IncrementsActor::increments = 0;
 atomic_int IncrementsRunnable::increments = 0;
 
+using clock = std::chrono::steady_clock;
 
 template <typename Runnables>
 auto timedRun(Runnables&& runnables) {
@@ -97,11 +98,11 @@ auto timedRun(Runnables&& runnables) {
             runnable->run();
         });
     }
-    auto start = std::chrono::steady_clock::now();
+    auto start = clock::now();
     barrier.count_down_and_wait();
     for (auto& thread : threads)
         thread.join();
-    auto duration = duration_cast<nanoseconds>(steady_clock::now() - start).count();
+    auto duration = duration_cast<nanoseconds>(clock::now() - start).count();
     return duration;
 }
 
