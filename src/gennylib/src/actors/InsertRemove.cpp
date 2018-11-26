@@ -33,21 +33,22 @@ struct genny::actor::InsertRemove::PhaseConfig {
 };
 
 void genny::actor::InsertRemove::run() {
+    int count = 0;
     for (auto&& [phase, config] : _loop) {
-        if (!config.isNullOpt()) {
-            for (auto&& _ : config) {
-                BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
-                {
-                    auto op = _insertTimer.raii();
-                    config->collection.insert_one(config->myDoc.view());
-                }
-                {
-                    auto op = _removeTimer.raii();
-                    config->collection.delete_many(config->myDoc.view());
-                }
+        count += 1;
+        for (auto&& _ : config) {
+            BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
+            {
+                auto op = _insertTimer.raii();
+                config->collection.insert_one(config->myDoc.view());
+            }
+            {
+                auto op = _removeTimer.raii();
+                config->collection.delete_many(config->myDoc.view());
             }
         }
     }
+    // std::cout << "Count: " << count << std::endl;
 }
 
 genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context, const unsigned int thread)

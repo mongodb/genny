@@ -249,7 +249,11 @@ public:
     }
 
     ActorPhaseIterator begin() {
-        return ActorPhaseIterator{_orchestrator, _iterationCheck.get(), _currentPhase, false};
+        if (_value) {
+            return ActorPhaseIterator{_orchestrator, _iterationCheck.get(), _currentPhase, false};
+        } else {
+            return ActorPhaseIterator{_orchestrator, nullptr, _currentPhase, true};
+        }
     }
 
     ActorPhaseIterator end() {

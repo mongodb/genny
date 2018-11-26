@@ -12,6 +12,6 @@ Actors:
     Phases:
       # - Operation: nop
       - Collection: inserts
-        Duration: 100
+        Repeat: 0
       - Collection: inserts
         Count: 179
