@@ -91,7 +91,7 @@ struct Fails : public genny::Actor {
             for (auto&& _ : config) {
                 state.didReachPhase(phase);
 
-                if (config->mode == "None") {
+                if (config->mode == "NoException") {
                     continue;
                 } else if (config->mode == "BoostException") {
                     auto x = SomeException{};
@@ -100,6 +100,7 @@ struct Fails : public genny::Actor {
                     throw std::exception{};
                 } else {
                     BOOST_LOG_TRIVIAL(error) << "Bad Mode " << config->mode;
+                    std::terminate();
                 }
             }
         }
@@ -150,7 +151,7 @@ TEST_CASE("Various Actor Behaviors") {
         - Type: Fails
           Threads: 1
           Phases:
-          - Mode: None
+          - Mode: NoException
             Repeat: 1
         )");
         REQUIRE((code == DefaultDriver::OutcomeCode::kSuccess));
@@ -165,7 +166,7 @@ TEST_CASE("Various Actor Behaviors") {
         - Type: Fails
           Threads: 1
           Phases:
-          - Mode: None
+          - Mode: NoException
             Repeat: 2
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
@@ -212,7 +213,7 @@ TEST_CASE("Various Actor Behaviors") {
           Threads: 2
           Phases:
             - Repeat: 1
-              Mode: None
+              Mode: NoException
             - Repeat: 1
               Mode: BoostException
         )");
@@ -232,7 +233,7 @@ TEST_CASE("Various Actor Behaviors") {
             - Repeat: 1
               Mode: BoostException
             - Repeat: 1
-              Mode: None
+              Mode: NoException
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
