@@ -62,7 +62,6 @@ PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     assert(state == State::PhaseEnded || this->_errors);
 
     _currentTokens += addTokens;
-    std::cout << "We're adding tokens: " << _currentTokens << std::endl;
 
     auto currentPhase = this->_current;
     if (_currentTokens >= _requireTokens) {
@@ -97,7 +96,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
     _currentTokens -= removeTokens;
     std::cout << "We're removing tokens: " << _currentTokens << std::endl;
 
-    // std::cout << "Current tokens: " << _currentTokens << std::endl;
+    _currentTokens -= removeTokens;
 
     // Not clear if we should allow _currentTokens to drop below zero
     // and if below check should be `if (_currentTokens == 0)`.
