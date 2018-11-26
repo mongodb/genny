@@ -43,7 +43,8 @@ namespace V1 {
 class IterationCompletionCheck final {
 
 public:
-    explicit IterationCompletionCheck() : IterationCompletionCheck(std::nullopt, std::nullopt, std::nullopt) {}
+    explicit IterationCompletionCheck()
+        : IterationCompletionCheck(std::nullopt, std::nullopt, std::nullopt) {}
 
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations)
@@ -252,7 +253,10 @@ public:
         : _orchestrator{orchestrator},
           _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
           _currentPhase{currentPhase},
-          _value{(!phaseContext.get<std::string, false>("Operation") || phaseContext.get<std::string>("Operation") != "nop") ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...)) : std::nullopt} {
+          _value{(!phaseContext.get<std::string, false>("Operation") ||
+                  phaseContext.get<std::string>("Operation") != "nop")
+                     ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
+                     : std::nullopt} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
@@ -528,8 +532,8 @@ private:
         // clang-format on
 
         V1::PhaseMap<T> out;
-        for (auto&& [num, phaseContext] : actorContext.phases()) {
-            auto [it, success] = out.try_emplace(
+        for (auto && [ num, phaseContext ] : actorContext.phases()) {
+            auto[it, success] = out.try_emplace(
                 // key
                 num,
                 // args to ActorPhase<T> ctor:
