@@ -44,17 +44,17 @@ class IterationCompletionCheck final {
 
 public:
     explicit IterationCompletionCheck()
-        : IterationCompletionCheck(std::nullopt, std::nullopt, std::nullopt) {}
+        : IterationCompletionCheck(std::nullopt, std::nullopt, false) {}
 
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations)
-        : IterationCompletionCheck(minDuration, minIterations, std::nullopt) {}
+        : IterationCompletionCheck(minDuration, minIterations, false) {}
 
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations,
-                             std::optional<std::string> isNullOp)
+                             bool isNullOp)
         : _minDuration{minDuration},
-          _minIterations{(!minIterations && isNullOp && isNullOp == "nop") ? 0 : minIterations},
+          _minIterations{(!minIterations && isNullOp) ? 0 : minIterations},
           _doesBlock{_minIterations || _minDuration} {
 
         if (minDuration && minDuration->count() < 0) {
@@ -69,10 +69,14 @@ public:
         }
     }
 
-    explicit IterationCompletionCheck(PhaseContext& phaseContext)
+    explicit IterationCompletionCheck(PhaseContext& phaseContext, bool isNullOp)
         : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
                                    phaseContext.get<int, false>("Repeat"),
-                                   phaseContext.get<std::string, false>("Operation")) {}
+                                   isNullOp) {}
+
+    explicit IterationCompletionCheck(PhaseContext& phaseContext)
+        : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
+                                   phaseContext.get<int, false>("Repeat"), false) {}
 
     std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
@@ -251,10 +255,10 @@ public:
                PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
-          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
+          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext, !_value)},
           _currentPhase{currentPhase},
           _value{(!phaseContext.get<std::string, false>("Operation") ||
-                  phaseContext.get<std::string>("Operation") != "nop")
+                  phaseContext.get<std::string>("Operation") != "Nop")
                      ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
                      : std::nullopt} {
         static_assert(std::is_constructible_v<T, Args...>);
@@ -273,6 +277,11 @@ public:
         return _iterationCheck->doesBlock();
     }
 
+    // Checks if the actor is performing a nullOp. Used only for testing.
+    bool isNullOp() const {
+        return !_value;
+    }
+
     // Could use `auto` for return-type of operator-> and operator*, but
     // IDE auto-completion likes it more if it's spelled out.
     //
@@ -284,6 +293,7 @@ public:
     // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator->()`
     //      so we trust the STL to do the right thing™️
     typename std::add_pointer_t<std::remove_reference_t<T>> operator->() const noexcept {
+        assert(_value);
         return (*_value).operator->();
     }
 
@@ -295,14 +305,15 @@ public:
     // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator*()`
     //      so we trust the STL to do the right thing™️
     typename std::add_lvalue_reference_t<T> operator*() const {
+        assert(_value);
         return (*_value).operator*();
     }
 
 private:
     Orchestrator& _orchestrator;
+    const std::optional<std::unique_ptr<T>> _value; // Is nullopt iff operation is Nop
     const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
     const PhaseNumber _currentPhase;
-    const std::optional<std::unique_ptr<T>> _value;
 
 };  // class ActorPhase
 
