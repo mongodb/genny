@@ -70,7 +70,8 @@ void runActor(Actor&& actor,
     }
 }
 
-genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::DefaultDriver::ProgramOptions& options) {
+genny::driver::DefaultDriver::OutcomeCode doRunLogic(
+    const genny::driver::DefaultDriver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
 
     auto actorSetup = metrics.timer("Genny.Setup");

@@ -69,6 +69,7 @@ public:
     void clear() {
         this->phaseCalls.clear();
     }
+
 private:
     std::multiset<int> phaseCalls;
     std::mutex mutex;
@@ -127,7 +128,8 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     return opts;
 }
 
-std::pair<DefaultDriver::OutcomeCode,DefaultDriver::ProgramOptions> outcome(const std::string& yaml) {
+std::pair<DefaultDriver::OutcomeCode, DefaultDriver::ProgramOptions> outcome(
+    const std::string& yaml) {
     DefaultDriver driver;
     auto opts = create(yaml);
     return {driver.run(opts), opts};
@@ -216,7 +218,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE((Fails::state.reachedPhases() == std::multiset<int>{0, 0, 1, 1} ||
-                Fails::state.reachedPhases() == std::multiset<int>{0, 0, 1}));
+                 Fails::state.reachedPhases() == std::multiset<int>{0, 0, 1}));
         REQUIRE(hasMetrics(opts));
     }
 
@@ -277,7 +279,7 @@ TEST_CASE("Various Actor Behaviors") {
                  code == DefaultDriver::OutcomeCode::kBoostException));
 
         REQUIRE((Fails::state.reachedPhases() == std::multiset<int>{0, 0} ||
-                Fails::state.reachedPhases() == std::multiset<int>{0}));
+                 Fails::state.reachedPhases() == std::multiset<int>{0}));
         REQUIRE(hasMetrics(opts));
     }
 
@@ -293,7 +295,7 @@ TEST_CASE("Various Actor Behaviors") {
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE((Fails::state.reachedPhases() == std::multiset<int>{0, 0} ||
-                Fails::state.reachedPhases() == std::multiset<int>{0}));
+                 Fails::state.reachedPhases() == std::multiset<int>{0}));
         REQUIRE(hasMetrics(opts));
     }
 }
