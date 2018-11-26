@@ -101,7 +101,7 @@ ProgramOptions create(const std::string& yaml) {
     opts.metricsFormat = "csv";
     opts.metricsOutputFileName = "metrics.csv";
     opts.mongoUri = "mongodb://localhost:27017";
-    opts.sourceType = ProgramOptions::YamlSource::STRING;
+    opts.workloadSourceType = ProgramOptions::YamlSource::kString;
     opts.workloadSource = yaml;
 
     return opts;

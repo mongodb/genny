@@ -36,7 +36,7 @@ using namespace genny;
 
 YAML::Node loadConfig(const std::string& source,
                       genny::driver::ProgramOptions::YamlSource sourceType) {
-    if (sourceType == genny::driver::ProgramOptions::YamlSource::STRING) {
+    if (sourceType == genny::driver::ProgramOptions::YamlSource::kString) {
         return YAML::Load(source);
     }
     try {
@@ -75,7 +75,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::Progra
 
     mongocxx::instance::current();
 
-    auto yaml = loadConfig(options.workloadSource, options.sourceType);
+    auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
     auto orchestrator = Orchestrator{};
 
     auto producers = std::vector<genny::ActorProducer>{
@@ -223,6 +223,10 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 
-    if (vm.count("workload-file") > 0)
+    if (vm.count("workload-file") > 0) {
         this->workloadSource = vm["workload-file"].as<std::string>();
+        this->workloadSourceType = YamlSource::kFile;
+    } else {
+        this->workloadSourceType = YamlSource::kString;
+    }
 }
