@@ -77,6 +77,39 @@ emacs, vim, etc.). Before doing anything cute (see
 [CONTRIBUTING.md](./CONTRIBUTING.md)), please do due-diligence to ensure
 it's not going to make common editing environments go wonky.
 
+Running Genny Self-Tests
+------------------------
+
+Genny has self-tests using Catch2. You can run them with the following command:
+
+```sh
+cd build
+cmake ..
+make .
+make test
+```
+
+**Perf Tests**
+
+The above `make test` line also runs so-called "perf" tests. They can
+take a while to run and may fail occasionally on local developer
+machines, especially if you have an IDE or web browser open while the
+test runs.
+
+If you want to run all the tests except perf tests you can manually
+invoke the test binaries and exclude perf tests:
+
+```sh
+cd build
+cmake ..
+make .
+./src/gennylib/test_gennylib '~[perf]'
+```
+
+Read more about specifying what tests to run [here][s].
+
+[s]: https://github.com/catchorg/Catch2/blob/master/docs/command-line.md#specifying-which-tests-to-run
+
 Running Genny Workloads
 -----------------------
 
