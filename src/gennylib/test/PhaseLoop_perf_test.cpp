@@ -91,7 +91,7 @@ using clock = std::chrono::steady_clock;
 template <typename Runnables>
 auto timedRun(Runnables&& runnables) {
     std::vector<std::thread> threads;
-    boost::barrier barrier(1);
+    boost::barrier barrier(runnables.size() + 1);
     for (auto& runnable : runnables) {
         threads.emplace_back([&]() {
             barrier.wait();
