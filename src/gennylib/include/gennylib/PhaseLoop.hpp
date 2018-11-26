@@ -55,10 +55,6 @@ public:
         : _minDuration{minDuration},
           _minIterations{(!minIterations && isNullOp && isNullOp == "nop") ? 0 : minIterations},
           _doesBlock{_minIterations || _minDuration} {
-        
-        if (isNullOp && isNullOp == "nop") {
-            std::cout << "Performing NullOp" << std::endl;
-        }
 
         if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
