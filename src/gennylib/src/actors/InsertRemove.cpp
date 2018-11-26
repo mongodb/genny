@@ -33,9 +33,7 @@ struct genny::actor::InsertRemove::PhaseConfig {
 };
 
 void genny::actor::InsertRemove::run() {
-    int count = 0;
     for (auto&& [phase, config] : _loop) {
-        count += 1;
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
             {
@@ -48,7 +46,6 @@ void genny::actor::InsertRemove::run() {
             }
         }
     }
-    // std::cout << "Count: " << count << std::endl;
 }
 
 genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context, const unsigned int thread)
