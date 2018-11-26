@@ -31,5 +31,6 @@ int main(int argc, char** argv) {
 
     genny::driver::DefaultDriver d;
 
-    return d.run(opts);
+    auto code = d.run(opts);
+    return static_cast<int>(code);
 }

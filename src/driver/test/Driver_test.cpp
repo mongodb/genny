@@ -107,7 +107,7 @@ ProgramOptions create(const std::string& yaml) {
     return opts;
 }
 
-int outcome(const std::string& yaml) {
+DefaultDriver::OutcomeCode outcome(const std::string& yaml) {
     DefaultDriver driver;
     auto opts = create(yaml);
     return driver.run(opts);
@@ -131,7 +131,7 @@ TEST_CASE("Various Actor Behaviors") {
           - Mode: None
             Repeat: 1
         )");
-        REQUIRE(code == 0);
+        REQUIRE((code == DefaultDriver::OutcomeCode::kSuccess));
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
         REQUIRE(hasMetrics());
     }
@@ -146,7 +146,7 @@ TEST_CASE("Various Actor Behaviors") {
           - Mode: None
             Repeat: 2
         )");
-        REQUIRE(code == 0);
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0, 0});
         REQUIRE(hasMetrics());
     }
@@ -161,7 +161,7 @@ TEST_CASE("Various Actor Behaviors") {
             - Repeat: 1
               Mode: BoostException
         )");
-        REQUIRE(code == 10);
+        REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
         REQUIRE(hasMetrics());
     }
@@ -176,7 +176,7 @@ TEST_CASE("Various Actor Behaviors") {
             - Repeat: 1
               Mode: StdException
         )");
-        REQUIRE(code == 11);
+        REQUIRE(code == DefaultDriver::OutcomeCode::kStandardException);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
         REQUIRE(hasMetrics());
     }
@@ -194,7 +194,7 @@ TEST_CASE("Various Actor Behaviors") {
             - Repeat: 1
               Mode: BoostException
         )");
-        REQUIRE(code == 10);
+        REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0, 1, 1} ||
                  Fails::phaseCalls == std::multiset<int>{0, 0, 1}));
         REQUIRE(hasMetrics());
@@ -212,7 +212,7 @@ TEST_CASE("Various Actor Behaviors") {
             - Repeat: 1
               Mode: None
         )");
-        REQUIRE(code == 10);
+        REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE(Fails::phaseCalls == std::multiset<int>{0});
         REQUIRE(hasMetrics());
     }
@@ -228,7 +228,7 @@ TEST_CASE("Various Actor Behaviors") {
               Mode: StdException
         )");
 
-        REQUIRE(code == 11);
+        REQUIRE(code == DefaultDriver::OutcomeCode::kStandardException);
 
         REQUIRE(Fails::phaseCalls.size() > 0);
         REQUIRE(hasMetrics());
@@ -253,7 +253,8 @@ TEST_CASE("Various Actor Behaviors") {
         // we set the outcome code atomically so
         // either the boost::exception or the
         // std::exception may get thrown/handled first
-        REQUIRE((code == 10 || code == 11));
+        REQUIRE((code == DefaultDriver::OutcomeCode::kStandardException ||
+                 code == DefaultDriver::OutcomeCode::kBoostException));
 
         REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0} ||
                  Fails::phaseCalls == std::multiset<int>{0}));
@@ -270,7 +271,7 @@ TEST_CASE("Various Actor Behaviors") {
               - Repeat: 1
                 Mode: BoostException
         )");
-        REQUIRE(code == 10);
+        REQUIRE(code == DefaultDriver::OutcomeCode::kBoostException);
         REQUIRE((Fails::phaseCalls == std::multiset<int>{0, 0} ||
                  Fails::phaseCalls == std::multiset<int>{0}));
         REQUIRE(hasMetrics());

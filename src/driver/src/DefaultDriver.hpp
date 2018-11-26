@@ -40,10 +40,17 @@ struct ProgramOptions {
 class DefaultDriver {
 
 public:
+    enum class OutcomeCode {
+        kSuccess = 0,
+        kStandardException = 1,
+        kBoostException = 2,
+        kUnknownException = 10,
+    };
+
     /**
      * @return c-style exit code
      */
-    int run(const ProgramOptions& options) const;
+    OutcomeCode run(const ProgramOptions& options) const;
 };
 
 }  // namespace genny::driver

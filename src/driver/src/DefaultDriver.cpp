@@ -48,16 +48,16 @@ YAML::Node loadConfig(const std::string& source,
 }
 
 template <typename Actor>
-void runActor(Actor&& actor, std::atomic_int& outcomeCode, Orchestrator& orchestrator) {
+void runActor(Actor&& actor, std::atomic<driver::DefaultDriver::OutcomeCode>& outcomeCode, Orchestrator& orchestrator) {
     try {
         actor->run();
     } catch (const boost::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "boost::exception: " << boost::diagnostic_information(x, true);
-        outcomeCode = 10;
+        outcomeCode = driver::DefaultDriver::OutcomeCode::kBoostException;
         orchestrator.abort();
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
-        outcomeCode = 11;
+        outcomeCode = driver::DefaultDriver::OutcomeCode::kStandardException;
         orchestrator.abort();
     } catch (...) {
         BOOST_LOG_TRIVIAL(error) << "Unknown error";
@@ -67,7 +67,7 @@ void runActor(Actor&& actor, std::atomic_int& outcomeCode, Orchestrator& orchest
     }
 }
 
-int doRunLogic(const genny::driver::ProgramOptions& options) {
+genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
 
     auto actorSetup = metrics.timer("Genny.Setup");
@@ -104,7 +104,7 @@ int doRunLogic(const genny::driver::ProgramOptions& options) {
 
     auto activeActors = metrics.counter("Genny.ActiveActors");
 
-    std::atomic_int outcomeCode = 0;
+    std::atomic<driver::DefaultDriver::OutcomeCode> outcomeCode = driver::DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex lock;
     std::vector<std::thread> threads;
@@ -141,14 +141,13 @@ int doRunLogic(const genny::driver::ProgramOptions& options) {
 }  // namespace
 
 
-int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
+genny::driver::DefaultDriver::OutcomeCode genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
     try {
         return doRunLogic(options);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Caught exception " << x.what();
     }
-    // unknown
-    return 500;
+    return genny::driver::DefaultDriver::OutcomeCode::kUnknownException;
 }
 
 
