@@ -66,8 +66,7 @@ struct IncrementsRunnable : public VirtualRunnable {
 
     const long iterations;
 
-    explicit IncrementsRunnable(long iters)
-    : iterations{iters} {}
+    explicit IncrementsRunnable(long iters) : iterations{iters} {}
 
     // virtual method just like Actor::run()
     void run() override {
@@ -128,10 +127,11 @@ auto runActors(int threads, long iterations) {
       Threads: %i
       Phases:
       - Repeat: %i
-    )") % threads % iterations;
+    )") %
+        threads % iterations;
     auto yaml = YAML::Load(yamlString.str());
     WorkloadContext workloadContext{
-            yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
+        yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
     o.addRequiredTokens(threads);
     auto actorDur = timedRun(workloadContext.actors());
     REQUIRE(IncrementsActor::increments == threads * iterations);
@@ -139,7 +139,8 @@ auto runActors(int threads, long iterations) {
 }
 
 void comparePerformance(int threads, long iterations, int tolerance) {
-    // just do the stupid simple thing and run it 5 times and take the mean, no need to make it fancy...
+    // just do the stupid simple thing and run it 5 times and take the mean, no need to make it
+    // fancy...
 
     auto reg1 = runRegularThreads(threads, iterations);
     auto act1 = runActors(threads, iterations);
@@ -162,7 +163,9 @@ void comparePerformance(int threads, long iterations, int tolerance) {
     auto actMean = double(act1 + act2 + act3 + act4 + act5) / 5.;
 
     // we're no less than tolerance times worse
-    INFO("threads=" << threads << ",iterations=" << iterations << ", actor mean " << actMean << " <= regular mean " << regMean << " * " << tolerance << "(" << (regMean*tolerance) << "). Ratio = " << double(actMean)/double(regMean));
+    INFO("threads=" << threads << ",iterations=" << iterations << ", actor mean " << actMean
+                    << " <= regular mean " << regMean << " * " << tolerance << "("
+                    << (regMean * tolerance) << "). Ratio = " << double(actMean) / double(regMean));
 
     REQUIRE(actMean <= regMean * tolerance);
 }
@@ -172,8 +175,8 @@ void comparePerformance(int threads, long iterations, int tolerance) {
 
 TEST_CASE("PhaseLoop performance", "[perf]") {
     // low tolerance for added latency with few threads
-    comparePerformance(50,  10000,  5);
-    comparePerformance(10,  100000, 10);
+    comparePerformance(50, 10000, 5);
+    comparePerformance(10, 100000, 10);
     // higher tolerance for added latency with more threads
     comparePerformance(500, 10000, 100);
 }
