@@ -121,14 +121,15 @@ auto runRegularThreads(int threads, long iterations) {
 TEST_CASE("PhaseLoop performance", "[perf]") {
     Orchestrator o;
     metrics::Registry registry;
-    auto yaml = YAML::Load(R"(
+    auto yamlString = R"(
     SchemaVersion: 2018-07-01
     Actors:
     - Type: Increments
       Threads: 500
       Phases:
       - Repeat: 10000
-    )");
+    )";
+    auto yaml = YAML::Load(yamlString);
     WorkloadContext workloadContext{
         yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
     o.addRequiredTokens(500);
