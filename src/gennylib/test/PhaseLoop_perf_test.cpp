@@ -108,6 +108,7 @@ auto timedRun(Runnables&& runnables) {
 
 
 auto runRegularThreads(int threads, long iterations) {
+    IncrementsRunnable::increments = 0;
     std::vector<std::unique_ptr<IncrementsRunnable>> runners;
     for (int i = 0; i < 500; ++i)
         runners.emplace_back(std::make_unique<IncrementsRunnable>(iterations));
@@ -117,6 +118,7 @@ auto runRegularThreads(int threads, long iterations) {
 }
 
 auto runActors(int threads, long iterations) {
+    IncrementsActor::increments = 0;
     Orchestrator o;
     metrics::Registry registry;
     auto yamlString = boost::format(R"(
@@ -136,13 +138,18 @@ auto runActors(int threads, long iterations) {
     return actorDur;
 }
 
+void comparePerformance(int threads, long iterations, int tolerance) {
+    auto regDur = runRegularThreads(threads, iterations);
+    auto actorDur = runActors(threads, iterations);
+    // we're no less than tolerance times worse
+    // INFO(double(regDur) / double(actorDur));
+    REQUIRE(actorDur <= regDur * tolerance);
+}
+
 }  // namespace
 
 
 TEST_CASE("PhaseLoop performance", "[perf]") {
-    auto regDur = runRegularThreads(500, 10000);
-    auto actorDur = runActors(500, 1000);
-    // we're no less than 100 times worse
-    // INFO(double(regDur) / double(actorDur));
-    REQUIRE(actorDur <= regDur * 100);
+    comparePerformance(500, 10000, 100);
+    comparePerformance(500, 10000, 100);
 }
