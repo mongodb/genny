@@ -22,20 +22,19 @@ using namespace genny::V1;
 using namespace std;
 using namespace std::chrono;
 
-static atomic_int increments = 0;
-
-
 namespace {
 
 struct PhaseConfig {
     PhaseConfig(PhaseContext& phaseContext) {}
 };
 
-struct Increments : public Actor {
+struct IncrementsActor : public Actor {
+
+    static atomic_int increments;
 
     PhaseLoop<PhaseConfig> _loop;
 
-    Increments(ActorContext& ctx) : _loop{ctx} {}
+    IncrementsActor(ActorContext& ctx) : _loop{ctx} {}
 
     void run() override {
         for (auto&& [phase, config] : _loop) {
@@ -49,19 +48,20 @@ struct Increments : public Actor {
         return [](ActorContext& context) {
             ActorVector out;
             for (int i = 0; i < context.get<int>("Threads"); ++i) {
-                out.push_back(std::make_unique<Increments>(context));
+                out.push_back(std::make_unique<IncrementsActor>(context));
             }
             return out;
         };
     }
 };
 
-struct Runnable {
+struct VirtualRunnable {
     virtual void run() = 0;
 };
 
-struct IncrementsRunnable : public Runnable {
+struct IncrementsRunnable : public VirtualRunnable {
     static atomic_bool stop;
+    static atomic_int increments;
 
     void run() override {
         for (int j = 0; j < 10000; ++j) {
@@ -72,7 +72,10 @@ struct IncrementsRunnable : public Runnable {
     }
 };
 
+
 atomic_bool IncrementsRunnable::stop = false;
+atomic_int IncrementsActor::increments = 0;
+atomic_int IncrementsRunnable::increments = 0;
 
 }  // namespace
 
@@ -91,7 +94,7 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
     )");
 
     WorkloadContext workloadContext{
-        yaml, registry, o, "mongodb://localhost:27017", {Increments::producer()}};
+        yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
 
     o.addRequiredTokens(500);
 
@@ -110,8 +113,7 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
     auto actorDur = duration_cast<nanoseconds>(steady_clock::now() - actorStart).count();
     std::cout << "Took " << actorDur << " nanoseconds for PhaseLoop loop" << std::endl;
 
-    REQUIRE(increments == 500 * 10000);
-    increments = 0;
+    REQUIRE(IncrementsActor::increments == 500 * 10000);
 
     boost::barrier regBarrier(1);
     std::vector<std::unique_ptr<IncrementsRunnable>> runners;
@@ -139,10 +141,11 @@ TEST_CASE("PhaseLoop performance", "[perf]") {
         reg.join();
     auto regDur = duration_cast<nanoseconds>(steady_clock::now() - regStart).count();
     std::cout << "Took " << regDur << " nanoseconds for regular for loop" << std::endl;
-    REQUIRE(increments == 500 * 10000);
+    REQUIRE(IncrementsRunnable::increments == 500 * 10000);
 
     stopper.join();
 
     // we're no less than 100 times worse
+    // INFO(double(regDur) / double(actorDur));
     REQUIRE(actorDur <= regDur * 100);
 }
