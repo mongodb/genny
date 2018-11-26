@@ -33,10 +33,11 @@
 namespace {
 
 using namespace genny;
+using namespace genny::driver;
 
 YAML::Node loadConfig(const std::string& source,
-                      genny::driver::ProgramOptions::YamlSource sourceType) {
-    if (sourceType == genny::driver::ProgramOptions::YamlSource::kString) {
+                      DefaultDriver::ProgramOptions::YamlSource sourceType) {
+    if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         return YAML::Load(source);
     }
     try {
@@ -69,7 +70,7 @@ void runActor(Actor&& actor,
     }
 }
 
-genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::ProgramOptions& options) {
+genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::DefaultDriver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
 
     auto actorSetup = metrics.timer("Genny.Setup");
@@ -145,7 +146,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(const genny::driver::Progra
 
 
 genny::driver::DefaultDriver::OutcomeCode genny::driver::DefaultDriver::run(
-    const genny::driver::ProgramOptions& options) const {
+    const genny::driver::DefaultDriver::ProgramOptions& options) const {
     try {
         // Wrap doRunLogic in another catch block in case it throws an exception of its own e.g.
         // file not found or io errors etc - exceptions not thrown by ActorProducers.
@@ -178,7 +179,7 @@ std::string normalizeOutputFile(const std::string& str) {
 }  // namespace
 
 
-genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
+genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     namespace po = boost::program_options;
 
     po::options_description description{u8"🧞‍ Allowed Options 🧞‍"};

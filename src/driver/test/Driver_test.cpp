@@ -89,8 +89,8 @@ std::multiset<int> Fails::phaseCalls = {};
 std::mutex Fails::mutex = {};
 
 
-ProgramOptions create(const std::string& yaml) {
-    ProgramOptions opts;
+DefaultDriver::ProgramOptions create(const std::string& yaml) {
+    DefaultDriver::ProgramOptions opts;
 
     opts.otherProducers.emplace_back(onActorContext([&](auto& context, auto& vec) {
         for (auto i = 0; i < context.template get<int, false>("Threads").value_or(1); ++i) {
@@ -101,7 +101,7 @@ ProgramOptions create(const std::string& yaml) {
     opts.metricsFormat = "csv";
     opts.metricsOutputFileName = "metrics.csv";
     opts.mongoUri = "mongodb://localhost:27017";
-    opts.workloadSourceType = ProgramOptions::YamlSource::kString;
+    opts.workloadSourceType = DefaultDriver::ProgramOptions::YamlSource::kString;
     opts.workloadSource = yaml;
 
     return opts;
