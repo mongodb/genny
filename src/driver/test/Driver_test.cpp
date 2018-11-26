@@ -94,10 +94,8 @@ struct Fails : public genny::Actor {
     }
 };
 
-// initialize static members of Fails
+// initialize static member of Fails
 StaticFailsInfo Fails::state = {};
-//std::multiset<int> Fails::phaseCalls = {};
-//std::mutex Fails::mutex = {};
 
 
 DefaultDriver::ProgramOptions create(const std::string& yaml) {
