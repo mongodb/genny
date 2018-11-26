@@ -91,18 +91,24 @@ using clock = std::chrono::steady_clock;
 template <typename Runnables>
 auto timedRun(Runnables&& runnables) {
     std::vector<std::thread> threads;
-    boost::barrier barrier(runnables.size() + 1);
+    boost::barrier startWait(runnables.size() + 1);
+    boost::barrier endWait(runnables.size() + 1);
     for (auto& runnable : runnables) {
         threads.emplace_back([&]() {
-            barrier.wait();
+            startWait.wait();
             runnable->run();
+            endWait.wait();
         });
     }
+
     auto start = clock::now();
-    barrier.count_down_and_wait();
+    startWait.count_down_and_wait();
+    endWait.count_down_and_wait();
+    auto duration = duration_cast<nanoseconds>(clock::now() - start).count();
+
     for (auto& thread : threads)
         thread.join();
-    auto duration = duration_cast<nanoseconds>(clock::now() - start).count();
+
     return duration;
 }
 
