@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
 
     std::cout << u8"🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔" << std::endl;
 
-    auto opts = genny::driver::ProgramOptions(argc, argv);
-    if(opts.isHelp){
+    auto opts = genny::driver::DefaultDriver::ProgramOptions(argc, argv);
+    if (opts.isHelp) {
         std::cout << opts.description << std::endl;
         return 0;
     }
@@ -31,5 +31,6 @@ int main(int argc, char** argv) {
 
     genny::driver::DefaultDriver d;
 
-    return d.run(opts);
+    auto code = d.run(opts);
+    return static_cast<int>(code);
 }

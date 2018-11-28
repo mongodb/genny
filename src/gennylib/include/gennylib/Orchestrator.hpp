@@ -1,6 +1,7 @@
 #ifndef HEADER_8615FA7A_9344_43E1_A102_889F47CCC1A6_INCLUDED
 #define HEADER_8615FA7A_9344_43E1_A102_889F47CCC1A6_INCLUDED
 
+#include <atomic>
 #include <condition_variable>
 #include <shared_mutex>
 
@@ -73,6 +74,12 @@ public:
 
     void abort();
 
+    /**
+     * @return whether the workload should continue running. This is true as long as
+     * no calls to abort() have been made.
+     */
+    bool continueRunning() const;
+
 private:
     mutable std::shared_mutex _mutex;
     std::condition_variable_any _phaseChange;
@@ -83,7 +90,9 @@ private:
     PhaseNumber _max = 0;
     PhaseNumber _current = 0;
 
-    bool _errors = false;
+    // Having this lets us avoid locking on _mutex for every call of
+    // continueRunning(). This gave two orders of magnitude speedup.
+    std::atomic_bool _errors = false;
 
     enum class State { PhaseEnded, PhaseStarted };
 

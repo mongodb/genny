@@ -43,8 +43,6 @@ namespace V1 {
 class IterationCompletionCheck final {
 
 public:
-    explicit IterationCompletionCheck() : IterationCompletionCheck(std::nullopt, std::nullopt) {}
-
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations)
         : _minDuration{minDuration},
@@ -150,10 +148,13 @@ public:
         return
                 // we're comparing against the .end() iterator (the common case)
                 (rhs._isEndIterator && !this->_isEndIterator &&
-                   // if we block, then check to see if we're done in current phase
-                   // else check to see if current phase has expired
-                   (_iterationCheck->doesBlock() ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration)
-                                                 : _orchestrator->currentPhase() != _inPhase))
+                   (!_orchestrator->continueRunning() ||
+                     // ↑ orchestrator says we stop
+                     // ...or...
+                     // if we block, then check to see if we're done in current phase
+                     // else check to see if current phase has expired
+                     (_iterationCheck->doesBlock() ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration)
+                                                   : _orchestrator->currentPhase() != _inPhase)))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus

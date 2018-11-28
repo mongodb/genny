@@ -6,6 +6,9 @@
 #include <thread>
 #include <vector>
 
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/exception.hpp>
+
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
@@ -29,28 +32,54 @@
 
 namespace {
 
-YAML::Node loadConfig(const std::string& fileName) {
+using namespace genny;
+using namespace genny::driver;
+
+YAML::Node loadConfig(const std::string& source,
+                      DefaultDriver::ProgramOptions::YamlSource sourceType) {
+    if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
+        return YAML::Load(source);
+    }
     try {
-        return YAML::LoadFile(fileName);
+        return YAML::LoadFile(source);
     } catch (const std::exception& ex) {
-        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << fileName << ": " << ex.what();
+        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
         throw;
     }
 }
 
-}  // namespace
+template <typename Actor>
+void runActor(Actor&& actor,
+              std::atomic<driver::DefaultDriver::OutcomeCode>& outcomeCode,
+              Orchestrator& orchestrator) {
+    try {
+        actor->run();
+    } catch (const boost::exception& x) {
+        BOOST_LOG_TRIVIAL(error) << "boost::exception: " << boost::diagnostic_information(x, true);
+        outcomeCode = driver::DefaultDriver::OutcomeCode::kBoostException;
+        orchestrator.abort();
+    } catch (const std::exception& x) {
+        BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
+        outcomeCode = driver::DefaultDriver::OutcomeCode::kStandardException;
+        orchestrator.abort();
+    } catch (...) {
+        BOOST_LOG_TRIVIAL(error) << "Unknown error";
+        orchestrator.abort();
+        // Don't try to handle unknown errors, let us crash ungracefully
+        throw;
+    }
+}
 
-
-int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& options) const {
-
+genny::driver::DefaultDriver::OutcomeCode doRunLogic(
+    const genny::driver::DefaultDriver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
 
     auto actorSetup = metrics.timer("Genny.Setup");
     auto setupTimer = actorSetup.start();
 
-    mongocxx::instance instance{};
+    mongocxx::instance::current();
 
-    auto yaml = loadConfig(options.workloadFileName);
+    auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
     auto orchestrator = Orchestrator{};
 
     auto producers = std::vector<genny::ActorProducer>{
@@ -64,6 +93,11 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     };
     // clang-format on
 
+    // The ProgramOptions struct can add some more ActorProducers.
+    // Add them at then end so they will produce Actors last.
+    // This is used primarily for testing so tests can inject test-only Actors.
+    producers.insert(producers.end(), options.otherProducers.begin(), options.otherProducers.end());
+
     auto workloadContext =
         WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, producers};
 
@@ -73,6 +107,9 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     setupTimer.report();
 
     auto activeActors = metrics.counter("Genny.ActiveActors");
+
+    std::atomic<driver::DefaultDriver::OutcomeCode> outcomeCode =
+        driver::DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex lock;
     std::vector<std::thread> threads;
@@ -85,7 +122,7 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
                            activeActors.incr();
                            lock.unlock();
 
-                           actor->run();
+                           runActor(actor, outcomeCode, orchestrator);
 
                            lock.lock();
                            activeActors.decr();
@@ -103,7 +140,22 @@ int genny::driver::DefaultDriver::run(const genny::driver::ProgramOptions& optio
     reporter.report(metricsOutput, options.metricsFormat);
     metricsOutput.close();
 
-    return 0;
+    return outcomeCode;
+}
+
+}  // namespace
+
+
+genny::driver::DefaultDriver::OutcomeCode genny::driver::DefaultDriver::run(
+    const genny::driver::DefaultDriver::ProgramOptions& options) const {
+    try {
+        // Wrap doRunLogic in another catch block in case it throws an exception of its own e.g.
+        // file not found or io errors etc - exceptions not thrown by ActorProducers.
+        return doRunLogic(options);
+    } catch (const std::exception& x) {
+        BOOST_LOG_TRIVIAL(error) << "Caught exception " << x.what();
+    }
+    return genny::driver::DefaultDriver::OutcomeCode::kInternalException;
 }
 
 
@@ -128,7 +180,7 @@ std::string normalizeOutputFile(const std::string& str) {
 }  // namespace
 
 
-genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
+genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     namespace po = boost::program_options;
 
     po::options_description description{u8"🧞‍ Allowed Options 🧞‍"};
@@ -177,6 +229,10 @@ genny::driver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 
-    if (vm.count("workload-file") > 0)
-        this->workloadFileName = vm["workload-file"].as<std::string>();
+    if (vm.count("workload-file") > 0) {
+        this->workloadSource = vm["workload-file"].as<std::string>();
+        this->workloadSourceType = YamlSource::kFile;
+    } else {
+        this->workloadSourceType = YamlSource::kString;
+    }
 }
