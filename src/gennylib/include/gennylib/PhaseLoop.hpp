@@ -43,10 +43,6 @@ namespace V1 {
 class IterationCompletionCheck final {
 
 public:
-    // Defaults to not a Nop - only Nop if specified.
-    explicit IterationCompletionCheck()
-        : IterationCompletionCheck(std::nullopt, std::nullopt, false) {}
-
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations,
                              bool isNop)
