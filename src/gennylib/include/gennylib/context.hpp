@@ -1,6 +1,7 @@
 #ifndef HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 #define HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 
+#include <cassert>
 #include <functional>
 #include <iterator>
 #include <optional>
@@ -576,6 +577,18 @@ public:
         // fallback to actor node
         return this->_actor->get<T, Required>(std::forward<Args>(args)...);
     };
+
+    /**
+    * Called in PhaseLoop during the IterationCompletionCheck constructor.
+    */
+    bool isNop() const {
+        bool isNop = get<std::string, false>("Operation") && get<std::string>("Operation") == "Nop";
+        if (isNop && _node.size() != 1) {
+            throw InvalidConfigurationException(
+                "Nop cannot be used with any other keywords. Check YML configuration.");
+        }
+        return isNop;
+    }
 
 private:
     YAML::Node _node;

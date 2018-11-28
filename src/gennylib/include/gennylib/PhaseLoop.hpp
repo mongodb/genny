@@ -44,9 +44,11 @@ class IterationCompletionCheck final {
 
 public:
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
-                             std::optional<int> minIterations)
+                             std::optional<int> minIterations,
+                             bool isNop)
         : _minDuration{minDuration},
-          _minIterations{minIterations},
+          // If it is a nop then should iterate 0 times.
+          _minIterations{isNop ? 0 : minIterations},
           _doesBlock{_minIterations || _minDuration} {
 
         if (minDuration && minDuration->count() < 0) {
@@ -63,7 +65,8 @@ public:
 
     explicit IterationCompletionCheck(PhaseContext& phaseContext)
         : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
-                                   phaseContext.get<int, false>("Repeat")) {}
+                                   phaseContext.get<int, false>("Repeat"),
+                                   phaseContext.isNop()) {}
 
     std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
@@ -227,9 +230,9 @@ public:
                PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
-          _iterationCheck{std::move(iterationCheck)},
           _currentPhase{currentPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {
+          _value{std::make_unique<T>(std::forward<Args>(args)...)},
+          _iterationCheck{std::move(iterationCheck)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
@@ -242,9 +245,11 @@ public:
                PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
-          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)},
           _currentPhase{currentPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {
+          _value{!phaseContext.isNop()
+                     ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
+                     : std::nullopt},
+          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
@@ -261,6 +266,11 @@ public:
         return _iterationCheck->doesBlock();
     }
 
+    // Checks if the actor is performing a nullOp. Used only for testing.
+    bool isNop() const {
+        return !_value;
+    }
+
     // Could use `auto` for return-type of operator-> and operator*, but
     // IDE auto-completion likes it more if it's spelled out.
     //
@@ -272,7 +282,8 @@ public:
     // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator->()`
     //      so we trust the STL to do the right thing™️
     typename std::add_pointer_t<std::remove_reference_t<T>> operator->() const noexcept {
-        return _value.operator->();
+        assert(_value);
+        return (*_value).operator->();
     }
 
     // Could use `auto` for return-type of operator-> and operator*, but
@@ -283,14 +294,15 @@ public:
     // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator*()`
     //      so we trust the STL to do the right thing™️
     typename std::add_lvalue_reference_t<T> operator*() const {
-        return _value.operator*();
+        assert(_value);
+        return (*_value).operator*();
     }
 
 private:
     Orchestrator& _orchestrator;
-    const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
     const PhaseNumber _currentPhase;
-    const std::unique_ptr<T> _value;
+    const std::optional<std::unique_ptr<T>> _value;  // Is nullopt iff operation is Nop
+    const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
 
 };  // class ActorPhase
 
@@ -346,7 +358,6 @@ public:
             msg << "No phase config found for PhaseNumber=[" << _currentPhase << "]";
             throw InvalidConfigurationException(msg.str());
         }
-
         return {_currentPhase, found->second};
     }
 
@@ -521,8 +532,8 @@ private:
         // clang-format on
 
         V1::PhaseMap<T> out;
-        for (auto&& [num, phaseContext] : actorContext.phases()) {
-            auto [it, success] = out.try_emplace(
+        for (auto && [ num, phaseContext ] : actorContext.phases()) {
+            auto[it, success] = out.try_emplace(
                 // key
                 num,
                 // args to ActorPhase<T> ctor:

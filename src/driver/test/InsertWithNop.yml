@@ -1,0 +1,25 @@
+SchemaVersion: 2018-07-01
+
+# Demonstrate the InsertRemove actor. The InsertRemove actor is a simple actor that inserts and then
+# removes the same document from a collection in a loop. Each instance of the actor uses a different
+# document, indexed by an integer _id field. The actor records the latency of each insert and each remove.
+
+Actors:
+  - Name: InsertWithNopTest
+    Type: Insert
+    Threads: 100
+    Database: "test2"
+    Phases:
+      - Operation: Nop
+      - Collection: "inserts"
+        Document: {"a": {$randomint: {min: 50, max: 60}}}
+      - Operation: Nop
+      - Operation: Nop
+      - Collection: "inserts"
+        Document: {"b": {$randomstring: {length: {$randomint: {min: 5, max: 15}}, alphabet: abcde}}}
+      - Collection: "inserts"
+        Document: {"a": {$randomint: {min: 63, max: 70}}}
+      - Operation: Nop
+      - Collection: "inserts"
+        Document: {"b": {$randomstring: {length: {$randomint: {min: 15, max: 25}}, alphabet: abcde}}}
+      - Operation: Nop

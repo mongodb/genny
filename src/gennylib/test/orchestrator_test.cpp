@@ -228,7 +228,7 @@ std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
         auto [it, success] =
             out.try_emplace(phaseNum,
                             orchestrator,
-                            std::make_unique<const V1::IterationCompletionCheck>(dur, iters),
+                            std::make_unique<const V1::IterationCompletionCheck>(dur, iters, false),
                             phaseNum,
                             phaseVal);
         // prevent misconfiguration within test (dupe phaseNum vals)
