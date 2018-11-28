@@ -35,7 +35,7 @@ TEST_CASE("Correctness for N iterations") {
 
     SECTION("Loops 0 Times") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 0_i), 1};
+            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 0_i, false), 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -43,7 +43,7 @@ TEST_CASE("Correctness for N iterations") {
     }
     SECTION("Loops 1 Time") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i), 1};
+            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i, false), 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -51,7 +51,7 @@ TEST_CASE("Correctness for N iterations") {
     }
     SECTION("Loops 113 Times") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 113_i), 1};
+            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 113_i, false), 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -61,7 +61,7 @@ TEST_CASE("Correctness for N iterations") {
     SECTION("Configured for -1 Times barfs") {
         REQUIRE_THROWS_WITH(
             (V1::ActorPhase<int>{
-                o, std::make_unique<V1::IterationCompletionCheck>(nullopt, make_optional(-1)), 1}),
+                o, std::make_unique<V1::IterationCompletionCheck>(nullopt, make_optional(-1), false), 1}),
             Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
@@ -70,7 +70,7 @@ TEST_CASE("Correctness for N milliseconds") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds so zero times") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(0_ms, nullopt), 0};
+            o, std::make_unique<V1::IterationCompletionCheck>(0_ms, nullopt ,false), 0};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -80,7 +80,7 @@ TEST_CASE("Correctness for N milliseconds") {
         // we nop in the loop so ideally it should take exactly 10ms, but don't want spurious
         // failures
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(10_ms, nullopt), 0};
+            o, std::make_unique<V1::IterationCompletionCheck>(10_ms, nullopt, false), 0};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -97,14 +97,14 @@ TEST_CASE("Correctness for N milliseconds") {
 TEST_CASE("Combinations of duration and iterations") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds but 100 times") {
-        V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(0_ms, 100_i), 0};
+        V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(0_ms, 100_i, false), 0};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 100);
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
-        V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(5_ms, 100_i), 0};
+        V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(5_ms, 100_i, false), 0};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -127,7 +127,7 @@ TEST_CASE("Combinations of duration and iterations") {
         REQUIRE_THROWS_WITH(
             (V1::ActorPhase<int>{o,
                                  std::make_unique<V1::IterationCompletionCheck>(
-                                     make_optional(chrono::milliseconds{-1}), nullopt),
+                                     make_optional(chrono::milliseconds{-1}), nullopt, false),
                                  0}),
             Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
@@ -136,7 +136,7 @@ TEST_CASE("Combinations of duration and iterations") {
 TEST_CASE("Can do without either iterations or duration") {
     Orchestrator o;
     V1::ActorPhase<int> actorPhase{
-        o, std::make_unique<V1::IterationCompletionCheck>(nullopt, nullopt), 0};
+        o, std::make_unique<V1::IterationCompletionCheck>(nullopt, nullopt, false), 0};
     auto iters = 0;
     for (auto&& _ : actorPhase) {
         ++iters;
@@ -151,7 +151,7 @@ TEST_CASE("Can do without either iterations or duration") {
 
 TEST_CASE("Iterator concept correctness") {
     Orchestrator o;
-    V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i), 0};
+    V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i, false), 0};
 
     // can deref
     SECTION("Deref and advance works") {

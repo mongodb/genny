@@ -47,11 +47,6 @@ public:
     explicit IterationCompletionCheck()
         : IterationCompletionCheck(std::nullopt, std::nullopt, false) {}
 
-    // This constructor is used exclusively in testing, and should not be called otherwise.
-    IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
-                             std::optional<int> minIterations)
-        : IterationCompletionCheck(minDuration, minIterations, false) {}
-
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations,
                              bool isNop)
