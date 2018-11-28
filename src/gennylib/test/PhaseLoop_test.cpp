@@ -279,6 +279,9 @@ TEST_CASE("Actual Actor Example") {
                     {94, 3}});
     }
 
+    /**
+    * Tests an actor with a Nop command. See YAML Node below. 
+    */
     SECTION("Actor with Nop") {
         class IncrementsMapValuesWithNop : public IncrementsMapValues {
         public:
@@ -327,8 +330,7 @@ TEST_CASE("Actual Actor Example") {
 
         std::unordered_map<int, int> counters;
 
-        // ////////
-        // setup and run (bypass the driver)
+        // This is how a Nop command should be specified. 
         YAML::Node config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
             Actors:

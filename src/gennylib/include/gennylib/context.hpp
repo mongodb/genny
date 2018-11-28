@@ -578,6 +578,9 @@ public:
         return this->_actor->get<T, Required>(std::forward<Args>(args)...);
     };
 
+    /**
+    * Called in PhaseLoop during the IterationCompletionCheck constructor.
+    */
     bool isNop() const {
         bool isNop = get<std::string, false>("Operation") && get<std::string>("Operation") == "Nop";
         if (isNop && _node.size() != 1) {

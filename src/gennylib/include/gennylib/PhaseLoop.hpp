@@ -43,9 +43,11 @@ namespace V1 {
 class IterationCompletionCheck final {
 
 public:
+    // Defaults to not a Nop - only Nop if specified.
     explicit IterationCompletionCheck()
         : IterationCompletionCheck(std::nullopt, std::nullopt, false) {}
 
+    // This constructor is used exclusively in testing, and should not be called otherwise.
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations)
         : IterationCompletionCheck(minDuration, minIterations, false) {}
@@ -54,7 +56,7 @@ public:
                              std::optional<int> minIterations,
                              bool isNop)
         : _minDuration{minDuration},
-          // If it is a nop then should iterate 0 times
+          // If it is a nop then should iterate 0 times.
           _minIterations{isNop ? 0 : minIterations},
           _doesBlock{_minIterations || _minDuration} {
 
@@ -70,10 +72,10 @@ public:
         }
     }
 
-    explicit IterationCompletionCheck(PhaseContext& phaseContext, bool isNop)
+    explicit IterationCompletionCheck(PhaseContext& phaseContext)
         : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
                                    phaseContext.get<int, false>("Repeat"),
-                                   isNop) {}
+                                   phaseContext.isNop()) {}
 
     std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
@@ -256,7 +258,7 @@ public:
           _value{!phaseContext.isNop()
                      ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
                      : std::nullopt},
-          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext, !_value)} {
+          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
