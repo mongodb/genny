@@ -253,7 +253,9 @@ public:
                Args&&... args)
         : _orchestrator{orchestrator},
           _currentPhase{currentPhase},
-          _value{!phaseContext.isNop() ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...)) : std::nullopt},
+          _value{!phaseContext.isNop()
+                     ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
+                     : std::nullopt},
           _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext, !_value)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
@@ -306,7 +308,7 @@ public:
 private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
-    const std::optional<std::unique_ptr<T>> _value; // Is nullopt iff operation is Nop
+    const std::optional<std::unique_ptr<T>> _value;  // Is nullopt iff operation is Nop
     const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
 
 };  // class ActorPhase

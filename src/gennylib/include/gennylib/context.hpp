@@ -579,10 +579,10 @@ public:
     };
 
     bool isNop() const {
-        bool isNop = get<std::string, false>("Operation")
-            && get<std::string>("Operation") == "Nop";
-        if (isNop) {
-            assert (_node.size() == 1);
+        bool isNop = get<std::string, false>("Operation") && get<std::string>("Operation") == "Nop";
+        if (_node.size() != 1) {
+            throw InvalidConfigurationException(
+                "Nop cannot be used with any other keywords. Check YML configuration.");
         }
         return isNop;
     }
