@@ -52,9 +52,10 @@ public:
 
     IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
                              std::optional<int> minIterations,
-                             bool isNullOp)
+                             bool isNop)
         : _minDuration{minDuration},
-          _minIterations{(!minIterations && isNullOp) ? 0 : minIterations},
+          // If it is a nop then should iterate 0 times
+          _minIterations{isNop ? 0 : minIterations},
           _doesBlock{_minIterations || _minDuration} {
 
         if (minDuration && minDuration->count() < 0) {
@@ -69,14 +70,10 @@ public:
         }
     }
 
-    explicit IterationCompletionCheck(PhaseContext& phaseContext, bool isNullOp)
+    explicit IterationCompletionCheck(PhaseContext& phaseContext, bool isNop)
         : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
                                    phaseContext.get<int, false>("Repeat"),
-                                   isNullOp) {}
-
-    explicit IterationCompletionCheck(PhaseContext& phaseContext)
-        : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
-                                   phaseContext.get<int, false>("Repeat"), false) {}
+                                   isNop) {}
 
     std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
@@ -240,9 +237,9 @@ public:
                PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
-          _iterationCheck{std::move(iterationCheck)},
           _currentPhase{currentPhase},
-          _value{std::make_unique<T>(std::forward<Args>(args)...)} {
+          _value{std::make_unique<T>(std::forward<Args>(args)...)},
+          _iterationCheck{std::move(iterationCheck)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
@@ -255,12 +252,9 @@ public:
                PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
-          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext, !_value)},
           _currentPhase{currentPhase},
-          _value{(!phaseContext.get<std::string, false>("Operation") ||
-                  phaseContext.get<std::string>("Operation") != "Nop")
-                     ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
-                     : std::nullopt} {
+          _value{!phaseContext.isNop() ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...)) : std::nullopt},
+          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext, !_value)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
@@ -278,7 +272,7 @@ public:
     }
 
     // Checks if the actor is performing a nullOp. Used only for testing.
-    bool isNullOp() const {
+    bool isNop() const {
         return !_value;
     }
 
@@ -311,9 +305,9 @@ public:
 
 private:
     Orchestrator& _orchestrator;
+    const PhaseNumber _currentPhase;
     const std::optional<std::unique_ptr<T>> _value; // Is nullopt iff operation is Nop
     const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
-    const PhaseNumber _currentPhase;
 
 };  // class ActorPhase
 

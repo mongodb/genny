@@ -210,7 +210,7 @@ TEST_CASE("Iterator concept correctness") {
 TEST_CASE("Actual Actor Example") {
 
     class IncrementsMapValues : public Actor {
-    private:
+    protected:
         struct IncrPhaseConfig {
             int _key;
             IncrPhaseConfig(PhaseContext& ctx, int keyOffset)
@@ -245,133 +245,126 @@ TEST_CASE("Actual Actor Example") {
         }
     };
 
-    std::unordered_map<int, int> counters;
+    SECTION("Simple Actor") {
+        std::unordered_map<int, int> counters;
 
-    // ////////
-    // setup and run (bypass the driver)
-    YAML::Node config = YAML::Load(R"(
-        SchemaVersion: 2018-07-01
-        Actors:
-        - Phases:
-          - Repeat: 100
-            Key: 71
-          - Repeat: 3
-            Key: 93
-    )");
+        // ////////
+        // setup and run (bypass the driver)
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Phases:
+              - Repeat: 100
+                Key: 71
+              - Repeat: 3
+                Key: 93
+        )");
 
-    Orchestrator orchestrator;
-    orchestrator.addRequiredTokens(1);
+        Orchestrator orchestrator;
+        orchestrator.addRequiredTokens(1);
 
-    metrics::Registry registry;
-    WorkloadContext wl{config,
-                       registry,
-                       orchestrator,
-                       "mongodb://localhost:27017",
-                       {IncrementsMapValues::producer(counters)}};
-    wl.actors()[0]->run();
-    // end
-    // ////////
+        metrics::Registry registry;
+        WorkloadContext wl{config,
+                        registry,
+                        orchestrator,
+                        "mongodb://localhost:27017",
+                        {IncrementsMapValues::producer(counters)}};
+        wl.actors()[0]->run();
+        // end
+        // ////////
 
-    REQUIRE(counters ==
-            std::unordered_map<int, int>{
-                {72, 100},  // keys & vals came from yaml config. Keys have a +1 offset.
-                {94, 3}});
-}
+        REQUIRE(counters ==
+                std::unordered_map<int, int>{
+                    {72, 100},  // keys & vals came from yaml config. Keys have a +1 offset.
+                    {94, 3}});
+    }
 
-TEST_CASE("Nop Actor Example") {
+    SECTION("Actor with Nop") {
+        class IncrementsMapValuesWithNop : public IncrementsMapValues {
+        public:
+            IncrementsMapValuesWithNop(ActorContext& actorContext, std::unordered_map<int, int>& counters)
+                : IncrementsMapValues(actorContext, counters) {}
 
-    class IncrementsMapValues : public Actor {
-    private:
-        struct IncrPhaseConfig {
-            int _key;
-            IncrPhaseConfig(PhaseContext& ctx, int keyOffset)
-                : _key{ctx.get<int>("Key") + keyOffset} {}
+            void run() override {
+                for (auto&& [num, cfg] : _loop) {
+                    // This is just for testing purposes. Actors *should* not place any commands
+                    // between the top level for-loop and the inner loop. 
+                    check(num, this->_counters);
+                    if (num == 0 || num == 2 || num == 3) {
+                        REQUIRE(cfg.isNop());
+                    }
+                    for (auto&& _ : cfg) {
+                        REQUIRE((num == 1 || num == 4));
+                        ++this->_counters[cfg->_key];
+                    }
+                }
+            }
+
+            void check(PhaseNumber num, std::unordered_map<int, int>& counter) {
+                if (num == 1) {
+                    REQUIRE(counter ==
+                        std::unordered_map<int, int>{});    
+                }
+                if (num == 2 || num == 3 || num == 4) {
+                    // std::cout << "Counter at num234 : " << counter << std::endl;
+                    REQUIRE(counter ==
+                        std::unordered_map<int, int>{
+                            {72, 10}
+                        });
+                }
+                if (num == 5) {
+                    // std::cout << "Counter at num5 : " << counter << std::endl;
+                    REQUIRE(counter ==
+                        std::unordered_map<int, int>{
+                            {72, 10},
+                            {94, 3}});
+                }
+            }
+
+            static auto producer(std::unordered_map<int, int>& counters) {
+                return [&](ActorContext& actorContext) {
+                    ActorVector out;
+                    out.push_back(std::make_unique<IncrementsMapValuesWithNop>(actorContext, counters));
+                    return out;
+                };
+            }
+
         };
 
-        PhaseLoop<IncrPhaseConfig> _loop;
-        std::unordered_map<int, int>& _counters;
+        std::unordered_map<int, int> counters;
 
-    public:
-        IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
-            : _loop{actorContext, 1}, _counters{counters} {}
-        //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset
-        //                        param.
+        // ////////
+        // setup and run (bypass the driver)
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Phases:
+              - Operation: Nop
+              - Repeat: 10
+                Key: 71
+              - Operation: Nop
+              - Operation: Nop
+              - Repeat: 3
+                Key: 93
+              - Operation: Nop
+        )");
 
-        void run() override {
-            for (auto&& [num, cfg] : _loop) {
-                check(num, this->_counters);
-                if (num == 0 || num == 2 || num == 3) {
-                    REQUIRE(cfg.isNullOp());
-                }
-                for (auto&& _ : cfg) {
-                    ++this->_counters[cfg->_key];
-                }
-            }
+        Orchestrator orchestrator;
+        orchestrator.addRequiredTokens(1);
+
+        metrics::Registry registry;
+        WorkloadContext wl{config,
+                        registry,
+                        orchestrator,
+                        "mongodb://localhost:27017",
+                        {IncrementsMapValuesWithNop::producer(counters)}};
+        wl.actors()[0]->run();
+        // end
+        // ////////
+
+        REQUIRE(counters ==
+                std::unordered_map<int, int>{
+                    {72, 10},  // keys & vals came from yaml config. Keys have a +1 offset.
+                    {94, 3}});
         }
-
-        void check(PhaseNumber num, std::unordered_map<int, int>& counter) {
-            if (num == 1) {
-                REQUIRE(counter ==
-                    std::unordered_map<int, int>{});    
-            }
-            if (num == 2 || num == 3 || num == 4) {
-                REQUIRE(counter ==
-                    std::unordered_map<int, int>{
-                        {72, 10}
-                    });
-            }
-            if (num == 5) {
-                REQUIRE(counter ==
-                    std::unordered_map<int, int>{
-                        {72, 10},
-                        {94, 3}});
-            }
-        }
-
-        // An ActorProducer can do whatever it wants.
-        // Here it passes in a stack-variable ref to the Actor(s) it creates.
-        static auto producer(std::unordered_map<int, int>& counters) {
-            return [&](ActorContext& actorContext) {
-                ActorVector out;
-                out.push_back(std::make_unique<IncrementsMapValues>(actorContext, counters));
-                return out;
-            };
-        }
-    };
-
-    std::unordered_map<int, int> counters;
-
-    // ////////
-    // setup and run (bypass the driver)
-    YAML::Node config = YAML::Load(R"(
-        SchemaVersion: 2018-07-01
-        Actors:
-        - Phases:
-          - Operation: Nop
-          - Repeat: 10
-            Key: 71
-          - Operation: Nop
-          - Operation: Nop
-          - Repeat: 3
-            Key: 93
-          - Operation: Nop
-    )");
-
-    Orchestrator orchestrator;
-    orchestrator.addRequiredTokens(1);
-
-    metrics::Registry registry;
-    WorkloadContext wl{config,
-                       registry,
-                       orchestrator,
-                       "mongodb://localhost:27017",
-                       {IncrementsMapValues::producer(counters)}};
-    wl.actors()[0]->run();
-    // end
-    // ////////
-
-    REQUIRE(counters ==
-            std::unordered_map<int, int>{
-                {72, 10},  // keys & vals came from yaml config. Keys have a +1 offset.
-                {94, 3}});
 }

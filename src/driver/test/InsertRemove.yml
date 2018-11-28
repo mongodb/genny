@@ -10,11 +10,7 @@ Actors:
     Threads: 100
     Database: test
     Phases:
-      - Operation: nop
       - Collection: inserts
-        Repeat: 100
-      - Operation: nop
-      - Operation: nop
+        Duration: 100
       - Collection: inserts
         Count: 179
-      - Operation: nop
