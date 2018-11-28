@@ -10,8 +10,10 @@ Actors:
     Threads: 100
     Database: "test2"
     Phases:
+      - Operation: Nop
       - Collection: "inserts"
         Document: {"a": {$randomint: {min: 50, max: 60}}}
+      - Operation: Nop
       - Operation: Nop
       - Collection: "inserts"
         Document: {"b": {$randomstring: {length: {$randomint: {min: 5, max: 15}}, alphabet: abcde}}}
@@ -20,3 +22,4 @@ Actors:
       - Operation: Nop
       - Collection: "inserts"
         Document: {"b": {$randomstring: {length: {$randomint: {min: 15, max: 25}}, alphabet: abcde}}}
+      - Operation: Nop
