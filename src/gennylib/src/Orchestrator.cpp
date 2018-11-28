@@ -94,9 +94,6 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
     assert(State::PhaseStarted == state || this->_errors);
 
     _currentTokens -= removeTokens;
-    std::cout << "We're removing tokens: " << _currentTokens << std::endl;
-
-    _currentTokens -= removeTokens;
 
     // Not clear if we should allow _currentTokens to drop below zero
     // and if below check should be `if (_currentTokens == 0)`.
