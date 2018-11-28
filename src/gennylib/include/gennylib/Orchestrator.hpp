@@ -90,6 +90,8 @@ private:
     PhaseNumber _max = 0;
     PhaseNumber _current = 0;
 
+    // Having this lets us avoid locking on _mutex for every call of
+    // continueRunning(). This gave two orders of magnitude speedup.
     std::atomic_bool _errors = false;
 
     enum class State { PhaseEnded, PhaseStarted };

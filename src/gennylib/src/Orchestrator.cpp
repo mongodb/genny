@@ -32,6 +32,21 @@ PhaseNumber Orchestrator::currentPhase() const {
 }
 
 bool Orchestrator::continueRunning() const {
+    // Be careful when changing this.
+    //
+    // In particular, stay away from changes that want to add
+    //     reader lock{_mutex}
+    // here. This is a performance-killer, so the _errors state
+    // isn't guarded by the Orchestrator's mutex.
+    //
+    // This method is called in a tight loop by every Actor
+    // for every iteration of its inner `for(auto&& _ : cfg)` loop.
+    //
+    // Hence only allowed to read std::atomic values.
+    //
+    // PhaseLoop_perf_test.cpp deals heavily with the performance
+    // implications of this method.
+    //
     return !this->_errors;
 }
 
