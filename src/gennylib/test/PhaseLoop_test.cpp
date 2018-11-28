@@ -59,10 +59,11 @@ TEST_CASE("Correctness for N iterations") {
     }
 
     SECTION("Configured for -1 Times barfs") {
-        REQUIRE_THROWS_WITH(
-            (V1::ActorPhase<int>{
-                o, std::make_unique<V1::IterationCompletionCheck>(nullopt, make_optional(-1), false), 1}),
-            Catch::Contains("Need non-negative number of iterations. Gave -1"));
+        REQUIRE_THROWS_WITH((V1::ActorPhase<int>{o,
+                                                 std::make_unique<V1::IterationCompletionCheck>(
+                                                     nullopt, make_optional(-1), false),
+                                                 1}),
+                            Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
 
@@ -70,7 +71,7 @@ TEST_CASE("Correctness for N milliseconds") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds so zero times") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(0_ms, nullopt ,false), 0};
+            o, std::make_unique<V1::IterationCompletionCheck>(0_ms, nullopt, false), 0};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -97,14 +98,16 @@ TEST_CASE("Correctness for N milliseconds") {
 TEST_CASE("Combinations of duration and iterations") {
     Orchestrator o;
     SECTION("Loops 0 milliseconds but 100 times") {
-        V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(0_ms, 100_i, false), 0};
+        V1::ActorPhase<int> loop{
+            o, std::make_unique<V1::IterationCompletionCheck>(0_ms, 100_i, false), 0};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 100);
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
-        V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(5_ms, 100_i, false), 0};
+        V1::ActorPhase<int> loop{
+            o, std::make_unique<V1::IterationCompletionCheck>(5_ms, 100_i, false), 0};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -151,7 +154,8 @@ TEST_CASE("Can do without either iterations or duration") {
 
 TEST_CASE("Iterator concept correctness") {
     Orchestrator o;
-    V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i, false), 0};
+    V1::ActorPhase<int> loop{
+        o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i, false), 0};
 
     // can deref
     SECTION("Deref and advance works") {
@@ -280,7 +284,7 @@ TEST_CASE("Actual Actor Example") {
     }
 
     /**
-    * Tests an actor with a Nop command. See YAML Node below. 
+    * Tests an actor with a Nop command. See YAML Node below.
     */
     SECTION("Actor with Nop") {
         class IncrementsMapValuesWithNop : public IncrementsMapValues {
@@ -330,7 +334,7 @@ TEST_CASE("Actual Actor Example") {
 
         std::unordered_map<int, int> counters;
 
-        // This is how a Nop command should be specified. 
+        // This is how a Nop command should be specified.
         YAML::Node config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
             Actors:
