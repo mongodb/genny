@@ -91,6 +91,7 @@ private:
     PhaseNumber _max = 0;
     PhaseNumber _current = 0;
 
+    // _phaseNumberGauge should keep up to date with _current.
     metrics::Gauge _phaseNumberGauge;
 
     // Having this lets us avoid locking on _mutex for every call of
