@@ -26,7 +26,7 @@ const std::string mongoUri = "mongodb://localhost:27017";
 template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator;
+    genny::Orchestrator orchestrator(metrics.gauge("PhaseNumber"));
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
@@ -41,7 +41,7 @@ template <class Out,
           class... Args>
 void gives(const string& yaml, OutV expect, Args... args) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator;
+    genny::Orchestrator orchestrator(metrics.gauge("PhaseNumber"));
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
@@ -53,7 +53,7 @@ void gives(const string& yaml, OutV expect, Args... args) {
 
 TEST_CASE("loads configuration okay") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator;
+    genny::Orchestrator orchestrator(metrics.gauge("PhaseNumber"));
     SECTION("Valid YAML") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
@@ -159,7 +159,7 @@ Actors:
 
 void onContext(YAML::Node& yaml, std::function<void(ActorContext&)>& op) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator;
+    genny::Orchestrator orchestrator(metrics.gauge("PhaseNumber"));
 
     ActorProducer producer = [&](ActorContext& context) -> ActorVector {
         op(context);
@@ -261,7 +261,7 @@ TEST_CASE("Duplicate Phase Numbers") {
     )");
 
     metrics::Registry metrics;
-    Orchestrator orchestrator;
+    genny::Orchestrator orchestrator(metrics.gauge("PhaseNumber"));
     ActorProducer producer = [&](ActorContext& context) -> ActorVector { return {}; };
 
     REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri, {producer}}),

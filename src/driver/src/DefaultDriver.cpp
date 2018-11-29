@@ -76,11 +76,12 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
 
     auto actorSetup = metrics.timer("Genny.Setup");
     auto setupTimer = actorSetup.start();
+    auto phaseNumberGauge = metrics.gauge("PhaseNumber");
 
     mongocxx::instance::current();
 
     auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
-    auto orchestrator = Orchestrator{};
+    auto orchestrator = Orchestrator(phaseNumberGauge);
 
     auto producers = std::vector<genny::ActorProducer>{
         &genny::actor::HelloWorld::producer,

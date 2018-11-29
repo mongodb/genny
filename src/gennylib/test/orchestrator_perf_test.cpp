@@ -15,7 +15,8 @@ using namespace std::chrono;
 TEST_CASE("Orchestrator Perf", "[perf]") {
     const auto dur = milliseconds{200};
 
-    auto o = Orchestrator{};
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o(metrics.gauge("PhaseNumber"));
     o.addRequiredTokens(2);
 
     atomic_long regIters(0);
