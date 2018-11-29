@@ -31,7 +31,8 @@ optional<chrono::milliseconds> operator"" _ms(unsigned long long int v) {
 }  // namespace
 
 TEST_CASE("Correctness for N iterations") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
 
     SECTION("Loops 0 Times") {
         V1::ActorPhase<int> loop{
@@ -68,7 +69,8 @@ TEST_CASE("Correctness for N iterations") {
 }
 
 TEST_CASE("Correctness for N milliseconds") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
     SECTION("Loops 0 milliseconds so zero times") {
         V1::ActorPhase<int> loop{
             o, std::make_unique<V1::IterationCompletionCheck>(0_ms, nullopt, false), 0};
@@ -96,7 +98,8 @@ TEST_CASE("Correctness for N milliseconds") {
 }
 
 TEST_CASE("Combinations of duration and iterations") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
     SECTION("Loops 0 milliseconds but 100 times") {
         V1::ActorPhase<int> loop{
             o, std::make_unique<V1::IterationCompletionCheck>(0_ms, 100_i, false), 0};
@@ -137,7 +140,8 @@ TEST_CASE("Combinations of duration and iterations") {
 }
 
 TEST_CASE("Can do without either iterations or duration") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
     V1::ActorPhase<int> actorPhase{
         o, std::make_unique<V1::IterationCompletionCheck>(nullopt, nullopt, false), 0};
     auto iters = 0;
@@ -153,7 +157,8 @@ TEST_CASE("Can do without either iterations or duration") {
 }
 
 TEST_CASE("Iterator concept correctness") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
     V1::ActorPhase<int> loop{
         o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i, false), 0};
 
@@ -264,7 +269,8 @@ TEST_CASE("Actual Actor Example") {
                 Key: 93
         )");
 
-        Orchestrator orchestrator;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
         orchestrator.addRequiredTokens(1);
 
         metrics::Registry registry;
@@ -349,7 +355,8 @@ TEST_CASE("Actual Actor Example") {
               - Operation: Nop
         )");
 
-        Orchestrator orchestrator;
+        genny::metrics::Registry metrics;
+        genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
         orchestrator.addRequiredTokens(1);
 
         metrics::Registry registry;

@@ -5,6 +5,8 @@
 #include <condition_variable>
 #include <shared_mutex>
 
+#include <gennylib/metrics.hpp>
+
 namespace genny {
 
 // May eventually want a proper type for Phase, but for now just a typedef is sufficient.
@@ -17,9 +19,8 @@ using PhaseNumber = unsigned int;
 class Orchestrator {
 
 public:
-    explicit Orchestrator() = default;
-
-    ~Orchestrator() = default;
+    explicit Orchestrator(metrics::Gauge phaseNumberGauge)
+    : _phaseNumberGauge{phaseNumberGauge} {}
 
     /**
      * @return the current phase number
@@ -89,6 +90,9 @@ private:
 
     PhaseNumber _max = 0;
     PhaseNumber _current = 0;
+
+    // _phaseNumberGauge should keep up to date with _current.
+    metrics::Gauge _phaseNumberGauge;
 
     // Having this lets us avoid locking on _mutex for every call of
     // continueRunning(). This gave two orders of magnitude speedup.

@@ -125,7 +125,8 @@ auto runRegularThreads(int threads, long iterations) {
 
 auto runActors(int threads, long iterations) {
     IncrementsActor::increments = 0;
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
     metrics::Registry registry;
     auto yamlString = boost::format(R"(
     SchemaVersion: 2018-07-01

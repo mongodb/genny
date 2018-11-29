@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iostream>
 
+#include <gennylib/metrics.hpp>
 #include <gennylib/Orchestrator.hpp>
 
 namespace {
@@ -115,6 +116,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
     if (_currentTokens <= 0) {
         ++_current;
+        _phaseNumberGauge.set(_current);
         _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {
