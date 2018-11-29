@@ -116,9 +116,9 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
     if (_currentTokens <= 0) {
         ++_current;
+        _phaseNumberGauge.set(_current);
         _phaseChange.notify_all();
         state = State::PhaseEnded;
-        _phaseNumberGauge.set(_current);
     } else {
         if (block) {
             while (state != State::PhaseEnded && !this->_errors) {

@@ -76,7 +76,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
 
     auto actorSetup = metrics.timer("Genny.Setup");
     auto setupTimer = actorSetup.start();
-    auto phaseNumberGauge = metrics.gauge("PhaseNumber");
+    auto phaseNumberGauge = metrics.gauge("Genny.PhaseNumber");
 
     mongocxx::instance::current();
 
