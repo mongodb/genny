@@ -2,11 +2,7 @@
 #define HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 
 #include <cassert>
-#include <functional>
-#include <iterator>
-#include <optional>
 #include <random>
-#include <type_traits>
 #include <vector>
 
 #include <boost/noncopyable.hpp>
@@ -15,6 +11,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "yaml_config.hh"
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
@@ -29,164 +26,48 @@
  *
  * Please see the documentation below on WorkloadContext, ActorContext, and PhaseContext.
  */
-
-
-/*
- * This is all helper/private implementation details. Ideally this section could
- * be defined _below_ the important stuff, but we live in a cruel world.
- */
-namespace genny::V1 {
-
-/**
- * If Required, type is Out, else it's optional<Out>
- */
-template <class Out, bool Required = true>
-struct MaybeOptional {
-    using type = typename std::conditional<Required, Out, std::optional<Out>>::type;
-};
-
-/**
- * The "path" to a configured value. E.g. given the structure
- *
- * ```yaml
- * foo:
- *   bar:
- *     baz: [10,20,30]
- * ```
- *
- * The path to the 10 is "foo/bar/baz/0".
- *
- * This is used to report meaningful exceptions in the case of mis-configuration.
- */
-class ConfigPath {
-
-public:
-    ConfigPath() = default;
-
-    ConfigPath(ConfigPath&) = delete;
-    void operator=(ConfigPath&) = delete;
-
-    template <class T>
-    void add(const T& elt) {
-        _elements.push_back(elt);
-    }
-    auto begin() const {
-        return std::begin(_elements);
-    }
-    auto end() const {
-        return std::end(_elements);
-    }
-
-private:
-    /**
-     * The parts of the path, so for this structure
-     *
-     * ```yaml
-     * foo:
-     *   bar: [bat, baz]
-     * ```
-     *
-     * If this `ConfigPath` represents "baz", then `_elements`
-     * will be `["foo", "bar", 1]`.
-     *
-     * To be "efficient" we only store a `function` that produces the
-     * path component string; do this to avoid (maybe) expensive
-     * string-formatting in the "happy case" where the ConfigPath is
-     * never fully serialized to an exception.
-     */
-    std::vector<std::function<void(std::ostream&)>> _elements;
-};
-
-// Support putting ConfigPaths onto ostreams
-inline std::ostream& operator<<(std::ostream& out, const ConfigPath& path) {
-    for (const auto& f : path) {
-        f(out);
-        out << "/";
-    }
-    return out;
-}
-
-// Used by get() in WorkloadContext and ActorContext
-//
-// This is the base-case when we're out of Args... expansions in the other helper below
-template <class Out,
-          class Current,
-          bool Required = true,
-          class OutV = typename MaybeOptional<Out, Required>::type>
-OutV get_helper(const ConfigPath& parent, const Current& curr) {
-    if (!curr) {
-        if constexpr (Required) {
-            std::stringstream error;
-            error << "Invalid key at path [" << parent << "]";
-            throw InvalidConfigurationException(error.str());
-        } else {
-            return std::nullopt;
-        }
-    }
-    try {
-        if constexpr (Required) {
-            return curr.template as<Out>();
-        } else {
-            return std::make_optional<Out>(curr.template as<Out>());
-        }
-    } catch (const YAML::BadConversion& conv) {
-        std::stringstream error;
-        // typeid(Out).name() is kinda hokey but could be useful when debugging config issues.
-        error << "Bad conversion of [" << curr << "] to [" << typeid(Out).name() << "] "
-              << "at path [" << parent << "]: " << conv.what();
-        throw InvalidConfigurationException(error.str());
-    }
-}
-
-// Used by get() in WorkloadContext and ActorContext
-//
-// Recursive case where we pick off first item and recurse:
-//      get_helper(foo, a, b, c) // this fn
-//   -> get_helper(foo[a], b, c) // this fn
-//   -> get_helper(foo[a][b], c) // this fn
-//   -> get_helper(foo[a][b][c]) // "base case" fn above
-template <class Out,
-          class Current,
-          bool Required = true,
-          class OutV = typename MaybeOptional<Out, Required>::type,
-          class PathFirst,
-          class... PathRest>
-OutV get_helper(ConfigPath& parent,
-                const Current& curr,
-                PathFirst&& pathFirst,
-                PathRest&&... rest) {
-    if (curr.IsScalar()) {
-        std::stringstream error;
-        error << "Wanted [" << parent << pathFirst << "] but [" << parent << "] is scalar: ["
-              << curr << "]";
-        throw InvalidConfigurationException(error.str());
-    }
-    const auto& next = curr[std::forward<PathFirst>(pathFirst)];
-
-    parent.add([&](std::ostream& out) { out << pathFirst; });
-
-    if (!next.IsDefined()) {
-        if constexpr (Required) {
-            std::stringstream error;
-            error << "Invalid key [" << pathFirst << "] at path [" << parent << "]. Last accessed ["
-                  << curr << "].";
-            throw InvalidConfigurationException(error.str());
-        } else {
-            return std::nullopt;
-        }
-    }
-    return V1::get_helper<Out, Current, Required>(parent, next, std::forward<PathRest>(rest)...);
-}
-
-}  // namespace genny::V1
-
 namespace genny {
 
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  * Call `.get()` to access top-level yaml configs.
+ *
+ * The get() method is somewhat expensive and should only be called during actor/workload setup.
+ *
+ * Typical usage:
+ *
+ * ```c++
+ *     class MyActor ... {
+ *       string name;
+ *       MyActor(ActorContext& context)
+ *       : name{context.get<string>("Name")} {}
+ *     }
+ * ```
+ *
+ * Given this YAML:
+ *
+ * ```yaml
+ *     SchemaVersion: 2018-07-01
+ *     Actors:
+ *     - Name: Foo
+ *       Count: 100
+ *     - Name: Bar
+ * ```
+ *
+ * Then traverse as with the following:
+ *
+ * ```c++
+ *     auto schema = context.get<std::string>("SchemaVersion");
+ *     auto actors = context.get("Actors"); // actors is a YAML::Node
+ *     auto name0  = context.get<std::string>("Actors", 0, "Name");
+ *     auto count0 = context.get<int>("Actors", 0, "Count");
+ *     auto name1  = context.get<std::string>("Actors", 1, "Name");
+ *
+ *     // if value may not exist:
+ *     std::optional<int> = context.get<int,false>("Actors", 0, "Count");
+ * ```
  */
-class WorkloadContext {
+class WorkloadContext : public V1::ConfigRoot {
 public:
     /**
      * @param producers
@@ -197,7 +78,7 @@ public:
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
                     const std::vector<ActorProducer>& producers)
-        : _node{std::move(node)},
+        : V1::ConfigRoot(std::move(node)),
           _registry{&registry},
           _orchestrator{&orchestrator},
           // TODO: make this optional and default to mongodb://localhost:27017
@@ -205,14 +86,14 @@ public:
           _done{false} {
         // This is good enough for now. Later can add a WorkloadContextValidator concept
         // and wire in a vector of those similar to how we do with the vector of Producers.
-        if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
+        if (this->get_noinherit<std::string>("SchemaVersion") != "2018-07-01") {
             throw InvalidConfigurationException("Invalid schema version");
         }
 
         // Default value selected from random.org, by selecting 2 random numbers
         // between 1 and 10^9 and concatenating.
-        rng.seed(get_static<int, false>(node, "RandomSeed").value_or(269849313357703264));
-        _actorContexts = constructActorContexts(_node, this);
+        rng.seed(this->get_noinherit<int, false>("RandomSeed").value_or(269849313357703264));
+        _actorContexts = constructActorContexts(this);
         _actors = constructActors(producers, _actorContexts);
         _done = true;
     }
@@ -222,68 +103,6 @@ public:
     void operator=(WorkloadContext&) = delete;
     WorkloadContext(WorkloadContext&&) = default;
     void operator=(WorkloadContext&&) = delete;
-
-    /**
-     * Retrieve configuration values from the top-level workload configuration.
-     * Returns `root[arg1][arg2]...[argN]`.
-     *
-     * This is somewhat expensive and should only be called during actor/workload setup.
-     *
-     * Typical usage:
-     *
-     * ```c++
-     *     class MyActor ... {
-     *       string name;
-     *       MyActor(ActorContext& context)
-     *       : name{context.get<string>("Name")} {}
-     *     }
-     * ```
-     *
-     * Given this YAML:
-     *
-     * ```yaml
-     *     SchemaVersion: 2018-07-01
-     *     Actors:
-     *     - Name: Foo
-     *       Count: 100
-     *     - Name: Bar
-     * ```
-     *
-     * Then traverse as with the following:
-     *
-     * ```c++
-     *     auto schema = context.get<std::string>("SchemaVersion");
-     *     auto actors = context.get("Actors"); // actors is a YAML::Node
-     *     auto name0  = context.get<std::string>("Actors", 0, "Name");
-     *     auto count0 = context.get<int>("Actors", 0, "Count");
-     *     auto name1  = context.get<std::string>("Actors", 1, "Name");
-     *
-     *     // if value may not exist:
-     *     std::optional<int> = context.get<int,false>("Actors", 0, "Count");
-     * ```
-     * @tparam T the output type required. Will forward to YAML::Node.as<T>()
-     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
-     * that will be empty if not found.
-     */
-    template <class T = YAML::Node,
-              bool Required = true,
-              class OutV = typename V1::MaybeOptional<T, Required>::type,
-              class... Args>
-    static OutV get_static(const YAML::Node& node, Args&&... args) {
-        V1::ConfigPath p;
-        return V1::get_helper<T, YAML::Node, Required>(p, node, std::forward<Args>(args)...);
-    };
-
-    /**
-     * @see get_static()
-     */
-    template <typename T = YAML::Node,
-              bool Required = true,
-              class OutV = typename V1::MaybeOptional<T, Required>::type,
-              class... Args>
-    OutV get(Args&&... args) const {
-        return WorkloadContext::get_static<T, Required>(_node, std::forward<Args>(args)...);
-    };
 
     /**
      * @return all the actors produced. This should only be called by workload drivers.
@@ -310,9 +129,8 @@ private:
     // helper methods used during construction
     static ActorVector constructActors(const std::vector<ActorProducer>& producers,
                                        const std::vector<std::unique_ptr<ActorContext>>&);
-    static std::vector<std::unique_ptr<ActorContext>> constructActorContexts(const YAML::Node&,
-                                                                             WorkloadContext*);
-    YAML::Node _node;
+
+    std::vector<std::unique_ptr<ActorContext>> constructActorContexts(WorkloadContext*);
 
     std::mt19937_64 rng;
     metrics::Registry* const _registry;
@@ -331,12 +149,41 @@ class PhaseContext;
 
 /**
  * Represents each `Actor:` block within a WorkloadConfig.
+ *
+ * The get() method is somewhat expensive and should only be called during actor/workload setup.
+ *
+ * Typical usage:
+ *
+ * ```c++
+ *     class MyActor ... {
+ *       string name;
+ *       MyActor(ActorContext& context)
+ *       : name{context.get<string>("Name")} {}
+ *     }
+ * ```
+ *
+ * Given this YAML:
+ *
+ * ```yaml
+ *     SchemaVersion: 2018-07-01
+ *     Actors:
+ *     - Name: Foo
+ *     - Name: Bar
+ * ```
+ *
+ * There will be two ActorConfigs, one for `{Name: Foo}` and another for `{Name: Bar}`.
+ *
+ * ```c++
+ * auto name = cx.get<std::string>("Name");
+ * ```
  */
-class ActorContext final {
+class ActorContext final : public V1::ConfigNode<WorkloadContext> {
 public:
-    ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
-        : _node{node}, _workload{&workloadContext}, _phaseContexts{} {
-        _phaseContexts = constructPhaseContexts(node, this);
+    ActorContext(YAML::Node node, WorkloadContext& workloadContext)
+        : ConfigNode(std::move(node), workloadContext),
+          _workload{&workloadContext},
+          _phaseContexts{} {
+        _phaseContexts = constructPhaseContexts(_node, this);
     }
 
     // no copy or move
@@ -344,50 +191,6 @@ public:
     void operator=(ActorContext&) = delete;
     ActorContext(ActorContext&&) = default;
     void operator=(ActorContext&&) = delete;
-
-    /**
-     * Retrieve configuration values from a particular `Actor:` block in the workload configuration.
-     * `Returns actor[arg1][arg2]...[argN]`.
-     *
-     * This is somewhat expensive and should only be called during actor/workload setup.
-     *
-     * Typical usage:
-     *
-     * ```c++
-     *     class MyActor ... {
-     *       string name;
-     *       MyActor(ActorContext& context)
-     *       : name{context.get<string>("Name")} {}
-     *     }
-     * ```
-     *
-     * Given this YAML:
-     *
-     * ```yaml
-     *     SchemaVersion: 2018-07-01
-     *     Actors:
-     *     - Name: Foo
-     *     - Name: Bar
-     * ```
-     *
-     * There will be two ActorConfigs, one for `{Name:Foo}` and another for `{Name:Bar}`.
-     *
-     * ```
-     * auto name = cx.get<std::string>("Name");
-     * ```
-     * @tparam T the return-value type. Will return a T if Required (and throw if not found) else
-     * will return an optional<T> (empty optional if not found).
-     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
-     * that will be empty if not found.
-     */
-    template <typename T = YAML::Node,
-              bool Required = true,
-              class OutV = typename V1::MaybeOptional<T, Required>::type,
-              class... Args>
-    OutV get(Args&&... args) const {
-        V1::ConfigPath p;
-        return V1::get_helper<T, YAML::Node, Required>(p, _node, std::forward<Args>(args)...);
-    };
 
     /**
      * Access top-level workload configuration.
@@ -543,11 +346,11 @@ private:
 };
 
 
-class PhaseContext final {
+class PhaseContext final : public V1::ConfigNode<ActorContext> {
 
 public:
     PhaseContext(const YAML::Node& node, const ActorContext& actorContext)
-        : _node{node}, _actor{&actorContext} {}
+        : ConfigNode(std::move(node), actorContext) {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -556,35 +359,8 @@ public:
     void operator=(PhaseContext&&) = delete;
 
     /**
-     * @return the value associated with the given key. If not specified
-     * directly in this `Phases` block, then the value from the parent `Actor`
-     * context is used, if present.
+     * Called in PhaseLoop during the IterationCompletionCheck constructor.
      */
-    template <typename T = YAML::Node,
-              bool Required = true,
-              class OutV = typename V1::MaybeOptional<T, Required>::type,
-              class... Args>
-    OutV get(Args&&... args) const {
-        V1::ConfigPath p;
-        // try to extract from own node
-        auto fromSelf = V1::get_helper<T, YAML::Node, false>(p, _node, std::forward<Args>(args)...);
-        if (fromSelf) {
-            if constexpr (Required) {
-                // unwrap from optional<T>
-                return *fromSelf;
-            } else {
-                // don't unwrap, return the optional<T> itself
-                return fromSelf;
-            }
-        }
-
-        // fallback to actor node
-        return this->_actor->get<T, Required>(std::forward<Args>(args)...);
-    };
-
-    /**
-    * Called in PhaseLoop during the IterationCompletionCheck constructor.
-    */
     bool isNop() const {
         bool isNop = get<std::string, false>("Operation") && get<std::string>("Operation") == "Nop";
         if (isNop && _node.size() != 1) {
@@ -593,10 +369,6 @@ public:
         }
         return isNop;
     }
-
-private:
-    YAML::Node _node;
-    const ActorContext* _actor;
 };
 
 }  // namespace genny

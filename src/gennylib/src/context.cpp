@@ -3,9 +3,9 @@
 
 // Helper method to convert Actors:[...] to ActorContexts
 std::vector<std::unique_ptr<genny::ActorContext>> genny::WorkloadContext::constructActorContexts(
-    const YAML::Node& node, WorkloadContext* workloadContext) {
+    WorkloadContext* workloadContext) {
     auto out = std::vector<std::unique_ptr<genny::ActorContext>>{};
-    for (const auto& actor : get_static(node, "Actors")) {
+    for (auto&& actor : this->get_noinherit("Actors")) {
         out.emplace_back(std::make_unique<genny::ActorContext>(actor, *workloadContext));
     }
     return out;
