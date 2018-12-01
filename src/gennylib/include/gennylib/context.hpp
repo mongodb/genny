@@ -349,7 +349,7 @@ private:
 class PhaseContext final : public V1::ConfigNode<ActorContext> {
 
 public:
-    PhaseContext(const YAML::Node& node, const ActorContext& actorContext)
+    PhaseContext(YAML::Node node, const ActorContext& actorContext)
         : ConfigNode(std::move(node), actorContext) {}
 
     // no copy or move
