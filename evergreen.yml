@@ -97,6 +97,10 @@ task_groups:
   max_hosts: 1
   setup_group:
   - func: f_cleanup
+  teardown_task:
+  # Attaching results is prohibited in "teardown_group". So we call it for each task but make the
+  # result file optional.
+  - func: f_report_test_results
   tasks:
   - t_compile
   - t_python_test
@@ -116,6 +120,8 @@ functions:
       # the || true prevents a failure exit code for when `src` doesn't exist
       script: |
         set -o errexit
+        set -o pipefail
+        set -o nounset
 
         rm -rf src || true
 
@@ -135,6 +141,8 @@ functions:
       working_dir: src/build
       script: |
         set -o errexit
+        set -o pipefail
+        set -o nounset
 
         rm -rf grpc # remove if already exists
         git clone --recurse-submodules https://github.com/grpc/grpc.git
@@ -164,6 +172,8 @@ functions:
       working_dir: src/build
       script: |
         set -o errexit
+        set -o pipefail
+        set -o nounset
 
         # Add paths to gRPC and protobuf.
         cwd=$(pwd)
@@ -183,6 +193,8 @@ functions:
       working_dir: src/build
       script: |
         set -o errexit
+        set -o pipefail
+        set -o nounset
 
         make test
 
@@ -195,18 +207,20 @@ functions:
       working_dir: src/src/python
       script: |
         set -o errexit
+        set -o pipefail
+        set -o nounset
 
         python setup.py nosetests
 
   ##
   # Reports test results to evergreen API.
   ##
-  f_report_cmake_test_results:
+  f_report_test_results:
   - command: attach.xunit_results
     params:
+      optional: true
       file: ./src/build/src/*/*.junit.xml
-
-  f_report_python_test_results:
   - command: attach.xunit_results
     params:
+      optional: true
       file: ./src/src/python/nosetests.xml
