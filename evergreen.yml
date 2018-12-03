@@ -71,23 +71,36 @@ buildvariants:
 ##                ⚡️ Tasks ⚡️
 
 tasks:
-
-- name: t_test
+- name: t_compile
   commands:
-    - func: f_fetch_source
-    - func: f_build_grpc
-    - func: f_compile
-    - func: f_cmake_test
-    - func: f_python_test
+  - func: f_fetch_source
+  - func: f_build_grpc
+  - func: f_compile
+- name: t_python_test
+  depends_on:
+  -name: t_compile
+  commands:
+  - func: f_python_test
+  - func: f_report_python_test_results
+- name: t_cmake_test
+  depends_on:
+  -name: t_compile
+  commands:
+  - func: f_cmake_test
+  - func: f_report_cmake_test_results
 
 
-##                ⚡️ Pre/Post ⚡️
+##                ⚡️ Task Groups ⚡️
 
-pre:
-- func: f_cleanup
-
-post:
-- func: f_report_results
+task_groups:
+- name: t_test
+  max_hosts: 1
+  setup_group:
+  - func: f_cleanup
+  tasks:
+  - t_compile
+  - t_python_test
+  - t_cmake_test
 
 
 ##                ⚡️ Functions ⚡️
@@ -188,10 +201,12 @@ functions:
   ##
   # Reports test results to evergreen API.
   ##
-  f_report_results:
+  f_report_cmake_test_results:
   - command: attach.xunit_results
     params:
       file: ./src/build/src/*/*.junit.xml
+
+  f_report_python_test_results:
   - command: attach.xunit_results
     params:
       file: ./src/src/python/nosetests.xml
