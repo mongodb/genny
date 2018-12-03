@@ -193,9 +193,8 @@ public:
      */
     template <typename T = YAML::Node, bool Required = true, class... Args>
     typename MaybeOptional<T, Required>::type get(Args&&... args) const {
-        ConfigPath p;
         // try to extract from own node
-        auto fromSelf = get_helper<T, false>(p, _node, std::forward<Args>(args)...);
+        auto fromSelf = get_noinherit<T, false>(std::forward<Args>(args)...);
         if (fromSelf) {
             if constexpr (Required) {
                 // unwrap from optional<T>
