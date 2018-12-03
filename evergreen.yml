@@ -102,6 +102,8 @@ functions:
     params:
       # the || true prevents a failure exit code for when `src` doesn't exist
       script: |
+        set -o errexit
+
         rm -rf src || true
 
   f_fetch_source:
@@ -119,11 +121,13 @@ functions:
     params:
       working_dir: src/build
       script: |
+        set -o errexit
+
         rm -rf grpc # remove if already exists
         git clone --recurse-submodules https://github.com/grpc/grpc.git
-        git checkout b79462f186cc22550bc8d53a00ae751f50d194f5
 
         pushd grpc
+        git checkout b79462f186cc22550bc8d53a00ae751f50d194f5
 
         # Work around https://github.com/grpc/grpc/issues/16675 by checking out a newer commit.
         pushd third_party/boringssl
@@ -146,6 +150,7 @@ functions:
     params:
       working_dir: src/build
       script: |
+        set -o errexit
 
         # Add paths to gRPC and protobuf.
         cwd=$(pwd)
@@ -162,9 +167,10 @@ functions:
   f_cmake_test:
   - command: shell.exec
     params:
-      continue_on_err: true
       working_dir: src/build
       script: |
+        set -o errexit
+
         make test
 
   ##
@@ -173,9 +179,10 @@ functions:
   f_python_test:
   - command: shell.exec
     params:
-      continue_on_err: true
       working_dir: src/src/python
       script: |
+        set -o errexit
+
         python setup.py nosetests
 
   ##
