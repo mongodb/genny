@@ -80,11 +80,11 @@ void genny::actor::Loader::run() {
     }
 }
 
-genny::actor::Loader::Loader(genny::ActorContext& context, const unsigned int thread)
+genny::actor::Loader::Loader(genny::ActorContext& context)
     : _rng{context.workload().createRNG()},
-      _totalBulkLoadTimer{context.timer("totalBulkInsertTime", thread)},
-      _individualBulkLoadTimer{context.timer("individualBulkInsertTime", thread)},
-      _indexBuildTimer{context.timer("indexBuildTime", thread)},
+      _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Actor::id())},
+      _individualBulkLoadTimer{context.timer("individualBulkInsertTime", Actor::id())},
+      _indexBuildTimer{context.timer("indexBuildTime", Actor::id())},
       _client{context.client()},
       _loop{context, _rng, _client} {}
 
@@ -94,6 +94,6 @@ genny::ActorVector genny::actor::Loader::producer(genny::ActorContext& context) 
         return out;
     }
     // Loader is single threaded for now
-    out.push_back(std::make_unique<genny::actor::Loader>(context, 0));
+    out.push_back(std::make_unique<genny::actor::Loader>(context));
     return out;
 }

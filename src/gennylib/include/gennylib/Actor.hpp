@@ -3,6 +3,8 @@
 
 namespace genny {
 
+using ActorId = unsigned int;
+
 /**
  * An Actor is the base unit of work in genny. An actor is a single-
  * threaded entity.
@@ -41,6 +43,7 @@ namespace genny {
 class Actor {
 
 public:
+    Actor();
     virtual ~Actor() = default;
 
     /**
@@ -48,19 +51,20 @@ public:
      * This is only intended to be called by workload drivers.
      */
     virtual void run() = 0;
+
+    ActorId id() const {
+        return _id;
+    }
+
+private:
+    ActorId _id;
 };
 
-using ActorId = unsigned int;
-
 /**
- * Increment the nextActorId and return the original value.
- * This is not thread safe and is intended solely for single-threaded Actor ctoring
+ * Get a unique ActorId
  * @return  unsigned int    The next sequential id
  */
-inline ActorId nextActorId() {
-    static ActorId nextActorId = 0u;
-    return nextActorId++;
-}
+ActorId nextActorId();
 
 }  // namespace genny
 

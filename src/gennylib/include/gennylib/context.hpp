@@ -596,19 +596,6 @@ private:
     const ActorContext* _actor;
 };
 
-inline ActorProducer makeThreadedProducer(ActorProducer producer){
-    return [producer{std::move(producer)}](ActorContext& context) {
-        ActorProducer::result_type out;
-
-        auto threads = context.get<int>("Threads");
-        for (int i = 0; i < threads; ++i)
-            for (auto & actor : producer(context))
-                out.emplace_back(std::move(actor));
-
-        return out;
-    };
-}
-
 }  // namespace genny
 
 #endif  // HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED

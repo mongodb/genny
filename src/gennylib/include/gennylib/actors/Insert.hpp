@@ -28,8 +28,6 @@ public:
 private:
     std::mt19937_64 _rng;
 
-    const ActorId _id;
-
     metrics::Timer _insertTimer;
     metrics::Counter _operations;
     mongocxx::pool::entry _client;

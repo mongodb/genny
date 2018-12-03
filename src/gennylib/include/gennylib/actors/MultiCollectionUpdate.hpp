@@ -16,7 +16,7 @@ namespace genny::actor {
 class MultiCollectionUpdate : public Actor {
 
 public:
-    explicit MultiCollectionUpdate(ActorContext& context, const unsigned int thread);
+    explicit MultiCollectionUpdate(ActorContext& context);
     ~MultiCollectionUpdate() = default;
 
     void run() override;

@@ -20,8 +20,6 @@ public:
     static ActorVector producer(ActorContext& context);
 
 private:
-    const ActorId _id;
-
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
 

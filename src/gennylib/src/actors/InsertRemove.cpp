@@ -50,11 +50,10 @@ void genny::actor::InsertRemove::run() {
 
 genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context)
     : _rng{context.workload().createRNG()},
-      _id{nextActorId()},
-      _insertTimer{context.timer("insert", _id)},
-      _removeTimer{context.timer("remove", _id)},
+      _insertTimer{context.timer("insert", Actor::id())},
+      _removeTimer{context.timer("remove", Actor::id())},
       _client{std::move(context.client())},
-      _loop{context, _rng, _client, _id} {}
+      _loop{context, _rng, _client, Actor::id()} {}
 
 genny::ActorVector genny::actor::InsertRemove::producer(genny::ActorContext& context) {
     if (context.get<std::string>("Type") != "InsertRemove") {
@@ -62,6 +61,11 @@ genny::ActorVector genny::actor::InsertRemove::producer(genny::ActorContext& con
     }
 
     ActorVector out;
-    out.emplace_back(std::make_unique<actor::InsertRemove>(context));
+
+    auto threads = context.get<int>("Threads");
+    for (int i = 0; i < threads; ++i) {
+        out.push_back(std::make_unique<genny::actor::InsertRemove>(context));
+    }
+
     return out;
 }

@@ -37,9 +37,8 @@ void genny::actor::Insert::run() {
 
 genny::actor::Insert::Insert(genny::ActorContext& context)
     : _rng{context.workload().createRNG()},
-      _id{nextActorId()},
-      _insertTimer{context.timer("insert", _id)},
-      _operations{context.counter("operations", _id)},
+      _insertTimer{context.timer("insert", Actor::id())},
+      _operations{context.counter("operations", Actor::id())},
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 
