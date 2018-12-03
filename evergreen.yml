@@ -81,13 +81,11 @@ tasks:
   -name: t_compile
   commands:
   - func: f_python_test
-  - func: f_report_python_test_results
 - name: t_cmake_test
   depends_on:
   -name: t_compile
   commands:
   - func: f_cmake_test
-  - func: f_report_cmake_test_results
 
 
 ##                ⚡️ Task Groups ⚡️
