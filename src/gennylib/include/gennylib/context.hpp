@@ -449,7 +449,11 @@ public:
     };
 
     mongocxx::pool::entry client() {
-        return _workload->_clientPool.acquire();
+        auto entry = _workload->_clientPool.try_acquire();
+	    if (!entry) {
+	        throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
+        }
+        return std::move(*entry);
     }
 
     // <Forwarding to delegates>
