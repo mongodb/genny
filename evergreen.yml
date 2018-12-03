@@ -177,8 +177,8 @@ functions:
 
         # Add paths to gRPC and protobuf.
         cwd=$(pwd)
-        export LIBRARY_PATH="$cwd/grpc/cmake-build/:$cwd/grpc/cmake-build/third_party/protobuf:$LIBRARY_PATH"
-        export CPLUS_INCLUDE_PATH="$cwd/grpc/include:$cwd/grpc/third_party/protobuf/src:$CPLUS_INCLUDE_PATH"
+        export LIBRARY_PATH="$cwd/grpc/cmake-build/:$cwd/grpc/cmake-build/third_party/protobuf"
+        export CPLUS_INCLUDE_PATH="$cwd/grpc/include:$cwd/grpc/third_party/protobuf/src"
 
         cmake -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" ..
         make
