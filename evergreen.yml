@@ -77,13 +77,9 @@ tasks:
   - func: f_build_grpc
   - func: f_compile
 - name: t_python_test
-  depends_on:
-  - name: t_compile
   commands:
   - func: f_python_test
 - name: t_cmake_test
-  depends_on:
-  -name: t_compile
   commands:
   - func: f_cmake_test
 
@@ -96,10 +92,15 @@ task_groups:
   setup_group:
   - func: f_cleanup
   teardown_task:
-  # Attaching results is prohibited in "teardown_group". So we call it for each task but make the
-  # result file optional.
+  # Attaching results is prohibited in "teardown_group". So we call it in "teardown_task"
+  # but make the result file optional.
   - func: f_report_test_results
   tasks:
+  # Rely on implicit dependencies in task_groups where tasks are executed in the order they're
+  # defined. Tasks with explicit "depends_on" tasks may conflict with task_group's implicit
+  # dependency, causing unexpected behavior.
+  #
+  # For this task group, the implicit dependency is that t_*_test has to run after t_compile.
   - t_compile
   - t_python_test
   - t_cmake_test
@@ -188,6 +189,7 @@ functions:
   f_cmake_test:
   - command: shell.exec
     params:
+      continue_on_err: true
       working_dir: src/build
       script: |
         set -o errexit
@@ -202,6 +204,7 @@ functions:
   f_python_test:
   - command: shell.exec
     params:
+      continue_on_err: true
       working_dir: src/src/python
       script: |
         set -o errexit
