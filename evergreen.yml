@@ -78,7 +78,7 @@ tasks:
   - func: f_compile
 - name: t_python_test
   depends_on:
-  -name: t_compile
+  - name: t_compile
   commands:
   - func: f_python_test
 - name: t_cmake_test
