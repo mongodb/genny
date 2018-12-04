@@ -19,16 +19,14 @@ Actors:
       - {string: 1}
     Phases:
       - Repeat: 1
-      - Repeat: 0
+      - Operation: Nop
   - Name: MultiCollectionUpdate
     Type: MultiCollectionUpdate
     Threads: 10
     Database: *DB
     CollectionCount: *CollectionCount
     Phases:
-      - UpdateFilter: {}
-        Update: {}
-        Repeat: 0
+      - Operation: Nop
       - UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
         Update: {$inc: {x: 1}}
         Duration: 60000 # TODO: TIG-1154
@@ -39,8 +37,7 @@ Actors:
     Database: *DB
     CollectionCount: *CollectionCount
     Phases:
-      - Filter: {}
-        Repeat: 0
+      - Operation: Nop
       - Filter: {y: {$randomint: {min: 0, max: 1000}}}
         Limit: 20
         Duration: 60000 # TODO: TIG-1154
