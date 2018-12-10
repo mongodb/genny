@@ -264,7 +264,7 @@ TEST_CASE("PhaseContexts constructed as expected") {
         int calls = 0;
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) { ++calls; };
         onContext(yaml, op);
-        REQUIRE(calls == 1);
+        REQUIRE(calls == 0);
     }
 
     SECTION("One Phase per block") {
@@ -322,6 +322,69 @@ TEST_CASE("PhaseContexts constructed as expected") {
     }
 }
 
+TEST_CASE("OperationContexts constructed as expected") {
+    auto yaml = YAML::Load(R"(
+    SchemaVersion: 2018-07-01
+    MongoUri: mongodb://localhost:27017
+    Actors:
+    - Name: Actor1
+      Phases:
+      - Database: test1
+        Operations:
+        - MetricsName: Find
+          Command:
+            find: restaurants
+        - MetricsName: Drop
+          Command:
+            drop: myCollection
+      - Database: test2
+        Operations:
+        - MetricsName: Find
+          Command:
+            find: schools
+    )");
+
+    SECTION("Loads Phases") {
+        // "test of the test"
+        int calls = 0;
+        std::function<void(ActorContext&)> op = [&](ActorContext& ctx) { ++calls; };
+        onContext(yaml, op);
+        REQUIRE(calls == 1);
+    }
+    SECTION("Creates the correct number of OperationContexts per phase") {
+        onContext(yaml, [](ActorContext& actorContext) {
+            const auto actorName = actorContext.get_noinherit<std::string>("Name");
+            if (actorName == "Actor1") {
+                for (auto&& [phase, config] : actorContext.phases()) {
+                    if (phase == 0) {
+                        REQUIRE(config->operations().size() == 2);
+                    } else if (phase == 1) {
+                        REQUIRE(config->operations().size() == 1);
+                    }
+                }
+            }
+        });
+    }
+    SECTION("Operation configs match to the correct phase") {
+        auto testYaml = YAML::Load(R"({ rating: { $gte: 9 }, cuisine: italian })");
+        onContext(yaml, [](ActorContext& actorContext) {
+            const auto actorName = actorContext.get_noinherit<std::string>("Name");
+            if (actorName == "Actor1") {
+                for (auto&& [phase, config] : actorContext.phases()) {
+                    if (phase == 0) {
+                        REQUIRE(config->operations().at("Find")->get<std::string>("Command", "find") == "restaurants");
+                        REQUIRE(config->operations().at("Drop")->get<std::string>("Command", "drop") == "myCollection");
+                        REQUIRE(config->operations().at("Find")->get<std::string>("Database") == "test1");
+                    } else if (phase == 1) {
+                        REQUIRE(config->operations().at("Find")->get<std::string>("Command", "find") == "schools");
+                        REQUIRE(config->operations().at("Find")->get<std::string>("Database") == "test2");
+                    }
+                }
+            }
+        });
+    }
+}
+
 TEST_CASE("Duplicate Phase Numbers") {
     auto yaml = YAML::Load(R"(
     SchemaVersion: 2018-07-01
@@ -358,5 +421,132 @@ TEST_CASE("No PhaseContexts") {
             REQUIRE(ctx.phases().size() == 0);
         };
         onContext(yaml, op);
+    }
+}
+
+TEST_CASE("Configuration cascades to nested context types") {
+    auto yaml = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Database: test
+Actors:
+- Name: Actor1
+  Collection: mycoll
+  Phases:
+  - Operation:
+
+  - Operation: Insert
+    Database: test3
+    Collection: mycoll2
+
+  - Operations:
+    - MetricsName: Find
+      Database: test4
+      Command:
+        find: schools
+- Name: Actor2
+  Database: test2
+    )");
+
+    SECTION("ActorContext inherits from WorkloadContext") {
+        onContext(yaml, [](ActorContext& actorContext) {
+            const auto& workloadContext = actorContext.workload();
+            REQUIRE(workloadContext.get_noinherit<std::string>("Database") == "test");
+            REQUIRE(workloadContext.get<std::string>("Database") == "test");
+
+            const auto actorName = actorContext.get_noinherit<std::string>("Name");
+            if (actorName == "Actor1") {
+                REQUIRE(actorContext.get_noinherit<std::string, false>("Database") == std::nullopt);
+                REQUIRE(actorContext.get<std::string>("Database") == "test");
+            } else if (actorName == "Actor2") {
+                REQUIRE(actorContext.get_noinherit<std::string>("Database") == "test2");
+                REQUIRE(actorContext.get<std::string>("Database") == "test2");
+            }
+        });
+    }
+
+    SECTION("PhaseContext inherits from ActorContext") {
+        onContext(yaml, [](ActorContext& actorContext) {
+            const auto actorName = actorContext.get_noinherit<std::string>("Name");
+            if (actorName == "Actor1") {
+                REQUIRE(actorContext.get_noinherit<std::string>("Collection") == "mycoll");
+                REQUIRE(actorContext.get<std::string>("Collection") == "mycoll");
+
+                for (auto&& [phase, config] : actorContext.phases()) {
+                    if (phase == 0) {
+                        REQUIRE(config->get_noinherit<std::string, false>("Collection") ==
+                                std::nullopt);
+                        REQUIRE(config->get<std::string>("Collection") == "mycoll");
+                    } else if (phase == 1) {
+                        REQUIRE(config->get_noinherit<std::string>("Collection") == "mycoll2");
+                        REQUIRE(config->get<std::string>("Collection") == "mycoll2");
+                    }
+                }
+            }
+        });
+    }
+
+    SECTION("PhaseContext inherits from WorkloadContext transitively") {
+        onContext(yaml, [](ActorContext& actorContext) {
+            const auto actorName = actorContext.get_noinherit<std::string>("Name");
+            if (actorName == "Actor1") {
+                for (auto&& [phase, config] : actorContext.phases()) {
+                    if (phase == 0) {
+                        REQUIRE(config->get_noinherit<std::string, false>("Database") ==
+                                std::nullopt);
+                        REQUIRE(config->get<std::string>("Database") == "test");
+                    } else if (phase == 1) {
+                        REQUIRE(config->get_noinherit<std::string>("Database") == "test3");
+                        REQUIRE(config->get<std::string>("Database") == "test3");
+                    }
+                }
+            }
+        });
+    }
+
+    SECTION("OperationContext inherits from ActorContext through PhaseContext") {
+        onContext(yaml, [](ActorContext& actorContext) {
+            const auto actorName = actorContext.get_noinherit<std::string>("Name");
+            if (actorName == "Actor1") {
+                for (auto&& [phase, config] : actorContext.phases()) {
+                    if (phase == 0) {
+                        for(auto&& [_, opCtx] : config->operations()) {
+                            REQUIRE(opCtx->get_noinherit<std::string, false>("Collection") == std::nullopt);
+                            REQUIRE(opCtx->get<std::string>("Collection") == "mycoll");
+                        }
+                    } else if (phase == 1) {
+                        for(auto&& [_, opCtx] : config->operations()) {
+                            REQUIRE(opCtx->get_noinherit<std::string, false>("Collection") == std::nullopt);
+                            REQUIRE(opCtx->get<std::string>("Collection") == "mycoll3");
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    SECTION("PhaseContext inherits from WorkloadContext through PhaseContext") {
+        onContext(yaml, [](ActorContext& actorContext) {
+            const auto actorName = actorContext.get_noinherit<std::string>("Name");
+            if (actorName == "Actor1") {
+                for (auto&& [phase, config] : actorContext.phases()) {
+                    if (phase == 0) {
+                        for(auto&& [_, opCtx] : config->operations()) {
+                            REQUIRE(opCtx->get_noinherit<std::string, false>("Database") == std::nullopt);
+                            REQUIRE(opCtx->get<std::string>("Database") == "test");
+                        }
+                    } else if (phase == 1) {
+                        for(auto&& [_, opCtx] : config->operations()) {
+                            REQUIRE(opCtx->get_noinherit<std::string, false>("Database") == std::nullopt);
+                            REQUIRE(opCtx->get<std::string>("Database") == "test3");
+                        }
+                    } else if (phase == 2) {
+                        for(auto&& [_, opCtx] : config->operations()) {
+                            REQUIRE(opCtx->get_noinherit<std::string, false>("Database") == "test4");
+                            REQUIRE(opCtx->get<std::string>("Database") == "test4");
+                        }
+                    }
+                }
+            }
+        });
     }
 }
