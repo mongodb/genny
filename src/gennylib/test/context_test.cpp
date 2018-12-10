@@ -192,7 +192,7 @@ TEST_CASE("PhaseContexts constructed as expected") {
         int calls = 0;
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) { ++calls; };
         onContext(yaml, op);
-        REQUIRE(calls == 0);
+        REQUIRE(calls == 1);
     }
 
     SECTION("One Phase per block") {
@@ -355,7 +355,7 @@ Actors:
 - Name: Actor1
   Collection: mycoll
   Phases:
-  - Operation:
+  - Operation: Nop
 
   - Operation: Insert
     Database: test3

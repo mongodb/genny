@@ -1,12 +1,12 @@
-#include <gennylib/actors/RunCommand.hpp>
-#include <gennylib/operations/RunCommand.hpp>
-#include <gennylib/value_generators.hpp>
-
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
-#include <log.hh>
 #include <yaml-cpp/yaml.h>
+
+#include <gennylib/actors/RunCommand.hpp>
+#include <gennylib/operations/RunCommand.hpp>
+#include <gennylib/value_generators.hpp>
+#include <log.hh>
 
 namespace {}
 
@@ -17,10 +17,10 @@ struct genny::actor::RunCommand::PhaseConfig {
                 ActorContext& actorContext,
                 const unsigned int thread)
         : database{(*client)[context.get<std::string>("Database")]} {
-        for (auto&& opContext: context.operations()) {
-            //auto operation = genny::operation::RunCommand(*(opContext.second), *client, rng);
+        for (auto&& opContext : context.operations()) {
             timers.push_back(actorContext.timer(opContext.first, thread));
-            operations.push_back(std::make_unique<genny::operation::RunCommand>(*(opContext.second), *client, rng));
+            operations.push_back(
+                std::make_unique<genny::operation::RunCommand>(*(opContext.second), *client, rng));
         }
     }
 

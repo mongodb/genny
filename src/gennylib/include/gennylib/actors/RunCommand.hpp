@@ -2,14 +2,14 @@
 #define HEADER_32412A69_F128_4BC8_8335_520EE35F5381
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/PhaseLoop.hpp>
 
 namespace genny::actor {
 
 /**
- * Command is an actor that performs database and admin commands on a database.
- * TODO: finish header description.
+ * RunCommand is an actor that performs database and admin commands on a database. The
+ * actor records the latency of each command run.
  */
 
 class RunCommand : public Actor {
