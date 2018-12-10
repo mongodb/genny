@@ -121,11 +121,17 @@ bsoncxx::array::value parseSequence(
     std::string prefix,
     std::vector<std::tuple<std::string, std::string, YAML::Node>>& overrides) {
     bsoncxx::builder::stream::array arraybuilder{};
+    int i = 0;
+    std::string key;
     for (auto entry : node) {
+        BOOST_LOG_TRIVIAL(trace) << "About to call checkTemplates in sequence";
+        key = std::to_string(i);
+        i++;
+        checkTemplates(key, entry, templates, prefix, overrides);
         if (entry.IsMap()) {
-            arraybuilder << open_document << concatenate(parseMap(entry)) << close_document;
+            arraybuilder << open_document << concatenate(parseMap(entry, templates, prefix + key + ".", overrides)) << close_document;
         } else if (entry.IsSequence()) {
-            arraybuilder << open_array << concatenate(parseSequence(entry)) << close_array;
+            arraybuilder << open_array << concatenate(parseSequence(entry, templates, prefix + key + ".", overrides)) << close_array;
         } else  // scalar
         {
             std::string doc = "{\"\": " + quoteIfNeeded(entry.Scalar()) + "}";
