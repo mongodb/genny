@@ -85,7 +85,7 @@ struct Fails : public genny::Actor {
     genny::PhaseLoop<PhaseConfig> loop;
     static StaticFailsInfo state;
 
-    explicit Fails(genny::ActorContext& ctx) : loop{ctx} {}
+    explicit Fails(genny::ActorContext& ctx) : Actor(ctx), loop{ctx} {}
 
     void run() override {
         for (auto&& [phase, config] : loop) {
