@@ -22,7 +22,6 @@ Actors:
       x: 0
       y: {$randomint: {min: 0, max: 1000}}
       z: {$randomint: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
-      TestArray: [0, 1, 2, 3, 4, 5, {$randomint: {min: 0, max: 1000}}]
       Int0: &int {$randomint: {min: 0, max: 10000}}
       Int1: *int
       Int2: *int
@@ -70,17 +69,17 @@ Actors:
       some: {embedded: {document: {with: {some: {depth: *string}}}}}
     # The Loader needs to be updated to take options to support unique, etc. I will do as a
     # follow-up.
-      Indexes:
-        - {t: 1, w: 1}
-        - {y: 1}
-        - {t: 1, StringShort: 1}
-        - {String0: 1}
-        - {String1: 1}
-        - {z: 1}  # will make this unique
-        - {y: 1, StringShort: 1}
-        - {int0: 1, int1: 1, int2: 1}
-        - {int3: 1}
-        - {int4: 1}
+    Indexes:
+      - {t: 1, w: 1}
+      - {y: 1}
+      - {t: 1, StringShort: 1}
+      - {String0: 1}
+      - {String1: 1}
+      - {z: 1}  # will make this unique
+      - {y: 1, StringShort: 1}
+      - {int0: 1, int1: 1, int2: 1}
+      - {int3: 1}
+      - {int4: 1}
     Phases:
       - Repeat: 1
       - Operation: Nop
