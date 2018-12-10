@@ -25,6 +25,7 @@
 #include <gennylib/actors/Loader.hpp>
 #include <gennylib/actors/MultiCollectionQuery.hpp>
 #include <gennylib/actors/MultiCollectionUpdate.hpp>
+#include <gennylib/actors/RunCommand.hpp>
 // NextActorHeaderHere
 
 #include "DefaultDriver.hpp"
@@ -90,6 +91,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
         &genny::actor::MultiCollectionUpdate::producer,
         &genny::actor::Loader::producer,
         &genny::actor::MultiCollectionQuery::producer,
+        &genny::actor::RunCommand::producer,
         // NextActorProducerHere
     };
     // clang-format on

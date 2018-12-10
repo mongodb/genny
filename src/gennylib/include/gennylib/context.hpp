@@ -146,6 +146,7 @@ private:
 
 // For some reason need to decl this; see impl below
 class PhaseContext;
+class OperationContext;
 
 /**
  * Represents each `Actor:` block within a WorkloadConfig.
@@ -253,8 +254,8 @@ public:
 
     mongocxx::pool::entry client() {
         auto entry = _workload->_clientPool.try_acquire();
-	    if (!entry) {
-	        throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
+        if (!entry) {
+            throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
         }
         return std::move(*entry);
     }
@@ -350,7 +351,9 @@ class PhaseContext final : public V1::ConfigNode<ActorContext> {
 
 public:
     PhaseContext(YAML::Node node, const ActorContext& actorContext)
-        : ConfigNode(std::move(node), actorContext) {}
+        : ConfigNode(std::move(node), actorContext) {
+        _operationContexts = constructOperationContexts(_node, this);
+    }
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -369,6 +372,36 @@ public:
         }
         return isNop;
     }
+
+    /**
+     * @return a structure representing the `Operations:` block in the Phase config.
+     *
+     * Keys are the metric names and values are the operation contexts associated with the metric.
+     * The structure is empty if there are no operations represented.
+     */
+    const std::unordered_map<std::string, std::unique_ptr<genny::OperationContext>>& operations()
+        const {
+        return _operationContexts;
+    };
+
+private:
+    static std::unordered_map<std::string, std::unique_ptr<genny::OperationContext>>
+    constructOperationContexts(const YAML::Node&, PhaseContext*);
+    std::unordered_map<std::string, std::unique_ptr<genny::OperationContext>> _operationContexts;
+};
+
+class OperationContext final : public V1::ConfigNode<PhaseContext> {
+public:
+    OperationContext(YAML::Node node, const PhaseContext& phaseContext)
+        : ConfigNode(std::move(node), phaseContext) {
+        std::cout << "node: " << node << std::endl;
+    }
+
+    // no copy or move
+    OperationContext(OperationContext&) = delete;
+    void operator=(OperationContext&) = delete;
+    OperationContext(OperationContext&&) = default;
+    void operator=(OperationContext&&) = delete;
 };
 
 }  // namespace genny

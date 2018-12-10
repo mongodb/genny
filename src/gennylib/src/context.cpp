@@ -46,3 +46,27 @@ genny::ActorContext::constructPhaseContexts(const YAML::Node&, genny::ActorConte
     actorContext->orchestrator().phasesAtLeastTo(out.size() - 1);
     return out;
 }
+
+// Helper method to convert Operations:[...] to OperationContexts
+std::unordered_map<std::string, std::unique_ptr<genny::OperationContext>>
+genny::PhaseContext::constructOperationContexts(const YAML::Node& node,
+                                                genny::PhaseContext* phaseContext) {
+    std::unordered_map<std::string, std::unique_ptr<genny::OperationContext>> out;
+    auto operations = phaseContext->get<YAML::Node, false>("Operations");
+    if (!operations) {
+        return out;
+    }
+
+    for (const auto& operation : *operations) {
+        auto metricsName = operation["MetricsName"].as<std::string>();
+        std::cout << "MetricsName: " << metricsName << std::endl;
+        auto [it, success] = out.try_emplace(
+            metricsName, std::make_unique<genny::OperationContext>(operation, *phaseContext));
+        if (!success) {
+            std::stringstream msg;
+            msg << "Duplicate metrics name " << metricsName;
+            throw InvalidConfigurationException(msg.str());
+        }
+    }
+    return out;
+}
