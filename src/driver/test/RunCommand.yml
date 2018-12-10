@@ -1,0 +1,24 @@
+SchemaVersion: 2018-07-01
+Actors:
+- Name: DropInsertFind
+  Type: RunCommand
+  Threads: 1
+  Collection: myCollection
+  Phases:
+  - Repeat: 50
+    Database: test
+    Operations:
+    - MetricsName: serverStatus
+      Command:
+        serverStatus: 1
+    - MetricsName: Insert
+      Command:
+        insert: myCollection
+        documents: [{name: {$randomstring: {length: {$randomint: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
+    - MetricsName: Find
+      Command:
+        find: restaurants
+        filter: { rating: { $gte: 9 }, cuisine: italian }
+        projection: { name: 1, rating: 1, address: 1 }
+        sort: { name: 1 }
+        limit: 5
