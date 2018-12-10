@@ -5,6 +5,8 @@ namespace genny {
 
 using ActorId = unsigned int;
 
+class ActorContext;
+
 /**
  * An Actor is the base unit of work in genny. An actor is a single-
  * threaded entity.
@@ -43,7 +45,7 @@ using ActorId = unsigned int;
 class Actor {
 
 public:
-    Actor();
+    Actor(ActorContext & context);
     virtual ~Actor() = default;
 
     /**
@@ -52,19 +54,13 @@ public:
      */
     virtual void run() = 0;
 
-    ActorId id() const {
+    virtual ActorId id() const {
         return _id;
     }
 
 private:
     ActorId _id;
 };
-
-/**
- * Get a unique ActorId
- * @return  unsigned int    The next sequential id
- */
-ActorId nextActorId();
 
 }  // namespace genny
 

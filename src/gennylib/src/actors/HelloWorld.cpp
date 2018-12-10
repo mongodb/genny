@@ -20,8 +20,9 @@ void genny::actor::HelloWorld::run() {
 }
 
 genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context)
-    : _outputTimer{context.timer("output", Actor::id())},
-      _operations{context.counter("operations", Actor::id())},
+    : Actor(context),
+      _outputTimer{context.timer("output", HelloWorld::id())},
+      _operations{context.counter("operations", HelloWorld::id())},
       _loop{context} {}
 
 genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {

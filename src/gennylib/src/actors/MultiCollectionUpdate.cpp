@@ -74,9 +74,10 @@ void genny::actor::MultiCollectionUpdate::run() {
 }
 
 genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
-    : _rng{context.workload().createRNG()},
-      _updateTimer{context.timer("updateTime", Actor::id())},
-      _updateCount{context.counter("updatedDocuments", Actor::id())},
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _updateTimer{context.timer("updateTime", MultiCollectionUpdate::id())},
+      _updateCount{context.counter("updatedDocuments", MultiCollectionUpdate::id())},
       _client{context.client()},
       _loop{context, _rng, _client} {}
 

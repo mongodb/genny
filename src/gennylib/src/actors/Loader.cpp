@@ -81,10 +81,11 @@ void genny::actor::Loader::run() {
 }
 
 genny::actor::Loader::Loader(genny::ActorContext& context)
-    : _rng{context.workload().createRNG()},
-      _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Actor::id())},
-      _individualBulkLoadTimer{context.timer("individualBulkInsertTime", Actor::id())},
-      _indexBuildTimer{context.timer("indexBuildTime", Actor::id())},
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Loader::id())},
+      _individualBulkLoadTimer{context.timer("individualBulkInsertTime", Loader::id())},
+      _indexBuildTimer{context.timer("indexBuildTime", Loader::id())},
       _client{context.client()},
       _loop{context, _rng, _client} {}
 

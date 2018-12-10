@@ -2,13 +2,10 @@
 
 #include <atomic>
 
+#include <gennylib/context.hpp>
+
 namespace genny{
 
-ActorId nextActorId() {
-    static std::atomic<ActorId> nextActorId{};
-    return nextActorId++;
-}
-
-Actor::Actor() : _id{nextActorId()}{}
+Actor::Actor(ActorContext& context) : _id{context.workload().nextActorId()} {}
 
 } // namespace genny

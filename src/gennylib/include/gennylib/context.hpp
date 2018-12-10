@@ -305,6 +305,14 @@ public:
         return std::mt19937_64{rng()};
     }
 
+    /**
+     * Get a WorkloadContext-unique ActorId
+     * @return  unsigned int    The next sequential id
+     */
+    ActorId nextActorId(){
+        return _nextActorId++;
+    }
+
 private:
     friend class ActorContext;
 
@@ -325,6 +333,10 @@ private:
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.
     bool _done;
+
+    // Actors should always be constructed in a single-threaded context.
+    // That said, atomic integral types are very cheap to work with.
+    std::atomic<ActorId> _nextActorId{0};
 };
 
 // For some reason need to decl this; see impl below

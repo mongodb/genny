@@ -49,11 +49,12 @@ void genny::actor::InsertRemove::run() {
 }
 
 genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context)
-    : _rng{context.workload().createRNG()},
-      _insertTimer{context.timer("insert", Actor::id())},
-      _removeTimer{context.timer("remove", Actor::id())},
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _insertTimer{context.timer("insert", InsertRemove::id())},
+      _removeTimer{context.timer("remove", InsertRemove::id())},
       _client{std::move(context.client())},
-      _loop{context, _rng, _client, Actor::id()} {}
+      _loop{context, _rng, _client, InsertRemove::id()} {}
 
 genny::ActorVector genny::actor::InsertRemove::producer(genny::ActorContext& context) {
     if (context.get<std::string>("Type") != "InsertRemove") {

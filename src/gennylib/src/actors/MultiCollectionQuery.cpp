@@ -77,9 +77,10 @@ void genny::actor::MultiCollectionQuery::run() {
 }
 
 genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
-    : _rng{context.workload().createRNG()},
-      _queryTimer{context.timer("queryTime", Actor::id())},
-      _documentCount{context.counter("returnedDocuments", Actor::id())},
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _queryTimer{context.timer("queryTime", MultiCollectionQuery::id())},
+      _documentCount{context.counter("returnedDocuments", MultiCollectionQuery::id())},
       _client{context.client()},
       _loop{context, _rng, _client} {}
 
