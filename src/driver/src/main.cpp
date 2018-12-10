@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     }
 
     // do this based on -v flag or something
-    boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+    boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
 
     genny::driver::DefaultDriver d;
 
