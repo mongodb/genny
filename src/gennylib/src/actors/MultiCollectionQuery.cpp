@@ -19,8 +19,7 @@ namespace {}  // namespace
 struct genny::actor::MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 std::mt19937_64& rng,
-                mongocxx::pool::entry& client,
-                int thread)
+                mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
@@ -77,13 +76,13 @@ void genny::actor::MultiCollectionQuery::run() {
     }
 }
 
-genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context,
-                                                         const unsigned int thread)
-    : _rng{context.workload().createRNG()},
-      _queryTimer{context.timer("queryTime", thread)},
-      _documentCount{context.counter("returnedDocuments", thread)},
+genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _queryTimer{context.timer("queryTime", MultiCollectionQuery::id())},
+      _documentCount{context.counter("returnedDocuments", MultiCollectionQuery::id())},
       _client{context.client()},
-      _loop{context, _rng, _client, thread} {}
+      _loop{context, _rng, _client} {}
 
 genny::ActorVector genny::actor::MultiCollectionQuery::producer(genny::ActorContext& context) {
     auto out = std::vector<std::unique_ptr<genny::Actor>>{};
@@ -92,7 +91,7 @@ genny::ActorVector genny::actor::MultiCollectionQuery::producer(genny::ActorCont
     }
     auto threads = context.get<int>("Threads");
     for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::MultiCollectionQuery>(context, i));
+        out.push_back(std::make_unique<genny::actor::MultiCollectionQuery>(context));
     }
     return out;
 }
