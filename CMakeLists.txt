@@ -39,6 +39,7 @@ find_package(yaml-cpp REQUIRED)
 
 # <Mongo Driver>
 find_package(libmongocxx REQUIRED)
+find_package(libmongoc-1.0 REQUIRED)
 # </Mongo Driver>
 
 # <Misc 3rd Party Integrations>

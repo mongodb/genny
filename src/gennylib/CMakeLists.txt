@@ -21,6 +21,7 @@ add_library(gennylib SHARED
     src/ActorProducer.cpp
     src/Cast.cpp
     src/Orchestrator.cpp
+    src/Uri.cpp
 
     src/value_generators/parser.cpp
     src/value_generators/value_generators.cpp
@@ -39,6 +40,7 @@ target_include_directories(gennylib
         $<INSTALL_INTERFACE:include>
         ${Boost_INCLUDE_DIR}
         ${YAML_CPP_INCLUDE_DIR}
+        ${MONGOC_INCLUDE_DIRS}
         ${LIBMONGOCXX_INCLUDE_DIRS}
     PRIVATE
         jasper
@@ -53,6 +55,7 @@ target_link_libraries(gennylib
         ${CMAKE_THREAD_LIBS_INIT}
         ${Boost_LIBRARIES}
         ${YAML_CPP_LIBRARIES}
+        ${MONGOC_LIBRARIES}
         ${LIBMONGOCXX_LIBRARIES}
     PRIVATE
         jasperlib
