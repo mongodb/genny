@@ -143,7 +143,7 @@ functions:
         set -o pipefail
         set -o nounset
 
-        rm -rf grpc # remove if already exists
+        rm -rf * # Remove grpc and any cmake config copied up from runner
         git clone --recurse-submodules https://github.com/grpc/grpc.git
 
         pushd grpc
