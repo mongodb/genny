@@ -1,13 +1,13 @@
 SchemaVersion: 2018-07-01
+
 Actors:
-- Name: DropInsertFind
+- Name: ServerStatusInsertFind
   Type: RunCommand
   Threads: 1
-  Collection: myCollection
+  Database: test
   Phases:
   - Operation: Nop
   - Repeat: 50
-    Database: test
     Operations:
     - MetricsName: ServerStatus
       Command:

@@ -11,17 +11,19 @@
 namespace {}
 
 struct genny::actor::RunCommand::RunCommandConfig {
-    RunCommandConfig(const OperationContext& operationContext,
+    RunCommandConfig(const PhaseContext& context,
                      mongocxx::client& client,
-                     std::mt19937_64& rng)
-        : database(client[operationContext.get<std::string>("Database")]) {
-        documentTemplate = genny::value_generators::makeDoc(operationContext.get("Command"), rng);
+                     std::mt19937_64& rng,
+                     const YAML::Node& commandNode)
+        : database(client[context.get<std::string>("Database")]) {
+        documentTemplate = genny::value_generators::makeDoc(commandNode, rng);
     }
 
     void run() {
         bsoncxx::builder::stream::document document{};
         auto view = documentTemplate->view(document);
-        BOOST_LOG_TRIVIAL(info) << " Running command: " << bsoncxx::to_json(view) << " on database: " << database.name();
+        BOOST_LOG_TRIVIAL(info) << " Running command: " << bsoncxx::to_json(view)
+                                << " on database: " << database.name();
         database.run_command(view);
     }
 
@@ -35,10 +37,15 @@ struct genny::actor::RunCommand::PhaseConfig {
                 mongocxx::pool::entry& client,
                 ActorContext& actorContext,
                 const unsigned int thread) {
-        for (auto&& [metricName, opCtx] : context.operations()) {
-            timersAndCommands.emplace_back(
-                std::make_pair(actorContext.timer(metricName, thread),
-                               std::make_unique<RunCommandConfig>(*opCtx, *client, rng)));
+        auto operations = context.get<YAML::Node, false>("Operations");
+        if (operations) {
+            for (auto&& op : *operations) {
+                auto metricName = op["MetricsName"].as<std::string>();
+                auto commandNode = op["Command"];
+                timersAndCommands.emplace_back(std::make_pair(
+                    actorContext.timer(metricName, thread),
+                    std::make_unique<RunCommandConfig>(context, *client, rng, commandNode)));
+            }
         }
     }
 
@@ -57,7 +64,8 @@ void genny::actor::RunCommand::run() {
 }
 
 genny::actor::RunCommand::RunCommand(genny::ActorContext& context, const unsigned int thread)
-    : _rng{context.workload().createRNG()},
+    : Actor(context),
+      _rng{context.workload().createRNG()},
       _client{context.client()},
       _loop{context, _rng, _client, context, thread} {}
 
