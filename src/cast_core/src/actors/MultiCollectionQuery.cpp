@@ -1,4 +1,4 @@
-#include <cast_core/actors/MultiCollectionQuery.hpp>
+#include <gennylib/actors/MultiCollectionQuery.hpp>
 
 #include <chrono>
 #include <memory>
@@ -10,16 +10,15 @@
 #include <mongocxx/pool.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include <boost/log/trivial.hpp>
-
-#include <gennylib/Cast.hpp>
+#include "log.hh"
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-namespace {}  // namespace
-
-struct genny::actor::MultiCollectionQuery::PhaseConfig {
-    PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client)
+namespace genny::actor{
+struct MultiCollectionQuery::PhaseConfig {
+    PhaseConfig(PhaseContext& context,
+                std::mt19937_64& rng,
+                mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
@@ -36,7 +35,7 @@ struct genny::actor::MultiCollectionQuery::PhaseConfig {
     mongocxx::options::find options;
 };
 
-void genny::actor::MultiCollectionQuery::run() {
+void MultiCollectionQuery::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
             // Take a timestamp -- remove after TIG-1155
@@ -76,7 +75,7 @@ void genny::actor::MultiCollectionQuery::run() {
     }
 }
 
-genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
+MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
       _queryTimer{context.timer("queryTime", MultiCollectionQuery::id())},
@@ -84,7 +83,17 @@ genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& co
       _client{context.client()},
       _loop{context, _rng, _client} {}
 
-namespace {
-auto registerMultiCollectionQuery =
-        genny::Cast::registerDefault<genny::actor::MultiCollectionQuery>();
+genny::ActorVector MultiCollectionQuery::producer(genny::ActorContext& context) {
+    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
+    if (context.get<std::string>("Type") != "MultiCollectionQuery") {
+        return out;
+    }
+    auto threads = context.get<int>("Threads");
+    for (int i = 0; i < threads; ++i) {
+        out.push_back(std::make_unique<MultiCollectionQuery>(context));
+    }
+    return out;
 }
+}  // namespace genny::actor
+
+

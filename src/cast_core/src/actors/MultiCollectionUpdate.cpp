@@ -1,4 +1,4 @@
-#include <cast_core/actors/MultiCollectionUpdate.hpp>
+#include <gennylib/actors/MultiCollectionUpdate.hpp>
 
 #include <chrono>
 #include <memory>
@@ -10,16 +10,16 @@
 #include <mongocxx/pool.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include <boost/log/trivial.hpp>
-
-#include <gennylib/Cast.hpp>
+#include "log.hh"
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-namespace {}  // namespace
+namespace genny::actor {
 
-struct genny::actor::MultiCollectionUpdate::PhaseConfig {
-    PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client)
+struct MultiCollectionUpdate::PhaseConfig {
+    PhaseConfig(PhaseContext& context,
+                std::mt19937_64& rng,
+                mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
@@ -40,7 +40,7 @@ struct genny::actor::MultiCollectionUpdate::PhaseConfig {
     std::chrono::milliseconds minDelay;
 };
 
-void genny::actor::MultiCollectionUpdate::run() {
+void MultiCollectionUpdate::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
             // Take a timestamp -- remove after TIG-1155
@@ -73,7 +73,7 @@ void genny::actor::MultiCollectionUpdate::run() {
     }
 }
 
-genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
+MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
       _updateTimer{context.timer("updateTime", MultiCollectionUpdate::id())},
@@ -81,7 +81,17 @@ genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& 
       _client{context.client()},
       _loop{context, _rng, _client} {}
 
-namespace {
-auto registerMultiCollectionUpdate =
-        genny::Cast::registerDefault<genny::actor::MultiCollectionUpdate>();
+genny::ActorVector MultiCollectionUpdate::producer(genny::ActorContext& context) {
+    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
+    if (context.get<std::string>("Type") != "MultiCollectionUpdate") {
+        return out;
+    }
+    auto threads = context.get<int>("Threads");
+    for (int i = 0; i < threads; ++i) {
+        out.push_back(std::make_unique<MultiCollectionUpdate>(context));
+    }
+    return out;
 }
+} // namespace genny::actor
+
+
