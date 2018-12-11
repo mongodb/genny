@@ -8,7 +8,7 @@
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
-#include "log.hh"
+#include <boost/log/trivial.hpp>
 
 #include <bsoncxx/json.hpp>
 #include <gennylib/Cast.hpp>

@@ -6,7 +6,7 @@
 #include <mongocxx/pool.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include "log.hh"
+#include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>

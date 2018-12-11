@@ -56,50 +56,14 @@ target_link_libraries(gennylib
         jasperlib
 )
 
-add_library(gennylib_actors SHARED
-    # ActorsStart
-    src/actors/HelloWorld.cpp
-    src/actors/Insert.cpp
-    src/actors/InsertRemove.cpp
-    src/actors/Loader.cpp
-    src/actors/MultiCollectionQuery.cpp
-    src/actors/MultiCollectionUpdate.cpp
-    # ActorsEnd
-)
-
-target_include_directories(gennylib_actors
-    PRIVATE
-        jasper
-        src
-        src/value_generators
-)
-
-target_link_libraries(gennylib_actors
-    PUBLIC
-        gennylib
-)
-
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib gennylib_actors EXPORT GennyLibraryConfig
+install(TARGETS  gennylib EXPORT GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
 install(DIRECTORY include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN *.hpp)
-
-# Below generates a cmake module so if you make install from this
-# project you can find_package(GennyLib) in another cmake project.
-#
-# Please don't build any projects that link against gennylib outside of
-# this repository please. Not yet. We need to think of a good ABI.
-# We're only exposing external cmake bindings because it encourages
-# best-practices and helps keep the codebase honest about what it
-# exports and how it's used.
-install(EXPORT GennyLibraryConfig DESTINATION share/GennyLibrary/cmake)
-
-# This makes the project importable from the build directory
-export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
 
 add_executable(test_gennylib
     test/context_test.cpp
@@ -123,7 +87,7 @@ target_include_directories(test_gennylib
         ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
 target_link_libraries(test_gennylib
-    PUBLIC ${Boost_LIBRARIES} gennylib gennylib_actors
+    PUBLIC ${Boost_LIBRARIES} gennylib
 )
 
 add_test(
