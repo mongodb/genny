@@ -12,18 +12,20 @@ namespace genny::actor {
 class HelloWorld : public genny::Actor {
 
 public:
-    explicit HelloWorld(ActorContext& context, unsigned int thread);
-
-    virtual void run() override;
-
+    explicit HelloWorld(ActorContext& context);
     ~HelloWorld() = default;
 
-private:
-    struct PhaseConfig;
-    PhaseLoop<PhaseConfig> _loop;
+    static std::string_view defaultName() {
+        return "HelloWorld";
+    }
+    void run() override;
 
+private:
     metrics::Timer _outputTimer;
     metrics::Counter _operations;
+
+    struct PhaseConfig;
+    PhaseLoop<PhaseConfig> _loop;
 };
 
 }  // namespace genny::actor

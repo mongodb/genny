@@ -18,14 +18,17 @@ namespace genny::actor {
 class Insert : public genny::Actor {
 
 public:
-    explicit Insert(ActorContext& context, unsigned int thread);
-
+    explicit Insert(ActorContext& context);
     ~Insert() = default;
 
-    virtual void run() override;
+    static std::string_view defaultName() {
+        return "Insert";
+    }
+    void run() override;
 
 private:
     std::mt19937_64 _rng;
+
     metrics::Timer _insertTimer;
     metrics::Counter _operations;
     mongocxx::pool::entry _client;

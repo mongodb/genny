@@ -81,14 +81,15 @@ void genny::actor::Loader::run() {
     }
 }
 
-genny::actor::Loader::Loader(genny::ActorContext& context, const unsigned int thread)
-    : _rng{context.workload().createRNG()},
-      _totalBulkLoadTimer{context.timer("totalBulkInsertTime", thread)},
-      _individualBulkLoadTimer{context.timer("individualBulkInsertTime", thread)},
-      _indexBuildTimer{context.timer("indexBuildTime", thread)},
+genny::actor::Loader::Loader(genny::ActorContext& context)
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Loader::id())},
+      _individualBulkLoadTimer{context.timer("individualBulkInsertTime", Loader::id())},
+      _indexBuildTimer{context.timer("indexBuildTime", Loader::id())},
       _client{context.client()},
       _loop{context, _rng, _client} {}
 
 namespace {
-auto registerLoader = genny::Cast::makeDefaultRegistration<genny::actor::Loader>("Loader");
+auto registerLoader = genny::Cast::makeDefaultRegistration<genny::actor::Loader>();
 }

@@ -243,7 +243,7 @@ TEST_CASE("Actual Actor Example") {
 
     public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
-            : _loop{actorContext, 1}, _counters{counters} {}
+            : Actor(actorContext), _loop{actorContext, 1}, _counters{counters} {}
         //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset
         //                        param.
 

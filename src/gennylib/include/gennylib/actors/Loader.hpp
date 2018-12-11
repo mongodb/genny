@@ -16,9 +16,12 @@ namespace genny::actor {
 class Loader : public Actor {
 
 public:
-    explicit Loader(ActorContext& context, const unsigned int thread);
+    explicit Loader(ActorContext& context);
     ~Loader() = default;
 
+    static std::string_view defaultName() {
+        return "Loader";
+    }
     void run() override;
 
 private:

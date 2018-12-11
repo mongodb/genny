@@ -2,7 +2,7 @@
 #define HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 
 #include <memory>
-#include <string>
+#include <string_view>
 #include <map>
 
 #include <gennylib/ActorVector.hpp>
@@ -37,26 +37,26 @@ class ActorContext;
  */
 class ActorProducer {
 public:
-    ActorProducer(std::string name) : _name{name} {}
+    ActorProducer(std::string_view name) : _name{name} {}
     ActorProducer(const ActorProducer&) = delete;
     ActorProducer& operator=(const ActorProducer&) = delete;
     ActorProducer(ActorProducer&&) = default;
     ActorProducer& operator=(ActorProducer&&) = default;
 
-    const std::string& name() const {
+    const std::string_view& name() const {
         return _name;
     }
 
     virtual ActorVector produce(ActorContext &) = 0;
 
 private:
-    std::string _name;
+    std::string_view _name;
 };
 
 template <class ActorT>
 class DefaultActorProducer : public ActorProducer {
 public:
-    DefaultActorProducer(const std::string& name) : ActorProducer(name) {}
+    DefaultActorProducer(const std::string_view& name) : ActorProducer(name) {}
 
     ActorVector produce(ActorContext& context) override {
         ActorVector out;
@@ -65,21 +65,7 @@ public:
     }
 };
 
-template <class ActorT>
-class DefaultThreadedActorProducer : public ActorProducer {
-public:
-    DefaultThreadedActorProducer(const std::string& name) : ActorProducer(name) {}
-
-    ActorVector produce(ActorContext& context) override {
-        static int threadMock = 0;
-
-        ActorVector out;
-        out.emplace_back(std::make_unique<ActorT>(context, threadMock++));
-        return out;
-    }
-};
-
-using ActorProducerMap = std::map<std::string, std::shared_ptr<ActorProducer>>;
+using ActorProducerMap = std::map<std::string_view, std::shared_ptr<ActorProducer>>;
 
 }  // namespace genny
 

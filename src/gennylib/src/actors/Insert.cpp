@@ -37,14 +37,14 @@ void genny::actor::Insert::run() {
     }
 }
 
-
-genny::actor::Insert::Insert(genny::ActorContext& context, const unsigned int thread)
-    : _rng{context.workload().createRNG()},
-      _insertTimer{context.timer("insert", thread)},
-      _operations{context.counter("operations", thread)},
+genny::actor::Insert::Insert(genny::ActorContext& context)
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _insertTimer{context.timer("insert", Insert::id())},
+      _operations{context.counter("operations", Insert::id())},
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 
 namespace {
-auto registerInsert = genny::Cast::makeDefaultRegistration<genny::actor::Insert>("Insert");
+auto registerInsert = genny::Cast::makeDefaultRegistration<genny::actor::Insert>();
 }

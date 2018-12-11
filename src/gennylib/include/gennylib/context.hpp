@@ -20,6 +20,7 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
+#include <gennylib/ActorVector.hpp>
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
@@ -289,6 +290,14 @@ public:
         return std::mt19937_64{_rng()};
     }
 
+    /**
+     * Get a WorkloadContext-unique ActorId
+     * @return  unsigned int    The next sequential id
+     */
+    ActorId nextActorId(){
+        return _nextActorId++;
+    }
+
 private:
     friend class ActorContext;
 
@@ -310,6 +319,10 @@ private:
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.
     bool _done = false;
+
+    // Actors should always be constructed in a single-threaded context.
+    // That said, atomic integral types are very cheap to work with.
+    std::atomic<ActorId> _nextActorId{0};
 };
 
 // For some reason need to decl this; see impl below
@@ -447,8 +460,8 @@ public:
      *   across Actors and threads.
      * @param thread the thread number of this Actor, if any.
      */
-    auto timer(const std::string& operationName, unsigned int thread = 0) const {
-        auto name = this->metricsName(operationName, thread);
+    auto timer(const std::string& operationName, ActorId id = 0u) const {
+        auto name = this->metricsName(operationName, id);
         return this->_workload->_registry->timer(name);
     }
 
@@ -461,8 +474,8 @@ public:
      *   across Actors and threads.
      * @param thread the thread number of this Actor, if any.
      */
-    auto gauge(const std::string& operationName, unsigned int thread = 0) const {
-        auto name = this->metricsName(operationName, thread);
+    auto gauge(const std::string& operationName, ActorId id = 0u) const {
+        auto name = this->metricsName(operationName, id);
         return this->_workload->_registry->gauge(name);
     }
 
@@ -476,8 +489,8 @@ public:
      *   across Actors and threads.
      * @param thread the thread number of this Actor, if any.
      */
-    auto counter(const std::string& operationName, unsigned int thread = 0) const {
-        auto name = this->metricsName(operationName, thread);
+    auto counter(const std::string& operationName, ActorId id = 0u) const {
+        auto name = this->metricsName(operationName, id);
         return this->_workload->_registry->counter(name);
     }
 
@@ -511,8 +524,8 @@ private:
      * @param thread the thread number of the Actor owning the object.
      * @return the fully-qualified metrics name e.g. "MyActor.0.inserts".
      */
-    std::string metricsName(const std::string& operation, unsigned int thread) const {
-        return this->get<std::string>("Name") + "." + std::to_string(thread) + "." + operation;
+    std::string metricsName(const std::string& operation, ActorId id) const {
+        return this->get<std::string>("Name") + ".id-" + std::to_string(id) + "." + operation;
     }
 
     static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>

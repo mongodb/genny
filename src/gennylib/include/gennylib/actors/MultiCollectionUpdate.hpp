@@ -16,9 +16,12 @@ namespace genny::actor {
 class MultiCollectionUpdate : public Actor {
 
 public:
-    explicit MultiCollectionUpdate(ActorContext& context, const unsigned int thread);
+    explicit MultiCollectionUpdate(ActorContext& context);
     ~MultiCollectionUpdate() = default;
 
+    static std::string_view defaultName() {
+        return "MultiCollectionUpdate";
+    }
     void run() override;
 
 private:

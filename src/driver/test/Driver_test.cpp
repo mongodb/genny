@@ -75,8 +75,11 @@ struct Fails : public genny::Actor {
     genny::PhaseLoop<PhaseConfig> loop;
     static StaticFailsInfo state;
 
-    explicit Fails(genny::ActorContext& ctx, int) : loop{ctx} {}
+    explicit Fails(genny::ActorContext& ctx) : Actor(ctx), loop{ctx} {}
 
+    static std::string_view defaultName() {
+        return "Fails";
+    }
     void run() override {
         for (auto&& [phase, config] : loop) {
             for (auto&& _ : config) {
@@ -99,7 +102,7 @@ struct Fails : public genny::Actor {
 };
 
 namespace {
-auto registerFails = genny::Cast::makeDefaultRegistration<Fails>("Fails");
+auto registerFails = genny::Cast::makeDefaultRegistration<Fails>();
 } // namespace
 
 // initialize static member of Fails

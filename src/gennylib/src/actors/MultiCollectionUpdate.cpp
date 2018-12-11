@@ -21,8 +21,7 @@ namespace {}  // namespace
 struct genny::actor::MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 std::mt19937_64& rng,
-                mongocxx::pool::entry& client,
-                int thread)
+                mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
@@ -76,16 +75,15 @@ void genny::actor::MultiCollectionUpdate::run() {
     }
 }
 
-genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context,
-                                                           const unsigned int thread)
-    : _rng{context.workload().createRNG()},
-      _updateTimer{context.timer("updateTime", thread)},
-      _updateCount{context.counter("updatedDocuments", thread)},
+genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _updateTimer{context.timer("updateTime", MultiCollectionUpdate::id())},
+      _updateCount{context.counter("updatedDocuments", MultiCollectionUpdate::id())},
       _client{context.client()},
-      _loop{context, _rng, _client, thread} {}
+      _loop{context, _rng, _client} {}
 
 namespace {
 auto registerMultiCollectionUpdate =
-    genny::Cast::makeDefaultRegistration<genny::actor::MultiCollectionUpdate>(
-        "MultiCollectionUpdate");
+    genny::Cast::makeDefaultRegistration<genny::actor::MultiCollectionUpdate>();
 }

@@ -3,6 +3,10 @@
 
 namespace genny {
 
+using ActorId = unsigned int;
+
+class ActorContext;
+
 /**
  * An Actor is the base unit of work in genny. An actor is a single-
  * threaded entity.
@@ -41,15 +45,28 @@ namespace genny {
 class Actor {
 
 public:
+    Actor(ActorContext & context);
     virtual ~Actor() = default;
+
+    /**
+     * A consistent compilation-unit unique name for this actor.
+     * This name is mostly intended for metrics and logging purposes.
+     */
+    // static std::string_view defaultName()
 
     /**
      * The main method of an actor. Will be run in its own thread.
      * This is only intended to be called by workload drivers.
      */
     virtual void run() = 0;
-};
 
+    virtual ActorId id() const {
+        return _id;
+    }
+
+private:
+    ActorId _id;
+};
 
 }  // namespace genny
 

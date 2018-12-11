@@ -20,12 +20,13 @@ void genny::actor::HelloWorld::run() {
         }
     }
 }
-genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context, const unsigned int thread)
-    : _outputTimer{context.timer("output", thread)},
-      _operations{context.counter("operations", thread)},
+
+genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context)
+    : Actor(context),
+      _outputTimer{context.timer("output", HelloWorld::id())},
+      _operations{context.counter("operations", HelloWorld::id())},
       _loop{context} {}
 
 namespace {
-auto registerHelloWorld =
-    genny::Cast::makeDefaultRegistration<genny::actor::HelloWorld>("HelloWorld");
+auto registerHelloWorld = genny::Cast::makeDefaultRegistration<genny::actor::HelloWorld>();
 }

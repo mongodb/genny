@@ -2,6 +2,8 @@
 
 #include <map>
 #include <memory>
+#include <string>
+#include <string_view>
 
 #include <gennylib/ActorProducer.hpp>
 
@@ -14,7 +16,7 @@ public:
 
     struct Registration;
 
-    void add(const std::string & castName, std::shared_ptr<Producer> entry) {
+    void add(const std::string_view & castName, std::shared_ptr<Producer> entry) {
         auto res = _producers.emplace(castName, std::move(entry));
 
         if (!res.second) {
@@ -27,7 +29,9 @@ public:
     }
 
     template <typename ActorT>
-    static Registration makeDefaultRegistration(const std::string& name);
+    static Registration makeDefaultRegistrationAs(const std::string_view& name);
+    template <typename ActorT>
+    static Registration makeDefaultRegistration();
 
     std::shared_ptr<Producer> getProducer(const std::string& name) const {
         try {
@@ -51,14 +55,20 @@ inline Cast & getCast(){
 }
 
 struct Cast::Registration {
-    Registration(const std::string& name, std::shared_ptr<Producer> producer) {
+    Registration(const std::string_view& name, std::shared_ptr<Producer> producer) {
         getCast().add(name, std::move(producer));
     }
 };
 
 template <typename ActorT>
-Cast::Registration Cast::makeDefaultRegistration(const std::string& name) {
-    return Registration(name, std::make_shared<DefaultThreadedActorProducer<ActorT>>(name));
+Cast::Registration Cast::makeDefaultRegistrationAs(const std::string_view& name) {
+    return Registration(name, std::make_shared<DefaultActorProducer<ActorT>>(name));
+}
+
+template <typename ActorT>
+Cast::Registration Cast::makeDefaultRegistration() {
+    auto name = ActorT::defaultName();
+    return makeDefaultRegistrationAs<ActorT>(name);
 }
 
 } // genny
