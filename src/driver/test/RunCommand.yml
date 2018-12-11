@@ -5,10 +5,11 @@ Actors:
   Threads: 1
   Collection: myCollection
   Phases:
+  - Operation: Nop
   - Repeat: 50
     Database: test
     Operations:
-    - MetricsName: serverStatus
+    - MetricsName: ServerStatus
       Command:
         serverStatus: 1
     - MetricsName: Insert
@@ -22,3 +23,4 @@ Actors:
         projection: { name: 1, rating: 1, address: 1 }
         sort: { name: 1 }
         limit: 5
+  - Operation: Nop
