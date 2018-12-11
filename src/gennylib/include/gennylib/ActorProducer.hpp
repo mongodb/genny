@@ -1,9 +1,9 @@
 #ifndef HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 #define HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 
+#include <map>
 #include <memory>
 #include <string_view>
-#include <map>
 
 #include <gennylib/ActorVector.hpp>
 
@@ -47,7 +47,7 @@ public:
         return _name;
     }
 
-    virtual ActorVector produce(ActorContext &) = 0;
+    virtual ActorVector produce(ActorContext&) = 0;
 
 private:
     std::string_view _name;

@@ -7,7 +7,7 @@
 
 #include <gennylib/ActorProducer.hpp>
 
-namespace genny{
+namespace genny {
 
 /**
  * A cast is a map of strings to shared ActorProducer instances.
@@ -34,14 +34,14 @@ public:
     struct Registration;
 
 public:
-    Cast(){}
+    Cast() {}
     Cast(std::initializer_list<ActorProducerMap::value_type> init) {
         for (auto&& pair : init) {
             add(pair.first, std::move(pair.second));
         }
     }
 
-    void add(const std::string_view & castName, std::shared_ptr<ActorProducer> entry) {
+    void add(const std::string_view& castName, std::shared_ptr<ActorProducer> entry) {
         auto res = _producers.emplace(castName, std::move(entry));
 
         if (!res.second) {
@@ -54,11 +54,7 @@ public:
     }
 
     std::shared_ptr<ActorProducer> getProducer(const std::string& name) const {
-        try {
-            return _producers.at(name);
-        } catch (const std::out_of_range) {
-            return {};
-        }
+        return _producers.at(name);
     }
 
     const ActorProducerMap& getProducers() const {
@@ -75,7 +71,7 @@ private:
     ActorProducerMap _producers;
 };
 
-inline Cast & getCast(){
+inline Cast& getCast() {
     static Cast _cast;
     return _cast;
 }
@@ -97,4 +93,4 @@ Cast::Registration Cast::makeDefaultRegistration() {
     return makeDefaultRegistrationAs<ActorT>(name);
 }
 
-} // genny
+}  // genny

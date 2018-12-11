@@ -47,11 +47,14 @@ WorkloadContext::WorkloadContext(YAML::Node node,
 }
 
 ActorVector WorkloadContext::_constructActors(const Cast& cast,
-                                              const std::unique_ptr<ActorContext> &actorContext) {
+                                              const std::unique_ptr<ActorContext>& actorContext) {
     auto actors = ActorVector{};
     auto name = actorContext->get<std::string>("Type");
-    auto producer = cast.getProducer(name);
-    if (!producer) {
+
+    std::shared_ptr<ActorProducer> producer;
+    try {
+        producer = cast.getProducer(name);
+    } catch (const std::out_of_range&) {
         std::ostringstream stream;
         stream << "Unable to construct actors: No producer for '" << name << "'.";
         throw std::out_of_range(stream.str());
@@ -67,8 +70,8 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts
-std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>>
-ActorContext::constructPhaseContexts(const YAML::Node&, ActorContext* actorContext) {
+std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::constructPhaseContexts(
+    const YAML::Node&, ActorContext* actorContext) {
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> out;
     auto phases = actorContext->get<YAML::Node, false>("Phases");
     if (!phases) {
@@ -78,8 +81,8 @@ ActorContext::constructPhaseContexts(const YAML::Node&, ActorContext* actorConte
     int index = 0;
     for (const auto& phase : *phases) {
         auto configuredIndex = phase["Phase"].as<PhaseNumber>(index);
-        auto [it, success] = out.try_emplace(
-            configuredIndex, std::make_unique<PhaseContext>(phase, *actorContext));
+        auto[it, success] =
+            out.try_emplace(configuredIndex, std::make_unique<PhaseContext>(phase, *actorContext));
         if (!success) {
             std::stringstream msg;
             msg << "Duplicate phase " << configuredIndex;
@@ -99,4 +102,4 @@ mongocxx::pool::entry ActorContext::client() {
     return std::move(*entry);
 }
 
-} // namespace genny
+}  // namespace genny
