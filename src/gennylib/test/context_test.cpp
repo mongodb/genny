@@ -270,6 +270,9 @@ TEST_CASE("OperationContexts constructed as expected") {
         - MetricsName: Find
           Command:
             find: schools
+      - Operation: Insert
+        Database: test3
+        Collection: myCollection2
     )");
 
     SECTION("Loads Phases") {
@@ -288,6 +291,8 @@ TEST_CASE("OperationContexts constructed as expected") {
                         REQUIRE(config->operations().size() == 2);
                     } else if (phase == 1) {
                         REQUIRE(config->operations().size() == 1);
+                    } else if (phase == 2) {
+                        REQUIRE(config->operations().size() == 0);
                     }
                 }
             }
@@ -447,7 +452,7 @@ Actors:
         });
     }
 
-    SECTION("PhaseContext inherits from WorkloadContext through PhaseContext") {
+    SECTION("OperationContext inherits from WorkloadContext through PhaseContext") {
         onContext(yaml, [](ActorContext& actorContext) {
             const auto actorName = actorContext.get_noinherit<std::string>("Name");
             if (actorName == "Actor1") {

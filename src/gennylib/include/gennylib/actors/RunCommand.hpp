@@ -24,6 +24,7 @@ public:
 
 private:
     struct PhaseConfig;
+    struct RunCommandConfig;
     std::mt19937_64 _rng;
     mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;

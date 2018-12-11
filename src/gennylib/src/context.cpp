@@ -57,16 +57,14 @@ genny::PhaseContext::constructOperationContexts(const YAML::Node& node,
         return out;
     }
 
+    if (operations->Type() != YAML::NodeType::Map &&
+        operations->Type() != YAML::NodeType::Sequence) {
+        throw InvalidConfigurationException("Operations is not of valid map or sequence type.");
+    }
+
     for (const auto& operation : *operations) {
         auto metricsName = operation["MetricsName"].as<std::string>();
-        std::cout << "MetricsName: " << metricsName << std::endl;
-        auto [it, success] = out.try_emplace(
-            metricsName, std::make_unique<genny::OperationContext>(operation, *phaseContext));
-        if (!success) {
-            std::stringstream msg;
-            msg << "Duplicate metrics name " << metricsName;
-            throw InvalidConfigurationException(msg.str());
-        }
+        out[metricsName] = std::make_unique<genny::OperationContext>(operation, *phaseContext);
     }
     return out;
 }

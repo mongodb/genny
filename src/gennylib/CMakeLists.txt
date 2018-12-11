@@ -32,10 +32,6 @@ add_library(gennylib SHARED
     src/actors/MultiCollectionUpdate.cpp
     src/actors/RunCommand.cpp
     # ActorsEnd
-
-    # OperationsStart
-    src/operations/RunCommand.cpp
-    # OperationsEnd
 )
 
 add_subdirectory(jasper)
