@@ -70,16 +70,17 @@ Actors:
     # The Loader needs to be updated to take options to support unique, etc. I will do as a
     # follow-up. PERF-1758
     Indexes:
-      - {t: 1, w: 1}
-      - {y: 1}
-      - {t: 1, StringShort: 1}
-      - {string0: 1}
-      - {string1: 1}
-      - {z: 1}  # will make this unique
-      - {y: 1, StringShort: 1}
-      - {int0: 1, int1: 1, int2: 1}
-      - {int3: 1}
-      - {int4: 1}
+      - keys: {t: 1, w: 1}
+      - keys: {y: 1}
+      - keys: {t: 1, stringShort: 1}
+      - keys: {string0: 1}
+      - keys: {string1: 1}
+      - keys: {z: 1}
+        options: {unique: 1}
+      - keys: {y: 1, stringShort: 1}
+      - keys: {int0: 1, int1: 1, int2: 1}
+      - keys: {int3: 1}
+      - keys: {int4: 1}
     Phases:
       - Repeat: 1
       - Operation: Nop

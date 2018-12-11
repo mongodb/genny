@@ -16,6 +16,9 @@
 
 namespace {}  // namespace
 
+using document_ptr=std::unique_ptr<genny::value_generators::DocumentGenerator>;
+using index_type=std::pair<document_ptr, std::optional<document_ptr>>;
+
 struct genny::actor::Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client, uint thread)
         : database{(*client)[context.get<std::string>("Database")]},
@@ -25,9 +28,11 @@ struct genny::actor::Loader::PhaseConfig {
           batchSize{context.get<uint>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)},
           collectionOffset{numCollections*thread} {
-              auto indexNodes = context.get<std::vector<YAML::Node>>("Indexes");
+              auto indexNodes = context.get<std::vector<YAML::Node>>("Indexes"); // Try removing the arguments in <<>>
               for (auto indexNode : indexNodes) {
-                  indexes.push_back(value_generators::makeDoc(indexNode, rng));
+                  indexes.emplace_back(
+                                       value_generators::makeDoc(indexNode["keys"], rng),
+                                       indexNode["options"] ? std::make_optional(value_generators::makeDoc(indexNode["options"], rng)) : std::nullopt);
               }
               if (thread == context.get<int>("Threads") - 1) {
                   // Pick up any extra collections left over by the division
@@ -39,8 +44,8 @@ struct genny::actor::Loader::PhaseConfig {
     uint numCollections;
     uint numDocuments;
     uint batchSize;
-    std::unique_ptr<value_generators::DocumentGenerator> documentTemplate;
-    std::vector<std::unique_ptr<value_generators::DocumentGenerator>> indexes;
+    document_ptr documentTemplate;
+    std::vector<index_type> indexes;
     uint collectionOffset;
 };
 
@@ -71,11 +76,20 @@ void genny::actor::Loader::run() {
                     }
                 }
                 // For each index
-                for (auto& index : config->indexes) {
+                for (auto&& [keys, options] : config->indexes) {
                     // Make the index
-                    bsoncxx::builder::stream::document keys;
-                    auto keyView = index->view(keys);
+                    bsoncxx::builder::stream::document keysDoc;
+                    bsoncxx::builder::stream::document optionsDoc;
+                    auto keyView = keys->view(keysDoc);
                     BOOST_LOG_TRIVIAL(debug) << "Building index " << bsoncxx::to_json(keyView);
+                    if (options)
+                        {
+                            auto optionsView = (*options)->view(optionsDoc);
+                            BOOST_LOG_TRIVIAL(debug) << "With options " << bsoncxx::to_json(optionsView);
+                            auto op = _indexBuildTimer.raii();
+                            collection.create_index(keyView, optionsView);
+                        }
+                    else
                     {
                         auto op = _indexBuildTimer.raii();
                         collection.create_index(keyView);
