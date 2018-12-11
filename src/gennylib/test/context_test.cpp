@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <string_view>
 
 #include <yaml-cpp/yaml.h>
 
@@ -21,7 +22,7 @@ using Catch::Matchers::StartsWith;
 // The driver checks the passed-in mongo uri for accuracy but doesn't actually
 // initiate a connection until a connection is retrieved from
 // the connection-pool
-static constexpr const char * mongoUri = "mongodb://localhost:27017";
+static constexpr std::string_view mongoUri = "mongodb://localhost:27017";
 
 template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
@@ -30,7 +31,7 @@ void errors(const string& yaml, string message, Args... args) {
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri, {}};
+        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), {}};
         return context.get<Out>(std::forward<Args>(args)...);
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -45,7 +46,7 @@ void gives(const string& yaml, OutV expect, Args... args) {
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri, {}};
+        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), {}};
         return context.get<Out, Required>(std::forward<Args>(args)...);
     };
     REQUIRE(test() == expect);
@@ -87,14 +88,16 @@ Actors:
   Count: 7
         )");
 
-        WorkloadContext w{yaml, metrics, orchestrator, mongoUri, cast};
+        WorkloadContext w{yaml, metrics, orchestrator, mongoUri.data(), cast};
         auto actors = w.get("Actors");
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
 
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, mongoUri, cast); };
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+        };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
     }
 
@@ -140,12 +143,16 @@ Actors:
 
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("Actors: []");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, mongoUri, cast); };
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+        };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
     }
     SECTION("No Actors") {
         auto yaml = YAML::Load("SchemaVersion: 2018-07-01");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, mongoUri, cast); };
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+        };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path(.*\n*)*)"));
     }
     SECTION("Invalid MongoUri") {
@@ -202,7 +209,7 @@ Actors:
             {"SomeList", someListProducer}, {"Count", countProducer},
         };
 
-        auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri, twoActorCast};
+        auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), twoActorCast};
 
         REQUIRE(someListProducer->calls == 1);
         REQUIRE(countProducer->calls == 1);
@@ -218,7 +225,7 @@ void onContext(YAML::Node& yaml, std::function<void(ActorContext&)> op) {
         {"Op", std::make_shared<OpProducer>(op)}, {"NoOp", std::make_shared<NoOpProducer>()},
     };
 
-    WorkloadContext{yaml, metrics, orchestrator, mongoUri, cast};
+    WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast};
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
@@ -321,7 +328,7 @@ TEST_CASE("Duplicate Phase Numbers") {
         {"NoOp", std::make_shared<NoOpProducer>()},
     };
 
-    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri, cast}),
+    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
                         Catch::Matches("Duplicate phase 0"));
 }
 

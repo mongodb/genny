@@ -262,7 +262,7 @@ TEST_CASE("Actual Actor Example") {
         YAML::Node config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
             Actors:
-            - Type: "Inc"
+            - Type: Inc
               Phases:
               - Repeat: 100
                 Key: 71
@@ -270,9 +270,9 @@ TEST_CASE("Actual Actor Example") {
                 Key: 93
         )");
 
-        genny::metrics::Registry metrics;
         metrics::Registry registry;
 
+        genny::metrics::Registry metrics;
         genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
         orchestrator.addRequiredTokens(1);
 
@@ -336,7 +336,7 @@ TEST_CASE("Actual Actor Example") {
         YAML::Node config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
             Actors:
-            - Type: "Inc"
+            - Type: Inc
               Phases:
               - Operation: Nop
               - Repeat: 10

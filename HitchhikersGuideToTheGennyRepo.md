@@ -43,6 +43,12 @@ This example is taken directly from the Workload.yml file.
 ##### 💃 General Actor Structure 💃 
 We'll look at the [HelloWorld Actor](src/gennylib/src/actors/HelloWorld.cpp) for example. The producer is called in the [DefaultDriver](src/driver/src/DefaultDriver.cpp) before any of the initialization is done. Then when the driver calls [`run()`](src/driver/src/DefaultDriver.cpp#L56) (actually calling [`runActor()`](src/driver/src/DefaultDriver.cpp#L52-L71) which then calls run), the actor iterates over it's PhaseLoop using the PhaseLoop iterator class. The [outer loop](src/gennylib/src/actors/HelloWorld.cpp#L14) splits the `_loop` object into a `PhaseNumber` and an `ActorPhase` (it actually creates an entry into the `_loop` object for each thread that the YAML file specifies). The [inner loop](src/gennylib/src/actors/HelloWorld.cpp#L15) iterates over the config and runs the specified operation for the actor for as many times as repeat or duration specify it to run. If both the repeat and duration (measured in milliseconds) keywords are specified, then it will run for the longer of the two (i.e. duration = 20000, repeat = 2, it will run for 20000).
 
+##### Casts
+The `Cast` keeps a set of `ActorProducer` objects that it exposes to the `WorkloadContext`. Each
+`ActorProducer` is a stateful object that knows a specific pattern for producing single `Actor`
+instances. It's perfectly acceptable to have two different `ActorProducer` instances that only
+differ in some preset constant value.
+
 ##### ➰ PhaseLoop and ActorPhase ➰
 The `PhaseLoop class` does two main things. It [constructs the `PhaseMap` object](src/gennylib/include/gennylib/PhaseLoop.hpp#L526-L555) (defined [here](src/gennylib/include/gennylib/PhaseLoop.hpp#L314)) and defines the [beginning](src/gennylib/include/gennylib/PhaseLoop.hpp#L516-L518) and [end](src/gennylib/include/gennylib/PhaseLoop.hpp#L520-L522) of the [`PhaseLoop Iterator class`](src/gennylib/include/gennylib/PhaseLoop.hpp#L329-L433). The `PhaseLoop` object is a map that has one entry per thread per phase per actor. So if the YAML was the one in the example above, the PhaseLoop object would have 8 entries in the `PhaseLoop` object (4 / actor, 2 / phase / actor because 2 threads for each actor). 
 

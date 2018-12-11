@@ -9,6 +9,26 @@
 
 namespace genny{
 
+/**
+ * A cast is a map of strings to shared ActorProducer instances.
+ *
+ * This class is how one conveys to a driver/workload context which ActorProducers are available.
+ * There will always be a global singleton cast available via getCast(). For limited applications
+ * and testing, one can make local Cast instances that behave in an identical fashion.
+ *
+ * To easily register a default ActorProducer to the global Cast, one can use the following in
+ * a source file:
+ * ```
+ * auto registerMyActor = genny::Cast::makeDefaultRegistration<MyActorT>();
+ * ```
+ * The function makes a specialization of DefaultActorProducer and hands it to the
+ * Cast::Registration struct along with the `defaultName()` of MyActorT. When that struct
+ * initializes, it adds its producer to the map in cast. More complex ActorProducers
+ * can be registered by following this same pattern.
+ *
+ * Note that ActorProducers are stateful. Calls to produce upon them are not idempotent and may
+ * produce differently initialized Actors as desired.
+ */
 class Cast {
 public:
     struct Registration;
