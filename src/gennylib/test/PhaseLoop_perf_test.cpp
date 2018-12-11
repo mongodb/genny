@@ -129,8 +129,10 @@ auto runActors(int threads, long iterations) {
         threads % iterations;
     auto yaml = YAML::Load(yamlString.str());
 
-    Cast cast;
-    cast.add("Increments", std::make_shared<DefaultActorProducer<IncrementsActor>>("Increments"));
+    auto incProducer = std::make_shared<DefaultActorProducer<IncrementsActor>>("Increments");
+    auto cast = Cast{
+        {"Increments", incProducer},
+    };
 
     WorkloadContext workloadContext{yaml, registry, o, "mongodb://localhost:27017", cast};
 

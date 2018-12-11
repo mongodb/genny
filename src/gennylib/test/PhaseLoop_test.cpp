@@ -276,9 +276,10 @@ TEST_CASE("Actual Actor Example") {
         genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
         orchestrator.addRequiredTokens(1);
 
-        Cast cast;
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        cast.add("Inc", imvProducer);
+        auto cast = Cast{
+            {"Inc", imvProducer},
+        };
 
         WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", cast};
         wl.actors()[0]->run();

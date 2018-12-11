@@ -59,12 +59,24 @@ struct NoOpProducer : public ActorProducer {
     }
 };
 
+struct OpProducer : public ActorProducer {
+    OpProducer(std::function<void(ActorContext&)> op) : ActorProducer("Op"), _op(op) {}
+
+    ActorVector produce(ActorContext& context) override {
+        _op(context);
+        return {};
+    }
+
+    std::function<void(ActorContext&)> _op;
+};
+
 TEST_CASE("loads configuration okay") {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
-    Cast cast;
-    cast.add("NoOp", std::make_shared<NoOpProducer>());
+    auto cast = Cast{
+        {"NoOp", std::make_shared<NoOpProducer>()},
+    };
 
     SECTION("Valid YAML") {
         auto yaml = YAML::Load(R"(
@@ -183,12 +195,12 @@ Actors:
             int calls = 0;
         };
 
-        Cast twoActorCast;
         auto someListProducer = std::make_shared<SomeListProducer>("SomeList");
-        twoActorCast.add("SomeList", someListProducer);
-
         auto countProducer = std::make_shared<CountProducer>("Count");
-        twoActorCast.add("Count", countProducer);
+
+        auto twoActorCast = Cast{
+            {"SomeList", someListProducer}, {"Count", countProducer},
+        };
 
         auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri, twoActorCast};
 
@@ -198,28 +210,16 @@ Actors:
     }
 }
 
-struct OpProducer : public ActorProducer {
-    OpProducer(std::function<void(ActorContext&)> op) : ActorProducer("Op"), _op(op) {}
-
-    ActorVector produce(ActorContext& context) override {
-        _op(context);
-        return {};
-    }
-
-    std::function<void(ActorContext&)> _op;
-};
-
 void onContext(YAML::Node& yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
-    Cast cast;
-    cast.add("Op", std::make_shared<OpProducer>(op));
-    cast.add("NoOp", std::make_shared<NoOpProducer>());
+    auto cast = Cast{
+        {"Op", std::make_shared<OpProducer>(op)}, {"NoOp", std::make_shared<NoOpProducer>()},
+    };
 
     WorkloadContext{yaml, metrics, orchestrator, mongoUri, cast};
 }
-
 
 TEST_CASE("PhaseContexts constructed as expected") {
     auto yaml = YAML::Load(R"(
@@ -317,8 +317,9 @@ TEST_CASE("Duplicate Phase Numbers") {
     metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
-    Cast cast;
-    cast.add("NoOp", std::make_shared<NoOpProducer>());
+    auto cast = Cast{
+        {"NoOp", std::make_shared<NoOpProducer>()},
+    };
 
     REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri, cast}),
                         Catch::Matches("Duplicate phase 0"));
