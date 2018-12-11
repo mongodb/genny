@@ -1,4 +1,4 @@
-#include <gennylib/actors/HelloWorld.hpp>
+#include <cast_core/actors/HelloWorld.hpp>
 
 #include <string>
 

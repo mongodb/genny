@@ -1,4 +1,4 @@
-#include <gennylib/actors/MultiCollectionQuery.hpp>
+#include <cast_core/actors/MultiCollectionQuery.hpp>
 
 #include <chrono>
 #include <memory>
