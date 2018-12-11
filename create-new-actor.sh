@@ -32,12 +32,12 @@ create_header_text() {
     echo "class $actor_name : public Actor {"
     echo ""
     echo "public:"
-    echo "    explicit $actor_name(ActorContext& context, const unsigned int thread);"
+    echo "    explicit $actor_name(ActorContext& context);"
     echo "    ~$actor_name() = default;"
     echo ""
-    echo "    void run() override;"
+    echo "    static std::string_view defaultName() { return \"$actor_name\"; }"
     echo ""
-    echo "    static ActorVector producer(ActorContext& context);"
+    echo "    void run() override;"
     echo ""
     echo "private:"
     echo "    struct PhaseConfig;"
@@ -57,18 +57,15 @@ create_impl_text() {
 
     echo "#include <memory>"
     echo ""
-    echo "#include <gennylib/actors/${actor_name}.hpp>"
+    echo "#include <cast_core/actors/${actor_name}.hpp>"
     echo ""
-    echo "namespace {"
+    echo "namespace genny {"
     echo ""
-    echo "}  // namespace"
-    echo ""
-    echo "struct genny::actor::${actor_name}::PhaseConfig {"
-    echo "    PhaseConfig(PhaseContext& context, int thread)"
-    echo "    {}"
+    echo "struct actor::${actor_name}::PhaseConfig {"
+    echo "    PhaseConfig(PhaseContext& context) {}"
     echo "};"
     echo ""
-    echo "void genny::actor::${actor_name}::run() {"
+    echo "void actor::${actor_name}::run() {"
     echo "    for (auto&& [phase, config] : _loop) {"
     echo "        for (auto&& _ : config) {"
     echo "            // TODO: main logic"
@@ -76,20 +73,14 @@ create_impl_text() {
     echo "    }"
     echo "}"
     echo ""
-    echo "genny::actor::${actor_name}::${actor_name}(genny::ActorContext& context, const unsigned int thread)"
-    echo "    : _loop{context, thread} {}"
+    echo "actor::${actor_name}::${actor_name}(ActorContext& context)"
+    echo "    : Actor(context),"
+    echo "      _loop{context} {}"
     echo ""
-    echo "genny::ActorVector genny::actor::${actor_name}::producer(genny::ActorContext& context) {"
-    echo "    auto out = std::vector<std::unique_ptr<genny::Actor>>{};"
-    echo "    if (context.get<std::string>(\"Type\") != \"${actor_name}\") {"
-    echo "        return out;"
-    echo "    }"
-    echo "    auto threads = context.get<int>(\"Threads\");"
-    echo "    for (int i = 0; i < threads; ++i) {"
-    echo "        out.push_back(std::make_unique<genny::actor::${actor_name}>(context, i));"
-    echo "    }"
-    echo "    return out;"
+    echo "namespace {"
+    echo "auto register${actor_name} = Cast::makeDefaultRegistration<actor::${actor_name}>();"
     echo "}"
+    echo "} // namespace genny"
 }
 
 create_header() {
@@ -98,7 +89,7 @@ create_header() {
     uuid="$1"
     actor_name="$2"
 
-    create_header_text "$@" > "$(dirname "$0")/src/gennylib/include/gennylib/actors/${actor_name}.hpp"
+    create_header_text "$@" > "$(dirname "$0")/src/cast_core/include/cast_core/actors/${actor_name}.hpp"
 }
 
 create_impl() {
@@ -107,32 +98,16 @@ create_impl() {
     uuid="$1"
     actor_name="$2"
 
-    create_impl_text "$@" > "$(dirname "$0")/src/gennylib/src/actors/${actor_name}.cpp"
+    create_impl_text "$@" > "$(dirname "$0")/src/cast_core/src/actors/${actor_name}.cpp"
 }
 
-recreate_driver_file() {
-    local uuid
-    local actor_name
-    local driver_file
-    uuid="$1"
-    actor_name="$2"
-    driver_file="$(dirname "$0")/src/driver/src/DefaultDriver.cpp"
-
-    < "$driver_file" \
-      perl -pe "s|(// NextActorHeaderHere)|#include <gennylib/actors/${actor_name}.hpp>\\n\$1|" \
-    | perl -pe "s|((\\s+)// NextActorProducerHere)|\$2&genny::actor::${actor_name}::producer,\\n\$1|" \
-    > "$$.driver.cpp"
-
-    mv "$$.driver.cpp" "$driver_file"
-}
-
-recreate_gennylib_cmake_file() {
+recreate_cast_core_cmake_file() {
     local uuid
     local actor_name
     local cmake_file
     uuid="$1"
     actor_name="$2"
-    cmake_file="$(dirname "$0")/src/gennylib/CMakeLists.txt"
+    cmake_file="$(dirname "$0")/src/cast_core/CMakeLists.txt"
 
     < "$cmake_file" \
     perl -pe "s|((\\s+)# ActorsEnd)|\$2src/actors/${actor_name}.cpp\\n\$1|" \
@@ -146,6 +121,10 @@ if [[ "$#" != 1 ]]; then
     exit 1
 fi
 
+case $1 in
+  (-h|--help) usage; exit 0;;
+esac
+
 actor_name="$1"
 if [ -z "$actor_name" ]; then
     usage
@@ -156,5 +135,4 @@ uuid="$(uuidgen | sed s/-/_/g)"
 
 create_header                "$uuid" "$actor_name"
 create_impl                  "$uuid" "$actor_name"
-recreate_driver_file         "$uuid" "$actor_name"
-recreate_gennylib_cmake_file "$uuid" "$actor_name"
+recreate_cast_core_cmake_file "$uuid" "$actor_name"
