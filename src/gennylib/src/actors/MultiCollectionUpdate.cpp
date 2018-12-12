@@ -82,13 +82,10 @@ genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& 
       _loop{context, _rng, _client} {}
 
 genny::ActorVector genny::actor::MultiCollectionUpdate::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     if (context.get<std::string>("Type") != "MultiCollectionUpdate") {
-        return out;
+        return {};
     }
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::MultiCollectionUpdate>(context));
-    }
+    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
+    out.emplace_back(std::make_unique<genny::actor::MultiCollectionUpdate>(context));
     return out;
 }

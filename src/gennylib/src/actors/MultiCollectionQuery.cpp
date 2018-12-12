@@ -85,13 +85,10 @@ genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& co
       _loop{context, _rng, _client} {}
 
 genny::ActorVector genny::actor::MultiCollectionQuery::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     if (context.get<std::string>("Type") != "MultiCollectionQuery") {
-        return out;
+        return {};
     }
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::MultiCollectionQuery>(context));
-    }
+    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
+    out.emplace_back(std::make_unique<genny::actor::MultiCollectionQuery>(context));
     return out;
 }
