@@ -13,8 +13,8 @@ Actors:
     Type: Loader
     Threads: 10
     Database: &DB test
-    CollectionCount: &CollectionCount 10000
-    DocumentCount: 10000
+    CollectionCount: &CollectionCount 100
+    DocumentCount: 1000
     BatchSize: 1000
     Document:  # Documents are approximately 1 KiB in size
       t: {$randomint: {min: 0, max: 10}}

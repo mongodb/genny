@@ -74,7 +74,7 @@ void genny::actor::Loader::run() {
                     // Make the index
                     bsoncxx::builder::stream::document keys;
                     auto keyView = index->view(keys);
-                    BOOST_LOG_TRIVIAL(info) << "Building index " << bsoncxx::to_json(keyView);
+                    BOOST_LOG_TRIVIAL(debug) << "Building index " << bsoncxx::to_json(keyView);
                     {
                         auto op = _indexBuildTimer.raii();
                         collection.create_index(keyView);
