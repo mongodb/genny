@@ -17,6 +17,7 @@ add_library(gennylib_headers SHARED
 add_library(gennylib SHARED
     src/version.cpp
     src/context.cpp
+    src/Actor.cpp
     src/Orchestrator.cpp
 
     src/value_generators/parser.cpp

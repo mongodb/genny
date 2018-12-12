@@ -84,9 +84,9 @@ private:
     GeneratorType generator;
     IntOrValue min;
     IntOrValue max;
-    IntOrValue t;                          // for binomial, negative binomial
-    std::unique_ptr<ValueGenerator> p;     // for binomial, geometric
-    std::unique_ptr<ValueGenerator> mean;  // for poisson
+    IntOrValue t;  // for binomial, negative binomial
+    double p;     // for binomial, geometric
+    double mean;  // for poisson
 };
 
 

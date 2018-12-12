@@ -35,22 +35,20 @@ void genny::actor::Insert::run() {
     }
 }
 
-
-genny::actor::Insert::Insert(genny::ActorContext& context, const unsigned int thread)
-    : _rng{context.workload().createRNG()},
-      _insertTimer{context.timer("insert", thread)},
-      _operations{context.counter("operations", thread)},
+genny::actor::Insert::Insert(genny::ActorContext& context)
+    : Actor(context),
+      _rng{context.workload().createRNG()},
+      _insertTimer{context.timer("insert", Insert::id())},
+      _operations{context.counter("operations", Insert::id())},
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 
 genny::ActorVector genny::actor::Insert::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
     if (context.get<std::string>("Type") != "Insert") {
-        return out;
+        return {};
     }
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::Insert>(context, i));
-    }
+
+    ActorVector out;
+    out.emplace_back(std::make_unique<actor::Insert>(context));
     return out;
 }
