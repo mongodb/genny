@@ -96,6 +96,22 @@ genny::actor::Loader::Loader(genny::ActorContext& context, uint thread)
       _client{context.client()},
       _loop{context, _rng, _client, thread} {}
 
+class LoaderProducer : public genny::ActorProducer {
+public:
+    LoaderProducer(const std::string_view &name) : ActorProducer(name) {}
+    genny::ActorVector produce(genny::ActorContext& context) {
+        if (context.get<std::string>("Type") != "Loader") {
+            return {};
+        }
+        genny::ActorVector out;
+        for(uint i=0; i<context.get<int>("Threads"); ++i) {
+            out.emplace_back(std::make_unique<genny::actor::Loader>(context, i));
+        }
+        return out;
+    }
+};
+
 namespace {
-auto registerLoader = genny::Cast::makeDefaultRegistration<genny::actor::Loader>();
+std::shared_ptr<genny::ActorProducer> loaderProducer = std::make_shared<LoaderProducer>("Loader");
+auto registration = genny::Cast::makeRegistration<genny::ActorProducer>(loaderProducer);
 }
