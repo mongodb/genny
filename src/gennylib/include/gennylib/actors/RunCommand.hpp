@@ -10,6 +10,34 @@ namespace genny::actor {
 /**
  * RunCommand is an actor that performs database and admin commands on a database. The
  * actor records the latency of each command run.
+ *
+ *
+ * Example:
+ *
+ * ```yaml
+ * Actors:
+ * - Name: MultipleOperations
+ *   Type: RunCommand
+ *   Database: test
+ *   Operations:
+ *   - MetricsName: ServerStatus
+ *     Name: RunCommand
+ *     Command:
+ *       serverStatus: 1
+ *   - Name: RunCommand
+ *     Command:
+ *       find: scores
+ *       filter: { rating: { $gte: 50 } }
+ * - Name: SingleOperation
+ *   Type: RunCommand
+ *   Database: admin
+ *   Phases:
+ *   - Repeat: 5
+ *     MetricsName: CurrentOp
+ *     Operation: RunCommand
+ *     Command:
+ *       currentOp: 1
+ * ```
  */
 
 class RunCommand : public Actor {
@@ -24,7 +52,6 @@ public:
 
 private:
     struct PhaseConfig;
-    struct RunCommandConfig;
     std::mt19937_64 _rng;
     mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;

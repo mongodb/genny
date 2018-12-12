@@ -6,13 +6,13 @@ Actors:
   Threads: 1
   Database: test
   Phases:
-  - Operation: Nop
-  - Repeat: 50
+  - Repeat: 10
     Operations:
     - MetricsName: ServerStatus
+      Name: RunCommand
       Command:
         serverStatus: 1
-    - MetricsName: Insert
+    - Name: RunCommand
       Command:
         insert: myCollection
         documents: [{name: {$randomstring: {length: {$randomint: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
@@ -23,4 +23,14 @@ Actors:
         projection: { name: 1, rating: 1, address: 1 }
         sort: { name: 1 }
         limit: 5
-  - Operation: Nop
+      Name: RunCommand
+- Name: CurrentOp
+  Type: RunCommand
+  Threads: 1
+  Database: admin
+  Phases:
+  - Repeat: 5
+    MetricsName: CurrentOp
+    Operation: RunCommand
+    Command:
+      currentOp: 1
