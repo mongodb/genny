@@ -4,8 +4,11 @@
 #include <cassert>
 #include <functional>
 #include <iterator>
+#include <map>
+#include <memory>
 #include <optional>
 #include <random>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -18,6 +21,7 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
+#include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
@@ -197,26 +201,7 @@ public:
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
-                    const std::vector<ActorProducer>& producers)
-        : _node{std::move(node)},
-          _registry{&registry},
-          _orchestrator{&orchestrator},
-          // TODO: make this optional and default to mongodb://localhost:27017
-          _clientPool{mongocxx::uri{mongoUri}},
-          _done{false} {
-        // This is good enough for now. Later can add a WorkloadContextValidator concept
-        // and wire in a vector of those similar to how we do with the vector of Producers.
-        if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
-            throw InvalidConfigurationException("Invalid schema version");
-        }
-
-        // Default value selected from random.org, by selecting 2 random numbers
-        // between 1 and 10^9 and concatenating.
-        rng.seed(get_static<int, false>(node, "RandomSeed").value_or(269849313357703264));
-        _actorContexts = constructActorContexts(_node, this);
-        _actors = constructActors(producers, _actorContexts);
-        _done = true;
-    }
+                    const Cast& cast);
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
@@ -302,7 +287,7 @@ public:
             throw InvalidConfigurationException(
                 "Tried to create a random number generator after construction");
         }
-        return std::mt19937_64{rng()};
+        return std::mt19937_64{_rng()};
     }
 
     /**
@@ -317,22 +302,23 @@ private:
     friend class ActorContext;
 
     // helper methods used during construction
-    static ActorVector constructActors(const std::vector<ActorProducer>& producers,
-                                       const std::vector<std::unique_ptr<ActorContext>>&);
-    static std::vector<std::unique_ptr<ActorContext>> constructActorContexts(const YAML::Node&,
-                                                                             WorkloadContext*);
+    static ActorVector _constructActors(const Cast& cast,
+                                        const std::unique_ptr<ActorContext>& contexts);
     YAML::Node _node;
 
-    std::mt19937_64 rng;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
+
+    std::unique_ptr<mongocxx::pool> _clientPool;
+
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
-    mongocxx::pool _clientPool;
     ActorVector _actors;
+    std::mt19937_64 _rng;
+
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.
-    bool _done;
+    bool _done = false;
 
     // Actors should always be constructed in a single-threaded context.
     // That said, atomic integral types are very cheap to work with.
@@ -461,13 +447,7 @@ public:
         return _phaseContexts;
     };
 
-    mongocxx::pool::entry client() {
-        auto entry = _workload->_clientPool.try_acquire();
-	    if (!entry) {
-	        throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
-        }
-        return std::move(*entry);
-    }
+    mongocxx::pool::entry client();
 
     // <Forwarding to delegates>
 

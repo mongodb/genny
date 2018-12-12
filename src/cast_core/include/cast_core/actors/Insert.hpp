@@ -21,9 +21,10 @@ public:
     explicit Insert(ActorContext& context);
     ~Insert() = default;
 
+    static std::string_view defaultName() {
+        return "Insert";
+    }
     void run() override;
-
-    static ActorVector producer(ActorContext& context);
 
 private:
     std::mt19937_64 _rng;

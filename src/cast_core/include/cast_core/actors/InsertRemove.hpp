@@ -23,9 +23,10 @@ public:
     explicit InsertRemove(ActorContext& context);
     ~InsertRemove() = default;
 
+    static std::string_view defaultName() {
+        return "InsertRemove";
+    }
     void run() override;
-
-    static ActorVector producer(ActorContext& context);
 
 private:
     std::mt19937_64 _rng;

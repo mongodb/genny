@@ -49,6 +49,12 @@ public:
     virtual ~Actor() = default;
 
     /**
+     * A consistent compilation-unit unique name for this actor.
+     * This name is mostly intended for metrics and logging purposes.
+     */
+    // static std::string_view defaultName()
+
+    /**
      * The main method of an actor. Will be run in its own thread.
      * This is only intended to be called by workload drivers.
      */

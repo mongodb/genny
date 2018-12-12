@@ -4,9 +4,9 @@
 #include <memory>
 #include <vector>
 
-#include <gennylib/Actor.hpp>
-
 namespace genny {
+
+struct Actor;
 
 /**
  * A convenience typedef for the return value from ActorProducer.

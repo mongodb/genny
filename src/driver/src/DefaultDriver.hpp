@@ -34,10 +34,7 @@ public:
         std::string mongoUri;
         std::string description;
         bool isHelp = false;
-
-        // Mainly only useful for testing. Allow specifying additional
-        // ActorProducers which will be *added* to the default list.
-        std::vector<genny::ActorProducer> otherProducers;
+        bool shouldListActors = false;
     };
 
 

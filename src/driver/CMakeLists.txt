@@ -5,7 +5,7 @@ add_executable(genny
 )
 
 # Define the libraries this project depends upon
-target_link_libraries(genny gennylib)
+target_link_libraries(genny gennylib cast_core)
 
 install(TARGETS  genny
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -25,7 +25,7 @@ target_include_directories(test_driver
         ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
 target_link_libraries(test_driver
-    PUBLIC ${Boost_LIBRARIES} gennylib
+    PUBLIC ${Boost_LIBRARIES} gennylib cast_core
 )
 
 add_test(

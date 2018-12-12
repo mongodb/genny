@@ -1,4 +1,4 @@
-#include <gennylib/actors/InsertRemove.hpp>
+#include <cast_core/actors/InsertRemove.hpp>
 
 #include <memory>
 
@@ -6,7 +6,9 @@
 #include <mongocxx/pool.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include "log.hh"
+#include <boost/log/trivial.hpp>
+
+#include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
@@ -56,17 +58,6 @@ genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context)
       _client{std::move(context.client())},
       _loop{context, _rng, _client, InsertRemove::id()} {}
 
-genny::ActorVector genny::actor::InsertRemove::producer(genny::ActorContext& context) {
-    if (context.get<std::string>("Type") != "InsertRemove") {
-        return {};
-    }
-
-    ActorVector out;
-
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::InsertRemove>(context));
-    }
-
-    return out;
+namespace {
+auto registerInsertRemove = genny::Cast::makeDefaultRegistration<genny::actor::InsertRemove>();
 }

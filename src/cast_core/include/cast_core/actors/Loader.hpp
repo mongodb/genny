@@ -19,9 +19,10 @@ public:
     explicit Loader(ActorContext& context);
     ~Loader() = default;
 
+    static std::string_view defaultName() {
+        return "Loader";
+    }
     void run() override;
-
-    static ActorVector producer(ActorContext& context);
 
 private:
     struct PhaseConfig;

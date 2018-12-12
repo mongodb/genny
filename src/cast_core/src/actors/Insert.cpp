@@ -1,4 +1,4 @@
-#include <gennylib/actors/Insert.hpp>
+#include <cast_core/actors/Insert.hpp>
 
 #include <memory>
 
@@ -8,8 +8,10 @@
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
-#include "log.hh"
+#include <boost/log/trivial.hpp>
+
 #include <bsoncxx/json.hpp>
+#include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
@@ -43,12 +45,6 @@ genny::actor::Insert::Insert(genny::ActorContext& context)
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 
-genny::ActorVector genny::actor::Insert::producer(genny::ActorContext& context) {
-    if (context.get<std::string>("Type") != "Insert") {
-        return {};
-    }
-
-    ActorVector out;
-    out.emplace_back(std::make_unique<actor::Insert>(context));
-    return out;
+namespace {
+auto registerInsert = genny::Cast::makeDefaultRegistration<genny::actor::Insert>();
 }
