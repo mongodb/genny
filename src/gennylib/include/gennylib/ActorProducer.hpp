@@ -1,7 +1,6 @@
 #ifndef HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 #define HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 
-#include <map>
 #include <memory>
 #include <string_view>
 
@@ -53,19 +52,23 @@ private:
     std::string_view _name;
 };
 
-template <class ActorT>
-class DefaultActorProducer : public ActorProducer {
+class ParallelizedActorProducer : public ActorProducer{
 public:
-    DefaultActorProducer(const std::string_view& name) : ActorProducer(name) {}
+    using ActorProducer::ActorProducer;
 
-    ActorVector produce(ActorContext& context) override {
-        ActorVector out;
-        out.emplace_back(std::make_unique<ActorT>(context));
-        return out;
-    }
+    virtual void produceInto(ActorVector & out, ActorContext& context) = 0;
+    ActorVector produce(ActorContext& context) override;
 };
 
-using ActorProducerMap = std::map<std::string_view, std::shared_ptr<ActorProducer>>;
+template <class ActorT>
+class DefaultActorProducer : public ParallelizedActorProducer {
+public:
+    using ParallelizedActorProducer::ParallelizedActorProducer;
+
+    void produceInto(ActorVector& out, ActorContext& context) override {
+        out.emplace_back(std::make_unique<ActorT>(context));
+    }
+};
 
 }  // namespace genny
 

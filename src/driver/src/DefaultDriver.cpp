@@ -63,9 +63,7 @@ void runActor(Actor&& actor,
 genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     const genny::driver::DefaultDriver::ProgramOptions& options) {
     if(options.shouldListActors){
-        for(const auto & pair : getCast().getProducers()){
-            std::cout << pair.first << " is " << pair.second->name() << std::endl;
-        }
+        globalCast().streamProducersTo(std::cout);
         return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
     }
 
@@ -79,7 +77,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     auto orchestrator = Orchestrator{phaseNumberGauge};
 
     auto workloadContext =
-        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, getCast()};
+        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, globalCast()};
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));

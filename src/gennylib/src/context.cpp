@@ -56,15 +56,13 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
         producer = cast.getProducer(name);
     } catch (const std::out_of_range&) {
         std::ostringstream stream;
-        stream << "Unable to construct actors: No producer for '" << name << "'.";
+        stream << "Unable to construct actors: No producer for '" << name << "'." << std::endl;
+        cast.streamProducersTo(stream);
         throw std::out_of_range(stream.str());
     }
 
-    auto threads = actorContext->get<int, /* Required = */ false>("Threads").value_or(1);
-    for (decltype(threads) i = 0; i < threads; ++i) {
-        for (auto&& actor : producer->produce(*actorContext)) {
-            actors.emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
-        }
+    for (auto&& actor : producer->produce(*actorContext)) {
+        actors.emplace_back(std::forward<std::unique_ptr<Actor>>(actor));
     }
     return actors;
 }

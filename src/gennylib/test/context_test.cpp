@@ -215,6 +215,16 @@ Actors:
         REQUIRE(countProducer->calls == 1);
         REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
     }
+
+    SECTION("Will throw if Producer is defined again") {
+        auto testFun = []() {
+            auto noOpProducer = std::make_shared<NoOpProducer>();
+            auto cast = Cast{
+                {"Foo", noOpProducer}, {"Bar", noOpProducer}, {"Foo", noOpProducer},
+            };
+        };
+        REQUIRE_THROWS_WITH(testFun(), StartsWith(R"(Failed to add 'NoOp' as 'Foo')"));
+    }
 }
 
 void onContext(YAML::Node& yaml, std::function<void(ActorContext&)> op) {

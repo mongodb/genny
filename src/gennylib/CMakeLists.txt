@@ -18,6 +18,8 @@ add_library(gennylib SHARED
     src/version.cpp
     src/context.cpp
     src/Actor.cpp
+    src/ActorProducer.cpp
+    src/Cast.cpp
     src/Orchestrator.cpp
 
     src/value_generators/parser.cpp
