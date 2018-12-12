@@ -15,7 +15,7 @@ find_package(Threads REQUIRED)
 
 # <PkgConfig>
 find_package(PkgConfig)
-# </PkgCnofig>
+# </PkgConfig>
 
 # <Boost>
 set(Boost_USE_STATIC_LIBS OFF)
