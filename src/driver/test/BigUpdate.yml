@@ -3,7 +3,7 @@
 # this workload is described here:
 # https://docs.google.com/document/d/1Dz0KyB_Pf94km4cBSpQHTBD7GQ8b3LM4_J350ukWjZ4/edit?usp=sharing
 # It loads data into a large number of collections, with 9 indexes on each collection. After loading
-# the data, a fraction of the collections are queried, and a smaller collection of documents are
+# the data, a fraction of the collections are queried, and a smaller fraction of collections are
 # updated.
 
 SchemaVersion: 2018-07-01
@@ -16,25 +16,25 @@ Actors:
     CollectionCount: &CollectionCount 10000
     DocumentCount: 10000
     BatchSize: 1000
-    Document:
+    Document:  # Documents are approximately 1 KiB in size
       t: {$randomint: {min: 0, max: 10}}
       w: {$randomint: {min: 0, max: 10}}
       x: 0
       y: {$randomint: {min: 0, max: 1000}}
       z: {$randomint: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
-      Int0: &int {$randomint: {min: 0, max: 10000}}
-      Int1: *int
-      Int2: *int
-      Int3: *int
-      Int4: *int
-      Int5: *int
-      Int6: *int
-      Int7: *int
-      Int8: *int
-      Int9: *int
+      int0: &int {$randomint: {min: 0, max: 10000}}
+      int1: *int
+      int2: *int
+      int3: *int
+      int4: *int
+      int5: *int
+      int6: *int
+      int7: *int
+      int8: *int
+      int9: *int
       # Note -- genny does not support value generation within lists
       # yet. https://jira.mongodb.org/browse/TIG-1245
-      IntArray:
+      intArray:
         - 1000
         - 2000
         - 3000
@@ -44,18 +44,18 @@ Actors:
         - 7000
         - 8000
         - 9000
-      String0: &string {$randomstring: {length: {$randomint: {min: 5, max: 15}}}}
-      String1: *string
-      String2: *string
-      String3: *string
-      String4: *string
-      String5: *string
-      String6: *string
-      String7: *string
-      String8: *string
-      String9: *string
-      StringShort: {$randomstring: {length: 1}}
-      CompressibleStringArray:
+      string0: &string {$randomstring: {length: {$randomint: {min: 5, max: 15}}}}
+      string1: *string
+      string2: *string
+      string3: *string
+      string4: *string
+      string5: *string
+      string6: *string
+      string7: *string
+      string8: *string
+      string9: *string
+      stringShort: {$randomstring: {length: 1}}
+      compressibleStringArray:
         - &cstring AAAAAAAAAAAAAAAAAAAA
         - *cstring
         - *cstring
@@ -73,8 +73,8 @@ Actors:
       - {t: 1, w: 1}
       - {y: 1}
       - {t: 1, StringShort: 1}
-      - {String0: 1}
-      - {String1: 1}
+      - {string0: 1}
+      - {string1: 1}
       - {z: 1}  # will make this unique
       - {y: 1, StringShort: 1}
       - {int0: 1, int1: 1, int2: 1}
