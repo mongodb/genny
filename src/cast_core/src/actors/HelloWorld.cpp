@@ -1,8 +1,10 @@
+#include <cast_core/actors/HelloWorld.hpp>
+
 #include <string>
 
-#include "log.hh"
+#include <boost/log/trivial.hpp>
 
-#include <gennylib/actors/HelloWorld.hpp>
+#include <gennylib/Cast.hpp>
 
 struct genny::actor::HelloWorld::PhaseConfig {
     std::string message;
@@ -25,17 +27,6 @@ genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context)
       _operations{context.counter("operations", HelloWorld::id())},
       _loop{context} {}
 
-genny::ActorVector genny::actor::HelloWorld::producer(genny::ActorContext& context) {
-    if (context.get<std::string>("Type") != "HelloWorld") {
-        return {};
-    }
-
-    ActorVector out;
-
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(context));
-    }
-
-    return out;
+namespace {
+auto registerHelloWorld = genny::Cast::makeDefaultRegistration<genny::actor::HelloWorld>();
 }

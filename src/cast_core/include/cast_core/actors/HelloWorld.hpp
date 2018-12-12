@@ -15,9 +15,10 @@ public:
     explicit HelloWorld(ActorContext& context);
     ~HelloWorld() = default;
 
+    static std::string_view defaultName() {
+        return "HelloWorld";
+    }
     void run() override;
-
-    static ActorVector producer(ActorContext& context);
 
 private:
     metrics::Timer _outputTimer;

@@ -1,4 +1,4 @@
-#include <gennylib/actors/Loader.hpp>
+#include <cast_core/actors/Loader.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -8,10 +8,11 @@
 #include <mongocxx/pool.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include "log.hh"
+#include <boost/log/trivial.hpp>
+
+#include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
-
 
 namespace {}  // namespace
 
@@ -95,13 +96,6 @@ genny::actor::Loader::Loader(genny::ActorContext& context, uint thread)
       _client{context.client()},
       _loop{context, _rng, _client, thread} {}
 
-genny::ActorVector genny::actor::Loader::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    if (context.get<std::string>("Type") != "Loader") {
-        return out;
-    }
-
-    // This is currently broken. 
-    out.emplace_back(std::make_unique<genny::actor::Loader>(context, 1));
-    return out;
+namespace {
+auto registerLoader = genny::Cast::makeDefaultRegistration<genny::actor::Loader>();
 }

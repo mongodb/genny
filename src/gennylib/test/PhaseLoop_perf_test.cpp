@@ -44,16 +44,6 @@ struct IncrementsActor : public Actor {
             }
         }
     }
-
-    static ActorProducer producer() {
-        return [](ActorContext& context) {
-            ActorVector out;
-            for (int i = 0; i < context.get<int>("Threads"); ++i) {
-                out.push_back(std::make_unique<IncrementsActor>(context));
-            }
-            return out;
-        };
-    }
 };
 
 struct VirtualRunnable {
@@ -138,8 +128,14 @@ auto runActors(int threads, long iterations) {
     )") %
         threads % iterations;
     auto yaml = YAML::Load(yamlString.str());
-    WorkloadContext workloadContext{
-        yaml, registry, o, "mongodb://localhost:27017", {IncrementsActor::producer()}};
+
+    auto incProducer = std::make_shared<DefaultActorProducer<IncrementsActor>>("Increments");
+    auto cast = Cast{
+        {"Increments", incProducer},
+    };
+
+    WorkloadContext workloadContext{yaml, registry, o, "mongodb://localhost:27017", cast};
+
     o.addRequiredTokens(threads);
     auto actorDur = timedRun(workloadContext.actors());
     REQUIRE(IncrementsActor::increments == threads * iterations);

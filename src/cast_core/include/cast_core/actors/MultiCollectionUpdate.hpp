@@ -19,9 +19,10 @@ public:
     explicit MultiCollectionUpdate(ActorContext& context);
     ~MultiCollectionUpdate() = default;
 
+    static std::string_view defaultName() {
+        return "MultiCollectionUpdate";
+    }
     void run() override;
-
-    static ActorVector producer(ActorContext& context);
 
 private:
     struct PhaseConfig;
