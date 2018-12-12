@@ -86,7 +86,7 @@ void genny::actor::Loader::run() {
     }
 }
 
-genny::actor::Loader::Loader(genny::ActorContext& context)
+genny::actor::Loader::Loader(genny::ActorContext& context, uint thread)
     : Actor(context),
       _rng{context.workload().createRNG()},
       _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Loader::id())},
@@ -101,9 +101,7 @@ genny::ActorVector genny::actor::Loader::producer(genny::ActorContext& context) 
         return out;
     }
 
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::Loader>(context, i));
-    }
+    // This is currently broken. 
+    out.emplace_back(std::make_unique<genny::actor::Loader>(context, 1));
     return out;
 }

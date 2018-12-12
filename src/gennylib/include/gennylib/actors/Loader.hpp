@@ -16,7 +16,7 @@ namespace genny::actor {
 class Loader : public Actor {
 
 public:
-    explicit Loader(ActorContext& context);
+    explicit Loader(ActorContext& context, uint thread);
     ~Loader() = default;
 
     void run() override;
