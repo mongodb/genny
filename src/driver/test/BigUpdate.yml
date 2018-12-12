@@ -68,7 +68,7 @@ Actors:
         - *cstring
       some: {embedded: {document: {with: {some: {depth: *string}}}}}
     # The Loader needs to be updated to take options to support unique, etc. I will do as a
-    # follow-up.
+    # follow-up. PERF-1758
     Indexes:
       - {t: 1, w: 1}
       - {y: 1}
