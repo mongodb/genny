@@ -18,6 +18,7 @@ namespace {}  // namespace
 struct genny::actor::Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client, uint thread)
         : database{(*client)[context.get<std::string>("Database")]},
+          // The next line uses integer division. The Remainder is accounted for below.
           numCollections{context.get<uint>("CollectionCount")/context.get<int>("Threads")},
           numDocuments{context.get<uint>("DocumentCount")},
           batchSize{context.get<uint>("BatchSize")},
@@ -45,7 +46,6 @@ struct genny::actor::Loader::PhaseConfig {
 void genny::actor::Loader::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
-            //config->database.drop();
             for (uint i = config->collectionOffset; i < config->collectionOffset + config->numCollections; i++) {
                 auto collectionName = "Collection" + std::to_string(i);
                 auto collection = config->database[collectionName];
@@ -74,7 +74,7 @@ void genny::actor::Loader::run() {
                     // Make the index
                     bsoncxx::builder::stream::document keys;
                     auto keyView = index->view(keys);
-                    // BOOST_LOG_TRIVIAL(info) << "Building index " << bsoncxx::to_json(keyView);
+                    BOOST_LOG_TRIVIAL(info) << "Building index " << bsoncxx::to_json(keyView);
                     {
                         auto op = _indexBuildTimer.raii();
                         collection.create_index(keyView);
