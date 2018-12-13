@@ -91,5 +91,5 @@ genny::actor::Loader::Loader(genny::ActorContext& context)
       _loop{context, _rng, _client} {}
 
 namespace {
-auto registerLoader = genny::Cast::makeDefaultRegistration<genny::actor::Loader>();
+auto registerLoader = genny::Cast::registerDefault<genny::actor::Loader>();
 }

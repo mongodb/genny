@@ -30,7 +30,7 @@ class ContextHelper {
 public:
     explicit ContextHelper(const std::string& name, const std::string& actorYaml = "")
         : _producer{std::make_shared<ProducerT>(name)},
-          _registration{globalCast().makeRegistration(_producer)},
+          _registration{globalCast().registerCustom(_producer)},
           _node{createWorkloadYaml(name, actorYaml)},
           _registry{},
           _orchestratorGauge{_registry.gauge("Genny.Orchestrator")},

@@ -102,7 +102,7 @@ struct Fails : public genny::Actor {
 };
 
 namespace {
-auto registerFails = genny::Cast::makeDefaultRegistration<Fails>();
+auto registerFails = genny::Cast::registerDefault<Fails>();
 }  // namespace
 
 // initialize static member of Fails

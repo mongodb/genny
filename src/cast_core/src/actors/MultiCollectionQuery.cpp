@@ -86,5 +86,5 @@ genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& co
 
 namespace {
 auto registerMultiCollectionQuery =
-    genny::Cast::makeDefaultRegistration<genny::actor::MultiCollectionQuery>();
+        genny::Cast::registerDefault<genny::actor::MultiCollectionQuery>();
 }

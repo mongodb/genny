@@ -83,5 +83,5 @@ genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& 
 
 namespace {
 auto registerMultiCollectionUpdate =
-    genny::Cast::makeDefaultRegistration<genny::actor::MultiCollectionUpdate>();
+        genny::Cast::registerDefault<genny::actor::MultiCollectionUpdate>();
 }

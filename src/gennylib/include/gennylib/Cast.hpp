@@ -64,9 +64,7 @@ public:
 
 public:
     template <typename ActorT>
-    static Registration makeDefaultRegistrationAs(const std::string_view& name);
-    template <typename ActorT>
-    static Registration makeDefaultRegistration();
+    static Registration registerDefault();
 
     /**
      * Register a custom ActorProducer. Do this if you don't wish to follow conventions
@@ -79,7 +77,7 @@ public:
      * @return Registration (empty struct used to call its ctor)
      */
     template <typename ProducerT>
-    static Registration makeRegistration(std::shared_ptr<ProducerT> producer);
+    static Registration registerCustom(std::shared_ptr<ProducerT> producer);
 
 private:
     ActorProducerMap _producers;
@@ -106,19 +104,14 @@ struct Cast::Registration {
 };
 
 template <typename ProducerT>
-Cast::Registration Cast::makeRegistration(std::shared_ptr<ProducerT> producer) {
+Cast::Registration Cast::registerCustom(std::shared_ptr<ProducerT> producer) {
     return Registration(producer->name(), producer);
 }
 
 template <typename ActorT>
-Cast::Registration Cast::makeDefaultRegistrationAs(const std::string_view& name) {
-    return Registration(name, std::make_shared<DefaultActorProducer<ActorT>>(name));
-}
-
-template <typename ActorT>
-Cast::Registration Cast::makeDefaultRegistration() {
+Cast::Registration Cast::registerDefault() {
     auto name = ActorT::defaultName();
-    return makeDefaultRegistrationAs<ActorT>(name);
+    return Registration(name, std::make_shared<DefaultActorProducer<ActorT>>(name));
 }
 
 }  // namespace genny

@@ -56,5 +56,5 @@ genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context)
       _loop{context, _rng, _client, InsertRemove::id()} {}
 
 namespace {
-auto registerInsertRemove = genny::Cast::makeDefaultRegistration<genny::actor::InsertRemove>();
+auto registerInsertRemove = genny::Cast::registerDefault<genny::actor::InsertRemove>();
 }
