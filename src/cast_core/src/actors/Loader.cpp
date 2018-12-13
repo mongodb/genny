@@ -28,7 +28,7 @@ struct genny::actor::Loader::PhaseConfig {
           batchSize{context.get<uint>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)},
           collectionOffset{numCollections*thread} {
-              auto indexNodes = context.get<std::vector<YAML::Node>>("Indexes"); // Try removing the arguments in <<>>
+              auto indexNodes = context.get("Indexes");
               for (auto indexNode : indexNodes) {
                   indexes.emplace_back(
                                        value_generators::makeDoc(indexNode["keys"], rng),
