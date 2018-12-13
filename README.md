@@ -38,6 +38,25 @@ brew install boost --build-from-source \
 
 Other errors, run `brew doctor`.
 
+**OS X Mojave**:
+
+Mojave doesn't have `/usr/local` on system roots, so you need to set
+environment variables for clang/ldd to find libraries provided by
+homebrew.
+
+Put the following in your shell profile (`~/.bashrc` or `~/.zshrc` etc):
+
+```sh
+export CPLUS_INCLUDE_PATH="$(brew --prefix)/include"
+export LIBRARY_PATH="$(brew --prefix)/lib/:$LIBRARY_PATH"
+```
+
+This needs to be run before you run `cmake`. If you have already run
+`cmake`, then `cd build; rm -rf *` after putting this in your profile
+and restarting your shell.
+
+TODO: TIG-1263 This is kind of a hack; using built-in package-location
+mechanisms would avoid having to have OS-specific hacks like this.
 
 **Other Operating-Systems**:
 
