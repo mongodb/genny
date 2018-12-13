@@ -10,7 +10,7 @@ using namespace genny;
 // Possibly extract this section to a ContextHelper if it seems useful elsewhere
 namespace genny {
 
-inline YAML::Node createWorkloadYaml(const std::string &type, const std::string &actorYaml) {
+inline YAML::Node createWorkloadYaml(const std::string& type, const std::string& actorYaml) {
     auto base = YAML::Load(R"(
 SchemaVersion: 2018-07-01
 Actors: []
@@ -22,24 +22,24 @@ Actors: []
     return base;
 }
 
-template<class ProducerT>
+template <class ProducerT>
 class ContextHelper {
 
-    static_assert(std::is_constructible_v<ProducerT, const std::string &>);
+    static_assert(std::is_constructible_v<ProducerT, const std::string&>);
 
 public:
-    explicit ContextHelper(const std::string &name, const std::string &actorYaml = "")
-            : _producer{std::make_shared<ProducerT>(name)},
-              _registration{globalCast().makeRegistration(_producer)},
-              _node{createWorkloadYaml(name, actorYaml)},
-              _registry{},
-              _orchestratorGauge{_registry.gauge("Genny.Orchestrator")},
-              _orchestrator{_orchestratorGauge},
-              _workloadContext{
-                      _node, _registry, _orchestrator, "mongodb://localhost:27017", genny::globalCast()} {}
+    explicit ContextHelper(const std::string& name, const std::string& actorYaml = "")
+        : _producer{std::make_shared<ProducerT>(name)},
+          _registration{globalCast().makeRegistration(_producer)},
+          _node{createWorkloadYaml(name, actorYaml)},
+          _registry{},
+          _orchestratorGauge{_registry.gauge("Genny.Orchestrator")},
+          _orchestrator{_orchestratorGauge},
+          _workloadContext{
+              _node, _registry, _orchestrator, "mongodb://localhost:27017", genny::globalCast()} {}
 
     void run() {
-        for (auto &&actor : _workloadContext.actors()) {
+        for (auto&& actor : _workloadContext.actors()) {
             actor->run();
         }
     }
@@ -66,7 +66,7 @@ std::atomic_int calls = 0;
 
 class MyActor : public Actor {
 public:
-    MyActor(ActorContext &context) : Actor(context) {}
+    MyActor(ActorContext& context) : Actor(context) {}
     void run() override {
         ++calls;
     }
@@ -74,7 +74,7 @@ public:
 
 class MyProducer : public ActorProducer {
 public:
-    MyProducer(const std::string_view &name) : ActorProducer(name) {}
+    MyProducer(const std::string_view& name) : ActorProducer(name) {}
 
     ActorVector produce(ActorContext& context) override {
         ActorVector out;
@@ -86,8 +86,7 @@ public:
 };
 
 TEST_CASE("Can register a new ActorProducer") {
-    genny::ContextHelper<MyProducer> helper {"MyActor"};
+    genny::ContextHelper<MyProducer> helper{"MyActor"};
     helper.run();
     REQUIRE(calls == 2);
 }
-
