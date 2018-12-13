@@ -13,10 +13,6 @@ include(GNUInstallDirs)
 
 find_package(Threads REQUIRED)
 
-# <PkgConfig>
-find_package(PkgConfig)
-# </PkgCnofig>
-
 # <Boost>
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
@@ -48,14 +44,6 @@ find_package(libmongocxx REQUIRED)
 # <Misc 3rd Party Integrations>
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 # </Misc 3rd Party Integrations>
-
-# <protobuf>
-find_package(protobuf REQUIRED)
-# </protobuf>
-
-# <grpc>
-pkg_check_modules(gRPC REQUIRED gRPC)
-# </grpc>
 
 set(CMAKE_CXX_STANDARD 17)
 
