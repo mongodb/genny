@@ -68,7 +68,7 @@ public:
     template <typename ActorT>
     static Registration makeDefaultRegistration();
     template <typename ProducerT>
-    static Registration makeRegistration(std::shared_ptr<ProducerT>& producer);
+    static Registration makeRegistration(std::shared_ptr<ProducerT> producer);
 
 private:
     ActorProducerMap _producers;
@@ -95,7 +95,7 @@ struct Cast::Registration {
 };
 
 template <typename ProducerT>
-Cast::Registration Cast::makeRegistration(std::shared_ptr<ProducerT>& producer) {
+Cast::Registration Cast::makeRegistration(std::shared_ptr<ProducerT> producer) {
     return Registration(producer->name(), producer);
 }
 
