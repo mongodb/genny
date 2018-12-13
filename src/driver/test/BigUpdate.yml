@@ -18,11 +18,11 @@ Actors:
     BatchSize: 1000
     Document:  # Documents are approximately 1 KiB in size
       t: {$randomint: {min: 0, max: 10}}
-      w: {$randomint: {min: 0, max: 10}}
+      w: {$randomint: {distribution: geometric, p: 0.1}}
       x: 0
       y: {$randomint: {min: 0, max: 1000}}
       z: {$randomint: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
-      int0: &int {$randomint: {min: 0, max: 10000}}
+      int0: &int {$randomint: {distribution: binomial, t: 200, p: 0.5}}
       int1: *int
       int2: *int
       int3: *int
@@ -74,13 +74,13 @@ Actors:
       - keys: {y: 1}
       - keys: {t: 1, stringShort: 1}
       - keys: {string0: 1}
-      - keys: {string1: 1}
       - keys: {z: 1}
-        options: {unique: 1}
-      - keys: {y: 1, stringShort: 1}
+        options: {unique: 1, dropDups: 1}
+      - keys: {stringShort: 1, y: 1}
       - keys: {int0: 1, int1: 1, int2: 1}
       - keys: {int3: 1}
       - keys: {int4: 1}
+      - keys: {int5: 1, int6: 1}
     Phases:
       - Repeat: 1
       - Operation: Nop
@@ -88,8 +88,8 @@ Actors:
     Type: MultiCollectionUpdate
     Threads: 10
     Database: *DB
-    CollectionCount: 100  # This is specifically 1% of collections
-    UpdateFilter: {y: {$randomint: {min: 0, max: 1000}}}
+    CollectionCount: 10  # This is specifically 1% of collections
+    UpdateFilter: {y: {$randomint: {distribution: poisson, mean: 100}}}
     Update: {$inc: {x: 1}}
     Phases:
       - Operation: Nop
@@ -99,8 +99,8 @@ Actors:
     Type: MultiCollectionQuery
     Threads: 10
     Database: *DB
-    CollectionCount: 10000  # This is specifically 10% of collections.
-    Filter: {y: {$randomint: {min: 0, max: 1000}}}
+    CollectionCount: 10  # This is specifically 10% of collections.
+    Filter: {y: {$randomint: {distribution: poisson, mean: 100}}}
     Limit: 20
     Phases:
       - Operation: Nop
