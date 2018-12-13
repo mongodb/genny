@@ -45,7 +45,7 @@ public:
 public:
     Cast() {}
     Cast(std::initializer_list<ActorProducerMap::value_type> init) {
-        for (const auto & [ name, producer ] : init) {
+        for (const auto& [name, producer] : init) {
             add(name, producer);
         }
     }
@@ -110,4 +110,4 @@ Cast::Registration Cast::makeDefaultRegistration() {
     return makeDefaultRegistrationAs<ActorT>(name);
 }
 
-}  // genny
+}  // namespace genny

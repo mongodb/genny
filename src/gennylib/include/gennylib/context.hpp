@@ -294,7 +294,7 @@ public:
      * Get a WorkloadContext-unique ActorId
      * @return  unsigned int    The next sequential id
      */
-    ActorId nextActorId(){
+    ActorId nextActorId() {
         return _nextActorId++;
     }
 
@@ -576,8 +576,8 @@ public:
     };
 
     /**
-    * Called in PhaseLoop during the IterationCompletionCheck constructor.
-    */
+     * Called in PhaseLoop during the IterationCompletionCheck constructor.
+     */
     bool isNop() const {
         bool isNop = get<std::string, false>("Operation") && get<std::string>("Operation") == "Nop";
         if (isNop && _node.size() != 1) {

@@ -157,9 +157,7 @@ Actors:
     }
     SECTION("Invalid MongoUri") {
         auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nActors: []");
-        auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, "notValid", cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, "notValid", cast); };
         REQUIRE_THROWS_WITH(test(), Matches(R"(an invalid MongoDB URI was provided)"));
     }
 
@@ -206,7 +204,8 @@ Actors:
         auto countProducer = std::make_shared<CountProducer>("Count");
 
         auto twoActorCast = Cast{
-            {"SomeList", someListProducer}, {"Count", countProducer},
+            {"SomeList", someListProducer},
+            {"Count", countProducer},
         };
 
         auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), twoActorCast};
@@ -220,7 +219,9 @@ Actors:
         auto testFun = []() {
             auto noOpProducer = std::make_shared<NoOpProducer>();
             auto cast = Cast{
-                {"Foo", noOpProducer}, {"Bar", noOpProducer}, {"Foo", noOpProducer},
+                {"Foo", noOpProducer},
+                {"Bar", noOpProducer},
+                {"Foo", noOpProducer},
             };
         };
         REQUIRE_THROWS_WITH(testFun(), StartsWith(R"(Failed to add 'NoOp' as 'Foo')"));
@@ -232,7 +233,8 @@ void onContext(YAML::Node& yaml, std::function<void(ActorContext&)> op) {
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
     auto cast = Cast{
-        {"Op", std::make_shared<OpProducer>(op)}, {"NoOp", std::make_shared<NoOpProducer>()},
+        {"Op", std::make_shared<OpProducer>(op)},
+        {"NoOp", std::make_shared<NoOpProducer>()},
     };
 
     WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast};

@@ -215,8 +215,8 @@ TEST_CASE("Iterator concept correctness") {
     }
 }
 
-template<typename ActorT>
-struct CounterProducer : public ActorProducer{
+template <typename ActorT>
+struct CounterProducer : public ActorProducer {
     using ActorProducer::ActorProducer;
 
     ActorVector produce(ActorContext& actorContext) override {
@@ -248,7 +248,7 @@ TEST_CASE("Actual Actor Example") {
         //                        param.
 
         void run() override {
-            for (auto && [ num, cfg ] : _loop) {
+            for (auto&& [num, cfg] : _loop) {
                 for (auto&& _ : cfg) {
                     ++this->_counters[cfg->_key];
                 }
@@ -293,8 +293,8 @@ TEST_CASE("Actual Actor Example") {
     }
 
     /**
-    * Tests an actor with a Nop command. See YAML Node below.
-    */
+     * Tests an actor with a Nop command. See YAML Node below.
+     */
     SECTION("Actor with Nop") {
         class IncrementsMapValuesWithNop : public IncrementsMapValues {
         public:
@@ -303,7 +303,7 @@ TEST_CASE("Actual Actor Example") {
                 : IncrementsMapValues(actorContext, counters) {}
 
             void run() override {
-                for (auto && [ num, cfg ] : _loop) {
+                for (auto&& [num, cfg] : _loop) {
                     // This is just for testing purposes. Actors *should* not place any commands
                     // between the top level for-loop and the inner loop.
                     check(num, this->_counters);
