@@ -67,6 +67,17 @@ public:
     static Registration makeDefaultRegistrationAs(const std::string_view& name);
     template <typename ActorT>
     static Registration makeDefaultRegistration();
+
+    /**
+     * Register a custom ActorProducer. Do this if you don't wish to follow conventions
+     * and wish to pass other state to your Actors other than just the ActorContext or if
+     * you wish to create a custom number of instances instead of the number indicated by
+     * the "Threads" Actor yaml.
+     *
+     * @tparam ProducerT type of the producer to use
+     * @param producer shared ptr to call ProducerT.produce(c) for each ActorContext c.
+     * @return Registration (empty struct used to call its ctor)
+     */
     template <typename ProducerT>
     static Registration makeRegistration(std::shared_ptr<ProducerT> producer);
 
