@@ -68,7 +68,6 @@ install(DIRECTORY include/
         FILES_MATCHING PATTERN *.hpp)
 
 add_executable(test_gennylib
-    test/ContextHelper.hpp
     test/Cast_test.cpp
     test/context_test.cpp
     test/conventions_test.cpp
