@@ -28,5 +28,5 @@ genny::actor::HelloWorld::HelloWorld(genny::ActorContext& context)
       _loop{context} {}
 
 namespace {
-auto registerHelloWorld = genny::Cast::makeDefaultRegistration<genny::actor::HelloWorld>();
+auto registerHelloWorld = genny::Cast::registerDefault<genny::actor::HelloWorld>();
 }

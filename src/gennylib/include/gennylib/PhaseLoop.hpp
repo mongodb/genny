@@ -532,8 +532,8 @@ private:
         // clang-format on
 
         V1::PhaseMap<T> out;
-        for (auto && [ num, phaseContext ] : actorContext.phases()) {
-            auto[it, success] = out.try_emplace(
+        for (auto&& [num, phaseContext] : actorContext.phases()) {
+            auto [it, success] = out.try_emplace(
                 // key
                 num,
                 // args to ActorPhase<T> ctor:

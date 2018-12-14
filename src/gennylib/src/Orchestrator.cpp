@@ -2,8 +2,8 @@
 #include <cassert>
 #include <iostream>
 
-#include <gennylib/metrics.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/metrics.hpp>
 
 namespace {
 

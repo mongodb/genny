@@ -21,10 +21,7 @@ struct genny::actor::InsertRemove::PhaseConfig {
           collection{db[collection_name]},
           myDoc(bsoncxx::builder::stream::document{} << "_id" << id
                                                      << bsoncxx::builder::stream::finalize) {}
-    PhaseConfig(PhaseContext& context,
-                std::mt19937_64& rng,
-                mongocxx::pool::entry& client,
-                int id)
+    PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client, int id)
         : PhaseConfig((*client)[context.get<std::string>("Database")],
                       context.get<std::string>("Collection"),
                       rng,
@@ -59,5 +56,5 @@ genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context)
       _loop{context, _rng, _client, InsertRemove::id()} {}
 
 namespace {
-auto registerInsertRemove = genny::Cast::makeDefaultRegistration<genny::actor::InsertRemove>();
+auto registerInsertRemove = genny::Cast::registerDefault<genny::actor::InsertRemove>();
 }
