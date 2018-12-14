@@ -6,7 +6,7 @@
 
 namespace genny::actor {
 
-struct genny::actor::HelloWorld::PhaseConfig {
+struct HelloWorld::PhaseConfig {
     std::string message;
     explicit PhaseConfig(PhaseContext& context)
         : message{context.get<std::string, false>("Message").value_or("Hello, World!")} {}
@@ -17,6 +17,9 @@ void HelloWorld::run() {
         for (auto _ : config) {
             auto op = this->_outputTimer.raii();
             BOOST_LOG_TRIVIAL(info) << config->message;
+            _loopCounter++;
+            BOOST_LOG_TRIVIAL(info) << "Counter: " << _loopCounter;
+
         }
     }
 }
@@ -25,6 +28,7 @@ HelloWorld::HelloWorld(genny::ActorContext& context)
 : Actor(context),
 _outputTimer{context.timer("output", HelloWorld::id())},
 _operations{context.counter("operations", HelloWorld::id())},
+_loopCounter{context.workload().getActorSharedState<HelloWorld, HelloWorld::LoopCounter>()},
 _loop{context} {}
 
 genny::ActorVector HelloWorld::producer(genny::ActorContext& context) {

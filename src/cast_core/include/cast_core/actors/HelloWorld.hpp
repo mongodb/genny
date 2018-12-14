@@ -9,7 +9,25 @@
 
 namespace genny::actor {
 
+
+
 class HelloWorld : public genny::Actor {
+
+    struct LoopCounter {
+        LoopCounter() = default;
+        ~LoopCounter() = default;
+
+        std::atomic_int nextId = 0;
+
+        LoopCounter& operator++(int) {
+            nextId++;
+            return *this;
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const LoopCounter& lc) {
+            return os << lc.nextId;
+        }
+    };
 
 public:
     explicit HelloWorld(ActorContext& context);
@@ -26,6 +44,8 @@ private:
 
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
+
+    LoopCounter& _loopCounter;
 };
 
 }  // namespace genny::actor

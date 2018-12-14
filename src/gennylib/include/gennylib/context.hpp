@@ -298,6 +298,16 @@ public:
         return _nextActorId++;
     }
 
+
+    /**
+     * Get states that can be shared across actors using the same WorkloadContext.
+     */
+    template<class ActorT, class StateT = typename ActorT::StateT>
+    StateT &getActorSharedState(){
+        static auto _state = StateT();
+        return _state;
+    }
+
 private:
     friend class ActorContext;
 
