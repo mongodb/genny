@@ -1,4 +1,5 @@
-#pragma once
+#ifndef HEADER_3BB17688_900D_4AFB_B736_C9EC8DA9E33B
+#define HEADER_3BB17688_900D_4AFB_B736_C9EC8DA9E33B
 
 #include <functional>
 #include <map>
@@ -48,3 +49,5 @@ private:
 };
 
 } // namespace genny
+
+#endif // HEADER_3BB17688_900D_4AFB_B736_C9EC8DA9E33B
