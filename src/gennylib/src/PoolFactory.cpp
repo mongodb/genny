@@ -72,7 +72,6 @@ struct PoolFactory::Config {
         }
 
         auto dbName = extraOptions.at("Database");
-        ;
         if (!dbName.empty() || !options.empty()) {
             ss << '/' << extraOptions.at("Database");
         }
