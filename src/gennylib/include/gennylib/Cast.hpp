@@ -104,18 +104,8 @@ struct Cast::Registration {
 };
 
 template <typename ProducerT>
-<<<<<<< HEAD
-Cast::Registration Cast::makeRegistration(std::shared_ptr<ProducerT>& producer) {
-    return Registration(producer->name(), producer);
-}
-
-template <typename ActorT>
-Cast::Registration Cast::makeDefaultRegistrationAs(const std::string_view& name) {
-    return Registration(name, std::make_shared<DefaultActorProducer<ActorT>>(name));
-=======
 Cast::Registration Cast::registerCustom(std::shared_ptr<ProducerT> producer) {
     return Registration(producer->name(), producer);
->>>>>>> master
 }
 
 template <typename ActorT>
