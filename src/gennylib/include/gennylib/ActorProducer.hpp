@@ -52,11 +52,11 @@ private:
     std::string_view _name;
 };
 
-class ParallelizedActorProducer : public ActorProducer{
+class ParallelizedActorProducer : public ActorProducer {
 public:
     using ActorProducer::ActorProducer;
 
-    virtual void produceInto(ActorVector & out, ActorContext& context) = 0;
+    virtual void produceInto(ActorVector& out, ActorContext& context) = 0;
     ActorVector produce(ActorContext& context) override;
 };
 

@@ -4,7 +4,7 @@
 
 namespace genny {
 void Cast::add(const std::string_view& castName, std::shared_ptr<ActorProducer> entry) {
-    const auto & [ it, success ] = _producers.emplace(castName, entry);
+    const auto& [it, success] = _producers.emplace(castName, entry);
 
     if (!success) {
         std::ostringstream stream;
@@ -17,7 +17,7 @@ void Cast::add(const std::string_view& castName, std::shared_ptr<ActorProducer> 
 }
 
 std::ostream& Cast::streamProducersTo(std::ostream& out) const {
-    for (const auto & [ castName, producer ] : globalCast().getProducers()) {
+    for (const auto& [castName, producer] : globalCast().getProducers()) {
         out << castName << " is " << producer->name() << std::endl;
     }
     return out;

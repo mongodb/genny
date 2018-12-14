@@ -19,8 +19,7 @@ using PhaseNumber = unsigned int;
 class Orchestrator {
 
 public:
-    explicit Orchestrator(metrics::Gauge phaseNumberGauge)
-    : _phaseNumberGauge{phaseNumberGauge} {}
+    explicit Orchestrator(metrics::Gauge phaseNumberGauge) : _phaseNumberGauge{phaseNumberGauge} {}
 
     /**
      * @return the current phase number

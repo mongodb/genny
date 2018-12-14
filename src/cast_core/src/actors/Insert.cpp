@@ -46,5 +46,5 @@ genny::actor::Insert::Insert(genny::ActorContext& context)
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 
 namespace {
-auto registerInsert = genny::Cast::makeDefaultRegistration<genny::actor::Insert>();
+auto registerInsert = genny::Cast::registerDefault<genny::actor::Insert>();
 }

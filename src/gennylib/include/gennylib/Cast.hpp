@@ -45,7 +45,7 @@ public:
 public:
     Cast() {}
     Cast(std::initializer_list<ActorProducerMap::value_type> init) {
-        for (const auto & [ name, producer ] : init) {
+        for (const auto& [name, producer] : init) {
             add(name, producer);
         }
     }
@@ -64,9 +64,20 @@ public:
 
 public:
     template <typename ActorT>
-    static Registration makeDefaultRegistrationAs(const std::string_view& name);
-    template <typename ActorT>
-    static Registration makeDefaultRegistration();
+    static Registration registerDefault();
+
+    /**
+     * Register a custom ActorProducer. Do this if you don't wish to follow conventions
+     * and wish to pass other state to your Actors other than just the ActorContext or if
+     * you wish to create a custom number of instances instead of the number indicated by
+     * the "Threads" Actor yaml.
+     *
+     * @tparam ProducerT type of the producer to use
+     * @param producer shared ptr to call ProducerT.produce(c) for each ActorContext c.
+     * @return Registration (empty struct used to call its ctor)
+     */
+    template <typename ProducerT>
+    static Registration registerCustom(std::shared_ptr<ProducerT> producer);
 
 private:
     ActorProducerMap _producers;
@@ -92,15 +103,15 @@ struct Cast::Registration {
     }
 };
 
+template <typename ProducerT>
+Cast::Registration Cast::registerCustom(std::shared_ptr<ProducerT> producer) {
+    return Registration(producer->name(), producer);
+}
+
 template <typename ActorT>
-Cast::Registration Cast::makeDefaultRegistrationAs(const std::string_view& name) {
+Cast::Registration Cast::registerDefault() {
+    auto name = ActorT::defaultName();
     return Registration(name, std::make_shared<DefaultActorProducer<ActorT>>(name));
 }
 
-template <typename ActorT>
-Cast::Registration Cast::makeDefaultRegistration() {
-    auto name = ActorT::defaultName();
-    return makeDefaultRegistrationAs<ActorT>(name);
-}
-
-}  // genny
+}  // namespace genny
