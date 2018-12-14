@@ -55,6 +55,7 @@ Actors:
       string8: *string
       string9: *string
       stringShort: {$randomstring: {length: 1}}
+      stringLong: {$randomstring: {length: 100}}
       compressibleStringArray:
         - &cstring AAAAAAAAAAAAAAAAAAAA
         - *cstring
@@ -74,8 +75,8 @@ Actors:
       - keys: {y: 1}
       - keys: {t: 1, stringShort: 1}
       - keys: {string0: 1}
-      - keys: {z: 1}
-        options: {unique: 1, dropDups: 1}
+      - keys: {stringLong: 1}
+        options: {unique: 1}
       - keys: {stringShort: 1, y: 1}
       - keys: {int0: 1, int1: 1, int2: 1}
       - keys: {int3: 1}
