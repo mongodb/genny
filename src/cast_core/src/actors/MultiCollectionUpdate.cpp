@@ -19,9 +19,7 @@
 namespace {}  // namespace
 
 struct genny::actor::MultiCollectionUpdate::PhaseConfig {
-    PhaseConfig(PhaseContext& context,
-                std::mt19937_64& rng,
-                mongocxx::pool::entry& client)
+    PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
@@ -85,5 +83,5 @@ genny::actor::MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& 
 
 namespace {
 auto registerMultiCollectionUpdate =
-    genny::Cast::makeDefaultRegistration<genny::actor::MultiCollectionUpdate>();
+        genny::Cast::registerDefault<genny::actor::MultiCollectionUpdate>();
 }

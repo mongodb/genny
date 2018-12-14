@@ -127,5 +127,5 @@ public:
 
 namespace {
 std::shared_ptr<genny::ActorProducer> loaderProducer = std::make_shared<LoaderProducer>("Loader");
-auto registration = genny::Cast::makeRegistration<genny::ActorProducer>(loaderProducer);
+auto registration = genny::Cast::registerCustom<genny::ActorProducer>(loaderProducer);
 }

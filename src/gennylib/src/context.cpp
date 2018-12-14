@@ -79,7 +79,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     int index = 0;
     for (const auto& phase : *phases) {
         auto configuredIndex = phase["Phase"].as<PhaseNumber>(index);
-        auto[it, success] =
+        auto [it, success] =
             out.try_emplace(configuredIndex, std::make_unique<PhaseContext>(phase, *actorContext));
         if (!success) {
             std::stringstream msg;

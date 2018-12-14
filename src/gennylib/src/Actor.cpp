@@ -4,8 +4,8 @@
 
 #include <gennylib/context.hpp>
 
-namespace genny{
+namespace genny {
 
 Actor::Actor(ActorContext& context) : _id{context.workload().nextActorId()} {}
 
-} // namespace genny
+}  // namespace genny

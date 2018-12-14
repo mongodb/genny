@@ -62,7 +62,7 @@ void runActor(Actor&& actor,
 
 genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     const genny::driver::DefaultDriver::ProgramOptions& options) {
-    if(options.shouldListActors){
+    if (options.shouldListActors) {
         globalCast().streamProducersTo(std::cout);
         return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
     }
