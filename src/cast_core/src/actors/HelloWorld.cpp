@@ -17,8 +17,8 @@ void HelloWorld::run() {
         for (auto _ : config) {
             auto op = this->_outputTimer.raii();
             BOOST_LOG_TRIVIAL(info) << config->message;
-            _loopCounter++;
-            BOOST_LOG_TRIVIAL(info) << "Counter: " << _loopCounter;
+            ++_hwCounter;
+            BOOST_LOG_TRIVIAL(info) << "Counter: " << _hwCounter;
 
         }
     }
@@ -28,7 +28,7 @@ HelloWorld::HelloWorld(genny::ActorContext& context)
 : Actor(context),
 _outputTimer{context.timer("output", HelloWorld::id())},
 _operations{context.counter("operations", HelloWorld::id())},
-_loopCounter{context.workload().getActorSharedState<HelloWorld, HelloWorld::LoopCounter>()},
+_hwCounter{context.workload().getActorSharedState<HelloWorld, HelloWorldCounter>()},
 _loop{context} {}
 
 genny::ActorVector HelloWorld::producer(genny::ActorContext& context) {

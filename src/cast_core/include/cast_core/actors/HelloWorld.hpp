@@ -1,33 +1,16 @@
 #ifndef HEADER_FF3E897B_C747_468B_AAAC_EA6421DB0902_INCLUDED
 #define HEADER_FF3E897B_C747_468B_AAAC_EA6421DB0902_INCLUDED
 
-#include <iostream>
-
 #include <mongocxx/client_session.hpp>
 
+#include <gennylib/ActorContext.hpp>
 #include <gennylib/PhaseLoop.hpp>
 
 namespace genny::actor {
 
-
-
 class HelloWorld : public genny::Actor {
 
-    struct LoopCounter {
-        LoopCounter() = default;
-        ~LoopCounter() = default;
-
-        std::atomic_int nextId = 0;
-
-        LoopCounter& operator++(int) {
-            nextId++;
-            return *this;
-        }
-
-        friend std::ostream& operator<<(std::ostream& os, const LoopCounter& lc) {
-            return os << lc.nextId;
-        }
-    };
+    struct HelloWorldCounter : BaseCounter{};
 
 public:
     explicit HelloWorld(ActorContext& context);
@@ -45,7 +28,7 @@ private:
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
 
-    LoopCounter& _loopCounter;
+    HelloWorldCounter& _hwCounter;
 };
 
 }  // namespace genny::actor

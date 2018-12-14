@@ -5,12 +5,14 @@
 #include <iostream>
 #include <optional>
 #include <string_view>
+#include <thread>
 
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
 #include <log.hh>
+#include <gennylib/ActorContext.hpp>
 
 
 using namespace genny;
@@ -359,4 +361,107 @@ TEST_CASE("No PhaseContexts") {
         };
         onContext(yaml, op);
     }
+}
+
+TEST_CASE("Actors Share WorkloadContext State") {
+
+    struct PhaseConfig {
+        PhaseConfig(PhaseContext& ctx) {}
+    };
+
+    class DummyInsert : public Actor {
+    public:
+        struct InsertCounter : genny::actor::BaseCounter{};
+
+        DummyInsert(ActorContext& actorContext):
+        Actor(actorContext),
+        _loop{actorContext},
+        _iCounter{actorContext.workload().getActorSharedState<DummyInsert, InsertCounter>()} {}
+
+        void run() override {
+            for (auto&& [_, cfg] : _loop) {
+                for (auto&& _ : cfg) {
+                    ++_iCounter;
+                }
+            }
+        }
+
+        static auto producer(genny::ActorContext& context) {
+            auto threads = context.get<int>("Threads");
+            ActorVector out;
+            for (int i = 0; i < threads; ++i) {
+                out.push_back(std::make_unique<DummyInsert>(context));
+            }
+
+            return out;
+        }
+    private:
+
+        PhaseLoop<PhaseConfig> _loop;
+        InsertCounter& _iCounter;
+    };
+
+    class DummyFind : public Actor {
+    public:
+        DummyFind(ActorContext& actorContext):
+            Actor(actorContext),
+            _loop{actorContext},
+            _iCounter{actorContext.workload().getActorSharedState<DummyInsert, DummyInsert::InsertCounter>()} {}
+
+        void run() override {
+            for (auto&& [_, cfg] : _loop) {
+                for (auto&& _ : cfg) {
+                    BOOST_LOG_TRIVIAL(info) << "Finding document lower than: " << _iCounter;
+                }
+            }
+        }
+
+        static auto producer(genny::ActorContext& context) {
+            auto threads = context.get<int>("Threads");
+            ActorVector out;
+            for (int i = 0; i < threads; ++i) {
+                out.push_back(std::make_unique<DummyFind>(context));
+            }
+
+            return out;
+        }
+    private:
+        PhaseLoop<PhaseConfig> _loop;
+        DummyInsert::InsertCounter& _iCounter;
+    };
+
+    YAML::Node config = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Threads: 10
+          Phases:
+          - Repeat: 100
+    )");
+
+    genny::metrics::Registry metrics;
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    orchestrator.addRequiredTokens(20);
+
+    metrics::Registry registry;
+    WorkloadContext wl{config,
+                       registry,
+                       orchestrator,
+                       "mongodb://localhost:27017",
+                       {DummyFind::producer, DummyInsert::producer}};
+
+
+    std::vector<std::thread> threads;
+    std::transform(cbegin(wl.actors()),
+                   cend(wl.actors()),
+                   std::back_inserter(threads),
+                   [&](const auto& actor) {
+                       return std::thread{[&]() {
+                           actor->run();
+                       }};
+                   });
+
+    for (auto& thread : threads)
+        thread.join();
+
+    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>().nextId.load() == 10 * 100);
 }

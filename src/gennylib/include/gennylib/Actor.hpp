@@ -44,6 +44,7 @@ class ActorContext;
  */
 class Actor {
 
+
 public:
     Actor(ActorContext& context);
     virtual ~Actor() = default;
