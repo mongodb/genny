@@ -41,7 +41,7 @@ public:
     void setIntOption(const std::string & option, int32_t value);
     void setFlag(const std::string & option, bool value);
 
-    void configureSsl(mongocxx::options::ssl options);
+    void configureSsl(mongocxx::options::ssl options, bool enableSsl = true);
 
 private:
     struct Config;

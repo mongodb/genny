@@ -1,7 +1,5 @@
 #include <gennylib/PoolFactory.hpp>
 
-#include <mongoc/mongoc.h>
-
 #include <iostream>
 #include <map>
 #include <regex>
@@ -17,39 +15,45 @@ namespace genny {
 
 struct PoolFactory::Config {
     Config(std::string_view uri) {
-        const auto protocolRegex = std::regex("^(mongodb://)?(([^:@]*):([^@]*)@)?");
+        const auto protocolRegex = std::regex("^(mongodb://|mongodb+srv://)?(([^:@]*):([^@]*)@)?");
         const auto hostRegex = std::regex("^,?([^:,/]+(:[0-9]+)?)");
-        const auto dbRegex = std::regex("^/?([^?]*)\\?");
+        const auto dbRegex = std::regex("^/([^?]*)\\??");
         const auto queryRegex = std::regex("^&?([^=&]*)=([^&]*)");
 
         std::cmatch matches;
         auto i = 0;
 
+        // Extract the protocol, and optionally the username and the password
         std::regex_search(uri.substr(i).data(), matches, protocolRegex);
         if (matches.length(1)) {
-            extraOptions["Protocol"] = matches[1];
+            accessOptions["Protocol"] = matches[1];
         } else {
-            extraOptions["Protocol"] = "mongodb://";
+            accessOptions["Protocol"] = "mongodb://";
         }
         if (matches.length(3))
-            extraOptions["Username"] = matches[3];
+            accessOptions["Username"] = matches[3];
         if (matches.length(4))
-            extraOptions["Password"] = matches[4];
+            accessOptions["Password"] = matches[4];
         i += matches.length();
 
+        // Extract each host specified in the uri
         while (std::regex_search(uri.substr(i).data(), matches, hostRegex)) {
             hosts.insert(matches[1]);
             i += matches.length();
         }
 
+        // Extract the db name and optionally the query string prefix
         std::regex_search(uri.substr(i).data(), matches, dbRegex);
-        extraOptions["Database"] = matches[1];
+        accessOptions["Database"] = matches[1];
         i += matches.length();
 
+        // Extract each query parameter
+        // Note that the official syntax of query strings is poorly defined, keys without values may
+        // be valid but not supported here.
         while (std::regex_search(uri.substr(i).data(), matches, queryRegex)) {
             auto key = matches[1];
             auto value = matches[2];
-            options[key] = value;
+            queryOptions[key] = value;
             i += matches.length();
         }
     }
@@ -58,9 +62,9 @@ struct PoolFactory::Config {
         std::ostringstream ss;
         size_t i;
 
-        ss << extraOptions.at("Protocol");
-        if (!extraOptions.at("Username").empty()) {
-            ss << extraOptions.at("Username") << ':' << extraOptions.at("Password") << '@';
+        ss << accessOptions.at("Protocol");
+        if (!accessOptions.at("Username").empty()) {
+            ss << accessOptions.at("Username") << ':' << accessOptions.at("Password") << '@';
         }
 
         i = 0;
@@ -71,17 +75,17 @@ struct PoolFactory::Config {
             ss << host;
         }
 
-        auto dbName = extraOptions.at("Database");
-        if (!dbName.empty() || !options.empty()) {
-            ss << '/' << extraOptions.at("Database");
+        auto dbName = accessOptions.at("Database");
+        if (!dbName.empty() || !queryOptions.empty()) {
+            ss << '/' << accessOptions.at("Database");
         }
 
-        if (!options.empty()) {
+        if (!queryOptions.empty()) {
             ss << '?';
         }
 
         i = 0;
-        for (auto && [ key, value ] : options) {
+        for (auto && [ key, value ] : queryOptions) {
             if (i++ > 0) {
                 ss << '&';
             }
@@ -92,8 +96,8 @@ struct PoolFactory::Config {
     }
 
     std::set<std::string> hosts;
-    std::map<std::string, std::string> options;
-    std::map<std::string, std::string> extraOptions = {
+    std::map<std::string, std::string> queryOptions;
+    std::map<std::string, std::string> accessOptions = {
         {"Protocol", ""}, {"Username", ""}, {"Password", ""}, {"Database", ""},
     };
     mongocxx::options::pool poolOptions;
@@ -115,15 +119,15 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
 }
 
 void PoolFactory::setStringOption(const std::string& option, std::string value) {
-    // If the value is in the extraOption set, set it
-    auto it = _config->extraOptions.find(option);
-    if (it != _config->extraOptions.end()) {
+    // If the value is in the accessOptions set, set it
+    auto it = _config->accessOptions.find(option);
+    if (it != _config->accessOptions.end()) {
         it->second = value;
         return;
     }
 
     // Treat the value as a normal query parameter
-    _config->options[option] = value;
+    _config->queryOptions[option] = value;
 }
 
 void PoolFactory::setIntOption(const std::string& option, int32_t value) {
@@ -136,8 +140,8 @@ void PoolFactory::setFlag(const std::string& option, bool value) {
     setStringOption(option, valueStr);
 }
 
-void PoolFactory::configureSsl(mongocxx::options::ssl options) {
-    setFlag("ssl", true);
+void PoolFactory::configureSsl(mongocxx::options::ssl options, bool enableSsl) {
+    setFlag("ssl", enableSsl);
 
     auto clientOpts = _config->poolOptions.client_opts();
     _config->poolOptions = clientOpts.ssl_opts(options);
