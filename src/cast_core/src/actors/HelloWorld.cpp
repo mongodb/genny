@@ -1,8 +1,9 @@
+#include <cast_core/actors/HelloWorld.hpp>
+
 #include <string>
 
-#include "log.hh"
+#include <boost/log/trivial.hpp>
 
-#include <gennylib/actors/HelloWorld.hpp>
 
 namespace genny::actor {
 

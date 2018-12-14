@@ -12,7 +12,6 @@
 #include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
 #include <log.hh>
-#include <gennylib/ActorContext.hpp>
 
 
 using namespace genny;
@@ -371,7 +370,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
     class DummyInsert : public Actor {
     public:
-        struct InsertCounter : genny::actor::BaseCounter{};
+        struct InsertCounter : genny::ActorContext::BaseCounter{};
 
         DummyInsert(ActorContext& actorContext):
         Actor(actorContext),
@@ -381,6 +380,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
         void run() override {
             for (auto&& [_, cfg] : _loop) {
                 for (auto&& _ : cfg) {
+                    BOOST_LOG_TRIVIAL(info) << "Inserting document at: " << _iCounter;
                     ++_iCounter;
                 }
             }
@@ -435,7 +435,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
         Actors:
         - Threads: 10
           Phases:
-          - Repeat: 100
+          - Repeat: 10
     )");
 
     genny::metrics::Registry metrics;

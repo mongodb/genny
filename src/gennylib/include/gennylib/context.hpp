@@ -308,6 +308,19 @@ public:
         return _state;
     }
 
+
+    template <typename T>
+    struct ShareableState {
+        ShareableState() = default;
+        ~ShareableState() = default;
+
+        T _state = 0;
+
+        operator T&() {
+            return _state;
+        }
+    };
+
 private:
     friend class ActorContext;
 

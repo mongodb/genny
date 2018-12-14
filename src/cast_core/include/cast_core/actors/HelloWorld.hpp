@@ -3,14 +3,13 @@
 
 #include <mongocxx/client_session.hpp>
 
-#include <gennylib/ActorContext.hpp>
 #include <gennylib/PhaseLoop.hpp>
 
 namespace genny::actor {
 
 class HelloWorld : public genny::Actor {
 
-    struct HelloWorldCounter : BaseCounter{};
+    struct HelloWorldCounter : genny::WorkloadContext::ShareableState<std::atomic_int>{};
 
 public:
     explicit HelloWorld(ActorContext& context);
