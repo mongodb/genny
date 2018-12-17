@@ -316,7 +316,7 @@ public:
 
         T _state = 0;
 
-        operator T&() {
+        explicit operator T() {
             return _state;
         }
     };

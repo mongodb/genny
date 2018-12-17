@@ -14,31 +14,31 @@
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-namespace {}  // namespace
+namespace genny::actor {
 
 using document_ptr=std::unique_ptr<genny::value_generators::DocumentGenerator>;
 using index_type=std::pair<document_ptr, std::optional<document_ptr>>;
 
-struct genny::actor::Loader::PhaseConfig {
+struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client, uint thread)
         : database{(*client)[context.get<std::string>("Database")]},
-          // The next line uses integer division. The Remainder is accounted for below.
+        // The next line uses integer division. The Remainder is accounted for below.
           numCollections{context.get<uint>("CollectionCount")/context.get<int>("Threads")},
           numDocuments{context.get<uint>("DocumentCount")},
           batchSize{context.get<uint>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)},
           collectionOffset{numCollections*thread} {
-              auto indexNodes = context.get("Indexes");
-              for (auto indexNode : indexNodes) {
-                  indexes.emplace_back(
-                                       value_generators::makeDoc(indexNode["keys"], rng),
-                                       indexNode["options"] ? std::make_optional(value_generators::makeDoc(indexNode["options"], rng)) : std::nullopt);
-              }
-              if (thread == context.get<int>("Threads") - 1) {
-                  // Pick up any extra collections left over by the division
-                  numCollections += context.get<uint>("CollectionCount") % context.get<uint>("Threads");
-              }
-          }
+        auto indexNodes = context.get("Indexes");
+        for (auto indexNode : indexNodes) {
+            indexes.emplace_back(
+                value_generators::makeDoc(indexNode["keys"], rng),
+                indexNode["options"] ? std::make_optional(value_generators::makeDoc(indexNode["options"], rng)) : std::nullopt);
+        }
+        if (thread == context.get<int>("Threads") - 1) {
+            // Pick up any extra collections left over by the division
+            numCollections += context.get<uint>("CollectionCount") % context.get<uint>("Threads");
+        }
+    }
 
     mongocxx::database database;
     uint numCollections;
@@ -83,12 +83,12 @@ void genny::actor::Loader::run() {
                     auto keyView = keys->view(keysDoc);
                     BOOST_LOG_TRIVIAL(debug) << "Building index " << bsoncxx::to_json(keyView);
                     if (options)
-                        {
-                            auto optionsView = (*options)->view(optionsDoc);
-                            BOOST_LOG_TRIVIAL(debug) << "With options " << bsoncxx::to_json(optionsView);
-                            auto op = _indexBuildTimer.raii();
-                            collection.create_index(keyView, optionsView);
-                        }
+                    {
+                        auto optionsView = (*options)->view(optionsDoc);
+                        BOOST_LOG_TRIVIAL(debug) << "With options " << bsoncxx::to_json(optionsView);
+                        auto op = _indexBuildTimer.raii();
+                        collection.create_index(keyView, optionsView);
+                    }
                     else
                     {
                         auto op = _indexBuildTimer.raii();
@@ -101,7 +101,7 @@ void genny::actor::Loader::run() {
     }
 }
 
-genny::actor::Loader::Loader(genny::ActorContext& context, uint thread)
+Loader::Loader(genny::ActorContext& context, uint thread)
     : Actor(context),
       _rng{context.workload().createRNG()},
       _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Loader::id())},
@@ -129,3 +129,6 @@ namespace {
 std::shared_ptr<genny::ActorProducer> loaderProducer = std::make_shared<LoaderProducer>("Loader");
 auto registration = genny::Cast::registerCustom<genny::ActorProducer>(loaderProducer);
 }
+}  // namespace
+
+

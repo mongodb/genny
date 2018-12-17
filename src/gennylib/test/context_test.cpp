@@ -11,6 +11,7 @@
 
 #include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
+#include <gennylib/PhaseLoop.hpp>
 #include <log.hh>
 
 
@@ -370,7 +371,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
     class DummyInsert : public Actor {
     public:
-        struct InsertCounter : genny::ActorContext::BaseCounter{};
+        struct InsertCounter : genny::WorkloadContext::ShareableState<std::atomic_int>{};
 
         DummyInsert(ActorContext& actorContext):
         Actor(actorContext),
@@ -381,20 +382,13 @@ TEST_CASE("Actors Share WorkloadContext State") {
             for (auto&& [_, cfg] : _loop) {
                 for (auto&& _ : cfg) {
                     BOOST_LOG_TRIVIAL(info) << "Inserting document at: " << _iCounter;
-                    ++_iCounter;
+//                    ++_iCounter;
                 }
             }
         }
 
-        static auto producer(genny::ActorContext& context) {
-            auto threads = context.get<int>("Threads");
-            ActorVector out;
-            for (int i = 0; i < threads; ++i) {
-                out.push_back(std::make_unique<DummyInsert>(context));
-            }
+        static std::string_view defaultName() {return "DummyInsert";}
 
-            return out;
-        }
     private:
 
         PhaseLoop<PhaseConfig> _loop;
@@ -416,24 +410,27 @@ TEST_CASE("Actors Share WorkloadContext State") {
             }
         }
 
-        static auto producer(genny::ActorContext& context) {
-            auto threads = context.get<int>("Threads");
-            ActorVector out;
-            for (int i = 0; i < threads; ++i) {
-                out.push_back(std::make_unique<DummyFind>(context));
-            }
+        static std::string_view defaultName() {return "DummyFind";}
 
-            return out;
-        }
     private:
         PhaseLoop<PhaseConfig> _loop;
         DummyInsert::InsertCounter& _iCounter;
     };
 
+    auto insertReg = genny::Cast::registerDefault<DummyInsert>();
+    auto findReg = genny::Cast::registerDefault<DummyFind>();
+
     YAML::Node config = YAML::Load(R"(
         SchemaVersion: 2018-07-01
         Actors:
-        - Threads: 10
+        - Name: DummyInsert
+          Type: DummyInsert
+          Threads: 10
+          Phases:
+          - Repeat: 10
+        - Name: DummyFind
+          Type: DummyFind
+          Threads: 10
           Phases:
           - Repeat: 10
     )");
@@ -447,7 +444,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
                        registry,
                        orchestrator,
                        "mongodb://localhost:27017",
-                       {DummyFind::producer, DummyInsert::producer}};
+                       globalCast()};
 
 
     std::vector<std::thread> threads;
@@ -463,5 +460,5 @@ TEST_CASE("Actors Share WorkloadContext State") {
     for (auto& thread : threads)
         thread.join();
 
-    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>().nextId.load() == 10 * 100);
+    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>().load() == 10 * 100);
 }

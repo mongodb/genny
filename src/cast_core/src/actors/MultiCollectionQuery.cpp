@@ -1,4 +1,4 @@
-#include <gennylib/actors/MultiCollectionQuery.hpp>
+#include <cast_core/actors/MultiCollectionQuery.hpp>
 
 #include <chrono>
 #include <memory>
@@ -10,7 +10,9 @@
 #include <mongocxx/pool.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include "log.hh"
+#include <boost/log/trivial.hpp>
+
+#include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
@@ -83,16 +85,9 @@ MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
       _client{context.client()},
       _loop{context, _rng, _client} {}
 
-genny::ActorVector MultiCollectionQuery::producer(genny::ActorContext& context) {
-    auto out = std::vector<std::unique_ptr<genny::Actor>>{};
-    if (context.get<std::string>("Type") != "MultiCollectionQuery") {
-        return out;
-    }
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<MultiCollectionQuery>(context));
-    }
-    return out;
+namespace {
+auto registerMultiCollectionQuery =
+     genny::Cast::registerDefault<genny::actor::MultiCollectionQuery>();
 }
 }  // namespace genny::actor
 

@@ -18,7 +18,7 @@ void HelloWorld::run() {
         for (auto _ : config) {
             auto op = this->_outputTimer.raii();
             BOOST_LOG_TRIVIAL(info) << config->message;
-            ++_hwCounter;
+//            ++_hwCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _hwCounter;
 
         }
@@ -32,20 +32,7 @@ _operations{context.counter("operations", HelloWorld::id())},
 _hwCounter{context.workload().getActorSharedState<HelloWorld, HelloWorldCounter>()},
 _loop{context} {}
 
-genny::ActorVector HelloWorld::producer(genny::ActorContext& context) {
-    if (context.get<std::string>("Type") != "HelloWorld") {
-        return {};
-    }
-
-    ActorVector out;
-
-    auto threads = context.get<int>("Threads");
-    for (int i = 0; i < threads; ++i) {
-        out.push_back(std::make_unique<genny::actor::HelloWorld>(context));
-    }
-
-    return out;
+namespace {
+auto registerHelloWorld = genny::Cast::registerDefault<genny::actor::HelloWorld>();
 }
 } // namespace genny::actor
-
-
