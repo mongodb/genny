@@ -10,7 +10,8 @@ namespace Catchers = Catch::Matchers;
 TEST_CASE("PoolFactory behavior") {
     mongocxx::instance::current();
 
-    SECTION("Make a few trivial localhost pools"){
+    // Testing out core features of the PoolFactory
+    SECTION("Make a few trivial localhost pools") {
         constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
 
         auto factory = genny::PoolFactory(kSourceUri);
@@ -26,45 +27,137 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE(extraPool);
     }
 
-    SECTION("Make a pool with the bare minimum uri"){
+    SECTION("Make a pool with the bare minimum uri") {
         constexpr auto kSourceUri = "127.0.0.1";
 
         auto factory = genny::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
-        auto expectedUri = [&](){
-            std::string uri{"mongodb://"};
-            uri += kSourceUri;
-            return uri;
-        };
+        auto expectedUri = [&]() { return std::string{"mongodb://"} + kSourceUri; };
         REQUIRE(factoryUri == expectedUri());
 
         auto pool = factory.makePool();
         REQUIRE(pool);
     }
 
-    SECTION("Make a pool with a severely limited max size"){
-        constexpr auto kSourceUri = "mongodb://127.0.0.1";
-        constexpr auto kQueryString = "/?maxPoolSize=2";
-        constexpr auto kOptionKey = "maxPoolSize";
+    SECTION("Replace the replset and the db") {
+        constexpr auto kSourceUri = "mongodb://127.0.0.1/bigdata?replicaSet=badChoices";
+
+        const std::string kBaseString = "mongodb://127.0.0.1/";
+
+        auto factory = genny::PoolFactory(kSourceUri);
+
+        SECTION("Validate the original URI") {
+            auto factoryUri = factory.makeUri();
+            auto expectedUri = [&]() { return kBaseString + "bigdata?replicaSet=badChoices"; };
+            REQUIRE(factoryUri == expectedUri());
+
+            auto pool = factory.makePool();
+            REQUIRE(pool);
+        }
+
+        SECTION("Modify the URI and check that it works") {
+            auto expectedUri = [&]() { return kBaseString + "webscale?replicaSet=threeNode"; };
+            factory.setStringOption("replicaSet", "threeNode");
+            factory.setStringOption("Database", "webscale");
+
+            auto factoryUri = factory.makeUri();
+            REQUIRE(factoryUri == expectedUri());
+
+            auto pool = factory.makePool();
+            REQUIRE(pool);
+        }
+    }
+
+    SECTION("Try various set() commands with odd cases") {
+        const std::string kBaseString = "mongodb://127.0.0.1/";
+        constexpr auto kOriginalDatabase = "admin";
+
+        SECTION("Use the wrong case for 'Database' option") {
+            auto sourceUri = [&]() { return kBaseString + kOriginalDatabase; };
+            auto factory = genny::PoolFactory(sourceUri());
+
+            auto expectedUri = [&]() { return sourceUri() + "?database=test"; };
+            factory.setStringOption("database", "test");
+
+            auto factoryUri = factory.makeUri();
+            REQUIRE(factoryUri == expectedUri());
+        }
+
+        // Funny enough, going through MongoURI means we convert to strings.
+        // So we can set access options like 'Database' through functions we would
+        // not normally consider for traditional string flags
+        SECTION("Set the 'Database' option in odd ways") {
+            auto sourceUri = [&]() { return kBaseString + kOriginalDatabase; };
+            auto factory = genny::PoolFactory(sourceUri());
+
+
+            SECTION("Use the flag option") {
+                auto expectedUri = [&]() { return kBaseString + "true"; };
+                factory.setFlag("Database");
+
+                auto factoryUri = factory.makeUri();
+                REQUIRE(factoryUri == expectedUri());
+            }
+
+            SECTION("Use the string option to reset the Database") {
+                auto expectedUri = [&]() { return kBaseString + "true"; };
+                factory.setStringOption("Database", "true");
+
+                auto factoryUri = factory.makeUri();
+                REQUIRE(factoryUri == expectedUri());
+            }
+
+            SECTION("Use the flag option to flip the Database") {
+                auto expectedUri = [&]() { return kBaseString + "false"; };
+                factory.setFlag("Database", false);
+
+                auto factoryUri = factory.makeUri();
+                REQUIRE(factoryUri == expectedUri());
+            }
+        }
+
+        SECTION("Overwrite the replSet option in a variety of ways") {
+            auto sourceUri = [&]() { return kBaseString + "?replSet=red"; };
+            auto factory = genny::PoolFactory(sourceUri());
+
+            SECTION("Overwrite with a normal string") {
+                auto expectedUri = [&]() { return kBaseString + "?replSet=blue"; };
+                factory.setStringOption("replSet", "blue");
+
+                auto factoryUri = factory.makeUri();
+                REQUIRE(factoryUri == expectedUri());
+            }
+
+            SECTION("Overwrite with an empty string") {
+                // An empty string is still a valid option, even if not a valid replset
+                auto expectedUri = [&]() { return kBaseString + "?replSet="; };
+                factory.setStringOption("replSet", "");
+
+                auto factoryUri = factory.makeUri();
+                REQUIRE(factoryUri == expectedUri());
+            }
+        }
+    }
+
+    // Moving on to actual pool cases
+    SECTION("Make a pool with a severely limited max size") {
+        const std::string kSourceUri = "mongodb://127.0.0.1";
         constexpr int32_t kMaxPoolSize = 2;
 
         auto factory = genny::PoolFactory(kSourceUri);
-        factory.setIntOption(kOptionKey, kMaxPoolSize);
+
+        auto expectedUri = [&]() { return kSourceUri + "/?maxPoolSize=2"; };
+        factory.setIntOption("maxPoolSize", kMaxPoolSize);
 
         auto factoryUri = factory.makeUri();
-        auto expectedUri = [&](){
-            std::string uri{kSourceUri};
-            uri += kQueryString;
-            return uri;
-        };
         REQUIRE(factoryUri == expectedUri());
 
         auto pool = factory.makePool();
         REQUIRE(pool);
 
         std::vector<std::unique_ptr<mongocxx::pool::entry>> clients;
-        for(int i = 0; i < kMaxPoolSize; ++i){
+        for (int i = 0; i < kMaxPoolSize; ++i) {
             auto client = pool->try_acquire();
             auto gotClient = static_cast<bool>(client);
             REQUIRE(gotClient);
@@ -77,21 +170,17 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE(getOneMore());
     }
 
-    SECTION("Make a pool with ssl enabled and auth params"){
-        constexpr auto kSourceUri = "mongodb://127.0.0.1";
-        constexpr auto kAuthString = "boss:pass@";
-        constexpr auto kHostString = "127.0.0.1";
-        constexpr auto kQueryString = "/admin?ssl=true";
+    SECTION("Make a pool with ssl enabled and auth params") {
+        const std::string kProtocol = "mongodb://";
+        const std::string kHost = "127.0.0.1";
 
-        constexpr auto kUsername = "boss";
-        constexpr auto kPassword = "pass";
-        constexpr auto kDatabase = "admin";
+        auto sourceUrl = [&]() { return kProtocol + kHost; };
+        auto factory = genny::PoolFactory(sourceUrl());
 
-        auto factory = genny::PoolFactory(kSourceUri);
-
-        factory.setStringOption("Username", kUsername);
-        factory.setStringOption("Password", kPassword);
-        factory.setStringOption("Database", kDatabase);
+        auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?ssl=true"; };
+        factory.setStringOption("Username", "boss");
+        factory.setStringOption("Password", "pass");
+        factory.setStringOption("Database", "admin");
 
         // This won't actually work for real, but it does test the interface
         mongocxx::options::ssl sslOpts;
@@ -99,13 +188,6 @@ TEST_CASE("PoolFactory behavior") {
         factory.configureSsl(sslOpts);
 
         auto factoryUri = factory.makeUri();
-        auto expectedUri = [&](){
-            std::string uri{"mongodb://"};
-            uri += kAuthString;
-            uri += kHostString;
-            uri += kQueryString;
-            return uri;
-        };
         REQUIRE(factoryUri == expectedUri());
 
         auto pool = factory.makePool();

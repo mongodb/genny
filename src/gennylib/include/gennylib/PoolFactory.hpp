@@ -39,7 +39,7 @@ public:
      */ 
     void setStringOption(const std::string & option, std::string value);
     void setIntOption(const std::string & option, int32_t value);
-    void setFlag(const std::string & option, bool value);
+    void setFlag(const std::string & option, bool value = true);
 
     void configureSsl(mongocxx::options::ssl options, bool enableSsl = true);
 
