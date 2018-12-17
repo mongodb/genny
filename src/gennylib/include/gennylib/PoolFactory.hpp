@@ -28,6 +28,7 @@ public:
     ~PoolFactory();
 
     std::string makeUri() const;
+    mongocxx::options::pool makeOptions() const;
     std::unique_ptr<mongocxx::pool> makePool() const;
 
     /** 
@@ -40,8 +41,6 @@ public:
     void setStringOption(const std::string & option, std::string value);
     void setIntOption(const std::string & option, int32_t value);
     void setFlag(const std::string & option, bool value = true);
-
-    void configureSsl(mongocxx::options::ssl options, bool enableSsl = true);
 
 private:
     struct Config;

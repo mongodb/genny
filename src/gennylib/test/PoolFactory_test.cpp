@@ -1,7 +1,9 @@
 #include "test.h"
 
+#include <iostream>
 #include <gennylib/PoolFactory.hpp>
 
+#include <bsoncxx/string/to_string.hpp>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
 
@@ -173,6 +175,7 @@ TEST_CASE("PoolFactory behavior") {
     SECTION("Make a pool with ssl enabled and auth params") {
         const std::string kProtocol = "mongodb://";
         const std::string kHost = "127.0.0.1";
+        constexpr auto kCAFile = "/etc/certs/ca.pem";
 
         auto sourceUrl = [&]() { return kProtocol + kHost; };
         auto factory = genny::PoolFactory(sourceUrl());
@@ -182,13 +185,21 @@ TEST_CASE("PoolFactory behavior") {
         factory.setStringOption("Password", "pass");
         factory.setStringOption("Database", "admin");
 
-        // This won't actually work for real, but it does test the interface
-        mongocxx::options::ssl sslOpts;
-        sslOpts.allow_invalid_certificates(true);
-        factory.configureSsl(sslOpts);
+        factory.setFlag("ssl");
+        factory.setFlag("AllowInvalidCertificates");
+        factory.setStringOption("CAFile", kCAFile);
 
         auto factoryUri = factory.makeUri();
         REQUIRE(factoryUri == expectedUri());
+
+        auto factoryOpts = factory.makeOptions();
+
+        auto sslOpts = *factoryOpts.client_opts().ssl_opts();
+        auto allowInvalid = *sslOpts.allow_invalid_certificates();
+        REQUIRE(allowInvalid);
+
+        std::string caFile = sslOpts.ca_file()->terminated().data();
+        REQUIRE(kCAFile == caFile);
 
         auto pool = factory.makePool();
         REQUIRE(pool);

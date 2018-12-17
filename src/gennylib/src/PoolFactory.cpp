@@ -98,9 +98,13 @@ struct PoolFactory::Config {
     std::set<std::string> hosts;
     std::map<std::string, std::string> queryOptions;
     std::map<std::string, std::string> accessOptions = {
-        {"Protocol", ""}, {"Username", ""}, {"Password", ""}, {"Database", ""},
+        {"Protocol", ""},
+        {"Username", ""},
+        {"Password", ""},
+        {"Database", ""},
+        {"AllowInvalidCertificates", ""},
+        {"CAFile", ""},
     };
-    mongocxx::options::pool poolOptions;
 };
 
 PoolFactory::PoolFactory(std::string_view rawUri) : _config(std::make_unique<Config>(rawUri)) {}
@@ -110,12 +114,37 @@ std::string PoolFactory::makeUri() const {
     return _config->makeUri();
 }
 
+mongocxx::options::pool PoolFactory::makeOptions() const {
+    mongocxx::options::ssl sslOptions;
+    if (_config->accessOptions.at("AllowInvalidCertificates") == "true") {
+        sslOptions.allow_invalid_certificates(true);
+    }
+
+    // Just doing CAFile for now, it's reasonably trivial to add other options
+    // Note that this is entering as a BSON string view, so you cannot delete the config object
+    auto& caFile = _config->accessOptions.at("CAFile");
+    if (!caFile.empty()) {
+        std::cout << caFile << std::endl;
+        sslOptions.ca_file(caFile);
+    }
+
+    mongocxx::options::client clientOptions;
+    clientOptions.ssl_opts(sslOptions);
+    return clientOptions;
+}
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto uriStr = makeUri();
     BOOST_LOG_TRIVIAL(info) << "Constructing pool with MongoURI '" << uriStr << "'";
 
     auto uri = mongocxx::uri{uriStr};
-    return std::make_unique<mongocxx::pool>(uri, _config->poolOptions);
+
+    auto poolOptions = mongocxx::options::pool{};
+    auto sslIt = _config->queryOptions.find("ssl");
+    if (sslIt != _config->queryOptions.end() && sslIt->second == "true") {
+        auto poolOptions = makeOptions();
+    }
+
+    return std::make_unique<mongocxx::pool>(uri, poolOptions);
 }
 
 void PoolFactory::setStringOption(const std::string& option, std::string value) {
@@ -138,13 +167,6 @@ void PoolFactory::setIntOption(const std::string& option, int32_t value) {
 void PoolFactory::setFlag(const std::string& option, bool value) {
     auto valueStr = value ? "true" : "false";
     setStringOption(option, valueStr);
-}
-
-void PoolFactory::configureSsl(mongocxx::options::ssl options, bool enableSsl) {
-    setFlag("ssl", enableSsl);
-
-    auto clientOpts = _config->poolOptions.client_opts();
-    _config->poolOptions = clientOpts.ssl_opts(options);
 }
 
 }  // namespace genny
