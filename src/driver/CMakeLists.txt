@@ -1,32 +1,32 @@
-# Define an executable
-add_executable(genny
-    src/main.cpp
+project(driver VERSION 0.0.1 LANGUAGES CXX)
+
+# Define an underlying core compilation unit
+add_library(driver STATIC
     src/DefaultDriver.cpp
 )
+target_include_directories(driver
+    PUBLIC
+        src
+)
+target_link_libraries(driver cast_core gennylib)
 
-# Define the libraries this project depends upon
-target_link_libraries(genny cast_core gennylib)
-
+# Make the genny driver executable
+add_executable(genny src/main.cpp)
+target_link_libraries(genny driver)
 install(TARGETS  genny
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
 
+# Define our test for the driver
 add_executable(test_driver
-    # This is slightly non-optimal since we duplicate info about what sources make up the "driver" here
-    # and in the add_executable line above. Maybe there should be a "driverlib" that we link against?
-    # If the Driver(s) ever end up being more than one or two .cpp files, investigate that. For now, KISS.
-    src/DefaultDriver.cpp
     test/Driver_test.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
 )
-
 target_include_directories(test_driver
     PRIVATE
         src
         ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
-target_link_libraries(test_driver
-    PUBLIC ${Boost_LIBRARIES} cast_core gennylib
-)
+target_link_libraries(test_driver driver)
 
 add_test(
     NAME    test_driver

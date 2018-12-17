@@ -82,5 +82,18 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
 endif()
 
+# These libraries are almost ubiquitously required in genny
+include_directories(
+    ${Boost_INCLUDE_DIR}
+    ${YAML_CPP_INCLUDE_DIR}
+    ${LIBMONGOCXX_INCLUDE_DIRS}
+)
+link_libraries(
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${Boost_LIBRARIES}
+    ${YAML_CPP_LIBRARIES}
+    ${LIBMONGOCXX_LIBRARIES}
+)
+
 enable_testing()
 add_subdirectory(src)

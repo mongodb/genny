@@ -33,7 +33,9 @@ target_include_directories(cast_core
 target_link_libraries(cast_core
     PUBLIC
         gennylib
-#        value_generators
+    PRIVATE
+        gennylib_cast
+        gennylib_generators
 )
 
 install(TARGETS  cast_core EXPORT GennyLibraryConfig
