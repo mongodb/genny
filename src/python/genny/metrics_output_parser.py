@@ -15,10 +15,10 @@ Genny's CSV-ish metrics output looks like the following:
     12137712905436,HelloTest.0.connections,1
 
     Timers
-    12137712905436,InsertTest.1.output,2235448
-    12137713296139,InsertTest.1.output,278701
-    12137712901949,InsertTest.0.output,2226794
-    12137713293440,InsertTest.0.output,268288
+    12137712905436,InsertTest.id-1.output,2235448
+    12137713296139,InsertTest.id-1.output,278701
+    12137712901949,InsertTest.id-0.output,2226794
+    12137713293440,InsertTest.id-0.output,268288
     12137710737813,HelloTest.1.output,67458
     12137713066822,HelloTest.1.output,40257
     12137710753276,HelloTest.0.output,82620
@@ -38,7 +38,7 @@ The format for Counters, Gauges, and Timers is:
     ,
     Actor name
     .
-    Actor thread number (zero-based) (optional)
+    Actor thread id (optional)
     .
     Actor operation name
     ,
@@ -208,12 +208,12 @@ class ParserResults(object):
             # for Genny.Setup and the like: event_parts is like
             #    [Genny, Setup]
             event_name = event_parts[0] + '.' + event_parts[1]
-            thread = 0
+            thread = '0'
         elif len(event_parts) == 3:
             # For regular (multi-threaded) cases, event_parts is like
-            #    [MyActor, 1, operation]
+            #    [MyActor, id-1, operation]
             event_name = event_parts[0] + '.' + event_parts[2]
-            thread = int(event_parts[1])
+            thread = event_parts[1]
         else:
             raise ParseError("Invalid event given: [{}]".format(event_parts), file_name,
                              line_number)
