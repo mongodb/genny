@@ -14,7 +14,7 @@ include(GNUInstallDirs)
 find_package(Threads REQUIRED)
 
 # <Boost>
-set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(
@@ -29,7 +29,7 @@ find_package(
 add_library(boost INTERFACE IMPORTED)
 set_property(TARGET boost PROPERTY
         INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
-#add_definitions(-DBOOST_ALL_DYN_LINK)
+add_definitions(-DBOOST_ALL_DYN_LINK)
 # </Boost>
 
 # <Yaml CPP>
