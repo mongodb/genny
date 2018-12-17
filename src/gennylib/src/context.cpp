@@ -39,7 +39,7 @@ WorkloadContext::WorkloadContext(YAML::Node node,
     auto accessOpts =
         get_static<std::map<std::string, std::string>, false>(node, "Pool", "AccessOptions");
     if (accessOpts) {
-        poolFactory.setOptions(PoolFactory::kQueryOption, *accessOpts);
+        poolFactory.setOptions(PoolFactory::kAccessOption, *accessOpts);
     }
 
     _clientPool = poolFactory.makePool();
