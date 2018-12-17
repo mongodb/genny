@@ -44,15 +44,17 @@ find_package(libmongocxx REQUIRED)
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 # </Misc 3rd Party Integrations>
 
+# Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
-
-set(CMAKE_CXX_EXTENSIONS                OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
-set(CMAKE_SKIP_BUILD_RPATH              false)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH      false)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true)
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
-set(CMAKE_MACOSX_RPATH                  1) # Ensure that RPATH is used on OSX
+
+# Nice-to-have CMAKE options
+set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
+set(CMAKE_SKIP_BUILD_RPATH              false   CACHE BOOL "")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH      false   CACHE BOOL "")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true    CACHE BOOL "")
+set(CMAKE_MACOSX_RPATH                  ON      CACHE BOOL "Ensure that RPATH is used on OSX")
+set(CMAKE_INSTALL_RPATH                 "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"   CACHE PATH "")
 
 # Help spot unknown compilers and versions.
 # Other compilers are probably supported just fine but aren't officially checked
