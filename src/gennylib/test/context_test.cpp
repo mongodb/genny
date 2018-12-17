@@ -424,7 +424,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
     Cast cast;
     auto insertProducer = std::make_shared<DefaultActorProducer<DummyInsert>>("DummyInsert");
-    auto findProducer = std::make_shared<DefaultActorProducer<DummyInsert>>("DummyFind");
+    auto findProducer = std::make_shared<DefaultActorProducer<DummyFind>>("DummyFind");
     cast.add("DummyInsert", insertProducer);
     cast.add("DummyFind", findProducer);
 
@@ -460,5 +460,5 @@ TEST_CASE("Actors Share WorkloadContext State") {
     for (auto& thread : threads)
         thread.join();
 
-    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>() == 20 * 10);
+    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>() == 10 * 10);
 }
