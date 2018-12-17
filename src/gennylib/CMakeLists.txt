@@ -21,6 +21,7 @@ add_library(gennylib SHARED
     src/ActorProducer.cpp
     src/Cast.cpp
     src/Orchestrator.cpp
+    src/PoolFactory.cpp
 
     src/value_generators/parser.cpp
     src/value_generators/value_generators.cpp
@@ -71,6 +72,7 @@ add_executable(test_gennylib
     test/Cast_test.cpp
     test/context_test.cpp
     test/conventions_test.cpp
+    test/PoolFactory_test.cpp
     test/PhaseLoop_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp

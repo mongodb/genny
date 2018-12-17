@@ -8,6 +8,7 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <gennylib/PoolFactory.hpp>
 
 namespace genny {
 
@@ -27,7 +28,8 @@ WorkloadContext::WorkloadContext(YAML::Node node,
     mongocxx::instance::current();
 
     // TODO: make this optional and default to mongodb://localhost:27017
-    _clientPool = std::make_unique<mongocxx::pool>(mongocxx::uri{mongoUri});
+    auto poolFactory = PoolFactory(mongoUri);
+    _clientPool = poolFactory.makePool();
 
     // Make a bunch of actor contexts
     for (const auto& actor : get_static(node, "Actors")) {

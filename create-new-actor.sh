@@ -12,13 +12,13 @@ usage() {
 }
 
 create_header_text() {
-    local uuid
+    local uuid_tag
     local actor_name
-    uuid="$1"
+    uuid_tag="$1"
     actor_name="$2"
 
-    echo "#ifndef HEADER_$uuid"
-    echo "#define HEADER_$uuid"
+    echo "#ifndef $uuid_tag"
+    echo "#define $uuid_tag"
     echo ""
     echo "#include <gennylib/Actor.hpp>"
     echo "#include <gennylib/PhaseLoop.hpp>"
@@ -46,13 +46,13 @@ create_header_text() {
     echo ""
     echo "}  // namespace genny::actor"
     echo ""
-    echo "#endif  // HEADER_$uuid"
+    echo "#endif  // $uuid_tag"
 }
 
 create_impl_text() {
-    local uuid
+    local uuid_tag
     local actor_name
-    uuid="$1"
+    uuid_tag="$1"
     actor_name="$2"
 
     echo "#include <memory>"
@@ -84,28 +84,28 @@ create_impl_text() {
 }
 
 create_header() {
-    local uuid
+    local uuid_tag
     local actor_name
-    uuid="$1"
+    uuid_tag="$1"
     actor_name="$2"
 
     create_header_text "$@" > "$(dirname "$0")/src/cast_core/include/cast_core/actors/${actor_name}.hpp"
 }
 
 create_impl() {
-    local uuid
+    local uuid_tag
     local actor_name
-    uuid="$1"
+    uuid_tag="$1"
     actor_name="$2"
 
     create_impl_text "$@" > "$(dirname "$0")/src/cast_core/src/actors/${actor_name}.cpp"
 }
 
 recreate_cast_core_cmake_file() {
-    local uuid
+    local uuid_tag
     local actor_name
     local cmake_file
-    uuid="$1"
+    uuid_tag="$1"
     actor_name="$2"
     cmake_file="$(dirname "$0")/src/cast_core/CMakeLists.txt"
 
@@ -131,8 +131,8 @@ if [ -z "$actor_name" ]; then
     exit 2
 fi
 
-uuid="$(uuidgen | sed s/-/_/g)"
+uuid_tag="$("$(dirname "$0")/generate-uuid-tag.sh")"
 
-create_header                "$uuid" "$actor_name"
-create_impl                  "$uuid" "$actor_name"
-recreate_cast_core_cmake_file "$uuid" "$actor_name"
+create_header                "$uuid_tag" "$actor_name"
+create_impl                  "$uuid_tag" "$actor_name"
+recreate_cast_core_cmake_file "$uuid_tag" "$actor_name"
