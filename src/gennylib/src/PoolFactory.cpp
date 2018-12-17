@@ -104,6 +104,7 @@ struct PoolFactory::Config {
         {"Database", ""},
         {"AllowInvalidCertificates", ""},
         {"CAFile", ""},
+        {"PEMKeyFile", ""},
     };
 };
 
@@ -117,20 +118,25 @@ std::string PoolFactory::makeUri() const {
 mongocxx::options::pool PoolFactory::makeOptions() const {
     mongocxx::options::ssl sslOptions;
     if (_config->accessOptions.at("AllowInvalidCertificates") == "true") {
-        sslOptions.allow_invalid_certificates(true);
+        BOOST_LOG_TRIVIAL(info) << "Allowing invalid certificates for SSL/TLS";
+        sslOptions = sslOptions.allow_invalid_certificates(true);
     }
 
-    // Just doing CAFile for now, it's reasonably trivial to add other options
+    // Just doing CAFile and PEMKeyFile for now, it's reasonably trivial to add other options
     // Note that this is entering as a BSON string view, so you cannot delete the config object
     auto& caFile = _config->accessOptions.at("CAFile");
     if (!caFile.empty()) {
-        std::cout << caFile << std::endl;
-        sslOptions.ca_file(caFile);
+        BOOST_LOG_TRIVIAL(info) << "Using CA file '" << caFile << "' for SSL/TLS";
+        sslOptions = sslOptions.ca_file(caFile);
     }
 
-    mongocxx::options::client clientOptions;
-    clientOptions.ssl_opts(sslOptions);
-    return clientOptions;
+    auto& pemKeyFile = _config->accessOptions.at("PEMKeyFile");
+    if (!pemKeyFile.empty()) {
+        BOOST_LOG_TRIVIAL(info) << "Using PEM Key file '" << pemKeyFile << "' for SSL/TLS";
+        sslOptions = sslOptions.pem_file(pemKeyFile);
+    }
+
+    return mongocxx::options::client{}.ssl_opts(sslOptions);
 }
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto uriStr = makeUri();
@@ -141,7 +147,8 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto poolOptions = mongocxx::options::pool{};
     auto sslIt = _config->queryOptions.find("ssl");
     if (sslIt != _config->queryOptions.end() && sslIt->second == "true") {
-        auto poolOptions = makeOptions();
+        poolOptions = makeOptions();
+        BOOST_LOG_TRIVIAL(info) << "Adding ssl options to pool...";
     }
 
     return std::make_unique<mongocxx::pool>(uri, poolOptions);

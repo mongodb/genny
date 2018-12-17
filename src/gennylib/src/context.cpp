@@ -29,6 +29,16 @@ WorkloadContext::WorkloadContext(YAML::Node node,
 
     // TODO: make this optional and default to mongodb://localhost:27017
     auto poolFactory = PoolFactory(mongoUri);
+
+    auto poolOpts = get_static<YAML::Node, false>(node, "PoolOptions");
+    if(poolOpts){
+        for (auto option : *poolOpts) {
+            // Just trying string conversion for now
+            auto keyStr = option.first.as<std::string>();
+            auto valueStr = option.second.as<std::string>();
+            poolFactory.setStringOption(keyStr, valueStr);
+        }
+    }
     _clientPool = poolFactory.makePool();
 
     // Make a bunch of actor contexts
