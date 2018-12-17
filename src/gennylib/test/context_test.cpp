@@ -382,7 +382,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
             for (auto&& [_, cfg] : _loop) {
                 for (auto&& _ : cfg) {
                     BOOST_LOG_TRIVIAL(info) << "Inserting document at: " << _iCounter;
-//                    ++_iCounter;
+                    ++_iCounter;
                 }
             }
         }
@@ -417,8 +417,8 @@ TEST_CASE("Actors Share WorkloadContext State") {
         DummyInsert::InsertCounter& _iCounter;
     };
 
-    auto insertReg = genny::Cast::registerDefault<DummyInsert>();
-    auto findReg = genny::Cast::registerDefault<DummyFind>();
+    auto insertRegistration = genny::Cast::registerDefault<DummyInsert>();
+    auto findRegistration = genny::Cast::registerDefault<DummyFind>();
 
     YAML::Node config = YAML::Load(R"(
         SchemaVersion: 2018-07-01
@@ -460,5 +460,5 @@ TEST_CASE("Actors Share WorkloadContext State") {
     for (auto& thread : threads)
         thread.join();
 
-    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>().load() == 10 * 100);
+    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>() == 10 * 10);
 }

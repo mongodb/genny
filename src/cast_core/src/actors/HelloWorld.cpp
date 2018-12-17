@@ -18,7 +18,7 @@ void HelloWorld::run() {
         for (auto _ : config) {
             auto op = this->_outputTimer.raii();
             BOOST_LOG_TRIVIAL(info) << config->message;
-//            ++_hwCounter;
+            ++_hwCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _hwCounter;
 
         }

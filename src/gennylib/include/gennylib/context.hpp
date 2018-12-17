@@ -308,15 +308,14 @@ public:
         return _state;
     }
 
-
     template <typename T>
-    struct ShareableState {
+    struct ShareableState : T {
         ShareableState() = default;
         ~ShareableState() = default;
 
         T _state = 0;
 
-        explicit operator T() {
+        operator T() {
             return _state;
         }
     };
