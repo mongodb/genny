@@ -27,21 +27,24 @@ struct genny::actor::Insert::PhaseConfig {
 void genny::actor::Insert::run() {
     for (auto&& [phase, config] : _loop) {
         for (const auto&& _ : config) {
-            auto op = _insertTimer.raii();
-            bsoncxx::builder::stream::document mydoc{};
-            auto view = config->json_document->view(mydoc);
-            BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(view);
-            config->collection.insert_one(view);
-            _operations.incr();
+            const auto fun = [&]() {
+                bsoncxx::builder::stream::document mydoc{};
+                auto view = config->json_document->view(mydoc);
+                BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(view);
+                config->collection.insert_one(view);
+            };
+
+            // TODO Allow a MaxRetries parameter
+            auto result = _wrapper.tryToRun(fun);
         }
+        _wrapper.markOps();
     }
 }
 
 genny::actor::Insert::Insert(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _insertTimer{context.timer("insert", Insert::id())},
-      _operations{context.counter("operations", Insert::id())},
+      _wrapper{context, "insert"},
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 

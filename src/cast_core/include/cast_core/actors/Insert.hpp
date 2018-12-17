@@ -7,9 +7,8 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <gennylib/Actor.hpp>
+#include <gennylib/MongoWrapper.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -29,8 +28,7 @@ public:
 private:
     std::mt19937_64 _rng;
 
-    metrics::Timer _insertTimer;
-    metrics::Counter _operations;
+    MongoWrapper _wrapper;
     mongocxx::pool::entry _client;
 
     struct PhaseConfig;
