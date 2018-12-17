@@ -315,9 +315,9 @@ public:
     /**
      * ShareableState should be the base class of all shareable
      *
-     * It uses the "Curiously recurring template pattern" to avoid storing `T` explicitly.
+     * It uses the "Curiously recurring template" pattern to avoid storing `T` explicitly.
      * Otherwise we'd need to implement a user-defined conversion to T, which
-     * would have prevented any implicit conversions defined by T from being run.
+     * would have prevented any further implicit conversions defined by T from being run.
      *
      * @tparam T type of the shareable state.
      */

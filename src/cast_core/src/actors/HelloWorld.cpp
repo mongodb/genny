@@ -4,6 +4,7 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <gennylib/Cast.hpp>
 
 namespace genny::actor {
 
