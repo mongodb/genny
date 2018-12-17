@@ -138,10 +138,28 @@ invoke the test binaries and exclude perf tests:
 make -C "build" benchmark_gennylib test
 ./build/src/gennylib/test_gennylib '~[benchmark]'
 ```
-
 Read more about specifying what tests to run [here][s].
 
 [s]: https://github.com/catchorg/Catch2/blob/master/docs/command-line.md#specifying-which-tests-to-run
+
+**Actor Integration Tests**
+
+The actor tests use resmoke to set up a real mongodb cluster and to execute
+the test binary. The yaml files that define the different cluster configurations
+are defined in `src/resmokeconfig`.
+
+Example to run locally with current working directory being the mongo root directory:
+
+First edit the yaml configuration file you want to run and update the `program_executable`
+path to point to the `test_gennylib_with_server` binary in your local environment.
+
+Then run:
+```sh
+env MONGO_CONNECTION_STRING=mongodb://localhost:27017 python2 buildscripts/resmoke.py --suite ~/genny/build/resmokeconfig/genny_standalone.yml
+```
+Each yaml configuration file will only run tests that are associated
+with their specific tags. (Eg. `genny_standalone.yml` will only run
+tests that have been tagged with the "[standalone]" tag.)
 
 Running Genny Workloads
 -----------------------

@@ -1,0 +1,11 @@
+test_kind: gennylib_test
+
+executor:
+  config:
+    program_executable: "../src/build/src/gennylib/test_gennylib_with_server"
+    tags: "[standalone]"
+  fixture:
+    class: MongoDFixture
+    mongod_options:
+      set_parameters:
+        enableTestCommands: 1

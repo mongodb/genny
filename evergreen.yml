@@ -79,13 +79,33 @@ tasks:
   - func: f_fetch_source
   - func: f_build_grpc
   - func: f_compile
+  - func: f_checkout_mongodb
 - name: t_python_test
   commands:
   - func: f_python_test
 - name: t_cmake_test
   commands:
   - func: f_cmake_test
-
+- name: t_integration_test_standalone
+  commands:
+  - func: f_run_integration_test
+    vars:
+      resmoke_suite_path: ${workdir}/src/src/resmokeconfig/genny_standalone.yml
+- name: t_integration_test_single_node_replset
+  commands:
+  - func: f_run_integration_test
+    vars:
+      resmoke_suite_path: ${workdir}/src/src/resmokeconfig/genny_single_node_replset.yml
+- name: t_integration_test_three_node_replset
+  commands:
+  - func: f_run_integration_test
+    vars:
+      resmoke_suite_path: ${workdir}/src/src/resmokeconfig/genny_three_node_replset.yml
+- name: t_integration_test_sharded
+  commands:
+  - func: f_run_integration_test
+    vars:
+      resmoke_suite_path: ${workdir}/src/src/resmokeconfig/genny_sharded.yml
 
 ##                ⚡️ Task Groups ⚡️
 
@@ -108,6 +128,10 @@ task_groups:
   - t_compile
   - t_python_test
   - t_cmake_test
+  - t_integration_test_standalone
+  - t_integration_test_single_node_replset
+  - t_integration_test_three_node_replset
+  - t_integration_test_sharded
 
 
 ##                ⚡️ Functions ⚡️
@@ -118,6 +142,24 @@ functions:
   - command: git.get_project
     params:
       directory: src
+
+  ##
+  # Download the mongodb binary and then clone and checkout the appropriate mongodb repository branch
+  # that contains the intended gennylib test case (SERVER-38646). Also installs resmoke dependencies.
+  ##
+  f_checkout_mongodb:
+  - command: shell.exec
+    working_dir: src/build
+    params:
+      script: |
+        yes | pacman -S mongodb
+        git clone git@github.com:mongodb/mongo.git mongo
+        cd mongo
+        git checkout 85df2fb7d78178adcb59bda8a5d0d57df139e314
+        cd ..
+        virtualenv -p python2 venv
+        source venv/bin/activate
+        python -m pip install -r mongo/etc/pip/dev-requirements.txt
 
   ##
   # Compile gRPC. This script should be synchronized with DSI's compilation sript for Genny:
@@ -202,6 +244,16 @@ functions:
         set -o nounset
 
         python setup.py nosetests
+
+  ##
+  # Runs an integration test suite using resmoke.
+  ##
+  f_run_integration_test:
+  - command: shell.exec
+    params:
+      working_dir: ./mongo
+      script: |
+        python2 buildscripts/resmoke.py --suite ${resmoke_suite_path}
 
   ##
   # Reports test results to evergreen API. If you add a new file to this list, then you should also
