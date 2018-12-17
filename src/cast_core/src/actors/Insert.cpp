@@ -15,7 +15,9 @@
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-struct genny::actor::Insert::PhaseConfig {
+namespace genny::actor {
+
+struct Insert::PhaseConfig {
     mongocxx::collection collection;
     std::unique_ptr<value_generators::DocumentGenerator> json_document;
 
@@ -24,7 +26,7 @@ struct genny::actor::Insert::PhaseConfig {
           json_document{value_generators::makeDoc(phaseContext.get("Document"), rng)} {}
 };
 
-void genny::actor::Insert::run() {
+void Insert::run() {
     for (auto&& [phase, config] : _loop) {
         for (const auto&& _ : config) {
             auto op = _insertTimer.raii();
@@ -37,7 +39,7 @@ void genny::actor::Insert::run() {
     }
 }
 
-genny::actor::Insert::Insert(genny::ActorContext& context)
+Insert::Insert(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
       _insertTimer{context.timer("insert", Insert::id())},
@@ -48,3 +50,4 @@ genny::actor::Insert::Insert(genny::ActorContext& context)
 namespace {
 auto registerInsert = genny::Cast::registerDefault<genny::actor::Insert>();
 }
+}  // namespace genny::actor

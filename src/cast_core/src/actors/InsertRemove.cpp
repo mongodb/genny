@@ -12,7 +12,8 @@
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-struct genny::actor::InsertRemove::PhaseConfig {
+namespace genny::actor {
+struct InsertRemove::PhaseConfig {
     PhaseConfig(mongocxx::database db,
                 const std::string collection_name,
                 std::mt19937_64& rng,
@@ -31,7 +32,7 @@ struct genny::actor::InsertRemove::PhaseConfig {
     bsoncxx::document::value myDoc;
 };
 
-void genny::actor::InsertRemove::run() {
+void InsertRemove::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
@@ -47,7 +48,7 @@ void genny::actor::InsertRemove::run() {
     }
 }
 
-genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context)
+InsertRemove::InsertRemove(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
       _insertTimer{context.timer("insert", InsertRemove::id())},
@@ -58,3 +59,4 @@ genny::actor::InsertRemove::InsertRemove(genny::ActorContext& context)
 namespace {
 auto registerInsertRemove = genny::Cast::registerDefault<genny::actor::InsertRemove>();
 }
+}  // namespace genny::actor

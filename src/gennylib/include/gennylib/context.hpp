@@ -298,6 +298,35 @@ public:
         return _nextActorId++;
     }
 
+    /**
+     * Get states that can be shared across actors using the same WorkloadContext.
+     *
+     * There is one copy of _state per (ActorT, StateT). It's up to the user to ensure
+     * there're not more than one instance of StateT per ActorT to avoid them clobbering
+     * each other.
+     */
+    template <class ActorT, class StateT = typename ActorT::StateT>
+    StateT& getActorSharedState() {
+        // C++11 function statics are created in a thread-safe manner.
+        static auto _state = StateT();
+        return _state;
+    }
+
+    /**
+     * ShareableState should be the base class of all shareable
+     *
+     * It uses the "Curiously recurring template" pattern to avoid storing `T` explicitly.
+     * Otherwise we'd need to implement a user-defined conversion to T, which
+     * would have prevented any further implicit conversions defined by T from being run.
+     *
+     * @tparam T type of the shareable state.
+     */
+    template <typename T>
+    struct ShareableState : T {
+        ShareableState() = default;
+        ~ShareableState() = default;
+    };
+
 private:
     friend class ActorContext;
 
