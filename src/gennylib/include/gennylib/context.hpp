@@ -305,8 +305,8 @@ public:
      * there're not more than one instance of StateT per ActorT to avoid them clobbering
      * each other.
      */
-    template<class ActorT, class StateT = typename ActorT::StateT>
-    StateT &getActorSharedState(){
+    template <class ActorT, class StateT = typename ActorT::StateT>
+    StateT& getActorSharedState() {
         // C++11 function statics are created in a thread-safe manner.
         static auto _state = StateT();
         return _state;

@@ -20,19 +20,18 @@ void HelloWorld::run() {
             BOOST_LOG_TRIVIAL(info) << config->message;
             ++_hwCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _hwCounter;
-
         }
     }
 }
 
 HelloWorld::HelloWorld(genny::ActorContext& context)
-: Actor(context),
-_outputTimer{context.timer("output", HelloWorld::id())},
-_operations{context.counter("operations", HelloWorld::id())},
-_hwCounter{context.workload().getActorSharedState<HelloWorld, HelloWorldCounter>()},
-_loop{context} {}
+    : Actor(context),
+      _outputTimer{context.timer("output", HelloWorld::id())},
+      _operations{context.counter("operations", HelloWorld::id())},
+      _hwCounter{context.workload().getActorSharedState<HelloWorld, HelloWorldCounter>()},
+      _loop{context} {}
 
 namespace {
 auto registerHelloWorld = genny::Cast::registerDefault<genny::actor::HelloWorld>();
 }
-} // namespace genny::actor
+}  // namespace genny::actor

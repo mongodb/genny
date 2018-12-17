@@ -98,5 +98,3 @@ genny::ActorVector Loader::producer(genny::ActorContext& context) {
     return out;
 }
 }  // namespace genny::actor
-
-

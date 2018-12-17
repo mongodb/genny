@@ -16,11 +16,9 @@
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-namespace genny::actor{
+namespace genny::actor {
 struct MultiCollectionQuery::PhaseConfig {
-    PhaseConfig(PhaseContext& context,
-                std::mt19937_64& rng,
-                mongocxx::pool::entry& client)
+    PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
@@ -87,8 +85,6 @@ MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
 
 namespace {
 auto registerMultiCollectionQuery =
-     genny::Cast::registerDefault<genny::actor::MultiCollectionQuery>();
+    genny::Cast::registerDefault<genny::actor::MultiCollectionQuery>();
 }
 }  // namespace genny::actor
-
-

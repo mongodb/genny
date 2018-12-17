@@ -9,9 +9,9 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
-#include <gennylib/PhaseLoop.hpp>
 #include <log.hh>
 
 
@@ -371,12 +371,13 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
     class DummyInsert : public Actor {
     public:
-        struct InsertCounter : genny::WorkloadContext::ShareableState<std::atomic_int>{};
+        struct InsertCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
-        DummyInsert(ActorContext& actorContext):
-        Actor(actorContext),
-        _loop{actorContext},
-        _iCounter{actorContext.workload().getActorSharedState<DummyInsert, InsertCounter>()} {}
+        DummyInsert(ActorContext& actorContext)
+            : Actor(actorContext),
+              _loop{actorContext},
+              _iCounter{actorContext.workload().getActorSharedState<DummyInsert, InsertCounter>()} {
+        }
 
         void run() override {
             for (auto&& [_, cfg] : _loop) {
@@ -387,20 +388,22 @@ TEST_CASE("Actors Share WorkloadContext State") {
             }
         }
 
-        static std::string_view defaultName() {return "DummyInsert";}
+        static std::string_view defaultName() {
+            return "DummyInsert";
+        }
 
     private:
-
         PhaseLoop<PhaseConfig> _loop;
         InsertCounter& _iCounter;
     };
 
     class DummyFind : public Actor {
     public:
-        DummyFind(ActorContext& actorContext):
-            Actor(actorContext),
-            _loop{actorContext},
-            _iCounter{actorContext.workload().getActorSharedState<DummyInsert, DummyInsert::InsertCounter>()} {}
+        DummyFind(ActorContext& actorContext)
+            : Actor(actorContext),
+              _loop{actorContext},
+              _iCounter{actorContext.workload()
+                            .getActorSharedState<DummyInsert, DummyInsert::InsertCounter>()} {}
 
         void run() override {
             for (auto&& [_, cfg] : _loop) {
@@ -410,7 +413,9 @@ TEST_CASE("Actors Share WorkloadContext State") {
             }
         }
 
-        static std::string_view defaultName() {return "DummyFind";}
+        static std::string_view defaultName() {
+            return "DummyFind";
+        }
 
     private:
         PhaseLoop<PhaseConfig> _loop;
@@ -440,22 +445,14 @@ TEST_CASE("Actors Share WorkloadContext State") {
     orchestrator.addRequiredTokens(20);
 
     metrics::Registry registry;
-    WorkloadContext wl{config,
-                       registry,
-                       orchestrator,
-                       "mongodb://localhost:27017",
-                       globalCast()};
+    WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", globalCast()};
 
 
     std::vector<std::thread> threads;
     std::transform(cbegin(wl.actors()),
                    cend(wl.actors()),
                    std::back_inserter(threads),
-                   [&](const auto& actor) {
-                       return std::thread{[&]() {
-                           actor->run();
-                       }};
-                   });
+                   [&](const auto& actor) { return std::thread{[&]() { actor->run(); }}; });
 
     for (auto& thread : threads)
         thread.join();

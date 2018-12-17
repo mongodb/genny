@@ -9,7 +9,7 @@ namespace genny::actor {
 
 class HelloWorld : public genny::Actor {
 
-    struct HelloWorldCounter : genny::WorkloadContext::ShareableState<std::atomic_int>{};
+    struct HelloWorldCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
 public:
     explicit HelloWorld(ActorContext& context);

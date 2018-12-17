@@ -50,5 +50,4 @@ Insert::Insert(genny::ActorContext& context)
 namespace {
 auto registerInsert = genny::Cast::registerDefault<genny::actor::Insert>();
 }
-}   // namespace genny::actor
-
+}  // namespace genny::actor
