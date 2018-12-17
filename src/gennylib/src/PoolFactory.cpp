@@ -118,7 +118,7 @@ std::string PoolFactory::makeUri() const {
 mongocxx::options::pool PoolFactory::makeOptions() const {
     mongocxx::options::ssl sslOptions;
     if (_config->accessOptions.at("AllowInvalidCertificates") == "true") {
-        BOOST_LOG_TRIVIAL(info) << "Allowing invalid certificates for SSL/TLS";
+        BOOST_LOG_TRIVIAL(debug) << "Allowing invalid certificates for SSL/TLS";
         sslOptions = sslOptions.allow_invalid_certificates(true);
     }
 
@@ -126,13 +126,13 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
     // Note that this is entering as a BSON string view, so you cannot delete the config object
     auto& caFile = _config->accessOptions.at("CAFile");
     if (!caFile.empty()) {
-        BOOST_LOG_TRIVIAL(info) << "Using CA file '" << caFile << "' for SSL/TLS";
+        BOOST_LOG_TRIVIAL(debug) << "Using CA file '" << caFile << "' for SSL/TLS";
         sslOptions = sslOptions.ca_file(caFile);
     }
 
     auto& pemKeyFile = _config->accessOptions.at("PEMKeyFile");
     if (!pemKeyFile.empty()) {
-        BOOST_LOG_TRIVIAL(info) << "Using PEM Key file '" << pemKeyFile << "' for SSL/TLS";
+        BOOST_LOG_TRIVIAL(debug) << "Using PEM Key file '" << pemKeyFile << "' for SSL/TLS";
         sslOptions = sslOptions.pem_file(pemKeyFile);
     }
 
@@ -148,7 +148,7 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto sslIt = _config->queryOptions.find("ssl");
     if (sslIt != _config->queryOptions.end() && sslIt->second == "true") {
         poolOptions = makeOptions();
-        BOOST_LOG_TRIVIAL(info) << "Adding ssl options to pool...";
+        BOOST_LOG_TRIVIAL(debug) << "Adding ssl options to pool...";
     }
 
     return std::make_unique<mongocxx::pool>(uri, poolOptions);

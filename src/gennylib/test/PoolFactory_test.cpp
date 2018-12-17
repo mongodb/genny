@@ -3,7 +3,6 @@
 #include <iostream>
 #include <gennylib/PoolFactory.hpp>
 
-#include <bsoncxx/string/to_string.hpp>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
 
@@ -175,7 +174,7 @@ TEST_CASE("PoolFactory behavior") {
     SECTION("Make a pool with ssl enabled and auth params") {
         const std::string kProtocol = "mongodb://";
         const std::string kHost = "127.0.0.1";
-        constexpr auto kCAFile = "/etc/certs/ca.pem";
+        constexpr auto kCAFile = "some-random-ca.pem";
 
         auto sourceUrl = [&]() { return kProtocol + kHost; };
         auto factory = genny::PoolFactory(sourceUrl());
