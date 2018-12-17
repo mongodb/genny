@@ -29,7 +29,6 @@ find_package(
 add_library(boost INTERFACE IMPORTED)
 set_property(TARGET boost PROPERTY
         INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
-#add_definitions(-DBOOST_ALL_DYN_LINK)
 # </Boost>
 
 # <Yaml CPP>
@@ -48,9 +47,11 @@ set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_EXTENSIONS                OFF)
+set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
 set(CMAKE_SKIP_BUILD_RPATH              false)
 set(CMAKE_BUILD_WITH_INSTALL_RPATH      false)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true)
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_MACOSX_RPATH                  1) # Ensure that RPATH is used on OSX
 
 # Help spot unknown compilers and versions.
