@@ -95,6 +95,60 @@ struct PoolFactory::Config {
         return ss.str();
     }
 
+    void set(OptionType type, const std::string& key, std::string value) {
+        switch (type) {
+            case OptionType::kQueryOption: {
+                queryOptions[key] = value;
+                return;
+            }
+            case OptionType::kAccessOption: {
+                // Access options are a predefined set
+                auto it = accessOptions.find(key);
+                if (it == accessOptions.end()) {
+                    std::ostringstream ss;
+                    ss << "Attempted to set unknown access option '" << key << "'";
+                    throw InvalidConfigurationException(ss.str());
+                }
+                it->second = value;
+                return;
+            }
+        }
+
+        throw InvalidConfigurationException("Did not recognize OptionType in setter");
+    }
+
+    std::optional<std::string_view> get(OptionType type, const std::string& key) {
+        switch (type) {
+            case OptionType::kQueryOption: {
+                auto it = queryOptions.find(key);
+                if (it == queryOptions.end())
+                    return std::nullopt;
+
+                return std::make_optional<std::string_view>(it->second);
+            }
+            case OptionType::kAccessOption: {
+                // Access options are a predefined set
+                auto it = accessOptions.find(key);
+                if (it == accessOptions.end()) {
+                    std::ostringstream ss;
+                    ss << "Attempted to get unknown access option '" << key << "'";
+                    throw InvalidConfigurationException(ss.str());
+                }
+                return std::make_optional<std::string_view>(it->second);
+            }
+        }
+
+        throw InvalidConfigurationException("Did not recognize OptionType in getter");
+    }
+
+    bool getFlag(OptionType type, const std::string& key, bool defaultValue = false) {
+        auto opt = get(type, key);
+        if (!opt)
+            return defaultValue;
+
+        return *opt == "true";
+    }
+
     std::set<std::string> hosts;
     std::map<std::string, std::string> queryOptions;
     std::map<std::string, std::string> accessOptions = {
@@ -117,23 +171,25 @@ std::string PoolFactory::makeUri() const {
 
 mongocxx::options::pool PoolFactory::makeOptions() const {
     mongocxx::options::ssl sslOptions;
-    if (_config->accessOptions.at("AllowInvalidCertificates") == "true") {
+
+    auto allowInv = _config->getFlag(OptionType::kAccessOption, "AllowInvalidCertificates");
+    if (allowInv) {
         BOOST_LOG_TRIVIAL(debug) << "Allowing invalid certificates for SSL/TLS";
         sslOptions = sslOptions.allow_invalid_certificates(true);
     }
 
     // Just doing CAFile and PEMKeyFile for now, it's reasonably trivial to add other options
     // Note that this is entering as a BSON string view, so you cannot delete the config object
-    auto& caFile = _config->accessOptions.at("CAFile");
+    auto caFile = *_config->get(OptionType::kAccessOption, "CAFile");
     if (!caFile.empty()) {
         BOOST_LOG_TRIVIAL(debug) << "Using CA file '" << caFile << "' for SSL/TLS";
-        sslOptions = sslOptions.ca_file(caFile);
+        sslOptions = sslOptions.ca_file(caFile.data());
     }
 
-    auto& pemKeyFile = _config->accessOptions.at("PEMKeyFile");
+    auto pemKeyFile = *_config->get(OptionType::kAccessOption, "PEMKeyFile");
     if (!pemKeyFile.empty()) {
         BOOST_LOG_TRIVIAL(debug) << "Using PEM Key file '" << pemKeyFile << "' for SSL/TLS";
-        sslOptions = sslOptions.pem_file(pemKeyFile);
+        sslOptions = sslOptions.pem_file(pemKeyFile.data());
     }
 
     return mongocxx::options::client{}.ssl_opts(sslOptions);
@@ -145,8 +201,8 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto uri = mongocxx::uri{uriStr};
 
     auto poolOptions = mongocxx::options::pool{};
-    auto sslIt = _config->queryOptions.find("ssl");
-    if (sslIt != _config->queryOptions.end() && sslIt->second == "true") {
+    auto useSsl = _config->getFlag(OptionType::kQueryOption, "ssl");
+    if (useSsl) {
         poolOptions = makeOptions();
         BOOST_LOG_TRIVIAL(debug) << "Adding ssl options to pool...";
     }
@@ -154,26 +210,23 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     return std::make_unique<mongocxx::pool>(uri, poolOptions);
 }
 
-void PoolFactory::setStringOption(const std::string& option, std::string value) {
-    // If the value is in the accessOptions set, set it
-    auto it = _config->accessOptions.find(option);
-    if (it != _config->accessOptions.end()) {
-        it->second = value;
-        return;
-    }
-
-    // Treat the value as a normal query parameter
-    _config->queryOptions[option] = value;
+void PoolFactory::setOption(OptionType type, const std::string& option, std::string value) {
+    _config->set(type, option, value);
 }
 
-void PoolFactory::setIntOption(const std::string& option, int32_t value) {
+void PoolFactory::setOptionFromInt(OptionType type, const std::string& option, int32_t value) {
     auto valueStr = std::to_string(value);
-    setStringOption(option, valueStr);
+    setOption(type, option, valueStr);
 }
 
-void PoolFactory::setFlag(const std::string& option, bool value) {
+void PoolFactory::setFlag(OptionType type, const std::string& option, bool value) {
     auto valueStr = value ? "true" : "false";
-    setStringOption(option, valueStr);
+    setOption(type, option, valueStr);
+}
+
+std::optional<std::string_view> PoolFactory::getOption(OptionType type,
+                                                       const std::string& option) const {
+    return _config->get(type, option);
 }
 
 }  // namespace genny
