@@ -8,6 +8,8 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <log.hh>
 
+#include <utils.hpp>
+
 using namespace genny;
 using namespace genny::V1;
 using namespace std;
@@ -270,21 +272,12 @@ TEST_CASE("Actual Actor Example") {
                 Key: 93
         )");
 
-        metrics::Registry registry;
-
-        genny::metrics::Registry metrics;
-        genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
-        orchestrator.addRequiredTokens(1);
-
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
         auto cast = Cast{
             {"Inc", imvProducer},
         };
 
-        WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", cast};
-        wl.actors()[0]->run();
-        // end
-        // ////////
+        run_actor_helper(config, 1, cast);
 
         REQUIRE(imvProducer->counters ==
                 std::unordered_map<int, int>{
@@ -348,20 +341,11 @@ TEST_CASE("Actual Actor Example") {
               - Operation: Nop
         )");
 
-        metrics::Registry registry;
-
-        metrics::Registry metrics;
-        Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
-        orchestrator.addRequiredTokens(1);
-
         Cast cast;
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
         cast.add("Inc", imvProducer);
 
-        WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", cast};
-        wl.actors()[0]->run();
-        // end
-        // ////////
+        run_actor_helper(config, 1, cast);
 
         REQUIRE(imvProducer->counters ==
                 std::unordered_map<int, int>{

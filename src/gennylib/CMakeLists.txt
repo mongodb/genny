@@ -80,6 +80,7 @@ add_executable(test_gennylib
     test/PhaseLoop_perf_test.cpp
     test/document_test.cpp
     test/orchestrator_perf_test.cpp
+    test/utils.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
 )
 
@@ -89,6 +90,7 @@ target_include_directories(test_gennylib
         $<INSTALL_INTERFACE:include>
     PRIVATE
         src
+        test
         ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
 target_link_libraries(test_gennylib
