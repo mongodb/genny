@@ -1,6 +1,7 @@
 #include "test.h"
 
 #include <iostream>
+
 #include <gennylib/PoolFactory.hpp>
 
 #include <mongocxx/instance.hpp>

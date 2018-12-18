@@ -16,8 +16,8 @@
 
 namespace genny::actor {
 
-using document_ptr=std::unique_ptr<genny::value_generators::DocumentGenerator>;
-using index_type=std::pair<document_ptr, std::optional<document_ptr>>;
+using document_ptr = std::unique_ptr<genny::value_generators::DocumentGenerator>;
+using index_type = std::pair<document_ptr, std::optional<document_ptr>>;
 
 struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context,
@@ -57,7 +57,9 @@ struct Loader::PhaseConfig {
 void genny::actor::Loader::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
-            for (uint i = config->collectionOffset; i < config->collectionOffset + config->numCollections; i++) {
+            for (uint i = config->collectionOffset;
+                 i < config->collectionOffset + config->numCollections;
+                 i++) {
                 auto collectionName = "Collection" + std::to_string(i);
                 auto collection = config->database[collectionName];
                 // Insert the documents
@@ -115,13 +117,13 @@ Loader::Loader(genny::ActorContext& context, uint thread)
 
 class LoaderProducer : public genny::ActorProducer {
 public:
-    LoaderProducer(const std::string_view &name) : ActorProducer(name) {}
+    LoaderProducer(const std::string_view& name) : ActorProducer(name) {}
     genny::ActorVector produce(genny::ActorContext& context) {
         if (context.get<std::string>("Type") != "Loader") {
             return {};
         }
         genny::ActorVector out;
-        for(uint i=0; i<context.get<int>("Threads"); ++i) {
+        for (uint i = 0; i < context.get<int>("Threads"); ++i) {
             out.emplace_back(std::make_unique<genny::actor::Loader>(context, i));
         }
         return out;
@@ -131,5 +133,5 @@ public:
 namespace {
 std::shared_ptr<genny::ActorProducer> loaderProducer = std::make_shared<LoaderProducer>("Loader");
 auto registration = genny::Cast::registerCustom<genny::ActorProducer>(loaderProducer);
-}
+}  // namespace
 }  // namespace genny::actor

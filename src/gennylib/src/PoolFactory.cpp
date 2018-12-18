@@ -85,7 +85,7 @@ struct PoolFactory::Config {
         }
 
         i = 0;
-        for (auto && [ key, value ] : queryOptions) {
+        for (auto&& [key, value] : queryOptions) {
             if (i++ > 0) {
                 ss << '&';
             }
