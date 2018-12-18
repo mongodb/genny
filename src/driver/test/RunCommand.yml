@@ -9,28 +9,37 @@ Actors:
   - Repeat: 10
     Operations:
     - MetricsName: ServerStatus
-      Name: RunCommand
-      Command:
+      OperationName: RunCommand
+      OperationCommand:
         serverStatus: 1
-    - Name: RunCommand
-      Command:
+    - OperationName: RunCommand
+      OperationCommand:
         insert: myCollection
         documents: [{name: {$randomstring: {length: {$randomint: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
     - MetricsName: Find
-      Command:
+      OperationCommand:
         find: restaurants
         filter: { rating: { $gte: 9 }, cuisine: italian }
         projection: { name: 1, rating: 1, address: 1 }
         sort: { name: 1 }
         limit: 5
-      Name: RunCommand
+      OperationName: RunCommand
 - Name: CurrentOp
-  Type: RunCommand
+  Type: AdminCommand
   Threads: 1
   Database: admin
   Phases:
   - Repeat: 5
-    MetricsName: CurrentOp
-    Operation: RunCommand
-    Command:
-      currentOp: 1
+    Operation:
+      MetricsName: CurrentOp
+      OperationName: RunCommand
+      OperationCommand:
+        currentOp: 1
+- Name: NoOp
+  Type: AdminCommand
+  Threads: 1
+  Database: admin
+  Phases:
+  - Repeat: 10
+    Operation:
+      OperationName: NoOp

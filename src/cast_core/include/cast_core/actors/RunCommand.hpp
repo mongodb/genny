@@ -21,34 +21,37 @@ namespace genny::actor {
  *   Database: test
  *   Operations:
  *   - MetricsName: ServerStatus
- *     Name: RunCommand
- *     Command:
+ *     OperationName: RunCommand
+ *     OperationCommand:
  *       serverStatus: 1
- *   - Name: RunCommand
- *     Command:
+ *   - OperationName: RunCommand
+ *     OperationCommand:
  *       find: scores
  *       filter: { rating: { $gte: 50 } }
- * - Name: SingleOperation
- *   Type: RunCommand
+ * - Name: SingleAdminOperation
+ *   Type: AdminCommand
  *   Database: admin
  *   Phases:
  *   - Repeat: 5
  *     MetricsName: CurrentOp
- *     Operation: RunCommand
- *     Command:
- *       currentOp: 1
+ *     Operation:
+ *       OperationName: RunCommand
+ *       OperationCommand:
+ *         currentOp: 1
  * ```
  */
 
 class RunCommand : public Actor {
 
 public:
-    explicit RunCommand(ActorContext& context, const unsigned int thread);
+    explicit RunCommand(ActorContext& context, const unsigned int threads);
     ~RunCommand() = default;
 
-    void run() override;
+    static std::string_view defaultName() {
+        return "RunCommand";
+    }
 
-    static ActorVector producer(ActorContext& context);
+    void run() override;
 
 private:
     struct PhaseConfig;

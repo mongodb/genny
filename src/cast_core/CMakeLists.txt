@@ -19,6 +19,7 @@ add_library(cast_core SHARED
     src/actors/Loader.cpp
     src/actors/MultiCollectionQuery.cpp
     src/actors/MultiCollectionUpdate.cpp
+    src/actors/RunCommand.cpp
     # ActorsEnd
 )
 
