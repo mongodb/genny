@@ -355,7 +355,7 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, std::mt19937_64& 
                     BOOST_LOG_TRIVIAL(warning)
                         << "Binomial distribution in random int, but no t parameter";
                 if (auto probability = node["p"])
-                    p = makeUniqueValueGenerator(probability, rng);
+                    p = probability.as<double>();
                 else {
                     throw InvalidConfigurationException(
                         "Binomial distribution in random int, but no p parameter");
@@ -368,7 +368,7 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, std::mt19937_64& 
                     BOOST_LOG_TRIVIAL(warning)
                         << "Negative binomial distribution in random int, not no k parameter";
                 if (auto probability = node["p"])
-                    p = makeUniqueValueGenerator(probability, rng);
+                    p = probability.as<double>();
                 else {
                     throw InvalidConfigurationException(
                         "Binomial distribution in random int, but no p parameter");
@@ -376,7 +376,7 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, std::mt19937_64& 
                 break;
             case GeneratorType::GEOMETRIC:
                 if (auto probability = node["p"])
-                    p = makeUniqueValueGenerator(probability, rng);
+                    p = probability.as<double>();
                 else {
                     throw InvalidConfigurationException(
                         "Geometric distribution in random int, but no p parameter");
@@ -384,7 +384,7 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, std::mt19937_64& 
                 break;
             case GeneratorType::POISSON:
                 if (auto meannode = node["mean"])
-                    mean = makeUniqueValueGenerator(meannode, rng);
+                    mean = meannode.as<double>();
                 else {
                     throw InvalidConfigurationException(
                         "Geometric distribution in random int, but no p parameter");
@@ -405,20 +405,19 @@ int64_t RandomIntGenerator::generateInt() {
             return (distribution(_rng));
         } break;
         case GeneratorType::BINOMIAL: {
-            std::binomial_distribution<int64_t> distribution(t.getInt(), p->generateDouble());
+            std::binomial_distribution<int64_t> distribution(t.getInt(), p);
             return (distribution(_rng));
         } break;
         case GeneratorType::NEGATIVE_BINOMIAL: {
-            std::negative_binomial_distribution<int64_t> distribution(t.getInt(),
-                                                                      p->generateDouble());
+            std::negative_binomial_distribution<int64_t> distribution(t.getInt(), p);
             return (distribution(_rng));
         } break;
         case GeneratorType::GEOMETRIC: {
-            std::geometric_distribution<int64_t> distribution(p->generateDouble());
+            std::geometric_distribution<int64_t> distribution(p);
             return (distribution(_rng));
         } break;
         case GeneratorType::POISSON: {
-            std::poisson_distribution<int64_t> distribution(mean->generateDouble());
+            std::poisson_distribution<int64_t> distribution(mean);
             return (distribution(_rng));
         } break;
         default:

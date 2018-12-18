@@ -4,8 +4,6 @@ SchemaVersion: 2018-07-01
 # removes the same document from a collection in a loop. Each instance of the actor uses a different
 # document, indexed by an integer _id field. The actor records the latency of each insert and each remove.
 
-MongoUri: "mongodb://localhost:27017"
-
 Actors:
   - Name: InsertRemoveTest
     Type: InsertRemove

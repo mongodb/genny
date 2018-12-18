@@ -31,11 +31,12 @@ optional<chrono::milliseconds> operator"" _ms(unsigned long long int v) {
 }  // namespace
 
 TEST_CASE("Correctness for N iterations") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
 
     SECTION("Loops 0 Times") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 0_i), 1};
+            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 0_i, false), 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -43,7 +44,7 @@ TEST_CASE("Correctness for N iterations") {
     }
     SECTION("Loops 1 Time") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i), 1};
+            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i, false), 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -51,7 +52,7 @@ TEST_CASE("Correctness for N iterations") {
     }
     SECTION("Loops 113 Times") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 113_i), 1};
+            o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 113_i, false), 1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -59,18 +60,20 @@ TEST_CASE("Correctness for N iterations") {
     }
 
     SECTION("Configured for -1 Times barfs") {
-        REQUIRE_THROWS_WITH(
-            (V1::ActorPhase<int>{
-                o, std::make_unique<V1::IterationCompletionCheck>(nullopt, make_optional(-1)), 1}),
-            Catch::Contains("Need non-negative number of iterations. Gave -1"));
+        REQUIRE_THROWS_WITH((V1::ActorPhase<int>{o,
+                                                 std::make_unique<V1::IterationCompletionCheck>(
+                                                     nullopt, make_optional(-1), false),
+                                                 1}),
+                            Catch::Contains("Need non-negative number of iterations. Gave -1"));
     }
 }
 
 TEST_CASE("Correctness for N milliseconds") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
     SECTION("Loops 0 milliseconds so zero times") {
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(0_ms, nullopt), 0};
+            o, std::make_unique<V1::IterationCompletionCheck>(0_ms, nullopt, false), 0};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -80,7 +83,7 @@ TEST_CASE("Correctness for N milliseconds") {
         // we nop in the loop so ideally it should take exactly 10ms, but don't want spurious
         // failures
         V1::ActorPhase<int> loop{
-            o, std::make_unique<V1::IterationCompletionCheck>(10_ms, nullopt), 0};
+            o, std::make_unique<V1::IterationCompletionCheck>(10_ms, nullopt, false), 0};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -95,16 +98,19 @@ TEST_CASE("Correctness for N milliseconds") {
 }
 
 TEST_CASE("Combinations of duration and iterations") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
     SECTION("Loops 0 milliseconds but 100 times") {
-        V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(0_ms, 100_i), 0};
+        V1::ActorPhase<int> loop{
+            o, std::make_unique<V1::IterationCompletionCheck>(0_ms, 100_i, false), 0};
         int i = 0;
         for (auto _ : loop)
             ++i;
         REQUIRE(i == 100);
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
-        V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(5_ms, 100_i), 0};
+        V1::ActorPhase<int> loop{
+            o, std::make_unique<V1::IterationCompletionCheck>(5_ms, 100_i, false), 0};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -127,16 +133,17 @@ TEST_CASE("Combinations of duration and iterations") {
         REQUIRE_THROWS_WITH(
             (V1::ActorPhase<int>{o,
                                  std::make_unique<V1::IterationCompletionCheck>(
-                                     make_optional(chrono::milliseconds{-1}), nullopt),
+                                     make_optional(chrono::milliseconds{-1}), nullopt, false),
                                  0}),
             Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
 
 TEST_CASE("Can do without either iterations or duration") {
-    Orchestrator o;
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
     V1::ActorPhase<int> actorPhase{
-        o, std::make_unique<V1::IterationCompletionCheck>(nullopt, nullopt), 0};
+        o, std::make_unique<V1::IterationCompletionCheck>(nullopt, nullopt, false), 0};
     auto iters = 0;
     for (auto&& _ : actorPhase) {
         ++iters;
@@ -150,8 +157,10 @@ TEST_CASE("Can do without either iterations or duration") {
 }
 
 TEST_CASE("Iterator concept correctness") {
-    Orchestrator o;
-    V1::ActorPhase<int> loop{o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i), 0};
+    genny::metrics::Registry metrics;
+    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    V1::ActorPhase<int> loop{
+        o, std::make_unique<V1::IterationCompletionCheck>(nullopt, 1_i, false), 0};
 
     // can deref
     SECTION("Deref and advance works") {
@@ -206,11 +215,23 @@ TEST_CASE("Iterator concept correctness") {
     }
 }
 
+template <typename ActorT>
+struct CounterProducer : public ActorProducer {
+    using ActorProducer::ActorProducer;
+
+    ActorVector produce(ActorContext& actorContext) override {
+        ActorVector out;
+        out.emplace_back(std::make_unique<ActorT>(actorContext, counters));
+        return out;
+    }
+
+    std::unordered_map<int, int> counters;
+};
 
 TEST_CASE("Actual Actor Example") {
 
     class IncrementsMapValues : public Actor {
-    private:
+    protected:
         struct IncrPhaseConfig {
             int _key;
             IncrPhaseConfig(PhaseContext& ctx, int keyOffset)
@@ -222,8 +243,9 @@ TEST_CASE("Actual Actor Example") {
 
     public:
         IncrementsMapValues(ActorContext& actorContext, std::unordered_map<int, int>& counters)
-            : _loop{actorContext, 1}, _counters{counters} {}
-        //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset param.
+            : Actor(actorContext), _loop{actorContext, 1}, _counters{counters} {}
+        //                        ↑ is forwarded to the IncrementsMapValues ctor as the keyOffset
+        //                        param.
 
         void run() override {
             for (auto&& [num, cfg] : _loop) {
@@ -232,44 +254,118 @@ TEST_CASE("Actual Actor Example") {
                 }
             }
         }
-
-        // An ActorProducer can do whatever it wants.
-        // Here it passes in a stack-variable ref to the Actor(s) it creates.
-        static auto producer(std::unordered_map<int, int>& counters) {
-            return [&](ActorContext& actorContext) {
-                ActorVector out;
-                out.push_back(std::make_unique<IncrementsMapValues>(actorContext, counters));
-                return out;
-            };
-        }
     };
 
-    std::unordered_map<int, int> counters;
+    SECTION("Simple Actor") {
+        // ////////
+        // setup and run (bypass the driver)
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 100
+                Key: 71
+              - Repeat: 3
+                Key: 93
+        )");
 
-    // ////////
-    // setup and run (bypass the driver)
-    YAML::Node config = YAML::Load(R"(
-        SchemaVersion: 2018-07-01
-        MongoUri: mongodb://example # unused but ctors currently require that it's syntactically valid
-        Actors:
-        - Phases:
-          - Repeat: 100
-            Key: 71
-          - Repeat: 3
-            Key: 93
-    )");
+        metrics::Registry registry;
 
-    Orchestrator orchestrator;
-    orchestrator.addRequiredTokens(1);
+        genny::metrics::Registry metrics;
+        genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+        orchestrator.addRequiredTokens(1);
 
-    metrics::Registry registry;
-    WorkloadContext wl{config, registry, orchestrator, {IncrementsMapValues::producer(counters)}};
-    wl.actors()[0]->run();
-    // end
-    // ////////
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+        auto cast = Cast{
+            {"Inc", imvProducer},
+        };
 
-    REQUIRE(counters ==
-            std::unordered_map<int, int>{
-                {72, 100},  // keys & vals came from yaml config. Keys have a +1 offset.
-                {94, 3}});
+        WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", cast};
+        wl.actors()[0]->run();
+        // end
+        // ////////
+
+        REQUIRE(imvProducer->counters ==
+                std::unordered_map<int, int>{
+                    {72, 100},  // keys & vals came from yaml config. Keys have a +1 offset.
+                    {94, 3}});
+    }
+
+    /**
+     * Tests an actor with a Nop command. See YAML Node below.
+     */
+    SECTION("Actor with Nop") {
+        class IncrementsMapValuesWithNop : public IncrementsMapValues {
+        public:
+            IncrementsMapValuesWithNop(ActorContext& actorContext,
+                                       std::unordered_map<int, int>& counters)
+                : IncrementsMapValues(actorContext, counters) {}
+
+            void run() override {
+                for (auto&& [num, cfg] : _loop) {
+                    // This is just for testing purposes. Actors *should* not place any commands
+                    // between the top level for-loop and the inner loop.
+                    check(num, this->_counters);
+                    if (num == 0 || num == 2 || num == 3) {
+                        REQUIRE(cfg.isNop());
+                    }
+                    for (auto&& _ : cfg) {
+                        REQUIRE((num == 1 || num == 4));
+                        ++this->_counters[cfg->_key];
+                    }
+                }
+            }
+
+            void check(PhaseNumber num, std::unordered_map<int, int>& counter) {
+                if (num == 1) {
+                    REQUIRE(counter == std::unordered_map<int, int>{});
+                }
+                if (num == 2 || num == 3 || num == 4) {
+                    // std::cout << "Counter at num234 : " << counter << std::endl;
+                    REQUIRE(counter == std::unordered_map<int, int>{{72, 10}});
+                }
+                if (num == 5) {
+                    // std::cout << "Counter at num5 : " << counter << std::endl;
+                    REQUIRE(counter == std::unordered_map<int, int>{{72, 10}, {94, 3}});
+                }
+            }
+        };
+
+        // This is how a Nop command should be specified.
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Operation: Nop
+              - Repeat: 10
+                Key: 71
+              - Operation: Nop
+              - Operation: Nop
+              - Repeat: 3
+                Key: 93
+              - Operation: Nop
+        )");
+
+        metrics::Registry registry;
+
+        metrics::Registry metrics;
+        Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+        orchestrator.addRequiredTokens(1);
+
+        Cast cast;
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+        cast.add("Inc", imvProducer);
+
+        WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", cast};
+        wl.actors()[0]->run();
+        // end
+        // ////////
+
+        REQUIRE(imvProducer->counters ==
+                std::unordered_map<int, int>{
+                    {72, 10},  // keys & vals came from yaml config. Keys have a +1 offset.
+                    {94, 3}});
+    }
 }

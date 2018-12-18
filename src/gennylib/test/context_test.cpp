@@ -4,9 +4,12 @@
 #include <iomanip>
 #include <iostream>
 #include <optional>
+#include <string_view>
+#include <thread>
 
 #include <yaml-cpp/yaml.h>
 
+#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
 #include <log.hh>
@@ -18,15 +21,19 @@ using namespace std;
 using Catch::Matchers::Matches;
 using Catch::Matchers::StartsWith;
 
+// The driver checks the passed-in mongo uri for accuracy but doesn't actually
+// initiate a connection until a connection is retrieved from
+// the connection-pool
+static constexpr std::string_view mongoUri = "mongodb://localhost:27017";
+
 template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator;
-    string modified =
-        "SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27017\nActors: []\n" + yaml;
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, {}};
+        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), {}};
         return context.get<Out>(std::forward<Args>(args)...);
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -37,37 +44,62 @@ template <class Out,
           class... Args>
 void gives(const string& yaml, OutV expect, Args... args) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator;
-    string modified =
-        "SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27107\nActors: []\n" + yaml;
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, {}};
+        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), {}};
         return context.get<Out, Required>(std::forward<Args>(args)...);
     };
     REQUIRE(test() == expect);
 }
 
+struct NoOpProducer : public ActorProducer {
+    NoOpProducer() : ActorProducer("NoOp") {}
+
+    ActorVector produce(ActorContext& context) override {
+        return {};
+    }
+};
+
+struct OpProducer : public ActorProducer {
+    OpProducer(std::function<void(ActorContext&)> op) : ActorProducer("Op"), _op(op) {}
+
+    ActorVector produce(ActorContext& context) override {
+        _op(context);
+        return {};
+    }
+
+    std::function<void(ActorContext&)> _op;
+};
+
 TEST_CASE("loads configuration okay") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator;
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+
+    auto cast = Cast{
+        {"NoOp", std::make_shared<NoOpProducer>()},
+    };
+
     SECTION("Valid YAML") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
-MongoUri: mongodb://localhost:27017
 Actors:
 - Name: HelloWorld
+  Type: NoOp
   Count: 7
         )");
-        WorkloadContext w{yaml, metrics, orchestrator, {}};
+
+        WorkloadContext w{yaml, metrics, orchestrator, mongoUri.data(), cast};
         auto actors = w.get("Actors");
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = YAML::Load(
-            "SchemaVersion: 2018-06-27\nMongoUri: mongodb://localhost:27017\nActors: []");
+        auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
 
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+        };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
     }
 
@@ -112,66 +144,102 @@ Actors:
     }
 
     SECTION("Empty Yaml") {
-        auto yaml = YAML::Load("MongoUri: mongodb://localhost:27017\nActors: []");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        auto yaml = YAML::Load("Actors: []");
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+        };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
     }
     SECTION("No Actors") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nMongoUri: mongodb://localhost:27017");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        auto yaml = YAML::Load("SchemaVersion: 2018-07-01");
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+        };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path(.*\n*)*)"));
     }
-    SECTION("No MongoUri") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nActors: []");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(bad conversion)"));
-    }
     SECTION("Invalid MongoUri") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nMongoUri: notValid\nActors: []");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, {}); };
+        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nActors: []");
+        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, "::notValid::", cast); };
         REQUIRE_THROWS_WITH(test(), Matches(R"(an invalid MongoDB URI was provided)"));
     }
 
     SECTION("Can call two actor producers") {
         auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
-MongoUri: mongodb://localhost:27017
 Actors:
 - Name: One
+  Type: SomeList
   SomeList: [100, 2, 3]
 - Name: Two
+  Type: Count
   Count: 7
   SomeList: [2]
         )");
 
-        int calls = 0;
-        std::vector<ActorProducer> producers;
-        producers.emplace_back([&](ActorContext& context) {
-            REQUIRE(context.workload().get<int>("Actors", 0, "SomeList", 0) == 100);
-            ++calls;
-            return ActorVector{};
-        });
-        producers.emplace_back([&](ActorContext& context) {
-            REQUIRE(context.workload().get<int>("Actors", 1, "Count") == 7);
-            ++calls;
-            return ActorVector{};
-        });
+        struct SomeListProducer : public ActorProducer {
+            using ActorProducer::ActorProducer;
 
-        auto context = WorkloadContext{yaml, metrics, orchestrator, producers};
+            ActorVector produce(ActorContext& context) override {
+                REQUIRE(context.workload().get<int>("Actors", 0, "SomeList", 0) == 100);
+                REQUIRE(context.get<int>("SomeList", 0) == 100);
+                ++calls;
+                return ActorVector{};
+            }
+
+            int calls = 0;
+        };
+
+        struct CountProducer : public ActorProducer {
+            using ActorProducer::ActorProducer;
+
+            ActorVector produce(ActorContext& context) override {
+                REQUIRE(context.workload().get<int>("Actors", 1, "Count") == 7);
+                REQUIRE(context.get<int>("Count") == 7);
+                ++calls;
+                return ActorVector{};
+            }
+
+            int calls = 0;
+        };
+
+        auto someListProducer = std::make_shared<SomeListProducer>("SomeList");
+        auto countProducer = std::make_shared<CountProducer>("Count");
+
+        auto twoActorCast = Cast{
+            {"SomeList", someListProducer},
+            {"Count", countProducer},
+        };
+
+        auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), twoActorCast};
+
+        REQUIRE(someListProducer->calls == 1);
+        REQUIRE(countProducer->calls == 1);
         REQUIRE(std::distance(context.actors().begin(), context.actors().end()) == 0);
+    }
+
+    SECTION("Will throw if Producer is defined again") {
+        auto testFun = []() {
+            auto noOpProducer = std::make_shared<NoOpProducer>();
+            auto cast = Cast{
+                {"Foo", noOpProducer},
+                {"Bar", noOpProducer},
+                {"Foo", noOpProducer},
+            };
+        };
+        REQUIRE_THROWS_WITH(testFun(), StartsWith(R"(Failed to add 'NoOp' as 'Foo')"));
     }
 }
 
-void onContext(YAML::Node& yaml, std::function<void(ActorContext&)>& op) {
+void onContext(YAML::Node& yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator;
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
-    ActorProducer producer = [&](ActorContext& context) -> ActorVector {
-        op(context);
-        return {};
+    auto cast = Cast{
+        {"Op", std::make_shared<OpProducer>(op)},
+        {"NoOp", std::make_shared<NoOpProducer>()},
     };
 
-    WorkloadContext{yaml, metrics, orchestrator, {producer}};
+    WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast};
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
@@ -180,6 +248,7 @@ TEST_CASE("PhaseContexts constructed as expected") {
     MongoUri: mongodb://localhost:27017
     Actors:
     - Name: HelloWorld
+      Type: Op
       Foo: Bar
       Foo2: Bar2
       Phases:
@@ -260,16 +329,20 @@ TEST_CASE("Duplicate Phase Numbers") {
     SchemaVersion: 2018-07-01
     MongoUri: mongodb://localhost:27017
     Actors:
-    - Phases:
+    - Type: NoOp
+      Phases:
       - Phase: 0
       - Phase: 0
     )");
 
     metrics::Registry metrics;
-    Orchestrator orchestrator;
-    ActorProducer producer = [&](ActorContext& context) -> ActorVector { return {}; };
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
-    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, {producer}}),
+    auto cast = Cast{
+        {"NoOp", std::make_shared<NoOpProducer>()},
+    };
+
+    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
                         Catch::Matches("Duplicate phase 0"));
 }
 
@@ -279,6 +352,7 @@ TEST_CASE("No PhaseContexts") {
     MongoUri: mongodb://localhost:27017
     Actors:
     - Name: HelloWorld
+      Type: NoOp
     )");
 
     SECTION("Empty PhaseContexts") {
@@ -287,4 +361,104 @@ TEST_CASE("No PhaseContexts") {
         };
         onContext(yaml, op);
     }
+}
+
+TEST_CASE("Actors Share WorkloadContext State") {
+
+    struct PhaseConfig {
+        PhaseConfig(PhaseContext& ctx) {}
+    };
+
+    class DummyInsert : public Actor {
+    public:
+        struct InsertCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
+
+        DummyInsert(ActorContext& actorContext)
+            : Actor(actorContext),
+              _loop{actorContext},
+              _iCounter{actorContext.workload().getActorSharedState<DummyInsert, InsertCounter>()} {
+        }
+
+        void run() override {
+            for (auto&& [_, cfg] : _loop) {
+                for (auto&& _ : cfg) {
+                    BOOST_LOG_TRIVIAL(info) << "Inserting document at: " << _iCounter;
+                    ++_iCounter;
+                }
+            }
+        }
+
+        static std::string_view defaultName() {
+            return "DummyInsert";
+        }
+
+    private:
+        PhaseLoop<PhaseConfig> _loop;
+        InsertCounter& _iCounter;
+    };
+
+    class DummyFind : public Actor {
+    public:
+        DummyFind(ActorContext& actorContext)
+            : Actor(actorContext),
+              _loop{actorContext},
+              _iCounter{actorContext.workload()
+                            .getActorSharedState<DummyInsert, DummyInsert::InsertCounter>()} {}
+
+        void run() override {
+            for (auto&& [_, cfg] : _loop) {
+                for (auto&& _ : cfg) {
+                    BOOST_LOG_TRIVIAL(info) << "Finding document lower than: " << _iCounter;
+                }
+            }
+        }
+
+        static std::string_view defaultName() {
+            return "DummyFind";
+        }
+
+    private:
+        PhaseLoop<PhaseConfig> _loop;
+        DummyInsert::InsertCounter& _iCounter;
+    };
+
+    Cast cast;
+    auto insertProducer = std::make_shared<DefaultActorProducer<DummyInsert>>("DummyInsert");
+    auto findProducer = std::make_shared<DefaultActorProducer<DummyFind>>("DummyFind");
+    cast.add("DummyInsert", insertProducer);
+    cast.add("DummyFind", findProducer);
+
+    YAML::Node config = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+        - Name: DummyInsert
+          Type: DummyInsert
+          Threads: 10
+          Phases:
+          - Repeat: 10
+        - Name: DummyFind
+          Type: DummyFind
+          Threads: 10
+          Phases:
+          - Repeat: 10
+    )");
+
+    genny::metrics::Registry metrics;
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    orchestrator.addRequiredTokens(20);
+
+    metrics::Registry registry;
+    WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", cast};
+
+
+    std::vector<std::thread> threads;
+    std::transform(cbegin(wl.actors()),
+                   cend(wl.actors()),
+                   std::back_inserter(threads),
+                   [&](const auto& actor) { return std::thread{[&]() { actor->run(); }}; });
+
+    for (auto& thread : threads)
+        thread.join();
+
+    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>() == 10 * 10);
 }

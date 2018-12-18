@@ -2,50 +2,52 @@
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(gennylib VERSION 0.0.1 LANGUAGES CXX)
 
-# Eventually will move gennylib/actors into its own lib so keep those files together
-add_library(gennylib SHARED
-    include/gennylib/version.hpp
-                 src/version.cpp
+# Pacify the CLion
+file(GLOB_RECURSE HEADERS_FOR_CLION
+     RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+     CONFIGURE_DEPENDS
+     include/*.hpp include/*.hh src/*.hh)
+add_library(gennylib_headers SHARED
+    EXCLUDE_FROM_ALL
+    src/version.cpp
+    ${HEADERS_FOR_CLION}
+)
 
-        include/gennylib/context.hpp
-        src/context.cpp
+# Concepts to do with Actors
+add_library(gennylib_cast STATIC
+    src/Actor.cpp
+    src/ActorProducer.cpp
+    src/Cast.cpp
+)
 
-    include/gennylib/conventions.hpp
+target_include_directories(gennylib_cast
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
 
-    include/gennylib/metrics.hpp
-
-    include/gennylib/MetricsReporter.hpp
-
-    include/gennylib/InvalidConfigurationException.hpp
-
-    src/value_generators/parser.hh
+# Concepts to do with generators
+add_library(gennylib_generators STATIC
     src/value_generators/parser.cpp
-    include/gennylib/value_generators.hpp
-    src/value_generators/generators-private.hh
     src/value_generators/value_generators.cpp
     src/value_generators/generators-private.cpp
+)
 
-    include/gennylib/Actor.hpp
-    include/gennylib/ActorProducer.hpp
-    include/gennylib/ActorVector.hpp
+target_include_directories(gennylib_generators
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        src/value_generators
+)
 
-    include/gennylib/PhaseLoop.hpp
-
-        include/gennylib/PhasedActor.hpp
-                 src/PhasedActor.cpp
-
-    include/gennylib/Orchestrator.hpp
-                 src/Orchestrator.cpp
-
-    include/gennylib/actors/HelloWorld.hpp
-                 src/actors/HelloWorld.cpp
-
-    include/gennylib/actors/Insert.hpp
-                 src/actors/Insert.cpp
-    include/gennylib/actors/InsertRemove.hpp
-                 src/actors/InsertRemove.cpp
-
-    # NextActorHere
+# Additional utilities and core concepts
+# Note that this contains both what you need to compile Actors and what you need to compile a Driver
+add_library(gennylib SHARED
+    src/version.cpp
+    src/context.cpp
+    src/Orchestrator.cpp
+    src/PoolFactory.cpp
 )
 
 # Define headers for this library. PUBLIC headers are used for
@@ -55,50 +57,41 @@ target_include_directories(gennylib
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-        ${Boost_INCLUDE_DIR}
-        ${YAML_CPP_INCLUDE_DIR}
-        ${LIBMONGOCXX_INCLUDE_DIRS}
     PRIVATE
         src
-        src/value_generators
 )
 
+add_subdirectory(jasper)
 
-# Depend on libraries that we defined in the top-level CMakeLists.txt file
+# Link in the sublibraries into the main library
 target_link_libraries(gennylib
     PUBLIC
-        ${Boost_LIBRARIES}
-        ${YAML_CPP_LIBRARIES}
-        ${LIBMONGOCXX_LIBRARIES}
+        gennylib_cast
+        gennylib_generators
+    PRIVATE
+        jasperlib
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib EXPORT GennyLibraryConfig
+install(TARGETS  gennylib gennylib_cast gennylib_generators
+        EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-# Below generates a cmake module so if you make install from this
-# project you can find_package(GennyLib) in another cmake project.
-#
-# Please don't build any projects that link against gennylib outside of
-# this repository please. Not yet. We need to think of a good ABI.
-# We're only exposing external cmake bindings because it encourages
-# best-practices and helps keep the codebase honest about what it
-# exports and how it's used.
-install(EXPORT GennyLibraryConfig DESTINATION share/GennyLibrary/cmake)
-
-# This makes the project importable from the build directory
-export(TARGETS gennylib FILE GennyLibraryConfig.cmake)
+install(DIRECTORY include/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN *.hpp)
 
 add_executable(test_gennylib
-        test/context_test.cpp
+    test/Cast_test.cpp
+    test/context_test.cpp
     test/conventions_test.cpp
+    test/PoolFactory_test.cpp
     test/PhaseLoop_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
+    test/PhaseLoop_perf_test.cpp
     test/document_test.cpp
     test/orchestrator_perf_test.cpp
     ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp

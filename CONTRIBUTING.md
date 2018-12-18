@@ -174,3 +174,8 @@ private:
 ## Relational Operators
 
 -   Prefer to use free functions
+
+## Use Scoped Enums
+
+-   Use scoped enums (`enum class`) wherever possible
+-   Use `k` prefixes for enum values e.g. `enum class Color { kRed, kBlue };`

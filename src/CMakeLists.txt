@@ -1,4 +1,17 @@
-
 add_subdirectory(gennylib)
+add_subdirectory(cast_core)
 add_subdirectory(driver)
 
+# This makes the project importable from the build directory
+export(TARGETS gennylib gennylib_cast gennylib_generators cast_core
+       FILE GennyLibraryConfig.cmake)
+
+# Below generates a cmake module so if you make install from this
+# project you can find_package(GennyLib) in another cmake project.
+#
+# Please don't build any projects that link against gennylib outside of
+# this repository please. Not yet. We need to think of a good ABI.
+# We're only exposing external cmake bindings because it encourages
+# best-practices and helps keep the codebase honest about what it
+# exports and how it's used.
+install(EXPORT GennyLibraryConfig DESTINATION share/GennyLibrary/cmake)

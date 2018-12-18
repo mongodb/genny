@@ -18,6 +18,7 @@ brew install cmake
 brew install icu4c
 brew install mongo-cxx-driver
 brew install yaml-cpp
+brew install grpc
 brew install boost --build-from-source \
     --include-test --with-icu4c --without-static
 
@@ -37,6 +38,25 @@ brew install boost --build-from-source \
 
 Other errors, run `brew doctor`.
 
+**OS X Mojave**:
+
+Mojave doesn't have `/usr/local` on system roots, so you need to set
+environment variables for clang/ldd to find libraries provided by
+homebrew.
+
+Put the following in your shell profile (`~/.bashrc` or `~/.zshrc` etc):
+
+```sh
+export CPLUS_INCLUDE_PATH="$(brew --prefix)/include"
+export LIBRARY_PATH="$(brew --prefix)/lib/:$LIBRARY_PATH"
+```
+
+This needs to be run before you run `cmake`. If you have already run
+`cmake`, then `cd build; rm -rf *` after putting this in your profile
+and restarting your shell.
+
+TODO: TIG-1263 This is kind of a hack; using built-in package-location
+mechanisms would avoid having to have OS-specific hacks like this.
 
 **Other Operating-Systems**:
 
@@ -53,7 +73,8 @@ apt-get install -y \
     clang-6.0 \
     make \
     libboost-all-dev \
-    libyaml-cpp-dev
+    libyaml-cpp-dev \
+    libgrpc++-dev
 
 # install mongo C++ driver:
 #   https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
@@ -74,6 +95,77 @@ We support using CLion and any conventional editors or IDEs (VSCode,
 emacs, vim, etc.). Before doing anything cute (see
 [CONTRIBUTING.md](./CONTRIBUTING.md)), please do due-diligence to ensure
 it's not going to make common editing environments go wonky.
+
+Running Genny Self-Tests
+------------------------
+
+Genny has self-tests using Catch2. You can run them with the following command:
+
+```sh
+cd build
+cmake ..
+make .
+make test
+```
+
+**Perf Tests**
+
+The above `make test` line also runs so-called "perf" tests. They can
+take a while to run and may fail occasionally on local developer
+machines, especially if you have an IDE or web browser open while the
+test runs.
+
+If you want to run all the tests except perf tests you can manually
+invoke the test binaries and exclude perf tests:
+
+```sh
+cd build
+cmake ..
+make .
+./src/gennylib/test_gennylib '~[perf]'
+```
+
+Read more about specifying what tests to run [here][s].
+
+[s]: https://github.com/catchorg/Catch2/blob/master/docs/command-line.md#specifying-which-tests-to-run
+
+Running Genny Workloads
+-----------------------
+
+First install mongodb and start a mongod process:
+
+```sh
+brew install mongodb
+mongod --dbpath=/tmp
+```
+
+Then build Genny (see above for more):
+
+```sh
+cd build
+cmake ..
+make -j8
+make test
+cd ..
+```
+
+And then run a workload:
+
+```sh
+cd build
+./src/driver/genny                                            \
+    --workload-file       ../src/driver/test/InsertRemove.yml \
+    --metrics-format      csv                                 \
+    --metrics-output-file ./genny-metrics.csv                 \
+    --mongo-uri           'mongodb://localhost:27017'
+```
+
+Logging currently goes to stdout, and time-series metrics data is
+written to the file indicated by the `-o` flag (`./genny-metrics.csv`
+in the above example).
+
+Post-processing of metrics data is done by Python scripts in the
+`src/python` directory. See [the README there](./src/python/README.md).
 
 Code Style and Limitations
 ---------------------------

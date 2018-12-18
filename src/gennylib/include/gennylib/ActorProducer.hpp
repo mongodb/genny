@@ -1,14 +1,17 @@
 #ifndef HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 #define HEADER_F7182B1D_27AF_4F90_9BB0_1ADF86FD1AEC_INCLUDED
 
-#include <functional>
+#include <memory>
+#include <string_view>
 
 #include <gennylib/ActorVector.hpp>
 
 namespace genny {
 
+class ActorContext;
+
 /**
- * An ActorProducer maps from ActorContext -> vector of Actors.
+ * ActorProducer.produce() maps from ActorContext -> vector of Actors.
  *
  * For the following YAML,
  *
@@ -31,7 +34,41 @@ namespace genny {
  * call context.get(...) only during their constructors and retain
  * refs or copies of config objects
  */
-using ActorProducer = typename std::function<ActorVector(class ActorContext&)>;
+class ActorProducer {
+public:
+    ActorProducer(std::string_view name) : _name{name} {}
+    ActorProducer(const ActorProducer&) = delete;
+    ActorProducer& operator=(const ActorProducer&) = delete;
+    ActorProducer(ActorProducer&&) = default;
+    ActorProducer& operator=(ActorProducer&&) = default;
+
+    const std::string_view& name() const {
+        return _name;
+    }
+
+    virtual ActorVector produce(ActorContext&) = 0;
+
+private:
+    std::string_view _name;
+};
+
+class ParallelizedActorProducer : public ActorProducer {
+public:
+    using ActorProducer::ActorProducer;
+
+    virtual void produceInto(ActorVector& out, ActorContext& context) = 0;
+    ActorVector produce(ActorContext& context) override;
+};
+
+template <class ActorT>
+class DefaultActorProducer : public ParallelizedActorProducer {
+public:
+    using ParallelizedActorProducer::ParallelizedActorProducer;
+
+    void produceInto(ActorVector& out, ActorContext& context) override {
+        out.emplace_back(std::make_unique<ActorT>(context));
+    }
+};
 
 }  // namespace genny
 

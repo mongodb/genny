@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/metrics.hpp>
 
 namespace {
 
@@ -31,6 +32,25 @@ PhaseNumber Orchestrator::currentPhase() const {
     return this->_current;
 }
 
+bool Orchestrator::continueRunning() const {
+    // Be careful when changing this.
+    //
+    // In particular, stay away from changes that want to add
+    //     reader lock{_mutex}
+    // here. This is a performance-killer, so the _errors state
+    // isn't guarded by the Orchestrator's mutex.
+    //
+    // This method is called in a tight loop by every Actor
+    // for every iteration of its inner `for(auto&& _ : cfg)` loop.
+    //
+    // Hence only allowed to read std::atomic values.
+    //
+    // PhaseLoop_perf_test.cpp deals heavily with the performance
+    // implications of this method.
+    //
+    return !this->_errors;
+}
+
 bool Orchestrator::morePhases() const {
     reader lock{_mutex};
 
@@ -40,7 +60,7 @@ bool Orchestrator::morePhases() const {
 // we start once we have required number of tokens
 PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
     writer lock{_mutex};
-    assert(state == State::PhaseEnded);
+    assert(state == State::PhaseEnded || this->_errors);
 
     _currentTokens += addTokens;
 
@@ -50,7 +70,7 @@ PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
         state = State::PhaseStarted;
     } else {
         if (block) {
-            while (state != State::PhaseStarted) {
+            while (state != State::PhaseStarted && !this->_errors) {
                 _phaseChange.wait(lock);
             }
         }
@@ -72,7 +92,7 @@ void Orchestrator::phasesAtLeastTo(PhaseNumber minPhase) {
 // we end once no more tokens left
 bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
     writer lock{_mutex};
-    assert(State::PhaseStarted == state);
+    assert(State::PhaseStarted == state || this->_errors);
 
     _currentTokens -= removeTokens;
 
@@ -96,11 +116,12 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
     if (_currentTokens <= 0) {
         ++_current;
+        _phaseNumberGauge.set(_current);
         _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {
         if (block) {
-            while (state != State::PhaseEnded) {
+            while (state != State::PhaseEnded && !this->_errors) {
                 _phaseChange.wait(lock);
             }
         }
@@ -110,8 +131,8 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
 void Orchestrator::abort() {
     writer lock{_mutex};
-
     this->_errors = true;
+    _phaseChange.notify_all();
 }
 
 }  // namespace genny

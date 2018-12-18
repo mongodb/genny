@@ -1,10 +1,14 @@
 #ifndef HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 #define HEADER_0E802987_B910_4661_8FAB_8B952A1E453B_INCLUDED
 
+#include <cassert>
 #include <functional>
 #include <iterator>
+#include <map>
+#include <memory>
 #include <optional>
 #include <random>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -16,6 +20,8 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
+#include <gennylib/ActorVector.hpp>
+#include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
@@ -194,26 +200,8 @@ public:
     WorkloadContext(YAML::Node node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
-                    const std::vector<ActorProducer>& producers)
-        : _node{std::move(node)},
-          _registry{&registry},
-          _orchestrator{&orchestrator},
-          // TODO: make this optional and default to mongodb://localhost:27017
-          _clientPool{mongocxx::uri{_node["MongoUri"].as<std::string>()}},
-          _done{false} {
-        // This is good enough for now. Later can add a WorkloadContextValidator concept
-        // and wire in a vector of those similar to how we do with the vector of Producers.
-        if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
-            throw InvalidConfigurationException("Invalid schema version");
-        }
-
-        // Default value selected from random.org, by selecting 2 random numbers
-        // between 1 and 10^9 and concatenating.
-        rng.seed(get_static<int, false>(node, "RandomSeed").value_or(269849313357703264));
-        _actorContexts = constructActorContexts(_node, this);
-        _actors = constructActors(producers, _actorContexts);
-        _done = true;
-    }
+                    const std::string& mongoUri,
+                    const Cast& cast);
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
@@ -299,29 +287,71 @@ public:
             throw InvalidConfigurationException(
                 "Tried to create a random number generator after construction");
         }
-        return std::mt19937_64{rng()};
+        return std::mt19937_64{_rng()};
     }
+
+    /**
+     * Get a WorkloadContext-unique ActorId
+     * @return  unsigned int    The next sequential id
+     */
+    ActorId nextActorId() {
+        return _nextActorId++;
+    }
+
+    /**
+     * Get states that can be shared across actors using the same WorkloadContext.
+     *
+     * There is one copy of _state per (ActorT, StateT). It's up to the user to ensure
+     * there're not more than one instance of StateT per ActorT to avoid them clobbering
+     * each other.
+     */
+    template <class ActorT, class StateT = typename ActorT::StateT>
+    StateT& getActorSharedState() {
+        // C++11 function statics are created in a thread-safe manner.
+        static auto _state = StateT();
+        return _state;
+    }
+
+    /**
+     * ShareableState should be the base class of all shareable
+     *
+     * It uses the "Curiously recurring template" pattern to avoid storing `T` explicitly.
+     * Otherwise we'd need to implement a user-defined conversion to T, which
+     * would have prevented any further implicit conversions defined by T from being run.
+     *
+     * @tparam T type of the shareable state.
+     */
+    template <typename T>
+    struct ShareableState : T {
+        ShareableState() = default;
+        ~ShareableState() = default;
+    };
 
 private:
     friend class ActorContext;
 
     // helper methods used during construction
-    static ActorVector constructActors(const std::vector<ActorProducer>& producers,
-                                       const std::vector<std::unique_ptr<ActorContext>>&);
-    static std::vector<std::unique_ptr<ActorContext>> constructActorContexts(const YAML::Node&,
-                                                                             WorkloadContext*);
+    static ActorVector _constructActors(const Cast& cast,
+                                        const std::unique_ptr<ActorContext>& contexts);
     YAML::Node _node;
 
-    std::mt19937_64 rng;
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
+
+    std::unique_ptr<mongocxx::pool> _clientPool;
+
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
-    mongocxx::pool _clientPool;
     ActorVector _actors;
+    std::mt19937_64 _rng;
+
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.
-    bool _done;
+    bool _done = false;
+
+    // Actors should always be constructed in a single-threaded context.
+    // That said, atomic integral types are very cheap to work with.
+    std::atomic<ActorId> _nextActorId{0};
 };
 
 // For some reason need to decl this; see impl below
@@ -446,9 +476,7 @@ public:
         return _phaseContexts;
     };
 
-    mongocxx::pool::entry client() {
-        return _workload->_clientPool.acquire();
-    }
+    mongocxx::pool::entry client();
 
     // <Forwarding to delegates>
 
@@ -461,8 +489,8 @@ public:
      *   across Actors and threads.
      * @param thread the thread number of this Actor, if any.
      */
-    auto timer(const std::string& operationName, unsigned int thread = 0) const {
-        auto name = this->metricsName(operationName, thread);
+    auto timer(const std::string& operationName, ActorId id = 0u) const {
+        auto name = this->metricsName(operationName, id);
         return this->_workload->_registry->timer(name);
     }
 
@@ -475,8 +503,8 @@ public:
      *   across Actors and threads.
      * @param thread the thread number of this Actor, if any.
      */
-    auto gauge(const std::string& operationName, unsigned int thread = 0) const {
-        auto name = this->metricsName(operationName, thread);
+    auto gauge(const std::string& operationName, ActorId id = 0u) const {
+        auto name = this->metricsName(operationName, id);
         return this->_workload->_registry->gauge(name);
     }
 
@@ -490,8 +518,8 @@ public:
      *   across Actors and threads.
      * @param thread the thread number of this Actor, if any.
      */
-    auto counter(const std::string& operationName, unsigned int thread = 0) const {
-        auto name = this->metricsName(operationName, thread);
+    auto counter(const std::string& operationName, ActorId id = 0u) const {
+        auto name = this->metricsName(operationName, id);
         return this->_workload->_registry->counter(name);
     }
 
@@ -525,8 +553,8 @@ private:
      * @param thread the thread number of the Actor owning the object.
      * @return the fully-qualified metrics name e.g. "MyActor.0.inserts".
      */
-    std::string metricsName(const std::string& operation, unsigned int thread) const {
-        return this->get<std::string>("Name") + "." + std::to_string(thread) + "." + operation;
+    std::string metricsName(const std::string& operation, ActorId id) const {
+        return this->get<std::string>("Name") + ".id-" + std::to_string(id) + "." + operation;
     }
 
     static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
@@ -575,6 +603,18 @@ public:
         // fallback to actor node
         return this->_actor->get<T, Required>(std::forward<Args>(args)...);
     };
+
+    /**
+     * Called in PhaseLoop during the IterationCompletionCheck constructor.
+     */
+    bool isNop() const {
+        bool isNop = get<std::string, false>("Operation") && get<std::string>("Operation") == "Nop";
+        if (isNop && _node.size() != 1) {
+            throw InvalidConfigurationException(
+                "Nop cannot be used with any other keywords. Check YML configuration.");
+        }
+        return isNop;
+    }
 
 private:
     YAML::Node _node;

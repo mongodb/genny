@@ -9,28 +9,32 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <gennylib/PhasedActor.hpp>
+#include <gennylib/Actor.hpp>
+#include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
 
 namespace genny::actor {
 
-class Insert : public genny::PhasedActor {
+class Insert : public genny::Actor {
 
 public:
-    explicit Insert(ActorContext& context, const unsigned int thread);
-
+    explicit Insert(ActorContext& context);
     ~Insert() = default;
 
-    static ActorVector producer(ActorContext& context);
+    static std::string_view defaultName() {
+        return "Insert";
+    }
+    void run() override;
 
 private:
-    struct Config;
-
-    void doPhase(PhaseNumber phase);
     std::mt19937_64 _rng;
-    metrics::Timer _outputTimer;
+
+    metrics::Timer _insertTimer;
     metrics::Counter _operations;
     mongocxx::pool::entry _client;
-    std::unique_ptr<Config> _config;
+
+    struct PhaseConfig;
+    PhaseLoop<PhaseConfig> _loop;
 };
 
 }  // namespace genny::actor
