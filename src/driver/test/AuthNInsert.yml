@@ -1,0 +1,22 @@
+SchemaVersion: 2018-07-01
+Pool:
+  QueryOptions:
+    ssl: true
+    authSource: admin
+    authMechanism: SCRAM-SHA-1
+  AccessOptions:
+    Username: boss
+    Password: password
+    CAFile: /opt/mongodb/etc/certs/trusted-ca.pem
+    PEMKeyFile: /opt/mongodb/etc/certs/trusted-client.pem
+    AllowInvalidCertificates: true
+Actors:
+- Name: Inserter
+  Type: Insert
+  Database: test
+  Phases:
+  - Phase: 0
+    Repeat: 100
+    Collection: "Inserts"
+    Document: {"a": {$randomint: {min: 50, max: 60}}}
+

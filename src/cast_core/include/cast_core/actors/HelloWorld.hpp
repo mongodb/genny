@@ -1,8 +1,6 @@
 #ifndef HEADER_FF3E897B_C747_468B_AAAC_EA6421DB0902_INCLUDED
 #define HEADER_FF3E897B_C747_468B_AAAC_EA6421DB0902_INCLUDED
 
-#include <iostream>
-
 #include <mongocxx/client_session.hpp>
 
 #include <gennylib/PhaseLoop.hpp>
@@ -10,6 +8,8 @@
 namespace genny::actor {
 
 class HelloWorld : public genny::Actor {
+
+    struct HelloWorldCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
 public:
     explicit HelloWorld(ActorContext& context);
@@ -26,6 +26,8 @@ private:
 
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
+
+    HelloWorldCounter& _hwCounter;
 };
 
 }  // namespace genny::actor

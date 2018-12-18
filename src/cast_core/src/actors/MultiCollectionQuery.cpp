@@ -16,9 +16,8 @@
 #include <gennylib/context.hpp>
 #include <gennylib/value_generators.hpp>
 
-namespace {}  // namespace
-
-struct genny::actor::MultiCollectionQuery::PhaseConfig {
+namespace genny::actor {
+struct MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<uint>("CollectionCount")},
@@ -36,7 +35,7 @@ struct genny::actor::MultiCollectionQuery::PhaseConfig {
     mongocxx::options::find options;
 };
 
-void genny::actor::MultiCollectionQuery::run() {
+void MultiCollectionQuery::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
             // Take a timestamp -- remove after TIG-1155
@@ -76,7 +75,7 @@ void genny::actor::MultiCollectionQuery::run() {
     }
 }
 
-genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
+MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
       _queryTimer{context.timer("queryTime", MultiCollectionQuery::id())},
@@ -86,5 +85,6 @@ genny::actor::MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& co
 
 namespace {
 auto registerMultiCollectionQuery =
-        genny::Cast::registerDefault<genny::actor::MultiCollectionQuery>();
+    genny::Cast::registerDefault<genny::actor::MultiCollectionQuery>();
 }
+}  // namespace genny::actor

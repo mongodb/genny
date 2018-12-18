@@ -24,10 +24,20 @@ namespace genny {
  */
 class PoolFactory {
 public:
+    enum OptionType {
+        kQueryOption = 0,  // Default to query option
+        kAccessOption,
+    };
+
+public:
     PoolFactory(std::string_view uri);
     ~PoolFactory();
 
+    // Both `makeUri()` and `makeOptions()` are used internally. They are publicly exposed to
+    // facilitate testing.
     std::string makeUri() const;
+    mongocxx::options::pool makeOptions() const;
+
     std::unique_ptr<mongocxx::pool> makePool() const;
 
     /** 
@@ -37,11 +47,19 @@ public:
      *  connectTimeoutMS
      *  socketTimeoutMS
      */ 
-    void setStringOption(const std::string & option, std::string value);
-    void setIntOption(const std::string & option, int32_t value);
-    void setFlag(const std::string & option, bool value = true);
+    void setOption(OptionType type, const std::string & option, std::string value);
 
-    void configureSsl(mongocxx::options::ssl options, bool enableSsl = true);
+    template <typename ContainerT = std::map<std::string, std::string>>
+    void setOptions(OptionType type, ContainerT list) {
+        for (const auto & [ key, value ] : list) {
+            setOption(type, key, value);
+        }
+    }
+
+    void setOptionFromInt(OptionType type, const std::string & option, int32_t value);
+    void setFlag(OptionType type, const std::string & option, bool value = true);
+
+    std::optional<std::string_view> getOption(OptionType type, const std::string& option) const;
 
 private:
     struct Config;

@@ -29,6 +29,19 @@ WorkloadContext::WorkloadContext(YAML::Node node,
 
     // TODO: make this optional and default to mongodb://localhost:27017
     auto poolFactory = PoolFactory(mongoUri);
+
+    auto queryOpts =
+        get_static<std::map<std::string, std::string>, false>(node, "Pool", "QueryOptions");
+    if (queryOpts) {
+        poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
+    }
+
+    auto accessOpts =
+        get_static<std::map<std::string, std::string>, false>(node, "Pool", "AccessOptions");
+    if (accessOpts) {
+        poolFactory.setOptions(PoolFactory::kAccessOption, *accessOpts);
+    }
+
     _clientPool = poolFactory.makePool();
 
     // Make a bunch of actor contexts
