@@ -8,7 +8,7 @@
 
 namespace genny {
 
-void ActorHelper::run(const ActorHelper::FuncWithContext&& runnerFunc) {
+void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
     orchestrator.addRequiredTokens(_tokenCount);
@@ -18,6 +18,11 @@ void ActorHelper::run(const ActorHelper::FuncWithContext&& runnerFunc) {
         _config, registry, orchestrator, "mongodb://localhost:27017", *_cast);
 
     runnerFunc(wl);
+}
+
+void ActorHelper::runAndVerify(ActorHelper::FuncWithContext&& runnerFunc, std::function<void()>&& verifyFunc) {
+    this->run(std::move(runnerFunc));
+    verifyFunc();
 }
 
 void ActorHelper::_doRunThreaded(const WorkloadContext& wl) {

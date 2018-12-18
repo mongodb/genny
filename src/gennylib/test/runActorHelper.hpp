@@ -29,7 +29,8 @@ public:
           _tokenCount(tokenCount),
           _cast(std::make_unique<Cast>(castInitializer)) {}
 
-    void run(const FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded);
+    void run(FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded);
+    void runAndVerify(ActorHelper::FuncWithContext&& runnerFunc, std::function<void()>&& verifyFunc);
 
 private:
     const YAML::Node& _config;
