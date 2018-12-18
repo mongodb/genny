@@ -13,23 +13,42 @@ add_library(gennylib_headers SHARED
     ${HEADERS_FOR_CLION}
 )
 
-# Eventually will move gennylib/actors into its own lib so keep those files together
-add_library(gennylib SHARED
-    src/version.cpp
-    src/context.cpp
+# Concepts to do with Actors
+add_library(gennylib_cast STATIC
     src/Actor.cpp
     src/ActorProducer.cpp
     src/Cast.cpp
-    src/Orchestrator.cpp
-    src/PoolFactory.cpp
+)
 
+target_include_directories(gennylib_cast
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+# Concepts to do with generators
+add_library(gennylib_generators STATIC
     src/value_generators/parser.cpp
     src/value_generators/value_generators.cpp
     src/value_generators/generators-private.cpp
-
 )
 
-add_subdirectory(jasper)
+target_include_directories(gennylib_generators
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+    PRIVATE
+        src/value_generators
+)
+
+# Additional utilities and core concepts
+# Note that this contains both what you need to compile Actors and what you need to compile a Driver
+add_library(gennylib SHARED
+    src/version.cpp
+    src/context.cpp
+    src/Orchestrator.cpp
+    src/PoolFactory.cpp
+)
 
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
@@ -38,29 +57,24 @@ target_include_directories(gennylib
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
-        ${Boost_INCLUDE_DIR}
-        ${YAML_CPP_INCLUDE_DIR}
-        ${LIBMONGOCXX_INCLUDE_DIRS}
     PRIVATE
-        jasper
         src
-        src/value_generators
 )
 
+add_subdirectory(jasper)
 
-# Depend on libraries that we defined in the top-level CMakeLists.txt file
+# Link in the sublibraries into the main library
 target_link_libraries(gennylib
     PUBLIC
-        ${CMAKE_THREAD_LIBS_INIT}
-        ${Boost_LIBRARIES}
-        ${YAML_CPP_LIBRARIES}
-        ${LIBMONGOCXX_LIBRARIES}
+        gennylib_cast
+        gennylib_generators
     PRIVATE
         jasperlib
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib EXPORT GennyLibraryConfig
+install(TARGETS  gennylib gennylib_cast gennylib_generators
+        EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows

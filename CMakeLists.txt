@@ -14,7 +14,7 @@ include(GNUInstallDirs)
 find_package(Threads REQUIRED)
 
 # <Boost>
-set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(
@@ -29,7 +29,6 @@ find_package(
 add_library(boost INTERFACE IMPORTED)
 set_property(TARGET boost PROPERTY
         INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
-add_definitions(-DBOOST_ALL_DYN_LINK)
 # </Boost>
 
 # <Yaml CPP>
@@ -45,13 +44,21 @@ find_package(libmongocxx REQUIRED)
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 # </Misc 3rd Party Integrations>
 
+# Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
 
-set(CMAKE_CXX_EXTENSIONS                OFF)
-set(CMAKE_SKIP_BUILD_RPATH              false)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH      false)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true)
-set(CMAKE_MACOSX_RPATH                  1) # Ensure that RPATH is used on OSX
+# Nice-to-have CMAKE options
+set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
+set(CMAKE_SKIP_BUILD_RPATH              false   CACHE BOOL "")
+set(CMAKE_BUILD_WITH_INSTALL_RPATH      false   CACHE BOOL "")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true    CACHE BOOL "")
+set(CMAKE_MACOSX_RPATH                  ON      CACHE BOOL "Ensure that RPATH is used on OSX")
+
+# This line allows us to run genny executables from a distribution folder where libraries live in
+# bin/../lib64. This is a nice thing for driver-like applications, because you can pass around
+# archives trivially.
+set(CMAKE_INSTALL_RPATH                 "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"   CACHE PATH "")
 
 # Help spot unknown compilers and versions.
 # Other compilers are probably supported just fine but aren't officially checked
@@ -80,6 +87,19 @@ endif()
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
 endif()
+
+# These libraries are almost ubiquitously required in genny
+include_directories(
+    ${Boost_INCLUDE_DIR}
+    ${YAML_CPP_INCLUDE_DIR}
+    ${LIBMONGOCXX_INCLUDE_DIRS}
+)
+link_libraries(
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${Boost_LIBRARIES}
+    ${YAML_CPP_LIBRARIES}
+    ${LIBMONGOCXX_LIBRARIES}
+)
 
 enable_testing()
 add_subdirectory(src)
