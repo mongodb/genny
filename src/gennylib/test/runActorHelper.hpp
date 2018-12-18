@@ -7,7 +7,12 @@
 
 namespace genny {
 
+class Orchestrator;
 class WorkloadContext;
+
+namespace metrics {
+class Registry;
+}
 
 /**
  * Helper class to run an actor for a test. No metrics are collected and no
@@ -40,6 +45,11 @@ private:
     static void _doRunThreaded(const WorkloadContext& wl);
 
     std::unique_ptr<WorkloadContext> _wlc;
+
+    // These are only used when constructing the workload context, but the context doesn't own them.
+    std::unique_ptr<Orchestrator> _orchestrator;
+    std::unique_ptr<Cast> _cast;
+    std::unique_ptr<metrics::Registry> _registry;
 };
 }  // namespace genny
 

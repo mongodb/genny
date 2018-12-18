@@ -12,13 +12,14 @@ ActorHelper::ActorHelper(
     const YAML::Node& config,
     int tokenCount,
     const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer) {
-    genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
-    orchestrator.addRequiredTokens(tokenCount);
+    _registry = std::make_unique<genny::metrics::Registry>();
 
-    metrics::Registry registry;
-    _wlc = std::make_unique<WorkloadContext>(
-        config, registry, orchestrator, "mongodb://localhost:27017", Cast(castInitializer));
+    _orchestrator = std::make_unique<genny::Orchestrator>(_registry->gauge("PhaseNumber"));
+    _orchestrator->addRequiredTokens(tokenCount);
+
+    _cast = std::make_unique<Cast>(castInitializer);
+
+    _wlc = std::make_unique<WorkloadContext>(config, *_registry, *_orchestrator, "mongodb://localhost:27017", *_cast);
 }
 
 void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {
