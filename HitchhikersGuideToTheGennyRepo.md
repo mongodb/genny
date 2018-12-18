@@ -133,7 +133,6 @@ longer of the two (i.e. duration = 20000, repeat = 2, it will run for 20000).
   [hi]: src/gennylib/src/actors/HelloWorld.cpp
   [DefaultDriver]: src/driver/src/DefaultDriver.cpp
   [run]: src/driver/src/DefaultDriver.cpp#L56
-  [runactor]: src/driver/src/DefaultDriver.cpp#L52-L71
   [oloop]: src/gennylib/src/actors/HelloWorld.cpp#L14
   [iloop]: src/gennylib/src/actors/HelloWorld.cpp#L15
 
