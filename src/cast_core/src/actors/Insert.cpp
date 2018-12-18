@@ -20,10 +20,12 @@ namespace genny::actor {
 struct Insert::PhaseConfig {
     mongocxx::collection collection;
     std::unique_ptr<value_generators::DocumentGenerator> json_document;
+    ExecutionStrategy::RunOptions options;
 
     PhaseConfig(PhaseContext& phaseContext, std::mt19937_64& rng, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          json_document{value_generators::makeDoc(phaseContext.get("Document"), rng)} {}
+          json_document{value_generators::makeDoc(phaseContext.get("Document"), rng)},
+          options{phaseContext.get<size_t, false>("Retries").value_or(0)} {}
 };
 
 void Insert::run() {
@@ -36,10 +38,10 @@ void Insert::run() {
                 config->collection.insert_one(view);
             };
 
-            // TODO Allow a MaxRetries parameter
-            auto result = _strategy.tryToRun(fun);
+            _strategy.tryToRun(fun, config->options);
         }
-        _strategy.markOps();
+
+        _strategy.recordMetrics();
     }
 }
 

@@ -11,7 +11,7 @@ ExecutionStrategy::ExecutionStrategy(ActorContext& context, const std::string& m
       _timer{context.timer(metricsPrefix + ".op-time")} {}
 
 ExecutionStrategy::~ExecutionStrategy() {
-    markOps();
+    recordMetrics();
 }
 
 void ExecutionStrategy::recordMetrics() {
@@ -19,8 +19,16 @@ void ExecutionStrategy::recordMetrics() {
 }
 
 void ExecutionStrategy::_recordError(const mongocxx::operation_exception& e) {
-    BOOST_LOG_TRIVIAL(debug) << "Error #" << _errors << ": " << e.what();
+    BOOST_LOG_TRIVIAL(info) << "Error #" << _errors << ": " << e.what();
 
     _errorGauge.set(++_errors);
+}
+
+void ExecutionStrategy::_finishRun(const RunOptions & options, Result result){
+    if (!result.wasSuccessful) {
+        BOOST_LOG_TRIVIAL(error) << "Operation failed after " << options.maxRetries << " attempts.";
+    }
+
+    _lastResult = std::move(result);
 }
 } // namespace genny
