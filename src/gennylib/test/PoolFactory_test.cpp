@@ -1,11 +1,14 @@
 #include "test.h"
 
+#include <iostream>
 #include <gennylib/PoolFactory.hpp>
 
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
 
 namespace Catchers = Catch::Matchers;
+
+using OptionType = genny::PoolFactory::OptionType;
 
 TEST_CASE("PoolFactory behavior") {
     mongocxx::instance::current();
@@ -58,8 +61,8 @@ TEST_CASE("PoolFactory behavior") {
 
         SECTION("Modify the URI and check that it works") {
             auto expectedUri = [&]() { return kBaseString + "webscale?replicaSet=threeNode"; };
-            factory.setStringOption("replicaSet", "threeNode");
-            factory.setStringOption("Database", "webscale");
+            factory.setOption(OptionType::kQueryOption, "replicaSet", "threeNode");
+            factory.setOption(OptionType::kAccessOption, "Database", "webscale");
 
             auto factoryUri = factory.makeUri();
             REQUIRE(factoryUri == expectedUri());
@@ -78,10 +81,15 @@ TEST_CASE("PoolFactory behavior") {
             auto factory = genny::PoolFactory(sourceUri());
 
             auto expectedUri = [&]() { return sourceUri() + "?database=test"; };
-            factory.setStringOption("database", "test");
+            factory.setOption(OptionType::kQueryOption, "database", "test");
 
             auto factoryUri = factory.makeUri();
             REQUIRE(factoryUri == expectedUri());
+
+            auto badSet = [&]() {
+                factory.setOption(OptionType::kAccessOption, "database", "test");
+            };
+            REQUIRE_THROWS(badSet());
         }
 
         // Funny enough, going through MongoURI means we convert to strings.
@@ -94,7 +102,7 @@ TEST_CASE("PoolFactory behavior") {
 
             SECTION("Use the flag option") {
                 auto expectedUri = [&]() { return kBaseString + "true"; };
-                factory.setFlag("Database");
+                factory.setFlag(OptionType::kAccessOption, "Database");
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
@@ -102,7 +110,7 @@ TEST_CASE("PoolFactory behavior") {
 
             SECTION("Use the string option to reset the Database") {
                 auto expectedUri = [&]() { return kBaseString + "true"; };
-                factory.setStringOption("Database", "true");
+                factory.setFlag(OptionType::kAccessOption, "Database", "true");
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
@@ -110,7 +118,7 @@ TEST_CASE("PoolFactory behavior") {
 
             SECTION("Use the flag option to flip the Database") {
                 auto expectedUri = [&]() { return kBaseString + "false"; };
-                factory.setFlag("Database", false);
+                factory.setFlag(OptionType::kAccessOption, "Database", false);
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
@@ -123,7 +131,7 @@ TEST_CASE("PoolFactory behavior") {
 
             SECTION("Overwrite with a normal string") {
                 auto expectedUri = [&]() { return kBaseString + "?replSet=blue"; };
-                factory.setStringOption("replSet", "blue");
+                factory.setOption(OptionType::kQueryOption, "replSet", "blue");
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
@@ -132,7 +140,7 @@ TEST_CASE("PoolFactory behavior") {
             SECTION("Overwrite with an empty string") {
                 // An empty string is still a valid option, even if not a valid replset
                 auto expectedUri = [&]() { return kBaseString + "?replSet="; };
-                factory.setStringOption("replSet", "");
+                factory.setOption(OptionType::kQueryOption, "replSet", "");
 
                 auto factoryUri = factory.makeUri();
                 REQUIRE(factoryUri == expectedUri());
@@ -148,7 +156,7 @@ TEST_CASE("PoolFactory behavior") {
         auto factory = genny::PoolFactory(kSourceUri);
 
         auto expectedUri = [&]() { return kSourceUri + "/?maxPoolSize=2"; };
-        factory.setIntOption("maxPoolSize", kMaxPoolSize);
+        factory.setOptionFromInt(OptionType::kQueryOption, "maxPoolSize", kMaxPoolSize);
 
         auto factoryUri = factory.makeUri();
         REQUIRE(factoryUri == expectedUri());
@@ -173,22 +181,30 @@ TEST_CASE("PoolFactory behavior") {
     SECTION("Make a pool with ssl enabled and auth params") {
         const std::string kProtocol = "mongodb://";
         const std::string kHost = "127.0.0.1";
+        constexpr auto kCAFile = "some-random-ca.pem";
 
         auto sourceUrl = [&]() { return kProtocol + kHost; };
         auto factory = genny::PoolFactory(sourceUrl());
 
         auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?ssl=true"; };
-        factory.setStringOption("Username", "boss");
-        factory.setStringOption("Password", "pass");
-        factory.setStringOption("Database", "admin");
+        factory.setOptions(OptionType::kAccessOption,
+                           {{"Username", "boss"}, {"Password", "pass"}, {"Database", "admin"}});
 
-        // This won't actually work for real, but it does test the interface
-        mongocxx::options::ssl sslOpts;
-        sslOpts.allow_invalid_certificates(true);
-        factory.configureSsl(sslOpts);
+        factory.setFlag(OptionType::kQueryOption, "ssl");
+        factory.setFlag(OptionType::kAccessOption, "AllowInvalidCertificates");
+        factory.setOption(OptionType::kAccessOption, "CAFile", kCAFile);
 
         auto factoryUri = factory.makeUri();
         REQUIRE(factoryUri == expectedUri());
+
+        auto factoryOpts = factory.makeOptions();
+
+        auto sslOpts = *factoryOpts.client_opts().ssl_opts();
+        auto allowInvalid = *sslOpts.allow_invalid_certificates();
+        REQUIRE(allowInvalid);
+
+        std::string caFile = sslOpts.ca_file()->terminated().data();
+        REQUIRE(kCAFile == caFile);
 
         auto pool = factory.makePool();
         REQUIRE(pool);
