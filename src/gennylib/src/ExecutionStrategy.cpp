@@ -5,21 +5,21 @@
 #include <gennylib/context.hpp>
 
 namespace genny {
-ExecutionStrategy::MongoWrapper(ActorContext& context, const std::string& metricsPrefix)
+ExecutionStrategy::ExecutionStrategy(ActorContext& context, const std::string& metricsPrefix)
     : _errorGauge{context.gauge(metricsPrefix + ".errors")},
       _opsGauge{context.gauge(metricsPrefix + ".ops")},
       _timer{context.timer(metricsPrefix + ".op-time")} {}
 
-ExecutionStrategy::~MongoWrapper() {
+ExecutionStrategy::~ExecutionStrategy() {
     markOps();
 }
 
-void ExecutionStrategy::markOps() {
+void ExecutionStrategy::recordMetrics() {
     _opsGauge.set(_ops);
 }
 
 void ExecutionStrategy::_recordError(const mongocxx::operation_exception& e) {
-    BOOST_LOG_TRIVIAL(error) << "Error #" << _errors << ": " << e.what();
+    BOOST_LOG_TRIVIAL(debug) << "Error #" << _errors << ": " << e.what();
 
     _errorGauge.set(++_errors);
 }
