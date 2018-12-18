@@ -8,21 +8,27 @@
 
 namespace genny {
 
-void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {
+ActorHelper::ActorHelper(
+    const YAML::Node& config,
+    int tokenCount,
+    const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
-    orchestrator.addRequiredTokens(_tokenCount);
+    orchestrator.addRequiredTokens(tokenCount);
 
     metrics::Registry registry;
-    WorkloadContext wl(_config, registry, orchestrator, "mongodb://localhost:27017", *_cast);
+    _wlc = std::make_unique<WorkloadContext>(
+        config, registry, orchestrator, "mongodb://localhost:27017", Cast(castInitializer));
+}
 
-    runnerFunc(wl);
+void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {
+    runnerFunc(*_wlc);
 }
 
 void ActorHelper::runAndVerify(ActorHelper::FuncWithContext&& runnerFunc,
-                               std::function<void()>&& verifyFunc) {
-    this->run(std::move(runnerFunc));
-    verifyFunc();
+                               ActorHelper::FuncWithContext&& verifyFunc) {
+    runnerFunc(*_wlc);
+    verifyFunc(*_wlc);
 }
 
 void ActorHelper::_doRunThreaded(const WorkloadContext& wl) {

@@ -23,10 +23,7 @@ public:
 
     ActorHelper(const YAML::Node& config,
                 int tokenCount,
-                const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer)
-        : _config(config),
-          _tokenCount(tokenCount),
-          _cast(std::make_unique<Cast>(castInitializer)){};
+                const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer);
 
     /**
      * Run the actors.
@@ -34,17 +31,15 @@ public:
     void run(FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded);
 
     /**
-     *  Run the actors and verify the results using verifyFunc.
+     *  Run the actors and verify the results using `verifyFunc`.
      */
-    void runAndVerify(ActorHelper::FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded,
-                      std::function<void()>&& verifyFunc = []() {});
+    void runAndVerify(FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded,
+                      FuncWithContext&& verifyFunc = FuncWithContext());
 
 private:
-    const YAML::Node& _config;
-    int _tokenCount;
-    std::unique_ptr<Cast> _cast;
-
     static void _doRunThreaded(const WorkloadContext& wl);
+
+    std::unique_ptr<WorkloadContext> _wlc;
 };
 }  // namespace genny
 
