@@ -42,6 +42,7 @@ target_include_directories(gennylib_generators
 )
 
 # Additional utilities and core concepts
+# Note that this contains both what you need to compile Actors and what you need to compile a Driver
 add_library(gennylib SHARED
     src/version.cpp
     src/context.cpp
