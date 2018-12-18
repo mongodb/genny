@@ -18,7 +18,7 @@
 #include <gennylib/context.hpp>
 #include <log.hh>
 
-#include <runActorHelper.hpp>
+#include <ActorHelper.hpp>
 
 using namespace genny;
 using namespace genny::V1;

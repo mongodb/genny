@@ -1,6 +1,8 @@
 #ifndef HEADER_C4365A3F_5581_470B_8B54_B46A42795A62_INCLUDED
 #define HEADER_C4365A3F_5581_470B_8B54_B46A42795A62_INCLUDED
 
+#include <functional>
+
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/Cast.hpp>
@@ -15,7 +17,7 @@ class Registry;
 }
 
 /**
- * Helper class to run an actor for a test. No metrics are collected and no
+ * Helper class to run an actor for a test. No metrics are collected by default.
  *
  * @param config YAML config of a workload that includes the actors you want to run.
  * @param tokenCount The total number of simultaneous threads ("tokens" in
@@ -30,14 +32,8 @@ public:
                 int tokenCount,
                 const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer);
 
-    /**
-     * Run the actors.
-     */
     void run(FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded);
 
-    /**
-     *  Run the actors and verify the results using `verifyFunc`.
-     */
     void runAndVerify(FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded,
                       FuncWithContext&& verifyFunc = FuncWithContext());
 

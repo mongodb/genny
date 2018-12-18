@@ -14,7 +14,7 @@
 #include <gennylib/metrics.hpp>
 #include <log.hh>
 
-#include <runActorHelper.hpp>
+#include <ActorHelper.hpp>
 
 using namespace genny;
 using namespace std;
