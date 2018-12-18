@@ -27,7 +27,6 @@ Actors:
 - Name: CurrentOp
   Type: AdminCommand
   Threads: 1
-  Database: admin
   Phases:
   - Repeat: 5
     Operation:
@@ -38,7 +37,6 @@ Actors:
 - Name: NoOp
   Type: AdminCommand
   Threads: 1
-  Database: admin
   Phases:
   - Repeat: 10
     Operation:

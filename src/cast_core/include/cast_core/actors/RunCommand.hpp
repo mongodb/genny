@@ -9,7 +9,8 @@ namespace genny::actor {
 
 /**
  * RunCommand is an actor that performs database and admin commands on a database. The
- * actor records the latency of each command run.
+ * actor records the latency of each command run. If no database value is provided for
+ * an actor, then the operations will run on the 'admin' database by default.
  *
  *
  * Example:
@@ -30,7 +31,6 @@ namespace genny::actor {
  *       filter: { rating: { $gte: 50 } }
  * - Name: SingleAdminOperation
  *   Type: AdminCommand
- *   Database: admin
  *   Phases:
  *   - Repeat: 5
  *     MetricsName: CurrentOp
@@ -44,7 +44,7 @@ namespace genny::actor {
 class RunCommand : public Actor {
 
 public:
-    explicit RunCommand(ActorContext& context, const unsigned int threads);
+    explicit RunCommand(ActorContext& context);
     ~RunCommand() = default;
 
     static std::string_view defaultName() {

@@ -18,8 +18,8 @@ struct genny::actor::RunCommand::PhaseConfig {
                 ActorContext& actorContext,
                 int id) {
         auto actorType = context.get<string>("Type");
-        auto database = context.get<string, false>("Database");
-        if (actorType == "AdminCommand" && (database && database != "admin")) {
+        auto database = context.get<string, false>("Database").value_or("admin");
+        if (actorType == "AdminCommand" && database != "admin") {
             throw InvalidConfigurationException(
                 "AdminCommands can only be run on the 'admin' database.");
         }
@@ -30,13 +30,16 @@ struct genny::actor::RunCommand::PhaseConfig {
                 "Can't have both 'Operations' and 'Operation' in YAML config.");
         }
         if (operationList) {
-            assert(operationList->IsSequence());
+            if (!operationList->IsSequence()) {
+                throw InvalidConfigurationException("'Operations' must be of sequence type.");
+            }
             for (auto&& op : *operationList) {
-                addOperation(op, context, rng, client, actorContext, id);
+                addOperation(op, context, rng, client, actorContext, id, database);
             }
         } else if (operationUnit) {
-            assert(operationUnit->IsMap());
-            addOperation(*operationUnit, context, rng, client, actorContext, id);
+            addOperation(*operationUnit, context, rng, client, actorContext, id, database);
+        } else if (!operationUnit && !operationList) {
+            throw InvalidConfigurationException("No operations found in RunCommand Actor.");
         }
     }
 
@@ -45,8 +48,9 @@ struct genny::actor::RunCommand::PhaseConfig {
                          mongocxx::client& client,
                          mt19937_64& rng,
                          const YAML::Node& commandNode,
-                         optional<metrics::Timer> timer)
-            : database{client[context.get<string>("Database")]},
+                         optional<metrics::Timer> timer,
+                         const string dbName)
+            : database{client[dbName]},
               documentTemplate{genny::value_generators::makeDoc(commandNode, rng)},
               timer{timer} {}
 
@@ -76,7 +80,11 @@ struct genny::actor::RunCommand::PhaseConfig {
                       mt19937_64& rng,
                       mongocxx::pool::entry& client,
                       ActorContext& actorContext,
-                      int id) {
+                      int id,
+                      const string dbName) {
+        if (!operation.IsMap()) {
+            throw InvalidConfigurationException("'Operation' must be of map type.");
+        }
         if (operation["OperationName"].as<string>() != "RunCommand")
             return;
         // Only record metrics if a 'MetricsName' field is defined for an operation.
@@ -86,7 +94,7 @@ struct genny::actor::RunCommand::PhaseConfig {
             : nullopt;
         auto commandNode = operation["OperationCommand"];
         runCommandConfigs.emplace_back(
-            make_unique<RunCommandConfig>(context, *client, rng, commandNode, timer));
+            make_unique<RunCommandConfig>(context, *client, rng, commandNode, timer, dbName));
     }
 
     vector<unique_ptr<RunCommandConfig>> runCommandConfigs;
@@ -102,26 +110,11 @@ void genny::actor::RunCommand::run() {
     }
 }
 
-genny::actor::RunCommand::RunCommand(genny::ActorContext& context, const unsigned int threads)
+genny::actor::RunCommand::RunCommand(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
       _client{context.client()},
-      _loop{context, _rng, _client, context, threads} {}
-
-class RunCommandProducer : public genny::ActorProducer {
-public:
-    RunCommandProducer(const std::string_view& name) : ActorProducer(name) {}
-    genny::ActorVector produce(genny::ActorContext& context) {
-        if (context.get<std::string>("Type") != "RunCommand") {
-            return {};
-        }
-        genny::ActorVector out;
-        for (uint i = 0; i < context.get<int>("Threads"); ++i) {
-            out.emplace_back(std::make_unique<genny::actor::RunCommand>(context, i));
-        }
-        return out;
-    }
-};
+      _loop{context, _rng, _client, context, RunCommand::id()} {}
 
 class AdminCommandProducer : public genny::ActorProducer {
 public:
@@ -132,17 +125,15 @@ public:
         }
         genny::ActorVector out;
         for (uint i = 0; i < context.get<int>("Threads"); ++i) {
-            out.emplace_back(std::make_unique<genny::actor::RunCommand>(context, i));
+            out.emplace_back(std::make_unique<genny::actor::RunCommand>(context));
         }
         return out;
     }
 };
 
 namespace {
-std::shared_ptr<genny::ActorProducer> runCommandProducer =
-    std::make_shared<RunCommandProducer>("RunCommand");
 std::shared_ptr<genny::ActorProducer> adminCommandProducer =
     std::make_shared<AdminCommandProducer>("AdminCommand");
-auto registerRunCommand = genny::Cast::registerCustom<genny::ActorProducer>(runCommandProducer);
+auto registerRunCommand = genny::Cast::registerDefault<genny::actor::RunCommand>();
 auto registerAdminCommand = genny::Cast::registerCustom<genny::ActorProducer>(adminCommandProducer);
 }  // namespace
