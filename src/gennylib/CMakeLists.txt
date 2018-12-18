@@ -20,7 +20,7 @@ add_library(gennylib SHARED
     src/Actor.cpp
     src/ActorProducer.cpp
     src/Cast.cpp
-    src/MongoWrapper.cpp
+    src/ExecutionStrategy.cpp
     src/Orchestrator.cpp
     src/PoolFactory.cpp
 

@@ -35,16 +35,16 @@ void genny::actor::Insert::run() {
             };
 
             // TODO Allow a MaxRetries parameter
-            auto result = _wrapper.tryToRun(fun);
+            auto result = _strategy.tryToRun(fun);
         }
-        _wrapper.markOps();
+        _strategy.markOps();
     }
 }
 
 genny::actor::Insert::Insert(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _wrapper{context, "insert"},
+      _strategy{context, "insert"},
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 

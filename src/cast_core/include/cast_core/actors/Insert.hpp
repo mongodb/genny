@@ -8,7 +8,7 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/MongoWrapper.hpp>
+#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -28,7 +28,7 @@ public:
 private:
     std::mt19937_64 _rng;
 
-    MongoWrapper _wrapper;
+    ExecutionStrategy _strategy;
     mongocxx::pool::entry _client;
 
     struct PhaseConfig;

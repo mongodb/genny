@@ -16,11 +16,11 @@ class ActorContext;
  *
  * ...it's got sick dBeats.
  */
-class MongoWrapper {
+class ExecutionStrategy {
 public:
     // TODO this should take a RegistryHandle for its actor instead of a prefix
-    MongoWrapper(ActorContext & context, const std::string & metricsPrefix);
-    ~MongoWrapper();
+    ExecutionStrategy(ActorContext & context, const std::string & metricsPrefix);
+    ~ExecutionStrategy();
 
     template<typename F>
     bool tryToRun(F&& fun){

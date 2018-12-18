@@ -1,24 +1,24 @@
-#include <gennylib/MongoWrapper.hpp>
+#include <gennylib/ExecutionStrategy.hpp>
 
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/context.hpp>
 
 namespace genny {
-MongoWrapper::MongoWrapper(ActorContext& context, const std::string& metricsPrefix)
+ExecutionStrategy::MongoWrapper(ActorContext& context, const std::string& metricsPrefix)
     : _errorGauge{context.gauge(metricsPrefix + ".errors")},
       _opsGauge{context.gauge(metricsPrefix + ".ops")},
       _timer{context.timer(metricsPrefix + ".op-time")} {}
 
-MongoWrapper::~MongoWrapper() {
+ExecutionStrategy::~MongoWrapper() {
     markOps();
 }
 
-void MongoWrapper::markOps() {
+void ExecutionStrategy::markOps() {
     _opsGauge.set(_ops);
 }
 
-void MongoWrapper::_recordError(const mongocxx::operation_exception& e) {
+void ExecutionStrategy::_recordError(const mongocxx::operation_exception& e) {
     BOOST_LOG_TRIVIAL(error) << "Error #" << _errors << ": " << e.what();
 
     _errorGauge.set(++_errors);
