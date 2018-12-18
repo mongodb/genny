@@ -14,7 +14,7 @@
 #include <gennylib/metrics.hpp>
 #include <log.hh>
 
-#include <utils.hpp>
+#include <runActorHelper.hpp>
 
 using namespace genny;
 using namespace std;
@@ -423,11 +423,8 @@ TEST_CASE("Actors Share WorkloadContext State") {
         DummyInsert::InsertCounter& _iCounter;
     };
 
-    Cast cast;
     auto insertProducer = std::make_shared<DefaultActorProducer<DummyInsert>>("DummyInsert");
     auto findProducer = std::make_shared<DefaultActorProducer<DummyFind>>("DummyFind");
-    cast.add("DummyInsert", insertProducer);
-    cast.add("DummyFind", findProducer);
 
     YAML::Node config = YAML::Load(R"(
         SchemaVersion: 2018-07-01
@@ -444,7 +441,8 @@ TEST_CASE("Actors Share WorkloadContext State") {
           - Repeat: 10
     )");
 
-    run_actor_helper(config, 20, cast);
+    ActorHelper ah(config, 20, {{"DummyInsert", insertProducer}, {"DummyFind", findProducer}});
+    ah.run();
 
     REQUIRE(WorkloadContext::getActorSharedState<DummyInsert, DummyInsert::InsertCounter>() ==
             10 * 10);

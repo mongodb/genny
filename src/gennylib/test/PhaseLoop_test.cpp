@@ -8,7 +8,7 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <log.hh>
 
-#include <utils.hpp>
+#include <runActorHelper.hpp>
 
 using namespace genny;
 using namespace genny::V1;
@@ -273,11 +273,8 @@ TEST_CASE("Actual Actor Example") {
         )");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        auto cast = Cast{
-            {"Inc", imvProducer},
-        };
-
-        run_actor_helper(config, 1, cast);
+        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ah.run();
 
         REQUIRE(imvProducer->counters ==
                 std::unordered_map<int, int>{
@@ -341,11 +338,10 @@ TEST_CASE("Actual Actor Example") {
               - Operation: Nop
         )");
 
-        Cast cast;
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        cast.add("Inc", imvProducer);
 
-        run_actor_helper(config, 1, cast);
+        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ah.run();
 
         REQUIRE(imvProducer->counters ==
                 std::unordered_map<int, int>{

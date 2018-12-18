@@ -1,16 +1,26 @@
-#include <utils.hpp>
+#include <runActorHelper.hpp>
+#include <thread>
 
+#include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/metrics.hpp>
+#include <vector>
 
-void genny::run_actor_helper(const YAML::Node& config, int token_count, const Cast& cast) {
+namespace genny {
+
+void ActorHelper::run(const ActorHelper::FuncWithContext&& runnerFunc) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
-    orchestrator.addRequiredTokens(token_count);
+    orchestrator.addRequiredTokens(_tokenCount);
 
     metrics::Registry registry;
-    WorkloadContext wl(config, registry, orchestrator, "mongodb://localhost:27017", cast);
+    WorkloadContext wl(
+        _config, registry, orchestrator, "mongodb://localhost:27017", *_cast);
 
+    runnerFunc(wl);
+}
 
+void ActorHelper::_doRunThreaded(const WorkloadContext& wl) {
     std::vector<std::thread> threads;
     std::transform(cbegin(wl.actors()),
                    cend(wl.actors()),
@@ -19,4 +29,5 @@ void genny::run_actor_helper(const YAML::Node& config, int token_count, const Ca
 
     for (auto& thread : threads)
         thread.join();
+}
 }
