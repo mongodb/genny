@@ -13,6 +13,11 @@ ActorHelper::ActorHelper(
     const YAML::Node& config,
     int tokenCount,
     const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer) {
+
+    if (tokenCount <= 0) {
+        throw InvalidConfigurationException("Must add a positive number of tokens");
+    }
+
     _registry = std::make_unique<genny::metrics::Registry>();
 
     _orchestrator = std::make_unique<genny::Orchestrator>(_registry->gauge("PhaseNumber"));

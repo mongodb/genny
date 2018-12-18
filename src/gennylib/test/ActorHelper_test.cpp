@@ -1,37 +1,91 @@
 #include "test.h"
 
-#include <chrono>
+#include <memory.h>
 
 #include <yaml-cpp/yaml.h>
 
-#include <gennylib/conventions.hpp>
+#include <gennylib/ActorProducer.hpp>
+#include <gennylib/Actor.hpp>
+#include <gennylib/context.hpp>
+#include <gennylib/InvalidConfigurationException.hpp>
+#include "log.hh"
 
-using namespace std::chrono;
+#include <ActorHelper.hpp>
+
+using Catch::Matchers::Matches;
 
 TEST_CASE("Actor Helper") {
-    SECTION("Can convert to milliseconds") {
-        REQUIRE(YAML::Load("D: 300")["D"].as<milliseconds>().count() == 300);
-        REQUIRE(YAML::Load("-1").as<milliseconds>().count() == -1);
-        REQUIRE(YAML::Load("0").as<milliseconds>().count() == 0);
+    class DummyActor : public genny::Actor {
+    public:
+        DummyActor(genny::ActorContext& ac) : Actor(ac){};
+
+        void run() override {
+            BOOST_LOG_TRIVIAL(info) << "In the run method of DummyActor";
+        };
+
+        static std::string_view defaultName() {
+            return "DummyActor";
+        }
+    };
+
+    SECTION("Barfs on invalid YAML") {
+        YAML::Node badConfig = YAML::Load("{i-am-json-not-yaml}");
+        auto dummyProducer = std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
+
+        auto test = [&](){genny::ActorHelper ah(badConfig, 1, {{"DummyActor", dummyProducer}});};
+        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key.*i-am-json-not-yaml.*)"));
     }
 
-    SECTION("Barfs on unknown types") {
-        REQUIRE_THROWS(YAML::Load("foo").as<milliseconds>());
-        REQUIRE_THROWS(YAML::Load("[1,2,3]").as<milliseconds>());
-        REQUIRE_THROWS(YAML::Load("[]").as<milliseconds>());
-        REQUIRE_THROWS(YAML::Load("{}").as<milliseconds>());
-        REQUIRE_THROWS(YAML::Load("foo: 1").as<milliseconds>());
+    SECTION("Barfs on invalid thread count (aka token)") {
+        YAML::Node config = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: DummyActor
+)");
+        auto dummyProducer = std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
+
+        auto test = [&](){genny::ActorHelper ah(config, -1, {{"DummyActor", dummyProducer}});};
+        REQUIRE_THROWS_WITH(test(), Matches("Must add a positive number of tokens"));
     }
 
-    SECTION("Can encode") {
-        YAML::Node n;
-        n["Duration"] = milliseconds{30};
-        REQUIRE(n["Duration"].as<milliseconds>().count() == 30);
+    class CtorThrowingActor : public DummyActor {
+    public:
+        CtorThrowingActor(genny::ActorContext& ac) : DummyActor(ac) {
+            throw genny::InvalidConfigurationException("CTOR Barf");
+        };
+    };
+
+    SECTION("Barfs if Actor Ctor barfs") {
+        YAML::Node config = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: DummyActor
+)");
+        auto dummyProducer = std::make_shared<genny::DefaultActorProducer<CtorThrowingActor>>("DummyActor");
+
+        auto test = [&](){genny::ActorHelper ah(config, 1, {{"DummyActor", dummyProducer}});};
+        REQUIRE_THROWS_WITH(test(), Matches("CTOR Barf"));
     }
 
-    // this section goes away once we implement desired support for richer parsing of strings to
-    // duration
-    SECTION("Future convention support") {
-        REQUIRE_THROWS(YAML::Load("1 milliseconds").as<milliseconds>());
+    SECTION("Barfs if Actor runAndVerify() barfs") {
+        YAML::Node config = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: DummyActor
+)");
+        auto dummyProducer =
+            std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
+
+        genny::ActorHelper ah(config, 1, {{"DummyActor", dummyProducer}});
+        auto runFunc = [](const genny::WorkloadContext& wc) {};
+        auto verifyFunc = [](const genny::WorkloadContext& wc) {
+            throw genny::InvalidConfigurationException("RUN Barf");
+        };
+        REQUIRE_THROWS_WITH(ah.runAndVerify(runFunc, verifyFunc), Matches("RUN Barf"));
     }
 }
+
+
