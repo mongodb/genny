@@ -19,7 +19,6 @@ class WorkloadContext;
  */
 class ActorHelper {
 public:
-
     using FuncWithContext = std::function<void(const WorkloadContext&)>;
 
     ActorHelper(const YAML::Node& config,
@@ -27,10 +26,18 @@ public:
                 const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer)
         : _config(config),
           _tokenCount(tokenCount),
-          _cast(std::make_unique<Cast>(castInitializer)) {}
+          _cast(std::make_unique<Cast>(castInitializer)){};
 
+    /**
+     * Run the actors.
+     */
     void run(FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded);
-    void runAndVerify(ActorHelper::FuncWithContext&& runnerFunc, std::function<void()>&& verifyFunc);
+
+    /**
+     *  Run the actors and verify the results using verifyFunc.
+     */
+    void runAndVerify(ActorHelper::FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded,
+                      std::function<void()>&& verifyFunc = []() {});
 
 private:
     const YAML::Node& _config;

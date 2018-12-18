@@ -14,13 +14,13 @@ void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {
     orchestrator.addRequiredTokens(_tokenCount);
 
     metrics::Registry registry;
-    WorkloadContext wl(
-        _config, registry, orchestrator, "mongodb://localhost:27017", *_cast);
+    WorkloadContext wl(_config, registry, orchestrator, "mongodb://localhost:27017", *_cast);
 
     runnerFunc(wl);
 }
 
-void ActorHelper::runAndVerify(ActorHelper::FuncWithContext&& runnerFunc, std::function<void()>&& verifyFunc) {
+void ActorHelper::runAndVerify(ActorHelper::FuncWithContext&& runnerFunc,
+                               std::function<void()>&& verifyFunc) {
     this->run(std::move(runnerFunc));
     verifyFunc();
 }
@@ -35,4 +35,4 @@ void ActorHelper::_doRunThreaded(const WorkloadContext& wl) {
     for (auto& thread : threads)
         thread.join();
 }
-}
+}  // namespace genny

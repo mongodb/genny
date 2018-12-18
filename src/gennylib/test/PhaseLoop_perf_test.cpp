@@ -133,9 +133,7 @@ auto runActors(int threads, long iterations) {
     int64_t actorDur;
 
     ActorHelper ac(config, threads, {{"Increments", incProducer}});
-    ac.run([&actorDur](const WorkloadContext& wc){
-        actorDur = timedRun(wc.actors());
-    });
+    ac.run([&actorDur](const WorkloadContext& wc) { actorDur = timedRun(wc.actors()); });
 
     REQUIRE(IncrementsActor::increments == threads * iterations);
     return actorDur;
