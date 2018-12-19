@@ -18,6 +18,8 @@
 #include <gennylib/context.hpp>
 #include <log.hh>
 
+#include <ActorHelper.hpp>
+
 using namespace genny;
 using namespace genny::V1;
 using namespace std;
@@ -79,7 +81,7 @@ atomic_int IncrementsRunnable::increments = 0;
 using clock = std::chrono::steady_clock;
 
 template <typename Runnables>
-auto timedRun(Runnables&& runnables) {
+int64_t timedRun(Runnables&& runnables) {
     std::vector<std::thread> threads;
     boost::barrier startWait(runnables.size() + 1);
     boost::barrier endWait(runnables.size() + 1);
@@ -115,10 +117,7 @@ auto runRegularThreads(int threads, long iterations) {
 
 auto runActors(int threads, long iterations) {
     IncrementsActor::increments = 0;
-    genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
-    metrics::Registry registry;
-    auto yamlString = boost::format(R"(
+    auto configString = boost::format(R"(
     SchemaVersion: 2018-07-01
     Actors:
     - Type: Increments
@@ -127,17 +126,15 @@ auto runActors(int threads, long iterations) {
       - Repeat: %i
     )") %
         threads % iterations;
-    auto yaml = YAML::Load(yamlString.str());
+    auto config = YAML::Load(configString.str());
 
     auto incProducer = std::make_shared<DefaultActorProducer<IncrementsActor>>("Increments");
-    auto cast = Cast{
-        {"Increments", incProducer},
-    };
 
-    WorkloadContext workloadContext{yaml, registry, o, "mongodb://localhost:27017", cast};
+    int64_t actorDur;
 
-    o.addRequiredTokens(threads);
-    auto actorDur = timedRun(workloadContext.actors());
+    ActorHelper ac(config, threads, {{"Increments", incProducer}});
+    ac.run([&actorDur](const WorkloadContext& wc) { actorDur = timedRun(wc.actors()); });
+
     REQUIRE(IncrementsActor::increments == threads * iterations);
     return actorDur;
 }

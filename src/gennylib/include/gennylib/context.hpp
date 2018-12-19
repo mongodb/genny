@@ -306,7 +306,7 @@ public:
      * each other.
      */
     template <class ActorT, class StateT = typename ActorT::StateT>
-    StateT& getActorSharedState() {
+    static StateT& getActorSharedState() {
         // C++11 function statics are created in a thread-safe manner.
         static auto _state = StateT();
         return _state;
@@ -521,6 +521,11 @@ public:
     auto counter(const std::string& operationName, ActorId id = 0u) const {
         auto name = this->metricsName(operationName, id);
         return this->_workload->_registry->counter(name);
+    }
+
+    auto operation(const std::string& operationName, ActorId id = 0u) const {
+        auto name = this->metricsName(operationName, id);
+        return this->_workload->_registry->operation(name);
     }
 
     auto morePhases() {
