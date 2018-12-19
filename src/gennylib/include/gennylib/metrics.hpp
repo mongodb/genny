@@ -511,7 +511,7 @@ public:
     }
     Operation operation(const std::string& name) {
         auto op = V1::OperationImpl(this->_timers[name + "_timer"],
-                                    this->_counters[name + "-_iters"],
+                                    this->_counters[name + "_iters"],
                                     this->_counters[name + "_docs"],
                                     this->_counters[name + "_bytes"]);
         return Operation{std::move(op)};
