@@ -82,6 +82,17 @@ install(DIRECTORY include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN *.hpp)
 
+# Pull together our utils, header directories, and testing dependencies into one static target
+add_library(gennylib_testutil STATIC
+    test/ActorHelper.cpp
+)
+target_include_directories(gennylib_testutil
+    PUBLIC
+        src
+        test
+)
+target_link_libraries(gennylib_testutil gennylib catch2)
+
 add_executable(test_gennylib
     test/Cast_test.cpp
     test/context_test.cpp
@@ -92,13 +103,10 @@ add_executable(test_gennylib
     test/metrics_test.cpp
     test/orchestrator_test.cpp
     test/document_test.cpp
+    test/ActorHelper_test.cpp
 )
 
-target_include_directories(test_gennylib
-    PRIVATE
-        src
-)
-target_link_libraries(test_gennylib gennylib catch2)
+target_link_libraries(test_gennylib gennylib_testutil)
 
 add_test(
     NAME    test_gennylib
@@ -114,11 +122,7 @@ add_executable(benchmark_gennylib
     test/PhaseLoop_benchmark.cpp
     test/orchestrator_benchmark.cpp
 )
-target_include_directories(benchmark_gennylib
-    PRIVATE
-        src
-)
-target_link_libraries(benchmark_gennylib gennylib catch2)
+target_link_libraries(benchmark_gennylib gennylib_testutil)
 
 add_test(
     NAME    benchmark_gennylib
