@@ -338,14 +338,18 @@ TEST_CASE("Actual Actor Example") {
             Actors:
             - Type: Inc
               Phases:
-              - Operation: Nop
+              - Operation:
+                  OperationName: Nop
               - Repeat: 10
                 Key: 71
-              - Operation: Nop
-              - Operation: Nop
+              - Operation:
+                  OperationName: Nop
+              - Operation:
+                  OperationName: Nop
               - Repeat: 3
                 Key: 93
-              - Operation: Nop
+              - Operation:
+                  OperationName: Nop
         )");
 
         metrics::Registry registry;

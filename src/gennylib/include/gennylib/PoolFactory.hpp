@@ -4,6 +4,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
@@ -40,24 +41,24 @@ public:
 
     std::unique_ptr<mongocxx::pool> makePool() const;
 
-    /** 
+    /**
      * Options of note:
      *  minPoolSize
      *  maxPoolSize
      *  connectTimeoutMS
      *  socketTimeoutMS
-     */ 
-    void setOption(OptionType type, const std::string & option, std::string value);
+     */
+    void setOption(OptionType type, const std::string& option, std::string value);
 
     template <typename ContainerT = std::map<std::string, std::string>>
     void setOptions(OptionType type, ContainerT list) {
-        for (const auto & [ key, value ] : list) {
+        for (const auto& [key, value] : list) {
             setOption(type, key, value);
         }
     }
 
-    void setOptionFromInt(OptionType type, const std::string & option, int32_t value);
-    void setFlag(OptionType type, const std::string & option, bool value = true);
+    void setOptionFromInt(OptionType type, const std::string& option, int32_t value);
+    void setFlag(OptionType type, const std::string& option, bool value = true);
 
     std::optional<std::string_view> getOption(OptionType type, const std::string& option) const;
 
@@ -66,6 +67,6 @@ private:
     std::unique_ptr<Config> _config;
 };
 
-} // namespace genny
+}  // namespace genny
 
-#endif // HEADER_3BB17688_900D_4AFB_B736_C9EC8DA9E33B
+#endif  // HEADER_3BB17688_900D_4AFB_B736_C9EC8DA9E33B
