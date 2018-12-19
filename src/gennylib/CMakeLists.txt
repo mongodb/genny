@@ -2,7 +2,7 @@
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(gennylib VERSION 0.0.1 LANGUAGES CXX)
 
-# Pacify the CLion
+#Pacify the CLion
 file(GLOB_RECURSE HEADERS_FOR_CLION
      RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
      CONFIGURE_DEPENDS
@@ -92,23 +92,14 @@ add_executable(test_gennylib
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
-    test/PhaseLoop_perf_test.cpp
     test/document_test.cpp
-    test/orchestrator_perf_test.cpp
-    ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
 )
 
 target_include_directories(test_gennylib
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
     PRIVATE
         src
-        ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
-target_link_libraries(test_gennylib
-    PUBLIC ${Boost_LIBRARIES} gennylib
-)
+target_link_libraries(test_gennylib gennylib catch2)
 
 add_test(
     NAME    test_gennylib
@@ -118,4 +109,24 @@ add_test(
         --rng-seed 12345
         --success
         --out test_gennylib.junit.xml
+)
+
+add_executable(benchmark_gennylib
+    test/PhaseLoop_perf_test.cpp
+    test/orchestrator_perf_test.cpp
+)
+target_include_directories(benchmark_gennylib
+    PRIVATE
+        src
+)
+target_link_libraries(benchmark_gennylib gennylib catch2)
+
+add_test(
+    NAME    benchmark_gennylib
+    COMMAND benchmark_gennylib
+        -r junit
+        -d yes
+        --rng-seed 12345
+        --success
+        --out benchmark_gennylib.junit.xml
 )
