@@ -34,8 +34,10 @@ If you get boost errors:
 
 ```sh
 brew remove boost
-brew install boost --build-from-source \
-    --include-test --with-icu4c --without-static
+brew install boost      \
+    --build-from-source \
+    --include-test      \
+    --with-icu4c
 ```
 
 Other errors, run `brew doctor`.
