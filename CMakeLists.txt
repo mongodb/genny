@@ -13,8 +13,19 @@ include(GNUInstallDirs)
 
 find_package(Threads REQUIRED)
 
+
+
 # <Boost>
-set(Boost_USE_STATIC_LIBS ON)
+option(USE_STATIC_BOOST
+       "Use boost static libaries when compiling genny. \
+        This also requires boost static libraries to have position-independent code."
+       OFF)
+
+set(Boost_USE_STATIC_LIBS ${USE_STATIC_BOOST})
+if(NOT ${USE_STATIC_BOOST})
+  add_definitions(-DBOOST_ALL_DYN_LINK)
+endif()
+
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(
