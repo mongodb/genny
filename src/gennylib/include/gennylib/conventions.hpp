@@ -5,8 +5,11 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace YAML {
+#include <gennylib/config/ExecutionStrategy.hpp>
 
+using namespace genny::config;
+
+namespace YAML {
 
 template <>
 struct convert<std::chrono::milliseconds> {
@@ -24,6 +27,30 @@ struct convert<std::chrono::milliseconds> {
         rhs = std::chrono::milliseconds{node.as<int>()};
         return true;
     }
+};
+
+template <>
+struct convert<ExecutionStrategy> {
+    static Node encode(const ExecutionStrategy& rhs) {
+        Node node;
+        node["Retries"] = rhs.maxRetries;
+        return node;
+    }
+
+    static bool decode(const Node& node, ExecutionStrategy& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+
+        auto yamlRetries = node["Retries"];
+        if (yamlRetries.IsNull()) {
+            return false;
+        }
+
+        rhs.maxRetries = yamlRetries.as<size_t>();
+        return true;
+    }
+
 };
 
 }  // namespace YAML

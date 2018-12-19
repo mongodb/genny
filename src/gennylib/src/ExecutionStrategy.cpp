@@ -5,10 +5,12 @@
 #include <gennylib/context.hpp>
 
 namespace genny {
-ExecutionStrategy::ExecutionStrategy(ActorContext& context, const std::string& metricsPrefix)
-    : _errorGauge{context.gauge(metricsPrefix + ".errors")},
-      _opsGauge{context.gauge(metricsPrefix + ".ops")},
-      _timer{context.timer(metricsPrefix + ".op-time")} {}
+ExecutionStrategy::ExecutionStrategy(ActorContext& context,
+                                     ActorId id,
+                                     const std::string& operation)
+    : _errorGauge{context.gauge(operation + ".errors", id)},
+      _opsGauge{context.gauge(operation + ".ops", id)},
+      _timer{context.timer(operation + ".op-time", id)} {}
 
 ExecutionStrategy::~ExecutionStrategy() {
     recordMetrics();

@@ -22,28 +22,46 @@ struct InsertRemove::PhaseConfig {
           collection{db[collection_name]},
           myDoc(bsoncxx::builder::stream::document{} << "_id" << id
                                                      << bsoncxx::builder::stream::finalize) {}
+
     PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client, int id)
         : PhaseConfig((*client)[context.get<std::string>("Database")],
                       context.get<std::string>("Collection"),
                       rng,
-                      id) {}
+                      id) {
+        auto maybeInsertOptions =
+            context.get<config::ExecutionStrategy, false>("InsertStage", "ExecutionStrategy");
+        if (maybeInsertOptions)
+            insertOptions = *maybeInsertOptions;
+
+        auto maybeRemoveOptions =
+            context.get<config::ExecutionStrategy, false>("RemoveStage", "ExecutionStrategy");
+        if (maybeRemoveOptions)
+            removeOptions = *maybeRemoveOptions;
+    }
+
     mongocxx::database database;
     mongocxx::collection collection;
     bsoncxx::document::value myDoc;
+    ExecutionStrategy::RunOptions insertOptions;
+    ExecutionStrategy::RunOptions removeOptions;
 };
 
 void InsertRemove::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
-            {
-                auto op = _insertTimer.raii();
-                config->collection.insert_one(config->myDoc.view());
-            }
-            {
-                auto op = _removeTimer.raii();
-                config->collection.delete_many(config->myDoc.view());
-            }
+            _insertStrategy.run(
+                [&]() {
+                    // First we insert
+                    config->collection.insert_one(config->myDoc.view());
+                },
+                config->insertOptions);
+            _removeStrategy.run(
+                [&]() {
+                    // Then we remove
+                    config->collection.delete_many(config->myDoc.view());
+                },
+                config->removeOptions);
         }
     }
 }
@@ -51,8 +69,8 @@ void InsertRemove::run() {
 InsertRemove::InsertRemove(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _insertTimer{context.timer("insert", InsertRemove::id())},
-      _removeTimer{context.timer("remove", InsertRemove::id())},
+      _insertStrategy{context, InsertRemove::id(), "insert"},
+      _removeStrategy{context, InsertRemove::id(), "remove"},
       _client{std::move(context.client())},
       _loop{context, _rng, _client, InsertRemove::id()} {}
 
