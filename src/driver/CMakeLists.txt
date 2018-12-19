@@ -33,6 +33,6 @@ add_test(
         -d yes
         --rng-seed 12345
         --success
-        --out test_gennylib.junit.xml
+        --out test_driver.junit.xml
 )
 
