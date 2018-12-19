@@ -84,6 +84,7 @@ install(DIRECTORY include/
         FILES_MATCHING PATTERN *.hpp)
 
 add_executable(test_gennylib
+    # Test case files.
     test/Cast_test.cpp
     test/context_test.cpp
     test/conventions_test.cpp
@@ -93,11 +94,16 @@ add_executable(test_gennylib
     test/metrics_test.cpp
     test/orchestrator_test.cpp
     test/document_test.cpp
+    test/ActorHelper_test.cpp
+
+    # Helper files.
+    test/ActorHelper.cpp
 )
 
 target_include_directories(test_gennylib
     PRIVATE
         src
+        test
 )
 target_link_libraries(test_gennylib gennylib catch2)
 
