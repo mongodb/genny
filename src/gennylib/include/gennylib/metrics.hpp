@@ -221,7 +221,7 @@ private:
  *     while(true) {
  *       requests.incr();
  *     }
- * </pr>
+ * </pre>
  */
 class Counter {
 
@@ -246,11 +246,11 @@ private:
  * It is defined by each metric what the value is interpreted to be
  * between calls to {@code set}. E.g.
  *
- * <pre>
- *     sessions.set(3);
- *     // do something
- *     sessions.set(5);
- * </pre>
+ * ```cpp
+ * sessions.set(3);
+ * // do something
+ * sessions.set(5);
+ * ```
  *
  * How to determine the value for the "do something" time-period
  * needs to be interpreted for each metric individually.
