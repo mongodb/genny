@@ -114,11 +114,5 @@ link_libraries(
     ${LIBMONGOCXX_LIBRARIES}
 )
 
-add_library(catch2 OBJECT ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp)
-target_include_directories(catch2
-    PUBLIC
-        ${THIRD_PARTY_SOURCE_DIR}/catch2/include
-)
-
 enable_testing()
 add_subdirectory(src)
