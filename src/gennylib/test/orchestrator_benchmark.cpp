@@ -12,7 +12,7 @@ using namespace std;
 using namespace std::chrono;
 
 
-TEST_CASE("Orchestrator Perf", "[perf]") {
+TEST_CASE("Orchestrator Perf", "[benchmark]") {
     const auto dur = milliseconds{200};
 
     genny::metrics::Registry metrics;

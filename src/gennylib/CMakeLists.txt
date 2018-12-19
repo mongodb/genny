@@ -112,8 +112,8 @@ add_test(
 )
 
 add_executable(benchmark_gennylib
-    test/PhaseLoop_perf_test.cpp
-    test/orchestrator_perf_test.cpp
+    test/PhaseLoop_benchmark.cpp
+    test/orchestrator_benchmark.cpp
 )
 target_include_directories(benchmark_gennylib
     PRIVATE
