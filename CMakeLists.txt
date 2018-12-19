@@ -17,7 +17,8 @@ find_package(Threads REQUIRED)
 
 # <Boost>
 option(USE_STATIC_BOOST
-       "Use boost static libaries when compiling genny. This also requires the use of -fPIC."
+       "Use boost static libaries when compiling genny. \
+        This also requires boost static libraries to have position-independent code."
        OFF)
 
 set(Boost_USE_STATIC_LIBS ${USE_STATIC_BOOST})
