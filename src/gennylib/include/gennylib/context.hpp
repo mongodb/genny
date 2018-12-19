@@ -306,7 +306,7 @@ public:
      * each other.
      */
     template <class ActorT, class StateT = typename ActorT::StateT>
-    StateT& getActorSharedState() {
+    static StateT& getActorSharedState() {
         // C++11 function statics are created in a thread-safe manner.
         static auto _state = StateT();
         return _state;

@@ -30,7 +30,7 @@ void HelloWorld::run() {
 HelloWorld::HelloWorld(genny::ActorContext& context)
     : Actor(context),
       _operation{context.operation("op", HelloWorld::id())},
-      _hwCounter{context.workload().getActorSharedState<HelloWorld, HelloWorldCounter>()},
+      _hwCounter{WorkloadContext::getActorSharedState<HelloWorld, HelloWorldCounter>()},
       _loop{context} {}
 
 namespace {

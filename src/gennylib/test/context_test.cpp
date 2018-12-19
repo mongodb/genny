@@ -14,6 +14,7 @@
 #include <gennylib/metrics.hpp>
 #include <log.hh>
 
+#include <ActorHelper.hpp>
 
 using namespace genny;
 using namespace std;
@@ -376,8 +377,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
         DummyInsert(ActorContext& actorContext)
             : Actor(actorContext),
               _loop{actorContext},
-              _iCounter{actorContext.workload().getActorSharedState<DummyInsert, InsertCounter>()} {
-        }
+              _iCounter{WorkloadContext::getActorSharedState<DummyInsert, InsertCounter>()} {}
 
         void run() override {
             for (auto&& [_, cfg] : _loop) {
@@ -402,8 +402,9 @@ TEST_CASE("Actors Share WorkloadContext State") {
         DummyFind(ActorContext& actorContext)
             : Actor(actorContext),
               _loop{actorContext},
-              _iCounter{actorContext.workload()
-                            .getActorSharedState<DummyInsert, DummyInsert::InsertCounter>()} {}
+              _iCounter{
+                  WorkloadContext::getActorSharedState<DummyInsert, DummyInsert::InsertCounter>()} {
+        }
 
         void run() override {
             for (auto&& [_, cfg] : _loop) {
@@ -422,11 +423,8 @@ TEST_CASE("Actors Share WorkloadContext State") {
         DummyInsert::InsertCounter& _iCounter;
     };
 
-    Cast cast;
     auto insertProducer = std::make_shared<DefaultActorProducer<DummyInsert>>("DummyInsert");
     auto findProducer = std::make_shared<DefaultActorProducer<DummyFind>>("DummyFind");
-    cast.add("DummyInsert", insertProducer);
-    cast.add("DummyFind", findProducer);
 
     YAML::Node config = YAML::Load(R"(
         SchemaVersion: 2018-07-01
@@ -443,22 +441,9 @@ TEST_CASE("Actors Share WorkloadContext State") {
           - Repeat: 10
     )");
 
-    genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
-    orchestrator.addRequiredTokens(20);
+    ActorHelper ah(config, 20, {{"DummyInsert", insertProducer}, {"DummyFind", findProducer}});
+    ah.run();
 
-    metrics::Registry registry;
-    WorkloadContext wl{config, registry, orchestrator, "mongodb://localhost:27017", cast};
-
-
-    std::vector<std::thread> threads;
-    std::transform(cbegin(wl.actors()),
-                   cend(wl.actors()),
-                   std::back_inserter(threads),
-                   [&](const auto& actor) { return std::thread{[&]() { actor->run(); }}; });
-
-    for (auto& thread : threads)
-        thread.join();
-
-    REQUIRE(wl.getActorSharedState<DummyInsert, DummyInsert::InsertCounter>() == 10 * 10);
+    REQUIRE(WorkloadContext::getActorSharedState<DummyInsert, DummyInsert::InsertCounter>() ==
+            10 * 10);
 }
