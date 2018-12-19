@@ -89,6 +89,8 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 # These libraries are almost ubiquitously required in genny
+# The AFTER tag means that our headers are considered before headers in the same folder as these
+# dependencies
 include_directories(AFTER
     ${Boost_INCLUDE_DIR}
     ${YAML_CPP_INCLUDE_DIR}
@@ -101,6 +103,8 @@ link_libraries(
     ${LIBMONGOCXX_LIBRARIES}
 )
 
+# For more info on object libraries,
+# see https://cmake.org/cmake/help/v3.5/command/add_library.html#object-libraries
 add_library(catch2 OBJECT ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp)
 target_include_directories(catch2
     PUBLIC
