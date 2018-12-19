@@ -19,14 +19,12 @@ install(TARGETS  genny
 # Define our test for the driver
 add_executable(test_driver
     test/Driver_test.cpp
-    ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
 )
 target_include_directories(test_driver
     PRIVATE
         src
-        ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
-target_link_libraries(test_driver driver)
+target_link_libraries(test_driver driver catch2)
 
 add_test(
     NAME    test_driver
