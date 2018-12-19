@@ -215,8 +215,8 @@ public:
           _bytes{std::addressof(bytes)} {}
 
     void report(const time_point& started) {
-        this->_iters->reportValue(1);
         this->_timer->report(started);
+        this->_iters->reportValue(1);
     }
 
     void setBytes(const count_type& size) {
@@ -233,35 +233,6 @@ private:
     CounterImpl* _iters;
     CounterImpl* _docs;
     CounterImpl* _bytes;
-};
-
-
-class OperationContextImpl {
-public:
-    explicit OperationContextImpl(OperationImpl& op)
-        : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
-
-    ~OperationContextImpl() {
-        if (this->_op != nullptr) {
-            this->report();
-        };
-    }
-
-    void report() {
-        this->_op->report(_started);
-    }
-
-    void setBytes(const count_type& size) {
-        this->_op->setBytes(size);
-    }
-
-    void setOps(const count_type& size) {
-        this->_op->setOps(size);
-    }
-
-private:
-    OperationImpl* _op;
-    const time_point _started;
 };
 
 
@@ -461,23 +432,28 @@ private:
 class OperationContext {
 
 public:
-    explicit constexpr OperationContext(V1::OperationContextImpl& ctx)
-        : _ctx{std::addressof(ctx)} {}
+    OperationContext(V1::OperationImpl& op)
+        : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
 
-    void report() {
-        this->_ctx->report();
+    ~OperationContext() {
+        this->report();
     }
 
     void setBytes(const count_type& size) {
-        this->_ctx->setBytes(size);
+        this->_op->setBytes(size);
     }
 
     void setOps(const count_type& size) {
-        this->_ctx->setOps(size);
+        this->_op->setOps(size);
     }
 
 private:
-    V1::OperationContextImpl* _ctx;
+    void report() {
+        this->_op->report(_started);
+    }
+
+    V1::OperationImpl* _op;
+    const time_point _started;
 };
 
 
@@ -487,8 +463,7 @@ public:
     explicit Operation(V1::OperationImpl& op) : _op{std::addressof(op)} {}
 
     OperationContext start() {
-        auto ctx = V1::OperationContextImpl(*this->_op);
-        return OperationContext{ctx};
+        return OperationContext(*this->_op);
     }
 
 private:
@@ -539,6 +514,7 @@ public:
                                     this->_counters[name + "-_iters"],
                                     this->_counters[name + "_docs"],
                                     this->_counters[name + "_bytes"]);
+
         return Operation{op};
     }
 
