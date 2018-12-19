@@ -460,14 +460,14 @@ private:
 class Operation {
 
 public:
-    explicit Operation(V1::OperationImpl& op) : _op{std::addressof(op)} {}
+    explicit Operation(V1::OperationImpl op) : _op{op} {}
 
     OperationContext start() {
-        return OperationContext(*this->_op);
+        return OperationContext(this->_op);
     }
 
 private:
-    V1::OperationImpl* _op;
+    V1::OperationImpl _op;
 };
 
 
@@ -514,8 +514,7 @@ public:
                                     this->_counters[name + "-_iters"],
                                     this->_counters[name + "_docs"],
                                     this->_counters[name + "_bytes"]);
-
-        return Operation{op};
+        return Operation{std::move(op)};
     }
 
     // passkey:
