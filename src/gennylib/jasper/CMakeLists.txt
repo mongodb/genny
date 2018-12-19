@@ -6,8 +6,11 @@ add_library(jasperlib STATIC
     jasper.grpc.pb.cc
 )
 
+find_library(GRPCXX grpc++)
+find_library(PROTOBUF protobuf)
+
 target_link_libraries(jasperlib
     PRIVATE
-        grpc++
-        protobuf
+        ${GRPCXX}
+        ${PROTOBUF}
 )
