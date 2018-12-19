@@ -8,7 +8,7 @@ PROJECT_NAME           = "Genny"
 PROJECT_NUMBER         =
 PROJECT_BRIEF          = "Genny is a workload generator with a soft-spot for MongoDB"
 PROJECT_LOGO           =
-OUTPUT_DIRECTORY       =
+OUTPUT_DIRECTORY       = build/docs
 CREATE_SUBDIRS         = YES
 ALLOW_UNICODE_NAMES    = YES
 OUTPUT_LANGUAGE        = English
@@ -158,8 +158,8 @@ FILE_PATTERNS          = *.c \
                          *.vhdl \
                          *.ucf \
                          *.qsf
-RECURSIVE              = NO
-EXCLUDE                =
+RECURSIVE              = YES
+EXCLUDE                = mwg src/python src/third_party
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       =
 EXCLUDE_SYMBOLS        =
