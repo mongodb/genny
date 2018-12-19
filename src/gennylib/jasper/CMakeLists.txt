@@ -1,3 +1,5 @@
+project(jasperlib VERSION 0.0.1 LANGUAGES CXX)
+
 add_library(jasperlib STATIC
     jasper.pb.h
     jasper.pb.cc
@@ -8,6 +10,5 @@ add_library(jasperlib STATIC
 
 target_link_libraries(jasperlib
     PRIVATE
-        grpc++
-        protobuf
+        gRPC::grpc++
 )

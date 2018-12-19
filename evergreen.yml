@@ -135,29 +135,10 @@ functions:
   # (URL valid as of 11/2018)
   ##
   f_build_grpc:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      working_dir: src/build
-      script: |
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        rm -rf * # Remove grpc and any cmake config copied up from runner
-        git clone --recurse-submodules https://github.com/grpc/grpc.git
-
-        pushd grpc
-        git checkout b79462f186cc22550bc8d53a00ae751f50d194f5
-
-        # Work around https://github.com/grpc/grpc/issues/16675 by checking out a newer commit.
-        pushd third_party/boringssl
-        git checkout 9edbc7ff9f56dff801a49f5ecb15ee06718b995c
-        popd
-
-        mkdir cmake-build
-        pushd cmake-build
-        cmake ..
-        make
+      working_dir: src
+      command: /bin/bash make-grpc.sh
 
   ##
   # Compile the project in src/build.
@@ -173,11 +154,6 @@ functions:
         set -o errexit
         set -o pipefail
         set -o nounset
-
-        # Add paths to gRPC and protobuf.
-        cwd=$(pwd)
-        export LIBRARY_PATH="$cwd/grpc/cmake-build/:$cwd/grpc/cmake-build/third_party/protobuf"
-        export CPLUS_INCLUDE_PATH="$cwd/grpc/include:$cwd/grpc/third_party/protobuf/src"
 
         cmake -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" ..
         make

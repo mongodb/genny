@@ -41,6 +41,8 @@ target_include_directories(gennylib_generators
         src/value_generators
 )
 
+add_subdirectory(jasper)
+
 # Additional utilities and core concepts
 # Note that this contains both what you need to compile Actors and what you need to compile a Driver
 add_library(gennylib SHARED
@@ -60,8 +62,6 @@ target_include_directories(gennylib
     PRIVATE
         src
 )
-
-add_subdirectory(jasper)
 
 # Link in the sublibraries into the main library
 target_link_libraries(gennylib

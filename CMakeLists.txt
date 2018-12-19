@@ -13,8 +13,6 @@ include(GNUInstallDirs)
 
 find_package(Threads REQUIRED)
 
-
-
 # <Boost>
 option(USE_STATIC_BOOST
        "Use boost static libaries when compiling genny. \
@@ -50,6 +48,12 @@ find_package(yaml-cpp REQUIRED)
 # <Mongo Driver>
 find_package(libmongocxx REQUIRED)
 # </Mongo Driver>
+
+# <gRPC>
+# Add our third_party path to the potential places to find gRPCConfig.cmake
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/third_party/grpc")
+find_package(gRPC REQUIRED)
+# </gRPC>
 
 # <Misc 3rd Party Integrations>
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
