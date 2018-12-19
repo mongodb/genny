@@ -1,0 +1,43 @@
+SchemaVersion: 2018-07-01
+
+Actors:
+- Name: ServerStatusInsertFind
+  Type: RunCommand
+  Threads: 1
+  Database: test
+  Phases:
+  - Repeat: 10
+    Operations:
+    - MetricsName: ServerStatus
+      OperationName: RunCommand
+      OperationCommand:
+        serverStatus: 1
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: myCollection
+        documents: [{name: {$randomstring: {length: {$randomint: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
+    - MetricsName: Find
+      OperationCommand:
+        find: restaurants
+        filter: { rating: { $gte: 9 }, cuisine: italian }
+        projection: { name: 1, rating: 1, address: 1 }
+        sort: { name: 1 }
+        limit: 5
+      OperationName: RunCommand
+- Name: CurrentOp
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 5
+    Operation:
+      MetricsName: CurrentOp
+      OperationName: RunCommand
+      OperationCommand:
+        currentOp: 1
+- Name: NoOp
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 10
+    Operation:
+      OperationName: NoOp
