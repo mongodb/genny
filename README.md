@@ -19,8 +19,10 @@ brew install icu4c
 brew install mongo-cxx-driver
 brew install yaml-cpp
 brew install grpc
-brew install boost --build-from-source \
-    --include-test --with-icu4c --without-static
+brew install boost      \
+    --build-from-source \
+    --include-test      \
+    --with-icu4c
 
 cd build
 cmake ..
