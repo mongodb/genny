@@ -21,8 +21,7 @@ public:
     void run() override;
 
 private:
-    metrics::Timer _outputTimer;
-    metrics::Counter _operations;
+    metrics::Operation _operation;
 
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
