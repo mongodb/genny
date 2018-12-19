@@ -23,7 +23,7 @@ class ActorContext;
  */
 class ExecutionStrategy {
 public:
-    struct Result{
+    struct Result {
         bool wasSuccessful = false;
         size_t numAttempts = 0;
     };
@@ -31,11 +31,11 @@ public:
     using RunOptions = config::ExecutionStrategy;
 
 public:
-    ExecutionStrategy(ActorContext & context, ActorId id, const std::string & operation);
+    ExecutionStrategy(ActorContext& context, ActorId id, const std::string& operation);
     ~ExecutionStrategy();
 
-    template<typename F>
-    void run(F&& fun, const RunOptions & options = RunOptions{}){
+    template <typename F>
+    void run(F&& fun, const RunOptions& options = RunOptions{}) {
         Result result;
 
         for (; result.numAttempts <= options.maxRetries; ++result.numAttempts) {
@@ -54,18 +54,22 @@ public:
 
         _finishRun(options, std::move(result));
     }
-    
+
     // This function takes the existing counter metrics recorded in this class, and adds them into
     // the metrics namespace timeseries. This may be desired in specific edge cases or at the end of
     // each phase. This will always be called when the ExecutionStrategy is dtor'd.
     void recordMetrics();
 
-    size_t errors() const { return _errors; }
-    const Result & lastResult() const { return _lastResult; }
+    size_t errors() const {
+        return _errors;
+    }
+    const Result& lastResult() const {
+        return _lastResult;
+    }
 
 private:
-    void _recordError(const mongocxx::operation_exception & e);
-    void _finishRun(const RunOptions & options, Result result);
+    void _recordError(const mongocxx::operation_exception& e);
+    void _finishRun(const RunOptions& options, Result result);
 
     Result _lastResult;
 
@@ -80,6 +84,6 @@ private:
     // The time series of execution function starts and _successful_ stops.
     metrics::Timer _timer;
 };
-} // namespace genny
+}  // namespace genny
 
-#endif // HEADER_0BE8D22D_E93B_48FE_BC5A_CFFF2E05D861
+#endif  // HEADER_0BE8D22D_E93B_48FE_BC5A_CFFF2E05D861

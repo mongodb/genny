@@ -26,11 +26,11 @@ void ExecutionStrategy::_recordError(const mongocxx::operation_exception& e) {
     _errorGauge.set(++_errors);
 }
 
-void ExecutionStrategy::_finishRun(const RunOptions & options, Result result){
+void ExecutionStrategy::_finishRun(const RunOptions& options, Result result) {
     if (!result.wasSuccessful) {
         BOOST_LOG_TRIVIAL(error) << "Operation failed after " << options.maxRetries << " attempts.";
     }
 
     _lastResult = std::move(result);
 }
-} // namespace genny
+}  // namespace genny
