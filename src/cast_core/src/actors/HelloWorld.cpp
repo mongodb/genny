@@ -17,18 +17,19 @@ struct HelloWorld::PhaseConfig {
 void HelloWorld::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto _ : config) {
-            auto op = this->_outputTimer.raii();
+            auto ctx = this->_operation.start();
             BOOST_LOG_TRIVIAL(info) << config->message;
             ++_hwCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _hwCounter;
+            ctx.setOps(1);
+            ctx.setBytes(config->message.size());
         }
     }
 }
 
 HelloWorld::HelloWorld(genny::ActorContext& context)
     : Actor(context),
-      _outputTimer{context.timer("output", HelloWorld::id())},
-      _operations{context.counter("operations", HelloWorld::id())},
+      _operation{context.operation("op", HelloWorld::id())},
       _hwCounter{context.workload().getActorSharedState<HelloWorld, HelloWorldCounter>()},
       _loop{context} {}
 

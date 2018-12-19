@@ -1,6 +1,7 @@
 #ifndef HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
+
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -24,7 +25,7 @@ class Reporter;
  */
 using clock = std::chrono::steady_clock;
 using count_type = long long;
-using gauged_type = double;
+using gauged_type = long long;
 
 static_assert(clock::is_steady, "clock must be steady");
 
@@ -203,6 +204,67 @@ private:
     TimeSeries<period> _timeSeries;
 };
 
+
+class OperationImpl {
+
+public:
+    OperationImpl(TimerImpl& timer, CounterImpl& iters, CounterImpl& docs, CounterImpl& bytes)
+        : _timer{std::addressof(timer)},
+          _iters{std::addressof(iters)},
+          _docs{std::addressof(docs)},
+          _bytes{std::addressof(bytes)} {}
+
+    void report(const time_point& started) {
+        this->_iters->reportValue(1);
+        this->_timer->report(started);
+    }
+
+    void setBytes(const count_type& size) {
+        this->_bytes->reportValue(size);
+    }
+
+    void setOps(const count_type& size) {
+        this->_docs->reportValue(size);
+    }
+
+
+private:
+    TimerImpl* _timer;
+    CounterImpl* _iters;
+    CounterImpl* _docs;
+    CounterImpl* _bytes;
+};
+
+
+class OperationContextImpl {
+public:
+    explicit OperationContextImpl(OperationImpl& op)
+        : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
+
+    ~OperationContextImpl() {
+        if (this->_op != nullptr) {
+            this->report();
+        };
+    }
+
+    void report() {
+        this->_op->report(_started);
+    }
+
+    void setBytes(const count_type& size) {
+        this->_op->setBytes(size);
+    }
+
+    void setOps(const count_type& size) {
+        this->_op->setOps(size);
+    }
+
+private:
+    OperationImpl* _op;
+    const time_point _started;
+};
+
+
 }  // namespace V1
 
 
@@ -367,12 +429,12 @@ public:
     /**
      * @return a {@code Stopwatch} instance that must be manually reported via {@code .report()}.
      *         When calling .report(), the amount of time elapsed from the calling of .start() to
-     *         to calling .report() is reported to the metrics back-end. Can call .report() multiple
+     *         calling .report() is reported to the metrics back-end. Can call .report() multiple
      *         times. Use .start() when you want to record successful outcomes of some specific
      *         code-path. If you never call .report(), no metrics data will be recorded.
      *
-     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names. They
-     *         are simply two APIs for reporting timing data.
+     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names.
+     *         They are simply two APIs for reporting timing data.
      */
     [[nodiscard]] Stopwatch start() const {
         return Stopwatch{*_timer};
@@ -381,7 +443,7 @@ public:
     /**
      * @return an {@code RaiiStopwatch} that will automatically report the time elapsed since it was
      *         constructed in its dtor. Call .raii() at the start of your method or scope to record
-     *         how long that method or scope takes even in the case of exceptions or early-rueturns.
+     *         how long that method or scope takes even in the case of exceptions or early-returns.
      *         You can also manually call .report() multiple times, but it's unclear if this is
      *         useful.
      *
@@ -394,6 +456,43 @@ public:
 
 private:
     V1::TimerImpl* _timer;
+};
+
+class OperationContext {
+
+public:
+    explicit constexpr OperationContext(V1::OperationContextImpl& ctx)
+        : _ctx{std::addressof(ctx)} {}
+
+    void report() {
+        this->_ctx->report();
+    }
+
+    void setBytes(const count_type& size) {
+        this->_ctx->setBytes(size);
+    }
+
+    void setOps(const count_type& size) {
+        this->_ctx->setOps(size);
+    }
+
+private:
+    V1::OperationContextImpl* _ctx;
+};
+
+
+class Operation {
+
+public:
+    explicit Operation(V1::OperationImpl& op) : _op{std::addressof(op)} {}
+
+    OperationContext start() {
+        auto ctx = V1::OperationContextImpl(*this->_op);
+        return OperationContext{ctx};
+    }
+
+private:
+    V1::OperationImpl* _op;
 };
 
 
@@ -434,6 +533,13 @@ public:
     }
     Gauge gauge(const std::string& name) {
         return Gauge{this->_gauges[name]};
+    }
+    Operation operation(const std::string& name) {
+        auto op = V1::OperationImpl(this->_timers[name + "_timer"],
+                                    this->_counters[name + "-_iters"],
+                                    this->_counters[name + "_docs"],
+                                    this->_counters[name + "_bytes"]);
+        return Operation{op};
     }
 
     // passkey:

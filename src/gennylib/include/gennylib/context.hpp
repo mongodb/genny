@@ -523,6 +523,11 @@ public:
         return this->_workload->_registry->counter(name);
     }
 
+    auto operation(const std::string& operationName, ActorId id = 0u) const {
+        auto name = this->metricsName(operationName, id);
+        return this->_workload->_registry->operation(name);
+    }
+
     auto morePhases() {
         return this->_workload->_orchestrator->morePhases();
     }
