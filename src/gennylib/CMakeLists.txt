@@ -68,11 +68,12 @@ target_link_libraries(gennylib
     PUBLIC
         gennylib_cast
         gennylib_generators
+    PRIVATE
         jasperlib
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib gennylib_cast gennylib_generators jasperlib
+install(TARGETS  gennylib gennylib_cast gennylib_generators
         EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
