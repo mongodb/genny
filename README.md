@@ -18,6 +18,7 @@ brew install cmake
 brew install icu4c
 brew install mongo-cxx-driver
 brew install grpc
+brew install yaml-cpp
 brew install boost      \
     --build-from-source \
     --include-test      \
@@ -59,13 +60,14 @@ and restarting your shell.
 TODO: TIG-1263 This is kind of a hack; using built-in package-location
 mechanisms would avoid having to have OS-specific hacks like this.
 
-**Linux Distrubtions**
+**Linux Distributions**
 
 Have installations of non-vendored dependent packages in your system,
 using the package manger. Generally this is:
 
 - cmake
 - boost
+- yaml-cpp
 - mongo-cxx-driver
 - grpc
 - icu
