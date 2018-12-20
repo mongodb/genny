@@ -28,6 +28,7 @@ add_library(gennylib_cast STATIC
     src/Actor.cpp
     src/ActorProducer.cpp
     src/Cast.cpp
+    src/ExecutionStrategy.cpp
 )
 target_link_libraries(gennylib_cast gennylib_core)
 
@@ -98,14 +99,18 @@ add_executable(test_gennylib
     test/Cast_test.cpp
     test/context_test.cpp
     test/conventions_test.cpp
+    test/ExecutionStrategy_test.cpp
     test/PoolFactory_test.cpp
     test/PhaseLoop_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
     test/document_test.cpp
+
+    # Test the helper
     test/ActorHelper_test.cpp
 )
+target_link_libraries(test_gennylib gennylib_testutil)
 
 target_link_libraries(test_gennylib gennylib_testutil)
 
