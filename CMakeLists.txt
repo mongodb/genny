@@ -100,7 +100,9 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 # These libraries are almost ubiquitously required in genny
-include_directories(
+# The AFTER tag means that our headers are considered before headers in the same folder as these
+# dependencies
+include_directories(AFTER
     ${Boost_INCLUDE_DIR}
     ${YAML_CPP_INCLUDE_DIR}
     ${LIBMONGOCXX_INCLUDE_DIRS}
