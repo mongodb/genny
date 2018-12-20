@@ -1,0 +1,68 @@
+SchemaVersion: 2018-07-01
+Pool:
+    QueryOptions:
+        maxPoolSize: 1000
+        socketTimeoutMS: 5000
+        connectTimeoutMS: 5000
+Actors:
+  - Name: StepdownCommand
+    Type: AdminCommand
+    Threads: 1
+    ExecutionStrategy:
+        ThrowOnFailure: true
+    Phases:
+      - Operation: 
+            OperationName: Nop
+      - Operation: 
+            OperationName: Nop
+      - Phase: 2
+        Operation:    
+            MetricsName: "Stepdown"
+            OperationName: AdminCommand
+            OperationCommand:
+                replSetStepDown: 60
+      - Operation: 
+            OperationName: Nop
+  - Name: PrimaryRequiredRead
+    Type: RunCommand
+    Threads: 100
+    ExecutionStrategy:
+        Retries: 3
+    Database: test
+    Phases:
+      - Operation: 
+            OperationName: Nop
+      - Phase: 1
+        Duration: 5000
+        Operation: &find_one 
+            MetricsName: "Find"
+            OperationName: RunCommand
+            OperationPreDelayMS: 10
+            OperationCommand:
+                find: Collection0
+                readConcern: { level: local }
+      - Phase: 2
+        Duration: 1000
+        Operation: *find_one
+      - Phase: 3
+        Duration: 1000
+        Operation: *find_one
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Database: test
+    CollectionCount: 1
+    DocumentCount: 100
+    BatchSize: 100
+    Document:
+      t: {$randomint: {min: 0, max: 10}}
+    Indexes:
+      - keys: {t: 1}
+    Phases:
+      - Phase: 0 # Only run on the first phase
+      - Operation: 
+            OperationName: Nop
+      - Operation: 
+            OperationName: Nop
+      - Operation: 
+            OperationName: Nop
