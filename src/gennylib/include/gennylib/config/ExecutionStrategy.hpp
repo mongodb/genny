@@ -4,6 +4,7 @@
 namespace genny::config {
 struct ExecutionStrategy {
     size_t maxRetries = 0;
+    bool throwOnFailure = false;
 };
 } // namespace genny::config
 

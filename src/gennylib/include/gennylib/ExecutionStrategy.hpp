@@ -38,10 +38,8 @@ public:
     void run(F&& fun, const RunOptions& options = RunOptions{}) {
         Result result;
 
-        auto shouldContinue = [&](){
-            return (result.numAttempts <= options.maxRetries) && !result.wasSuccessful;
-        };
-        for (; shouldContinue(); ++result.numAttempts) {
+        bool haveMoreRetries = true;
+        for (; !result.wasSuccessful && haveMoreRetries; ++result.numAttempts) {
             try {
                 auto timer = _timer.start();
                 ++_ops;
@@ -52,6 +50,11 @@ public:
                 result.wasSuccessful = true;
             } catch (const mongocxx::operation_exception& e) {
                 _recordError(e);
+
+                haveMoreRetries = result.numAttempts <= options.maxRetries;
+                if (!haveMoreRetries && options.throwOnFailure) {
+                    throw;
+                }
             }
         }
 

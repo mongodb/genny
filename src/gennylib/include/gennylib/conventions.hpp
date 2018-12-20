@@ -34,6 +34,7 @@ struct convert<ExecutionStrategy> {
     static Node encode(const ExecutionStrategy& rhs) {
         Node node;
         node["Retries"] = rhs.maxRetries;
+        node["ThrowOnFailure"] = rhs.throwOnFailure;
         return node;
     }
 
@@ -43,11 +44,15 @@ struct convert<ExecutionStrategy> {
         }
 
         auto yamlRetries = node["Retries"];
-        if (yamlRetries.IsNull()) {
-            return false;
+        if (yamlRetries) {
+            rhs.maxRetries = yamlRetries.as<size_t>();
         }
 
-        rhs.maxRetries = yamlRetries.as<size_t>();
+        auto yamlThrow = node["ThrowOnFailure"];
+        if (yamlThrow) {
+            rhs.throwOnFailure = yamlThrow.as<size_t>();
+        }
+        
         return true;
     }
 
