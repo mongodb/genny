@@ -13,7 +13,7 @@ Actors:
     Type: Loader
     Threads: 10
     Database: &DB test
-    CollectionCount: &CollectionCount 10000
+    CollectionCount: &CollectionCount 1000
     DocumentCount: 10000
     BatchSize: 1000
     Document:  # Documents are approximately 1 KiB in size
