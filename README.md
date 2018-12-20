@@ -126,7 +126,7 @@ invoke the test binaries and exclude perf tests:
 cd build
 cmake ..
 make .
-./src/gennylib/test_gennylib '~[perf]'
+./src/gennylib/test_gennylib '~[benchmark]'
 ```
 
 Read more about specifying what tests to run [here][s].

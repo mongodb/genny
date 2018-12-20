@@ -2,7 +2,7 @@
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(gennylib VERSION 0.0.1 LANGUAGES CXX)
 
-# Pacify the CLion
+#Pacify the CLion
 file(GLOB_RECURSE HEADERS_FOR_CLION
      RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
      CONFIGURE_DEPENDS
@@ -83,8 +83,18 @@ install(DIRECTORY include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN *.hpp)
 
+# Pull together our utils, header directories, and testing dependencies into one static target
+add_library(gennylib_testutil STATIC
+    test/ActorHelper.cpp
+)
+target_include_directories(gennylib_testutil
+    PUBLIC
+        src
+        test
+)
+target_link_libraries(gennylib_testutil gennylib catch2)
+
 add_executable(test_gennylib
-    # Test case files.
     test/Cast_test.cpp
     test/context_test.cpp
     test/conventions_test.cpp
@@ -93,28 +103,11 @@ add_executable(test_gennylib
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
-    test/PhaseLoop_perf_test.cpp
     test/document_test.cpp
-    test/orchestrator_perf_test.cpp
     test/ActorHelper_test.cpp
-
-    # Helper files.
-    test/ActorHelper.cpp
-    ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp)
-
-
-target_include_directories(test_gennylib
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-    PRIVATE
-        src
-        test
-        ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
-target_link_libraries(test_gennylib
-    PUBLIC ${Boost_LIBRARIES} gennylib
-)
+
+target_link_libraries(test_gennylib gennylib_testutil)
 
 add_test(
     NAME    test_gennylib
@@ -124,4 +117,20 @@ add_test(
         --rng-seed 12345
         --success
         --out test_gennylib.junit.xml
+)
+
+add_executable(benchmark_gennylib
+    test/PhaseLoop_benchmark.cpp
+    test/orchestrator_benchmark.cpp
+)
+target_link_libraries(benchmark_gennylib gennylib_testutil)
+
+add_test(
+    NAME    benchmark_gennylib
+    COMMAND benchmark_gennylib
+        -r junit
+        -d yes
+        --rng-seed 12345
+        --success
+        --out benchmark_gennylib.junit.xml
 )
