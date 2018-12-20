@@ -13,7 +13,7 @@ Actors:
     Type: Loader
     Threads: 10
     Database: &DB test
-    CollectionCount: &CollectionCount 800
+    CollectionCount: &CollectionCount 10000
     DocumentCount: 10000
     BatchSize: 1000
     Document:  # Documents are approximately 1 KiB in size
@@ -87,23 +87,23 @@ Actors:
       - Operation: Nop
   - Name: MultiCollectionUpdate
     Type: MultiCollectionUpdate
-    Threads: 10
+    Threads: 100
     Database: *DB
-    CollectionCount: 8  # This is specifically 1% of collections
+    CollectionCount: 10  # This is specifically 1% of collections
     UpdateFilter: {y: {$randomint: {distribution: poisson, mean: 100}}}
     Update: {$inc: {x: 1}}
     Phases:
       - Operation: Nop
       - Duration: &phase2_duration 600000  # TODO: TIG-1154
-        MinDelay: 1000  # This should be replaced with Rate with TIG-1155.
+        MinDelay: 31  # This should be replaced with Rate with TIG-1155.
   - Name: MultiCollectionQuery
     Type: MultiCollectionQuery
-    Threads: 10
+    Threads: 100
     Database: *DB
-    CollectionCount: 80  # This is specifically 10% of collections.
+    CollectionCount: 100  # This is specifically 10% of collections.
     Filter: {y: {$randomint: {distribution: poisson, mean: 100}}}
     Limit: 20
     Phases:
       - Operation: Nop
       - Duration: *phase2_duration  # TODO: TIG-1154
-        MinDelay: 1000  # This should be replaced with Rate with TIG-1155.
+        MinDelay: 9  # This should be replaced with Rate with TIG-1155.
