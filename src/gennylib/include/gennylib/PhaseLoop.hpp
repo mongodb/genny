@@ -298,6 +298,10 @@ public:
         return (*_value).operator*();
     }
 
+    PhaseNumber phaseNumber() const {
+        return _currentPhase;
+    }
+
 private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
@@ -337,7 +341,7 @@ public:
           _currentPhase{0},
           _awaitingPlusPlus{false} {}
 
-    std::pair<PhaseNumber, ActorPhase<T>&> operator*() /* cannot be const */ {
+    ActorPhase<T>& operator*() /* cannot be const */ {
         assert(!_awaitingPlusPlus);
         // Intentionally don't bother with cases where user didn't call operator++()
         // between invocations of operator*() and vice-versa.
@@ -358,7 +362,7 @@ public:
             msg << "No phase config found for PhaseNumber=[" << _currentPhase << "]";
             throw InvalidConfigurationException(msg.str());
         }
-        return {_currentPhase, found->second};
+        return found->second;
     }
 
     PhaseLoopIterator& operator++() {

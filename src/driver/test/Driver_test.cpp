@@ -81,9 +81,9 @@ struct Fails : public genny::Actor {
         return "Fails";
     }
     void run() override {
-        for (auto&& [phase, config] : loop) {
+        for (auto&& config : loop) {
             for (auto&& _ : config) {
-                state.didReachPhase(phase);
+                state.didReachPhase(config.phaseNumber());
 
                 if (config->mode == "NoException") {
                     continue;

@@ -27,7 +27,7 @@ struct Insert::PhaseConfig {
 };
 
 void Insert::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (const auto&& _ : config) {
             auto op = _insertTimer.raii();
             bsoncxx::builder::stream::document mydoc{};
