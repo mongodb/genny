@@ -111,6 +111,8 @@ add_executable(test_gennylib
 )
 target_link_libraries(test_gennylib gennylib_testutil)
 
+target_link_libraries(test_gennylib gennylib_testutil)
+
 add_test(
     NAME    test_gennylib
     COMMAND test_gennylib
