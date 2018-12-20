@@ -1,12 +1,18 @@
 #include <cast_core/actors/RunCommand.hpp>
 
+#include <chrono>
+#include <thread>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
 #include <bsoncxx/json.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <boost/log/trivial.hpp>
+
+#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/value_generators.hpp>
 
 namespace genny {
@@ -39,6 +45,11 @@ struct actor::RunCommand::Operation {
         auto yamlCommand = config.yaml["OperationCommand"];
         documentTemplate = value_generators::makeDoc(yamlCommand, config.rng);
 
+        auto yamlPreDelay = config.yaml["OperationPreDelayMS"];
+        if (yamlPreDelay) {
+            preDelayMS = std::chrono::milliseconds{yamlPreDelay.as<int32_t>()};
+        }
+
         // Check if we're quiet
         isQuiet = context.get<bool, false>("Quiet").value_or(false);
     }
@@ -51,6 +62,7 @@ struct actor::RunCommand::Operation {
                                     << " on database: " << config.database;
         }
 
+        std::this_thread::sleep_for(preDelayMS);
         std::unique_ptr<metrics::RaiiStopwatch> watch;
         if (timer) {
             watch = std::make_unique<metrics::RaiiStopwatch>(timer->raii());
@@ -64,6 +76,7 @@ struct actor::RunCommand::Operation {
 
     std::optional<metrics::Timer> timer;
     std::unique_ptr<value_generators::DocumentGenerator> documentTemplate;
+    std::chrono::milliseconds preDelayMS;
     bool isQuiet = false;
 };
 
@@ -73,7 +86,8 @@ struct actor::RunCommand::PhaseState {
                ActorContext& actorContext,
                std::mt19937_64& rng,
                mongocxx::pool::entry& client,
-               ActorId id) {
+               ActorId id)
+        : strategy{actorContext, id, "RunCommand"} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
@@ -105,15 +119,18 @@ struct actor::RunCommand::PhaseState {
         }
     }
 
+    ExecutionStrategy strategy;
     std::vector<std::unique_ptr<Operation>> operations;
 };
 
 void actor::RunCommand::run() {
     for (auto&& [phase, config] : _loop) {
         for (auto&& _ : config) {
-            for (auto&& op : config->operations) {
-                op->run();
-            }
+            config->strategy.run([&]() {
+                for (auto&& op : config->operations) {
+                    op->run();
+                }
+            });
         }
     }
 }

@@ -58,7 +58,9 @@ public:
 
 private:
     std::mt19937_64 _rng;
+
     mongocxx::pool::entry _client;
+
     PhaseLoop<PhaseState> _loop;
 };
 
