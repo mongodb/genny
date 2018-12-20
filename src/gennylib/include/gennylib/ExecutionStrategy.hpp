@@ -38,7 +38,10 @@ public:
     void run(F&& fun, const RunOptions& options = RunOptions{}) {
         Result result;
 
-        for (; result.numAttempts <= options.maxRetries; ++result.numAttempts) {
+        auto shouldContinue = [&](){
+            return (result.numAttempts <= options.maxRetries) && !result.wasSuccessful;
+        };
+        for (; shouldContinue(); ++result.numAttempts) {
             try {
                 auto timer = _timer.start();
                 ++_ops;

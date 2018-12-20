@@ -28,7 +28,8 @@ void ExecutionStrategy::_recordError(const mongocxx::operation_exception& e) {
 
 void ExecutionStrategy::_finishRun(const RunOptions& options, Result result) {
     if (!result.wasSuccessful) {
-        BOOST_LOG_TRIVIAL(error) << "Operation failed after " << options.maxRetries << " attempts.";
+        BOOST_LOG_TRIVIAL(error) << "Operation failed after " << options.maxRetries
+                                 << " retry attempts.";
     }
 
     _lastResult = std::move(result);
