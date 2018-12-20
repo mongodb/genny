@@ -42,6 +42,9 @@ namespace genny::actor {
  */
 
 class RunCommand : public Actor {
+public:
+    struct Operation;
+    struct PhaseState;
 
 public:
     explicit RunCommand(ActorContext& context);
@@ -54,10 +57,9 @@ public:
     void run() override;
 
 private:
-    struct PhaseConfig;
     std::mt19937_64 _rng;
     mongocxx::pool::entry _client;
-    PhaseLoop<PhaseConfig> _loop;
+    PhaseLoop<PhaseState> _loop;
 };
 
 

@@ -36,3 +36,11 @@ add_test(
         --out test_driver.junit.xml
 )
 
+# Install all the workload documents
+file(GLOB WORKLOADS
+     test/*.yml
+     test/*.yaml
+)
+install(FILES ${WORKLOADS}
+        DESTINATION etc/genny/workloads
+)
