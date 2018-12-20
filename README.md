@@ -17,7 +17,6 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 brew install cmake
 brew install icu4c
 brew install mongo-cxx-driver
-brew install yaml-cpp
 brew install grpc
 brew install boost      \
     --build-from-source \
@@ -77,7 +76,6 @@ apt-get install -y \
     clang-6.0 \
     make \
     libboost-all-dev \
-    libyaml-cpp-dev \
     libgrpc++-dev
 
 # install mongo C++ driver:
