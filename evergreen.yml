@@ -80,32 +80,39 @@ tasks:
   - func: f_build_grpc
   - func: f_compile
   - func: f_checkout_mongodb
+
 - name: t_python_test
   commands:
   - func: f_python_test
+
 - name: t_cmake_test
   commands:
   - func: f_cmake_test
+
 - name: t_integration_test_standalone
   commands:
-  - func: f_run_integration_test
+  - func: f_resmoke_test
     vars:
-      resmoke_suite_path: ${workdir}/src/src/resmokeconfig/genny_standalone.yml
+      resmoke_suite: genny_standalone.yml
+
 - name: t_integration_test_single_node_replset
   commands:
-  - func: f_run_integration_test
+  - func: f_resmoke_test
     vars:
-      resmoke_suite_path: ${workdir}/src/src/resmokeconfig/genny_single_node_replset.yml
+      resmoke_suite: genny_single_node_replset.yml
+
 - name: t_integration_test_three_node_replset
   commands:
-  - func: f_run_integration_test
+  - func: f_resmoke_test
     vars:
-      resmoke_suite_path: ${workdir}/src/src/resmokeconfig/genny_three_node_replset.yml
+      resmoke_suite: genny_three_node_replset.yml
+
 - name: t_integration_test_sharded
   commands:
-  - func: f_run_integration_test
+  - func: f_resmoke_test
     vars:
-      resmoke_suite_path: ${workdir}/src/src/resmokeconfig/genny_sharded.yml
+      resmoke_suite: genny_sharded.yml
+
 
 ##                ⚡️ Task Groups ⚡️
 
@@ -149,17 +156,19 @@ functions:
   ##
   f_checkout_mongodb:
   - command: shell.exec
-    working_dir: src/build
     params:
+      working_dir: src/build
       script: |
         yes | pacman -S mongodb
         git clone git@github.com:mongodb/mongo.git mongo
-        cd mongo
-        git checkout 85df2fb7d78178adcb59bda8a5d0d57df139e314
-        cd ..
+
+        pushd mongo
+          git checkout 6734c12d17dd4c0e2738a47feb7114221d6ba66d
+        popd
+
         virtualenv -p python2 venv
         source venv/bin/activate
-        python -m pip install -r mongo/etc/pip/dev-requirements.txt
+        python -m pip install -r mongo/etc/pip/evgtest-requirements.txt
 
   ##
   # Compile gRPC. This script should be synchronized with DSI's compilation sript for Genny:
@@ -189,7 +198,7 @@ functions:
         mkdir cmake-build
         pushd cmake-build
         cmake ..
-        make
+        make -j$(nproc)
 
   ##
   # Compile the project in src/build.
@@ -212,10 +221,10 @@ functions:
         export CPLUS_INCLUDE_PATH="$cwd/grpc/include:$cwd/grpc/third_party/protobuf/src"
 
         cmake -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" ..
-        make
+        make -j$(nproc)
 
   ##
-  # Runs tests via `make test`.
+  # Runs tests via ctest.
   # Requires f_compile to have been run first.
   ##
   f_cmake_test:
@@ -228,7 +237,53 @@ functions:
         set -o pipefail
         set -o nounset
 
-        make test
+        ctest --label-exclude "(standalone|sharded|single_node_replset|three_node_replset)"
+
+  ##
+  # Runs tests via resmoke.
+  # Requires f_compile to have been run first.
+  ##
+  f_resmoke_test:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      working_dir: src
+      script: |
+        set -o errexit
+        set -o pipefail
+        # set -o nounset # the "activate" script has an unbound variable
+
+        source build/venv/bin/activate
+
+        # We rely on catch2 to report test failures, but it doesn't always do so.
+        # See https://github.com/catchorg/Catch2/issues/1210
+        # As a workaround, we generate a dummy report with a failed test that is deleted if resmoke
+        # succeeds.
+
+        cat << EOF >> "build/sentinel.junit.xml"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <testsuites>
+         <testsuite name="resmoke_failure_sentinel" errors="0" failures="1" tests="1" hostname="tbd" time="1.0" timestamp="2019-01-01T00:00:00Z">
+          <testcase classname="resmoke_failure_sentinel" name="Dummy testcase to signal that resmoke failed because a report may not be generated" time="1.0">
+           <failure message="resmoke did not exit cleanly, see task log for detail" type="">
+           </failure>
+          </testcase>
+          <system-out/>
+          <system-err/>
+         </testsuite>
+        </testsuites>
+        EOF
+
+        # The tests themselves do the reporting instead of using resmoke.
+        python build/mongo/buildscripts/resmoke.py \
+               --suite src/resmokeconfig/${resmoke_suite} \
+               --mongod mongod \
+               --mongo mongo \
+               --mongos mongos
+
+        # Remove the sentinel report if resmoke succeeds. This line won't be executed if
+        # resmoke fails because we've set errexit on this shell.
+        rm build/sentinel.junit.xml
 
   ##
   # Runs python nosetests.
@@ -246,16 +301,6 @@ functions:
         python setup.py nosetests
 
   ##
-  # Runs an integration test suite using resmoke.
-  ##
-  f_run_integration_test:
-  - command: shell.exec
-    params:
-      working_dir: ./mongo
-      script: |
-        python2 buildscripts/resmoke.py --suite ${resmoke_suite_path}
-
-  ##
   # Reports test results to evergreen API. If you add a new file to this list, then you should also
   # add it to the `f_remove_test_results_files` function to ensure it is cleaned up between tasks in
   # the task group.
@@ -265,6 +310,10 @@ functions:
     params:
       optional: true
       file: src/build/src/*/*.junit.xml
+  - command: attach.xunit_results
+    params:
+      optional: true
+      file: src/build/*.junit.xml
   - command: attach.xunit_results
     params:
       optional: true
@@ -281,4 +330,7 @@ functions:
         set -o pipefail
         set -o nounset
 
-        rm -f src/build/src/*/*.junit.xml src/src/python/nosetests.xml
+        rm -f \
+        src/build/*.junit.xml \
+        src/build/src/*/*.junit.xml \
+        src/src/python/nosetests.xml

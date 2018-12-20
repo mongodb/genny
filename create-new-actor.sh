@@ -107,36 +107,22 @@ create_test() {
     local actor_name
     actor_name="$1"
 
-    cat << 'EOF' >> "$(dirname "$0")/src/gennylib/test/${actor_name}_test.cpp"
+    cat << EOF >> "$(dirname "$0")/src/gennylib/test/${actor_name}_test.cpp"
 #include "test.h"
 
-#include <cstdint>
-#include <iostream>
-#include <vector>
 #include <bsoncxx/json.hpp>
-#include <mongocxx/stdx.hpp>
-#include <mongocxx/client.hpp>
-#include <mongocxx/uri.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 
-#include<log.hh>
+#include <MongoTestFixture.hpp>
 
-using namespace std;
+namespace {
+using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 
-static const auto client = mongocxx::client(mongocxx::uri{getenv("MONGO_CONNECTION_STRING")});
+TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a MongoDB instance.",
+          "[standalone][single_node_replset][three_node_replset][sharded]") {
 
-void teardown() {
-    for(auto&& dbDoc: client.list_databases()) {
-        const auto dbName = dbDoc["name"].get_utf8().value;
-        const auto dbNameString = dbName.to_string();
-        if (dbNameString != "admin" && dbNameString != "config" && dbNameString != "local") {
-            client.database(dbName).drop();
-        }
-    }
-}
-
-TEST_CASE("Successfully connects to a MongoDB instance.") {
+    dropAllDatabases();
     auto db = client.database("test");
 
     SECTION("Insert a document into the database.") {
@@ -153,12 +139,10 @@ TEST_CASE("Successfully connects to a MongoDB instance.") {
         bsoncxx::document::view view = doc_value.view();
         db.collection("test").insert_one(view);
         // Fail on purpose to encourage contributors to extend automated testing for each new actor.
-        REQUIRE(db.collection("test").count_documents(view) == 0);
+        REQUIRE(db.collection("test").count(view) == 0);
     }
-
-    teardown();
-
 }
+} // namespace
 EOF
 }
 
@@ -186,7 +170,7 @@ recreate_gennylib_cmake_file() {
     cmake_file="$(dirname "$0")/src/gennylib/CMakeLists.txt"
 
     < "$cmake_file" \
-    perl -pe "s|((\\s+)# ActorsTestEnd)|\$2src/actors/${actor_name}_test.cpp\\n\$1|" \
+    perl -pe "s|((\\s+)# ActorsTestEnd)|\$2test/${actor_name}_test.cpp\\n\$1|" \
     > "$$.cmake.txt"
 
     mv "$$.cmake.txt" "$cmake_file"

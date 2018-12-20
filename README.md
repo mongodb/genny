@@ -61,7 +61,7 @@ and restarting your shell.
 TODO: TIG-1263 This is kind of a hack; using built-in package-location
 mechanisms would avoid having to have OS-specific hacks like this.
 
-### Linux Distributions
+#### Linux Distributions
 
 Have installations of non-vendored dependent packages in your system,
 using the package manger. Generally this is:
@@ -85,7 +85,7 @@ You only need to run cmake once. Other useful targets include:
 - test_gennylib test_driver (builds tests)
 - test (run's tests if they're built)
 
-### Other Operating Systems
+#### Other Operating Systems
 
 If not using OS X, ensure you have a recent C++ compiler and boost
 installation. You will also need packages installed corresponding to the
@@ -105,7 +105,7 @@ apt-get install -y \
 #   https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
 ```
 
-### IDEs and Whatnot
+#### IDEs and Whatnot
 
 We follow CMake and C++17 best-practices so anything that doesn't work
 via "normal means" is probably a bug.
@@ -115,8 +115,7 @@ emacs, vim, etc.). Before doing anything cute (see
 [CONTRIBUTING.md](./CONTRIBUTING.md)), please do due-diligence to ensure
 it's not going to make common editing environments go wonky.
 
-Running Genny Self-Tests
-------------------------
+### Running Genny Self-Tests
 
 Genny has self-tests using Catch2. You can run them with the following command:
 
@@ -124,7 +123,7 @@ Genny has self-tests using Catch2. You can run them with the following command:
 make -C "build" test_gennylib test_driver test
 ```
 
-### Perf Tests
+#### Perf Tests
 
 The above `make test` line also runs so-called "perf" tests. They can
 take a while to run and may fail occasionally on local developer
@@ -138,31 +137,33 @@ invoke the test binaries and exclude perf tests:
 make -C "build" benchmark_gennylib test
 ./build/src/gennylib/test_gennylib '~[benchmark]'
 ```
+
 Read more about specifying what tests to run [here][s].
 
 [s]: https://github.com/catchorg/Catch2/blob/master/docs/command-line.md#specifying-which-tests-to-run
 
-**Actor Integration Tests**
+#### Actor Integration Tests
 
-The actor tests use resmoke to set up a real mongodb cluster and to execute
-the test binary. The yaml files that define the different cluster configurations
-are defined in `src/resmokeconfig`.
+The actor tests use resmoke to set up a real MongoDB cluster and execute
+the test binary. The resmoke yaml config files that define the different
+cluster configurations are defined in `src/resmokeconfig`.
 
-Example to run locally with current working directory being the mongo root directory:
-
-First edit the yaml configuration file you want to run and update the `program_executable`
-path to point to the `test_gennylib_with_server` binary in your local environment.
-
-Then run:
+resmoke.py can be run locally as follows:
 ```sh
-env MONGO_CONNECTION_STRING=mongodb://localhost:27017 python2 buildscripts/resmoke.py --suite ~/genny/build/resmokeconfig/genny_standalone.yml
+# Set up virtualenv and install resmoke requirements if needed.
+# From genny's top-level directory.
+python /path/to/resmoke.py --suite src/resmokeconfig/genny_standalone.yml
 ```
+
 Each yaml configuration file will only run tests that are associated
 with their specific tags. (Eg. `genny_standalone.yml` will only run
 tests that have been tagged with the "[standalone]" tag.)
 
-Running Genny Workloads
------------------------
+When creating a new actor, `create-new-actor.sh` will generate a new test case
+template to ensure the new actor can run against different MongoDB topologies,
+please update the template as needed so it uses the newly created actor.
+
+### Running Genny Workloads
 
 First install mongodb and start a mongod process:
 
@@ -191,16 +192,14 @@ in the above example).
 Post-processing of metrics data is done by Python scripts in the
 `src/python` directory. See [the README there](./src/python/README.md).
 
-Code Style and Limitations
----------------------------
+### Code Style and Limitations
 
 > Don't get cute.
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for code-style etc.
 Note that we're pretty vanilla.
 
-Sanitizers
-----------
+### Sanitizers
 
 Genny is periodically manually tested to be free of unknown sanitizer
 errors. These are not currently run in a CI job. If you are adding
