@@ -17,17 +17,15 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 brew install cmake
 brew install icu4c
 brew install mongo-cxx-driver
-brew install yaml-cpp
 brew install grpc
+brew install yaml-cpp
 brew install boost      \
     --build-from-source \
     --include-test      \
     --with-icu4c
 
-cd build
-cmake ..
-make -j8
-make test
+cmake -B "build" .
+make -C "build" genny
 ```
 
 If you get boost errors:
@@ -62,12 +60,36 @@ and restarting your shell.
 TODO: TIG-1263 This is kind of a hack; using built-in package-location
 mechanisms would avoid having to have OS-specific hacks like this.
 
+**Linux Distributions**
+
+Have installations of non-vendored dependent packages in your system,
+using the package manger. Generally this is:
+
+- cmake
+- boost
+- yaml-cpp
+- mongo-cxx-driver
+- grpc
+- icu
+
+To to build genny use the following commands:
+
+```sh
+cmake -B "build" .
+make -C "build" genny
+```
+
+You only need to run cmake once. Other useful targets include:
+
+- all
+- test_gennylib test_driver (builds tests)
+- test (run's tests if they're built)
+
 **Other Operating-Systems**:
 
 If not using OS X, ensure you have a recent C++ compiler and boost
 installation. You will also need packages installed corresponding to the
-above `brew install` lines. Then specify compiler path when invoking
-`cmake`.
+above `brew install` lines.
 
 E.g. for Ubuntu:
 
@@ -82,12 +104,6 @@ apt-get install -y \
 
 # install mongo C++ driver:
 #   https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
-
-cd build
-cmake \
-    -DCMAKE_CXX_COMPILER=clang++-6.0 \
-    -DCMAKE_CXX_FLAGS=-pthread \
-    ..
 ```
 
 **IDEs and Whatnot**
@@ -106,10 +122,7 @@ Running Genny Self-Tests
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-cd build
-cmake ..
-make .
-make test
+make -C "build" test_gennylib test_driver test
 ```
 
 **Perf Tests**
@@ -123,9 +136,7 @@ If you want to run all the tests except perf tests you can manually
 invoke the test binaries and exclude perf tests:
 
 ```sh
-cd build
-cmake ..
-make .
+make -C "build" benchmark_gennylib test
 ./src/gennylib/test_gennylib '~[benchmark]'
 ```
 
