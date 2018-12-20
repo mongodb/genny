@@ -44,6 +44,9 @@
 
 ##                ⚡️ Variants ⚡️
 
+ignore:
+    - "*.md" # don't schedule tests if a commit only changes markdown files
+
 buildvariants:
 
 - name: archlinux
