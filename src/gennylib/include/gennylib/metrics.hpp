@@ -74,6 +74,10 @@ class Reporter;
 // The V1 namespace is here for two reasons:
 // 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes
 // 2) it prevents auto-completion of metrics::{X}Impl when you really want metrics::{X}
+/**
+ * @namespace genny::metrics::V1 this namespace is private and only intended to be used by Genny's internals.
+ * Actors should never have to type `genny::*::V1` into any types.
+ */
 namespace V1 {
 
 /**
