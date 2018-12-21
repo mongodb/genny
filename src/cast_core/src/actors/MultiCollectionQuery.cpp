@@ -36,7 +36,7 @@ struct MultiCollectionQuery::PhaseConfig {
 };
 
 void MultiCollectionQuery::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (auto&& _ : config) {
             // Take a timestamp -- remove after TIG-1155
             auto startTime = std::chrono::steady_clock::now();

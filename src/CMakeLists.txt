@@ -1,9 +1,11 @@
+add_subdirectory(third_party)
+
 add_subdirectory(gennylib)
 add_subdirectory(cast_core)
 add_subdirectory(driver)
 
 # This makes the project importable from the build directory
-export(TARGETS gennylib gennylib_cast gennylib_generators cast_core
+export(TARGETS gennylib gennylib_cast gennylib_generators gennylib_core cast_core
        FILE GennyLibraryConfig.cmake)
 
 # Below generates a cmake module so if you make install from this

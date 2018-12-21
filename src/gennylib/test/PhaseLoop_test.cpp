@@ -250,7 +250,7 @@ TEST_CASE("Actual Actor Example") {
         //                        param.
 
         void run() override {
-            for (auto&& [num, cfg] : _loop) {
+            for (auto&& cfg : _loop) {
                 for (auto&& _ : cfg) {
                     ++this->_counters[cfg->_key];
                 }
@@ -293,7 +293,8 @@ TEST_CASE("Actual Actor Example") {
                 : IncrementsMapValues(actorContext, counters) {}
 
             void run() override {
-                for (auto&& [num, cfg] : _loop) {
+                for (auto&& cfg : _loop) {
+                    auto num = cfg.phaseNumber();
                     // This is just for testing purposes. Actors *should* not place any commands
                     // between the top level for-loop and the inner loop.
                     check(num, this->_counters);

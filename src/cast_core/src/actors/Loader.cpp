@@ -55,7 +55,7 @@ struct Loader::PhaseConfig {
 };
 
 void genny::actor::Loader::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (auto&& _ : config) {
             for (uint i = config->collectionOffset;
                  i < config->collectionOffset + config->numCollections;
