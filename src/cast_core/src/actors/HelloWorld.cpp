@@ -15,7 +15,7 @@ struct HelloWorld::PhaseConfig {
 };
 
 void HelloWorld::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (auto _ : config) {
             auto ctx = this->_operation.start();
             BOOST_LOG_TRIVIAL(info) << config->message;
