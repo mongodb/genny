@@ -18,7 +18,6 @@ brew install cmake
 brew install icu4c
 brew install mongo-cxx-driver
 brew install grpc
-brew install yaml-cpp
 brew install boost      \
     --build-from-source \
     --include-test      \
@@ -67,7 +66,6 @@ using the package manger. Generally this is:
 
 - cmake
 - boost
-- yaml-cpp
 - mongo-cxx-driver
 - grpc
 - icu
@@ -99,7 +97,6 @@ apt-get install -y \
     clang-6.0 \
     make \
     libboost-all-dev \
-    libyaml-cpp-dev \
     libgrpc++-dev
 
 # install mongo C++ driver:
