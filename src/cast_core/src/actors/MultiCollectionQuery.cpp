@@ -17,6 +17,8 @@
 #include <gennylib/value_generators.hpp>
 
 namespace genny::actor {
+
+/** @private */
 struct MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},

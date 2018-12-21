@@ -52,6 +52,7 @@ private:
     std::string_view _name;
 };
 
+/** @private */
 class ParallelizedActorProducer : public ActorProducer {
 public:
     using ActorProducer::ActorProducer;
@@ -60,6 +61,7 @@ public:
     ActorVector produce(ActorContext& context) override;
 };
 
+/** @private */
 template <class ActorT>
 class DefaultActorProducer : public ParallelizedActorProducer {
 public:

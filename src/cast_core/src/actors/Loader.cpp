@@ -22,6 +22,7 @@ using document_ptr = std::unique_ptr<genny::value_generators::DocumentGenerator>
 /** @private */
 using index_type = std::pair<document_ptr, std::optional<document_ptr>>;
 
+/** @private */
 struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 std::mt19937_64& rng,

@@ -163,7 +163,7 @@ EXCLUDE                = mwg build src/python src/third_party \
                          src/gennylib/test src/driver/test src/cast_core/test
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       =
-EXCLUDE_SYMBOLS        =
+EXCLUDE_SYMBOLS        = genny::V1 genny::metrics::V1
 EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO

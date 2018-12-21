@@ -17,6 +17,7 @@
 
 namespace genny::actor {
 
+/** @private */
 struct Insert::PhaseConfig {
     mongocxx::collection collection;
     std::unique_ptr<value_generators::DocumentGenerator> json_document;
