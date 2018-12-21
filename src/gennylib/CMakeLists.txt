@@ -61,8 +61,6 @@ target_include_directories(gennylib
         src
 )
 
-add_subdirectory(jasper)
-
 # Link in the sublibraries into the main library
 target_link_libraries(gennylib
     PUBLIC
