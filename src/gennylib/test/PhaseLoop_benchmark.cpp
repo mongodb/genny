@@ -40,7 +40,7 @@ struct IncrementsActor : public Actor {
     IncrementsActor(ActorContext& ctx) : Actor(ctx), _loop{ctx} {}
 
     void run() override {
-        for (auto&& [phase, config] : _loop) {
+        for (auto&& config : _loop) {
             for (auto&& _ : config) {
                 ++increments;
             }
@@ -174,7 +174,7 @@ void comparePerformance(int threads, long iterations, int tolerance) {
 }  // namespace
 
 
-TEST_CASE("PhaseLoop performance", "[perf]") {
+TEST_CASE("PhaseLoop performance", "[benchmark]") {
     // low tolerance for added latency with few threads
     comparePerformance(50, 10000, 5);
     comparePerformance(10, 100000, 10);

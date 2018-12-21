@@ -101,7 +101,7 @@ struct genny::actor::RunCommand::PhaseConfig {
 };
 
 void genny::actor::RunCommand::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (auto&& _ : config) {
             for (auto&& runCommand : config->runCommandConfigs) {
                 runCommand->run();

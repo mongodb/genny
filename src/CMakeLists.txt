@@ -1,3 +1,5 @@
+add_subdirectory(third_party)
+
 add_subdirectory(gennylib)
 add_subdirectory(cast_core)
 add_subdirectory(driver)
