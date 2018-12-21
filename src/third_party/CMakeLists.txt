@@ -6,3 +6,7 @@ add_subdirectory(yaml-cpp)
 # <Catch2>
 add_subdirectory(catch2)
 # </Catch2>
+
+# <Jasper>
+add_subdirectory(jasper)
+# </Jasper>
