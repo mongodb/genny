@@ -57,7 +57,10 @@ public:
      * This can be used to make actors work "in the background" either across
      * phases or in an "optimistic" fashion such that long-running operations
      * don't cause the phase-progression to stall.
+     * @param removeTokens how many "tokens" should be removed.
+     * @see awaitPhaseStart()
      *
+     * @example
      * ```c++
      * while (orchestrator.morePhases()) {
      *     auto phase = orchestrator.awaitPhaseStart();

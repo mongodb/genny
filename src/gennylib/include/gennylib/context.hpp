@@ -199,6 +199,7 @@ public:
      * @param node top-level (file-level) YAML node
      * @param registry metrics registry to use in ActorContext::counter() etc
      * @param orchestrator to control Phasing
+     * @param mongoUri the base mongo URI to use @see PoolFactory
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
@@ -499,7 +500,7 @@ public:
      *   the name of the thing being timed.
      *   Will automatically add prefixes to make the full name unique
      *   across Actors and threads.
-     * @param ActorId the id of this Actor, if any.
+     * @param id the id of this Actor, if any.
      */
     auto timer(const std::string& operationName, ActorId id = 0u) const {
         auto name = this->metricsName(operationName, id);
@@ -513,7 +514,7 @@ public:
      *   the name of the thing being gauged.
      *   Will automatically add prefixes to make the full name unique
      *   across Actors and threads.
-     * @param ActorId the id of this Actor, if any.
+     * @param id the id of this Actor, if any.
      */
     auto gauge(const std::string& operationName, ActorId id = 0u) const {
         auto name = this->metricsName(operationName, id);
@@ -528,7 +529,7 @@ public:
      *   the name of the thing being counted.
      *   Will automatically add prefixes to make the full name unique
      *   across Actors and threads.
-     * @param ActorId the id of this Actor, if any.
+     * @param id the id of this Actor, if any.
      */
     auto counter(const std::string& operationName, ActorId id = 0u) const {
         auto name = this->metricsName(operationName, id);
