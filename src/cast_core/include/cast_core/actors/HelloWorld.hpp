@@ -7,6 +7,10 @@
 
 namespace genny::actor {
 
+/**
+ * A "Proof of Concept" dumb Actor that we use
+ * to smoke-test framework features.
+ */
 class HelloWorld : public genny::Actor {
 
     struct HelloWorldCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
