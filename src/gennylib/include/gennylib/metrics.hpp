@@ -238,6 +238,37 @@ private:
 
 }  // namespace V1
 
+namespace V2 {
+
+struct OperationEvent {
+    count_type ops;
+    count_type iter;
+    count_type bytes;
+    time_point duration;
+};
+
+class OperationImpl {
+    void report(const time_point& started) {
+        _base.duration += started;
+        _base.iter++;
+        _events.add(_base);
+    }
+
+    void setBytes(const count_type& size) {
+        _base.bytes += size;
+    }
+
+    void setOps(const count_type& ops) {
+        _base.ops += ops;
+    }
+
+private:
+    OperationEvent _base;
+    TimeSeries<OperationEvent> _events;
+};
+
+}  // namespace V2
+
 
 /**
  * A Counter lets callers indicate <b>deltas</b> of a value at a particular time.
