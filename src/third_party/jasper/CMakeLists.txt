@@ -12,3 +12,9 @@ target_link_libraries(jasperlib
     PRIVATE
         gRPC::grpc++
 )
+
+install(TARGETS  jasperlib
+        EXPORT   GennyLibraryConfig
+        ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows

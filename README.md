@@ -17,11 +17,13 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 brew install cmake
 brew install icu4c
 brew install mongo-cxx-driver
-brew install grpc
 brew install boost      \
     --build-from-source \
     --include-test      \
     --with-icu4c
+
+# install a local grpc for your genny dir
+./scripts/make-grpc.sh
 
 cmake -B "build" .
 make -C "build" genny
@@ -67,7 +69,6 @@ using the package manger. Generally this is:
 - cmake
 - boost
 - mongo-cxx-driver
-- grpc
 - icu
 
 To to build genny use the following commands:
@@ -96,8 +97,7 @@ apt-get install -y \
     software-properties-common \
     clang-6.0 \
     make \
-    libboost-all-dev \
-    libgrpc++-dev
+    libboost-all-dev
 
 # install mongo C++ driver:
 #   https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/

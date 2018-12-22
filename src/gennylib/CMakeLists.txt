@@ -44,8 +44,6 @@ target_include_directories(gennylib_generators
 )
 target_link_libraries(gennylib_generators gennylib_core)
 
-add_subdirectory(jasper)
-
 # Additional utilities and core concepts
 # Note that this contains both what you need to compile Actors and what you need to compile a Driver
 add_library(gennylib SHARED

@@ -7,6 +7,19 @@ add_subdirectory(yaml-cpp)
 add_subdirectory(catch2)
 # </Catch2>
 
+# <gRPC>
+# Try to prefer our local openssl if it's there
+set(OPENSSL_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/openssl")
+if(EXISTS "${OPENSSL_LOCAL_DIR}")
+    set(OPENSSL_ROOT_DIR "${OPENSSL_LOCAL_DIR}" CACHE PATH "")
+    set(OPENSSL_USE_STATIC_LIBS ON)
+endif()
+
+# Add our third_party path to the potential places to find gRPCConfig.cmake
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/grpc")
+find_package(gRPC REQUIRED)
+# </gRPC>
+
 # <Jasper>
 add_subdirectory(jasper)
 # </Jasper>

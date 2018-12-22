@@ -6,20 +6,29 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-WORKING_DIR="$(dirname "${BASH_SOURCE[0]}")/src/third_party/grpc"
+set -x
+
+SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
+ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
+
+GRPC_DIR="${ROOT_DIR}/src/third_party/grpc"
+GRPC_SRC_DIR="${GRPC_DIR}/src"
+GRPC_BUILD_DIR="${GRPC_DIR}/build"
+
+cleanGRpc() {
+    rm -rf "${GRPC_DIR}" # Remove grpc and any cmake config copied up from runner
+}
 
 cloneGRpc() {
-    rm -rf "${WORKING_DIR}" # Remove grpc and any cmake config copied up from runner
-    git clone --recurse-submodules https://github.com/grpc/grpc.git "${WORKING_DIR}"
+    git clone --recurse-submodules https://github.com/grpc/grpc.git "${GRPC_SRC_DIR}"
 
-    cd "${WORKING_DIR}"
-    WORKING_DIR="$(pwd)"
+    cd "${GRPC_SRC_DIR}"
 
     git checkout b79462f186cc22550bc8d53a00ae751f50d194f5
 }
 
 buildProtobuf() {
-    cd "${WORKING_DIR}/third_party/protobuf"
+    cd "${GRPC_SRC_DIR}/third_party/protobuf"
 
     BUILD_DIR="cmake/build"
     mkdir -p "${BUILD_DIR}"
@@ -37,7 +46,7 @@ buildProtobuf() {
     )
 
     CMAKE_CMD+=(
-        -DCMAKE_INSTALL_PREFIX="${WORKING_DIR}"
+        -DCMAKE_INSTALL_PREFIX="${GRPC_SRC_DIR}"
     )
 
     "${CMAKE_CMD[@]}"
@@ -45,7 +54,7 @@ buildProtobuf() {
 }
 
 buildCAres(){
-    cd "${WORKING_DIR}/third_party/cares/cares"
+    cd "${GRPC_SRC_DIR}/third_party/cares/cares"
 
     BUILD_DIR="cmake/build"
     mkdir -p "${BUILD_DIR}"
@@ -65,7 +74,7 @@ buildCAres(){
     )
 
     CMAKE_CMD+=(
-        -DCMAKE_INSTALL_PREFIX="${WORKING_DIR}"
+        -DCMAKE_INSTALL_PREFIX="${GRPC_SRC_DIR}"
     )
 
     "${CMAKE_CMD[@]}"
@@ -73,20 +82,19 @@ buildCAres(){
 }
 
 buildGRpc() {
-    BUILD_DIR="${BUILD_DIR:-${WORKING_DIR}/cmake/build}"
-    mkdir -p "${BUILD_DIR}"
-    cd "${BUILD_DIR}"
+    mkdir -p "${GRPC_BUILD_DIR}"
+    cd "${GRPC_BUILD_DIR}"
     rm -rf *
 
     CMAKE_CMD=(
         cmake
-        "${WORKING_DIR}"
+        "${GRPC_SRC_DIR}"
     )
 
     # Install grpc into its own source dir for ease of access
     CMAKE_CMD+=(
-      -DCMAKE_PREFIX_PATH="${WORKING_DIR}"
-      -DCMAKE_INSTALL_PREFIX="${WORKING_DIR}"
+      -DCMAKE_PREFIX_PATH="${GRPC_DIR}"
+      -DCMAKE_INSTALL_PREFIX="${GRPC_DIR}"
     )
 
     # Make gRPC easier to install
@@ -94,23 +102,30 @@ buildGRpc() {
         -DgRPC_INSTALL=ON -DgRPC_BUILD_TESTS=OFF
     )
 
-    # Use system provided zlib and ssl
+    # Use gRPC build-external instances of these components
+    # zLib is usually system provided
+    # c-ares and protobuf are compiled here
+    # OpenSSL may or may not be compiled here
     CMAKE_CMD+=(
         -DgRPC_ZLIB_PROVIDER=package
         -DgRPC_SSL_PROVIDER=package
-    )
-
-    # Use compiled protobuf and c-ares
-    CMAKE_CMD+=(
         -DgRPC_PROTOBUF_PROVIDER=package
         -DgRPC_CARES_PROVIDER=package
     )
+
+    # Use our custom static OpenSSL if it's there
+    if [[ -n ${OPENSSL_DIR} && -d ${OPENSSL_DIR} ]]; then
+        CMAKE_CMD+=(
+            "-DOPENSSL_ROOT_DIR=${OPENSSL_DIR}"
+        )
+    fi
 
     "${CMAKE_CMD[@]}"
     make install
 }
 
-cloneGRpc
+(cleanGRpc)
+(cloneGRpc)
 (buildProtobuf)
 (buildCAres)
 (buildGRpc)

@@ -1,2 +1,3 @@
-# gRPC may be pulled from git
+# Optionally built from a git source repository
 grpc
+openssl
