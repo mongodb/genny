@@ -7,6 +7,10 @@ add_subdirectory(yaml-cpp)
 add_subdirectory(catch2)
 # </Catch2>
 
+# <Mongo Driver>
+#find_package(libmongocxx REQUIRED)
+# </Mongo Driver>
+
 # <gRPC>
 # Try to prefer our local openssl if it's there
 set(OPENSSL_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/openssl")
@@ -17,9 +21,21 @@ endif()
 
 # Add our third_party path to the potential places to find gRPCConfig.cmake
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/grpc")
-find_package(gRPC REQUIRED)
+#find_package(gRPC REQUIRED)
 # </gRPC>
 
 # <Jasper>
-add_subdirectory(jasper)
+#add_subdirectory(jasper)
 # </Jasper>
+
+# These libraries are almost ubiquitously required in genny
+# The AFTER tag means that our headers are considered before headers in the same folder as these
+# dependencies
+include_directories(AFTER
+    ${LIBMONGOCXX_INCLUDE_DIRS}
+)
+link_libraries(
+    ${CMAKE_THREAD_LIBS_INIT}
+    Boost:boost
+    ${LIBMONGOCXX_LIBRARIES}
+)

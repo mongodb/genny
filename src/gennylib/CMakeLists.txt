@@ -21,7 +21,7 @@ target_include_directories(gennylib_core
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(gennylib_core yaml-cpp)
+target_link_libraries(gennylib_core yaml-cpp Boost::boost)
 
 # Concepts to do with Actors
 add_library(gennylib_cast STATIC
@@ -68,7 +68,7 @@ target_link_libraries(gennylib
         gennylib_generators
         gennylib_core
     PRIVATE
-        jasperlib
+    #jasperlib
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).

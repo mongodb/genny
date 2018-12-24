@@ -5,44 +5,35 @@ if(POLICY CMP0025)
     cmake_policy(SET CMP0025 NEW)
 endif()
 
+# https://cmake.org/cmake/help/v3.0/ipolicy/CMP0042.html
+if(POLICY CMP0042)
+    cmake_policy(SET CMP0042 NEW)
+endif()
+
+# https://cmake.org/cmake/help/v3.13/policy/CMP0077.html
+if(POLICY CMP0077)
+    cmake_policy(SET CMP0077 NEW)
+endif()
+
 # NB: this version number is duplicated in
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(genny VERSION 0.0.1 LANGUAGES CXX)
 
+# Include our local cmake folder in the module path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# If the user did not customize the install prefix,
+# set it to <BUILD>/dist so we don't inadverently pollute /usr/local
+if(${GENNY_DIST_DIR})
+    set (CMAKE_INSTALL_PREFIX "${GENNY_DIST_DIR}" CACHE PATH "default install path" FORCE)
+else()
+    set (CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/dist" CACHE PATH "default install path" FORCE)
+endif()
+message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
+
 include(GNUInstallDirs)
 
 find_package(Threads REQUIRED)
-
-# <Boost>
-option(USE_STATIC_BOOST
-       "Use boost static libaries when compiling genny. \
-        This also requires boost static libraries to have position-independent code."
-       OFF)
-
-set(Boost_USE_STATIC_LIBS ${USE_STATIC_BOOST})
-if(NOT ${USE_STATIC_BOOST})
-  add_definitions(-DBOOST_ALL_DYN_LINK)
-endif()
-
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(
-        Boost
-        1.58 # Minimum version, vetted via Ubuntu 16.04
-        REQUIRED
-        COMPONENTS
-        log_setup
-        log
-        program_options
-)
-add_library(boost INTERFACE IMPORTED)
-set_property(TARGET boost PROPERTY
-        INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
-# </Boost>
-
-# <Mongo Driver>
-find_package(libmongocxx REQUIRED)
-# </Mongo Driver>
 
 # <Misc 3rd Party Integrations>
 set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
@@ -86,24 +77,12 @@ else()
     message(FATAL_ERROR "Unknown compiler... ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
 endif()
 
-# If the user did not customize the install prefix to ${genny_root}/install
-# set it to live under build so we don't inadverently pollute /usr/local
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
-endif()
+# See ./cmake folder
+include(GennyOptions)
+include(GetBoost)
 
-# These libraries are almost ubiquitously required in genny
-# The AFTER tag means that our headers are considered before headers in the same folder as these
-# dependencies
-include_directories(AFTER
-    ${Boost_INCLUDE_DIR}
-    ${LIBMONGOCXX_INCLUDE_DIRS}
-)
-link_libraries(
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
-    ${LIBMONGOCXX_LIBRARIES}
-)
+# Build the third party external pieces
+include(GetLibMongoCxx)
 
 enable_testing()
 add_subdirectory(src)

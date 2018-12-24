@@ -1,6 +1,9 @@
 *.d
 mwg
 
+# tarball dir
+dist/
+
 # clion
 .idea
 cmake-build-debug
