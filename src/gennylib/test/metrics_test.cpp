@@ -223,3 +223,5 @@ TEST_CASE("metrics tests") {
 
     reporter.report(std::cout, "csv");
 }
+
+TEST_CASE("operation event") {}

@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <boost/core/noncopyable.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
 
 namespace genny::metrics {
 
@@ -241,30 +242,62 @@ private:
 namespace V2 {
 
 struct OperationEvent {
+    std::chrono::time_point<std::chrono::steady_clock> timestamp;
     count_type ops;
     count_type iter;
     count_type bytes;
-    time_point duration;
+    count_type errors;
+    std::chrono::steady_clock::duration duration;
+    std::chrono::steady_clock::duration total;
+    gauged_type state;
+    gauged_type workers;
+    bool failed;
 };
 
-class OperationImpl {
-    void report(const time_point& started) {
-        _base.duration += started;
-        _base.iter++;
-        _events.add(_base);
+
+class EventImpl {
+public:
+    explicit EventImpl() {
+        _events.reserve(1000 * 1000);
+    }
+
+    void report(const std::chrono::steady_clock::duration& started) {
+        _base->duration += started;
+        _base->timestamp = std::chrono::steady_clock::now();
+        _base->total += std::chrono::duration_cast<std::chrono::nanoseconds>(metrics::clock::now() -
+                                                                             this->_last);
+        _base->iter++;
+        _events.emplace_back(*_base);
     }
 
     void setBytes(const count_type& size) {
-        _base.bytes += size;
+        _base->bytes += size;
     }
 
     void setOps(const count_type& ops) {
-        _base.ops += ops;
+        _base->ops += ops;
+    }
+
+    void setError(const count_type& ops) {
+        _base->errors += ops;
+    }
+
+    void setFailed(const bool& failed) {
+        _base->failed = failed;
+    }
+
+    void setState(const gauged_type& state) {
+        _base->state = state;
+    }
+
+    void setWorkers(const gauged_type& workers) {
+        _base->workers = workers;
     }
 
 private:
-    OperationEvent _base;
-    TimeSeries<OperationEvent> _events;
+    std::chrono::steady_clock::time_point _last;
+    OperationEvent* _base;
+    std::vector<OperationEvent> _events;
 };
 
 }  // namespace V2
@@ -502,6 +535,64 @@ private:
 };
 
 
+class EventContext {
+
+public:
+    EventContext(V2::EventImpl& op) : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
+
+    ~EventContext() {
+        this->report();
+    }
+
+    void setBytes(const count_type& size) {
+        this->_op->setBytes(size);
+    }
+
+    void setOps(const count_type& ops) {
+        this->_op->setOps(ops);
+    }
+
+    void setError(const count_type& errs) {
+        this->_op->setError(errs);
+    }
+
+    void setFailed(const bool& failed) {
+        this->_op->setFailed(failed);
+    }
+
+    void setState(const gauged_type& state) {
+        this->_op->setState(state);
+    }
+
+    void setWorkers(const gauged_type& workers) {
+        this->_op->setWorkers(workers);
+    }
+
+private:
+    void report() {
+        auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(metrics::clock::now() -
+                                                                        this->_started);
+        this->_op->report(dur);
+    }
+
+    V2::EventImpl* _op;
+    const std::chrono::steady_clock::time_point _started;
+};
+
+class Events {
+
+public:
+    explicit Events(V2::EventImpl op) : _op{op} {}
+
+    EventContext start() {
+        return EventContext(this->_op);
+    }
+
+private:
+    V2::EventImpl _op;
+};
+
+
 /**
  * Supports recording a number of types of Time-Series Values:
  *
@@ -548,6 +639,10 @@ public:
         return Operation{std::move(op)};
     }
 
+    Events events(const std::string& name) {
+        return Events{this->_events[name]};
+    };
+
     // passkey:
     const std::unordered_map<std::string, V1::CounterImpl>& getCounters(V1::Permission) const {
         return this->_counters;
@@ -569,6 +664,7 @@ private:
     std::unordered_map<std::string, V1::CounterImpl> _counters;
     std::unordered_map<std::string, V1::TimerImpl> _timers;
     std::unordered_map<std::string, V1::GaugeImpl> _gauges;
+    std::unordered_map<std::string, V2::EventImpl> _events;
 };
 
 static_assert(std::is_move_constructible<Registry>::value, "move");
