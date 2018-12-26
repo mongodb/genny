@@ -41,10 +41,6 @@ find_package(
 find_package(libmongocxx REQUIRED)
 # </Mongo Driver>
 
-# <Misc 3rd Party Integrations>
-set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
-# </Misc 3rd Party Integrations>
-
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
