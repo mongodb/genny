@@ -5,6 +5,15 @@ cmake_policy(VERSION 3.11)
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(genny VERSION 0.0.1 LANGUAGES CXX)
 
+# Include our local cmake folder in the module path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# Use our modules
+include(Options)
+include(CheckCompiler)
+include(ConfigureInstall)
+
+# Use other external modules
 include(GNUInstallDirs)
 
 find_package(Threads REQUIRED)
@@ -38,25 +47,8 @@ set(THIRD_PARTY_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/third_party)
 
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
-
-# Nice-to-have CMAKE options
 set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
-set(CMAKE_SKIP_BUILD_RPATH              false   CACHE BOOL "")
-set(CMAKE_BUILD_WITH_INSTALL_RPATH      false   CACHE BOOL "")
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true    CACHE BOOL "")
-set(CMAKE_MACOSX_RPATH                  ON      CACHE BOOL "Ensure that RPATH is used on OSX")
-
-# This line allows us to run genny executables from a distribution folder where libraries live in
-# bin/../lib64. This is a nice thing for driver-like applications, because you can pass around
-# archives trivially.
-set(CMAKE_INSTALL_RPATH                 "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"   CACHE PATH "")
-
-# If the user did not customize the install prefix to ${genny_root}/install
-# set it to live under build so we don't inadverently pollute /usr/local
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "default install path" FORCE)
-endif()
+set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
 
 # These libraries are almost ubiquitously required in genny
 # The AFTER tag means that our headers are considered before headers in the same folder as these
