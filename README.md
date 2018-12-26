@@ -160,9 +160,9 @@ And then run a workload:
 ```sh
 
 ./build/src/driver/genny                                      \
-    --workload-file       ../src/driver/test/InsertRemove.yml \
+    --workload-file       src/driver/test/InsertRemove.yml \
     --metrics-format      csv                                 \
-    --metrics-output-file ./genny-metrics.csv                 \
+    --metrics-output-file build/genny-metrics.csv                 \
     --mongo-uri           'mongodb://localhost:27017'
 ```
 
