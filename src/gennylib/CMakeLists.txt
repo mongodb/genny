@@ -72,9 +72,13 @@ target_link_libraries(gennylib
         gennylib_cast
         gennylib_generators
         gennylib_core
-    PRIVATE
-        jasperlib
 )
+if(ENABLE_JASPER)
+    target_link_libraries(gennylib
+        PRIVATE
+            jasperlib
+    )
+endif()
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
 install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core

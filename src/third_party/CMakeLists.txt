@@ -8,5 +8,7 @@ add_subdirectory(catch2)
 # </Catch2>
 
 # <Jasper>
-add_subdirectory(jasper)
+if(ENABLE_JASPER)
+    add_subdirectory(jasper)
+endif()
 # </Jasper>
