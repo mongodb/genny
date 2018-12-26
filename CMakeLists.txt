@@ -9,14 +9,7 @@ include(GNUInstallDirs)
 
 find_package(Threads REQUIRED)
 
-
-
 # <Boost>
-option(USE_STATIC_BOOST
-       "Use boost static libaries when compiling genny. \
-        This also requires boost static libraries to have position-independent code."
-       OFF)
-
 set(Boost_USE_STATIC_LIBS ${USE_STATIC_BOOST})
 if(NOT ${USE_STATIC_BOOST})
   add_definitions(-DBOOST_ALL_DYN_LINK)
@@ -58,28 +51,6 @@ set(CMAKE_MACOSX_RPATH                  ON      CACHE BOOL "Ensure that RPATH is
 # bin/../lib64. This is a nice thing for driver-like applications, because you can pass around
 # archives trivially.
 set(CMAKE_INSTALL_RPATH                 "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}"   CACHE PATH "")
-
-# Help spot unknown compilers and versions.
-# Other compilers are probably supported just fine but aren't officially checked
-if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "10.0")
-        message(FATAL_ERROR "Insufficient Apple clang version - XCode 10+ required")
-    endif()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "6.0")
-        message(FATAL_ERROR "Insufficient clang version - clang 6.0+ required")
-    endif()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.3.0")
-        message(FATAL_ERROR "Insufficient GCC/GNU version - gnu/gcc 7.3.0+ required")
-    endif()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "19.14.26430")
-        message(FATAL_ERROR "Insufficient Microsoft Visual C++ version - VS 2017 15.7+ (compiler version 19.14.26430). Found compiler version ${CMAKE_CXX_COMPILER_VERSION}")
-    endif()
-else()
-    message(FATAL_ERROR "Unknown compiler... ${CMAKE_CXX_COMPILER_ID} version ${CMAKE_CXX_COMPILER_VERSION}")
-endif()
 
 # If the user did not customize the install prefix to ${genny_root}/install
 # set it to live under build so we don't inadverently pollute /usr/local
