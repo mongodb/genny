@@ -37,9 +37,6 @@ find_package(
         log
         program_options
 )
-add_library(boost INTERFACE IMPORTED)
-set_property(TARGET boost PROPERTY
-        INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
 # </Boost>
 
 # <Mongo Driver>
@@ -98,12 +95,10 @@ endif()
 # The AFTER tag means that our headers are considered before headers in the same folder as these
 # dependencies
 include_directories(AFTER
-    ${Boost_INCLUDE_DIR}
     ${LIBMONGOCXX_INCLUDE_DIRS}
 )
 link_libraries(
     ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
     ${LIBMONGOCXX_LIBRARIES}
 )
 

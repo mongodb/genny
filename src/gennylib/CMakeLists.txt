@@ -21,7 +21,11 @@ target_include_directories(gennylib_core
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(gennylib_core yaml-cpp)
+target_link_libraries(gennylib_core
+    yaml-cpp
+
+    Boost::boost Boost::log
+)
 
 # Concepts to do with Actors
 add_library(gennylib_cast STATIC
