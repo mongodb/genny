@@ -1,5 +1,5 @@
 # <yaml-cpp>
-set(YAML_CPP_BUILD_TESTS OFF)
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "No tests for YAML" FORCE)
 add_subdirectory(yaml-cpp)
 # </yaml-cpp>
 
