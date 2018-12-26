@@ -58,7 +58,7 @@ add_library(gennylib SHARED
     src/Orchestrator.cpp
     src/PoolFactory.cpp
     src/DefaultRandom.cpp
-)
+    )
 
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
@@ -110,6 +110,7 @@ add_executable(test_gennylib
     test/ExecutionStrategy_test.cpp
     test/PoolFactory_test.cpp
     test/PhaseLoop_test.cpp
+    test/RunCommandActor_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
@@ -119,7 +120,7 @@ add_executable(test_gennylib
     # Test the helper
     test/ActorHelper_test.cpp
 )
-target_link_libraries(test_gennylib gennylib_testutil)
+target_link_libraries(test_gennylib gennylib_testutil cast_core)
 
 add_executable(benchmark_gennylib
     test/PhaseLoop_benchmark.cpp

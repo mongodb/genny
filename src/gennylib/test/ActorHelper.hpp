@@ -3,6 +3,8 @@
 
 #include <functional>
 
+#include <mongocxx/uri.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/Cast.hpp>
@@ -28,7 +30,10 @@ class ActorHelper {
 public:
     using FuncWithContext = std::function<void(const WorkloadContext&)>;
 
-    ActorHelper(const YAML::Node& config, int tokenCount, Cast::List castInitializer);
+    ActorHelper(const YAML::Node& config,
+                int tokenCount,
+                Cast::List castInitializer,
+                const std::string& connStr = mongocxx::uri::k_default_uri);
 
     void run(FuncWithContext&& runnerFunc = ActorHelper::doRunThreaded);
 

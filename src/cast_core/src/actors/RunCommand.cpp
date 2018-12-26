@@ -3,6 +3,8 @@
 #include <chrono>
 #include <thread>
 
+#include <boost/throw_exception.hpp>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
@@ -13,6 +15,7 @@
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/ExecutionStrategy.hpp>
+#include <gennylib/MongoException.hpp>
 #include <gennylib/value_generators.hpp>
 
 namespace genny {
@@ -58,7 +61,11 @@ public:
         auto maybeWatch = _timer ? std::make_optional<metrics::RaiiStopwatch>(_timer->raii())
                                  : std::optional<metrics::RaiiStopwatch>(std::nullopt);
 
-        _database.run_command(view);
+        try {
+            _database.run_command(view);
+        } catch (mongocxx::operation_exception& e){
+            BOOST_THROW_EXCEPTION(MongoException(e, view));
+        }
     }
 
 private:

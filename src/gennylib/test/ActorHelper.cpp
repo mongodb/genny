@@ -1,15 +1,19 @@
 #include "ActorHelper.hpp"
 
 #include <thread>
+#include <vector>
 
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
-#include <vector>
+
 
 namespace genny {
 
-ActorHelper::ActorHelper(const YAML::Node& config, int tokenCount, Cast::List castInitializer) {
+ActorHelper::ActorHelper(const YAML::Node& config,
+                         int tokenCount,
+                         Cast::List castInitializer,
+                         const std::string& uri) {
     if (tokenCount <= 0) {
         throw InvalidConfigurationException("Must add a positive number of tokens");
     }
@@ -21,8 +25,7 @@ ActorHelper::ActorHelper(const YAML::Node& config, int tokenCount, Cast::List ca
 
     _cast = std::make_unique<Cast>(std::move(castInitializer));
 
-    _wlc = std::make_unique<WorkloadContext>(
-        config, *_registry, *_orchestrator, "mongodb://localhost:27017", *_cast);
+    _wlc = std::make_unique<WorkloadContext>(config, *_registry, *_orchestrator, uri, *_cast);
 }
 
 void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {
