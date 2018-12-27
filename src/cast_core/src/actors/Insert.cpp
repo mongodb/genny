@@ -24,11 +24,8 @@ struct Insert::PhaseConfig {
 
     PhaseConfig(PhaseContext& phaseContext, std::mt19937_64& rng, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          json_document{value_generators::makeDoc(phaseContext.get("Document"), rng)} {
-        auto maybeOptions = phaseContext.get<config::ExecutionStrategy, false>("ExecutionStrategy");
-        if (maybeOptions)
-            options = *maybeOptions;
-    }
+          json_document{value_generators::makeDoc(phaseContext.get("Document"), rng)},
+          options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
 };
 
 void Insert::run() {

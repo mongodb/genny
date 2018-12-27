@@ -4,7 +4,7 @@
 #include <mongocxx/exception/operation_exception.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/config/ExecutionStrategy.hpp>
+#include <gennylib/config/ExecutionStrategyOptions.hpp>
 #include <gennylib/metrics.hpp>
 
 namespace genny {
@@ -28,11 +28,22 @@ public:
         size_t numAttempts = 0;
     };
 
-    using RunOptions = config::ExecutionStrategy;
+    using RunOptions = config::ExecutionStrategyOptions;
 
 public:
     ExecutionStrategy(ActorContext& context, ActorId id, const std::string& operation);
     ~ExecutionStrategy();
+
+    /*
+     * Either get a set of options at the specified path in the config,
+     * or return a default constructed set of the options.
+     * This function is mostly about abstracting a fairly common pattern for DRYness
+     */
+    template <typename ConfigT, class... Args>
+    static RunOptions getOptionsFrom(const ConfigT& config, Args&&... args) {
+        return config.template get<RunOptions, false>(std::forward<Args>(args)...)
+            .value_or(RunOptions{});
+    }
 
     template <typename F>
     void run(F&& fun, const RunOptions& options = RunOptions{}) {

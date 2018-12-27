@@ -22,13 +22,9 @@ namespace genny::test {
 struct StrategyActor : public Actor {
 public:
     struct PhaseState {
-        PhaseState(const PhaseContext& context) {
-            auto maybeOptions = context.get<config::ExecutionStrategy, false>("ExecutionStrategy");
-            if (maybeOptions)
-                options = *maybeOptions;
-
-            throwCount = context.get<int, false>("ThrowCount").value_or(0);
-        }
+        PhaseState(const PhaseContext& context)
+            : options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")},
+              throwCount{context.get<int, false>("ThrowCount").value_or(0)} {}
 
         ExecutionStrategy::RunOptions options;
         signed long long throwCount;
@@ -39,7 +35,7 @@ public:
         : Actor(context), strategy{context, StrategyActor::id(), "simple"}, _loop{context} {}
 
     void run() override {
-        for (auto && [ phase, config ] : _loop) {
+        for (auto && config : _loop) {
             auto throwCount = config->throwCount;
             strategy.run(
                 [&]() {
@@ -53,11 +49,12 @@ public:
                 config->options);
 
             auto attempts = strategy.lastResult().numAttempts;
-            BOOST_LOG_TRIVIAL(info) << "Phase " << phase << ": tried " << attempts << " times";
+            BOOST_LOG_TRIVIAL(info) << "Phase " << config.phaseNumber() << ": tried " << attempts
+                                    << " times";
             allRuns += attempts;
 
             if (!strategy.lastResult().wasSuccessful) {
-                BOOST_LOG_TRIVIAL(info) << "Phase " << phase << ": failed";
+                BOOST_LOG_TRIVIAL(info) << "Phase " << config.phaseNumber() << ": failed";
                 ++failedRuns;
             }
         }

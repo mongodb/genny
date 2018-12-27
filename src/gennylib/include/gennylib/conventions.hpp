@@ -5,7 +5,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <gennylib/config/ExecutionStrategy.hpp>
+#include <gennylib/config/ExecutionStrategyOptions.hpp>
 
 using namespace genny::config;
 
@@ -30,14 +30,14 @@ struct convert<std::chrono::milliseconds> {
 };
 
 template <>
-struct convert<ExecutionStrategy> {
-    static Node encode(const ExecutionStrategy& rhs) {
+struct convert<ExecutionStrategyOptions> {
+    static Node encode(const ExecutionStrategyOptions& rhs) {
         Node node;
         node["Retries"] = rhs.maxRetries;
         return node;
     }
 
-    static bool decode(const Node& node, ExecutionStrategy& rhs) {
+    static bool decode(const Node& node, ExecutionStrategyOptions& rhs) {
         if (!node.IsMap()) {
             return false;
         }
@@ -47,7 +47,7 @@ struct convert<ExecutionStrategy> {
             return false;
         }
 
-        rhs.maxRetries = yamlRetries.as<size_t>();
+        rhs.maxRetries = yamlRetries.as<decltype(rhs.maxRetries)>();
         return true;
     }
 

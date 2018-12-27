@@ -17,31 +17,29 @@ struct InsertRemove::PhaseConfig {
     PhaseConfig(mongocxx::database db,
                 const std::string collection_name,
                 std::mt19937_64& rng,
-                int id)
+                int id,
+                ExecutionStrategy::RunOptions insertOpts = {},
+                ExecutionStrategy::RunOptions removeOpts = {})
         : database{db},
           collection{db[collection_name]},
           myDoc(bsoncxx::builder::stream::document{} << "_id" << id
-                                                     << bsoncxx::builder::stream::finalize) {}
+                                                     << bsoncxx::builder::stream::finalize),
+          insertOptions{std::move(insertOpts)},
+          removeOptions{std::move(removeOpts)} {}
 
     PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client, int id)
-        : PhaseConfig((*client)[context.get<std::string>("Database")],
-                      context.get<std::string>("Collection"),
-                      rng,
-                      id) {
-        auto maybeInsertOptions =
-            context.get<config::ExecutionStrategy, false>("InsertStage", "ExecutionStrategy");
-        if (maybeInsertOptions)
-            insertOptions = *maybeInsertOptions;
-
-        auto maybeRemoveOptions =
-            context.get<config::ExecutionStrategy, false>("RemoveStage", "ExecutionStrategy");
-        if (maybeRemoveOptions)
-            removeOptions = *maybeRemoveOptions;
-    }
+        : PhaseConfig(
+              (*client)[context.get<std::string>("Database")],
+              context.get<std::string>("Collection"),
+              rng,
+              id,
+              ExecutionStrategy::getOptionsFrom(context, "InsertStage", "ExecutionsStrategy"),
+              ExecutionStrategy::getOptionsFrom(context, "RemoveStage", "ExecutionsStrategy")) {}
 
     mongocxx::database database;
     mongocxx::collection collection;
     bsoncxx::document::value myDoc;
+
     ExecutionStrategy::RunOptions insertOptions;
     ExecutionStrategy::RunOptions removeOptions;
 };
