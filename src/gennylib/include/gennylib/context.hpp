@@ -7,7 +7,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <random>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -24,6 +23,7 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/RNG.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/metrics.hpp>
 
@@ -282,12 +282,12 @@ public:
      * @return a new seeded random number generator. This should only be called during construction
      * to ensure reproducibility.
      */
-    std::mt19937_64 createRNG() {
+    auto createRNG() {
         if (_done) {
             throw InvalidConfigurationException(
                 "Tried to create a random number generator after construction");
         }
-        return std::mt19937_64{_rng()};
+        return DefaultRNG{_rng()};
     }
 
     /**
@@ -343,7 +343,7 @@ private:
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
-    std::mt19937_64 _rng;
+    DefaultRNG _rng;
 
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.

@@ -3,13 +3,13 @@
 
 #include <iostream>
 #include <memory>
-#include <random>
 
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
+#include <gennylib/RNG.hpp>
 #include <gennylib/context.hpp>
 
 namespace genny::actor {
@@ -26,7 +26,7 @@ public:
     void run() override;
 
 private:
-    std::mt19937_64 _rng;
+    genny::DefaultRNG _rng;
 
     ExecutionStrategy _strategy;
     mongocxx::pool::entry _client;

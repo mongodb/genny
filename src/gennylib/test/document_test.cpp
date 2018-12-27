@@ -1,9 +1,5 @@
 #include "test.h"
 
-#include "../src/value_generators/generators-private.hh"
-#include "../src/value_generators/parser.hh"
-#include <gennylib/value_generators.hpp>
-
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/core.hpp>
@@ -13,11 +9,15 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 
+#include "../src/value_generators/generators-private.hh"
+#include "../src/value_generators/parser.hh"
+#include <gennylib/RNG.hpp>
+#include <gennylib/value_generators.hpp>
+
 using namespace genny::value_generators;
 using bsoncxx::builder::stream::close_document;
 using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_document;
-using std::mt19937_64;
 
 template <typename T>
 void viewable_eq_viewable(const T& stream, const bsoncxx::document::view& test) {
@@ -35,7 +35,7 @@ void viewable_eq_viewable(const T& stream, const bsoncxx::document::view& test) 
 TEST_CASE("Documents are created", "[documents]") {
 
     bsoncxx::builder::stream::document mydoc{};
-    mt19937_64 rng;
+    genny::DefaultRNG rng{};
     rng.seed(269849313357703264);
 
     SECTION("Simple bson") {
@@ -76,7 +76,7 @@ TEST_CASE("Documents are created", "[documents]") {
 }
 
 TEST_CASE("Value Generators", "[generators]") {
-    mt19937_64 rng;
+    genny::DefaultRNG rng{};
     rng.seed(269849313357703264);
 
     SECTION("UseValueGenerator") {

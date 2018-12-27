@@ -2,10 +2,10 @@
 
 #include <atomic>
 #include <chrono>
-#include <random>
 #include <thread>
 
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/RNG.hpp>
 
 using namespace genny;
 using namespace std;
@@ -21,7 +21,7 @@ TEST_CASE("Orchestrator Perf", "[benchmark]") {
 
     atomic_long regIters(0);
     {
-        std::mt19937_64 rand;
+        genny::DefaultRNG rand;
         rand.seed(1234);
         int i = 0;
         bool done = false;
@@ -52,7 +52,7 @@ TEST_CASE("Orchestrator Perf", "[benchmark]") {
 
         auto t2 = std::thread{[&]() {
             // setup before timing starts
-            std::mt19937_64 rand;
+            genny::DefaultRNG rand;
             rand.seed(1234);
 
             auto phase = o.awaitPhaseStart();

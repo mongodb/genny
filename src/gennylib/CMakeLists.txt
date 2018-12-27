@@ -52,7 +52,7 @@ add_library(gennylib SHARED
     src/context.cpp
     src/Orchestrator.cpp
     src/PoolFactory.cpp
-)
+    include/gennylib/RNG.hpp)
 
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
@@ -104,12 +104,11 @@ add_executable(test_gennylib
     test/metrics_test.cpp
     test/orchestrator_test.cpp
     test/document_test.cpp
+    test/RNG_test.cpp
 
     # Test the helper
     test/ActorHelper_test.cpp
 )
-target_link_libraries(test_gennylib gennylib_testutil)
-
 target_link_libraries(test_gennylib gennylib_testutil)
 
 add_test(

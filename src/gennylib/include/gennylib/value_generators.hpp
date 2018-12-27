@@ -3,8 +3,9 @@
 
 #include <bsoncxx/builder/stream/document.hpp>
 #include <optional>
-#include <random>
 #include <unordered_map>
+
+#include <gennylib/RNG.hpp>
 
 namespace genny::value_generators {
 
@@ -40,7 +41,7 @@ public:
  *  A reference to the random number generator for the owning thread. Internal object may save a
  * reference to this random number generator.
  */
-std::unique_ptr<DocumentGenerator> makeDoc(const YAML::Node, std::mt19937_64&);
+std::unique_ptr<DocumentGenerator> makeDoc(YAML::Node, genny::DefaultRNG&);
 
 }  // namespace genny::value_generators
 
