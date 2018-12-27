@@ -47,7 +47,7 @@ struct InsertRemove::PhaseConfig {
 };
 
 void InsertRemove::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
             _insertStrategy.run(

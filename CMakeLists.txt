@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 # https://cmake.org/cmake/help/v3.0/policy/CMP0025.html
 if(POLICY CMP0025)
@@ -41,11 +41,6 @@ add_library(boost INTERFACE IMPORTED)
 set_property(TARGET boost PROPERTY
         INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
 # </Boost>
-
-# <Yaml CPP>
-set(YAMLCPP_STATIC_LIBRARY FALSE)
-find_package(yaml-cpp REQUIRED)
-# </Yaml CPP>
 
 # <Mongo Driver>
 find_package(libmongocxx REQUIRED)
@@ -104,13 +99,11 @@ endif()
 # dependencies
 include_directories(AFTER
     ${Boost_INCLUDE_DIR}
-    ${YAML_CPP_INCLUDE_DIR}
     ${LIBMONGOCXX_INCLUDE_DIRS}
 )
 link_libraries(
     ${CMAKE_THREAD_LIBS_INIT}
     ${Boost_LIBRARIES}
-    ${YAML_CPP_LIBRARIES}
     ${LIBMONGOCXX_LIBRARIES}
 )
 

@@ -32,7 +32,7 @@ struct Insert::PhaseConfig {
 };
 
 void Insert::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (const auto&& _ : config) {
             _strategy.run(
                 [&]() {

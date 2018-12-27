@@ -380,7 +380,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
               _iCounter{WorkloadContext::getActorSharedState<DummyInsert, InsertCounter>()} {}
 
         void run() override {
-            for (auto&& [_, cfg] : _loop) {
+            for (auto&& cfg : _loop) {
                 for (auto&& _ : cfg) {
                     BOOST_LOG_TRIVIAL(info) << "Inserting document at: " << _iCounter;
                     ++_iCounter;
@@ -407,7 +407,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
         }
 
         void run() override {
-            for (auto&& [_, cfg] : _loop) {
+            for (auto&& cfg : _loop) {
                 for (auto&& _ : cfg) {
                     BOOST_LOG_TRIVIAL(info) << "Finding document lower than: " << _iCounter;
                 }

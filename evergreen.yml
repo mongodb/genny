@@ -44,6 +44,9 @@
 
 ##                ⚡️ Variants ⚡️
 
+ignore:
+    - "*.md" # don't schedule tests if a commit only changes markdown files
+
 buildvariants:
 
 - name: archlinux
@@ -89,12 +92,13 @@ tasks:
 task_groups:
 - name: t_test
   max_hosts: 1
-  setup_group:
-  - func: f_cleanup
+  setup_task:
+  - func: f_remove_test_results_files
   teardown_task:
   # Attaching results is prohibited in "teardown_group". So we call it in "teardown_task"
   # but make the result file optional.
   - func: f_report_test_results
+  - func: f_remove_test_results_files
   tasks:
   # Rely on implicit dependencies in task_groups where tasks are executed in the order they're
   # defined. Tasks with explicit "depends_on" tasks may conflict with task_group's implicit
@@ -109,20 +113,6 @@ task_groups:
 ##                ⚡️ Functions ⚡️
 
 functions:
-
-  ##
-  # Remove any remnants of past builds.
-  ##
-  f_cleanup:
-  - command: shell.exec
-    params:
-      # the || true prevents a failure exit code for when `src` doesn't exist
-      script: |
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        rm -rf src || true
 
   f_fetch_source:
   - command: git.get_project
@@ -214,14 +204,29 @@ functions:
         python setup.py nosetests
 
   ##
-  # Reports test results to evergreen API.
+  # Reports test results to evergreen API. If you add a new file to this list, then you should also
+  # add it to the `f_remove_test_results_files` function to ensure it is cleaned up between tasks in
+  # the task group.
   ##
   f_report_test_results:
   - command: attach.xunit_results
     params:
       optional: true
-      file: ./src/build/src/*/*.junit.xml
+      file: src/build/src/*/*.junit.xml
   - command: attach.xunit_results
     params:
       optional: true
-      file: ./src/src/python/nosetests.xml
+      file: src/src/python/nosetests.xml
+
+  ##
+  # Removes the test results files from the local filesystem.
+  ##
+  f_remove_test_results_files:
+  - command: shell.exec
+    params:
+      script: |
+        set -o errexit
+        set -o pipefail
+        set -o nounset
+
+        rm -f src/build/src/*/*.junit.xml src/src/python/nosetests.xml

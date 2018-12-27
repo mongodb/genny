@@ -258,8 +258,8 @@ TEST_CASE("Two non-blocking Phases") {
     auto phaseConfig{makePhaseConfig(o, {{0, 7, 2_i, nullopt}, {1, 9, 2_i, nullopt}})};
 
     auto count = 0;
-    for (auto&& [p, h] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-        seenPhases.insert(p);
+    for (auto&& h : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+        seenPhases.insert(h.phaseNumber());
         for (auto&& _ : h) {
             seenActorPhaseValues.insert(*h);
             ++count;
@@ -279,8 +279,8 @@ TEST_CASE("Single Blocking Phase") {
     std::unordered_set<PhaseNumber> seen{};
 
     auto phaseConfig{makePhaseConfig(o, {{0, 7, 1_i, nullopt}})};
-    for (auto&& [p, h] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-        seen.insert(p);
+    for (auto&& h : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+        seen.insert(h.phaseNumber());
     }
 
     REQUIRE(seen == std::unordered_set<PhaseNumber>{0});
@@ -302,8 +302,8 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
 
     auto iters = 0;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-        seen.insert(phase);
+    for (auto&& holder : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+        seen.insert(holder.phaseNumber());
         for (auto&& _ : holder) {
             ++iters;
         }
@@ -329,8 +329,8 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 
     auto iters = 0;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-        seen.insert(phase);
+    for (auto&& holder : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+        seen.insert(holder.phaseNumber());
         for (auto&& _ : holder) {
             ++iters;
         }
@@ -353,8 +353,8 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     std::unordered_set<PhaseNumber> seen;
 
     auto iters = 0;
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-        seen.insert(phase);
+    for (auto&& holder : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+        seen.insert(holder.phaseNumber());
         for (auto&& _ : holder) {
             ++iters;
         }
@@ -379,8 +379,8 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
     auto iters = 0;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-        seen.insert(phase);
+    for (auto&& holder : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+        seen.insert(holder.phaseNumber());
         for (auto&& _ : holder) {
             ++iters;
         }
@@ -405,8 +405,8 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
     auto iters = 0;
 
-    for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-        seen.insert(phase);
+    for (auto&& holder : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+        seen.insert(holder.phaseNumber());
         for (auto&& _ : holder) {
             ++iters;
         }
@@ -427,7 +427,7 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
 
     // t1 blocks for 75ms in Phase 0
     auto t1 = std::thread([&]() {
-        for (auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ms}})})
+        for (auto&& h : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ms}})})
             for (auto _ : h) {
             }  // nop
         blockingDone = true;
@@ -435,7 +435,7 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
 
     // t2 does not block
     auto t2 = std::thread([&]() {
-        for (auto&& [p, h] : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, nullopt}})})
+        for (auto&& h : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, nullopt}})})
             for (auto _ : h) {
             }  // nop
         {
@@ -473,8 +473,8 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                                           {0, 7, nullopt, nullopt},
                                           {1, 9, 1_i, nullopt}})};
 
-        for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-            switch (phase) {
+        for (auto&& holder : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+            switch (holder.phaseNumber()) {
                 case 0:
                     for (auto&& _ : holder) {
                     }  // nop
@@ -489,7 +489,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                     phaseOneSlept = true;
                     break;
                 default:
-                    BOOST_LOG_TRIVIAL(error) << "Unknown phase " << phase;
+                    BOOST_LOG_TRIVIAL(error) << "Unknown phase " << holder.phaseNumber();
                     ++failures;
             }
         }
@@ -504,8 +504,8 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         auto prevPhaseStart = system_clock::now();
         int prevPhase = -1;
 
-        for (auto&& [phase, holder] : PhaseLoop<int>{o, std::move(phaseConfig)}) {
-            switch (phase) {
+        for (auto&& holder : PhaseLoop<int>{o, std::move(phaseConfig)}) {
+            switch (holder.phaseNumber()) {
                 case 0:
                     std::this_thread::sleep_for(sleepTime);
                     phaseZeroSlept = true;
@@ -519,7 +519,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
                     }
                     break;
                 default:
-                    BOOST_LOG_TRIVIAL(error) << "Unknown phase " << phase;
+                    BOOST_LOG_TRIVIAL(error) << "Unknown phase " << holder.phaseNumber();
                     ++failures;
             }
         }

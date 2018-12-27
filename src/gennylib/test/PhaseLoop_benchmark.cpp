@@ -40,7 +40,7 @@ struct IncrementsActor : public Actor {
     IncrementsActor(ActorContext& ctx) : Actor(ctx), _loop{ctx} {}
 
     void run() override {
-        for (auto&& [phase, config] : _loop) {
+        for (auto&& config : _loop) {
             for (auto&& _ : config) {
                 ++increments;
             }

@@ -20,7 +20,7 @@ namespace genny {
  * To easily register a default ActorProducer to the global Cast, one can use the following in
  * a source file:
  * ```
- * auto registerMyActor = genny::Cast::makeDefaultRegistration<MyActorT>();
+ * auto registerMyActor = genny::Cast::registerDefault<MyActorT>();
  * ```
  * The function makes a specialization of DefaultActorProducer and hands it to the
  * Cast::Registration struct along with the `defaultName()` of MyActorT. When that struct
@@ -95,7 +95,7 @@ inline Cast& globalCast() {
  * This struct is a vehicle for its ctor function which takes a name for the specific ActorProducer
  * in the Cast and a `shared_ptr` to the instance of the ActorProducer. This allows for pre-main
  * invocations of the registration via global variables of type `Cast::Registration`. The vast
- * majority of cases will want to use `makeDefaultRegistration()` below and avoid most concerns on
+ * majority of cases will want to use `registerDefault()` below and avoid most concerns on
  * this struct.
  */
 struct Cast::Registration {

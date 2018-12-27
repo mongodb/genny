@@ -13,6 +13,16 @@ add_library(gennylib_headers SHARED
     ${HEADERS_FOR_CLION}
 )
 
+add_library(gennylib_core STATIC
+    src/version.cpp
+)
+target_include_directories(gennylib_core
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(gennylib_core yaml-cpp)
+
 # Concepts to do with Actors
 add_library(gennylib_cast STATIC
     src/Actor.cpp
@@ -20,12 +30,7 @@ add_library(gennylib_cast STATIC
     src/Cast.cpp
     src/ExecutionStrategy.cpp
 )
-
-target_include_directories(gennylib_cast
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-)
+target_link_libraries(gennylib_cast gennylib_core)
 
 # Concepts to do with generators
 add_library(gennylib_generators STATIC
@@ -35,12 +40,10 @@ add_library(gennylib_generators STATIC
 )
 
 target_include_directories(gennylib_generators
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
     PRIVATE
         src/value_generators
 )
+target_link_libraries(gennylib_generators gennylib_core)
 
 # Additional utilities and core concepts
 # Note that this contains both what you need to compile Actors and what you need to compile a Driver
@@ -55,26 +58,22 @@ add_library(gennylib SHARED
 # compiling the library, and will be added to consumers' build
 # paths.
 target_include_directories(gennylib
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
     PRIVATE
         src
 )
-
-add_subdirectory(jasper)
 
 # Link in the sublibraries into the main library
 target_link_libraries(gennylib
     PUBLIC
         gennylib_cast
         gennylib_generators
+        gennylib_core
     PRIVATE
         jasperlib
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib gennylib_cast gennylib_generators
+install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core
         EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
