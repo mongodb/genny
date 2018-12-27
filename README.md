@@ -55,7 +55,7 @@ export LIBRARY_PATH="$(brew --prefix)/lib/:$LIBRARY_PATH"
 ```
 
 This needs to be run before you run `cmake`. If you have already run
-`cmake`, then `cd build; rm -rf *` after putting this in your profile
+`cmake`, then `rm -rf build/*` after putting this in your profile
 and restarting your shell.
 
 TODO: TIG-1263 This is kind of a hack; using built-in package-location
@@ -153,7 +153,7 @@ brew install mongodb
 mongod --dbpath=/tmp
 ```
 
-Then build Genny (see [above](#quick-start) for detail):
+Then build Genny (see [above](#quick-start) for details):
 
 And then run a workload:
 
@@ -203,7 +203,7 @@ Running with ASAN:
     make -C "build" test
     ./build/src/driver/genny src/driver/test/Workload.yml
 
-Running with ubsan
+Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
     cmake -DCMAKE_CXX_FLAGS="$FLAGS" -B "build" .
