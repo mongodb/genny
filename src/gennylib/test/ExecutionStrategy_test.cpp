@@ -13,6 +13,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <mongocxx/exception/operation_exception.hpp>
+#include <mongocxx/exception/server_error_code.hpp>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
 
@@ -35,13 +36,14 @@ public:
         : Actor(context), strategy{context, StrategyActor::id(), "simple"}, _loop{context} {}
 
     void run() override {
-        for (auto && config : _loop) {
+        for (auto&& config : _loop) {
             auto throwCount = config->throwCount;
             strategy.run(
                 [&]() {
                     if (throwCount > 0) {
                         --throwCount;
-                        throw mongocxx::operation_exception();
+                        throw mongocxx::operation_exception(mongocxx::make_error_code({}),
+                                                            "Testing ExecutionStrategy catching.");
                     }
 
                     ++goodRuns;
@@ -49,8 +51,8 @@ public:
                 config->options);
 
             auto attempts = strategy.lastResult().numAttempts;
-            BOOST_LOG_TRIVIAL(info) << "Phase " << config.phaseNumber() << ": tried " << attempts
-                                    << " times";
+            BOOST_LOG_TRIVIAL(info)
+                << "Phase " << config.phaseNumber() << ": tried " << attempts << " times";
             allRuns += attempts;
 
             if (!strategy.lastResult().wasSuccessful) {
