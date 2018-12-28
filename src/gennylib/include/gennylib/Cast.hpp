@@ -41,10 +41,11 @@ public:
     struct Registration;
 
     using ActorProducerMap = std::map<std::string_view, std::shared_ptr<ActorProducer>>;
+    using List = std::initializer_list<Cast::ActorProducerMap::value_type>;
 
 public:
     Cast() {}
-    Cast(std::initializer_list<ActorProducerMap::value_type> init) {
+    Cast(List init) {
         for (const auto& [name, producer] : init) {
             add(name, producer);
         }
