@@ -128,7 +128,7 @@ functions:
       working_dir: src
       command: /bin/bash ${workdir}/src/scripts/make-grpc.sh
       env:
-          MAKEFLAGS: "-j16" # This should be reasonably safe even on low memory machines
+          MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
 
   ##
   # Compile the project in src/build.
