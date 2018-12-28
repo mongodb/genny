@@ -28,24 +28,26 @@ class ActorHelper {
 public:
     using FuncWithContext = std::function<void(const WorkloadContext&)>;
 
-    ActorHelper(const YAML::Node& config,
-                int tokenCount,
-                const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer);
+    ActorHelper(const YAML::Node& config, int tokenCount, Cast::List castInitializer);
 
-    void run(FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded);
+    void run(FuncWithContext&& runnerFunc = ActorHelper::doRunThreaded);
 
-    void runAndVerify(FuncWithContext&& runnerFunc = ActorHelper::_doRunThreaded,
+    void runAndVerify(FuncWithContext&& runnerFunc = ActorHelper::doRunThreaded,
                       FuncWithContext&& verifyFunc = FuncWithContext());
 
+    void runDefaultAndVerify(FuncWithContext&& verifyFunc) {
+        runAndVerify(ActorHelper::doRunThreaded, std::forward<FuncWithContext>(verifyFunc));
+    }
+
+    static void doRunThreaded(const WorkloadContext& wl);
+
 private:
-    static void _doRunThreaded(const WorkloadContext& wl);
-
-    std::unique_ptr<WorkloadContext> _wlc;
-
     // These are only used when constructing the workload context, but the context doesn't own them.
+    std::unique_ptr<metrics::Registry> _registry;
     std::unique_ptr<Orchestrator> _orchestrator;
     std::unique_ptr<Cast> _cast;
-    std::unique_ptr<metrics::Registry> _registry;
+
+    std::unique_ptr<WorkloadContext> _wlc;
 };
 }  // namespace genny
 

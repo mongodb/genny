@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 # https://cmake.org/cmake/help/v3.0/policy/CMP0025.html
 if(POLICY CMP0025)

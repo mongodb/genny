@@ -6,6 +6,7 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -31,8 +32,8 @@ public:
 private:
     std::mt19937_64 _rng;
 
-    metrics::Timer _insertTimer;
-    metrics::Timer _removeTimer;
+    ExecutionStrategy _insertStrategy;
+    ExecutionStrategy _removeStrategy;
     mongocxx::pool::entry _client;
 
     struct PhaseConfig;

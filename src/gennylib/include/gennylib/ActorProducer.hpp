@@ -66,6 +66,7 @@ template <class ActorT>
 class DefaultActorProducer : public ParallelizedActorProducer {
 public:
     using ParallelizedActorProducer::ParallelizedActorProducer;
+    DefaultActorProducer() : DefaultActorProducer{ActorT::defaultName()} {}
 
     void produceInto(ActorVector& out, ActorContext& context) override {
         out.emplace_back(std::make_unique<ActorT>(context));
