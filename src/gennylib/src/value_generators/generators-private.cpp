@@ -24,7 +24,8 @@ bsoncxx::document::view BsonDocument::view(bsoncxx::builder::stream::document&) 
     return doc->view();
 }
 
-TemplateDocument::TemplateDocument(YAML::Node node, genny::DefaultRNG& rng) : DocumentGenerator() {
+TemplateDocument::TemplateDocument(YAML::Node node, genny::DefaultRandom& rng)
+    : DocumentGenerator() {
     auto templates = getGeneratorTypes();
     std::vector<std::tuple<std::string, std::string, YAML::Node>> overrides;
 
@@ -143,7 +144,9 @@ bsoncxx::document::view TemplateDocument::view(bsoncxx::builder::stream::documen
     applyOverrideLevel(output, doc.view(tempdoc), "");
     return output.view();
 }
-ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type, genny::DefaultRNG& rng) {
+ValueGenerator* makeValueGenerator(YAML::Node yamlNode,
+                                   std::string type,
+                                   genny::DefaultRandom& rng) {
     if (type == "randomint") {
         return new RandomIntGenerator(yamlNode, rng);
     } else if (type == "randomstring") {
@@ -158,7 +161,7 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode, std::string type, genny:
     throw InvalidConfigurationException(error.str());
 }
 
-ValueGenerator* makeValueGenerator(YAML::Node yamlNode, genny::DefaultRNG& rng) {
+ValueGenerator* makeValueGenerator(YAML::Node yamlNode, genny::DefaultRandom& rng) {
     if (auto type = yamlNode["type"])
         return (makeValueGenerator(yamlNode, type.Scalar(), rng));
     // If it doesn't have a type field, search for templating keys
@@ -184,12 +187,12 @@ std::string ValueGenerator::generateString() {
 
 
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node yamlNode,
-                                                         genny::DefaultRNG& rng) {
+                                                         genny::DefaultRandom& rng) {
     return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode, rng));
 }
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node yamlNode,
                                                          std::string type,
-                                                         genny::DefaultRNG& rng) {
+                                                         genny::DefaultRandom& rng) {
     return std::unique_ptr<ValueGenerator>(makeValueGenerator(yamlNode, type, rng));
 }
 
@@ -300,7 +303,7 @@ double valAsDouble(view_or_value val) {
     return (0);
 }
 
-UseValueGenerator::UseValueGenerator(YAML::Node& node, genny::DefaultRNG& rng)
+UseValueGenerator::UseValueGenerator(YAML::Node& node, genny::DefaultRandom& rng)
     : ValueGenerator(node, rng) {
     // add in error checking
     if (node.IsScalar()) {
@@ -315,7 +318,7 @@ bsoncxx::array::value UseValueGenerator::generate() {
     return (bsoncxx::array::value(*value));
 }
 
-RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, genny::DefaultRNG& rng)
+RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, genny::DefaultRandom& rng)
     : ValueGenerator(node, rng), generator(GeneratorType::UNIFORM), min(0), max(100), t(10) {
     // It's okay to have a scalar for the templating. Just use defaults
     if (node.IsMap()) {
@@ -436,7 +439,7 @@ bsoncxx::array::value RandomIntGenerator::generate() {
                                               << bsoncxx::builder::stream::finalize);
 }
 
-IntOrValue::IntOrValue(YAML::Node yamlNode, genny::DefaultRNG& rng)
+IntOrValue::IntOrValue(YAML::Node yamlNode, genny::DefaultRandom& rng)
     : myInt(0), myGenerator(nullptr) {
     if (yamlNode.IsScalar()) {
         // Read in just a number
@@ -448,7 +451,8 @@ IntOrValue::IntOrValue(YAML::Node yamlNode, genny::DefaultRNG& rng)
         myGenerator = makeUniqueValueGenerator(yamlNode, rng);
     }
 }
-FastRandomStringGenerator::FastRandomStringGenerator(const YAML::Node& node, genny::DefaultRNG& rng)
+FastRandomStringGenerator::FastRandomStringGenerator(const YAML::Node& node,
+                                                     genny::DefaultRandom& rng)
     : ValueGenerator(node, rng) {
     if (node["length"]) {
         length = IntOrValue(node["length"], rng);
@@ -474,7 +478,7 @@ bsoncxx::array::value FastRandomStringGenerator::generate() {
     return (bsoncxx::builder::stream::array{} << str << bsoncxx::builder::stream::finalize);
 }
 
-RandomStringGenerator::RandomStringGenerator(YAML::Node& node, genny::DefaultRNG& rng)
+RandomStringGenerator::RandomStringGenerator(YAML::Node& node, genny::DefaultRandom& rng)
     : ValueGenerator(node, rng) {
     if (node["length"]) {
         length = IntOrValue(node["length"], rng);

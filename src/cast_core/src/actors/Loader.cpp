@@ -21,7 +21,7 @@ using index_type = std::pair<document_ptr, std::optional<document_ptr>>;
 
 struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context,
-                genny::DefaultRNG& rng,
+                genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 uint thread)
         : database{(*client)[context.get<std::string>("Database")]},

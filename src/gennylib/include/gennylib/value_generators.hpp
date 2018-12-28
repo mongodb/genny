@@ -5,7 +5,7 @@
 #include <optional>
 #include <unordered_map>
 
-#include <gennylib/RNG.hpp>
+#include <gennylib/PseudoRandom.hpp>
 
 namespace genny::value_generators {
 
@@ -37,11 +37,11 @@ public:
  *
  * @param Node
  *  The YAML node with the configuration for this document generator.
- * @param RNG
+ * @param PseudoRandom
  *  A reference to the random number generator for the owning thread. Internal object may save a
  * reference to this random number generator.
  */
-std::unique_ptr<DocumentGenerator> makeDoc(YAML::Node, genny::DefaultRNG&);
+std::unique_ptr<DocumentGenerator> makeDoc(YAML::Node, genny::DefaultRandom&);
 
 }  // namespace genny::value_generators
 

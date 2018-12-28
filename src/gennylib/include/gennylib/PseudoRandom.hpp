@@ -7,23 +7,39 @@
 namespace genny {
 
 template <class RNGImpl>
-class RNG {
+class PseudoRandom {
 
 public:
     using result_type = typename RNGImpl::result_type;
 
-    explicit RNG(result_type seed = 6514393) : _rng(std::make_unique<RNGImpl>(seed)) {}
+    using Handle = PseudoRandom&;
 
-    RNG child() {
-        return RNG(*this());
+    explicit PseudoRandom(result_type seed = 6514393) : _rng(std::make_unique<RNGImpl>(seed)) {}
+
+    // Allow moves.
+    PseudoRandom(PseudoRandom&&) = default;
+    PseudoRandom& operator=(PseudoRandom&&) = default;
+
+    // No copies.
+    PseudoRandom(const PseudoRandom&) = delete;
+    PseudoRandom& operator=(const PseudoRandom&) = delete;
+
+    ~PseudoRandom() = default;
+
+    PseudoRandom child() {
+        return PseudoRandom(this());
     }
 
     void seed(result_type newSeed) {
         _rng->seed(newSeed);
     }
 
-    auto operator()() -> result_type {
+    result_type nextValue() {
         return (*_rng)();
+    }
+
+    result_type operator()() {
+        return this->nextValue();
     }
 
     static constexpr auto min() {
@@ -38,7 +54,7 @@ private:
     std::unique_ptr<RNGImpl> _rng;
 };
 
-using DefaultRNG = RNG<std::mt19937_64>;
+using DefaultRandom = PseudoRandom<std::mt19937_64>;
 
 }  // namespace genny
 #endif  // HEADER_EBA231D0_AA7A_4008_A9E8_BD1C98D9023E_INCLUDED

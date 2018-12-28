@@ -11,7 +11,7 @@
 
 #include "../src/value_generators/generators-private.hh"
 #include "../src/value_generators/parser.hh"
-#include <gennylib/RNG.hpp>
+#include <gennylib/PseudoRandom.hpp>
 #include <gennylib/value_generators.hpp>
 
 using namespace genny::value_generators;
@@ -35,7 +35,7 @@ void viewable_eq_viewable(const T& stream, const bsoncxx::document::view& test) 
 TEST_CASE("Documents are created", "[documents]") {
 
     bsoncxx::builder::stream::document mydoc{};
-    genny::DefaultRNG rng{};
+    genny::DefaultRandom rng{};
     rng.seed(269849313357703264);
 
     SECTION("Simple bson") {
@@ -76,7 +76,7 @@ TEST_CASE("Documents are created", "[documents]") {
 }
 
 TEST_CASE("Value Generators", "[generators]") {
-    genny::DefaultRNG rng{};
+    genny::DefaultRandom rng{};
     rng.seed(269849313357703264);
 
     SECTION("UseValueGenerator") {

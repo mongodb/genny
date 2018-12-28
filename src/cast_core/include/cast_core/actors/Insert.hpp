@@ -9,7 +9,7 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/RNG.hpp>
+#include <gennylib/PseudoRandom.hpp>
 #include <gennylib/context.hpp>
 
 namespace genny::actor {
@@ -26,7 +26,7 @@ public:
     void run() override;
 
 private:
-    genny::DefaultRNG _rng;
+    genny::DefaultRandom _rng;
 
     ExecutionStrategy _strategy;
     mongocxx::pool::entry _client;

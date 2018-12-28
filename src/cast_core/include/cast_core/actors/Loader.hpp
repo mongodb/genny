@@ -3,7 +3,7 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/RNG.hpp>
+#include <gennylib/PseudoRandom.hpp>
 #include <gennylib/context.hpp>
 
 namespace genny::actor {
@@ -27,7 +27,7 @@ public:
 
 private:
     struct PhaseConfig;
-    genny::DefaultRNG _rng;
+    genny::DefaultRandom _rng;
     metrics::Timer _totalBulkLoadTimer;
     metrics::Timer _individualBulkLoadTimer;
     metrics::Timer _indexBuildTimer;

@@ -52,7 +52,8 @@ add_library(gennylib SHARED
     src/context.cpp
     src/Orchestrator.cpp
     src/PoolFactory.cpp
-    include/gennylib/RNG.hpp)
+    src/PseudoRandom.cpp
+)
 
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build

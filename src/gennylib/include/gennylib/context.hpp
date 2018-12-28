@@ -23,7 +23,7 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/RNG.hpp>
+#include <gennylib/PseudoRandom.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/metrics.hpp>
 
@@ -287,7 +287,7 @@ public:
             throw InvalidConfigurationException(
                 "Tried to create a random number generator after construction");
         }
-        return DefaultRNG{_rng()};
+        return DefaultRandom{_rng()};
     }
 
     /**
@@ -343,7 +343,7 @@ private:
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
-    DefaultRNG _rng;
+    DefaultRandom _rng;
 
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.

@@ -16,7 +16,7 @@ namespace genny::actor {
 struct InsertRemove::PhaseConfig {
     PhaseConfig(mongocxx::database db,
                 const std::string collection_name,
-                genny::DefaultRNG& rng,
+                genny::DefaultRandom& rng,
                 int id,
                 ExecutionStrategy::RunOptions insertOpts = {},
                 ExecutionStrategy::RunOptions removeOpts = {})
@@ -28,7 +28,7 @@ struct InsertRemove::PhaseConfig {
           removeOptions{std::move(removeOpts)} {}
 
     PhaseConfig(PhaseContext& context,
-                genny::DefaultRNG& rng,
+                genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 int id)
         : PhaseConfig(
