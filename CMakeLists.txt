@@ -1,16 +1,6 @@
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 cmake_policy(VERSION 3.11)
 
-# https://cmake.org/cmake/help/v3.0/ipolicy/CMP0042.html
-if(POLICY CMP0042)
-    cmake_policy(SET CMP0042 NEW)
-endif()
-
-# https://cmake.org/cmake/help/v3.13/policy/CMP0077.html
-if(POLICY CMP0077)
-    cmake_policy(SET CMP0077 NEW)
-endif()
-
 # NB: this version number is duplicated in
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(genny VERSION 0.0.1 LANGUAGES CXX)

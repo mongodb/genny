@@ -20,6 +20,7 @@ brew install cmake
 brew install icu4c
 brew install openssl@1.1
 brew install mongo-cxx-driver
+brew install grpc
 brew install boost      \
     --build-from-source \
     --include-test      \
@@ -72,6 +73,7 @@ using the package manger. Generally this is:
 - cmake
 - boost
 - mongo-cxx-driver
+- grpc
 - openssl
 - icu
 
