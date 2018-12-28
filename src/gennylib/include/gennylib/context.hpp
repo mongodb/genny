@@ -30,9 +30,8 @@
 /**
  * @file context.hpp defines WorkloadContext, ActorContext, and PhaseContext.
  *
- * These provide access
- * to configuration values and other workload collaborators (e.g. metrics) during the construction
- * of actors.
+ * These provide access to configuration values and other workload collaborators
+ * (e.g. metrics) during the construction of actors.
  *
  * Please see the documentation below on WorkloadContext, ActorContext, and PhaseContext.
  */
