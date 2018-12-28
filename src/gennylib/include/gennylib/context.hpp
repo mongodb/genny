@@ -253,8 +253,8 @@ public:
      *     std::optional<int> = context.get<int,false>("Actors", 0, "Count");
      * ```
      * @tparam T the output type required. Will forward to `YAML::Node.as<T>()`
-     * @tparam Required If true, will error if item not found. If false, will return an `std::optional<T>`
-     * that will be empty if not found.
+     * @tparam Required If true, will error if item not found. If false, will return an
+     * `std::optional<T>` that will be empty if not found.
      */
     template <class T = YAML::Node,
               bool Required = true,

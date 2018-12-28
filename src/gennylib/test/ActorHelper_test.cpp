@@ -4,11 +4,11 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <gennylib/ActorProducer.hpp>
-#include <gennylib/Actor.hpp>
-#include <gennylib/context.hpp>
-#include <gennylib/InvalidConfigurationException.hpp>
 #include "log.hh"
+#include <gennylib/Actor.hpp>
+#include <gennylib/ActorProducer.hpp>
+#include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/context.hpp>
 
 #include <ActorHelper.hpp>
 
@@ -30,9 +30,10 @@ TEST_CASE("Actor Helper") {
 
     SECTION("Barfs on invalid YAML") {
         YAML::Node badConfig = YAML::Load("{i-am-json-not-yaml}");
-        auto dummyProducer = std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
+        auto dummyProducer =
+            std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 
-        auto test = [&](){genny::ActorHelper ah(badConfig, 1, {{"DummyActor", dummyProducer}});};
+        auto test = [&]() { genny::ActorHelper ah(badConfig, 1, {{"DummyActor", dummyProducer}}); };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key.*i-am-json-not-yaml.*)"));
     }
 
@@ -43,9 +44,10 @@ Actors:
 - Name: One
   Type: DummyActor
 )");
-        auto dummyProducer = std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
+        auto dummyProducer =
+            std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 
-        auto test = [&](){genny::ActorHelper ah(config, -1, {{"DummyActor", dummyProducer}});};
+        auto test = [&]() { genny::ActorHelper ah(config, -1, {{"DummyActor", dummyProducer}}); };
         REQUIRE_THROWS_WITH(test(), Matches("Must add a positive number of tokens"));
     }
 
@@ -63,9 +65,10 @@ Actors:
 - Name: One
   Type: DummyActor
 )");
-        auto dummyProducer = std::make_shared<genny::DefaultActorProducer<CtorThrowingActor>>("DummyActor");
+        auto dummyProducer =
+            std::make_shared<genny::DefaultActorProducer<CtorThrowingActor>>("DummyActor");
 
-        auto test = [&](){genny::ActorHelper ah(config, 1, {{"DummyActor", dummyProducer}});};
+        auto test = [&]() { genny::ActorHelper ah(config, 1, {{"DummyActor", dummyProducer}}); };
         REQUIRE_THROWS_WITH(test(), Matches("CTOR Barf"));
     }
 
@@ -87,5 +90,3 @@ Actors:
         REQUIRE_THROWS_WITH(ah.runAndVerify(runFunc, verifyFunc), Matches("RUN Barf"));
     }
 }
-
-

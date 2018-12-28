@@ -15,7 +15,7 @@ class ActorContext;
  *
  * For the following %YAML,
  *
- * ```yaml           
+ * ```yaml
  * SchemaVersion: 2018-07-01
  * Actors:
  * - Name: Foo
