@@ -5,7 +5,6 @@ if(GENNY_INSTALL_DIR)
 elseif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set (CMAKE_INSTALL_PREFIX "${GENNY_DEFAULT_INSTALL_DIR}" CACHE PATH "" FORCE)
 endif()
-list(APPEND CMAKE_PREFIX_PATH ${CMAKE_INSTALL_PREFIX})
 
 # This line allows us to run genny executables from a distribution folder where libraries live in
 # bin/../lib64. This is a nice thing for driver-like applications, because you can pass around

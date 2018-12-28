@@ -35,5 +35,5 @@ for DIR in "${OPENSSL_DIRS[@]}"; do
 done
 
 # Use the mongodbtoolchain openssl to build and install grpc
-cmake "${OPENSSL_ROOT_DIR}" "${ROOT_DIR}" -DCMAKE_PREFIX_PATH="${ROOT_DIR}/../../dist"
+cmake "${OPENSSL_ROOT_DIR}" "${CMAKE_ARGS[@]:-}" "${ROOT_DIR}"
 make project_grpc
