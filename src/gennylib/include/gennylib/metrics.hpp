@@ -115,8 +115,8 @@ public:
     }
 
     /**
-     * Add a TSD data point occurring {@code now()}.
-     * Args are forwarded to the {@code T} constructor.
+     * Add a TSD data point occurring `now()`.
+     * Args are forwarded to the `T` constructor.
      */
     template <class... Args>
     void add(Args&&... args) {
@@ -145,7 +145,7 @@ private:
 
 
 /**
- * Data-storage backing a {@code Counter}.
+ * Data-storage backing a `Counter`.
  * Please see the documentation there.
  */
 class CounterImpl : private boost::noncopyable {
@@ -168,7 +168,7 @@ private:
 
 
 /**
- * Data-storage backing a {@code Gauge}.
+ * Data-storage backing a `Gauge`.
  * Please see the documentation there.
  */
 class GaugeImpl : private boost::noncopyable {
@@ -189,7 +189,7 @@ private:
 
 
 /**
- * Data-storage backing a {@code Timer}.
+ * Data-storage backing a `Timer`.
  * Please see the documentation there.
  */
 class TimerImpl : private boost::noncopyable {
@@ -250,15 +250,15 @@ private:
  *
  * This is useful when simply recording the number of operations completed.
  *
- * <pre>
- *     // setup:
- *     auto requests = registry.counter("requests");
+ * ```c++
+ * // setup:
+ * auto requests = registry.counter("requests");
  *
- *     // main method
- *     while(true) {
- *       requests.incr();
- *     }
- * </pre>
+ * // main method
+ * while(true) {
+ *   requests.incr();
+ * }
+ * ```
  */
 class Counter {
 
@@ -281,7 +281,7 @@ private:
  * A Gauge lets you record a known value. E.g. the number
  * of active sessions, how many threads are waiting on something, etc.
  * It is defined by each metric what the value is interpreted to be
- * between calls to {@code set}. E.g.
+ * between calls to `set()`. E.g.
  *
  * ```cpp
  * sessions.set(3);
@@ -312,17 +312,17 @@ private:
  *
  * Example usage:
  *
- * <pre>
- *     // setup:
- *     auto timer = registry.timer("loops");
+ * ```cpp
+ * // setup:
+ * auto timer = registry.timer("loops");
  *
- *     // main method:
- *     for(int i=0; i<5; ++i) {
- *         auto r = timer.raii();
- *     }
- * </pre>
+ * // main method:
+ * for(int i=0; i<5; ++i) {
+ *     auto r = timer.raii();
+ * }
+ * ```
  *
- * You can call {@code .report()} multiple times manually
+ * You can call `.report()` multiple times manually
  * but that does not prevent the timer from reporting on
  * its own in its dtor.
  */
@@ -357,27 +357,27 @@ private:
 
 
 /**
- * Similar to {@code RaiiStopwatch} but doesn't automatically
+ * Similar to `RaiiStopwatch` but doesn't automatically
  * report on its own. Records the time at which it was constructed
- * and then emits a metric event every time {@code .report()} is called.
+ * and then emits a metric event every time `.report()` is called.
  *
  * Example usage:
  *
- * <pre>
- *     // setup
- *     auto oper = registry.timer("operation.success");
+ * ```c++
+ * // setup
+ * auto oper = registry.timer("operation.success");
  *
- *     // main method
- *     for(int i=0; i<10; ++i) {
- *         auto t = oper.start();
- *         try {
- *             // do something
- *             t.report();
- *         } catch(...) { ... }
- *     }
- * </pre>
+ * // main method
+ * for(int i=0; i<10; ++i) {
+ *     auto t = oper.start();
+ *     try {
+ *         // do something
+ *         t.report();
+ *     } catch(...) { ... }
+ * }
+ * ```
  *
- * The {@code .report()} is only called in the successful
+ * The `.report()` is only called in the successful
  * scenarios, not if an exception is thrown.
  */
 class Stopwatch {
@@ -402,13 +402,13 @@ public:
     explicit constexpr Timer(V1::TimerImpl& t) : _timer{std::addressof(t)} {}
 
     /**
-     * @return a {@code Stopwatch} instance that must be manually reported via {@code .report()}.
-     *         When calling .report(), the amount of time elapsed from the calling of .start() to
-     *         calling .report() is reported to the metrics back-end. Can call .report() multiple
-     *         times. Use .start() when you want to record successful outcomes of some specific
-     *         code-path. If you never call .report(), no metrics data will be recorded.
+     * @return a `Stopwatch` instance that must be manually reported via `.report()`.
+     *         When calling `.report()`, the amount of time elapsed from the calling of `.start()` to
+     *         calling `.report()` is reported to the metrics back-end. Can call `.report()` multiple
+     *         times. Use `.start()` when you want to record successful outcomes of some specific
+     *         code-path. If you never call `.report()`, no metrics data will be recorded.
      *
-     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names.
+     *         Both `Stopwatch` and `RaiiStopwatch` record timing data, and they can share names.
      *         They are simply two APIs for reporting timing data.
      */
     [[nodiscard]] Stopwatch start() const {
@@ -416,13 +416,13 @@ public:
     }
 
     /**
-     * @return an {@code RaiiStopwatch} that will automatically report the time elapsed since it was
-     *         constructed in its dtor. Call .raii() at the start of your method or scope to record
+     * @return an `RaiiStopwatch` that will automatically report the time elapsed since it was
+     *         constructed in its dtor. Call `.raii()` at the start of your method or scope to record
      *         how long that method or scope takes even in the case of exceptions or early-returns.
-     *         You can also manually call .report() multiple times, but it's unclear if this is
+     *         You can also manually call `.report()` multiple times, but it's unclear if this is
      *         useful.
      *
-     *         Both Stopwatch and RaiiStopwatch record timing data, and they can share names. They
+     *         Both `Stopwatch` and `RaiiStopwatch` record timing data, and they can share names. They
      *         are simply two APIs for reporting timing data.
      */
     [[nodiscard]] RaiiStopwatch raii() const {
@@ -478,24 +478,24 @@ private:
 /**
  * Supports recording a number of types of Time-Series Values:
  *
- *   Counters:   a count of things that can be incremented or decremented
- *   Gauges:     a "current" number of things; a value that can be known and observed
- *   Timers:     recordings of how long certain operations took
+ * - Counters:   a count of things that can be incremented or decremented
+ * - Gauges:     a "current" number of things; a value that can be known and observed
+ * - Timers:     recordings of how long certain operations took
  *
  * All data-points are recorded along with the clock::now() value of when
  * the points are recorded.
  *
  * It is expensive to create a distinct metric name but cheap to record new values.
- * The first time registry.counter("foo") is called for a distinct counter
+ * The first time `registry.counter("foo")` is called for a distinct counter
  * name "foo", a large block of memory is reserved to store its data-points. But
- * all calls to registry.counter("foo") return pimpl-backed wrappers that are cheap
+ * all calls to `registry.counter("foo")` return pimpl-backed wrappers that are cheap
  * to construct and are safe to pass-by-value. Same applies for other metric types.
  *
  * As of now, none of the metrics classes are thread-safe, however they are all
  * thread-compatible. Two threads may not record values to the same metrics names
  * at the same time.
  *
- * metrics::Reporter instances have read-access to the TSD data, but that should
+ * `metrics::Reporter` instances have read-access to the TSD data, but that should
  * only be used by workload-drivers to produce a report of the metrics at specific-points
  * in their workload lifecycle.
  */
