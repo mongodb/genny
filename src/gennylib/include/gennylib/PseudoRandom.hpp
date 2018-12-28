@@ -2,6 +2,7 @@
 #define HEADER_EBA231D0_AA7A_4008_A9E8_BD1C98D9023E_INCLUDED
 
 #include <cstdint>
+#include <memory>
 #include <random>
 
 namespace genny {
