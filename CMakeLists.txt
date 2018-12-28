@@ -27,8 +27,6 @@ if(ENABLE_SSL)
     include(GetSsl)
 endif()
 
-include(GetGRpc)
-
 # Use other external modules
 include(GNUInstallDirs)
 

@@ -54,8 +54,6 @@ buildvariants:
   modules: ~
   run_on:
   - archlinux-test
-  expansions:
-    cmake_cxx_flags: -pthread
   tasks:
   - name: t_test
 
@@ -128,7 +126,7 @@ functions:
   - command: subprocess.exec
     params:
       working_dir: src
-      command: /bin/bash make-grpc.sh
+      command: /bin/bash ${workdir}/scripts/make-grpc.sh
 
   ##
   # Compile the project in src/build.

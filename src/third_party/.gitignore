@@ -1,5 +1,0 @@
-# Optionally built from a git source repository
-openssl
-mongo-c-driver
-mongo-cxx-driver
-grpc
