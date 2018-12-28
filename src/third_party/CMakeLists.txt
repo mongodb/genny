@@ -7,10 +7,6 @@ add_subdirectory(yaml-cpp)
 add_subdirectory(catch2)
 # </Catch2>
 
-# <Mongo Driver>
-#find_package(libmongocxx REQUIRED)
-# </Mongo Driver>
-
 # <gRPC>
 include(GetGRpc)
 # </gRPC>

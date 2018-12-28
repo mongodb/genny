@@ -103,6 +103,8 @@ apt-get install -y \
     software-properties-common \
     clang-6.0 \
     make \
+    libssl-dev \
+    libgrpc++-dev \
     libboost-all-dev
 
 # install mongo C++ driver:

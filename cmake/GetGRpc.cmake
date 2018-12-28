@@ -56,7 +56,7 @@ set(gRPC_ARGS
     -DgRPC_BUILD_TESTS:BOOL=OFF
 )
 
-# Jump through all the hoops necessary to install gRPC 
+# Jump through all the hoops necessary to install gRPC
 list(APPEND gRPC_ARGS
     -DgRPC_INSTALL:BOOL=ON
     -DgRPC_PROTOBUF_PROVIDER:STRING=package
