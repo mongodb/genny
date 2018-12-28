@@ -8,7 +8,12 @@ target_include_directories(driver
     PUBLIC
         src
 )
-target_link_libraries(driver cast_core gennylib)
+target_link_libraries(driver
+    cast_core
+    gennylib
+
+    Boost::program_options
+)
 
 # Make the genny driver executable
 add_executable(genny src/main.cpp)

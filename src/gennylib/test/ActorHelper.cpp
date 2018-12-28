@@ -9,11 +9,7 @@
 
 namespace genny {
 
-ActorHelper::ActorHelper(
-    const YAML::Node& config,
-    int tokenCount,
-    const std::initializer_list<Cast::ActorProducerMap::value_type>&& castInitializer) {
-
+ActorHelper::ActorHelper(const YAML::Node& config, int tokenCount, Cast::List castInitializer) {
     if (tokenCount <= 0) {
         throw InvalidConfigurationException("Must add a positive number of tokens");
     }
@@ -23,9 +19,10 @@ ActorHelper::ActorHelper(
     _orchestrator = std::make_unique<genny::Orchestrator>(_registry->gauge("PhaseNumber"));
     _orchestrator->addRequiredTokens(tokenCount);
 
-    _cast = std::make_unique<Cast>(castInitializer);
+    _cast = std::make_unique<Cast>(std::move(castInitializer));
 
-    _wlc = std::make_unique<WorkloadContext>(config, *_registry, *_orchestrator, "mongodb://localhost:27017", *_cast);
+    _wlc = std::make_unique<WorkloadContext>(
+        config, *_registry, *_orchestrator, "mongodb://localhost:27017", *_cast);
 }
 
 void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {
@@ -38,7 +35,7 @@ void ActorHelper::runAndVerify(ActorHelper::FuncWithContext&& runnerFunc,
     verifyFunc(*_wlc);
 }
 
-void ActorHelper::_doRunThreaded(const WorkloadContext& wl) {
+void ActorHelper::doRunThreaded(const WorkloadContext& wl) {
     std::vector<std::thread> threads;
     std::transform(cbegin(wl.actors()),
                    cend(wl.actors()),

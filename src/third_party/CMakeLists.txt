@@ -1,5 +1,5 @@
 # <yaml-cpp>
-set(YAML_CPP_BUILD_TESTS OFF)
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "No tests for YAML" FORCE)
 add_subdirectory(yaml-cpp)
 # </yaml-cpp>
 
@@ -25,17 +25,7 @@ list(APPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/grpc")
 # </gRPC>
 
 # <Jasper>
-#add_subdirectory(jasper)
+if(ENABLE_JASPER)
+    add_subdirectory(jasper)
+endif()
 # </Jasper>
-
-# These libraries are almost ubiquitously required in genny
-# The AFTER tag means that our headers are considered before headers in the same folder as these
-# dependencies
-include_directories(AFTER
-    ${LIBMONGOCXX_INCLUDE_DIRS}
-)
-link_libraries(
-    ${CMAKE_THREAD_LIBS_INIT}
-    Boost:boost
-    ${LIBMONGOCXX_LIBRARIES}
-)
