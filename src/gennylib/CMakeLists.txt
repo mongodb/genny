@@ -79,6 +79,12 @@ if(ENABLE_JASPER)
             jasperlib
     )
 endif()
+if(ENABLE_SSL)
+    target_link_libraries(gennylib
+        PUBLIC
+            OpenSSL::Crypto OpenSSL::SSL
+    )
+endif()
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
 install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core

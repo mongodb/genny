@@ -18,6 +18,7 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 # install third-party packages and build-tools
 brew install cmake
 brew install icu4c
+brew install openssl@1.1
 brew install mongo-cxx-driver
 brew install boost      \
     --build-from-source \
@@ -71,6 +72,7 @@ using the package manger. Generally this is:
 - cmake
 - boost
 - mongo-cxx-driver
+- openssl
 - icu
 
 To to build genny use the following commands:

@@ -23,6 +23,10 @@ include(Options)
 include(CheckCompiler)
 include(ConfigureInstall)
 
+if(ENABLE_SSL)
+    include(GetSsl)
+endif()
+
 # Use other external modules
 include(GNUInstallDirs)
 
