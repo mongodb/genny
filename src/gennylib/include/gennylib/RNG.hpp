@@ -34,35 +34,6 @@ public:
         return RNGImpl::max();
     }
 
-
-    // Copied from https://github.com/mongodb/mongo/blob/r4.1.4/src/mongo/platform/random.h#L72-L103
-    auto urbg() {
-
-        class URBG {
-        public:
-            explicit URBG(RNG* impl) : _impl(impl) {}
-
-            using result_type = uint64_t;
-
-            static constexpr result_type min() {
-                return std::numeric_limits<result_type>::min();
-            }
-
-            static constexpr result_type max() {
-                return std::numeric_limits<result_type>::max();
-            }
-
-            result_type operator()() {
-                return _impl->nextInt64();
-            }
-
-        private:
-            RNG* _impl;
-        };
-
-        return URBG(this);
-    }
-
 private:
     std::unique_ptr<RNGImpl> _rng;
 };
