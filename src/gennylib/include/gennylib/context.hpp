@@ -231,7 +231,7 @@ public:
      *     }
      * ```
      *
-     * Given this YAML:
+     * Given this %YAML:
      *
      * ```yaml
      *     SchemaVersion: 2018-07-01
@@ -253,8 +253,8 @@ public:
      *     // if value may not exist:
      *     std::optional<int> = context.get<int,false>("Actors", 0, "Count");
      * ```
-     * @tparam T the output type required. Will forward to YAML::Node.as<T>()
-     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
+     * @tparam T the output type required. Will forward to `YAML::Node.as<T>()`
+     * @tparam Required If true, will error if item not found. If false, will return an `std::optional<T>`
      * that will be empty if not found.
      */
     template <class T = YAML::Node,
@@ -395,7 +395,7 @@ public:
      *     }
      * ```
      *
-     * Given this YAML:
+     * Given this %YAML:
      *
      * ```yaml
      *     SchemaVersion: 2018-07-01
