@@ -8,7 +8,7 @@
 namespace genny {
 
 TEST_CASE("genny RNG") {
-    // Testing out core features of the PoolFactory
+
     SECTION("Can be used in std::shuffle") {
         std::vector<int> input = {1, 2, 3};
         std::vector<int> output = {3, 1, 2};
