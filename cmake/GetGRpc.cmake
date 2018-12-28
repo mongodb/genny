@@ -8,7 +8,7 @@ include(ExternalProject)
 
 ## Install c-ares
 set(cares_ARGS
-    -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
+    -DCMAKE_INSTALL_PREFIX:PATH=${GENNY_INSTALL_DIR}
 )
 
 # Only build static libraries
@@ -29,7 +29,7 @@ ExternalProject_Add(project_cares
 
 ## Install Protocol Buffers
 set(protobuf_ARGS
-    -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
+    -DCMAKE_INSTALL_PREFIX:PATH=${GENNY_INSTALL_DIR}
 )
 
 # No shared libs and no tests
@@ -51,8 +51,8 @@ ExternalProject_Add(project_protobuf
 
 ## Install gRPC
 set(gRPC_ARGS
-    -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
-    -DCMAKE_PREFIX_PATH:PATH=${CMAKE_INSTALL_PREFIX}
+    -DCMAKE_INSTALL_PREFIX:PATH=${GENNY_INSTALL_DIR}
+    -DCMAKE_PREFIX_PATH:PATH=${GENNY_INSTALL_DIR}
     -DgRPC_BUILD_TESTS:BOOL=OFF
 )
 
