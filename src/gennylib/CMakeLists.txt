@@ -85,13 +85,14 @@ install(DIRECTORY include/
 # Pull together our utils, header directories, and testing dependencies into one static target
 add_library(gennylib_testutil STATIC
     test/ActorHelper.cpp
+    $<TARGET_OBJECTS:catch2>
 )
 target_include_directories(gennylib_testutil
     PUBLIC
         src
         test
 )
-target_link_libraries(gennylib_testutil gennylib catch2)
+target_link_libraries(gennylib_testutil gennylib)
 
 add_executable(test_gennylib
     test/Cast_test.cpp

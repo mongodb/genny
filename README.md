@@ -4,9 +4,9 @@ Genny 🧞‍
 Genny is a workload-generator library and tool. It is implemented using
 C++17.
 
-### Quick-Start
+## Build and Install
 
-#### macOS
+### macOS
 
 1. [Download XCode 10](https://developer.apple.com/download/) (around 10GB) and install.
 2. Drag `Xcode.app` into `Applications`. For some reason the installer may put it in `~/Downloads`.
@@ -25,8 +25,10 @@ brew install boost      \
     --include-test      \
     --with-icu4c
 
-cmake -B "build" .
-make -C "build" genny
+cd build
+cmake ..
+make -j8
+make test
 ```
 
 If you get boost errors:
@@ -41,7 +43,7 @@ brew install boost      \
 
 Other errors, run `brew doctor`.
 
-##### Notes for macOS Mojave
+#### Notes for macOS Mojave
 
 Mojave doesn't have `/usr/local` on system roots, so you need to set
 environment variables for clang/ldd to find libraries provided by
@@ -63,20 +65,23 @@ mechanisms would avoid having to have OS-specific hacks like this.
 
 ### Linux Distributions
 
-Have installations of non-vendored dependent packages in your system,
+Have recent versions of non-vendored dependent packages in your system,
 using the package manger. Generally this is:
 
-- cmake
 - boost
-- mongo-cxx-driver
-- grpc
+- cmake (>=3.10.2)
+- grpc (17)
 - icu
+- mongo-cxx-driver
+- protobuf (3.6.1)
 
-To to build genny use the following commands:
+To build genny use the following commands:
 
 ```sh
-cmake -B "build" .
-make -C "build" genny
+cd build
+cmake ..
+make -j8
+make test
 ```
 
 You only need to run cmake once. Other useful targets include:
@@ -85,25 +90,39 @@ You only need to run cmake once. Other useful targets include:
 - test_gennylib test_driver (builds tests)
 - test (run's tests if they're built)
 
-### Other Operating Systems
+#### Ubuntu 18.04 LTS
 
-If not using OS X, ensure you have a recent C++ compiler and boost
-installation. You will also need packages installed corresponding to the
-above `brew install` lines.
+For C++17 support you need at least Ubuntu 18.04. (Before you say "mongodbtoolchain", note that
+it doesn't provide cmake.)
 
 E.g. for Ubuntu:
 
 ```sh
-apt-get install -y \
+apt install -y \
+    build-essential \
+    cmake \
     software-properties-common \
-    clang-6.0 \
-    make \
-    libboost-all-dev \
-    libgrpc++-dev
-
-# install mongo C++ driver:
-#   https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
+    clang-6.0 \ # optional
+    libboost-all-dev
 ```
+
+You also need `libgrpc++-dev` and `libprotobuf-dev`, but here genny is more picky about the
+versions. They need to be 17 and 3.6.1 respectively. I ended up installing from source:
+
+- protobuf: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md
+- grpc: https://github.com/grpc/grpc/blob/master/src/cpp/README.md
+
+If you already installed the wrong versions with apt, you are better of uninstalling them:
+
+```sh
+apt remove libgrpc++-dev libprotobuf-dev
+```
+
+Finally, install mongo C++ driver from source too:
+- https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
+- Note that you need to specifically tell it to install into `/usr/local`!
+
+Now you can build genny as described in the previous section.
 
 ### IDEs and Whatnot
 
