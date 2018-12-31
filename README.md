@@ -172,7 +172,7 @@ brew install mongodb
 mongod --dbpath=/tmp
 ```
 
-Then build Genny (see [above](#quick-start) for details):
+Then build Genny (see [above](#build-and-install) for details):
 
 And then run a workload:
 
