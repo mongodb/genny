@@ -105,7 +105,7 @@ add_executable(test_gennylib
     test/metrics_test.cpp
     test/orchestrator_test.cpp
     test/document_test.cpp
-    test/RNG_test.cpp
+    test/PseudoRandom_test.cpp
 
     # Test the helper
     test/ActorHelper_test.cpp

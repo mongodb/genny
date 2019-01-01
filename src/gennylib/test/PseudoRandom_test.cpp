@@ -10,14 +10,16 @@ namespace genny {
 TEST_CASE("genny PseudoRandom") {
 
     SECTION("Can be used in std::shuffle") {
-        std::vector<int> input = {1, 2, 3};
+        auto output = std::vector<int>(100);
+        std::iota(std::begin(output), std::end(output), 1);
 
         DefaultRandom rng;
         rng.seed(12345);
 
-        std::shuffle(input.begin(), input.end(), rng);
+        const auto input = output;
+        std::shuffle(output.begin(), output.end(), rng);
 
-        REQUIRE(input.size() == 3);
+        REQUIRE(input != output);
     }
 }
 }  // namespace genny
