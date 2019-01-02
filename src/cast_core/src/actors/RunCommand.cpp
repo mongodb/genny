@@ -20,8 +20,8 @@ namespace genny {
 class actor::RunCommand::Operation {
 public:
     struct Context {
-        PhaseContext & phaseContext;
-        ActorContext & actorContext;
+        PhaseContext& phaseContext;
+        ActorContext& actorContext;
 
         ActorId id;
         std::string databaseName;
@@ -54,8 +54,8 @@ public:
             std::this_thread::sleep_for(_options.preDelayMS);
         }
 
-        auto watch = [&](){
-            if(!_timer)
+        auto watch = [&]() {
+            if (!_timer)
                 return std::unique_ptr<metrics::RaiiStopwatch>{};
 
             return std::make_unique<metrics::RaiiStopwatch>(_timer->raii());
@@ -154,4 +154,4 @@ auto registerAdminCommand =
     Cast::registerCustom(std::make_shared<AdminCommandProducer>("AdminCommand"));
 }  // namespace
 
-} // namespace genny
+}  // namespace genny

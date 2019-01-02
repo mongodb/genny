@@ -49,9 +49,11 @@ struct convert<ExecutionStrategyOptions> {
             return false;
         }
 
-        decodeNodeInto(rhs.maxRetries, node["Retries"], ExecutionStrategyOptions::kDefaultMaxRetries);
         decodeNodeInto(
-            rhs.throwOnFailure, node["ThrowOnFailure"], ExecutionStrategyOptions::kDefaultThrowOnFailure);
+            rhs.maxRetries, node["Retries"], ExecutionStrategyOptions::kDefaultMaxRetries);
+        decodeNodeInto(rhs.throwOnFailure,
+                       node["ThrowOnFailure"],
+                       ExecutionStrategyOptions::kDefaultThrowOnFailure);
 
         return true;
     }
@@ -87,7 +89,6 @@ struct convert<OperationOptions> {
 
         return true;
     }
-
 };
 
 }  // namespace YAML

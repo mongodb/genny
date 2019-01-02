@@ -16,6 +16,6 @@ struct OperationOptions {
     std::string metricsName = kDefaultMetricsName;
     bool isQuiet = kDefaultIsQuiet;
 };
-} // namespace genny::config
+}  // namespace genny::config
 
-#endif // HEADER_AB6A8E35_4B60_43C7_BAD7_01B540596111
+#endif  // HEADER_AB6A8E35_4B60_43C7_BAD7_01B540596111

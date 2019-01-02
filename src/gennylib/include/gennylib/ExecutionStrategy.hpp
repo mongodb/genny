@@ -50,7 +50,7 @@ public:
         Result result;
 
         bool shouldContinue = true;
-        while(shouldContinue) {
+        while (shouldContinue) {
             try {
                 auto timer = _timer.start();
                 ++_ops;
