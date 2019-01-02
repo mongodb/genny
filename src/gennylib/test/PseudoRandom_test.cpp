@@ -7,6 +7,7 @@
 
 namespace genny {
 
+namespace {
 TEST_CASE("genny PseudoRandom") {
 
     SECTION("Can be used in std::shuffle") {
@@ -22,4 +23,6 @@ TEST_CASE("genny PseudoRandom") {
         REQUIRE(input != output);
     }
 }
+}  // namespace
+
 }  // namespace genny
