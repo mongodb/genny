@@ -624,11 +624,11 @@ public:
 
         auto yamlOpName = [&]() -> YAML::Node {
             // We have a simple string, use that
-            if (maybeOperation->isScalar())
+            if (maybeOperation->IsScalar())
                 return *maybeOperation;
 
             // We have a full object, get "OperationName"
-            if (maybeOperation->isMap())
+            if (maybeOperation->IsMap())
                 return (*maybeOperation)["OperationName"];
 
             // We have something we don't understand, we're null
