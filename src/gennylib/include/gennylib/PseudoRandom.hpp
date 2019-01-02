@@ -36,7 +36,8 @@ public:
     }
 
     result_type nextValue() {
-        return (*_rng)();
+        auto& rng = *_rng;
+        return rng();
     }
 
     result_type operator()() {
