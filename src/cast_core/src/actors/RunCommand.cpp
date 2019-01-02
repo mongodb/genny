@@ -34,7 +34,10 @@ public:
     Operation(Context context,
               std::unique_ptr<value_generators::DocumentGenerator> docTemplate,
               Options opts)
-        : _database{context.database}, _doc{std::move(docTemplate)}, _options{opts} {
+        : _databaseName{context.databaseName},
+          _database{context.database},
+          _doc{std::move(docTemplate)},
+          _options{opts} {
         // Only record metrics if we have a name for the operation.
         if (!_options.metricsName.empty()) {
             _timer = std::make_optional<metrics::Timer>(
@@ -47,7 +50,7 @@ public:
         auto view = _doc->view(document);
         if (!_options.isQuiet) {
             BOOST_LOG_TRIVIAL(info) << " Running command: " << bsoncxx::to_json(view)
-                                    << " on database: " << _database.name().data();
+                                    << " on database: " << _databaseName;
         }
 
         if (_options.preDelayMS >= std::chrono::milliseconds{0}) {
@@ -71,6 +74,7 @@ public:
     }
 
 private:
+    std::string _databaseName;
     mongocxx::database _database;
     std::unique_ptr<value_generators::DocumentGenerator> _doc;
     Options _options;
