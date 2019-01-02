@@ -614,17 +614,29 @@ public:
      */
     bool isNop() const {
         // If we don't have a node or we are a null type, then we are a NoOp
-        if(!_node || _node.IsNull())
+        if (!_node || _node.IsNull())
             return true;
 
         // If we don't have an operation or our operation isn't a map, then we're not a NoOp
         auto maybeOperation = get<YAML::Node, false>("Operation");
-        if(!maybeOperation || !maybeOperation->IsMap())
+        if (!maybeOperation)
             return false;
 
-        // If we do not have an OpName or we do and it's not "Nop", we're not a NoOp
-        auto yamlOpName = (*maybeOperation)["OperationName"];
-        if(!yamlOpName || yamlOpName.as<std::string>() != "Nop")
+        auto yamlOpName = [&]() -> YAML::Node {
+            // We have a simple string, use that
+            if (maybeOperation->isScalar())
+                return *maybeOperation;
+
+            // We have a full object, get "OperationName"
+            if (maybeOperation->isMap())
+                return (*maybeOperation)["OperationName"];
+
+            // We have something we don't understand, we're null
+            return {};
+        }();
+
+        // If we aren't "Nop", well, obviously...
+        if (!yamlOpName.IsScalar() || yamlOpName.as<std::string>() != "Nop")
             return false;
 
         // Check to make sure we haven't broken our rules
