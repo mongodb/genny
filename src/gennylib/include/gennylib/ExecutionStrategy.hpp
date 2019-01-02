@@ -4,6 +4,7 @@
 #include <mongocxx/exception/operation_exception.hpp>
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/MakeGuard.hpp>
 #include <gennylib/config/ExecutionStrategyOptions.hpp>
 #include <gennylib/metrics.hpp>
 
@@ -49,6 +50,9 @@ public:
     void run(F&& fun, const RunOptions& options = RunOptions{}) {
         Result result;
 
+        // Always report our results, even if we threw
+        auto guard = MakeGuard([&]() { _finishRun(options, std::move(result)); });
+
         bool shouldContinue = true;
         while (shouldContinue) {
             try {
@@ -77,8 +81,6 @@ public:
                 }
             }
         }
-
-        _finishRun(options, std::move(result));
     }
 
     // This function takes the existing counter metrics recorded in this class, and adds them into

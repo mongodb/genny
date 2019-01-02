@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <gennylib/ExecutionStrategy.hpp>
+#include <gennylib/MakeGuard.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -52,26 +53,27 @@ public:
     }
 
     void runOnce(PhaseState& state, PhaseNumber phase) {
-        auto throwCount = state.throwCount;
+        auto guard = MakeGuard([&]() {
+            auto attempts = strategy.lastResult().numAttempts;
+            BOOST_LOG_TRIVIAL(info) << "Phase " << phase << ": tried " << attempts << " times";
+            allRuns += attempts;
+
+            if (!strategy.lastResult().wasSuccessful) {
+                BOOST_LOG_TRIVIAL(info) << "Phase " << phase << ": failed";
+                ++failedRuns;
+            }
+        });
+
         strategy.run(
             [&]() {
-                if (throwCount > 0) {
-                    --throwCount;
+                if (state.throwCount > 0) {
+                    --state.throwCount;
                     throw Exception(mongocxx::make_error_code({}), kErrorMessage);
                 }
 
                 ++goodRuns;
             },
             state.options);
-
-        auto attempts = strategy.lastResult().numAttempts;
-        BOOST_LOG_TRIVIAL(info) << "Phase " << phase << ": tried " << attempts << " times";
-        allRuns += attempts;
-
-        if (!strategy.lastResult().wasSuccessful) {
-            BOOST_LOG_TRIVIAL(info) << "Phase " << phase << ": failed";
-            ++failedRuns;
-        }
     }
 
     static std::string_view defaultName() {
@@ -188,7 +190,16 @@ Actors:
         auto producer = std::make_shared<genny::DefaultActorProducer<genny::test::StrategyActor>>();
         genny::ActorHelper elf(config, 1, {{"Strategy", producer}});
 
-        elf.run();
+        auto verifyFun = [&](const genny::WorkloadContext& context) {
+            auto actor = genny::test::extractActor(context.actors()[0]);
+
+            REQUIRE(actor->allRuns == 1);
+            REQUIRE(actor->failedRuns == 1);
+            REQUIRE(actor->goodRuns == 0);
+            REQUIRE(!actor->strategy.lastResult().wasSuccessful);
+        };
+
+        elf.runDefaultAndVerify(verifyFun);
     }
 
     SECTION("Test retries and failure reset") {
