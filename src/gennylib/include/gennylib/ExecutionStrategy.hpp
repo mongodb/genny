@@ -49,20 +49,32 @@ public:
     void run(F&& fun, const RunOptions& options = RunOptions{}) {
         Result result;
 
-        auto shouldContinue = [&](){
-            return (result.numAttempts <= options.maxRetries) && !result.wasSuccessful;
-        };
-        for (; shouldContinue(); ++result.numAttempts) {
+        bool shouldContinue = true;
+        while(shouldContinue) {
             try {
                 auto timer = _timer.start();
                 ++_ops;
+                ++result.numAttempts;
 
                 fun();
 
                 timer.report();
+
                 result.wasSuccessful = true;
+                shouldContinue = false;
             } catch (const mongocxx::operation_exception& e) {
                 _recordError(e);
+
+                // We should continue if we've attempted less than the amount of retries plus one
+                // for the original attempt
+                shouldContinue = result.numAttempts <= options.maxRetries;
+                if (!shouldContinue) {
+                    result.wasSuccessful = false;
+
+                    if (options.throwOnFailure) {
+                        throw;
+                    }
+                }
             }
         }
 

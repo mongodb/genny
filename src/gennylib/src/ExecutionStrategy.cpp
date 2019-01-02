@@ -21,7 +21,8 @@ void ExecutionStrategy::recordMetrics() {
 }
 
 void ExecutionStrategy::_recordError(const mongocxx::operation_exception& e) {
-    BOOST_LOG_TRIVIAL(info) << "Error #" << _errors << ": " << e.what();
+    // This probably needs context
+    BOOST_LOG_TRIVIAL(debug) << "Caught error: " << e.what();
 
     _errorGauge.set(++_errors);
 }

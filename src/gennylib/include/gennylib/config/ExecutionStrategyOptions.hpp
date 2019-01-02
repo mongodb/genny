@@ -3,7 +3,11 @@
 
 namespace genny::config {
 struct ExecutionStrategyOptions {
-    size_t maxRetries = 0;
+    static constexpr auto kDefaultMaxRetries = size_t{0};
+    static constexpr auto kDefaultThrowOnFailure = false;
+
+    size_t maxRetries = kDefaultMaxRetries;
+    bool throwOnFailure = kDefaultThrowOnFailure;
 };
 } // namespace genny::config
 
