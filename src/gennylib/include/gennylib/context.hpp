@@ -622,18 +622,14 @@ public:
         if (!maybeOperation)
             return false;
 
-        auto yamlOpName = [&]() -> YAML::Node {
-            // We have a simple string, use that
-            if (maybeOperation->IsScalar())
-                return *maybeOperation;
-
-            // We have a full object, get "OperationName"
-            if (maybeOperation->IsMap())
-                return (*maybeOperation)["OperationName"];
-
-            // We have something we don't understand, we're null
-            return {};
-        }();
+        // If we have a simple string, use that
+        // If we have a full object, get "OperationName"
+        // Otherwise, we're null
+        auto yamlOpName = YAML::Node{};
+        if (maybeOperation->IsScalar())
+            yamlOpName = *maybeOperation;
+        else if (maybeOperation->IsMap())
+            yamlOpName = (*maybeOperation)["OperationName"];
 
         // If we aren't "Nop", well, obviously...
         if (!yamlOpName.IsScalar() || yamlOpName.as<std::string>() != "Nop")
