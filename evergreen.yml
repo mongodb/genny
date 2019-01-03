@@ -54,8 +54,22 @@ buildvariants:
   modules: ~
   run_on:
   - archlinux-test
+  expansions:
+    grpc_revision: bcbd299aad62fd5dcd348fdab01adc43c3649e25
   tasks:
   - name: t_test
+  - name: t_grpc
+
+# TODO: TIG-1314 Amazon Linux 2 needs a newer boost
+# - name: amazon2
+#   display_name: Amazon Linux 2
+#   modules: ~
+#   run_on:
+#   - amazon2-build
+#   expansions:
+#     cmake: "/opt/cmake/bin/cmake"
+#  tasks:
+#  - name: t_grpc
 
 # TODO: TIG-1056 the OS X image doesn't have a recent CMake or C++ compiler
 # - name: macos-1012
@@ -75,7 +89,7 @@ tasks:
 - name: t_compile
   commands:
   - func: f_fetch_source
-  - func: f_build_grpc
+  - func: f_fetch_grpc
   - func: f_compile
   - func: f_checkout_mongodb
 
@@ -86,6 +100,13 @@ tasks:
 - name: t_cmake_test
   commands:
   - func: f_cmake_test
+
+- name: t_grpc
+  patch_only: yes
+  commands:
+  - func: f_fetch_source
+  - func: f_build_grpc
+  - func: f_push_grpc
 
 - name: t_integration_test_standalone
   commands:
@@ -180,6 +201,49 @@ functions:
       command: /bin/bash ${workdir}/src/scripts/make-grpc.sh
       env:
           MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
+          CMAKE: "${cmake|cmake}"
+          CMAKE_ARGS: "-DGENNY_INSTALL_DIR=${workdir}/grpc -DOPENSSL_USE_STATIC_LIBS=ON"
+
+  f_push_grpc:
+  - command: archive.targz_pack
+    params:
+      source_dir: grpc
+      target: grpc.tgz
+      include:
+      - "./**"
+  - command: shell.exec
+    params:
+      working_dir: .
+      script: |
+        set -o errexit
+
+        # Make sure we have a file, give more info
+        stat grpc.tgz
+  - command: s3.put
+    params:
+      aws_key: ${aws_key}
+      aws_secret: ${aws_secret}
+      local_file: grpc.tgz
+      remote_file: ${project}/grpc/grpc-${build_variant}-${revision}.tgz
+      bucket: mciuploads
+      permissions: public-read
+      content_type: ${content_type|application/gzip}
+      display_name: gRPC
+
+  f_fetch_grpc:
+  - command: s3.get
+    params:
+      aws_key: ${aws_key}
+      aws_secret: ${aws_secret}
+      local_file: grpc.tgz
+      remote_file: ${project}/grpc/grpc-${build_variant}-${grpc_revision}.tgz
+      bucket: mciuploads
+      permissions: public-read
+      content_type: ${content_type|application/gzip}
+  - command: archive.targz_extract
+    params:
+      path: grpc.tgz
+      destination: ${workdir}/dist
 
   ##
   # Compile the project in src/build.
@@ -196,7 +260,9 @@ functions:
         set -o pipefail
         set -o nounset
 
-        cmake -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" ..
+        "${cmake|cmake}" "${workdir}/src" \
+            -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" \
+            -DGENNY_INSTALL_DIR="${workdir}/dist"
         make -j$(nproc)
 
   ##
