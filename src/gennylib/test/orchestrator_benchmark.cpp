@@ -83,5 +83,5 @@ TEST_CASE("Orchestrator Perf", "[benchmark]") {
 
     REQUIRE(regIters >= 5000000);  // at least 5 million times in 200 milliseconds (sanity check);
                                    // my macbook was doing 7e6.
-    REQUIRE(orchIters >= (regIters * 999) / 1000);  // at least 99.9% as fast
+    REQUIRE(orchIters >= (regIters * 995) / 1000);  // at least 99.5% as fast
 }
