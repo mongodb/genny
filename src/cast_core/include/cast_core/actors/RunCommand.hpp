@@ -2,8 +2,9 @@
 #define HEADER_32412A69_F128_4BC8_8335_520EE35F5381
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/context.hpp>
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
 
 namespace genny::actor {
 
@@ -55,7 +56,7 @@ public:
 
 private:
     struct PhaseConfig;
-    std::mt19937_64 _rng;
+    genny::DefaultRandom _rng;
     mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
 };
