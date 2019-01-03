@@ -8,7 +8,12 @@ target_include_directories(driver
     PUBLIC
         src
 )
-target_link_libraries(driver cast_core gennylib)
+target_link_libraries(driver
+    cast_core
+    gennylib
+
+    Boost::program_options
+)
 
 # Make the genny driver executable
 add_executable(genny src/main.cpp)
@@ -26,13 +31,4 @@ target_include_directories(test_driver
 )
 target_link_libraries(test_driver driver catch2)
 
-add_test(
-    NAME    test_driver
-    COMMAND test_driver
-        -r junit
-        -d yes
-        --rng-seed 12345
-        --success
-        --out test_driver.junit.xml
-)
-
+ParseAndAddCatchTests(test_driver)

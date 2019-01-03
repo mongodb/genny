@@ -103,6 +103,49 @@ create_impl() {
     create_impl_text "$@" > "$(dirname "$0")/src/cast_core/src/actors/${actor_name}.cpp"
 }
 
+create_test() {
+    local actor_name
+    actor_name="$1"
+
+    cat << EOF >> "$(dirname "$0")/src/gennylib/test/${actor_name}_test.cpp"
+#include "test.h"
+
+#include <bsoncxx/json.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
+
+#include <MongoTestFixture.hpp>
+
+namespace {
+using namespace genny::testing;
+namespace bson_stream = bsoncxx::builder::stream;
+
+TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a MongoDB instance.",
+          "[standalone][single_node_replset][three_node_replset][sharded]") {
+
+    dropAllDatabases();
+    auto db = client.database("test");
+
+    SECTION("Insert a document into the database.") {
+        auto builder = bson_stream::document{};
+        bsoncxx::document::value doc_value = builder
+                << "name" << "MongoDB"
+                << "type" << "database"
+                << "count" << 1
+                << "info" << bson_stream::open_document
+                << "x" << 203
+                << "y" << 102
+                << bson_stream::close_document
+                << bson_stream::finalize;
+        bsoncxx::document::view view = doc_value.view();
+        db.collection("test").insert_one(view);
+        // Fail on purpose to encourage contributors to extend automated testing for each new actor.
+        REQUIRE(db.collection("test").count(view) == 0);
+    }
+}
+} // namespace
+EOF
+}
+
 recreate_cast_core_cmake_file() {
     local uuid_tag
     local actor_name
@@ -113,6 +156,21 @@ recreate_cast_core_cmake_file() {
 
     < "$cmake_file" \
     perl -pe "s|((\\s+)# ActorsEnd)|\$2src/actors/${actor_name}.cpp\\n\$1|" \
+    > "$$.cmake.txt"
+
+    mv "$$.cmake.txt" "$cmake_file"
+}
+
+recreate_gennylib_cmake_file() {
+    local uuid_tag
+    local actor_name
+    local cmake_file
+    uuid="$1"
+    actor_name="$2"
+    cmake_file="$(dirname "$0")/src/gennylib/CMakeLists.txt"
+
+    < "$cmake_file" \
+    perl -pe "s|((\\s+)# ActorsTestEnd)|\$2test/${actor_name}_test.cpp\\n\$1|" \
     > "$$.cmake.txt"
 
     mv "$$.cmake.txt" "$cmake_file"
@@ -138,3 +196,5 @@ uuid_tag="$("$(dirname "$0")/generate-uuid-tag.sh")"
 create_header                "$uuid_tag" "$actor_name"
 create_impl                  "$uuid_tag" "$actor_name"
 recreate_cast_core_cmake_file "$uuid_tag" "$actor_name"
+create_test                  "$actor_name"
+recreate_gennylib_cmake_file "$uuid_tag" "$actor_name"

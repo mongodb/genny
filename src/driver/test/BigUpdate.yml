@@ -84,7 +84,8 @@ Actors:
       - keys: {int5: 1, int6: 1}
     Phases:
       - Repeat: 1
-      - Operation: Nop
+      - Operation:
+          OperationName: Nop
   - Name: MultiCollectionUpdate
     Type: MultiCollectionUpdate
     Threads: 100
@@ -93,7 +94,8 @@ Actors:
     UpdateFilter: {y: {$randomint: {distribution: poisson, mean: 100}}}
     Update: {$inc: {x: 1}}
     Phases:
-      - Operation: Nop
+      - Operation:
+          OperationName: Nop
       - Duration: &phase2_duration 600000  # TODO: TIG-1154
         MinDelay: 31  # This should be replaced with Rate with TIG-1155.
   - Name: MultiCollectionQuery
@@ -104,6 +106,7 @@ Actors:
     Filter: {y: {$randomint: {distribution: poisson, mean: 100}}}
     Limit: 20
     Phases:
-      - Operation: Nop
+      - Operation:
+          OperationName: Nop
       - Duration: *phase2_duration  # TODO: TIG-1154
         MinDelay: 9  # This should be replaced with Rate with TIG-1155.

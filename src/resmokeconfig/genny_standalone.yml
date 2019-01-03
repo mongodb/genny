@@ -1,0 +1,21 @@
+test_kind: gennylib_test
+
+executor:
+  config:
+    program_executable: build/src/gennylib/test_gennylib_with_server
+    verbatim_arguments:
+    - "--reporter"
+    - "junit"
+    - "--durations"
+    - "yes"
+    - "--rng-seed"
+    - "12345"
+    - "--success"
+    - "--out"
+    - "build/test_gennylib_with_server.junit.xml"
+    - "[standalone]"
+  fixture:
+    class: MongoDFixture
+    mongod_options:
+      set_parameters:
+        enableTestCommands: 1
