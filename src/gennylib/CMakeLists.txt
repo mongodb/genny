@@ -99,7 +99,7 @@ install(DIRECTORY include/
 # Pull together our utils, header directories, and testing dependencies into one static target
 add_library(gennylib_testutil STATIC
     test/ActorHelper.cpp
-)
+    test/MongoTestFixture.cpp)
 target_include_directories(gennylib_testutil
     PUBLIC
         src
@@ -126,28 +126,25 @@ target_link_libraries(test_gennylib gennylib_testutil)
 
 target_link_libraries(test_gennylib gennylib_testutil)
 
-add_test(
-    NAME    test_gennylib
-    COMMAND test_gennylib
-        -r junit
-        -d yes
-        --rng-seed 12345
-        --success
-        --out test_gennylib.junit.xml
-)
-
 add_executable(benchmark_gennylib
     test/PhaseLoop_benchmark.cpp
     test/orchestrator_benchmark.cpp
 )
+
 target_link_libraries(benchmark_gennylib gennylib_testutil)
 
-add_test(
-    NAME    benchmark_gennylib
-    COMMAND benchmark_gennylib
-        -r junit
-        -d yes
-        --rng-seed 12345
-        --success
-        --out benchmark_gennylib.junit.xml
+
+add_executable(test_gennylib_with_server
+        # Don't modify the following comments; they're used as anchors in scripts that create new actors.
+        # ActorsTestStart
+        test/actors_test.cpp
+        # ActorsTestEnd
 )
+
+target_link_libraries(test_gennylib_with_server gennylib_testutil)
+
+ParseAndAddCatchTests(test_gennylib)
+
+ParseAndAddCatchTests(benchmark_gennylib)
+
+ParseAndAddCatchTests(test_gennylib_with_server)

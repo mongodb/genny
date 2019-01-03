@@ -179,3 +179,9 @@ private:
 
 -   Use scoped enums (`enum class`) wherever possible
 -   Use `k` prefixes for enum values e.g. `enum class Color { kRed, kBlue };`
+
+## Catch2
+Genny uses [Catch2](https://github.com/catchorg/Catch2) as its test framework.
+If you'd like to make changes to the vendored copy of Catch2 (e.g. to upgrade
+to a newer copy) Please make sure you read the README in the Catch2 directory
+before making changes.

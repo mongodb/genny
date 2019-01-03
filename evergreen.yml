@@ -77,12 +77,39 @@ tasks:
   - func: f_fetch_source
   - func: f_build_grpc
   - func: f_compile
+  - func: f_checkout_mongodb
+
 - name: t_python_test
   commands:
   - func: f_python_test
+
 - name: t_cmake_test
   commands:
   - func: f_cmake_test
+
+- name: t_integration_test_standalone
+  commands:
+  - func: f_resmoke_test
+    vars:
+      resmoke_suite: genny_standalone.yml
+
+- name: t_integration_test_single_node_replset
+  commands:
+  - func: f_resmoke_test
+    vars:
+      resmoke_suite: genny_single_node_replset.yml
+
+- name: t_integration_test_three_node_replset
+  commands:
+  - func: f_resmoke_test
+    vars:
+      resmoke_suite: genny_three_node_replset.yml
+
+- name: t_integration_test_sharded
+  commands:
+  - func: f_resmoke_test
+    vars:
+      resmoke_suite: genny_sharded.yml
 
 
 ##                ⚡️ Task Groups ⚡️
@@ -106,6 +133,10 @@ task_groups:
   - t_compile
   - t_python_test
   - t_cmake_test
+  - t_integration_test_standalone
+  - t_integration_test_single_node_replset
+  - t_integration_test_three_node_replset
+  - t_integration_test_sharded
 
 
 ##                ⚡️ Functions ⚡️
@@ -116,6 +147,26 @@ functions:
   - command: git.get_project
     params:
       directory: src
+
+  ##
+  # Download the mongodb binary and then clone and checkout the appropriate mongodb repository branch
+  # that contains the intended gennylib test case (SERVER-38646). Also installs resmoke dependencies.
+  ##
+  f_checkout_mongodb:
+  - command: shell.exec
+    params:
+      working_dir: src/build
+      script: |
+        yes | pacman -S mongodb
+        git clone git@github.com:mongodb/mongo.git mongo
+
+        pushd mongo
+          git checkout 6734c12d17dd4c0e2738a47feb7114221d6ba66d
+        popd
+
+        virtualenv -p python2 venv
+        source venv/bin/activate
+        python -m pip install -r mongo/etc/pip/evgtest-requirements.txt
 
   ##
   # Compile gRPC. This script should be synchronized with DSI's compilation sript for Genny:
@@ -146,10 +197,10 @@ functions:
         set -o nounset
 
         cmake -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" ..
-        make
+        make -j$(nproc)
 
   ##
-  # Runs tests via `make test`.
+  # Runs tests via ctest.
   # Requires f_compile to have been run first.
   ##
   f_cmake_test:
@@ -162,7 +213,53 @@ functions:
         set -o pipefail
         set -o nounset
 
-        make test
+        ctest --label-exclude "(standalone|sharded|single_node_replset|three_node_replset)"
+
+  ##
+  # Runs tests via resmoke.
+  # Requires f_compile to have been run first.
+  ##
+  f_resmoke_test:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      working_dir: src
+      script: |
+        set -o errexit
+        set -o pipefail
+        # set -o nounset # the "activate" script has an unbound variable
+
+        source build/venv/bin/activate
+
+        # We rely on catch2 to report test failures, but it doesn't always do so.
+        # See https://github.com/catchorg/Catch2/issues/1210
+        # As a workaround, we generate a dummy report with a failed test that is deleted if resmoke
+        # succeeds.
+
+        cat << EOF >> "build/sentinel.junit.xml"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <testsuites>
+         <testsuite name="resmoke_failure_sentinel" errors="0" failures="1" tests="1" hostname="tbd" time="1.0" timestamp="2019-01-01T00:00:00Z">
+          <testcase classname="resmoke_failure_sentinel" name="Dummy testcase to signal that resmoke failed because a report may not be generated" time="1.0">
+           <failure message="resmoke did not exit cleanly, see task log for detail" type="">
+           </failure>
+          </testcase>
+          <system-out/>
+          <system-err/>
+         </testsuite>
+        </testsuites>
+        EOF
+
+        # The tests themselves do the reporting instead of using resmoke.
+        python build/mongo/buildscripts/resmoke.py \
+               --suite src/resmokeconfig/${resmoke_suite} \
+               --mongod mongod \
+               --mongo mongo \
+               --mongos mongos
+
+        # Remove the sentinel report if resmoke succeeds. This line won't be executed if
+        # resmoke fails because we've set errexit on this shell.
+        rm build/sentinel.junit.xml
 
   ##
   # Runs python nosetests.
@@ -192,6 +289,10 @@ functions:
   - command: attach.xunit_results
     params:
       optional: true
+      file: src/build/*.junit.xml
+  - command: attach.xunit_results
+    params:
+      optional: true
       file: src/src/python/nosetests.xml
 
   ##
@@ -205,4 +306,7 @@ functions:
         set -o pipefail
         set -o nounset
 
-        rm -f src/build/src/*/*.junit.xml src/src/python/nosetests.xml
+        rm -f \
+        src/build/*.junit.xml \
+        src/build/src/*/*.junit.xml \
+        src/src/python/nosetests.xml
