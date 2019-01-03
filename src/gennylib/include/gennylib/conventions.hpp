@@ -10,12 +10,23 @@
 
 using namespace genny::config;
 
-namespace YAML {
+namespace genny {
 
+/**
+ * This function converts a YAML::Node into a given type and uses a given fallback.
+ * It simplifies a common pattern where you have a member variable that needs to be assigned either
+ * the value in a node or a fallback value (traditionally, this involves at least a decltype).
+ */
 template <typename T, typename S>
-void decodeNodeInto(T& out, const Node& node, const S& fallback) {
+void decodeNodeInto(T& out, const YAML::Node& node, const S& fallback) {
     out = node.as<T>(fallback);
 }
+
+}  // namespace genny
+
+namespace YAML {
+
+using genny::decodeNodeInto;
 
 template <>
 struct convert<std::chrono::milliseconds> {

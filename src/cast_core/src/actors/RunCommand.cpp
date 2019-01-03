@@ -19,7 +19,7 @@ namespace genny {
 
 class actor::RunCommand::Operation {
 public:
-    struct Context {
+    struct Fixture {
         PhaseContext& phaseContext;
         ActorContext& actorContext;
 
@@ -31,17 +31,17 @@ public:
     using Options = config::OperationOptions;
 
 public:
-    Operation(Context context,
+    Operation(Fixture fixture,
               std::unique_ptr<value_generators::DocumentGenerator> docTemplate,
               Options opts)
-        : _databaseName{context.databaseName},
-          _database{context.database},
+        : _databaseName{fixture.databaseName},
+          _database{fixture.database},
           _doc{std::move(docTemplate)},
           _options{opts} {
         // Only record metrics if we have a name for the operation.
         if (!_options.metricsName.empty()) {
             _timer = std::make_optional<metrics::Timer>(
-                context.actorContext.timer(_options.metricsName, context.id));
+                fixture.actorContext.timer(_options.metricsName, fixture.id));
         }
     }
 
@@ -66,6 +66,7 @@ public:
 
         _database.run_command(view);
 
+        // Reset the watch to stop the RaiiStopwatch
         watch.reset();
 
         if (_options.postDelayMS >= std::chrono::milliseconds{0}) {
@@ -97,7 +98,7 @@ struct actor::RunCommand::PhaseState {
                 "AdminCommands can only be run on the 'admin' database.");
         }
 
-        auto opContext = Operation::Context{
+        auto fixture = Operation::Fixture{
             context, actorContext, id, database, (*client)[database],
         };
 
@@ -106,7 +107,7 @@ struct actor::RunCommand::PhaseState {
             auto doc = value_generators::makeDoc(yamlCommand, rng);
 
             auto options = node.as<Operation::Options>(Operation::Options{});
-            operations.push_back(std::make_unique<Operation>(opContext, std::move(doc), options));
+            operations.push_back(std::make_unique<Operation>(fixture, std::move(doc), options));
         };
 
         auto operationList = context.get<YAML::Node, false>("Operations");
