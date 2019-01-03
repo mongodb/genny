@@ -12,7 +12,9 @@ BUILD_DIR="${ROOT_DIR}/build/grpc"
 
 # Hop into a fresh build dir
 mkdir -p "${BUILD_DIR}"
-rm -rf "${BUILD_DIR:?}/"*
+if [[ ${CLEAN_BUILD:-yes} == yes ]]; then
+    rm -rf "${BUILD_DIR:?}/"*
+fi
 cd "${BUILD_DIR}"
 
 # Find openssl at a set of locations we expect

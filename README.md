@@ -29,7 +29,12 @@ brew install boost      \
 # install a local grpc for your genny dir
 ./scripts/make-grpc.sh
 
+# use our fresh new openssl
 export OPENSSL_ROOT_DIR="$(brew --prefix openssl@1.1)"
+
+# use twice as many jobs as we have cores
+export MAKEFLAGS="-j((2 * $(sysctl -n hw.ncpu)))"
+
 cmake -B "build" .
 make -C "build" genny
 ```
