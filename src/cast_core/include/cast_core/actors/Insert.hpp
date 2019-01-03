@@ -7,9 +7,9 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/PseudoRandom.hpp>
 #include <gennylib/context.hpp>
 
 namespace genny::actor {

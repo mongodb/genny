@@ -5,7 +5,7 @@
 #include <boost/log/trivial.hpp>
 #include <bsoncxx/json.hpp>
 
-#include <gennylib/PseudoRandom.hpp>
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/value_generators.hpp>
 
 namespace genny::value_generators {

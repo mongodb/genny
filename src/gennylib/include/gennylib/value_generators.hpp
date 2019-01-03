@@ -5,7 +5,7 @@
 #include <optional>
 #include <unordered_map>
 
-#include <gennylib/PseudoRandom.hpp>
+#include <gennylib/DefaultRandom.hpp>
 
 namespace genny::value_generators {
 
@@ -37,7 +37,7 @@ public:
  *
  * @param Node
  *  The YAML node with the configuration for this document generator.
- * @param PseudoRandom
+ * @param DefaultRandom
  *  A reference to the random number generator for the owning thread. Internal object may save a
  * reference to this random number generator.
  */

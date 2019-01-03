@@ -4,8 +4,8 @@
 #include <chrono>
 #include <thread>
 
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/PseudoRandom.hpp>
 
 using namespace genny;
 using namespace std;

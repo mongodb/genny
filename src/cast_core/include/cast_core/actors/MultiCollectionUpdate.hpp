@@ -2,8 +2,8 @@
 #define HEADER_D112CCC3_DF60_434E_A038_5A7AADED0E46
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/PseudoRandom.hpp>
 #include <gennylib/context.hpp>
 
 namespace genny::actor {

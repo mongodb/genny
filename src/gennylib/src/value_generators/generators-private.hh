@@ -4,7 +4,7 @@
 #include "parser.hh"
 
 #include <gennylib/value_generators.hpp>
-#include <gennylib/PseudoRandom.hpp>
+#include <gennylib/DefaultRandom.hpp>
 
 namespace genny::value_generators {
 

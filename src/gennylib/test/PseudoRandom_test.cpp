@@ -3,12 +3,12 @@
 #include <algorithm>
 #include <iostream>
 
-#include <gennylib/PseudoRandom.hpp>
+#include <gennylib/DefaultRandom.hpp>
 
 namespace genny {
 
 namespace {
-TEST_CASE("genny PseudoRandom") {
+TEST_CASE("genny DefaultRandom") {
 
     SECTION("Can be used in std::shuffle") {
         auto output = std::vector<int>(100);

@@ -52,7 +52,7 @@ add_library(gennylib SHARED
     src/context.cpp
     src/Orchestrator.cpp
     src/PoolFactory.cpp
-    src/PseudoRandom.cpp
+    src/DefaultRandom.cpp
 )
 
 # Define headers for this library. PUBLIC headers are used for

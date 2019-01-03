@@ -21,9 +21,9 @@
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
 #include <gennylib/Cast.hpp>
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/PseudoRandom.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/metrics.hpp>
 
