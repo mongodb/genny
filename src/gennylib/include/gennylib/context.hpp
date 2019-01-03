@@ -613,37 +613,19 @@ public:
      * Called in PhaseLoop during the IterationCompletionCheck constructor.
      */
     bool isNop() const {
-        // If we don't have a node or we are a null type, then we are a NoOp
-        if (!_node || _node.IsNull())
-            return true;
-
-        // If we don't have an operation or our operation isn't a map, then we're not a NoOp
-        auto maybeOperation = get<YAML::Node, false>("Operation");
-        if (!maybeOperation)
-            return false;
-
-        // If we have a simple string, use that
-        // If we have a full object, get "OperationName"
-        // Otherwise, we're null
-        auto yamlOpName = YAML::Node{};
-        if (maybeOperation->IsScalar())
-            yamlOpName = *maybeOperation;
-        else if (maybeOperation->IsMap())
-            yamlOpName = (*maybeOperation)["OperationName"];
-
-        // If we aren't "Nop", well, obviously...
-        if (!yamlOpName.IsScalar() || yamlOpName.as<std::string>() != "Nop")
-            return false;
+        auto isNop = _isNop();
 
         // Check to make sure we haven't broken our rules
-        if (_node.size() > 1) {
+        if (isNop && _node.size() > 1) {
             throw InvalidConfigurationException(
                 "Nop cannot be used with any other keywords. Check YML configuration.");
         }
 
-        // We've gotten through. We're a NoOp.
-        return true;
+        return isNop;
     }
+
+private:
+    bool _isNop() const;
 
 private:
     YAML::Node _node;
