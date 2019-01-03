@@ -23,6 +23,7 @@ target_include_directories(gennylib_core
 )
 target_link_libraries(gennylib_core
     yaml-cpp
+    loki
 
     Boost::boost Boost::log
 )
@@ -81,7 +82,7 @@ if(ENABLE_JASPER)
 endif()
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core
+install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core loki
         EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}

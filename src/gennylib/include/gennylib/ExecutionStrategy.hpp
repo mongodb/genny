@@ -3,8 +3,9 @@
 
 #include <mongocxx/exception/operation_exception.hpp>
 
+#include <loki/ScopeGuard.h>
+
 #include <gennylib/Actor.hpp>
-#include <gennylib/MakeGuard.hpp>
 #include <gennylib/config/ExecutionStrategyOptions.hpp>
 #include <gennylib/metrics.hpp>
 
@@ -51,7 +52,7 @@ public:
         Result result;
 
         // Always report our results, even if we threw
-        auto guard = MakeGuard([&]() { _finishRun(options, std::move(result)); });
+        auto guard = Loki::MakeGuard([&]() { _finishRun(options, std::move(result)); });
 
         bool shouldContinue = true;
         while (shouldContinue) {

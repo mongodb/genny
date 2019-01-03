@@ -4,11 +4,6 @@
 
 #include <iostream>
 
-#include <gennylib/ExecutionStrategy.hpp>
-#include <gennylib/MakeGuard.hpp>
-#include <gennylib/PhaseLoop.hpp>
-#include <gennylib/context.hpp>
-
 #include <boost/log/trivial.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -17,6 +12,12 @@
 #include <mongocxx/exception/server_error_code.hpp>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
+
+#include <loki/ScopeGuard.h>
+
+#include <gennylib/ExecutionStrategy.hpp>
+#include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
 
 namespace Catchers = Catch::Matchers;
 
@@ -53,7 +54,7 @@ public:
     }
 
     void runOnce(PhaseState& state, PhaseNumber phase) {
-        auto guard = MakeGuard([&]() {
+        auto guard = Loki::MakeGuard([&]() {
             auto attempts = strategy.lastResult().numAttempts;
             BOOST_LOG_TRIVIAL(info) << "Phase " << phase << ": tried " << attempts << " times";
             allRuns += attempts;
