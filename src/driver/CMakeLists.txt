@@ -24,6 +24,7 @@ add_executable(test_driver
 target_include_directories(test_driver
     PRIVATE
         src
+        ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
 target_link_libraries(test_driver driver)
 

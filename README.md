@@ -70,7 +70,7 @@ using the package manger. Generally this is:
 
 - boost
 - cmake (>=3.10.2)
-- grpc (17)
+- grpc (>=1.16)
 - icu
 - mongo-cxx-driver
 - protobuf (3.6.1)
@@ -107,12 +107,12 @@ apt install -y \
 ```
 
 You also need `libgrpc++-dev` and `libprotobuf-dev`, but here genny is more picky about the
-versions. They need to be 17 and 3.6.1 respectively. I ended up installing from source:
+versions. They need to be >=1.16 and exactly 3.6.1 respectively. To install those from source:
 
 - protobuf: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md
 - grpc: https://github.com/grpc/grpc/blob/master/src/cpp/README.md
 
-If you already installed the wrong versions with apt, you are better of uninstalling them:
+If you already installed the wrong versions with apt, you are better off uninstalling them:
 
 ```sh
 apt remove libgrpc++-dev libprotobuf-dev

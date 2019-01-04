@@ -91,6 +91,7 @@ target_include_directories(gennylib_testutil
     PUBLIC
         src
         test
+        ${THIRD_PARTY_SOURCE_DIR}/catch2/include
 )
 target_link_libraries(gennylib_testutil gennylib)
 

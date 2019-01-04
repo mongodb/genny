@@ -1,5 +1,5 @@
 # 3.10.2 comes with Ubuntu 18.04.1 LTS
-cmake_minimum_required(VERSION 3.10.2 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 # https://cmake.org/cmake/help/v3.0/policy/CMP0025.html
 if(POLICY CMP0025)
@@ -101,7 +101,6 @@ endif()
 include_directories(AFTER
     ${Boost_INCLUDE_DIR}
     ${LIBMONGOCXX_INCLUDE_DIRS}
-    src/third_party/catch2/include
 )
 link_libraries(
     ${CMAKE_THREAD_LIBS_INIT}
