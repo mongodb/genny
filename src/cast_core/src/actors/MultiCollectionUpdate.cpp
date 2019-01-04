@@ -18,6 +18,7 @@
 
 namespace genny::actor {
 
+/** @private */
 struct MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context, genny::DefaultRandom& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},

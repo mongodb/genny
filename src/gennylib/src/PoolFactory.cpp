@@ -13,6 +13,7 @@
 
 namespace genny {
 
+/** @private */
 struct PoolFactory::Config {
     Config(std::string_view uri) {
         const auto protocolRegex = std::regex("^(mongodb://|mongodb+srv://)?(([^:@]*):([^@]*)@)?");

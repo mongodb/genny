@@ -9,8 +9,8 @@
 namespace genny::actor {
 
 /**
- * Prepares a database for testing. For use with {@code MultiCollectionUpdate} and {@code
- * MultiCollectionQuery} actors. It loads a set of documents into multiple collections with
+ * Prepares a database for testing. For use with `MultiCollectionUpdate` and
+ * `MultiCollectionQuery` actors. It loads a set of documents into multiple collections with
  * indexes. Each collection is identically configured. The document shape, number of documents,
  * number of collections, and list of indexes are all adjustable from the yaml configuration.
  */

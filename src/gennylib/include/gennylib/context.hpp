@@ -28,9 +28,10 @@
 #include <gennylib/metrics.hpp>
 
 /**
- * This file defines `WorkloadContext`, `ActorContext`, and `PhaseContext` which provide access
- * to configuration values and other workload collaborators (e.g. metrics) during the construction
- * of actors.
+ * @file context.hpp defines WorkloadContext, ActorContext, and PhaseContext.
+ *
+ * These provide access to configuration values and other workload collaborators
+ * (e.g. metrics) during the construction of actors.
  *
  * Please see the documentation below on WorkloadContext, ActorContext, and PhaseContext.
  */
@@ -194,8 +195,12 @@ namespace genny {
 class WorkloadContext {
 public:
     /**
-     * @param producers
-     *  producers are called eagerly at construction-time.
+     * @param node top-level (file-level) YAML node
+     * @param registry metrics registry to use in ActorContext::counter() etc
+     * @param orchestrator to control Phasing
+     * @param mongoUri the base mongo URI to use @see PoolFactory
+     * @param cast source of Actors to use. Actors are constructed
+     * from the cast at construction-time.
      */
     WorkloadContext(YAML::Node node,
                     metrics::Registry& registry,
@@ -225,7 +230,7 @@ public:
      *     }
      * ```
      *
-     * Given this YAML:
+     * Given this %YAML:
      *
      * ```yaml
      *     SchemaVersion: 2018-07-01
@@ -247,9 +252,9 @@ public:
      *     // if value may not exist:
      *     std::optional<int> = context.get<int,false>("Actors", 0, "Count");
      * ```
-     * @tparam T the output type required. Will forward to YAML::Node.as<T>()
-     * @tparam Required If true, will error if item not found. If false, will return an optional<T>
-     * that will be empty if not found.
+     * @tparam T the output type required. Will forward to `YAML::Node.as<T>()`
+     * @tparam Required If true, will error if item not found. If false, will return an
+     * `std::optional<T>` that will be empty if not found.
      */
     template <class T = YAML::Node,
               bool Required = true,
@@ -278,9 +283,9 @@ public:
         return _actors;
     }
 
-    /*
-     * @return a new seeded random number generator. This should only be called during construction
-     * to ensure reproducibility.
+    /**
+     * @return a new seeded random number generator.
+     * @warning This should only be called during construction to ensure reproducibility.
      */
     auto createRNG() {
         if (_done) {
@@ -292,7 +297,7 @@ public:
 
     /**
      * Get a WorkloadContext-unique ActorId
-     * @return  unsigned int    The next sequential id
+     * @return The next sequential id
      */
     ActorId nextActorId() {
         return _nextActorId++;
@@ -389,7 +394,7 @@ public:
      *     }
      * ```
      *
-     * Given this YAML:
+     * Given this %YAML:
      *
      * ```yaml
      *     SchemaVersion: 2018-07-01
@@ -418,12 +423,15 @@ public:
     };
 
     /**
-     * Access top-level workload configuration.
+     * @return top-level workload configuration
      */
     WorkloadContext& workload() {
         return *this->_workload;
     }
 
+    /**
+     * @return the workload-wide Orchestrator
+     */
     Orchestrator& orchestrator() {
         return *this->_workload->_orchestrator;
     }
@@ -476,6 +484,10 @@ public:
         return _phaseContexts;
     };
 
+    /**
+     * @return a pool from the "default" MongoDB connection-pool.
+     * @throws InvalidConfigurationException if no connections available.
+     */
     mongocxx::pool::entry client();
 
     // <Forwarding to delegates>
@@ -487,7 +499,7 @@ public:
      *   the name of the thing being timed.
      *   Will automatically add prefixes to make the full name unique
      *   across Actors and threads.
-     * @param thread the thread number of this Actor, if any.
+     * @param id the id of this Actor, if any.
      */
     auto timer(const std::string& operationName, ActorId id = 0u) const {
         auto name = this->metricsName(operationName, id);
@@ -501,7 +513,7 @@ public:
      *   the name of the thing being gauged.
      *   Will automatically add prefixes to make the full name unique
      *   across Actors and threads.
-     * @param thread the thread number of this Actor, if any.
+     * @param id the id of this Actor, if any.
      */
     auto gauge(const std::string& operationName, ActorId id = 0u) const {
         auto name = this->metricsName(operationName, id);
@@ -516,7 +528,7 @@ public:
      *   the name of the thing being counted.
      *   Will automatically add prefixes to make the full name unique
      *   across Actors and threads.
-     * @param thread the thread number of this Actor, if any.
+     * @param id the id of this Actor, if any.
      */
     auto counter(const std::string& operationName, ActorId id = 0u) const {
         auto name = this->metricsName(operationName, id);
@@ -528,22 +540,47 @@ public:
         return this->_workload->_registry->operation(name);
     }
 
+    /**
+     * @return if there are any more phases.
+     * @see Orchestrator::morePhases()
+     */
     auto morePhases() {
         return this->_workload->_orchestrator->morePhases();
     }
 
+    /**
+     * @return the current PhaseNumber from the Orchestrator
+     * @see Orchestrator::currentPhase()
+     */
     auto currentPhase() {
         return this->_workload->_orchestrator->currentPhase();
     }
+
+    /**
+     * Block until Phase starts.
+     * @return value from Orchestrator::awaitPhaseStart()
+     * @see Orchestrator::awaitPhaseStart()
+     */
     auto awaitPhaseStart() {
         return this->_workload->_orchestrator->awaitPhaseStart();
     }
 
+    /**
+     * Block until Phase ends.
+     * @return value from Orchestrator::awaitPhaseEnd()
+     * @see Orchestrator::awaitPhaseEnd()
+     */
     template <class... Args>
     auto awaitPhaseEnd(Args&&... args) {
         return this->_workload->_orchestrator->awaitPhaseEnd(std::forward<Args>(args)...);
     }
 
+    /**
+     * Indicate a problem that should cause all Actors that are using
+     * the Orchestrator to abort.
+     * @return value from Orchestrator::abort()
+     * @see Orchestrator::abort()
+     */
     auto abort() {
         return this->_workload->_orchestrator->abort();
     }

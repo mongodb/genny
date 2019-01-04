@@ -17,6 +17,7 @@
 
 namespace genny {
 
+/** @private */
 class actor::RunCommand::Operation {
 public:
     struct Fixture {
@@ -69,6 +70,7 @@ private:
     std::optional<metrics::Timer> _timer;
 };
 
+/** @private */
 struct actor::RunCommand::PhaseState {
     PhaseState(PhaseContext& context,
                ActorContext& actorContext,

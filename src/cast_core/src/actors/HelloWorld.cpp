@@ -8,6 +8,7 @@
 
 namespace genny::actor {
 
+/** @private */
 struct HelloWorld::PhaseConfig {
     std::string message;
     explicit PhaseConfig(PhaseContext& context)
