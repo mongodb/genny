@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <boost/core/noncopyable.hpp>
-#include <bsoncxx/builder/basic/document.hpp>
 
 namespace genny::metrics {
 
