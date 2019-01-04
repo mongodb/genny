@@ -3,6 +3,8 @@
 
 #include <mongocxx/exception/operation_exception.hpp>
 
+#include <loki/ScopeGuard.h>
+
 #include <gennylib/Actor.hpp>
 #include <gennylib/config/ExecutionStrategyOptions.hpp>
 #include <gennylib/metrics.hpp>
@@ -49,24 +51,37 @@ public:
     void run(F&& fun, const RunOptions& options = RunOptions{}) {
         Result result;
 
-        auto shouldContinue = [&]() {
-            return (result.numAttempts <= options.maxRetries) && !result.wasSuccessful;
-        };
-        for (; shouldContinue(); ++result.numAttempts) {
+        // Always report our results, even if we threw
+        auto guard = Loki::MakeGuard([&]() { _finishRun(options, std::move(result)); });
+
+        bool shouldContinue = true;
+        while (shouldContinue) {
             try {
                 auto timer = _timer.start();
                 ++_ops;
+                ++result.numAttempts;
 
                 fun();
 
                 timer.report();
+
                 result.wasSuccessful = true;
+                shouldContinue = false;
             } catch (const mongocxx::operation_exception& e) {
                 _recordError(e);
+
+                // We should continue if we've attempted less than the amount of retries plus one
+                // for the original attempt
+                shouldContinue = result.numAttempts <= options.maxRetries;
+                if (!shouldContinue) {
+                    result.wasSuccessful = false;
+
+                    if (options.throwOnFailure) {
+                        throw;
+                    }
+                }
             }
         }
-
-        _finishRun(options, std::move(result));
     }
 
     // This function takes the existing counter metrics recorded in this class, and adds them into

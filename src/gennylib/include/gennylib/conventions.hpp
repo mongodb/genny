@@ -5,11 +5,23 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <gennylib/config/ExecutionStrategyOptions.hpp>
+namespace genny {
 
-using namespace genny::config;
+/**
+ * This function converts a YAML::Node into a given type and uses a given fallback.
+ * It simplifies a common pattern where you have a member variable that needs to be assigned either
+ * the value in a node or a fallback value (traditionally, this involves at least a decltype).
+ */
+template <typename T, typename S>
+void decodeNodeInto(T& out, const YAML::Node& node, const S& fallback) {
+    out = node.as<T>(fallback);
+}
+
+}  // namespace genny
 
 namespace YAML {
+
+using genny::decodeNodeInto;
 
 template <>
 struct convert<std::chrono::milliseconds> {
@@ -25,29 +37,6 @@ struct convert<std::chrono::milliseconds> {
             return false;
         }
         rhs = std::chrono::milliseconds{node.as<int>()};
-        return true;
-    }
-};
-
-template <>
-struct convert<ExecutionStrategyOptions> {
-    static Node encode(const ExecutionStrategyOptions& rhs) {
-        Node node;
-        node["Retries"] = rhs.maxRetries;
-        return node;
-    }
-
-    static bool decode(const Node& node, ExecutionStrategyOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-
-        auto yamlRetries = node["Retries"];
-        if (yamlRetries.IsNull()) {
-            return false;
-        }
-
-        rhs.maxRetries = yamlRetries.as<decltype(rhs.maxRetries)>();
         return true;
     }
 };

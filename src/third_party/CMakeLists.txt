@@ -7,6 +7,10 @@ add_subdirectory(yaml-cpp)
 add_subdirectory(catch2)
 # </Catch2>
 
+# <Loki>
+add_subdirectory(loki)
+# </Loki>
+
 # <Jasper>
 if(ENABLE_JASPER)
     add_subdirectory(jasper)

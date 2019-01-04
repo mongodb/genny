@@ -5,6 +5,8 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
+#include <cast_core/config/RunCommandConfig.hpp>
+
 namespace genny::actor {
 
 /**
@@ -42,6 +44,9 @@ namespace genny::actor {
  */
 
 class RunCommand : public Actor {
+public:
+    class Operation;
+    struct PhaseState;
 
 public:
     explicit RunCommand(ActorContext& context);
@@ -54,10 +59,10 @@ public:
     void run() override;
 
 private:
-    struct PhaseConfig;
     genny::DefaultRandom _rng;
     mongocxx::pool::entry _client;
-    PhaseLoop<PhaseConfig> _loop;
+
+    PhaseLoop<PhaseState> _loop;
 };
 
 
