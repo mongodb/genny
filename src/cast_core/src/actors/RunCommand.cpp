@@ -69,11 +69,10 @@ private:
     std::optional<metrics::Timer> _timer;
 };
 
-
 struct actor::RunCommand::PhaseState {
     PhaseState(PhaseContext& context,
                ActorContext& actorContext,
-               std::mt19937_64& rng,
+               genny::DefaultRandom& rng,
                mongocxx::pool::entry& client,
                ActorId id)
         : strategy{actorContext, id, "RunCommand"} {

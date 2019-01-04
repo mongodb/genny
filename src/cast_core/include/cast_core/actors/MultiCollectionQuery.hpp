@@ -2,6 +2,7 @@
 #define HEADER_F86B8CA3_F0C0_4973_9FC8_3875A76D7610
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -26,7 +27,7 @@ public:
 
 private:
     struct PhaseConfig;
-    std::mt19937_64 _rng;
+    genny::DefaultRandom _rng;
     metrics::Timer _queryTimer;
     metrics::Counter _documentCount;
     mongocxx::pool::entry _client;

@@ -2,6 +2,7 @@
 #define HEADER_D112CCC3_DF60_434E_A038_5A7AADED0E46
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -26,7 +27,7 @@ public:
 
 private:
     struct PhaseConfig;
-    std::mt19937_64 _rng;
+    genny::DefaultRandom _rng;
 
     metrics::Timer _updateTimer;
     metrics::Counter _updateCount;
