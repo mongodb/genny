@@ -7,7 +7,6 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <random>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -22,6 +21,7 @@
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
 #include <gennylib/Cast.hpp>
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
@@ -287,12 +287,12 @@ public:
      * @return a new seeded random number generator.
      * @warning This should only be called during construction to ensure reproducibility.
      */
-    std::mt19937_64 createRNG() {
+    auto createRNG() {
         if (_done) {
             throw InvalidConfigurationException(
                 "Tried to create a random number generator after construction");
         }
-        return std::mt19937_64{_rng()};
+        return DefaultRandom{_rng()};
     }
 
     /**
@@ -348,7 +348,7 @@ private:
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
     ActorVector _actors;
-    std::mt19937_64 _rng;
+    DefaultRandom _rng;
 
     // Indicate that we are doing building the context. This is used to gate certain methods that
     // should not be called after construction.
@@ -650,14 +650,19 @@ public:
      * Called in PhaseLoop during the IterationCompletionCheck constructor.
      */
     bool isNop() const {
-        auto opNode = get<YAML::Node, false>("Operation");
-        bool isNop = opNode && (*opNode)["OperationName"].as<std::string>() == "Nop";
-        if (isNop && _node.size() != 1) {
+        auto isNop = _isNop();
+
+        // Check to make sure we haven't broken our rules
+        if (isNop && _node.size() > 1) {
             throw InvalidConfigurationException(
                 "Nop cannot be used with any other keywords. Check YML configuration.");
         }
+
         return isNop;
     }
+
+private:
+    bool _isNop() const;
 
 private:
     YAML::Node _node;

@@ -1,5 +1,5 @@
 # <yaml-cpp>
-set(YAML_CPP_BUILD_TESTS OFF)
+set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "No tests for YAML" FORCE)
 add_subdirectory(yaml-cpp)
 # </yaml-cpp>
 
@@ -8,5 +8,7 @@ add_subdirectory(catch2)
 # </Catch2>
 
 # <Jasper>
-add_subdirectory(jasper)
+if(ENABLE_JASPER)
+    add_subdirectory(jasper)
+endif()
 # </Jasper>

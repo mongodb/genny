@@ -55,7 +55,7 @@ public:
 
 private:
     struct PhaseConfig;
-    std::mt19937_64 _rng;
+    genny::DefaultRandom _rng;
     mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
 };

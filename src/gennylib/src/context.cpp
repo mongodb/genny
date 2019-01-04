@@ -93,6 +93,14 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
 
     int index = 0;
     for (const auto& phase : *phases) {
+        // If we don't have a node or we are a null type, then we are a NoOp
+        if (!phase || phase.IsNull()){
+            std::ostringstream ss;
+            ss << "Encountered a null/empty phase. "
+                  "Every phase should have at least be an empty map.";
+            throw InvalidConfigurationException(ss.str());
+        }
+
         auto configuredIndex = phase["Phase"].as<PhaseNumber>(index);
         auto [it, success] =
             out.try_emplace(configuredIndex, std::make_unique<PhaseContext>(phase, *actorContext));
@@ -113,6 +121,42 @@ mongocxx::pool::entry ActorContext::client() {
         throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
     }
     return std::move(*entry);
+}
+
+bool PhaseContext::_isNop() const {
+    auto hasNoOp = get<bool, false>("Nop").value_or(false)  //
+        || get<bool, false>("nop").value_or(false)          //
+        || get<bool, false>("NoOp").value_or(false)         //
+        || get<bool, false>("noop").value_or(false);
+
+    // If we had the simple Nop key, just exit out now
+    if (hasNoOp)
+        return true;
+
+    // If we don't have an operation or our operation isn't a map, then we're not a NoOp
+    auto maybeOperation = get<YAML::Node, false>("Operation");
+    if (!maybeOperation)
+        return false;
+
+    // If we have a simple string, use that
+    // If we have a full object, get "OperationName"
+    // Otherwise, we're null
+    auto yamlOpName = YAML::Node{};
+    if (maybeOperation->IsScalar())
+        yamlOpName = *maybeOperation;
+    else if (maybeOperation->IsMap())
+        yamlOpName = (*maybeOperation)["OperationName"];
+
+    // At this stage, we should have a string scalar
+    if (!yamlOpName.IsScalar())
+        return false;
+
+    // Fall back to an empty string in case we cannot convert to string
+    const auto& opName = yamlOpName.as<std::string>("");
+    return (opName == "Nop")   //
+        || (opName == "nop")   //
+        || (opName == "NoOp")  //
+        || (opName == "noop");
 }
 
 }  // namespace genny

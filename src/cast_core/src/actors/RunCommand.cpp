@@ -14,7 +14,7 @@ using namespace std;
 /** @private */
 struct genny::actor::RunCommand::PhaseConfig {
     PhaseConfig(PhaseContext& context,
-                mt19937_64& rng,
+                genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 ActorContext& actorContext,
                 int id) {
@@ -47,7 +47,7 @@ struct genny::actor::RunCommand::PhaseConfig {
     struct RunCommandConfig {
         RunCommandConfig(const PhaseContext& context,
                          mongocxx::client& client,
-                         mt19937_64& rng,
+                         genny::DefaultRandom& rng,
                          const YAML::Node& commandNode,
                          optional<metrics::Timer> timer,
                          const string dbName)
@@ -78,7 +78,7 @@ struct genny::actor::RunCommand::PhaseConfig {
 
     void addOperation(const YAML::Node& operation,
                       PhaseContext& context,
-                      mt19937_64& rng,
+                      genny::DefaultRandom& rng,
                       mongocxx::pool::entry& client,
                       ActorContext& actorContext,
                       int id,

@@ -23,7 +23,7 @@ struct Insert::PhaseConfig {
     std::unique_ptr<value_generators::DocumentGenerator> json_document;
     ExecutionStrategy::RunOptions options;
 
-    PhaseConfig(PhaseContext& phaseContext, std::mt19937_64& rng, const mongocxx::database& db)
+    PhaseConfig(PhaseContext& phaseContext, genny::DefaultRandom& rng, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           json_document{value_generators::makeDoc(phaseContext.get("Document"), rng)},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}

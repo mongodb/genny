@@ -2,9 +2,9 @@
 
 #include <atomic>
 #include <chrono>
-#include <random>
 #include <thread>
 
+#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/Orchestrator.hpp>
 
 using namespace genny;
@@ -21,7 +21,7 @@ TEST_CASE("Orchestrator Perf", "[benchmark]") {
 
     atomic_long regIters(0);
     {
-        std::mt19937_64 rand;
+        genny::DefaultRandom rand;
         rand.seed(1234);
         int i = 0;
         bool done = false;
@@ -52,7 +52,7 @@ TEST_CASE("Orchestrator Perf", "[benchmark]") {
 
         auto t2 = std::thread{[&]() {
             // setup before timing starts
-            std::mt19937_64 rand;
+            genny::DefaultRandom rand;
             rand.seed(1234);
 
             auto phase = o.awaitPhaseStart();
@@ -83,5 +83,5 @@ TEST_CASE("Orchestrator Perf", "[benchmark]") {
 
     REQUIRE(regIters >= 5000000);  // at least 5 million times in 200 milliseconds (sanity check);
                                    // my macbook was doing 7e6.
-    REQUIRE(orchIters >= (regIters * 999) / 1000);  // at least 99.9% as fast
+    REQUIRE(orchIters >= (regIters * 995) / 1000);  // at least 99.5% as fast
 }
