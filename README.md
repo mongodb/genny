@@ -199,6 +199,24 @@ Post-processing of metrics data is done by Python scripts in the
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for code-style etc.
 Note that we're pretty vanilla.
 
+### Generating Doxygen Documentation
+
+We use Doxygen with a configuration that relies on llvm for its parsing
+and graphviz for generating diagrams. As such you must compile Doxygen
+with the appropriate support for these:
+
+```sh
+brew install graphviz
+brew install doxygen --with-llvm --with-graphviz
+```
+
+Then generate and open Doxygen docs with the following:
+
+```sh
+doxygen .doxygen
+open build/docs/html/index.html
+```
+
 ### Sanitizers
 
 Genny is periodically manually tested to be free of unknown sanitizer

@@ -6,7 +6,7 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "Genny"
 PROJECT_NUMBER         =
-PROJECT_BRIEF          = "Genny is a workload generator with a soft-spot for MongoDB"
+PROJECT_BRIEF          = "Genny is a MongoDB workload-generator library and tool"
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       = build/docs
 CREATE_SUBDIRS         = YES
@@ -74,6 +74,7 @@ HIDE_FRIEND_COMPOUNDS  = NO
 HIDE_IN_BODY_DOCS      = NO
 INTERNAL_DOCS          = NO
 CASE_SENSE_NAMES       = NO
+CLANG_ASSISTED_PARSING = YES
 HIDE_SCOPE_NAMES       = NO
 HIDE_COMPOUND_REFERENCE= NO
 SHOW_INCLUDE_FILES     = YES
