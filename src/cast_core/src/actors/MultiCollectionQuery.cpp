@@ -1,6 +1,5 @@
 #include <cast_core/actors/MultiCollectionQuery.hpp>
 
-#include <chrono>
 #include <memory>
 #include <string>
 #include <thread>
@@ -14,6 +13,7 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/time.hpp>
 #include <gennylib/value_generators.hpp>
 
 namespace genny::actor {
@@ -25,15 +25,14 @@ struct MultiCollectionQuery::PhaseConfig {
           numCollections{context.get<uint>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
           uniformDistribution{0, numCollections},
-          minDelay{context.get<std::chrono::milliseconds, false>("MinDelay")
-                       .value_or(std::chrono::milliseconds(0))} {}
+          minDelay{context.get<time::Duration, false>("MinDelay").value_or(time::Duration(0))} {}
 
     mongocxx::database database;
     uint numCollections;
     std::unique_ptr<value_generators::DocumentGenerator> filterDocument;
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<uint> uniformDistribution;
-    std::chrono::milliseconds minDelay;
+    time::Duration minDelay;
     mongocxx::options::find options;
 };
 

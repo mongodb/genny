@@ -2,7 +2,6 @@
 #define HEADER_10276107_F885_4F2C_B99B_014AF3B4504A_INCLUDED
 
 #include <cassert>
-#include <chrono>
 #include <iterator>
 #include <optional>
 #include <sstream>
@@ -13,6 +12,7 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/time.hpp>
 
 /**
  * @file
@@ -43,7 +43,7 @@ namespace V1 {
 class IterationCompletionCheck final {
 
 public:
-    IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
+    IterationCompletionCheck(std::optional<time::Duration> minDuration,
                              std::optional<int> minIterations,
                              bool isNop)
         : _minDuration{minDuration},
@@ -53,7 +53,8 @@ public:
 
         if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
-            str << "Need non-negative duration. Gave " << minDuration->count() << " milliseconds";
+            str << "Need non-negative duration. Gave " << time::millis(*minDuration)
+                << " milliseconds";
             throw InvalidConfigurationException(str.str());
         }
         if (minIterations && *minIterations < 0) {
@@ -64,7 +65,7 @@ public:
     }
 
     explicit IterationCompletionCheck(PhaseContext& phaseContext)
-        : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
+        : IterationCompletionCheck(phaseContext.get<time::Duration, false>("Duration"),
                                    phaseContext.get<int, false>("Repeat"),
                                    phaseContext.isNop()) {}
 
@@ -79,7 +80,7 @@ public:
         return (!_minIterations || currentIteration >= *_minIterations) &&
             (!_minDuration ||
              // check is last to avoid doing now() call unnecessarily
-             std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::duration_cast<time::Duration>(
                  std::chrono::steady_clock::now() - startedAt) >= *_minDuration);
     }
 
@@ -96,7 +97,7 @@ private:
     // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
     // .end() iterator needs an instance of this, so it's weird
 
-    const std::optional<std::chrono::milliseconds> _minDuration;
+    const std::optional<time::Duration> _minDuration;
     const std::optional<int> _minIterations;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
 };
