@@ -11,6 +11,7 @@
 
 using namespace std;
 
+/** @private */
 struct genny::actor::RunCommand::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 genny::DefaultRandom& rng,
@@ -116,6 +117,7 @@ genny::actor::RunCommand::RunCommand(genny::ActorContext& context)
       _client{context.client()},
       _loop{context, _rng, _client, context, RunCommand::id()} {}
 
+/** @private */
 class AdminCommandProducer : public genny::ActorProducer {
 public:
     AdminCommandProducer(const std::string_view& name) : ActorProducer(name) {}

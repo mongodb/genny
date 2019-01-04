@@ -49,7 +49,7 @@ public:
     void run(F&& fun, const RunOptions& options = RunOptions{}) {
         Result result;
 
-        auto shouldContinue = [&](){
+        auto shouldContinue = [&]() {
             return (result.numAttempts <= options.maxRetries) && !result.wasSuccessful;
         };
         for (; shouldContinue(); ++result.numAttempts) {

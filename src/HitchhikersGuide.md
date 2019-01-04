@@ -1,4 +1,4 @@
-## 🚀 Hitchhikers' Guide to the Genny Repo 🚀
+## 🚀 Hitchhikers' Guide to the Genny Repo 🚀 {#mainpage}
 
 #### 🔰 Intro 🔰
 This guide is meant to serve as a readme for anyone working in the Genny Repo. This is not meant as a guide to use Genny as a tool - that is in the [README.md](README.md) file in this same directory. The Genny Repo has a lot of different layers 🍰 to it, and before getting started it is useful to know what part of it to work on. This guide should give you an overview of where to get started!

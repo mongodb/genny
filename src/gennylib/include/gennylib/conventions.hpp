@@ -50,7 +50,6 @@ struct convert<ExecutionStrategyOptions> {
         rhs.maxRetries = yamlRetries.as<decltype(rhs.maxRetries)>();
         return true;
     }
-
 };
 
 }  // namespace YAML

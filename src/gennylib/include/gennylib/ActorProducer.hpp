@@ -11,27 +11,27 @@ namespace genny {
 class ActorContext;
 
 /**
- * ActorProducer.produce() maps from ActorContext -> vector of Actors.
+ * `ActorProducer.produce()` maps from ActorContext -> vector of `Actor`s.
  *
- * For the following YAML,
+ * For the following %YAML,
  *
- * <pre>
- *      SchemaVersion: 2018-07-01
- *      Actors:
- *      - Name: Foo
- *      - Name: Bar
- * </pre>
+ * ```yaml
+ * SchemaVersion: 2018-07-01
+ * Actors:
+ * - Name: Foo
+ * - Name: Bar
+ * ```
  *
  * each ActorProducer will be called twice: once with the ActorContext for
- * {Name:Foo} and another with the ActorContext for {Name:Bar}.
+ * `{Name: Foo}` and another with the ActorContext for `{Name: Bar}`.
  *
- * Many ActorProducers will want to return an empty ActorVector if the
+ * Many `ActorProducer`s will want to return an empty ActorVector if the
  * "Name" field is different from what they expect, but this is just
  * a convention.
  *
  * Actors may retain a reference to the ActorContext and/or parent
  * WorkloadContext, but it is recommended for performance that they
- * call context.get(...) only during their constructors and retain
+ * call `ActorContext::get()` only during their constructors and retain
  * refs or copies of config objects
  */
 class ActorProducer {
@@ -52,6 +52,7 @@ private:
     std::string_view _name;
 };
 
+/** @private */
 class ParallelizedActorProducer : public ActorProducer {
 public:
     using ActorProducer::ActorProducer;
@@ -60,6 +61,7 @@ public:
     ActorVector produce(ActorContext& context) override;
 };
 
+/** @private */
 template <class ActorT>
 class DefaultActorProducer : public ParallelizedActorProducer {
 public:

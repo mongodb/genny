@@ -13,6 +13,8 @@
 #include <gennylib/value_generators.hpp>
 
 namespace genny::actor {
+
+/** @private */
 struct InsertRemove::PhaseConfig {
     PhaseConfig(mongocxx::database db,
                 const std::string collection_name,

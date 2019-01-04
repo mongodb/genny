@@ -94,7 +94,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     int index = 0;
     for (const auto& phase : *phases) {
         // If we don't have a node or we are a null type, then we are a NoOp
-        if (!phase || phase.IsNull()){
+        if (!phase || phase.IsNull()) {
             std::ostringstream ss;
             ss << "Encountered a null/empty phase. "
                   "Every phase should have at least be an empty map.";

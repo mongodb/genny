@@ -1,3 +1,4 @@
-namespace genny {
-// Just a source file for now
-}  // namespace genny
+/**
+ * @namespace genny::actor All Genny Actors live in the genny::actor namespace.
+ */
+namespace genny::actor {}  // namespace genny::actor

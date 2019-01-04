@@ -23,7 +23,9 @@ namespace genny {
  * Multiple readers can access at same time, but only one writer.
  * Use reader when only reading internal state, but use writer whenever changing it.
  */
+/** @private */
 using reader = std::shared_lock<std::shared_mutex>;
+/** @private */
 using writer = std::unique_lock<std::shared_mutex>;
 
 PhaseNumber Orchestrator::currentPhase() const {

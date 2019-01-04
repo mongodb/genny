@@ -15,6 +15,8 @@ namespace genny::metrics {
  * The Reporter is given read-access to metrics data
  * for the purposes of reporting data.
  * This class is not ABI-safe.
+ *
+ * @private
  */
 class Reporter {
 
