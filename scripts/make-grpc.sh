@@ -51,5 +51,5 @@ for DIR in "${OPENSSL_DIRS[@]}"; do
     break
 done
 
-"${CMAKE:-cmake}" "${CMAKE_ARGS[@]:-}" "${ROOT_DIR}"
+"${CMAKE:-cmake}" "${@:-}" "${ROOT_DIR}"
 make project_grpc

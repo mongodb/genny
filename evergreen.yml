@@ -58,7 +58,8 @@ buildvariants:
     grpc_revision: bcbd299aad62fd5dcd348fdab01adc43c3649e25
   tasks:
   - name: t_test
-  - name: t_grpc
+  # The gRPC task only needs to be run to refresh our gRPC tarball.
+  # - name: t_grpc
 
 # TODO: TIG-1314 Amazon Linux 2 needs a newer boost
 # - name: amazon2
@@ -102,7 +103,6 @@ tasks:
   - func: f_cmake_test
 
 - name: t_grpc
-  patch_only: yes
   commands:
   - func: f_fetch_source
   - func: f_build_grpc
@@ -198,11 +198,13 @@ functions:
   - command: subprocess.exec
     params:
       working_dir: src
-      command: /bin/bash ${workdir}/src/scripts/make-grpc.sh
+      binary: /bin/bash
+      args:
+        - "${workdir}/src/scripts/make-grpc.sh"
+        - "-DGENNY_INSTALL_DIR:PATH=${workdir}/grpc"
       env:
           MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
           CMAKE: "${cmake|cmake}"
-          CMAKE_ARGS: "-DGENNY_INSTALL_DIR=${workdir}/grpc -DOPENSSL_USE_STATIC_LIBS=ON"
 
   f_push_grpc:
   - command: archive.targz_pack
@@ -216,7 +218,6 @@ functions:
       working_dir: .
       script: |
         set -o errexit
-
         # Make sure we have a file, give more info
         stat grpc.tgz
   - command: s3.put
@@ -229,21 +230,29 @@ functions:
       permissions: public-read
       content_type: ${content_type|application/gzip}
       display_name: gRPC
+  - command: s3Copy.copy
+    params:
+      aws_key: ${aws_key}
+      aws_secret: ${aws_secret}
+      bucket: mciuploads
+      s3_copy_files:
+        - source:
+            path: ${project}/grpc/grpc-${build_variant}-${revision}.tgz
+            bucket: mciuploads
+          destination:
+            path: ${project}/grpc/grpc-${build_variant}.tgz
+            bucket: mciuploads
 
   f_fetch_grpc:
   - command: s3.get
     params:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
-      local_file: grpc.tgz
+      extract_to: ${workdir}/dist
       remote_file: ${project}/grpc/grpc-${build_variant}-${grpc_revision}.tgz
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
-  - command: archive.targz_extract
-    params:
-      path: grpc.tgz
-      destination: ${workdir}/dist
 
   ##
   # Compile the project in src/build.
