@@ -5,11 +5,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <gennylib/config/ExecutionStrategyOptions.hpp>
-#include <gennylib/config/OperationOptions.hpp>
-
-using namespace genny::config;
-
 namespace genny {
 
 /**
@@ -42,62 +37,6 @@ struct convert<std::chrono::milliseconds> {
             return false;
         }
         rhs = std::chrono::milliseconds{node.as<int>()};
-        return true;
-    }
-};
-
-template <>
-struct convert<ExecutionStrategyOptions> {
-    static Node encode(const ExecutionStrategyOptions& rhs) {
-        Node node;
-        node["Retries"] = rhs.maxRetries;
-        node["ThrowOnFailure"] = rhs.throwOnFailure;
-        return node;
-    }
-
-    static bool decode(const Node& node, ExecutionStrategyOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-
-        decodeNodeInto(
-            rhs.maxRetries, node["Retries"], ExecutionStrategyOptions::kDefaultMaxRetries);
-        decodeNodeInto(rhs.throwOnFailure,
-                       node["ThrowOnFailure"],
-                       ExecutionStrategyOptions::kDefaultThrowOnFailure);
-
-        return true;
-    }
-};
-
-template <>
-struct convert<OperationOptions> {
-    static Node encode(const OperationOptions& rhs) {
-        Node node;
-        node["OperationPreDelayMS"] = rhs.preDelayMS;
-        node["OperationPostDelayMS"] = rhs.postDelayMS;
-
-        if (!rhs.metricsName.empty()) {
-            node["OperationMetricsName"] = rhs.metricsName;
-        }
-
-        node["OperationIsQuiet"] = rhs.isQuiet;
-        return node;
-    }
-
-    static bool decode(const Node& node, OperationOptions& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-
-        decodeNodeInto(
-            rhs.preDelayMS, node["OperationPreDelayMS"], OperationOptions::kDefaultPreDelayMS);
-        decodeNodeInto(
-            rhs.postDelayMS, node["OperationPostDelayMS"], OperationOptions::kDefaultPostDelayMS);
-        decodeNodeInto(
-            rhs.metricsName, node["OperationMetricsName"], OperationOptions::kDefaultMetricsName);
-        decodeNodeInto(rhs.isQuiet, node["OperationIsQuiet"], OperationOptions::kDefaultIsQuiet);
-
         return true;
     }
 };

@@ -28,7 +28,7 @@ public:
         mongocxx::database database;
     };
 
-    using Options = config::OperationOptions;
+    using Options = config::RunCommandConfig::Operation;
 
 public:
     Operation(Fixture fixture,
@@ -53,10 +53,6 @@ public:
                                     << " on database: " << _databaseName;
         }
 
-        if (_options.preDelayMS >= std::chrono::milliseconds{0}) {
-            std::this_thread::sleep_for(_options.preDelayMS);
-        }
-
         auto watch = [&]() {
             if (!_timer)
                 return std::unique_ptr<metrics::RaiiStopwatch>{};
@@ -68,10 +64,6 @@ public:
 
         // Reset the watch to stop the RaiiStopwatch
         watch.reset();
-
-        if (_options.postDelayMS >= std::chrono::milliseconds{0}) {
-            std::this_thread::sleep_for(_options.postDelayMS);
-        }
     }
 
 private:
@@ -133,7 +125,7 @@ struct actor::RunCommand::PhaseState {
     std::vector<std::unique_ptr<Operation>> operations;
 };
 
-void genny::actor::RunCommand::run() {
+void actor::RunCommand::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
             config->strategy.run([&]() {
@@ -152,11 +144,11 @@ actor::RunCommand::RunCommand(ActorContext& context)
       _loop{context, context, _rng, _client, RunCommand::id()} {}
 
 namespace {
-using AdminCommandProducer = DefaultActorProducer<actor::RunCommand>;
-
 auto registerRunCommand = Cast::registerDefault<actor::RunCommand>();
-auto registerAdminCommand =
-    Cast::registerCustom(std::make_shared<AdminCommandProducer>("AdminCommand"));
+
+auto adminCommandProducer =
+    std::make_shared<DefaultActorProducer<actor::RunCommand>>("AdminCommand");
+auto registerAdminCommand = Cast::registerCustom(adminCommandProducer);
 }  // namespace
 
 }  // namespace genny

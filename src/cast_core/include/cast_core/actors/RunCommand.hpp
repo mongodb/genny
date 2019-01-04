@@ -3,7 +3,8 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/context.hpp>
+
+#include <cast_core/config/RunCommandConfig.hpp>
 
 namespace genny::actor {
 
