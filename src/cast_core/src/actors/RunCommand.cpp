@@ -53,17 +53,11 @@ public:
                                     << " on database: " << _databaseName;
         }
 
-        auto watch = [&]() {
-            if (!_timer)
-                return std::unique_ptr<metrics::RaiiStopwatch>{};
-
-            return std::make_unique<metrics::RaiiStopwatch>(_timer->raii());
-        }();
+        // If we have a timer, then we have a watch
+        auto maybeWatch = _timer ? std::make_optional<metrics::RaiiStopwatch>(_timer->raii())
+                                 : std::optional<metrics::RaiiStopwatch>(std::nullopt);
 
         _database.run_command(view);
-
-        // Reset the watch to stop the RaiiStopwatch
-        watch.reset();
     }
 
 private:
