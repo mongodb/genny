@@ -24,11 +24,12 @@ install(TARGETS  genny
 # Define our test for the driver
 add_executable(test_driver
     test/Driver_test.cpp
+    $<TARGET_OBJECTS:catch2>
 )
 target_include_directories(test_driver
     PRIVATE
         src
 )
-target_link_libraries(test_driver driver catch2)
+target_link_libraries(test_driver driver catch2_headers)
 
 ParseAndAddCatchTests(test_driver)
