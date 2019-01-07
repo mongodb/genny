@@ -6,3 +6,10 @@ target_include_directories(catch2
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+add_library(catch2_headers INTERFACE)
+target_include_directories(catch2_headers
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+

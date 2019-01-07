@@ -29,8 +29,7 @@ add_executable(test_driver
 target_include_directories(test_driver
     PRIVATE
         src
-        ../third_party/catch2/include
 )
-target_link_libraries(test_driver driver)
+target_link_libraries(test_driver driver catch2_headers)
 
 ParseAndAddCatchTests(test_driver)

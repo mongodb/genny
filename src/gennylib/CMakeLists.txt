@@ -101,9 +101,8 @@ target_include_directories(gennylib_testutil
     PUBLIC
         src
         test
-        ../third_party/catch2/include
 )
-target_link_libraries(gennylib_testutil gennylib)
+target_link_libraries(gennylib_testutil gennylib catch2_headers)
 
 add_executable(test_gennylib
     test/Cast_test.cpp
