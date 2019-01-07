@@ -8,7 +8,7 @@ Actors:
   Phases:
   - Repeat: 10
     Operations:
-    - MetricsName: ServerStatus
+    - OperationMetricsName: ServerStatus
       OperationName: RunCommand
       OperationCommand:
         serverStatus: 1
@@ -16,7 +16,7 @@ Actors:
       OperationCommand:
         insert: myCollection
         documents: [{name: {$randomstring: {length: {$randomint: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
-    - MetricsName: Find
+    - OperationMetricsName: Find
       OperationCommand:
         find: restaurants
         filter: { rating: { $gte: 9 }, cuisine: italian }
@@ -30,14 +30,7 @@ Actors:
   Phases:
   - Repeat: 5
     Operation:
-      MetricsName: CurrentOp
+      OperationMetricsName: CurrentOp
       OperationName: RunCommand
       OperationCommand:
         currentOp: 1
-- Name: NoOp
-  Type: AdminCommand
-  Threads: 1
-  Phases:
-  - Repeat: 10
-    Operation:
-      OperationName: NoOp
