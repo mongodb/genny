@@ -83,7 +83,7 @@ if(ENABLE_JASPER)
 endif()
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core loki
+install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core
         EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -101,7 +101,11 @@ target_include_directories(gennylib_testutil
         src
         test
 )
-target_link_libraries(gennylib_testutil gennylib catch2)
+target_sources(gennylib_testutil
+    PUBLIC
+        $<TARGET_OBJECTS:catch2>
+)
+target_link_libraries(gennylib_testutil gennylib catch2_headers)
 
 add_executable(test_gennylib
     test/Cast_test.cpp

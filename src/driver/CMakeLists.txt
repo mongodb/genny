@@ -29,6 +29,6 @@ target_include_directories(test_driver
     PRIVATE
         src
 )
-target_link_libraries(test_driver driver catch2)
+target_link_libraries(test_driver driver gennylib_testutil)
 
 ParseAndAddCatchTests(test_driver)

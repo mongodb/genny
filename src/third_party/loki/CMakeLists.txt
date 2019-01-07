@@ -10,3 +10,9 @@ target_include_directories(loki
 install(DIRECTORY include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN *.h)
+
+install(TARGETS  loki
+        EXPORT   GennyLibraryConfig
+        ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
