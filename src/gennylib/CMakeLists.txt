@@ -110,7 +110,6 @@ add_executable(test_gennylib
     test/ExecutionStrategy_test.cpp
     test/PoolFactory_test.cpp
     test/PhaseLoop_test.cpp
-    test/RunCommandActor_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
@@ -120,7 +119,7 @@ add_executable(test_gennylib
     # Test the helper
     test/ActorHelper_test.cpp
 )
-target_link_libraries(test_gennylib gennylib_testutil cast_core)
+target_link_libraries(test_gennylib gennylib_testutil)
 
 add_executable(benchmark_gennylib
     test/PhaseLoop_benchmark.cpp
@@ -134,10 +133,11 @@ add_executable(test_gennylib_with_server
         # Don't modify the following comments; they're used as anchors in scripts that create new actors.
         # ActorsTestStart
         test/actors_test.cpp
+        test/RunCommandActor_test.cpp
         # ActorsTestEnd
 )
 
-target_link_libraries(test_gennylib_with_server gennylib_testutil)
+target_link_libraries(test_gennylib_with_server gennylib_testutil cast_core)
 
 ParseAndAddCatchTests(test_gennylib)
 

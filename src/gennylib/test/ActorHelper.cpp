@@ -23,9 +23,21 @@ ActorHelper::ActorHelper(const YAML::Node& config,
     _orchestrator = std::make_unique<genny::Orchestrator>(_registry->gauge("PhaseNumber"));
     _orchestrator->addRequiredTokens(tokenCount);
 
-    _cast = std::make_unique<Cast>(std::move(castInitializer));
-
+    _cast = std::make_unique<Cast>(castInitializer);
     _wlc = std::make_unique<WorkloadContext>(config, *_registry, *_orchestrator, uri, *_cast);
+}
+
+ActorHelper::ActorHelper(const YAML::Node& config, int tokenCount, const std::string& uri) {
+    if (tokenCount <= 0) {
+        throw InvalidConfigurationException("Must add a positive number of tokens");
+    }
+
+    _registry = std::make_unique<genny::metrics::Registry>();
+
+    _orchestrator = std::make_unique<genny::Orchestrator>(_registry->gauge("PhaseNumber"));
+    _orchestrator->addRequiredTokens(tokenCount);
+
+    _wlc = std::make_unique<WorkloadContext>(config, *_registry, *_orchestrator, uri, globalCast());
 }
 
 void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {

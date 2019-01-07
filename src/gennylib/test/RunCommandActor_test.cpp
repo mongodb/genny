@@ -8,6 +8,7 @@
 
 #include <MongoTestFixture.hpp>
 #include <cast_core/actors/RunCommand.hpp>
+#include <gennylib/MongoException.hpp>
 
 namespace genny {
 namespace {
@@ -18,46 +19,37 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "RunCommandActor successfully connects to a MongoDB instance.",
                  "[standalone][single_node_replset][three_node_replset][sharded]") {
 
-    dropAllDatabases();
-
-    auto db = client.database("test");
-
-    using bsoncxx::builder::basic::document;
-    using bsoncxx::builder::basic::kvp;
-
-    auto doc = document{};
-    doc.append(kvp("someKey", "someValue"));
-
-    auto rcProducer =
-        std::make_shared<DefaultActorProducer<genny::actor::RunCommand>>("RunCommand");
-
     YAML::Node config = YAML::Load(R"(
         SchemaVersion: 2018-07-01
         Actors:
-        - Name: RunCommand
+        - Name: TestRunCommand
           Type: RunCommand
-          Database: mydb
+          ExecutionStrategy:
+            ThrowOnFailure: true
           Phases:
           - Repeat: 1
+            Database: mydb
+            Type: RunCommand
+            Operation:
+              OperationCommand: {someKey: 1}
     )");
 
-    ActorHelper ah(config, 20, {{"RunCommand", rcProducer}});
-    ah.run();
+    ActorHelper ah(config, 1, MongoTestFixture::kConnectionString.to_string());
 
     SECTION("throws error with full context on operation_exception") {
         bool has_exception = true;
 
         try {
-            ah.run();
+            ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
             has_exception = false;
-        } catch (boost::exception& e) {
+        } catch (const boost::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
 
             REQUIRE(diagInfo.find("someKey") != std::string::npos);
-            REQUIRE(diagInfo.find("command_object") != std::string::npos);
+            REQUIRE(diagInfo.find("InfoObject") != std::string::npos);
 
             REQUIRE(diagInfo.find("no such command") != std::string::npos);
-            REQUIRE(diagInfo.find("server_response") != std::string::npos);
+            REQUIRE(diagInfo.find("ServerResponse") != std::string::npos);
         }
 
         // runCommandHelper did not throw exception.
