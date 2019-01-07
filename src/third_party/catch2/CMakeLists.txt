@@ -5,7 +5,8 @@ add_library(catch2 OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
 add_library(catch2_headers INTERFACE)
 target_include_directories(catch2_headers
     INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
 )
 
 target_link_libraries(catch2 catch2_headers)
