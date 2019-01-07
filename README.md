@@ -137,7 +137,7 @@ it's not going to make common editing environments go wonky.
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-make -C "build" test_gennylib test_driver test
+make -j8 -C "build" test_gennylib test_driver test
 ```
 
 #### Perf Tests
@@ -151,7 +151,7 @@ If you want to run all the tests except perf tests you can manually
 invoke the test binaries and exclude perf tests:
 
 ```sh
-make -C "build" benchmark_gennylib test
+make -j8 -C "build" benchmark_gennylib test
 ./build/src/gennylib/test_gennylib '~[benchmark]'
 ```
 
@@ -226,20 +226,20 @@ etc, you can run the clang sanitizers yourself easily.
 Running with TSAN:
 
     FLAGS="-pthread -fsanitize=thread -g -O1"
-    cmake -DCMAKE_CXX_FLAGS="$FLAGS" -B "build" .
-    make -C "build" test
+    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
+    make -j8 -C "build" test
     ./build/src/driver/genny src/driver/test/Workload.yml
 
 Running with ASAN:
 
     FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
-    cmake -DCMAKE_CXX_FLAGS="$FLAGS" -B "build" .
-    make -C "build" test
+    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
+    make -j8 -C "build" test
     ./build/src/driver/genny src/driver/test/Workload.yml
 
 Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
-    cmake -DCMAKE_CXX_FLAGS="$FLAGS" -B "build" .
-    make -C "build" test
+    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
+    make -j8 -C "build" test
     ./build/src/driver/genny src/driver/test/Workload.yml
