@@ -57,9 +57,9 @@ buildvariants:
   tasks:
   - name: t_test
   # The gRPC task only needs to be run to refresh our gRPC tarball.
-  - name: t_grpc
-  - name: t_mongocxx
-  - name: t_boost
+#  - name: t_grpc
+#  - name: t_mongocxx
+#  - name: t_boost
 
 - name: amazon2
   display_name: Amazon Linux 2
@@ -71,9 +71,9 @@ buildvariants:
     toolchain: "/opt/mongodbtoolchain/v3/bin"
   tasks:
   - name: t_compile
-  - name: t_grpc
-  - name: t_mongocxx
-  - name: t_boost
+#  - name: t_grpc
+#  - name: t_mongocxx
+#  - name: t_boost
 
 - name: rhel70
   display_name: RHEL 7
@@ -85,9 +85,9 @@ buildvariants:
     toolchain: "/opt/mongodbtoolchain/v3/bin"
   tasks:
   - name: t_compile
-  - name: t_grpc
-  - name: t_mongocxx
-  - name: t_boost
+#  - name: t_grpc
+#  - name: t_mongocxx
+#  - name: t_boost
 
 - name: ubuntu1804
   display_name: Ubuntu 18.04
@@ -99,9 +99,9 @@ buildvariants:
     toolchain: "/opt/mongodbtoolchain/v3/bin"
   tasks:
   - name: t_compile
-  - name: t_grpc
-  - name: t_mongocxx
-  - name: t_boost
+#  - name: t_grpc
+#  - name: t_mongocxx
+#  - name: t_boost
 
 # - name: macos-1014
 #   display_name: OS X Mojave
