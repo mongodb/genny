@@ -15,9 +15,10 @@ namespace {
 
 using namespace genny::testing;
 
+// Don't run in a sharded cluster because the error message is different.
 TEST_CASE_METHOD(MongoTestFixture,
                  "RunCommandActor successfully connects to a MongoDB instance.",
-                 "[standalone][single_node_replset][three_node_replset][sharded]") {
+                 "[standalone][single_node_replset][three_node_replset]") {
 
     YAML::Node config = YAML::Load(R"(
         SchemaVersion: 2018-07-01
