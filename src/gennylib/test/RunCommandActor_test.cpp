@@ -6,9 +6,10 @@
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
-#include <MongoTestFixture.hpp>
 #include <cast_core/actors/RunCommand.hpp>
 #include <gennylib/MongoException.hpp>
+
+#include "MongoTestFixture.hpp"
 
 namespace genny {
 namespace {
@@ -35,7 +36,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               OperationCommand: {someKey: 1}
     )");
 
-    ActorHelper ah(config, 1, MongoTestFixture::kConnectionString.to_string());
+    ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
 
     SECTION("throws error with full context on operation_exception") {
         bool has_exception = true;
