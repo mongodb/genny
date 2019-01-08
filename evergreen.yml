@@ -54,21 +54,66 @@ buildvariants:
   modules: ~
   run_on:
   - archlinux-test
-  expansions:
-    cmake_cxx_flags: -pthread
   tasks:
   - name: t_test
+  # The gRPC task only needs to be run to refresh our gRPC tarball.
+  - name: t_grpc
+  - name: t_mongocxx
+  - name: t_boost
 
-# TODO: TIG-1056 the OS X image doesn't have a recent CMake or C++ compiler
-# - name: macos-1012
-#   display_name: OS X Sierra
+- name: amazon2
+  display_name: Amazon Linux 2
+  modules: ~
+  run_on:
+  - amazon2-build
+  expansions:
+    cmake: "/opt/cmake/bin/cmake"
+    toolchain: "/opt/mongodbtoolchain/v3/bin"
+  tasks:
+  - name: t_compile
+  - name: t_grpc
+  - name: t_mongocxx
+  - name: t_boost
+
+- name: rhel70
+  display_name: RHEL 7
+  modules: ~
+  run_on:
+  - rhel70
+  expansions:
+    cmake: "/opt/cmake/bin/cmake"
+    toolchain: "/opt/mongodbtoolchain/v3/bin"
+  tasks:
+  - name: t_compile
+  - name: t_grpc
+  - name: t_mongocxx
+  - name: t_boost
+
+- name: ubuntu1804
+  display_name: Ubuntu 18.04
+  modules: ~
+  run_on:
+  - ubuntu1804-build
+  expansions:
+    cmake: "/opt/cmake/bin/cmake"
+    toolchain: "/opt/mongodbtoolchain/v3/bin"
+  tasks:
+  - name: t_compile
+  - name: t_grpc
+  - name: t_mongocxx
+  - name: t_boost
+
+# - name: macos-1014
+#   display_name: OS X Mojave
 #   modules: ~
 #   run_on:
-#   - macos-1012
+#   - macos-1014
 #   expansions:
-#     cmake_cxx_flags: ""
+#     cmake: "/Applications/CMake.app/Contents/bin/cmake"
+#     toolchain: "/Applications/Xcode10.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
 #   tasks:
-#   - name: t_test
+#   - name: t_grpc
+#   - name: t_boost
 
 
 ##                ⚡️ Tasks ⚡️
@@ -77,8 +122,27 @@ tasks:
 - name: t_compile
   commands:
   - func: f_fetch_source
-  - func: f_build_grpc
+  - func: f_fetch_library
+    vars:
+        install_dir: boost
+        short_name: boost
+  - func: f_fetch_library
+    vars:
+        install_dir: dist
+        short_name: mongocxx
+  - func: f_fetch_library
+    vars:
+        install_dir: dist
+        short_name: grpc
   - func: f_compile
+  - func: f_push
+    vars:
+        display_name: Genny
+        short_name: genny
+        install_dir: dist
+
+- name: t_mongo_server
+  commands:
   - func: f_checkout_mongodb
 
 - name: t_python_test
@@ -88,6 +152,48 @@ tasks:
 - name: t_cmake_test
   commands:
   - func: f_cmake_test
+
+- name: t_grpc
+  commands:
+  - func: f_fetch_source
+  - func: f_fetch_library
+    vars:
+        install_dir: boost
+        short_name: boost
+  - func: f_fetch_library
+    vars:
+        install_dir: dist
+        short_name: mongocxx
+  - func: f_build_grpc
+  - func: f_push
+    vars:
+        display_name: gRPC
+        short_name: grpc
+        install_dir: grpc
+
+- name: t_mongocxx
+  commands:
+  - func: f_fetch_source
+  - func: f_fetch_library
+    vars:
+        install_dir: boost
+        short_name: boost
+  - func: f_build_mongocxx
+  - func: f_push
+    vars:
+        display_name: Mongo Driver
+        short_name: mongocxx
+        install_dir: mongocxx
+
+- name: t_boost
+  commands:
+  - func: f_fetch_source
+  - func: f_build_boost
+  - func: f_push
+    vars:
+        display_name: Boost
+        short_name: boost
+        install_dir: boost
 
 - name: t_integration_test_standalone
   commands:
@@ -133,6 +239,7 @@ task_groups:
   #
   # For this task group, the implicit dependency is that t_*_test has to run after t_compile.
   - t_compile
+  - t_mongo_server
   - t_python_test
   - t_cmake_test
   - t_integration_test_standalone
@@ -157,18 +264,15 @@ functions:
   f_checkout_mongodb:
   - command: shell.exec
     params:
-      working_dir: src/build
+      working_dir: src
       script: |
         yes | pacman -S mongodb
-        git clone git@github.com:mongodb/mongo.git mongo
-
-        pushd mongo
-          git checkout 6734c12d17dd4c0e2738a47feb7114221d6ba66d
-        popd
-
-        virtualenv -p python2 venv
-        source venv/bin/activate
-        python -m pip install -r mongo/etc/pip/evgtest-requirements.txt
+  - command: subprocess.exec
+    params:
+      working_dir: src
+      binary: /bin/bash
+      args:
+        - "${workdir}/src/scripts/get-mongo-source.sh"
 
   ##
   # Compile gRPC. This script should be synchronized with DSI's compilation sript for Genny:
@@ -176,29 +280,97 @@ functions:
   # (URL valid as of 11/2018)
   ##
   f_build_grpc:
+  - command: subprocess.exec
+    params:
+      working_dir: src
+      binary: /bin/bash
+      args:
+        - "${workdir}/src/scripts/make-grpc.sh"
+        - "-DGENNY_STATIC_BOOST_PATH:PATH=${workdir}/boost"
+        - "-DGENNY_INSTALL_DIR:PATH=${workdir}/grpc"
+        - "-DCMAKE_PREFIX_PATH=${workdir}/dist"
+      env:
+          MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
+          CMAKE: "${cmake|cmake}"
+          PATH: "${toolchain}:/usr/bin:/bin"
+
+  f_build_mongocxx:
+  - command: subprocess.exec
+    params:
+      working_dir: src
+      binary: /bin/bash
+      args:
+        - "${workdir}/src/scripts/make-mongocxx.sh"
+        - "-DBOOST_ROOT:PATH=${workdir}/boost"
+        - "-DCMAKE_INSTALL_PREFIX=${workdir}/mongocxx"
+        - "-DCMAKE_PREFIX_PATH=${workdir}/mongocxx"
+      env:
+          MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
+          CMAKE: "${cmake|cmake}"
+          PATH: "${toolchain}:/usr/bin:/bin"
+
+  f_build_boost:
+  - command: subprocess.exec
+    params:
+      working_dir: src
+      binary: /bin/bash
+      args:
+        - "${workdir}/src/scripts/make-boost.sh"
+        - "${workdir}/boost"
+      env:
+          MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
+          CMAKE: "${cmake|cmake}"
+          PATH: "${toolchain}:/usr/bin:/bin"
+
+  f_push:
+  - command: archive.targz_pack
+    params:
+      source_dir: ${install_dir|dist}
+      target: ${short_name}.tgz
+      include:
+      - "./**"
   - command: shell.exec
     params:
-      working_dir: src/build
+      working_dir: .
       script: |
         set -o errexit
-        set -o pipefail
-        set -o nounset
+        # Make sure we have a file, give more info
+        ls -lah *.tgz
+        stat ${short_name}.tgz
+  - command: s3.put
+    params:
+      aws_key: ${aws_key}
+      aws_secret: ${aws_secret}
+      local_file: ${short_name}.tgz
+      remote_file: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
+      bucket: mciuploads
+      permissions: public-read
+      content_type: ${content_type|application/gzip}
+      display_name: "${display_name} - ${revision}"
+  - command: s3Copy.copy
+    params:
+      aws_key: ${aws_key}
+      aws_secret: ${aws_secret}
+      bucket: mciuploads
+      s3_copy_files:
+        - source:
+            path: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
+            bucket: mciuploads
+          destination:
+            path: ${project}/${short_name}/${short_name}-${build_variant}.tgz
+            bucket: mciuploads
+          display_name: ${display_name}
 
-        rm -rf * # Remove grpc and any cmake config copied up from runner
-        git clone --recurse-submodules https://github.com/grpc/grpc.git
-
-        pushd grpc
-        git checkout b79462f186cc22550bc8d53a00ae751f50d194f5
-
-        # Work around https://github.com/grpc/grpc/issues/16675 by checking out a newer commit.
-        pushd third_party/boringssl
-        git checkout 9edbc7ff9f56dff801a49f5ecb15ee06718b995c
-        popd
-
-        mkdir cmake-build
-        pushd cmake-build
-        cmake ..
-        make -j$(nproc)
+  f_fetch_library:
+  - command: s3.get
+    params:
+      aws_key: ${aws_key}
+      aws_secret: ${aws_secret}
+      extract_to: ${install_dir}
+      remote_file: ${project}/${short_name}/${short_name}-${build_variant}.tgz
+      bucket: mciuploads
+      permissions: public-read
+      content_type: ${content_type|application/gzip}
 
   ##
   # Compile the project in src/build.
@@ -207,21 +379,20 @@ functions:
   #  cmake_cxx_flags: sent to cmake as `-DCMAKE_CXX_FLAGS`
   ###
   f_compile:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      working_dir: src/build
-      script: |
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        # Add paths to gRPC and protobuf.
-        cwd=$(pwd)
-        export LIBRARY_PATH="$cwd/grpc/cmake-build/:$cwd/grpc/cmake-build/third_party/protobuf"
-        export CPLUS_INCLUDE_PATH="$cwd/grpc/include:$cwd/grpc/third_party/protobuf/src"
-
-        cmake -DCMAKE_CXX_FLAGS="${cmake_cxx_flags}" ..
-        make -j$(nproc)
+      working_dir: src
+      binary: /bin/bash
+      args:
+        - "${workdir}/src/scripts/bootstrap.sh"
+        - "-DCMAKE_CXX_FLAGS=${cmake_cxx_flags}"
+        - "-DGENNY_STATIC_BOOST_PATH:PATH=${workdir}/boost"
+        - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
+        - "-DGENNY_INSTALL_SSL:BOOL=ON"
+      env:
+          MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
+          CMAKE: "${cmake|cmake}"
+          PATH: "${toolchain}:/usr/bin:/bin"
 
   ##
   # Runs tests via ctest.

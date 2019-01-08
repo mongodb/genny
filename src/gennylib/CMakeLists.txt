@@ -22,6 +22,8 @@ target_include_directories(gennylib_core
         $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(gennylib_core
+    ${CMAKE_THREAD_LIBS_INIT}
+
     yaml-cpp
     loki
 
@@ -80,6 +82,12 @@ if(ENABLE_JASPER)
     target_link_libraries(gennylib
         PRIVATE
             jasperlib
+    )
+endif()
+if(ENABLE_SSL)
+    target_link_libraries(gennylib
+        PUBLIC
+            OpenSSL::Crypto OpenSSL::SSL
     )
 endif()
 
