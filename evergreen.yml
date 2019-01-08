@@ -244,46 +244,15 @@ functions:
   # Requires f_compile to have been run first.
   ##
   f_resmoke_test:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
       continue_on_err: true
       working_dir: src
-      script: |
-        set -o errexit
-        set -o pipefail
-        # set -o nounset # the "activate" script has an unbound variable
-
-        source build/venv/bin/activate
-
-        # We rely on catch2 to report test failures, but it doesn't always do so.
-        # See https://github.com/catchorg/Catch2/issues/1210
-        # As a workaround, we generate a dummy report with a failed test that is deleted if resmoke
-        # succeeds.
-
-        cat << EOF >> "build/sentinel.junit.xml"
-        <?xml version="1.0" encoding="UTF-8"?>
-        <testsuites>
-         <testsuite name="resmoke_failure_sentinel" errors="0" failures="1" tests="1" hostname="tbd" time="1.0" timestamp="2019-01-01T00:00:00Z">
-          <testcase classname="resmoke_failure_sentinel" name="Dummy testcase to signal that resmoke failed because a report may not be generated" time="1.0">
-           <failure message="resmoke did not exit cleanly, see task log for detail" type="">
-           </failure>
-          </testcase>
-          <system-out/>
-          <system-err/>
-         </testsuite>
-        </testsuites>
-        EOF
-
-        # The tests themselves do the reporting instead of using resmoke.
-        python build/mongo/buildscripts/resmoke.py \
-               --suite src/resmokeconfig/${resmoke_suite} \
-               --mongod mongod \
-               --mongo mongo \
-               --mongos mongos
-
-        # Remove the sentinel report if resmoke succeeds. This line won't be executed if
-        # resmoke fails because we've set errexit on this shell.
-        rm build/sentinel.junit.xml
+      binary: /bin/bash
+      args:
+      - ${workdir}/src/scripts/run-resmoke.sh
+      env:
+        RESMOKE_SUITE: ${resmoke_suite}
 
   ##
   # Runs python nosetests.
