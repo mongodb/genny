@@ -33,3 +33,12 @@ target_include_directories(test_driver
 target_link_libraries(test_driver driver catch2_headers)
 
 ParseAndAddCatchTests(test_driver)
+
+# Install all the workload documents
+file(GLOB WORKLOADS
+     test/*.yml
+     test/*.yaml
+)
+install(FILES ${WORKLOADS}
+        DESTINATION etc/genny/workloads
+)
