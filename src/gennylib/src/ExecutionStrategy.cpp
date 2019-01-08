@@ -1,5 +1,6 @@
 #include <gennylib/ExecutionStrategy.hpp>
 
+#include <boost/exception/diagnostic_information.hpp>
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/context.hpp>
@@ -20,9 +21,9 @@ void ExecutionStrategy::recordMetrics() {
     _opsGauge.set(_ops);
 }
 
-void ExecutionStrategy::_recordError(const mongocxx::operation_exception& e) {
+void ExecutionStrategy::_recordError(const boost::exception& e) {
     // This probably needs context
-    BOOST_LOG_TRIVIAL(debug) << "Caught error: " << e.what();
+    BOOST_LOG_TRIVIAL(debug) << "Caught error: " << boost::diagnostic_information(e);
 
     _errorGauge.set(++_errors);
 }

@@ -8,7 +8,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <mongocxx/exception/operation_exception.hpp>
 #include <mongocxx/exception/server_error_code.hpp>
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
@@ -16,6 +15,7 @@
 #include <loki/ScopeGuard.h>
 
 #include <gennylib/ExecutionStrategy.hpp>
+#include <gennylib/MongoException.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -35,7 +35,7 @@ public:
         bool shouldThrow;
     };
 
-    using Exception = mongocxx::operation_exception;
+    using Exception = genny::MongoException;
 
     static constexpr auto kErrorMessage = "Testing ExecutionStrategy catching";
 
@@ -69,7 +69,7 @@ public:
             [&]() {
                 if (state.throwCount > 0) {
                     --state.throwCount;
-                    throw Exception(mongocxx::make_error_code({}), kErrorMessage);
+                    throw Exception(kErrorMessage);
                 }
 
                 ++goodRuns;

@@ -3,6 +3,8 @@
 
 #include <functional>
 
+#include <mongocxx/uri.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/Cast.hpp>
@@ -18,17 +20,31 @@ class Registry;
 
 /**
  * Helper class to run an actor for a test. No metrics are collected by default.
- *
- * @param config YAML config of a workload that includes the actors you want to run.
- * @param tokenCount The total number of simultaneous threads ("tokens" in
- * Orchestrator lingo) required by all actors.
- * @param l initializer list for a Cast.
  */
 class ActorHelper {
 public:
     using FuncWithContext = std::function<void(const WorkloadContext&)>;
 
-    ActorHelper(const YAML::Node& config, int tokenCount, Cast::List castInitializer);
+    /**
+     * Construct an ActorHelper with a cast.
+     *
+     * @param config YAML config of a workload that includes the actors you want to run.
+     * @param tokenCount The total number of simultaneous threads ("tokens" in
+     * Orchestrator lingo) required by all actors.
+     * @param l initializer list for a Cast.
+     * @param connStr optional, connection string to the mongo cluster.
+     */
+    ActorHelper(const YAML::Node& config,
+                int tokenCount,
+                Cast::List castInitializer,
+                const std::string& uri = mongocxx::uri::k_default_uri);
+
+    /**
+     * Construct an ActorHelper with the global cast.
+     */
+    ActorHelper(const YAML::Node& config,
+                int tokenCount,
+                const std::string& uri = mongocxx::uri::k_default_uri);
 
     void run(FuncWithContext&& runnerFunc = ActorHelper::doRunThreaded);
 

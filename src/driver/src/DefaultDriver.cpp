@@ -14,6 +14,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <loki/ScopeGuard.h>
+
 #include <gennylib/Cast.hpp>
 #include <gennylib/MetricsReporter.hpp>
 #include <gennylib/context.hpp>
@@ -42,19 +44,19 @@ template <typename Actor>
 void runActor(Actor&& actor,
               std::atomic<driver::DefaultDriver::OutcomeCode>& outcomeCode,
               Orchestrator& orchestrator) {
+    auto guard = Loki::MakeGuard([&]() { orchestrator.abort(); });
+
     try {
         actor->run();
     } catch (const boost::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "boost::exception: " << boost::diagnostic_information(x, true);
+        BOOST_LOG_TRIVIAL(error) << "Unexpected boost::exception: "
+                                 << boost::diagnostic_information(x, true);
         outcomeCode = driver::DefaultDriver::OutcomeCode::kBoostException;
-        orchestrator.abort();
     } catch (const std::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "std::exception: " << x.what();
+        BOOST_LOG_TRIVIAL(error) << "Unexpected std::exception: " << x.what();
         outcomeCode = driver::DefaultDriver::OutcomeCode::kStandardException;
-        orchestrator.abort();
     } catch (...) {
         BOOST_LOG_TRIVIAL(error) << "Unknown error";
-        orchestrator.abort();
         // Don't try to handle unknown errors, let us crash ungracefully
         throw;
     }

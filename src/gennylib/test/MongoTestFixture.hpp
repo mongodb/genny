@@ -14,7 +14,6 @@ protected:
 
     mongocxx::client client;
 
-private:
     static const mongocxx::uri kConnectionString;
 };
 }  // namespace genny::testing
