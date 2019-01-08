@@ -90,7 +90,7 @@ if(ENABLE_SSL)
 endif()
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core loki
+install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core
         EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
