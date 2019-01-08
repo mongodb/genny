@@ -26,6 +26,7 @@ target_link_libraries(gennylib_core
     loki
 
     Boost::boost Boost::log
+    MongoCxx::mongocxx
 )
 
 # Concepts to do with Actors

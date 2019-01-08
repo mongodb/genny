@@ -38,25 +38,10 @@ find_package(
 )
 # </Boost>
 
-# <Mongo Driver>
-find_package(libmongocxx REQUIRED)
-# </Mongo Driver>
-
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
 set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
-
-# These libraries are almost ubiquitously required in genny
-# The AFTER tag means that our headers are considered before headers in the same folder as these
-# dependencies
-include_directories(AFTER
-    ${LIBMONGOCXX_INCLUDE_DIRS}
-)
-link_libraries(
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${LIBMONGOCXX_LIBRARIES}
-)
 
 enable_testing()
 add_subdirectory(src)
