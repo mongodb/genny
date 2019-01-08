@@ -95,7 +95,8 @@ install(DIRECTORY include/
 # Pull together our utils, header directories, and testing dependencies into one static target
 add_library(gennylib_testutil STATIC
     test/ActorHelper.cpp
-    test/MongoTestFixture.cpp)
+    test/MongoTestFixture.cpp
+)
 target_include_directories(gennylib_testutil
     PUBLIC
         src
