@@ -38,10 +38,6 @@ find_package(
 )
 # </Boost>
 
-# <Mongo Driver>
-find_package(libmongocxx REQUIRED)
-# </Mongo Driver>
-
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
