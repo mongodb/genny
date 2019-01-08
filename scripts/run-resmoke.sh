@@ -13,8 +13,10 @@ MONGO_DIR="${MONGO_DIR:-${BUILD_DIR}/mongo}"
 RESMOKE_SUITE="${RESMOKE_SUITE:-genny_standalone.yml}"
 SENTINEL_XML="${BUILD_DIR}/sentinel.junit.xml"
 
-# shellcheck disable=SC1090
-. "${VENV_DIR}/bin/activate"
+if [[ -z $VIRTUAL_ENV ]]; then
+    # shellcheck disable=SC1090
+    . "${VENV_DIR}/bin/activate"
+fi
 
 # Move to the root dir because of how resmoke paths
 cd "${ROOT_DIR}"
