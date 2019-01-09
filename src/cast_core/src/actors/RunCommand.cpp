@@ -3,6 +3,8 @@
 #include <chrono>
 #include <thread>
 
+#include <boost/throw_exception.hpp>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
@@ -13,6 +15,7 @@
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/ExecutionStrategy.hpp>
+#include <gennylib/MongoException.hpp>
 #include <gennylib/value_generators.hpp>
 
 namespace genny {
@@ -58,7 +61,11 @@ public:
         auto maybeWatch = _timer ? std::make_optional<metrics::RaiiStopwatch>(_timer->raii())
                                  : std::optional<metrics::RaiiStopwatch>(std::nullopt);
 
-        _database.run_command(view);
+        try {
+            _database.run_command(view);
+        } catch (mongocxx::operation_exception& e) {
+            BOOST_THROW_EXCEPTION(MongoException(e, view));
+        }
     }
 
 private:
@@ -77,7 +84,8 @@ struct actor::RunCommand::PhaseState {
                genny::DefaultRandom& rng,
                mongocxx::pool::entry& client,
                ActorId id)
-        : strategy{actorContext, id, "RunCommand"} {
+        : strategy{actorContext, id, "RunCommand"},
+          options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
@@ -117,17 +125,20 @@ struct actor::RunCommand::PhaseState {
     }
 
     ExecutionStrategy strategy;
+    ExecutionStrategy::RunOptions options;
     std::vector<std::unique_ptr<Operation>> operations;
 };
 
 void actor::RunCommand::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            config->strategy.run([&]() {
-                for (auto&& op : config->operations) {
-                    op->run();
-                }
-            });
+            config->strategy.run(
+                [&]() {
+                    for (auto&& op : config->operations) {
+                        op->run();
+                    }
+                },
+                config->options);
         }
     }
 }

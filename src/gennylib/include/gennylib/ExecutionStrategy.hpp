@@ -6,6 +6,7 @@
 #include <loki/ScopeGuard.h>
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/MongoException.hpp>
 #include <gennylib/config/ExecutionStrategyOptions.hpp>
 #include <gennylib/metrics.hpp>
 
@@ -67,7 +68,7 @@ public:
 
                 result.wasSuccessful = true;
                 shouldContinue = false;
-            } catch (const mongocxx::operation_exception& e) {
+            } catch (const boost::exception& e) {
                 _recordError(e);
 
                 // We should continue if we've attempted less than the amount of retries plus one
@@ -97,7 +98,7 @@ public:
     }
 
 private:
-    void _recordError(const mongocxx::operation_exception& e);
+    void _recordError(const boost::exception& e);
     void _finishRun(const RunOptions& options, Result result);
 
     Result _lastResult;
