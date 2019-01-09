@@ -17,5 +17,9 @@ git clone git@github.com:mongodb/mongo.git "${SOURCE_DIR}"
 )
 
 virtualenv -p python2 "${VENV_DIR}"
-source "${VENV_DIR}/bin/activate"
+
+export VIRTUAL_ENV_DISABLE_PROMPT="yes"
+# shellcheck disable=SC1090
+. "${VENV_DIR}/bin/activate"
+
 python -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"
