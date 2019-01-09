@@ -34,6 +34,7 @@ add_library(gennylib_cast STATIC
     src/ActorProducer.cpp
     src/Cast.cpp
     src/ExecutionStrategy.cpp
+    src/RateLimiter.cpp
 )
 target_link_libraries(gennylib_cast gennylib_core)
 

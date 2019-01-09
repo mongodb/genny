@@ -16,6 +16,7 @@
 
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
+#include <gennylib/RateLimiter.hpp>
 #include <gennylib/value_generators.hpp>
 
 namespace genny {
@@ -41,7 +42,8 @@ public:
         : _databaseName{fixture.databaseName},
           _database{fixture.database},
           _doc{std::move(docTemplate)},
-          _options{opts} {
+          _options{opts},
+          _rateLimiter{_options.rateLimit} {
         // Only record metrics if we have a name for the operation.
         if (!_options.metricsName.empty()) {
             _timer = std::make_optional<metrics::Timer>(
@@ -50,6 +52,11 @@ public:
     }
 
     void run() {
+        _rateLimiter.run([&] { _run(); });
+    }
+
+private:
+    void _run() {
         bsoncxx::builder::stream::document document{};
         auto view = _doc->view(document);
         if (!_options.isQuiet) {
@@ -68,12 +75,12 @@ public:
         }
     }
 
-private:
     std::string _databaseName;
     mongocxx::database _database;
     std::unique_ptr<value_generators::DocumentGenerator> _doc;
     Options _options;
 
+    RateLimiter _rateLimiter;
     std::optional<metrics::Timer> _timer;
 };
 

@@ -4,6 +4,7 @@
 #include <string>
 
 #include <gennylib/conventions.hpp>
+#include <gennylib/config/RateLimiterOptions.hpp>
 
 namespace genny::config {
 
@@ -11,15 +12,18 @@ struct RunCommandOperationOptions {
     struct Defaults {
         static constexpr auto kMetricsName = "";
         static constexpr auto kIsQuiet = false;
+        static constexpr auto kRateLimit = RateLimiterOptions{};
     };
 
     struct Keys {
         static constexpr auto kMetricsName = "OperationMetricsName";
         static constexpr auto kIsQuiet = "OperationIsQuiet";
+        static constexpr auto kRateLimit = "OperationRateLimit";
     };
 
     std::string metricsName = Defaults::kMetricsName;
     bool isQuiet = Defaults::kIsQuiet;
+    RateLimiterOptions rateLimit = Defaults::kRateLimit;
 };
 
 struct RunCommandConfig{
@@ -42,6 +46,7 @@ struct convert<genny::config::RunCommandOperationOptions> {
         // If we don't have a MetricsName, this key is null
         node[Keys::kMetricsName] = rhs.metricsName;
         node[Keys::kIsQuiet] = rhs.isQuiet;
+        node[Keys::kRateLimit] = rhs.rateLimit;
 
         return node;
     }
@@ -53,6 +58,7 @@ struct convert<genny::config::RunCommandOperationOptions> {
 
         genny::decodeNodeInto(rhs.metricsName, node[Keys::kMetricsName], Defaults::kMetricsName);
         genny::decodeNodeInto(rhs.isQuiet, node[Keys::kIsQuiet], Defaults::kIsQuiet);
+        genny::decodeNodeInto(rhs.rateLimit, node[Keys::kRateLimit], Defaults::kRateLimit);
 
         return true;
     }
