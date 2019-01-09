@@ -94,6 +94,7 @@ buildvariants:
   - name: t_compile
   - name: t_push
 
+# TODO: TIG-1056 the OS X image doesn't have a recent CMake or C++ compiler
 # - name: macos-1014
 #   display_name: OS X Mojave
 #   modules: ~
@@ -237,6 +238,7 @@ functions:
   # Expansions:
   #  install_dir: The directory in which this dependency was installed
   #  short_name: The name for the folder and prefix for the tarball to push
+  #  display_name: The name to show in evergreen
   ###
   f_push_revision:
   - command: archive.targz_pack
@@ -268,6 +270,7 @@ functions:
   #
   # Expansions:
   #  short_name: The name for the folder and prefix for the tarball to push
+  #  display_name: The name to show in evergreen
   ###
   f_push_official:
   - command: s3Copy.copy
