@@ -4,10 +4,15 @@
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
+
 #include <bsoncxx/json.hpp>
 
 #include <cast_core/actors/RunCommand.hpp>
 #include <gennylib/MongoException.hpp>
+
+#include <mongocxx/read_preference.hpp>
 
 #include "MongoTestFixture.hpp"
 
@@ -15,6 +20,8 @@ namespace genny {
 namespace {
 
 using namespace genny::testing;
+using bsoncxx::builder::basic::kvp;
+using bsoncxx::builder::basic::make_document;
 
 // Don't run in a sharded cluster because the error message is different.
 TEST_CASE_METHOD(MongoTestFixture,
@@ -57,6 +64,47 @@ TEST_CASE_METHOD(MongoTestFixture,
         // runCommandHelper did not throw exception.
         REQUIRE(has_exception);
     }
+}
+
+TEST_CASE_METHOD(MongoTestFixture, 
+                 "InsertActor respects writeConcern.",
+                 "[three_node_replset]") {
+
+    YAML::Node config = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+
+        Actors:
+        - Name: TestInsertWriteConcern
+          Type: RunCommand
+          Threads: 1
+          Phases:
+          - Repeat: 1
+            Database: mydb
+            Operation:
+              OperationName: RunCommand
+              OperationCommand:
+                insert: myCollection
+                documents: [{name: myName}]
+                writeConcern: {w: 3, wtimeout: 5000}
+    )");
+
+    ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+
+    SECTION("verify that write concern was respected") {
+        ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
+    
+        auto session = MongoTestFixture::client.start_session();
+        auto coll = MongoTestFixture::client["mydb"]["myCollection"];
+        
+        mongocxx::options::find opts;        
+        mongocxx::read_preference secondary;
+        secondary.mode(mongocxx::read_preference::read_mode::k_secondary);
+        opts.read_preference(secondary).max_time(std::chrono::milliseconds(2000));
+        
+        bool result = (bool) coll.find_one(session, make_document(kvp("name", "myName")), opts);
+        
+        REQUIRE(result);
+    }             
 }
 }  // namespace
 }  // namespace genny
