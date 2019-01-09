@@ -1,4 +1,0 @@
-[2016-03-16 08:29:35.639950] [0x00007fff79f17000] [info]    ../examples/hello_world.yml
-[2016-03-16 08:29:35.647980] [0x0000700000187000] [info]    Inserted Hello World document
-[2016-03-16 08:29:35.648066] [0x00007fff79f17000] [info]    Workload: Hello_World, Count=1, Avg=2119us, Min=2119us, Max = 2119us
-[2016-03-16 08:29:35.648084] [0x00007fff79f17000] [info]    Node: insert_one0, Count=1, CountExceptions=0, Avg=1893us, Min=1893us, Max = 1893us, stddev=0
