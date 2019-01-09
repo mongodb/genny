@@ -280,7 +280,7 @@ functions:
       binary: /bin/bash
       args:
         - "${workdir}/src/scripts/bootstrap.sh"
-        - "-DCMAKE_CXX_FLAGS=${cmake_cxx_flags}"
+        - "-DENABLE_JASPER:BOOL=ON"
         - "-DGENNY_STATIC_BOOST_PATH:PATH=${workdir}/boost"
         - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
         - "-DGENNY_INSTALL_SSL:BOOL=ON"

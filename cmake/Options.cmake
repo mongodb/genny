@@ -1,16 +1,9 @@
 ## Define boolean options and cache variables
 
-option(ENABLE_SSL
-       "Use SSL for mongo-c-driver and jasperlib."
-       ON)
-
 option(ENABLE_JASPER
        "Enable the jasper framework and include gRPC."
-       ON)
-
-if(NOT ENABLE_SSL AND ENABLE_JASPER)
-    message(FATAL "SSL is required for Jasper.")
-endif()
+       OFF
+)
 
 set(GENNY_INSTALL_DIR
     ""

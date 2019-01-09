@@ -1,9 +1,7 @@
 project(jasperlib VERSION 0.0.1 LANGUAGES CXX)
 
 if(NOT gRPC_FOUND)
-    message(WARNING "gRPC not found. Disabling Jasper...")
-    set(ENABLE_JASPER OFF CACHE BOOL "" FORCE)
-    return()
+    message(FATAL "gRPC not found. Cannot build jasperlib...")
 endif()
 
 add_library(jasperlib STATIC
