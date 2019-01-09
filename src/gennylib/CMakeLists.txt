@@ -82,6 +82,12 @@ if(ENABLE_JASPER)
     )
 endif()
 
+# Link in OpenSSL
+target_link_libraries(gennylib
+    PUBLIC
+        OpenSSL::Crypto OpenSSL::SSL
+)
+
 # 'make install' to the correct locations (provided by GNUInstallDirs).
 install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core
         EXPORT   GennyLibraryConfig
