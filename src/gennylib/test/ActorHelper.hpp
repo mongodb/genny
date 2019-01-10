@@ -50,7 +50,8 @@ public:
 
     void run();
 
-    void runAndVerify(FuncWithContext&& runnerFunc, FuncWithContext&& verifyFunc);
+    void runAndVerify(FuncWithContext&& runnerFunc,
+                      FuncWithContext&& verifyFunc = FuncWithContext());
 
     void runDefaultAndVerify(FuncWithContext&& verifyFunc) {
         doRunThreaded(*_wlc);
