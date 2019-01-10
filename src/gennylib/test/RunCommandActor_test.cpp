@@ -70,7 +70,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "InsertActor respects writeConcern.",
                  "[three_node_replset]") {
 
-    YAML::Node config = YAML::Load(R"(
+    YAML::Node config_w3 = YAML::Load(R"(
         SchemaVersion: 2018-07-01
 
         Actors:
@@ -87,10 +87,27 @@ TEST_CASE_METHOD(MongoTestFixture,
                 documents: [{name: myName}]
                 writeConcern: {w: 3, wtimeout: 5000}
     )");
+    
+    YAML::Node config_w1 = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+        
+        Actors:
+        - Name: TestInsertWriteConcern
+          Type: RunCommand 
+          Threads: 1
+          Phases:
+          - Repeat: 1
+            Database: mydb
+            Operation:
+              OperationName: RunCommand
+              OperationCommand:
+                insert: myCollection
+                documents: [{name: myOtherName}]
+                writeConcern: {w: 1, wtimeout: 5000}
+    )");
 
-    ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
-
-    SECTION("verify that write concern was respected") {
+    SECTION("verify write concern to secondaries") {
+        ActorHelper ah(config_w3, 1, MongoTestFixture::connectionUri().to_string());
         ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
     
         auto session = MongoTestFixture::client.start_session();
@@ -104,7 +121,31 @@ TEST_CASE_METHOD(MongoTestFixture,
         bool result = (bool) coll.find_one(session, make_document(kvp("name", "myName")), opts);
         
         REQUIRE(result);
-    }             
+    }        
+    
+    SECTION("verify write concern to primary only") {
+        ActorHelper ah(config_w1, 1, MongoTestFixture::connectionUri().to_string());
+        
+        ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
+        
+        auto session = MongoTestFixture::client.start_session();
+        auto coll = MongoTestFixture::client["mydb"]["myCollection"];
+        
+        mongocxx::options::find opts;
+        
+        mongocxx::read_preference secondary;
+        secondary.mode(mongocxx::read_preference::read_mode::k_secondary);
+        mongocxx::read_preference primary;
+        secondary.mode(mongocxx::read_preference::read_mode::k_secondary);
+        
+        opts.read_preference(secondary).max_time(std::chrono::milliseconds(2000));
+        bool result_secondary = (bool) coll.find_one(session, make_document(kvp("name", "myOtherName")), opts);
+        REQUIRE(!result_secondary);
+        
+        opts.read_preference(primary).max_time(std::chrono::milliseconds(2000));
+        bool result_primary = (bool) coll.find_one(session, make_document(kvp("name", "myOtherName")), opts);
+        REQUIRE(result_primary);
+    }
 }
 }  // namespace
 }  // namespace genny
