@@ -73,9 +73,11 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
+// Don't run in a sharded cluster to avoid 'CannotImplicitlyCreateCollection' exceptions. These do
+// not test any sharding-specific behavior.
 TEST_CASE_METHOD(MongoTestFixture,
                  "Perform a single RunCommand command.",
-                 "[standalone][single_node_replset][three_node_replset][sharded]") {
+                 "[standalone][single_node_replset][three_node_replset]") {
     dropAllDatabases();
     auto db = client.database("test");
 
@@ -246,9 +248,11 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
+// Don't run in a sharded cluster to avoid 'CannotImplicitlyCreateCollection' exceptions. These do
+// not test any sharding-specific behavior.
 TEST_CASE_METHOD(MongoTestFixture,
                  "AdminCommand actor with a single operation.",
-                 "[standalone][single_node_replset][three_node_replset][sharded]") {
+                 "[standalone][single_node_replset][three_node_replset]") {
     dropAllDatabases();
     auto adminDb = client.database("admin");
 
@@ -331,9 +335,11 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
+// Don't run in a sharded cluster to avoid 'CannotImplicitlyCreateCollection' exceptions. These do
+// not test any sharding-specific behavior.
 TEST_CASE_METHOD(MongoTestFixture,
                  "Performing multiple operations.",
-                 "[standalone][single_node_replset][three_node_replset][sharded]") {
+                 "[standalone][single_node_replset][three_node_replset]") {
     dropAllDatabases();
     auto adminDb = client.database("admin");
     auto db = client.database("test");
@@ -420,9 +426,11 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
+// Don't run in a sharded cluster to avoid 'CannotImplicitlyCreateCollection' exceptions. These do
+// not test any sharding-specific behavior.
 TEST_CASE_METHOD(MongoTestFixture,
                  "Test metric reporting.",
-                 "[standalone][single_node_replset][three_node_replset][sharded]") {
+                 "[standalone][single_node_replset][three_node_replset]") {
     dropAllDatabases();
     auto db = client.database("test");
 
