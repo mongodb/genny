@@ -175,7 +175,7 @@ using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 
 TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a MongoDB instance.",
-          "[standalone][single_node_replset][three_node_replset][sharded]") {
+          "[standalone][single_node_replset][three_node_replset][sharded][${actor_name}]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
@@ -195,7 +195,7 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
     )");
 
 
-    SECTION("Inserts three documents into the database.") {
+    SECTION("Inserts documents into the database.") {
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::kConnectionString.to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
@@ -271,3 +271,12 @@ create_impl                  "$uuid_tag" "$actor_name"
 recreate_cast_core_cmake_file "$uuid_tag" "$actor_name"
 create_test                  "$actor_name"
 recreate_gennylib_cmake_file "$uuid_tag" "$actor_name"
+
+echo "Successfully generated skeleton for ${actor_name}. Build and test ${actor_name} with the following command:"
+echo ""
+echo "    cd build"
+echo "    cmake .."
+echo "    make -j8"
+echo "    ./src/gennylib/test_gennylib_with_server '[${actor_name}]'"
+echo "    make test"
+echo ""
