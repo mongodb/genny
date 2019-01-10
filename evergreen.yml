@@ -94,17 +94,17 @@ buildvariants:
   - name: t_compile
   - name: t_push
 
-# TODO: TIG-1056 the OS X image doesn't have a recent CMake or C++ compiler
-# - name: macos-1014
-#   display_name: OS X Mojave
-#   modules: ~
-#   run_on:
-#   - macos-1014
-#   expansions:
-#     cmake: "/Applications/CMake.app/Contents/bin/cmake"
-#     toolchain: "/Applications/Xcode10.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
-#   tasks:
-#   - name: t_test
+- name: macos-1014
+  display_name: OS X Mojave
+  modules: ~
+  run_on:
+  - macos-1014
+  expansions:
+    cmake: "/Applications/CMake.app/Contents/bin/cmake"
+    toolchain: "/Applications/Xcode10.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
+  tasks:
+  - name: t_compile
+  - name: t_push
 
 
 ##                ⚡️ Tasks ⚡️
