@@ -10,7 +10,7 @@ Actors:
     Database: &DB test
     CollectionCount: 1
     # Collection name will be Collection0, this is not configurable.
-    DocumentCount: 100000000 # 100M
+    DocumentCount: 10000000 # 10M
     BatchSize: 1000
     Document:  # Documents are approximately 18 - 108 bytes in size
       x: {$randomint: {distribution: geometric, p: 0.1}}
@@ -36,3 +36,4 @@ Actors:
       - OperationName: RunCommand
         OperationCommand:
           find: Collection0
+        filter: { x: "never true" }
