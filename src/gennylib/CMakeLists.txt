@@ -61,7 +61,7 @@ add_library(gennylib SHARED
     src/Orchestrator.cpp
     src/PoolFactory.cpp
     src/DefaultRandom.cpp
-)
+    )
 
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
@@ -90,6 +90,12 @@ if(ENABLE_SSL)
             OpenSSL::Crypto OpenSSL::SSL
     )
 endif()
+
+# Link in OpenSSL
+target_link_libraries(gennylib
+    PUBLIC
+        OpenSSL::Crypto OpenSSL::SSL
+)
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
 install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core
@@ -147,10 +153,11 @@ add_executable(test_gennylib_with_server
         # Don't modify the following comments; they're used as anchors in scripts that create new actors.
         # ActorsTestStart
         test/actors_test.cpp
+        test/RunCommandActor_test.cpp
         # ActorsTestEnd
 )
 
-target_link_libraries(test_gennylib_with_server gennylib_testutil)
+target_link_libraries(test_gennylib_with_server gennylib_testutil cast_core)
 
 ParseAndAddCatchTests(test_gennylib)
 

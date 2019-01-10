@@ -14,11 +14,10 @@ include(Options)
 include(CheckCompiler)
 include(ConfigureInstall)
 
-if(ENABLE_SSL)
-    include(GetSsl)
-endif()
-
 find_package(Threads REQUIRED)
+
+# Grab OpenSSL right away
+include(GetSsl)
 
 # <Boost>
 if(GENNY_STATIC_BOOST_PATH)
