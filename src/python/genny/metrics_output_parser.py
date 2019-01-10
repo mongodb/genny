@@ -209,10 +209,11 @@ class ParserResults(object):
             #    [Genny, Setup]
             event_name = event_parts[0] + '.' + event_parts[1]
             thread = '0'
-        elif len(event_parts) == 3:
+        elif len(event_parts) >= 3:
             # For regular (multi-threaded) cases, event_parts is like
-            #    [MyActor, id-1, operation]
-            event_name = event_parts[0] + '.' + event_parts[2]
+            #    [MyActor, id-1, operation, ...]
+            # where ... is any other parts of the operation name
+            event_name = event_parts[0] + '.' + ('.'.join(event_parts[2:]))
             thread = event_parts[1]
         else:
             raise ParseError("Invalid event given: [{}]".format(event_parts), file_name,

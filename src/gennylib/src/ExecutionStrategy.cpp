@@ -9,9 +9,9 @@ namespace genny {
 ExecutionStrategy::ExecutionStrategy(ActorContext& context,
                                      ActorId id,
                                      const std::string& operation)
-    : _errorGauge{context.gauge(operation + ".errors", id)},
-      _opsGauge{context.gauge(operation + ".ops", id)},
-      _timer{context.timer(operation + ".op-time", id)} {}
+    : _errorGauge{context.gauge(operation + "_errors", id)},
+      _opsGauge{context.gauge(operation + "_ops", id)},
+      _timer{context.timer(operation, id)} {}
 
 ExecutionStrategy::~ExecutionStrategy() {
     recordMetrics();
