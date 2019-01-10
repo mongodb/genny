@@ -16,6 +16,10 @@ add_subdirectory(loki)
 find_package(MongoCxx)
 # </Mongo Driver>
 
+# <gRPC>
+include(GetGRpc)
+# </gRPC>
+
 # <Jasper>
 if(ENABLE_JASPER)
     add_subdirectory(jasper)

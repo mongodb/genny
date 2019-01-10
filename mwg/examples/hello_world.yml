@@ -1,8 +1,0 @@
-# Hello World example. Inserts one document
-
-main: 
-  name: Hello_World
-  nodes: 
-    - type: insert_one
-      document: {x: Hello World}
-      print: Inserted Hello World document

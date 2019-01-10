@@ -59,7 +59,7 @@ add_library(gennylib SHARED
     src/Orchestrator.cpp
     src/PoolFactory.cpp
     src/DefaultRandom.cpp
-)
+    )
 
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
@@ -83,8 +83,14 @@ if(ENABLE_JASPER)
     )
 endif()
 
+# Link in OpenSSL
+target_link_libraries(gennylib
+    PUBLIC
+        OpenSSL::Crypto OpenSSL::SSL
+)
+
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core loki
+install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core
         EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -97,12 +103,15 @@ install(DIRECTORY include/
 add_library(gennylib_testutil STATIC
     test/ActorHelper.cpp
     test/MongoTestFixture.cpp
-    $<TARGET_OBJECTS:catch2>
 )
 target_include_directories(gennylib_testutil
     PUBLIC
         src
         test
+)
+target_sources(gennylib_testutil
+    PUBLIC
+        $<TARGET_OBJECTS:catch2>
 )
 target_link_libraries(gennylib_testutil gennylib catch2_headers)
 
@@ -136,10 +145,11 @@ add_executable(test_gennylib_with_server
         # Don't modify the following comments; they're used as anchors in scripts that create new actors.
         # ActorsTestStart
         test/actors_test.cpp
+        test/RunCommandActor_test.cpp
         # ActorsTestEnd
 )
 
-target_link_libraries(test_gennylib_with_server gennylib_testutil)
+target_link_libraries(test_gennylib_with_server gennylib_testutil cast_core)
 
 ParseAndAddCatchTests(test_gennylib)
 

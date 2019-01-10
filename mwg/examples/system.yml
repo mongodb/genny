@@ -1,7 +1,0 @@
-# Example demonstrating system node
-
-main:
-  name: system-demo
-  nodes:
-    - type: system
-      command: touch touchme
