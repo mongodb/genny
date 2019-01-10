@@ -30,9 +30,10 @@ struct Loader::PhaseConfig {
                 uint thread)
         : database{(*client)[context.get<std::string>("Database")]},
           // The next line uses integer division. The Remainder is accounted for below.
-          numCollections{context.get<uint>("CollectionCount") / context.get<int>("Threads")},
-          numDocuments{context.get<uint>("DocumentCount")},
-          batchSize{context.get<uint>("BatchSize")},
+          numCollections{context.get<uint, true, Integer>("CollectionCount") /
+                         context.get<int, true, Integer>("Threads")},
+          numDocuments{context.get<uint, true, Integer>("DocumentCount")},
+          batchSize{context.get<uint, true, Integer>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)},
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");

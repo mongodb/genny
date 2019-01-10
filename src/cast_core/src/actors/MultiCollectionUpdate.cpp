@@ -22,11 +22,11 @@ namespace genny::actor {
 struct MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context, genny::DefaultRandom& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
-          numCollections{context.get<uint>("CollectionCount")},
+          numCollections{context.get<uint, true, Integer>("CollectionCount")},
           queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
           updateDocument{value_generators::makeDoc(context.get("Update"), rng)},
           uniformDistribution{0, numCollections},
-          minDelay{context.get<std::chrono::milliseconds, false>("MinDelay")
+          minDelay{context.get<std::chrono::milliseconds, false, Time>("MinDelay")
                        .value_or(std::chrono::milliseconds(0))} {}
 
     mongocxx::database database;

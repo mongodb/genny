@@ -64,9 +64,10 @@ public:
     }
 
     explicit IterationCompletionCheck(PhaseContext& phaseContext)
-        : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
-                                   phaseContext.get<int, false>("Repeat"),
-                                   phaseContext.isNop()) {}
+        : IterationCompletionCheck(
+              phaseContext.get<std::chrono::milliseconds, false, Time>("Duration"),
+              phaseContext.get<int, false>("Repeat"),
+              phaseContext.isNop()) {}
 
     std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured

@@ -118,6 +118,7 @@ inline std::ostream& operator<<(std::ostream& out, const ConfigPath& path) {
 template <class Out,
           class Current,
           bool Required = true,
+          class Raw = Out,
           class OutV = typename MaybeOptional<Out, Required>::type>
 OutV get_helper(const ConfigPath& parent, const Current& curr) {
     if (!curr) {
@@ -131,9 +132,9 @@ OutV get_helper(const ConfigPath& parent, const Current& curr) {
     }
     try {
         if constexpr (Required) {
-            return curr.template as<Out>();
+            return static_cast<Out>(curr.template as<Raw>());
         } else {
-            return std::make_optional<Out>(curr.template as<Out>());
+            return std::make_optional<Out>(static_cast<Out>(curr.template as<Raw>()));
         }
     } catch (const YAML::BadConversion& conv) {
         std::stringstream error;
@@ -154,6 +155,7 @@ OutV get_helper(const ConfigPath& parent, const Current& curr) {
 template <class Out,
           class Current,
           bool Required = true,
+          class Raw = Out,
           class OutV = typename MaybeOptional<Out, Required>::type,
           class PathFirst,
           class... PathRest>
@@ -181,7 +183,8 @@ OutV get_helper(ConfigPath& parent,
             return std::nullopt;
         }
     }
-    return V1::get_helper<Out, Current, Required>(parent, next, std::forward<PathRest>(rest)...);
+    return V1::get_helper<Out, Current, Required, Raw>(
+        parent, next, std::forward<PathRest>(rest)...);
 }
 
 }  // namespace genny::V1
@@ -256,13 +259,14 @@ public:
      * @tparam Required If true, will error if item not found. If false, will return an
      * `std::optional<T>` that will be empty if not found.
      */
-    template <class T = YAML::Node,
+    template <typename T = YAML::Node,
               bool Required = true,
+              typename RawT = T,
               class OutV = typename V1::MaybeOptional<T, Required>::type,
               class... Args>
     static OutV get_static(const YAML::Node& node, Args&&... args) {
         V1::ConfigPath p;
-        return V1::get_helper<T, YAML::Node, Required>(p, node, std::forward<Args>(args)...);
+        return V1::get_helper<T, YAML::Node, Required, RawT>(p, node, std::forward<Args>(args)...);
     };
 
     /**
@@ -270,10 +274,11 @@ public:
      */
     template <typename T = YAML::Node,
               bool Required = true,
+              typename RawT = T,
               class OutV = typename V1::MaybeOptional<T, Required>::type,
               class... Args>
     OutV get(Args&&... args) const {
-        return WorkloadContext::get_static<T, Required>(_node, std::forward<Args>(args)...);
+        return WorkloadContext::get_static<T, Required, RawT>(_node, std::forward<Args>(args)...);
     };
 
     /**
@@ -412,14 +417,17 @@ public:
      * will return an optional<T> (empty optional if not found).
      * @tparam Required If true, will error if item not found. If false, will return an optional<T>
      * that will be empty if not found.
+     * @tparam RawT the raw type converted from YAML::Node. The raw type is usually standardized
+     * for a specific field; we cast it to T to be a more friendlier type for callers.
      */
     template <typename T = YAML::Node,
               bool Required = true,
+              typename RawT = T,
               class OutV = typename V1::MaybeOptional<T, Required>::type,
               class... Args>
     OutV get(Args&&... args) const {
         V1::ConfigPath p;
-        return V1::get_helper<T, YAML::Node, Required>(p, _node, std::forward<Args>(args)...);
+        return V1::get_helper<T, YAML::Node, Required, RawT>(p, _node, std::forward<Args>(args)...);
     };
 
     /**
@@ -626,12 +634,14 @@ public:
      */
     template <typename T = YAML::Node,
               bool Required = true,
+              typename RawT = T,
               class OutV = typename V1::MaybeOptional<T, Required>::type,
               class... Args>
     OutV get(Args&&... args) const {
         V1::ConfigPath p;
         // try to extract from own node
-        auto fromSelf = V1::get_helper<T, YAML::Node, false>(p, _node, std::forward<Args>(args)...);
+        auto fromSelf =
+            V1::get_helper<T, YAML::Node, false, RawT>(p, _node, std::forward<Args>(args)...);
         if (fromSelf) {
             if constexpr (Required) {
                 // unwrap from optional<T>
@@ -643,7 +653,7 @@ public:
         }
 
         // fallback to actor node
-        return this->_actor->get<T, Required>(std::forward<Args>(args)...);
+        return this->_actor->get<T, Required, RawT>(std::forward<Args>(args)...);
     };
 
     /**
