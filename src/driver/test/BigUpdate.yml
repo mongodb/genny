@@ -14,7 +14,7 @@ Actors:
     Threads: 10
     Database: &DB test
     CollectionCount: &CollectionCount 1000
-    DocumentCount: 10000
+    DocumentCount: 1e4
     BatchSize: 1000
     Document:  # Documents are approximately 1 KiB in size
       t: {$randomint: {min: 0, max: 10}}
@@ -96,7 +96,7 @@ Actors:
     Phases:
       - Operation:
           OperationName: Nop
-      - Duration: &phase2_duration 600000  # TODO: TIG-1154
+      - Duration: &phase2_duration 10 minutes
         MinDelay: 31  # This should be replaced with Rate with TIG-1155.
   - Name: MultiCollectionQuery
     Type: MultiCollectionQuery
@@ -108,5 +108,5 @@ Actors:
     Phases:
       - Operation:
           OperationName: Nop
-      - Duration: *phase2_duration  # TODO: TIG-1154
+      - Duration: *phase2_duration
         MinDelay: 9  # This should be replaced with Rate with TIG-1155.
