@@ -16,7 +16,7 @@
 
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
-#include <gennylib/RateLimiter.hpp>
+#include <gennylib/v1/RateLimiter.hpp>
 #include <gennylib/value_generators.hpp>
 
 namespace genny {
@@ -80,7 +80,7 @@ private:
     std::unique_ptr<value_generators::DocumentGenerator> _doc;
     Options _options;
 
-    RateLimiter _rateLimiter;
+    v1::RateLimiter _rateLimiter;
     std::optional<metrics::Timer> _timer;
 };
 

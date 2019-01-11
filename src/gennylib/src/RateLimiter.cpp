@@ -1,10 +1,10 @@
-#include <gennylib/RateLimiter.hpp>
+#include <gennylib/v1/RateLimiter.hpp>
 
 #include <thread>
 
 #include <boost/log/trivial.hpp>
 
-namespace genny {
+namespace genny::v1 {
 RateLimiter::RateLimiter(const Options& options)
     : _options{options}, _state{std::make_unique<State>()} {}
 
@@ -39,5 +39,5 @@ void RateLimiter::_scheduleNext() {
     ++_state->generation;
 }
 
-}  // namespace genny
+}  // namespace genny::v1
 
