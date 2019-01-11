@@ -13,7 +13,7 @@ public:
 protected:
     void dropAllDatabases();
 
-    mongocxx::instance & instance;
+    mongocxx::instance& instance;
     mongocxx::client client;
 
     static mongocxx::uri connectionUri();
