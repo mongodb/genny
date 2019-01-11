@@ -30,15 +30,15 @@ struct UIntSpec {
     UIntSpec() = default;
     ~UIntSpec() = default;
 
-    explicit UIntSpec(uint64_t v) : value{v} {}
-    // uint64 is used by default, you can explicitly cast to another type if needed.
-    uint64_t value;
+    explicit UIntSpec(size_t v) : value{v} {}
+    // size_t is used by default, you can explicitly cast to another type if needed.
+    size_t value;
 
     explicit operator uint32_t() {
         return static_cast<uint32_t>(value);
     }
 
-    operator uint64_t() {  // NOLINT(google-explicit-constructor)
+    operator size_t() {  // NOLINT(google-explicit-constructor)
         return value;
     }
 };
@@ -107,7 +107,7 @@ struct RateSpec {
     RateSpec(TimeSpec t, UIntSpec i) : per{t}, operations{i} {}
 
     // Allow construction with integers for testing.
-    RateSpec(int64_t t, uint64_t i) : per{t}, operations{i} {}
+    RateSpec(int64_t t, size_t i) : per{t}, operations{i} {}
     TimeSpec per;
     UIntSpec operations;
 };

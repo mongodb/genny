@@ -51,12 +51,12 @@ struct Loader::PhaseConfig {
     }
 
     mongocxx::database database;
-    uint64_t numCollections;
-    uint64_t numDocuments;
-    uint64_t batchSize;
+    size_t numCollections;
+    size_t numDocuments;
+    size_t batchSize;
     document_ptr documentTemplate;
     std::vector<index_type> indexes;
-    uint64_t collectionOffset;
+    size_t collectionOffset;
 };
 
 void genny::actor::Loader::run() {
@@ -74,7 +74,7 @@ void genny::actor::Loader::run() {
                     while (remainingInserts > 0) {
                         // insert the next batch
                         uint numberToInsert =
-                            std::min<uint64_t>(config->batchSize, remainingInserts);
+                            std::min<size_t>(config->batchSize, remainingInserts);
                         std::vector<bsoncxx::builder::stream::document> docs(numberToInsert);
                         std::vector<bsoncxx::document::view> views;
                         auto newDoc = docs.begin();

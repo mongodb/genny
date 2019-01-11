@@ -28,10 +28,10 @@ struct MultiCollectionQuery::PhaseConfig {
           minDelay{context.get<TimeSpec, false>("MinDelay").value_or(genny::TimeSpec(0))} {}
 
     mongocxx::database database;
-    uint64_t numCollections;
+    size_t numCollections;
     std::unique_ptr<value_generators::DocumentGenerator> filterDocument;
     // uniform distribution random int for selecting collection
-    std::uniform_int_distribution<uint64_t> uniformDistribution;
+    std::uniform_int_distribution<size_t> uniformDistribution;
     std::chrono::milliseconds minDelay;
     mongocxx::options::find options;
 };
