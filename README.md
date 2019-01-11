@@ -199,7 +199,6 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-
 ./build/src/driver/genny                                    \
     --workload-file       src/driver/test/InsertRemove.yml  \
     --metrics-format      csv                               \
