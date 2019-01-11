@@ -469,7 +469,7 @@ public:
     }
 
     void addOps(const count_type& size) {
-        _totalOpsSize += size;
+        _totalOps += size;
     }
 
     void success() {
@@ -488,13 +488,13 @@ private:
     void report() {
         this->_op->report(_started);
         this->_op->reportBytes(_totalBytes);
-        this->_op->reportOps(_totalOpsSize);
+        this->_op->reportOps(_totalOps);
     }
 
     V1::OperationImpl* _op;
     const time_point _started;
     count_type _totalBytes = 0;
-    count_type _totalOpsSize = 0;
+    count_type _totalOps = 0;
     bool _isClosed = false;
 };
 
