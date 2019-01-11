@@ -9,20 +9,17 @@
 
 namespace genny::testing {
 
-const mongocxx::uri MongoTestFixture::kConnectionString = []() {
+mongocxx::uri MongoTestFixture::connectionUri() {
     const char* connChar = getenv("MONGO_CONNECTION_STRING");
-    std::string connStr;
 
-    if (!connChar) {
-        connStr = mongocxx::uri::k_default_uri;
-        BOOST_LOG_TRIVIAL(info) << "MONGO_CONNECTION_STRING not set, using default value: "
-                                << connStr;
-    } else {
-        connStr = connChar;
+    if (connChar != nullptr) {
+        return mongocxx::uri(connChar);
     }
 
+    auto& connStr = mongocxx::uri::k_default_uri;
+    BOOST_LOG_TRIVIAL(info) << "MONGO_CONNECTION_STRING not set, using default value: " << connStr;
     return mongocxx::uri(connStr);
-}();
+};
 
 void MongoTestFixture::dropAllDatabases() {
     for (auto&& dbDoc : client.list_databases()) {
@@ -33,4 +30,5 @@ void MongoTestFixture::dropAllDatabases() {
         }
     }
 }
+
 }  // namespace genny::testing

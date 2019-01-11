@@ -3,6 +3,7 @@
 #include <thread>
 #include <vector>
 
+#include <gennylib/MetricsReporter.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/metrics.hpp>
@@ -40,6 +41,10 @@ ActorHelper::ActorHelper(const YAML::Node& config, int tokenCount, const std::st
     _wlc = std::make_unique<WorkloadContext>(config, *_registry, *_orchestrator, uri, globalCast());
 }
 
+void ActorHelper::run() {
+    doRunThreaded(*_wlc);
+}
+
 void ActorHelper::run(ActorHelper::FuncWithContext&& runnerFunc) {
     runnerFunc(*_wlc);
 }
@@ -59,5 +64,9 @@ void ActorHelper::doRunThreaded(const WorkloadContext& wl) {
 
     for (auto& thread : threads)
         thread.join();
+
+    auto reporter = genny::metrics::Reporter{*_registry};
+
+    reporter.report(_metricsOutput, "csv");
 }
 }  // namespace genny

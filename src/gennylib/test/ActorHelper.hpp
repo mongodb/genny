@@ -2,24 +2,21 @@
 #define HEADER_C4365A3F_5581_470B_8B54_B46A42795A62_INCLUDED
 
 #include <functional>
+#include <string>
 
 #include <mongocxx/uri.hpp>
 
 #include <yaml-cpp/yaml.h>
 
+#include <gennylib/metrics.hpp>
+#include <gennylib/context.hpp>
 #include <gennylib/Cast.hpp>
+#include <gennylib/Orchestrator.hpp>
 
 namespace genny {
 
-class Orchestrator;
-class WorkloadContext;
-
-namespace metrics {
-class Registry;
-}
-
 /**
- * Helper class to run an actor for a test. No metrics are collected by default.
+ * Helper class to run an Actor for a test. No metrics are collected by default.
  */
 class ActorHelper {
 public:
@@ -46,24 +43,33 @@ public:
                 int tokenCount,
                 const std::string& uri = mongocxx::uri::k_default_uri);
 
-    void run(FuncWithContext&& runnerFunc = ActorHelper::doRunThreaded);
+    void run(FuncWithContext&& runnerFunc);
 
-    void runAndVerify(FuncWithContext&& runnerFunc = ActorHelper::doRunThreaded,
-                      FuncWithContext&& verifyFunc = FuncWithContext());
+    void run();
+
+    void runAndVerify(FuncWithContext&& runnerFunc, FuncWithContext&& verifyFunc);
 
     void runDefaultAndVerify(FuncWithContext&& verifyFunc) {
-        runAndVerify(ActorHelper::doRunThreaded, std::forward<FuncWithContext>(verifyFunc));
+        doRunThreaded(*_wlc);
+        verifyFunc(*_wlc);
     }
 
-    static void doRunThreaded(const WorkloadContext& wl);
+    void doRunThreaded(const WorkloadContext& wl);
+
+    const std::string_view getMetricsOutput() {
+        return _metricsOutput.str();
+    }
 
 private:
-    // These are only used when constructing the workload context, but the context doesn't own them.
+    // These are only used when constructing the workload context, but the context doesn't own
+    // them.
     std::unique_ptr<metrics::Registry> _registry;
     std::unique_ptr<Orchestrator> _orchestrator;
     std::unique_ptr<Cast> _cast;
 
     std::unique_ptr<WorkloadContext> _wlc;
+
+    std::stringstream _metricsOutput;
 };
 }  // namespace genny
 

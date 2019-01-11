@@ -19,11 +19,14 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 brew install cmake
 brew install icu4c
 brew install mongo-cxx-driver
-brew install grpc
+brew install openssl@1.1
 brew install boost      \
     --build-from-source \
     --include-test      \
     --with-icu4c
+
+# may want to put this in your shell profile:
+OPENSSL_ROOT_DIR="$(brew --prefix openssl@1.1)"
 
 cmake -E chdir "build" cmake ..
 make -j8 -C "build" genny
@@ -88,8 +91,8 @@ You only need to run cmake once. Other useful targets include:
 
 #### Ubuntu 18.04 LTS
 
-For C++17 support you need at least Ubuntu 18.04. (Before you say "mongodbtoolchain", note that
-it doesn't provide cmake.)
+For C++17 support you need at least Ubuntu 18.04. (Before you say
+"mongodbtoolchain", note that it doesn't provide cmake.)
 
 ```sh
 apt install -y \
@@ -105,13 +108,15 @@ versions. They need to be >=1.16 and exactly 3.6.1 respectively. To install thos
 - protobuf: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md
 - grpc: https://github.com/grpc/grpc/blob/master/src/cpp/README.md
 
-If you already installed the wrong versions with apt, you are better off uninstalling them:
+If you already installed the wrong versions with apt, you are better off
+uninstalling them:
 
 ```sh
 apt remove libgrpc++-dev libprotobuf-dev
 ```
 
 Finally, install mongo C++ driver from source too:
+
 - https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
 - Note that you need to specifically tell it to install into `/usr/local`!
 
@@ -122,7 +127,7 @@ cmake -E chdir "build" cmake -DCMAKE_EXE_LINKER_FLAGS=-Wl,--no-as-needed ..
 make -j8 -C "build" genny
 ```
 
-#### IDEs and Whatnot
+### IDEs and Whatnot
 
 We follow CMake and C++17 best-practices so anything that doesn't work
 via "normal means" is probably a bug.
@@ -132,7 +137,7 @@ emacs, vim, etc.). Before doing anything cute (see
 [CONTRIBUTING.md](./CONTRIBUTING.md)), please do due-diligence to ensure
 it's not going to make common editing environments go wonky.
 
-### Running Genny Self-Tests
+## Running Genny Self-Tests
 
 Genny has self-tests using Catch2. You can run them with the following command:
 
@@ -140,10 +145,10 @@ Genny has self-tests using Catch2. You can run them with the following command:
 make -j8 -C "build" test_gennylib test_driver test
 ```
 
-#### Perf Tests
+### Benchmark Tests
 
-The above `make test` line also runs so-called "perf" tests. They can
-take a while to run and may fail occasionally on local developer
+The above `make test` line also runs so-called "benchmark" tests. They
+can take a while to run and may fail occasionally on local developer
 machines, especially if you have an IDE or web browser open while the
 test runs.
 
@@ -180,7 +185,7 @@ When creating a new actor, `create-new-actor.sh` will generate a new test case
 template to ensure the new actor can run against different MongoDB topologies,
 please update the template as needed so it uses the newly created actor.
 
-### Running Genny Workloads
+## Running Genny Workloads
 
 First install mongodb and start a mongod process:
 
@@ -194,11 +199,10 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-
-./build/src/driver/genny                                      \
-    --workload-file       src/driver/test/InsertRemove.yml \
-    --metrics-format      csv                                 \
-    --metrics-output-file build/genny-metrics.csv                 \
+./build/src/driver/genny                                    \
+    --workload-file       src/driver/test/InsertRemove.yml  \
+    --metrics-format      csv                               \
+    --metrics-output-file build/genny-metrics.csv           \
     --mongo-uri           'mongodb://localhost:27017'
 ```
 
@@ -209,7 +213,15 @@ in the above example).
 Post-processing of metrics data is done by Python scripts in the
 `src/python` directory. See [the README there](./src/python/README.md).
 
-### Code Style and Limitations
+## Creating New Actors
+
+To create a new Actor, run the following:
+
+```sh
+./scripts/create-new-actor.sh NameOfYourNewActor
+```
+
+## Code Style and Limitations
 
 > Don't get cute.
 

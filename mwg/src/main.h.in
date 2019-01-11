@@ -1,3 +1,0 @@
-#define WorkloadGen_VERSION_MAJOR @WorkloadGeneration_VERSION_MAJOR@
-#define WorkloadGen_VERSION_MINOR @WorkloadGeneration_VERSION_MINOR@
-extern const char g_GIT_SHA1[];

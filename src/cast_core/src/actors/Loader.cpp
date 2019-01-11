@@ -72,7 +72,7 @@ void genny::actor::Loader::run() {
                     auto totalOp = _totalBulkLoadTimer.raii();
                     while (remainingInserts > 0) {
                         // insert the next batch
-                        uint numberToInsert = std::max(config->batchSize, remainingInserts);
+                        uint numberToInsert = std::min(config->batchSize, remainingInserts);
                         std::vector<bsoncxx::builder::stream::document> docs(numberToInsert);
                         std::vector<bsoncxx::document::view> views;
                         auto newDoc = docs.begin();

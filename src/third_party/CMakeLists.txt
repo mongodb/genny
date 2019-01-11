@@ -11,6 +11,10 @@ add_subdirectory(catch2)
 add_subdirectory(loki)
 # </Loki>
 
+# <gRPC>
+include(GetGRpc)
+# </gRPC>
+
 # <Jasper>
 if(ENABLE_JASPER)
     add_subdirectory(jasper)

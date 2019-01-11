@@ -94,7 +94,11 @@ struct actor::RunCommand::PhaseState {
         }
 
         auto fixture = Operation::Fixture{
-            context, actorContext, id, database, (*client)[database],
+            context,
+            actorContext,
+            id,
+            database,
+            (*client)[database],
         };
 
         auto addOperation = [&](YAML::Node node) {

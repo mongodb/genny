@@ -22,7 +22,7 @@ struct RunCommandOperationOptions {
     bool isQuiet = Defaults::kIsQuiet;
 };
 
-struct RunCommandConfig{
+struct RunCommandConfig {
     using Operation = RunCommandOperationOptions;
 };
 
