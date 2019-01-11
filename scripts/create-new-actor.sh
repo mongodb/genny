@@ -19,7 +19,7 @@ create_header_text() {
     uuid_tag="$1"
     actor_name="$2"
 
-    echo "// Copyright ${year} MongoDB Inc."
+    echo "// Copyright ${year}-present MongoDB Inc."
     echo "//"
     echo "// Licensed under the Apache License, Version 2.0 (the \"License\");"
     echo "// you may not use this file except in compliance with the License."
@@ -83,7 +83,7 @@ create_impl_text() {
     uuid_tag="$1"
     actor_name="$2"
 
-    echo "// Copyright ${year} MongoDB Inc."
+    echo "// Copyright ${year}-present MongoDB Inc."
     echo "//"
     echo "// Licensed under the Apache License, Version 2.0 (the \"License\");"
     echo "// you may not use this file except in compliance with the License."
@@ -210,7 +210,7 @@ create_test() {
     actor_name="$1"
 
     cat << EOF > "$(dirname "$0")/../src/gennylib/test/${actor_name}_test.cpp"
-// Copyright ${year} MongoDB Inc.
+// Copyright ${year}-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
