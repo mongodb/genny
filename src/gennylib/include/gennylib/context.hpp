@@ -417,8 +417,11 @@ public:
      * will return an optional<T> (empty optional if not found).
      * @tparam Required If true, will error if item not found. If false, will return an optional<T>
      * that will be empty if not found.
-     * @tparam RawT the raw type converted from YAML::Node. The raw type is usually standardized
-     * for a specific field; we cast it to T to be a more friendlier type for callers.
+     * @tparam RawT the raw type converted from YAML::Node using friendly YAML syntax. It can be
+     * used as a bridge between familiar types in C++ and YAML, where raw C++ types conversely can't
+     * be represented as easily in YAML. E.g. you can't use the scientific notation to represent any
+     * C++ number in YAML, so a genny::Integer type is introduced to implicitly map a YAML notation
+     * to a C++ number (T) which is returned by this function.
      */
     template <typename T = YAML::Node,
               bool Required = true,
