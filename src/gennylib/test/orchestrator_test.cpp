@@ -40,15 +40,15 @@ std::mutex asserting;
 
 //
 // Cute convenience operators -
-//  100_i   gives optional<int>     holding 100
-//  100_ms  gives optional<millis>  holding 100
+//  100_uis   gives optional<UIntSpec>     holding 100
+//  100_ts  gives optional<millis>  holding 100
 //
 // These are copy/pasta in PhaseLoop_test and orchestrator_test. Refactor.
-optional<int> operator"" _i(unsigned long long int v) {
-    return make_optional(v);
+optional<UIntSpec> operator""_uis(unsigned long long v) {
+    return make_optional(UIntSpec(v));
 }
-optional<chrono::milliseconds> operator"" _ms(unsigned long long int v) {
-    return make_optional(chrono::milliseconds{v});
+optional<TimeSpec> operator""_ts(unsigned long long v) {
+    return make_optional(TimeSpec(chrono::milliseconds{v}));
 }
 
 std::thread start(Orchestrator& o,
@@ -236,8 +236,7 @@ TEST_CASE("Orchestrator") {
 }
 
 // more easily construct V1::ActorPhase instances
-using PhaseConfig =
-    std::tuple<PhaseNumber, int, std::optional<int>, std::optional<std::chrono::milliseconds>>;
+using PhaseConfig = std::tuple<PhaseNumber, int, std::optional<UIntSpec>, std::optional<TimeSpec>>;
 
 std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
     Orchestrator& orchestrator, const std::vector<PhaseConfig>& phaseConfigs) {
@@ -269,7 +268,7 @@ TEST_CASE("Two non-blocking Phases") {
     std::unordered_set<PhaseNumber> seenPhases{};
     std::unordered_set<int> seenActorPhaseValues;
 
-    auto phaseConfig{makePhaseConfig(o, {{0, 7, 2_i, nullopt}, {1, 9, 2_i, nullopt}})};
+    auto phaseConfig{makePhaseConfig(o, {{0, 7, 2_uis, nullopt}, {1, 9, 2_uis, nullopt}})};
 
     auto count = 0;
     for (auto&& h : PhaseLoop<int>{o, std::move(phaseConfig)}) {
@@ -292,7 +291,7 @@ TEST_CASE("Single Blocking Phase") {
 
     std::unordered_set<PhaseNumber> seen{};
 
-    auto phaseConfig{makePhaseConfig(o, {{0, 7, 1_i, nullopt}})};
+    auto phaseConfig{makePhaseConfig(o, {{0, 7, 1_uis, nullopt}})};
     for (auto&& h : PhaseLoop<int>{o, std::move(phaseConfig)}) {
         seen.insert(h.phaseNumber());
     }
@@ -308,9 +307,9 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
 
     auto phaseConfig{makePhaseConfig(o,
                                      {// all blocking on # iterations
-                                      {0, 7, 1_i, nullopt},
-                                      {1, 9, 2_i, nullopt},
-                                      {2, 11, 3_i, nullopt}})};
+                                      {0, 7, 1_uis, nullopt},
+                                      {1, 9, 2_uis, nullopt},
+                                      {2, 11, 3_uis, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -363,7 +362,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     auto phaseConfig{makePhaseConfig(o,
                                      {// non-block then block
                                       {0, 7, nullopt, nullopt},
-                                      {1, 9, 1_i, nullopt}})};
+                                      {1, 9, 1_uis, nullopt}})};
     std::unordered_set<PhaseNumber> seen;
 
     auto iters = 0;
@@ -386,7 +385,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
     auto phaseConfig{makePhaseConfig(o,
                                      {// block then non-block
-                                      {0, 7, 1_i, nullopt},
+                                      {0, 7, 1_uis, nullopt},
                                       {1, 9, nullopt, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
@@ -412,8 +411,8 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
     auto phaseConfig{makePhaseConfig(o,
                                      {// block then block
-                                      {0, 7, 1_i, nullopt},
-                                      {1, 9, 1_i, nullopt}})};
+                                      {0, 7, 1_uis, nullopt},
+                                      {1, 9, 1_uis, nullopt}})};
 
     std::unordered_set<PhaseNumber> seen;
 
@@ -441,7 +440,7 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
 
     // t1 blocks for 75ms in Phase 0
     auto t1 = std::thread([&]() {
-        for (auto&& h : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ms}})})
+        for (auto&& h : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ts}})})
             for (auto _ : h) {
             }  // nop
         blockingDone = true;
@@ -485,7 +484,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
         auto phaseConfig{makePhaseConfig(o,
                                          {// non-block then block
                                           {0, 7, nullopt, nullopt},
-                                          {1, 9, 1_i, nullopt}})};
+                                          {1, 9, 1_uis, nullopt}})};
 
         for (auto&& holder : PhaseLoop<int>{o, std::move(phaseConfig)}) {
             switch (holder.phaseNumber()) {
@@ -512,7 +511,7 @@ TEST_CASE("Multi-threaded Range-based for loops") {
     auto t2 = std::thread([&]() {
         auto phaseConfig{makePhaseConfig(o,
                                          {// block then non-block
-                                          {0, 7, 1_i, nullopt},
+                                          {0, 7, 1_uis, nullopt},
                                           {1, 9, nullopt, nullopt}})};
 
         auto prevPhaseStart = system_clock::now();

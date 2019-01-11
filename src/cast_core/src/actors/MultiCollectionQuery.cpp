@@ -36,17 +36,16 @@ namespace genny::actor {
 struct MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context, genny::DefaultRandom& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
-          numCollections{context.get<uint>("CollectionCount")},
+          numCollections{context.get<UIntSpec, true>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
           uniformDistribution{0, numCollections},
-          minDelay{context.get<std::chrono::milliseconds, false>("MinDelay")
-                       .value_or(std::chrono::milliseconds(0))} {}
+          minDelay{context.get<TimeSpec, false>("MinDelay").value_or(genny::TimeSpec(0))} {}
 
     mongocxx::database database;
-    uint numCollections;
+    size_t numCollections;
     std::unique_ptr<value_generators::DocumentGenerator> filterDocument;
     // uniform distribution random int for selecting collection
-    std::uniform_int_distribution<uint> uniformDistribution;
+    std::uniform_int_distribution<size_t> uniformDistribution;
     std::chrono::milliseconds minDelay;
     mongocxx::options::find options;
 };

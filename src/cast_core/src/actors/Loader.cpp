@@ -44,9 +44,10 @@ struct Loader::PhaseConfig {
                 uint thread)
         : database{(*client)[context.get<std::string>("Database")]},
           // The next line uses integer division. The Remainder is accounted for below.
-          numCollections{context.get<uint>("CollectionCount") / context.get<int>("Threads")},
-          numDocuments{context.get<uint>("DocumentCount")},
-          batchSize{context.get<uint>("BatchSize")},
+          numCollections{context.get<UIntSpec, true>("CollectionCount") /
+                         context.get<UIntSpec, true>("Threads")},
+          numDocuments{context.get<UIntSpec, true>("DocumentCount")},
+          batchSize{context.get<UIntSpec, true>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)},
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");
@@ -64,12 +65,12 @@ struct Loader::PhaseConfig {
     }
 
     mongocxx::database database;
-    uint numCollections;
-    uint numDocuments;
-    uint batchSize;
+    size_t numCollections;
+    size_t numDocuments;
+    size_t batchSize;
     document_ptr documentTemplate;
     std::vector<index_type> indexes;
-    uint collectionOffset;
+    size_t collectionOffset;
 };
 
 void genny::actor::Loader::run() {
@@ -86,7 +87,7 @@ void genny::actor::Loader::run() {
                     auto totalOp = _totalBulkLoadTimer.raii();
                     while (remainingInserts > 0) {
                         // insert the next batch
-                        uint numberToInsert = std::min(config->batchSize, remainingInserts);
+                        uint numberToInsert = std::min<size_t>(config->batchSize, remainingInserts);
                         std::vector<bsoncxx::builder::stream::document> docs(numberToInsert);
                         std::vector<bsoncxx::document::view> views;
                         auto newDoc = docs.begin();
