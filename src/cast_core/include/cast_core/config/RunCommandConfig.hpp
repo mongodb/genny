@@ -46,7 +46,7 @@ struct convert<genny::config::RunCommandOperationOptions> {
         // If we don't have a MetricsName, this key is null
         node[Keys::kMetricsName] = rhs.metricsName;
         node[Keys::kIsQuiet] = rhs.isQuiet;
-        node[Keys::kRateLimit] = rhs.rateLimit;
+        //node[Keys::kRateLimit] = rhs.rateLimit;
 
         return node;
     }
@@ -58,7 +58,7 @@ struct convert<genny::config::RunCommandOperationOptions> {
 
         genny::decodeNodeInto(rhs.metricsName, node[Keys::kMetricsName], Defaults::kMetricsName);
         genny::decodeNodeInto(rhs.isQuiet, node[Keys::kIsQuiet], Defaults::kIsQuiet);
-        genny::decodeNodeInto(rhs.rateLimit, node[Keys::kRateLimit], Defaults::kRateLimit);
+        //genny::decodeNodeInto(rhs.rateLimit, node[Keys::kRateLimit], Defaults::kRateLimit);
 
         return true;
     }

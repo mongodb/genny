@@ -5,11 +5,15 @@
 #include <boost/log/trivial.hpp>
 
 namespace genny::v1 {
+RateLimiter::RateLimiter() : RateLimiter(Options{}) {}
+
 RateLimiter::RateLimiter(const Options& options)
     : _options{options}, _state{std::make_unique<State>()} {}
 
 void RateLimiter::waitFor(DurationT sleepMS) {
-    std::this_thread::sleep_for(sleepMS);
+    if (sleepMS.count() > 0) {
+        std::this_thread::sleep_for(sleepMS);
+    }
 }
 
 void RateLimiter::waitUntil(TimeT stopTime) {
@@ -17,7 +21,8 @@ void RateLimiter::waitUntil(TimeT stopTime) {
 }
 
 void RateLimiter::waitUntilNext() {
-    if (_state->status != Status::kInactive) {
+    auto hasEndTime = _state->startTime != _state->endTime;
+    if (_state->status != Status::kInactive && hasEndTime) {
         waitUntil(_state->endTime);
     }
 

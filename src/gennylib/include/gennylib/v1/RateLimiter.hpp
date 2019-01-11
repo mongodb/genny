@@ -56,6 +56,7 @@ public:
     };
 
 public:
+    RateLimiter();
     RateLimiter(const Options& options);
 
     /**
