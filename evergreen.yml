@@ -259,11 +259,11 @@ functions:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
       local_file: ${short_name}.tgz
-      remote_file: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
+      remote_file: ${project}/${short_name}/${short_name}-${build_variant}-id_${build_id}.tgz
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
-      display_name: "${display_name} - ${revision}"
+      display_name: "${display_name} - ${build_id}"
 
   ##
   # Copy the library tarball for a given revision to the official path
@@ -280,7 +280,20 @@ functions:
       bucket: mciuploads
       s3_copy_files:
         - source:
+            path: ${project}/${short_name}/${short_name}-${build_variant}-id_${build_id}.tgz
+            bucket: mciuploads
+          destination:
             path: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
+            bucket: mciuploads
+          display_name: ${display_name} - ${revision}
+  - command: s3Copy.copy
+    params:
+      aws_key: ${aws_key}
+      aws_secret: ${aws_secret}
+      bucket: mciuploads
+      s3_copy_files:
+        - source:
+            path: ${project}/${short_name}/${short_name}-${build_variant}-id_${build_id}.tgz
             bucket: mciuploads
           destination:
             path: ${project}/${short_name}/${short_name}-${build_variant}.tgz
