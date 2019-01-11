@@ -139,7 +139,7 @@ create_header() {
     uuid_tag="$1"
     actor_name="$2"
 
-    create_header_text "$@" > "$(dirname "$0")/src/cast_core/include/cast_core/actors/${actor_name}.hpp"
+    create_header_text "$@" > "$(dirname "$0")/../src/cast_core/include/cast_core/actors/${actor_name}.hpp"
 }
 
 create_impl() {
@@ -148,14 +148,14 @@ create_impl() {
     uuid_tag="$1"
     actor_name="$2"
 
-    create_impl_text "$@" > "$(dirname "$0")/src/cast_core/src/actors/${actor_name}.cpp"
+    create_impl_text "$@" > "$(dirname "$0")/../src/cast_core/src/actors/${actor_name}.cpp"
 }
 
 create_test() {
     local actor_name
     actor_name="$1"
 
-    cat << EOF > "$(dirname "$0")/src/gennylib/test/${actor_name}_test.cpp"
+    cat << EOF > "$(dirname "$0")/../src/gennylib/test/${actor_name}_test.cpp"
 #include "test.h"
 
 #include <bsoncxx/json.hpp>
@@ -197,7 +197,7 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
 
     SECTION("Inserts documents into the database.") {
         try {
-            genny::ActorHelper ah(config, 1, MongoTestFixture::kConnectionString.to_string());
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             auto builder = bson_stream::document{};
@@ -225,7 +225,7 @@ recreate_cast_core_cmake_file() {
     local cmake_file
     uuid_tag="$1"
     actor_name="$2"
-    cmake_file="$(dirname "$0")/src/cast_core/CMakeLists.txt"
+    cmake_file="$(dirname "$0")/../src/cast_core/CMakeLists.txt"
 
     < "$cmake_file" \
     perl -pe "s|((\\s+)# ActorsEnd)|\$2src/actors/${actor_name}.cpp\\n\$1|" \
@@ -240,7 +240,7 @@ recreate_gennylib_cmake_file() {
     local cmake_file
     uuid="$1"
     actor_name="$2"
-    cmake_file="$(dirname "$0")/src/gennylib/CMakeLists.txt"
+    cmake_file="$(dirname "$0")/../src/gennylib/CMakeLists.txt"
 
     < "$cmake_file" \
     perl -pe "s|((\\s+)# ActorsTestEnd)|\$2test/${actor_name}_test.cpp\\n\$1|" \
@@ -272,7 +272,11 @@ recreate_cast_core_cmake_file "$uuid_tag" "$actor_name"
 create_test                  "$actor_name"
 recreate_gennylib_cmake_file "$uuid_tag" "$actor_name"
 
-echo "Successfully generated skeleton for ${actor_name}. Build and test ${actor_name} with the following command:"
+echo "Successfully generated Actor skeleton for ${actor_name}:"
+echo ""
+git status --porcelain=v1 | sed 's/^/    /'
+echo ""
+echo "Build and test ${actor_name} with the following command:"
 echo ""
 echo "    cd build"
 echo "    cmake .."
