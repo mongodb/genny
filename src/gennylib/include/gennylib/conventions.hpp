@@ -247,7 +247,8 @@ struct convert<genny::TimeSpec> {
 
         auto timeUnit = strRepr.substr(spacePos + 1);
 
-        if (timeUnit.find("nanosecond") != std::string::npos) {
+        // Use string::find here so plurals get parsed correctly.
+        if (timeUnit.find("nanosecond") == 0) {
             rhs = genny::TimeSpec{std::chrono::nanoseconds(timeCount)};
         } else if (timeUnit.find("microsecond") == 0) {
             rhs = genny::TimeSpec{std::chrono::microseconds(timeCount)};
