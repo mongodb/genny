@@ -24,7 +24,7 @@ void decodeNodeInto(T& out, const YAML::Node& node, const S& fallback) {
 /**
  * Intermediate state for converting YAML syntax into a native integer type of your choice.
  *
- * uint64 is used by default; smaller types can be explicitly converted to as needed.
+ * size_t is used by default; smaller types can be explicitly converted to as needed.
  */
 struct UIntSpec {
     UIntSpec() = default;
@@ -34,6 +34,7 @@ struct UIntSpec {
     // size_t is used by default, you can explicitly cast to another type if needed.
     size_t value;
 
+    // Explicitly cast to avoid narrowing.
     explicit operator uint32_t() {
         return static_cast<uint32_t>(value);
     }
@@ -55,7 +56,7 @@ struct TimeSpec {
     TimeSpec() = default;
     ~TimeSpec() = default;
 
-    TimeSpec(std::chrono::nanoseconds v) : value{v} {}
+    TimeSpec(std::chrono::nanoseconds v) : value{v} {} // NOLINT(google-explicit-constructor)
 
     // Allow construction with integers for testing.
     explicit TimeSpec(int64_t v) : value{v} {}
