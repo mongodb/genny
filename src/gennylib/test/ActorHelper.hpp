@@ -2,24 +2,21 @@
 #define HEADER_C4365A3F_5581_470B_8B54_B46A42795A62_INCLUDED
 
 #include <functional>
+#include <string>
 
 #include <mongocxx/uri.hpp>
 
 #include <yaml-cpp/yaml.h>
 
+#include <gennylib/metrics.hpp>
+#include <gennylib/context.hpp>
 #include <gennylib/Cast.hpp>
+#include <gennylib/Orchestrator.hpp>
 
 namespace genny {
 
-class Orchestrator;
-class WorkloadContext;
-
-namespace metrics {
-class Registry;
-}
-
 /**
- * Helper class to run an actor for a test. No metrics are collected by default.
+ * Helper class to run an Actor for a test. No metrics are collected by default.
  */
 class ActorHelper {
 public:
