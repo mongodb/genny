@@ -263,7 +263,7 @@ functions:
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
-      display_name: "${display_name} - ${build_id}"
+      display_name: "${display_name} - Patch ${build_id}"
 
   ##
   # Copy the library tarball for a given revision to the official path
@@ -285,7 +285,7 @@ functions:
           destination:
             path: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
             bucket: mciuploads
-          display_name: ${display_name} - ${revision}
+          display_name: "${display_name} - ${revision}"
   - command: s3Copy.copy
     params:
       aws_key: ${aws_key}
