@@ -213,7 +213,7 @@ private:
 class OperationImpl {
 
 public:
-    OperationImpl(const std::string_view& name,
+    OperationImpl(const std::string& name,
                   TimerImpl& timer,
                   CounterImpl& iters,
                   CounterImpl& docs,
@@ -224,7 +224,7 @@ public:
           _docs{std::addressof(docs)},
           _bytes{std::addressof(bytes)} {}
 
-    const std::string_view getOpName() {
+    const std::string getOpName() {
         return _opName;
     }
 
@@ -244,7 +244,7 @@ public:
 
 
 private:
-    const std::string_view _opName;
+    const std::string _opName;
     TimerImpl* _timer;
     CounterImpl* _iters;
     CounterImpl* _docs;
@@ -457,7 +457,7 @@ public:
         if (!_isClosed) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Metrics not reported because operation '" << this->_op->getOpName()
-                << "' has not been explicitly closed with success() or failure().";
+                << "' did not close with success().";
         }
     }
 
@@ -471,26 +471,25 @@ public:
 
     void success() {
         this->report();
-        this->_op->reportBytes(_totalBytes);
-        this->_op->reportOps(_totalOpsSize);
         _isClosed = true;
     }
 
     void fail() {
         _isClosed = true;
-        BOOST_LOG_TRIVIAL(error) << "Failure on operation '" << this->_op->getOpName() << "'.";
     }
 
 private:
     void report() {
         this->_op->report(_started);
+        this->_op->reportBytes(_totalBytes);
+        this->_op->reportOps(_totalOpsSize);
     }
 
     V1::OperationImpl* _op;
     const time_point _started;
-    bool _isClosed = false;
     count_type _totalBytes = 0;
     count_type _totalOpsSize = 0;
+    bool _isClosed = false;
 };
 
 
