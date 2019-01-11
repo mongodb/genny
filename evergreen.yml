@@ -259,7 +259,7 @@ functions:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
       local_file: ${short_name}.tgz
-      remote_file: ${project}/${short_name}/${short_name}-${build_variant}-id_${build_id}.tgz
+      remote_file: ${project}/${short_name}/${short_name}-${build_variant}-patch_${build_id}.tgz
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
@@ -280,7 +280,7 @@ functions:
       bucket: mciuploads
       s3_copy_files:
         - source:
-            path: ${project}/${short_name}/${short_name}-${build_variant}-id_${build_id}.tgz
+            path: ${project}/${short_name}/${short_name}-${build_variant}-patch_${build_id}.tgz
             bucket: mciuploads
           destination:
             path: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
@@ -293,7 +293,7 @@ functions:
       bucket: mciuploads
       s3_copy_files:
         - source:
-            path: ${project}/${short_name}/${short_name}-${build_variant}-id_${build_id}.tgz
+            path: ${project}/${short_name}/${short_name}-${build_variant}-patch_${build_id}.tgz
             bucket: mciuploads
           destination:
             path: ${project}/${short_name}/${short_name}-${build_variant}.tgz
