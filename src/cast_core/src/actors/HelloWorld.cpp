@@ -22,8 +22,9 @@ void HelloWorld::run() {
             BOOST_LOG_TRIVIAL(info) << config->message;
             ++_hwCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _hwCounter;
-            ctx.setOps(1);
-            ctx.setBytes(config->message.size());
+            ctx.addOps(1);
+            ctx.addBytes(config->message.size());
+            ctx.success();
         }
     }
 }
