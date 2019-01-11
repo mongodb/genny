@@ -104,12 +104,12 @@ struct RateSpec {
     RateSpec() = default;
     ~RateSpec() = default;
 
-    RateSpec(TimeSpec t, UIntSpec i) : per{t}, operations{i} {}
+    RateSpec(TimeSpec t, UIntSpec i) : per{t.count()}, operations{i.value} {}
 
     // Allow construction with integers for testing.
     RateSpec(int64_t t, size_t i) : per{t}, operations{i} {}
-    TimeSpec per;
-    UIntSpec operations;
+    std::chrono::nanoseconds per;
+    size_t operations;
 };
 
 inline bool operator==(const RateSpec& lhs, const RateSpec& rhs) {
@@ -132,7 +132,7 @@ template <>
 struct convert<genny::RateSpec> {
     static Node encode(const genny::RateSpec& rhs) {
         std::stringstream msg;
-        msg << rhs.operations.value << " per " << rhs.per.count() << " nanoseconds";
+        msg << rhs.operations << " per " << rhs.per.count() << " nanoseconds";
         return Node{msg.str()};
     }
 
