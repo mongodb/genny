@@ -224,7 +224,10 @@ public:
           _docs{std::addressof(docs)},
           _bytes{std::addressof(bytes)} {}
 
-    const std::string getOpName() {
+    /**
+     * Operation name getter to help with exception reporting.
+     */
+    const std::string& getOpName() const {
         return _opName;
     }
 
@@ -234,12 +237,12 @@ public:
         this->_iters->reportValue(1);
     }
 
-    void reportBytes(const count_type& size) {
-        this->_bytes->reportValue(size);
+    void reportBytes(const count_type& total) {
+        this->_bytes->reportValue(total);
     }
 
-    void reportOps(const count_type& size) {
-        this->_docs->reportValue(size);
+    void reportOps(const count_type& total) {
+        this->_docs->reportValue(total);
     }
 
 
@@ -457,7 +460,7 @@ public:
         if (!_isClosed) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Metrics not reported because operation '" << this->_op->getOpName()
-                << "' did not close with success().";
+                << "' did not close with success() or fail().";
         }
     }
 
@@ -474,6 +477,9 @@ public:
         _isClosed = true;
     }
 
+    /**
+     * An operation does not report metrics upon failure.
+     */
     void fail() {
         _isClosed = true;
     }
