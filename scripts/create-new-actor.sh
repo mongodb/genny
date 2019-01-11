@@ -151,6 +151,30 @@ create_impl() {
     create_impl_text "$@" > "$(dirname "$0")/../src/cast_core/src/actors/${actor_name}.cpp"
 }
 
+create_workload_yml() {
+    local actor_name
+    actor_name="$1"
+cat << EOF > "$(dirname "$0")/../src/driver/test/${actor_name}.yml"
+SchemaVersion: 2018-07-01
+
+# TODO: delete this file or add a meaningful workload using or
+#       demonstrating your Actor
+
+Actors:
+- Name: ${actor_name}
+  Type: ${actor_name}
+  Threads: 100
+  Database: test
+  Phases:
+  - Phase: 0
+    Repeat: 10 # used by PhaesLoop
+    Retries: 7 # used by ExecutionStrategy
+    # below used by PhaseConfig in ${actor_name}.cpp
+    Collection: test
+    Document: {foo: {\$randomint: {min: 0, max: 100}}}
+EOF
+}
+
 create_test() {
     local actor_name
     actor_name="$1"
@@ -271,6 +295,7 @@ create_impl                  "$uuid_tag" "$actor_name"
 recreate_cast_core_cmake_file "$uuid_tag" "$actor_name"
 create_test                  "$actor_name"
 recreate_gennylib_cmake_file "$uuid_tag" "$actor_name"
+create_workload_yml          "$actor_name"
 
 echo "Successfully generated Actor skeleton for ${actor_name}:"
 echo ""
@@ -284,3 +309,12 @@ echo "    make -j8"
 echo "    ./src/gennylib/test_gennylib_with_server '[${actor_name}]'"
 echo "    make test"
 echo ""
+echo "Run your workload as follows:"
+echo ""
+echo "    ./build/src/driver/genny                                   \\"
+echo "        --workload-file       src/driver/test/${actor_name}.yml \\"
+echo "        --metrics-format      csv                              \\"
+echo "        --metrics-output-file build/genny-metrics.csv          \\"
+echo "        --mongo-uri           'mongodb://localhost:27017'"
+echo ""
+
