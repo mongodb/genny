@@ -56,7 +56,7 @@ struct TimeSpec {
     TimeSpec() = default;
     ~TimeSpec() = default;
 
-    TimeSpec(std::chrono::nanoseconds v) : value{v} {} // NOLINT(google-explicit-constructor)
+    TimeSpec(std::chrono::nanoseconds v) : value{v} {}  // NOLINT(google-explicit-constructor)
 
     // Allow construction with integers for testing.
     explicit TimeSpec(int64_t v) : value{v} {}
