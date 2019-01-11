@@ -14,11 +14,12 @@ public:
 
     static mongocxx::uri connectionUri();
 
+private:
+    mongocxx::instance& instance;
+
 protected:
     mongocxx::client client;
 
-private:
-    mongocxx::instance& instance;
 };
 }  // namespace genny::testing
 
