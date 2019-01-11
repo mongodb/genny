@@ -27,9 +27,6 @@ brew install boost      \
 
 # may want to put this in your shell profile:
 OPENSSL_ROOT_DIR="$(brew --prefix openssl@1.1)"
-PKG_CONFIG_PATH="$(brew --prefix openssl@1.1)/lib/pkgconfig"
-
-
 
 cmake -E chdir "build" cmake ..
 make -j8 -C "build" genny
