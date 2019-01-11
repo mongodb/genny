@@ -45,7 +45,7 @@
 ##                ⚡️ Variants ⚡️
 
 ignore:
-    - "*.md" # don't schedule tests if a commit only changes markdown files
+- "*.md" # don't schedule tests if a commit only changes markdown files
 
 buildvariants:
 
@@ -115,22 +115,22 @@ tasks:
   - func: f_fetch_source
   - func: f_fetch_library
     vars:
-        install_dir: boost
-        short_name: boost
+      install_dir: boost
+      short_name: boost
   - func: f_fetch_library
     vars:
-        install_dir: dist
-        short_name: mongocxx
+      install_dir: dist
+      short_name: mongocxx
   - func: f_fetch_library
     vars:
-        install_dir: dist
-        short_name: grpc
+      install_dir: dist
+      short_name: grpc
   - func: f_compile
   - func: f_push_revision
     vars:
-        display_name: Genny
-        short_name: genny
-        install_dir: dist
+      display_name: Genny
+      short_name: genny
+      install_dir: dist
 
 - name: t_push
   depends_on: t_compile
@@ -138,8 +138,8 @@ tasks:
   commands:
   - func: f_push_official
     vars:
-        display_name: Genny
-        short_name: genny
+      display_name: Genny
+      short_name: genny
 
 - name: t_mongo_server
   commands:
@@ -230,7 +230,7 @@ functions:
       working_dir: src
       binary: /bin/bash
       args:
-        - "${workdir}/src/scripts/get-mongo-source.sh"
+      - "${workdir}/src/scripts/get-mongo-source.sh"
 
   ##
   # Archive an installed library into a tarball and upload it with revision suffix
@@ -279,13 +279,13 @@ functions:
       aws_secret: ${aws_secret}
       bucket: mciuploads
       s3_copy_files:
-        - source:
-            path: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
-            bucket: mciuploads
-          destination:
-            path: ${project}/${short_name}/${short_name}-${build_variant}.tgz
-            bucket: mciuploads
-          display_name: ${display_name}
+      - source:
+          path: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
+          bucket: mciuploads
+        destination:
+          path: ${project}/${short_name}/${short_name}-${build_variant}.tgz
+          bucket: mciuploads
+        display_name: ${display_name}
 
   ##
   # Download one of genny's dependencies as a tarball and expand it
@@ -318,15 +318,15 @@ functions:
       working_dir: src
       binary: /bin/bash
       args:
-        - "${workdir}/src/scripts/bootstrap.sh"
-        - "-DENABLE_JASPER:BOOL=ON"
-        - "-DGENNY_STATIC_BOOST_PATH:PATH=${workdir}/boost"
-        - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
-        - "-DGENNY_INSTALL_SSL:BOOL=ON"
+      - "${workdir}/src/scripts/bootstrap.sh"
+      - "-DENABLE_JASPER:BOOL=ON"
+      - "-DGENNY_STATIC_BOOST_PATH:PATH=${workdir}/boost"
+      - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
+      - "-DGENNY_INSTALL_SSL:BOOL=ON"
       env:
-          MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
-          CMAKE: "${cmake|cmake}"
-          PATH: "${toolchain}:/usr/bin:/bin"
+        MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
+        CMAKE: "${cmake|cmake}"
+        PATH: "${toolchain}:/usr/bin:/bin"
 
   ##
   # Runs tests via ctest.
