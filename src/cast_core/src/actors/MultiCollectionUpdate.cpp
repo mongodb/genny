@@ -22,22 +22,21 @@ namespace genny::actor {
 struct MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context, genny::DefaultRandom& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
-          numCollections{context.get<uint, true, Integer>("CollectionCount")},
+          numCollections{context.get<UIntSpec, true>("CollectionCount")},
           queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
           updateDocument{value_generators::makeDoc(context.get("Update"), rng)},
           uniformDistribution{0, numCollections},
-          minDelay{context.get<std::chrono::milliseconds, false, Time>("MinDelay")
-                       .value_or(std::chrono::milliseconds(0))} {}
+          minDelay{context.get<TimeSpec, false>("MinDelay").value_or(TimeSpec(0))} {}
 
     mongocxx::database database;
-    uint numCollections;
+    uint64_t numCollections;
     std::unique_ptr<value_generators::DocumentGenerator> queryDocument;
     std::unique_ptr<value_generators::DocumentGenerator> updateDocument;
     // TODO: Enable passing in update options.
     //    std::unique_ptr<value_generators::DocumentGenerator>  updateOptions;
 
     // uniform distribution random int for selecting collection
-    std::uniform_int_distribution<uint> uniformDistribution;
+    std::uniform_int_distribution<uint64_t> uniformDistribution;
     std::chrono::milliseconds minDelay;
 };
 

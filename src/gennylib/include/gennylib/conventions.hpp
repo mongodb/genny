@@ -23,46 +23,51 @@ void decodeNodeInto(T& out, const YAML::Node& node, const S& fallback) {
 
 /**
  * Intermediate state for converting YAML syntax into a native integer type of your choice.
+ *
+ * uint64 is used by default; smaller types can be explicitly converted to as needed.
  */
-struct Integer {
-    Integer() = default;
-    ~Integer() = default;
+struct UIntSpec {
+    UIntSpec() = default;
+    ~UIntSpec() = default;
 
-    explicit Integer(int64_t v) : value(v) {}
-    int64_t value;
+    explicit UIntSpec(uint64_t v) : value{v} {}
+    // uint64 is used by default, you can explicitly cast to another type if needed.
+    uint64_t value;
 
-    explicit operator int64_t() {
+    explicit operator uint32_t() {
+        return static_cast<uint32_t>(value);
+    }
+
+    operator uint64_t() {  // NOLINT(google-explicit-constructor)
         return value;
     }
-
-    explicit operator int32_t() {
-        return static_cast<int32_t>(value);
-    }
-
-    explicit operator uint() {
-        return static_cast<uint>(value);
-    }
 };
+
+inline bool operator==(const UIntSpec& lhs, const UIntSpec& rhs) {
+    return lhs.value == rhs.value;
+}
 
 /**
  * Intermediate state for converting YAML syntax into a native std::chrono::duration type of your
  * choice.
  */
-struct Time {
-    Time() = default;
-    ~Time() = default;
+struct TimeSpec {
+    TimeSpec() = default;
+    ~TimeSpec() = default;
 
-    explicit Time(std::chrono::nanoseconds v) : value(v) {}
+    TimeSpec(std::chrono::nanoseconds v) : value{v} {}
 
     // Allow construction with integers for testing.
-    explicit Time(int64_t v) : value(v) {}
+    explicit TimeSpec(int64_t v) : value{v} {}
 
     std::chrono::nanoseconds value;  // Use the highest precision internally.
 
-    explicit operator std::chrono::nanoseconds() {
+    // nanoseconds is used by default, you can explicitly cast to another type if needed.
+    operator std::chrono::nanoseconds() {  // NOLINT(google-explicit-constructor)
         return value;
     }
 
+    // TODO: TIG-1155 remove these conversion operators if they're not used.
     explicit operator std::chrono::microseconds() {
         return std::chrono::duration_cast<std::chrono::microseconds>(value);
     }
@@ -88,20 +93,28 @@ struct Time {
     }
 };
 
+inline bool operator==(const TimeSpec& lhs, const TimeSpec& rhs) {
+    return lhs.value == rhs.value;
+}
+
 /**
  * Rate defined as X operations per Y duration.
  */
-struct Rate {
-    Rate() = default;
-    ~Rate() = default;
+struct RateSpec {
+    RateSpec() = default;
+    ~RateSpec() = default;
 
-    Rate(Time t, Integer i) : per(t), operations(i) {}
+    RateSpec(TimeSpec t, UIntSpec i) : per{t}, operations{i} {}
 
     // Allow construction with integers for testing.
-    Rate(int64_t t, int64_t i) : per(t), operations(i) {}
-    Time per;
-    Integer operations;
+    RateSpec(int64_t t, uint64_t i) : per{t}, operations{i} {}
+    TimeSpec per;
+    UIntSpec operations;
 };
+
+inline bool operator==(const RateSpec& lhs, const RateSpec& rhs) {
+    return (lhs.per == rhs.per) && (lhs.operations == rhs.operations);
+}
 
 }  // namespace genny
 
@@ -116,37 +129,39 @@ using genny::decodeNodeInto;
  * The syntax is interpreted as operations per unit of time.
  */
 template <>
-struct convert<genny::Rate> {
-    static Node encode(const genny::Rate& rhs) {
+struct convert<genny::RateSpec> {
+    static Node encode(const genny::RateSpec& rhs) {
         std::stringstream msg;
         msg << rhs.operations.value << " per " << rhs.per.count() << " nanoseconds";
         return Node{msg.str()};
     }
 
-    static bool decode(const Node& node, genny::Rate& rhs) {
+    static bool decode(const Node& node, genny::RateSpec& rhs) {
         if (node.IsSequence() || node.IsMap()) {
             return false;
         }
         auto strRepr = node.as<std::string>();
 
         // Use space as the delimiter.
-        auto spacePos = strRepr.find(" per ");
+        const std::string delimiter = " per ";
+        auto spacePos = strRepr.find(delimiter);
 
         if (spacePos == std::string::npos) {
             std::stringstream msg;
-            msg << "Invalid value for genny::Time field, expected a space separated integer and "
+            msg << "Invalid value for genny::TimeSpec field, expected a space separated integer "
+                   "and "
                    "time unit. Saw: "
                 << strRepr;
             throw genny::InvalidConfigurationException(msg.str());
         }
 
         auto opCountYaml = Load(strRepr.substr(0, spacePos));
-        auto opCount = opCountYaml.as<genny::Integer>();
+        auto opCount = opCountYaml.as<genny::UIntSpec>();
 
-        auto timeUnitYaml = Load(strRepr.substr(spacePos + 5));
-        auto timeUnit = timeUnitYaml.as<genny::Time>();
+        auto timeUnitYaml = Load(strRepr.substr(spacePos + delimiter.size()));
+        auto timeUnit = timeUnitYaml.as<genny::TimeSpec>();
 
-        rhs = genny::Rate(timeUnit, opCount);
+        rhs = genny::RateSpec(timeUnit, opCount);
 
         return true;
     }
@@ -158,12 +173,12 @@ struct convert<genny::Rate> {
  * The YAML syntax accepts regular and scientific notation decimal values.
  */
 template <>
-struct convert<genny::Integer> {
-    static Node encode(const genny::Integer& rhs) {
+struct convert<genny::UIntSpec> {
+    static Node encode(const genny::UIntSpec& rhs) {
         return Node{rhs.value};
     }
 
-    static bool decode(const Node& node, genny::Integer& rhs) {
+    static bool decode(const Node& node, genny::UIntSpec& rhs) {
         if (node.IsSequence() || node.IsMap()) {
             return false;
         }
@@ -176,11 +191,20 @@ struct convert<genny::Integer> {
 
         if (pos != strRepr.length() || std::llround(num) != num) {
             std::stringstream msg;
-            msg << "Invalid value for genny::Integer field: " << strRepr;
+            msg << "Invalid value for genny::UIntSpec field: " << strRepr
+                << " from config: " << strRepr;
             throw genny::InvalidConfigurationException(msg.str());
         }
 
-        rhs = genny::Integer(std::llround(num));
+        if (num < 0) {
+            std::stringstream msg;
+            msg << "Value for genny::UIntSpec can't be negative: " << num
+                << " from config: " << strRepr;
+            ;
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+
+        rhs = genny::UIntSpec(std::llround(num));
 
         return true;
     }
@@ -192,14 +216,14 @@ struct convert<genny::Integer> {
  * The YAML syntax looks like [genny::Integer] [milliseconds/microseconds/etc...]
  */
 template <>
-struct convert<genny::Time> {
-    static Node encode(const genny::Time& rhs) {
+struct convert<genny::TimeSpec> {
+    static Node encode(const genny::TimeSpec& rhs) {
         std::stringstream msg;
         msg << rhs.value.count() << " nanoseconds";
         return Node{msg.str()};
     }
 
-    static bool decode(const Node& node, genny::Time& rhs) {
+    static bool decode(const Node& node, genny::TimeSpec& rhs) {
         if (node.IsSequence() || node.IsMap()) {
             return false;
         }
@@ -211,32 +235,34 @@ struct convert<genny::Time> {
 
         if (spacePos == std::string::npos) {
             std::stringstream msg;
-            msg << "Invalid value for genny::Time field, expected a space separated integer and "
+            msg << "Invalid value for genny::TimeSpec field, expected a space separated integer "
+                   "and "
                    "time unit. Saw: "
                 << strRepr;
             throw genny::InvalidConfigurationException(msg.str());
         }
 
         auto timeCountYaml = Load(strRepr.substr(0, spacePos));
-        auto timeCount = timeCountYaml.as<genny::Integer>().value;
+        auto timeCount = timeCountYaml.as<genny::UIntSpec>().value;
 
         auto timeUnit = strRepr.substr(spacePos + 1);
 
         if (timeUnit.find("nanosecond") != std::string::npos) {
-            rhs = genny::Time{std::chrono::nanoseconds(timeCount)};
+            rhs = genny::TimeSpec{std::chrono::nanoseconds(timeCount)};
         } else if (timeUnit.find("microsecond") == 0) {
-            rhs = genny::Time{std::chrono::microseconds(timeCount)};
+            rhs = genny::TimeSpec{std::chrono::microseconds(timeCount)};
         } else if (timeUnit.find("millisecond") == 0) {
-            rhs = genny::Time{std::chrono::milliseconds(timeCount)};
+            rhs = genny::TimeSpec{std::chrono::milliseconds(timeCount)};
         } else if (timeUnit.find("second") == 0) {
-            rhs = genny::Time{std::chrono::seconds(timeCount)};
+            rhs = genny::TimeSpec{std::chrono::seconds(timeCount)};
         } else if (timeUnit.find("minute") == 0) {
-            rhs = genny::Time{std::chrono::minutes(timeCount)};
+            rhs = genny::TimeSpec{std::chrono::minutes(timeCount)};
         } else if (timeUnit.find("hour") == 0) {
-            rhs = genny::Time{std::chrono::hours(timeCount)};
+            rhs = genny::TimeSpec{std::chrono::hours(timeCount)};
         } else {
             std::stringstream msg;
-            msg << "Invalid unit for genny::Time field: " << timeUnit;
+            msg << "Invalid unit: " << timeUnit
+                << " for genny::TimeSpec field in config: " << strRepr;
             throw genny::InvalidConfigurationException(msg.str());
         }
 
