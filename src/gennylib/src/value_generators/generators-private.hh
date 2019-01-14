@@ -2,7 +2,9 @@
 #define HEADER_48C0CEE4_FC42_4B98_AABE_5980BF83A174
 
 #include "parser.hh"
+
 #include <gennylib/value_generators.hpp>
+#include <gennylib/DefaultRandom.hpp>
 
 namespace genny::value_generators {
 
@@ -11,7 +13,7 @@ using view_or_value = bsoncxx::view_or_value<bsoncxx::array::view, bsoncxx::arra
 // Generate a value, such as a random value or access a variable
 class ValueGenerator {
 public:
-    ValueGenerator(const YAML::Node&, std::mt19937_64& rng) : _rng(rng){};
+    ValueGenerator(const YAML::Node&, genny::DefaultRandom& rng) : _rng(rng){};
     virtual ~ValueGenerator(){};
     // Generate a new value.
     virtual bsoncxx::array::value generate() = 0;
@@ -22,19 +24,19 @@ public:
     // Class to wrap either a plain int64_t, or a value generator that will be called as an int.
 
 protected:
-    std::mt19937_64& _rng;
+    genny::DefaultRandom& _rng;
 };
 
 const std::set<std::string> getGeneratorTypes();
-std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, std::mt19937_64&);
-std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, std::string, std::mt19937_64&);
+std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, genny::DefaultRandom&);
+std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, std::string, genny::DefaultRandom&);
 std::string valAsString(view_or_value);
 int64_t valAsInt(view_or_value);
 double valAsDouble(view_or_value);
 
 class UseValueGenerator : public ValueGenerator {
 public:
-    UseValueGenerator(YAML::Node&, std::mt19937_64&);
+    UseValueGenerator(YAML::Node&, genny::DefaultRandom&);
     virtual bsoncxx::array::value generate() override;
 
 private:
@@ -50,7 +52,7 @@ public:
     IntOrValue(int64_t inInt) : myInt(inInt), myGenerator(nullptr), isInt(true) {}
     IntOrValue(std::unique_ptr<ValueGenerator> generator)
         : myInt(0), myGenerator(std::move(generator)), isInt(false) {}
-    IntOrValue(YAML::Node, std::mt19937_64&);
+    IntOrValue(YAML::Node, genny::DefaultRandom&);
 
     int64_t getInt() {
         if (isInt) {
@@ -67,7 +69,7 @@ private:
 };
 class RandomIntGenerator : public ValueGenerator {
 public:
-    RandomIntGenerator(const YAML::Node&, std::mt19937_64&);
+    RandomIntGenerator(const YAML::Node&, genny::DefaultRandom&);
     virtual bsoncxx::array::value generate() override;
     virtual int64_t generateInt() override;
     virtual std::string generateString() override;
@@ -92,7 +94,7 @@ private:
 
 class FastRandomStringGenerator : public ValueGenerator {
 public:
-    FastRandomStringGenerator(const YAML::Node&, std::mt19937_64&);
+    FastRandomStringGenerator(const YAML::Node&, genny::DefaultRandom&);
     virtual bsoncxx::array::value generate() override;
 
 private:
@@ -108,7 +110,7 @@ private:
 
 class RandomStringGenerator : public ValueGenerator {
 public:
-    RandomStringGenerator(YAML::Node&, std::mt19937_64&);
+    RandomStringGenerator(YAML::Node&, genny::DefaultRandom&);
     virtual bsoncxx::array::value generate() override;
 
 private:
@@ -139,7 +141,7 @@ private:
 class TemplateDocument : public DocumentGenerator {
 public:
     TemplateDocument();
-    TemplateDocument(const YAML::Node, std::mt19937_64&);
+    TemplateDocument(const YAML::Node, genny::DefaultRandom&);
     virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&) override;
 
 protected:

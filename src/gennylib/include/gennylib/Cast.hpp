@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include <map>
@@ -20,7 +34,7 @@ namespace genny {
  * To easily register a default ActorProducer to the global Cast, one can use the following in
  * a source file:
  * ```
- * auto registerMyActor = genny::Cast::makeDefaultRegistration<MyActorT>();
+ * auto registerMyActor = genny::Cast::registerDefault<MyActorT>();
  * ```
  * The function makes a specialization of DefaultActorProducer and hands it to the
  * Cast::Registration struct along with the `defaultName()` of MyActorT. When that struct
@@ -41,10 +55,11 @@ public:
     struct Registration;
 
     using ActorProducerMap = std::map<std::string_view, std::shared_ptr<ActorProducer>>;
+    using List = std::initializer_list<Cast::ActorProducerMap::value_type>;
 
 public:
     Cast() {}
-    Cast(std::initializer_list<ActorProducerMap::value_type> init) {
+    Cast(List init) {
         for (const auto& [name, producer] : init) {
             add(name, producer);
         }
@@ -94,7 +109,7 @@ inline Cast& globalCast() {
  * This struct is a vehicle for its ctor function which takes a name for the specific ActorProducer
  * in the Cast and a `shared_ptr` to the instance of the ActorProducer. This allows for pre-main
  * invocations of the registration via global variables of type `Cast::Registration`. The vast
- * majority of cases will want to use `makeDefaultRegistration()` below and avoid most concerns on
+ * majority of cases will want to use `registerDefault()` below and avoid most concerns on
  * this struct.
  */
 struct Cast::Registration {

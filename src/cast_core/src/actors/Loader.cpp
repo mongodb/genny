@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <cast_core/actors/Loader.hpp>
 
 #include <algorithm>
@@ -16,19 +30,24 @@
 
 namespace genny::actor {
 
-using document_ptr=std::unique_ptr<genny::value_generators::DocumentGenerator>;
-using index_type=std::pair<document_ptr, std::optional<document_ptr>>;
+/** @private */
+using document_ptr = std::unique_ptr<genny::value_generators::DocumentGenerator>;
 
+/** @private */
+using index_type = std::pair<document_ptr, std::optional<document_ptr>>;
+
+/** @private */
 struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context,
-                std::mt19937_64& rng,
+                genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 uint thread)
         : database{(*client)[context.get<std::string>("Database")]},
           // The next line uses integer division. The Remainder is accounted for below.
-          numCollections{context.get<uint>("CollectionCount") / context.get<int>("Threads")},
-          numDocuments{context.get<uint>("DocumentCount")},
-          batchSize{context.get<uint>("BatchSize")},
+          numCollections{context.get<UIntSpec, true>("CollectionCount") /
+                         context.get<UIntSpec, true>("Threads")},
+          numDocuments{context.get<UIntSpec, true>("DocumentCount")},
+          batchSize{context.get<UIntSpec, true>("BatchSize")},
           documentTemplate{value_generators::makeDoc(context.get("Document"), rng)},
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");
@@ -46,18 +65,20 @@ struct Loader::PhaseConfig {
     }
 
     mongocxx::database database;
-    uint numCollections;
-    uint numDocuments;
-    uint batchSize;
+    size_t numCollections;
+    size_t numDocuments;
+    size_t batchSize;
     document_ptr documentTemplate;
     std::vector<index_type> indexes;
-    uint collectionOffset;
+    size_t collectionOffset;
 };
 
 void genny::actor::Loader::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            for (uint i = config->collectionOffset; i < config->collectionOffset + config->numCollections; i++) {
+            for (uint i = config->collectionOffset;
+                 i < config->collectionOffset + config->numCollections;
+                 i++) {
                 auto collectionName = "Collection" + std::to_string(i);
                 auto collection = config->database[collectionName];
                 // Insert the documents
@@ -66,7 +87,7 @@ void genny::actor::Loader::run() {
                     auto totalOp = _totalBulkLoadTimer.raii();
                     while (remainingInserts > 0) {
                         // insert the next batch
-                        uint numberToInsert = std::max(config->batchSize, remainingInserts);
+                        uint numberToInsert = std::min<size_t>(config->batchSize, remainingInserts);
                         std::vector<bsoncxx::builder::stream::document> docs(numberToInsert);
                         std::vector<bsoncxx::document::view> views;
                         auto newDoc = docs.begin();
@@ -115,13 +136,13 @@ Loader::Loader(genny::ActorContext& context, uint thread)
 
 class LoaderProducer : public genny::ActorProducer {
 public:
-    LoaderProducer(const std::string_view &name) : ActorProducer(name) {}
+    LoaderProducer(const std::string_view& name) : ActorProducer(name) {}
     genny::ActorVector produce(genny::ActorContext& context) {
         if (context.get<std::string>("Type") != "Loader") {
             return {};
         }
         genny::ActorVector out;
-        for(uint i=0; i<context.get<int>("Threads"); ++i) {
+        for (uint i = 0; i < context.get<int>("Threads"); ++i) {
             out.emplace_back(std::make_unique<genny::actor::Loader>(context, i));
         }
         return out;
@@ -131,5 +152,5 @@ public:
 namespace {
 std::shared_ptr<genny::ActorProducer> loaderProducer = std::make_shared<LoaderProducer>("Loader");
 auto registration = genny::Cast::registerCustom<genny::ActorProducer>(loaderProducer);
-}
+}  // namespace
 }  // namespace genny::actor

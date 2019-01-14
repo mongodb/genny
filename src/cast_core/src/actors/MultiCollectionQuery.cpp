@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <cast_core/actors/MultiCollectionQuery.hpp>
 
 #include <chrono>
@@ -17,26 +31,27 @@
 #include <gennylib/value_generators.hpp>
 
 namespace genny::actor {
+
+/** @private */
 struct MultiCollectionQuery::PhaseConfig {
-    PhaseConfig(PhaseContext& context, std::mt19937_64& rng, mongocxx::pool::entry& client)
+    PhaseConfig(PhaseContext& context, genny::DefaultRandom& rng, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
-          numCollections{context.get<uint>("CollectionCount")},
+          numCollections{context.get<UIntSpec, true>("CollectionCount")},
           filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
           uniformDistribution{0, numCollections},
-          minDelay{context.get<std::chrono::milliseconds, false>("MinDelay")
-                       .value_or(std::chrono::milliseconds(0))} {}
+          minDelay{context.get<TimeSpec, false>("MinDelay").value_or(genny::TimeSpec(0))} {}
 
     mongocxx::database database;
-    uint numCollections;
+    size_t numCollections;
     std::unique_ptr<value_generators::DocumentGenerator> filterDocument;
     // uniform distribution random int for selecting collection
-    std::uniform_int_distribution<uint> uniformDistribution;
+    std::uniform_int_distribution<size_t> uniformDistribution;
     std::chrono::milliseconds minDelay;
     mongocxx::options::find options;
 };
 
 void MultiCollectionQuery::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (auto&& _ : config) {
             // Take a timestamp -- remove after TIG-1155
             auto startTime = std::chrono::steady_clock::now();

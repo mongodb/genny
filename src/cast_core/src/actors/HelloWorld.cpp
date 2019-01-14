@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <cast_core/actors/HelloWorld.hpp>
 
 #include <string>
@@ -8,6 +22,7 @@
 
 namespace genny::actor {
 
+/** @private */
 struct HelloWorld::PhaseConfig {
     std::string message;
     explicit PhaseConfig(PhaseContext& context)
@@ -15,21 +30,23 @@ struct HelloWorld::PhaseConfig {
 };
 
 void HelloWorld::run() {
-    for (auto&& [phase, config] : _loop) {
+    for (auto&& config : _loop) {
         for (auto _ : config) {
-            auto op = this->_outputTimer.raii();
+            auto ctx = this->_operation.start();
             BOOST_LOG_TRIVIAL(info) << config->message;
             ++_hwCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _hwCounter;
+            ctx.addOps(1);
+            ctx.addBytes(config->message.size());
+            ctx.success();
         }
     }
 }
 
 HelloWorld::HelloWorld(genny::ActorContext& context)
     : Actor(context),
-      _outputTimer{context.timer("output", HelloWorld::id())},
-      _operations{context.counter("operations", HelloWorld::id())},
-      _hwCounter{context.workload().getActorSharedState<HelloWorld, HelloWorldCounter>()},
+      _operation{context.operation("op", HelloWorld::id())},
+      _hwCounter{WorkloadContext::getActorSharedState<HelloWorld, HelloWorldCounter>()},
       _loop{context} {}
 
 namespace {

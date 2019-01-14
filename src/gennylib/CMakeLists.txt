@@ -1,8 +1,22 @@
+# Copyright 2019-present MongoDB Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # NB: this version number is duplicated in
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(gennylib VERSION 0.0.1 LANGUAGES CXX)
 
-# Pacify the CLion
+#Pacify the CLion
 file(GLOB_RECURSE HEADERS_FOR_CLION
      RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
      CONFIGURE_DEPENDS
@@ -13,18 +27,30 @@ add_library(gennylib_headers SHARED
     ${HEADERS_FOR_CLION}
 )
 
+add_library(gennylib_core STATIC
+    src/version.cpp
+)
+target_include_directories(gennylib_core
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(gennylib_core
+    yaml-cpp
+    loki
+
+    Boost::boost Boost::log
+    MongoCxx::mongocxx
+)
+
 # Concepts to do with Actors
 add_library(gennylib_cast STATIC
     src/Actor.cpp
     src/ActorProducer.cpp
     src/Cast.cpp
+    src/ExecutionStrategy.cpp
 )
-
-target_include_directories(gennylib_cast
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-)
+target_link_libraries(gennylib_cast gennylib_core)
 
 # Concepts to do with generators
 add_library(gennylib_generators STATIC
@@ -34,12 +60,10 @@ add_library(gennylib_generators STATIC
 )
 
 target_include_directories(gennylib_generators
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
     PRIVATE
         src/value_generators
 )
+target_link_libraries(gennylib_generators gennylib_core)
 
 # Additional utilities and core concepts
 # Note that this contains both what you need to compile Actors and what you need to compile a Driver
@@ -48,32 +72,39 @@ add_library(gennylib SHARED
     src/context.cpp
     src/Orchestrator.cpp
     src/PoolFactory.cpp
-)
+    src/DefaultRandom.cpp
+    )
 
 # Define headers for this library. PUBLIC headers are used for
 # compiling the library, and will be added to consumers' build
 # paths.
 target_include_directories(gennylib
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
     PRIVATE
         src
 )
-
-add_subdirectory(jasper)
 
 # Link in the sublibraries into the main library
 target_link_libraries(gennylib
     PUBLIC
         gennylib_cast
         gennylib_generators
-    PRIVATE
-        jasperlib
+        gennylib_core
+)
+if(ENABLE_JASPER)
+    target_link_libraries(gennylib
+        PRIVATE
+            jasperlib
+    )
+endif()
+
+# Link in OpenSSL
+target_link_libraries(gennylib
+    PUBLIC
+        OpenSSL::Crypto OpenSSL::SSL
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
-install(TARGETS  gennylib gennylib_cast gennylib_generators
+install(TARGETS  gennylib gennylib_cast gennylib_generators gennylib_core
         EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -82,39 +113,60 @@ install(DIRECTORY include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN *.hpp)
 
+# Pull together our utils, header directories, and testing dependencies into one static target
+add_library(gennylib_testutil STATIC
+    test/ActorHelper.cpp
+    test/MongoTestFixture.cpp
+)
+target_include_directories(gennylib_testutil
+    PUBLIC
+        src
+        test
+)
+target_sources(gennylib_testutil
+    PUBLIC
+        $<TARGET_OBJECTS:catch2>
+)
+target_link_libraries(gennylib_testutil gennylib catch2_headers)
+
 add_executable(test_gennylib
     test/Cast_test.cpp
     test/context_test.cpp
     test/conventions_test.cpp
+    test/ExecutionStrategy_test.cpp
     test/PoolFactory_test.cpp
     test/PhaseLoop_test.cpp
     test/version_test.cpp
     test/metrics_test.cpp
     test/orchestrator_test.cpp
-    test/PhaseLoop_perf_test.cpp
     test/document_test.cpp
-    test/orchestrator_perf_test.cpp
-    ${THIRD_PARTY_SOURCE_DIR}/catch2/main.cpp
+    test/DefaultRandom_test.cpp
+
+    # Test the helper
+    test/ActorHelper_test.cpp
+)
+target_link_libraries(test_gennylib gennylib_testutil)
+
+add_executable(benchmark_gennylib
+    test/PhaseLoop_benchmark.cpp
+    test/orchestrator_benchmark.cpp
 )
 
-target_include_directories(test_gennylib
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-    PRIVATE
-        src
-        ${THIRD_PARTY_SOURCE_DIR}/catch2/include
-)
-target_link_libraries(test_gennylib
-    PUBLIC ${Boost_LIBRARIES} gennylib
+target_link_libraries(benchmark_gennylib gennylib_testutil)
+
+
+add_executable(test_gennylib_with_server
+        # Don't modify the following comments; they're used as anchors in scripts that create new actors.
+        # ActorsTestStart
+        test/actors_test.cpp
+        test/RunCommandActor_test.cpp
+        # ActorsTestEnd
 )
 
-add_test(
-    NAME    test_gennylib
-    COMMAND test_gennylib
-        -r junit
-        -d yes
-        --rng-seed 12345
-        --success
-        --out test_gennylib.junit.xml
-)
+target_link_libraries(test_gennylib_with_server gennylib_testutil cast_core)
+
+ParseAndAddCatchTests(test_gennylib)
+
+ParseAndAddCatchTests(benchmark_gennylib)
+
+ParseAndAddCatchTests(test_gennylib_with_server)
