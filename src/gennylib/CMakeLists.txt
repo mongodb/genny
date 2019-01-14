@@ -49,6 +49,7 @@ add_library(gennylib_cast STATIC
     src/ActorProducer.cpp
     src/Cast.cpp
     src/ExecutionStrategy.cpp
+    src/RateLimiter.cpp
 )
 target_link_libraries(gennylib_cast gennylib_core)
 
@@ -149,6 +150,7 @@ target_link_libraries(test_gennylib gennylib_testutil)
 
 add_executable(benchmark_gennylib
     test/PhaseLoop_benchmark.cpp
+    test/RateLimiter_benchmark.cpp
     test/orchestrator_benchmark.cpp
 )
 
