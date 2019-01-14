@@ -2,12 +2,6 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 cmake_policy(VERSION 3.10)
 
-# Set the default output paths/prefixes
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/bin CACHE PATH "")
-set(CMAKE_INSTALL_PREFIX            ${CMAKE_SOURCE_DIR}/dist CACHE PATH "")
-
 # NB: this version number is duplicated in
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(genny VERSION 0.0.1 LANGUAGES CXX)
@@ -19,6 +13,12 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(Options)
 include(CheckCompiler)
 include(ConfigureInstall)
+
+if(${GENNY_BUILD_FLAT})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/bin CACHE PATH "")
+endif()
 
 find_package(Threads REQUIRED)
 
