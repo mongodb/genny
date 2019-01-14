@@ -19,3 +19,9 @@ option(GENNY_INSTALL_SSL
        "Install the SSL libraries local to the genny install."
        OFF
 )
+
+# See http://www.pathname.com/fhs/
+option(GENNY_BUILD_FLAT
+       "Use FHS-like build directories."
+       OFF
+)

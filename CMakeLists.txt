@@ -14,6 +14,12 @@ include(Options)
 include(CheckCompiler)
 include(ConfigureInstall)
 
+if(${GENNY_BUILD_FLAT})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/bin CACHE PATH "")
+endif()
+
 find_package(Threads REQUIRED)
 
 # Grab OpenSSL right away
