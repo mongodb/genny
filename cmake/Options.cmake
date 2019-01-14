@@ -20,6 +20,7 @@ option(GENNY_INSTALL_SSL
        OFF
 )
 
+# See http://www.pathname.com/fhs/
 option(GENNY_BUILD_FLAT
        "Use FHS-like build directories."
        OFF
