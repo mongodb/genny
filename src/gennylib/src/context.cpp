@@ -31,10 +31,10 @@ WorkloadContext::WorkloadContext(YAML::Node node,
                                  Orchestrator& orchestrator,
                                  const std::string& mongoUri,
                                  const Cast& cast)
-    : _node{std::move(node)}, _registry{&registry}, _orchestrator{&orchestrator} {
+    : V1::ConfigNode(std::move(node)), _registry{&registry}, _orchestrator{&orchestrator} {
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
-    if (get_static<std::string>(_node, "SchemaVersion") != "2018-07-01") {
+    if (this->get_noinherit<std::string>("SchemaVersion") != "2018-07-01") {
         throw InvalidConfigurationException("Invalid schema version");
     }
 
@@ -45,13 +45,13 @@ WorkloadContext::WorkloadContext(YAML::Node node,
     auto poolFactory = PoolFactory(mongoUri);
 
     auto queryOpts =
-        get_static<std::map<std::string, std::string>, false>(node, "Pool", "QueryOptions");
+        this->get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
     if (queryOpts) {
         poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
     }
 
     auto accessOpts =
-        get_static<std::map<std::string, std::string>, false>(node, "Pool", "AccessOptions");
+        this->get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
     if (accessOpts) {
         poolFactory.setOptions(PoolFactory::kAccessOption, *accessOpts);
     }
@@ -59,13 +59,13 @@ WorkloadContext::WorkloadContext(YAML::Node node,
     _clientPool = poolFactory.makePool();
 
     // Make a bunch of actor contexts
-    for (const auto& actor : get_static(node, "Actors")) {
+    for (const auto& actor : this->get_noinherit("Actors")) {
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
     // Default value selected from random.org, by selecting 2 random numbers
     // between 1 and 10^9 and concatenating.
-    _rng.seed(get_static<int, false>(node, "RandomSeed").value_or(269849313357703264));
+    _rng.seed(this->get_noinherit<int, false>("RandomSeed").value_or(269849313357703264));
 
     for (auto& actorContext : _actorContexts) {
         for (auto&& actor : _constructActors(cast, actorContext)) {
