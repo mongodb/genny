@@ -14,6 +14,7 @@ RESMOKE_SUITE="${RESMOKE_SUITE:-genny_standalone.yml}"
 SENTINEL_XML="${BUILD_DIR}/sentinel.junit.xml"
 
 if [[ -z $VIRTUAL_ENV ]]; then
+    export VIRTUAL_ENV_DISABLE_PROMPT="yes"
     # shellcheck disable=SC1090
     . "${VENV_DIR}/bin/activate"
 fi
