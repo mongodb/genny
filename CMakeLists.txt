@@ -14,14 +14,25 @@ include(Options)
 include(CheckCompiler)
 include(ConfigureInstall)
 
-# Use other external modules
-include(GNUInstallDirs)
-
 find_package(Threads REQUIRED)
 
+# Grab OpenSSL right away
+include(GetSsl)
+
 # <Boost>
-set(Boost_USE_STATIC_LIBS ${USE_STATIC_BOOST})
-if(NOT ${USE_STATIC_BOOST})
+if(GENNY_STATIC_BOOST_PATH)
+    set(Boost_USE_STATIC_LIBS ON
+        CACHE BOOL "Use static Boost"
+    )
+    set(Boost_NO_SYSTEM_PATHS ON
+        CACHE BOOL "Use non-system Boost"
+    )
+    set(BOOST_ROOT "${GENNY_STATIC_BOOST_PATH}"
+        CACHE PATH "Use a specific path for Boost"
+    )
+endif()
+
+if(NOT Boost_USE_STATIC_LIBS)
   add_definitions(-DBOOST_ALL_DYN_LINK)
 endif()
 
@@ -38,25 +49,10 @@ find_package(
 )
 # </Boost>
 
-# <Mongo Driver>
-find_package(libmongocxx REQUIRED)
-# </Mongo Driver>
-
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
 set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
-
-# These libraries are almost ubiquitously required in genny
-# The AFTER tag means that our headers are considered before headers in the same folder as these
-# dependencies
-include_directories(AFTER
-    ${LIBMONGOCXX_INCLUDE_DIRS}
-)
-link_libraries(
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${LIBMONGOCXX_LIBRARIES}
-)
 
 enable_testing()
 add_subdirectory(src)

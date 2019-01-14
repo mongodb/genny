@@ -11,6 +11,15 @@ add_subdirectory(catch2)
 add_subdirectory(loki)
 # </Loki>
 
+# <Mongo Driver>
+# Use our FindMongoCxx module to wrap the mongo-cxx-driver in a target
+find_package(MongoCxx)
+# </Mongo Driver>
+
+# <gRPC>
+include(GetGRpc)
+# </gRPC>
+
 # <Jasper>
 if(ENABLE_JASPER)
     add_subdirectory(jasper)

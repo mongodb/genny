@@ -1,3 +1,17 @@
+# Copyright 2019-present MongoDB Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #!/usr/bin/env python
 
 import json
@@ -209,10 +223,11 @@ class ParserResults(object):
             #    [Genny, Setup]
             event_name = event_parts[0] + '.' + event_parts[1]
             thread = '0'
-        elif len(event_parts) == 3:
+        elif len(event_parts) >= 3:
             # For regular (multi-threaded) cases, event_parts is like
-            #    [MyActor, id-1, operation]
-            event_name = event_parts[0] + '.' + event_parts[2]
+            #    [MyActor, id-1, operation, ...]
+            # where ... is any other parts of the operation name
+            event_name = event_parts[0] + '.' + ('.'.join(event_parts[2:]))
             thread = event_parts[1]
         else:
             raise ParseError("Invalid event given: [{}]".format(event_parts), file_name,

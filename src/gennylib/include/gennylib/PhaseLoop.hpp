@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef HEADER_10276107_F885_4F2C_B99B_014AF3B4504A_INCLUDED
 #define HEADER_10276107_F885_4F2C_B99B_014AF3B4504A_INCLUDED
 
@@ -43,12 +57,12 @@ namespace V1 {
 class IterationCompletionCheck final {
 
 public:
-    IterationCompletionCheck(std::optional<std::chrono::milliseconds> minDuration,
-                             std::optional<int> minIterations,
+    IterationCompletionCheck(std::optional<TimeSpec> minDuration,
+                             std::optional<UIntSpec> minIterations,
                              bool isNop)
         : _minDuration{minDuration},
           // If it is a nop then should iterate 0 times.
-          _minIterations{isNop ? 0 : minIterations},
+          _minIterations{isNop ? UIntSpec(0l) : minIterations},
           _doesBlock{_minIterations || _minDuration} {
 
         if (minDuration && minDuration->count() < 0) {
@@ -64,8 +78,8 @@ public:
     }
 
     explicit IterationCompletionCheck(PhaseContext& phaseContext)
-        : IterationCompletionCheck(phaseContext.get<std::chrono::milliseconds, false>("Duration"),
-                                   phaseContext.get<int, false>("Repeat"),
+        : IterationCompletionCheck(phaseContext.get<TimeSpec, false>("Duration"),
+                                   phaseContext.get<UIntSpec, false>("Repeat"),
                                    phaseContext.isNop()) {}
 
     std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
@@ -74,13 +88,12 @@ public:
                             : std::chrono::time_point<std::chrono::steady_clock>::min();
     }
 
-    bool isDone(std::chrono::steady_clock::time_point startedAt,
-                unsigned int currentIteration) const {
-        return (!_minIterations || currentIteration >= *_minIterations) &&
+    bool isDone(std::chrono::steady_clock::time_point startedAt, uint64_t currentIteration) const {
+        return (!_minIterations || currentIteration >= (*_minIterations).value) &&
             (!_minDuration ||
              // check is last to avoid doing now() call unnecessarily
-             std::chrono::duration_cast<std::chrono::milliseconds>(
-                 std::chrono::steady_clock::now() - startedAt) >= *_minDuration);
+             (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                          std::chrono::steady_clock::now() - startedAt));
     }
 
     bool operator==(const IterationCompletionCheck& other) const {
@@ -96,8 +109,8 @@ private:
     // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
     // .end() iterator needs an instance of this, so it's weird
 
-    const std::optional<std::chrono::milliseconds> _minDuration;
-    const std::optional<int> _minIterations;
+    const std::optional<TimeSpec> _minDuration;
+    const std::optional<UIntSpec> _minIterations;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
 };
 
