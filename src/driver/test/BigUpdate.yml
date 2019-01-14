@@ -97,7 +97,7 @@ Actors:
       - Operation:
           OperationName: Nop
       - Duration: &phase2_duration 10 minutes
-        MinDelay: 31  # This should be replaced with Rate with TIG-1155.
+        MinDelay: 31 milliseconds
   - Name: MultiCollectionQuery
     Type: MultiCollectionQuery
     Threads: 100
@@ -109,4 +109,4 @@ Actors:
       - Operation:
           OperationName: Nop
       - Duration: *phase2_duration
-        MinDelay: 9  # This should be replaced with Rate with TIG-1155.
+        MinDelay: 9 milliseconds
