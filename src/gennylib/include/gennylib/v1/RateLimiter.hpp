@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include <gennylib/config/RateLimiterOptions.hpp>
+#include <gennylib/conventions.hpp>
 
 namespace genny::v1 {
 
@@ -19,19 +20,15 @@ namespace genny::v1 {
  *    invocation of `run()`.
  * 2. Enforce a sleep of a specified duration before the function passed to `run()` is invoked.
  * 3. Enforce a sleep of a specified duration after the function passed to `run()` is invoked.
- *
- * As an intentional choice, RateLimiter has a strong API that obscures the actual implementation.
- * As of now, it uses simple sleeps. The preferred mechanism would be to have a scheduler that
- * notifies each RateLimiter at specific deadlines.
  */
 class RateLimiter {
 public:
     using Generation = int64_t;
-    using Options = config::RateLimiterOptions;
 
     using ClockT = std::chrono::steady_clock;
     using TimeT = typename ClockT::time_point;
-    using DurationT = std::chrono::milliseconds;
+
+    using Options = config::RateLimiterOptions;
 
     /**
      * Status is a very simple state enumeration.
@@ -56,20 +53,19 @@ public:
     };
 
 public:
-    RateLimiter();
-    RateLimiter(const Options& options);
+    virtual ~RateLimiter() = 0;
 
     /**
      * Block execution for a specified duration
-     * @param sleepMS   A duration after which to unblock
+     * @param sleepDuration   A duration after which to unblock
      */
-    void waitFor(DurationT sleepMS);
+    virtual void waitFor(Duration sleepDuration) = 0;
 
     /**
      * Block execution until a designated time
      * @param   stopTime    A time point until which to unblock
      */
-    void waitUntil(TimeT stopTime);
+    virtual void waitUntil(TimeT stopTime) = 0;
 
     /**
      * Block execution until the current period is over and start the next
@@ -78,7 +74,7 @@ public:
      * If we have not run before, return immediately.
      * In either case, set the endTime for the coming period.
      */
-    void waitUntilNext();
+    virtual void waitUntilNext() = 0;
 
     /**
      * Run the given function with certain timing guarantees
@@ -90,29 +86,67 @@ public:
         waitUntilNext();
 
         // Wait for a specified amount of time before
-        waitFor(_options.preSleep);
+        waitFor(options().preSleep);
 
         // Run the actual function
         std::invoke(std::forward<F>(fun));
 
         // Wait for a specified amount of time after
-        waitFor(_options.postSleep);
+        waitFor(options().postSleep);
     }
 
     /**
      * Set the endTime for the coming period and mark ourselves as running
      */
-    void start();
+    virtual void start() = 0;
 
     /**
      * Mark ourselves as no longer running
      */
-    void stop();
+    virtual void stop() = 0;
+
+    /**
+     * Return a constant refence to the options for this limiter
+     */
+    virtual const Options & options() const = 0;
 
     /**
      * Return a constant refence to the current rate limit state
      */
-    const State & state() const {
+    virtual const State & state() const = 0;
+
+protected:
+    RateLimiter(){}
+};
+
+/**
+ * RateLimiterSimple uses simple system sleeps to control the internal rate.
+ *
+ * The more advanced mechnism for rate limiting would be to have a scheduler that notifies each
+ * RateLimiter at specific deadlines.
+ */
+class RateLimiterSimple : public RateLimiter {
+public:
+    using Options = RateLimiter::Options;
+    using State = RateLimiter::State;
+
+public:
+    RateLimiterSimple();
+    RateLimiterSimple(const Options& options);
+    virtual ~RateLimiterSimple();
+
+    void waitFor(Duration sleepDuration) override;
+    void waitUntil(RateLimiter::TimeT stopTime) override;
+    void waitUntilNext() override;
+
+    void start() override;
+    void stop() override;
+
+    const Options & options() const override {
+        return _options;
+    }
+
+    const State & state() const override {
         return *_state;
     }
 

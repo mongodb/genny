@@ -67,43 +67,51 @@ inline bool operator==(const UIntSpec& lhs, const UIntSpec& rhs) {
  * choice.
  */
 struct TimeSpec {
-    TimeSpec() = default;
+public: // Typedefs/Structs
+    // Use the highest precision internally.
+    using ValueT = std::chrono::nanoseconds;
+
+public: // Ctors/Dtors/Generators
     ~TimeSpec() = default;
 
-    TimeSpec(std::chrono::nanoseconds v) : value{v} {}  // NOLINT(google-explicit-constructor)
+    explicit constexpr TimeSpec(ValueT v) : value{v} {}
 
     // Allow construction with integers for testing.
-    explicit TimeSpec(int64_t v) : value{v} {}
+    explicit constexpr TimeSpec(int64_t v) : TimeSpec{ValueT(v)} {}
 
-    std::chrono::nanoseconds value;  // Use the highest precision internally.
+    // Default construct as a zero value
+    constexpr TimeSpec() : TimeSpec(ValueT::zero()) {}
 
-    // nanoseconds is used by default, you can explicitly cast to another type if needed.
-    operator std::chrono::nanoseconds() {  // NOLINT(google-explicit-constructor)
+public: // Members
+    ValueT value;
+
+public: // Operators
+    constexpr operator ValueT() const {
         return value;
     }
 
     // TODO: TIG-1155 remove these conversion operators if they're not used.
-    explicit operator std::chrono::microseconds() {
+    explicit constexpr operator std::chrono::microseconds() const {
         return std::chrono::duration_cast<std::chrono::microseconds>(value);
     }
 
-    explicit operator std::chrono::milliseconds() {
+    explicit constexpr operator std::chrono::milliseconds() const {
         return std::chrono::duration_cast<std::chrono::milliseconds>(value);
     }
 
-    explicit operator std::chrono::seconds() {
+    explicit constexpr operator std::chrono::seconds() const {
         return std::chrono::duration_cast<std::chrono::seconds>(value);
     }
 
-    explicit operator std::chrono::minutes() {
+    explicit constexpr operator std::chrono::minutes() const {
         return std::chrono::duration_cast<std::chrono::minutes>(value);
     }
 
-    explicit operator std::chrono::hours() {
+    explicit constexpr operator std::chrono::hours() const {
         return std::chrono::duration_cast<std::chrono::hours>(value);
     }
 
-    int64_t count() const {
+    constexpr auto count() const {
         return value.count();
     }
 };
@@ -111,6 +119,9 @@ struct TimeSpec {
 inline bool operator==(const TimeSpec& lhs, const TimeSpec& rhs) {
     return lhs.value == rhs.value;
 }
+
+// Use the underlying type in TimeSpec as the default Duration type
+using Duration = typename TimeSpec::ValueT;
 
 /**
  * Rate defined as X operations per Y duration.

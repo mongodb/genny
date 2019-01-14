@@ -7,9 +7,9 @@
 
 namespace genny::config {
 struct RateLimiterOptions {
-    std::chrono::milliseconds minPeriod{0};
-    std::chrono::milliseconds preSleep{0};
-    std::chrono::milliseconds postSleep{0};
+    Duration minPeriod = Duration::zero();
+    Duration preSleep = Duration::zero();
+    Duration postSleep = Duration::zero();
 };
 }  // namespace genny::config
 

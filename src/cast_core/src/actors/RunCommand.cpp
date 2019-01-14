@@ -57,7 +57,7 @@ public:
           _database{fixture.database},
           _doc{std::move(docTemplate)},
           _options{opts},
-          _rateLimiter{_options.rateLimit} {
+          _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)} {
         // Only record metrics if we have a name for the operation.
         if (!_options.metricsName.empty()) {
             _timer = std::make_optional<metrics::Timer>(
@@ -66,7 +66,7 @@ public:
     }
 
     void run() {
-        _rateLimiter.run([&] { _run(); });
+        _rateLimiter->run([&] { _run(); });
     }
 
 private:
@@ -94,7 +94,7 @@ private:
     std::unique_ptr<value_generators::DocumentGenerator> _doc;
     Options _options;
 
-    v1::RateLimiter _rateLimiter;
+    std::unique_ptr<v1::RateLimiter> _rateLimiter;
     std::optional<metrics::Timer> _timer;
 };
 
