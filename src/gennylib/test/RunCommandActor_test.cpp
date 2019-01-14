@@ -9,6 +9,8 @@
 
 #include <bsoncxx/json.hpp>
 
+#include <boost/log/trivial.hpp>
+
 #include <cast_core/actors/RunCommand.hpp>
 #include <gennylib/MongoException.hpp>
 
@@ -16,12 +18,12 @@
 
 #include "MongoTestFixture.hpp"
 
+namespace BasicBson = bsoncxx::builder::basic;
+
 namespace genny {
 namespace {
 
 using namespace genny::testing;
-using bsoncxx::builder::basic::kvp;
-using bsoncxx::builder::basic::make_document;
 
 // Don't run in a sharded cluster because the error message is different.
 TEST_CASE_METHOD(MongoTestFixture,
@@ -66,86 +68,102 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MongoTestFixture, 
+TEST_CASE_METHOD(MongoTestFixture,
                  "InsertActor respects writeConcern.",
                  "[three_node_replset]") {
+ 
+    auto makeConfig = []() {
+        return YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Name: TestInsertWriteConcern
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - Repeat: 1
+                Operation:
+                    OperationName: RunCommand
+                    OperationCommand:
+                        insert:
+                        documents: [{name: myName}]
+                        writeConcern: {wtimeout: 5000}
 
-    YAML::Node config_w3 = YAML::Load(R"(
-        SchemaVersion: 2018-07-01
-
-        Actors:
-        - Name: TestInsertWriteConcern
-          Type: RunCommand
-          Threads: 1
-          Phases:
-          - Repeat: 1
-            Database: mydb
-            Operation:
-              OperationName: RunCommand
-              OperationCommand:
-                insert: myCollection
-                documents: [{name: myName}]
-                writeConcern: {w: 3, wtimeout: 5000}
-    )");
+        )");
+    };
     
-    YAML::Node config_w1 = YAML::Load(R"(
-        SchemaVersion: 2018-07-01
+    auto makeFindOp = [](mongocxx::read_preference::read_mode readPreference, int timeout) {
+        mongocxx::options::find opts;
+        mongocxx::read_preference preference;
         
-        Actors:
-        - Name: TestInsertWriteConcern
-          Type: RunCommand 
-          Threads: 1
-          Phases:
-          - Repeat: 1
-            Database: mydb
-            Operation:
-              OperationName: RunCommand
-              OperationCommand:
-                insert: myCollection
-                documents: [{name: myOtherName}]
-                writeConcern: {w: 1, wtimeout: 5000}
-    )");
+        preference.mode(readPreference);
+        opts.read_preference(preference).max_time(std::chrono::milliseconds(timeout));
+        
+        return opts;
+    };
+    
+    constexpr auto readTimeout = 6000;
 
     SECTION("verify write concern to secondaries") {
-        ActorHelper ah(config_w3, 1, MongoTestFixture::connectionUri().to_string());
-        ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
-    
+        constexpr auto dbStr = "test";
+        constexpr auto collectionStr = "testCollection";
+        
         auto session = MongoTestFixture::client.start_session();
-        auto coll = MongoTestFixture::client["mydb"]["myCollection"];
-        
-        mongocxx::options::find opts;        
-        mongocxx::read_preference secondary;
-        secondary.mode(mongocxx::read_preference::read_mode::k_secondary);
-        opts.read_preference(secondary).max_time(std::chrono::milliseconds(2000));
-        
-        bool result = (bool) coll.find_one(session, make_document(kvp("name", "myName")), opts);
-        
+
+        BOOST_LOG_TRIVIAL(info) << MongoTestFixture::client.uri().to_string() << std::endl;
+
+        auto yamlConfig = makeConfig();
+
+        [&](YAML::Node yamlPhase) {
+            yamlPhase["Database"] = dbStr;
+            yamlPhase["Operation"]["OperationCommand"]["insert"] = collectionStr;
+            yamlPhase["Operation"]["OperationCommand"]["writeConcern"]["w"] = 3;
+        }(yamlConfig["Actors"][0]["Phases"][0]);
+
+        ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string());
+        ah.run();
+
+        auto coll = MongoTestFixture::client["test"]["testCollection"];
+
+        mongocxx::options::find opts = makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
+
+        auto result = static_cast<bool>(coll.find_one(session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts));
+
         REQUIRE(result);
-    }        
-    
-    SECTION("verify write concern to primary only") {
-        ActorHelper ah(config_w1, 1, MongoTestFixture::connectionUri().to_string());
-        
-        ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
-        
-        auto session = MongoTestFixture::client.start_session();
-        auto coll = MongoTestFixture::client["mydb"]["myCollection"];
-        
-        mongocxx::options::find opts;
-        
-        mongocxx::read_preference secondary;
-        secondary.mode(mongocxx::read_preference::read_mode::k_secondary);
-        mongocxx::read_preference primary;
-        secondary.mode(mongocxx::read_preference::read_mode::k_secondary);
-        
-        opts.read_preference(secondary).max_time(std::chrono::milliseconds(2000));
-        bool result_secondary = (bool) coll.find_one(session, make_document(kvp("name", "myOtherName")), opts);
-        REQUIRE(!result_secondary);
-        
-        opts.read_preference(primary).max_time(std::chrono::milliseconds(2000));
-        bool result_primary = (bool) coll.find_one(session, make_document(kvp("name", "myOtherName")), opts);
-        REQUIRE(result_primary);
     }
+    
+    
+    // TODO: Once better repl support comes in, pause replication for this test case. With replication paused, we want to 
+    // test that reads to secondaries will fail on primary write concerns. Without the paused replication, the test currently
+    // is a bit flaky. Refer to jstests/libs/write_concern_util.js in the main mongo repo for pausing replication.
+    // 
+    // SECTION("verify write concern to primary only") {
+    //     constexpr auto dbStr = "test";
+    //     constexpr auto collectionStr = "testOtherCollection";
+    // 
+    //     auto yamlConfig = makeConfig();
+    // 
+    //     [&](YAML::Node yamlPhase) {
+    //         yamlPhase["Database"] = dbStr;
+    //         yamlPhase["Operation"]["OperationCommand"]["insert"] = collectionStr;
+    //         yamlPhase["Operation"]["OperationCommand"]["writeConcern"]["w"] = 1;
+    //     }(yamlConfig["Actors"][0]["Phases"][0]);
+    // 
+    //     ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string());
+    // 
+    //     ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
+    // 
+    //     auto session = MongoTestFixture::client.start_session();
+    //     auto coll = MongoTestFixture::client["test"]["testOtherCollection"];
+    // 
+    //     mongocxx::options::find opts_primary = makeFindOp(mongocxx::read_preference::read_mode::k_primary, readTimeout);
+    //     mongocxx::options::find opts_secondary = makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
+    // 
+    //     bool result_secondary = (bool) coll.find_one(session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts_secondary);
+    //     REQUIRE(!result_secondary);
+    // 
+    //     bool result_primary = (bool) coll.find_one(session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts_primary);
+    //     REQUIRE(result_primary);
+    // }
 }
 }  // namespace
 }  // namespace genny
