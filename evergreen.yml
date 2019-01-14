@@ -224,7 +224,7 @@ functions:
     params:
       working_dir: src
       script: |
-        yes | pacman -S mongodb
+        pacman --noconfirm -Sy mongodb
   - command: subprocess.exec
     params:
       working_dir: src
