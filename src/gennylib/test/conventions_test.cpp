@@ -70,30 +70,30 @@ TEST_CASE("genny::TimeSpec conversions") {
     }
 }
 
-TEST_CASE("genny::UIntSpec conversions") {
-    SECTION("Can convert to genny::UIntSpec") {
-        REQUIRE(YAML::Load("Repeat: 300")["Repeat"].as<UIntSpec>().value == 300);
-        REQUIRE(YAML::Load("0").as<UIntSpec>().value == 0);
-        REQUIRE(YAML::Load("1e3").as<UIntSpec>().value == 1000);
-        REQUIRE(YAML::Load("10.3e2").as<UIntSpec>().value == 1030);
+TEST_CASE("genny::IntegerSpec conversions") {
+    SECTION("Can convert to genny::IntegerSpec") {
+        REQUIRE(YAML::Load("Repeat: 300")["Repeat"].as<IntegerSpec>().value == 300);
+        REQUIRE(YAML::Load("0").as<IntegerSpec>().value == 0);
+        REQUIRE(YAML::Load("1e3").as<IntegerSpec>().value == 1000);
+        REQUIRE(YAML::Load("10.3e2").as<IntegerSpec>().value == 1030);
     }
 
     SECTION("Barfs on invalid values") {
-        REQUIRE_THROWS(YAML::Load("-1").as<UIntSpec>());
-        REQUIRE_THROWS(YAML::Load("1e100000").as<UIntSpec>());
-        REQUIRE_THROWS(YAML::Load("1e-3").as<UIntSpec>());
-        REQUIRE_THROWS(YAML::Load("foo").as<UIntSpec>());
-        REQUIRE_THROWS(YAML::Load("").as<UIntSpec>());
-        REQUIRE_THROWS(YAML::Load("-e1").as<UIntSpec>());
-        REQUIRE_THROWS(YAML::Load("e").as<UIntSpec>());
-        REQUIRE_THROWS(YAML::Load("0.1").as<UIntSpec>());
-        REQUIRE_THROWS(YAML::Load("-100.33e-1").as<UIntSpec>());
+        REQUIRE_THROWS(YAML::Load("-1").as<IntegerSpec>());
+        REQUIRE_THROWS(YAML::Load("1e100000").as<IntegerSpec>());
+        REQUIRE_THROWS(YAML::Load("1e-3").as<IntegerSpec>());
+        REQUIRE_THROWS(YAML::Load("foo").as<IntegerSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<IntegerSpec>());
+        REQUIRE_THROWS(YAML::Load("-e1").as<IntegerSpec>());
+        REQUIRE_THROWS(YAML::Load("e").as<IntegerSpec>());
+        REQUIRE_THROWS(YAML::Load("0.1").as<IntegerSpec>());
+        REQUIRE_THROWS(YAML::Load("-100.33e-1").as<IntegerSpec>());
     }
 
     SECTION("Can encode") {
         YAML::Node n;
-        n["Repeat"] = UIntSpec{30};
-        REQUIRE(n["Repeat"].as<UIntSpec>().value == 30);
+        n["Repeat"] = IntegerSpec{30};
+        REQUIRE(n["Repeat"].as<IntegerSpec>().value == 30);
     }
 }
 

@@ -37,6 +37,7 @@
 #include <gennylib/v1/ConfigNode.hpp>
 #include <metrics/metrics.hpp>
 #include <value_generators/DefaultRandom.hpp>
+#include <gennylib/v1/GlobalRateLimiter.hpp>
 
 /**
  * @file context.hpp defines WorkloadContext, ActorContext, and PhaseContext.
@@ -175,6 +176,14 @@ public:
         ~ShareableState() = default;
     };
 
+    v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec) {
+        if (_rateLimiters.count(name) == 0) {
+            _rateLimiters.emplace(
+                std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
+        }
+        return _rateLimiters[name].get();
+    }
+
 private:
     friend class ActorContext;
 
@@ -203,6 +212,8 @@ private:
     // A flag representing the presence of application performance monitoring options used for
     // testing. This can be removed once TIG-1396 is resolved.
     bool _hasApmOpts;
+
+    std::unordered_map<std::string, std::unique_ptr<v1::GlobalRateLimiter>> _rateLimiters;
 };
 
 // For some reason need to decl this; see impl below
@@ -256,7 +267,7 @@ public:
     /**
      * @return top-level workload configuration
      */
-    WorkloadContext& workload() {
+    WorkloadContext& workload() const {
         return *this->_workload;
     }
 
@@ -441,7 +452,8 @@ class PhaseContext final : public V1::ConfigNode {
 
 public:
     PhaseContext(YAML::Node node, const ActorContext& actorContext)
-        : ConfigNode(std::move(node), std::addressof(actorContext)) {}
+        : ConfigNode(std::move(node), std::addressof(actorContext)),
+          _actor{std::addressof(actorContext)} {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -465,6 +477,10 @@ public:
         }
 
         return isNop;
+    }
+
+    WorkloadContext& workload() {
+        return _actor->workload();
     }
 
 private:

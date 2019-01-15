@@ -38,27 +38,22 @@ void decodeNodeInto(T& out, const YAML::Node& node, const S& fallback) {
 /**
  * Intermediate state for converting YAML syntax into a native integer type of your choice.
  *
- * size_t is used by default; smaller types can be explicitly converted to as needed.
+ * int64_t is used by default; smaller types can be explicitly converted to as needed.
  */
-struct UIntSpec {
-    UIntSpec() = default;
-    ~UIntSpec() = default;
+struct IntegerSpec {
+    IntegerSpec() = default;
+    ~IntegerSpec() = default;
 
-    explicit UIntSpec(size_t v) : value{v} {}
-    // size_t is used by default, you can explicitly cast to another type if needed.
-    size_t value;
+    explicit IntegerSpec(int64_t v) : value{v} {}
+    // int64_t is used by default, you can explicitly cast to another type if needed.
+    int64_t value;
 
-    // Explicitly cast to avoid narrowing.
-    explicit operator uint32_t() {
-        return static_cast<uint32_t>(value);
-    }
-
-    operator size_t() {  // NOLINT(google-explicit-constructor)
+    operator int64_t() {  // NOLINT(google-explicit-constructor)
         return value;
     }
 };
 
-inline bool operator==(const UIntSpec& lhs, const UIntSpec& rhs) {
+inline bool operator==(const IntegerSpec& lhs, const IntegerSpec& rhs) {
     return lhs.value == rhs.value;
 }
 
@@ -130,12 +125,12 @@ struct RateSpec {
     RateSpec() = default;
     ~RateSpec() = default;
 
-    RateSpec(TimeSpec t, UIntSpec i) : per{t.count()}, operations{i.value} {}
+    RateSpec(TimeSpec t, IntegerSpec i) : per{t.count()}, operations{i.value} {}
 
     // Allow construction with integers for testing.
-    RateSpec(int64_t t, size_t i) : per{t}, operations{i} {}
+    RateSpec(int64_t t, int64_t i) : per{t}, operations{i} {}
     std::chrono::nanoseconds per;
-    size_t operations;
+    int64_t operations;
 };
 
 inline bool operator==(const RateSpec& lhs, const RateSpec& rhs) {
@@ -182,7 +177,7 @@ struct convert<genny::RateSpec> {
         }
 
         auto opCountYaml = Load(strRepr.substr(0, spacePos));
-        auto opCount = opCountYaml.as<genny::UIntSpec>();
+        auto opCount = opCountYaml.as<genny::IntegerSpec>();
 
         auto timeUnitYaml = Load(strRepr.substr(spacePos + delimiter.size()));
         auto timeUnit = timeUnitYaml.as<genny::TimeSpec>();
@@ -199,12 +194,12 @@ struct convert<genny::RateSpec> {
  * The YAML syntax accepts regular and scientific notation decimal values.
  */
 template <>
-struct convert<genny::UIntSpec> {
-    static Node encode(const genny::UIntSpec& rhs) {
+struct convert<genny::IntegerSpec> {
+    static Node encode(const genny::IntegerSpec& rhs) {
         return Node{rhs.value};
     }
 
-    static bool decode(const Node& node, genny::UIntSpec& rhs) {
+    static bool decode(const Node& node, genny::IntegerSpec& rhs) {
         if (node.IsSequence() || node.IsMap()) {
             return false;
         }
@@ -217,20 +212,20 @@ struct convert<genny::UIntSpec> {
 
         if (pos != strRepr.length() || std::llround(num) != num) {
             std::stringstream msg;
-            msg << "Invalid value for genny::UIntSpec field: " << strRepr
+            msg << "Invalid value for genny::IntegerSpec field: " << strRepr
                 << " from config: " << strRepr;
             throw genny::InvalidConfigurationException(msg.str());
         }
 
         if (num < 0) {
             std::stringstream msg;
-            msg << "Value for genny::UIntSpec can't be negative: " << num
+            msg << "Value for genny::IntegerSpec can't be negative: " << num
                 << " from config: " << strRepr;
             ;
             throw genny::InvalidConfigurationException(msg.str());
         }
 
-        rhs = genny::UIntSpec(std::llround(num));
+        rhs = genny::IntegerSpec(std::llround(num));
 
         return true;
     }
@@ -269,7 +264,7 @@ struct convert<genny::TimeSpec> {
         }
 
         auto timeCountYaml = Load(strRepr.substr(0, spacePos));
-        auto timeCount = timeCountYaml.as<genny::UIntSpec>().value;
+        auto timeCount = timeCountYaml.as<genny::IntegerSpec>().value;
 
         auto timeUnit = strRepr.substr(spacePos + 1);
 
