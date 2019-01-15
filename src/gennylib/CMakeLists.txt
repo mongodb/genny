@@ -146,6 +146,7 @@ add_executable(test_gennylib_with_server
         # ActorsTestStart
         test/actors_test.cpp
         test/RunCommandActor_test.cpp
+        test/CrudActor_test.cpp
         # ActorsTestEnd
 )
 

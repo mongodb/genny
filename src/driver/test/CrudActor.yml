@@ -1,0 +1,17 @@
+SchemaVersion: 2018-07-01
+
+# TODO: delete this file or add a meaningful workload using or
+#       demonstrating your Actor
+
+Actors:
+- Name: CrudActor
+  Type: CrudActor
+  Threads: 100
+  Database: test
+  Phases:
+  - Phase: 0
+    Repeat: 10 # used by PhaesLoop
+    Retries: 7 # used by ExecutionStrategy
+    # below used by PhaseConfig in CrudActor.cpp
+    Collection: test
+    Document: {foo: {$randomint: {min: 0, max: 100}}}
