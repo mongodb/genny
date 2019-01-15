@@ -1,0 +1,67 @@
+SchemaVersion: 2018-07-01
+Pool:
+    QueryOptions:
+        maxPoolSize: 1000
+        socketTimeoutMS: 5000
+        connectTimeoutMS: 5000
+Actors:
+  - Name: StepdownCommand
+    Type: AdminCommand
+    Threads: 1
+    # So this *will* fail the first time because that's what replSetStepdown does.
+    # We don't know if the failure message is the right one
+    # or if the replset ends up in the correct state afterward
+    # See https://jira.mongodb.org/browse/TIG-1322 for what should eventually be here
+    ExecutionStrategy:
+        Retries: 0
+        ThrowOnFailure: false
+    Phases:
+      - # Phase: 0 # Load
+        Operation:
+            OperationName: Nop
+      - Phase: 1 # Run
+        Repeat: 1
+        Operation:
+            OperationMetricsName: "Stepdown"
+            OperationName: AdminCommand
+            OperationPreSleep: 5 seconds
+            OperationPostSleep: 5 seconds
+            OperationCommand:
+                replSetStepDown: 60
+  - Name: PrimaryRequiredRead
+    Type: RunCommand
+    Threads: 100
+    ExecutionStrategy:
+        Retries: 3
+    Database: test
+    Phases:
+      - # Phase: 0 # Load
+        Operation:
+            OperationName: Nop
+      - Phase: 1 # Run
+        # Since there is no way to say "repeat until all other phases finish",
+        # We actually specify here how long this should go
+        Duration: 10 seconds
+        Operation: &find_one
+            MetricsName: "Find"
+            OperationName: RunCommand
+            OperationMinPeriod: 100 microseconds
+            OperationCommand:
+                find: Collection0
+                readConcern: { level: local }
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Database: test
+    CollectionCount: 1
+    DocumentCount: 100
+    BatchSize: 100
+    Document:
+      t: {$randomint: {min: 0, max: 10}}
+    Indexes:
+      - keys: {t: 1}
+    Phases:
+      - Phase: 0 # Load
+      - # Phase: 1 # Run
+        Operation:
+            OperationName: Nop
