@@ -31,12 +31,12 @@
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
 #include <gennylib/Cast.hpp>
-#include <gennylib/ConfigNode.hpp>
 #include <gennylib/DefaultRandom.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/metrics.hpp>
+#include <gennylib/v1/ConfigNode.hpp>
 
 /**
  * @file context.hpp defines WorkloadContext, ActorContext, and PhaseContext.

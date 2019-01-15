@@ -17,9 +17,9 @@
 
 #include <boost/exception/diagnostic_information.hpp>
 
-#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
 #include <cast_core/actors/RunCommand.hpp>
@@ -93,9 +93,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
-TEST_CASE_METHOD(MongoTestFixture,
-                 "InsertActor respects writeConcern.",
-                 "[three_node_replset]") {
+TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three_node_replset]") {
 
     auto makeConfig = []() {
         return YAML::Load(R"(
@@ -147,17 +145,20 @@ TEST_CASE_METHOD(MongoTestFixture,
 
         auto coll = MongoTestFixture::client["test"]["testCollection"];
 
-        mongocxx::options::find opts = makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
+        mongocxx::options::find opts =
+            makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
 
-        auto result = static_cast<bool>(coll.find_one(session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts));
+        auto result = static_cast<bool>(coll.find_one(
+            session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts));
 
         REQUIRE(result);
     }
 
 
-    // TODO: Once better repl support comes in, pause replication for this test case. With replication paused, we want to 
-    // test that reads to secondaries will fail on primary write concerns. Without the paused replication, the test currently
-    // is a bit flaky. Refer to jstests/libs/write_concern_util.js in the main mongo repo for pausing replication.
+    // TODO: Once better repl support comes in, pause replication for this test case. With
+    // replication paused, we want to test that reads to secondaries will fail on primary write
+    // concerns. Without the paused replication, the test currently is a bit flaky. Refer to
+    // jstests/libs/write_concern_util.js in the main mongo repo for pausing replication.
     //
     // SECTION("verify write concern to primary only") {
     //     constexpr auto dbStr = "test";
@@ -178,13 +179,17 @@ TEST_CASE_METHOD(MongoTestFixture,
     //     auto session = MongoTestFixture::client.start_session();
     //     auto coll = MongoTestFixture::client["test"]["testOtherCollection"];
     //
-    //     mongocxx::options::find opts_primary = makeFindOp(mongocxx::read_preference::read_mode::k_primary, readTimeout);
-    //     mongocxx::options::find opts_secondary = makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
+    //     mongocxx::options::find opts_primary =
+    //     makeFindOp(mongocxx::read_preference::read_mode::k_primary, readTimeout);
+    //     mongocxx::options::find opts_secondary =
+    //     makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
     //
-    //     bool result_secondary = (bool) coll.find_one(session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts_secondary);
+    //     bool result_secondary = (bool) coll.find_one(session,
+    //     BasicBson::make_document(BasicBson::kvp("name", "myName")), opts_secondary);
     //     REQUIRE(!result_secondary);
     //
-    //     bool result_primary = (bool) coll.find_one(session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts_primary);
+    //     bool result_primary = (bool) coll.find_one(session,
+    //     BasicBson::make_document(BasicBson::kvp("name", "myName")), opts_primary);
     //     REQUIRE(result_primary);
     // }
 }

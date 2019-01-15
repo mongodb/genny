@@ -50,4 +50,3 @@ void RateLimiterSimple::_scheduleNext() {
 }
 
 }  // namespace genny::v1
-
