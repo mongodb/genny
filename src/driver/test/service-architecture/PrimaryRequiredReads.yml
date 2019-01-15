@@ -47,6 +47,7 @@ Actors:
             OperationCommand:
                 find: Collection0
                 readConcern: { level: local }
+                readPreference: primary
   - Name: Loader
     Type: Loader
     Threads: 1
