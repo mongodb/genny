@@ -6,12 +6,13 @@ Pool:
         connectTimeoutMS: 5000
 Actors:
   - Name: StepdownCommand
+    # See https://jira.mongodb.org/browse/TIG-1322 for what Type this should be eventually
     Type: AdminCommand
     Threads: 1
-    # So this *will* fail the first time because that's what replSetStepdown does.
-    # We don't know if the failure message is the right one
-    # or if the replset ends up in the correct state afterward
-    # See https://jira.mongodb.org/browse/TIG-1322 for what should eventually be here
+    # This ExecutionStrategy block says to try once and catch any exception thrown.
+    # There should be an exception because the replSetStepDown command either returns failure
+    # or disconnects its client session. That said, any other failure we did not expect would still
+    # be caught.
     ExecutionStrategy:
         Retries: 0
         ThrowOnFailure: false
@@ -39,9 +40,6 @@ Actors:
         Operation:
             OperationName: Nop
       - Phase: 1 # Run
-        # Since there is no way to say "repeat until all other phases finish",
-        # We actually specify here how long this should go
-        Duration: 10 seconds
         Operation: &find_one
             MetricsName: "Find"
             OperationName: RunCommand
