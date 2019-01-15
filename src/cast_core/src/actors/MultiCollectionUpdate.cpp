@@ -92,7 +92,7 @@ MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
       _rng{context.workload().createRNG()},
       _updateTimer{context.timer("updateTime", MultiCollectionUpdate::id())},
       _updateCount{context.counter("updatedDocuments", MultiCollectionUpdate::id())},
-      _client{context.client()},
+      _client{std::move(context.client())},
       _loop{context, _rng, _client} {}
 
 namespace {

@@ -49,6 +49,7 @@ public:
         std::string description;
         bool isHelp = false;
         bool shouldListActors = false;
+        bool isDryRun = false;
     };
 
 

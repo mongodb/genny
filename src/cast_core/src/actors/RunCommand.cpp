@@ -171,7 +171,7 @@ void actor::RunCommand::run() {
 actor::RunCommand::RunCommand(ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _client{context.client()},
+      _client{std::move(context.client())},
       _loop{context, context, _rng, _client, RunCommand::id()} {}
 
 namespace {

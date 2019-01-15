@@ -8,6 +8,9 @@
 
 SchemaVersion: 2018-07-01
 
+Pool:
+  QueryOptions:
+    maxPoolSize: 1000
 Actors:
   - Name: Loader
     Type: Loader

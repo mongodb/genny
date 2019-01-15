@@ -6,7 +6,7 @@ Actors:
     Threads: 2
     Phases:
     - Message: Hello Phase 0 🐳
-      Duration: 50
+      Duration: 50 milliseconds
     - Message: Hello Phase 1 👬
       Repeat: 100
   - Name: InsertTest

@@ -126,6 +126,7 @@ tasks:
         install_dir: dist
         short_name: grpc
   - func: f_compile
+  - func: f_dry_run_workloads
   - func: f_push_revision
     vars:
         display_name: Genny
@@ -340,6 +341,21 @@ functions:
           MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
           CMAKE: "${cmake|cmake}"
           PATH: "${toolchain}:/usr/bin:/bin"
+
+  ##
+  # Runs each workload as a dry run
+  # Requires f_compile to have been run first.
+  ##
+  f_dry_run_workloads:
+  - command: subprocess.exec
+    params:
+      working_dir: .
+      binary: /bin/bash
+      args:
+        - "${workdir}/src/scripts/dry-run-workloads.sh"
+        - "${workdir}/dist/etc/genny/workloads"
+      env:
+        GENNY: "${workdir}/dist/bin/genny"
 
   ##
   # Runs tests via ctest.
