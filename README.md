@@ -6,126 +6,46 @@ C++17.
 
 ## Build and install
 
-### macOS
+1. Install the development tools for your OS.
 
-1. [Download XCode 10](https://developer.apple.com/download/) (around 10GB) and install.
-2. Drag `Xcode.app` into `Applications`. For some reason the installer may put it in `~/Downloads`.
-3. Run the below shell (requires [`brew`](https://brew.sh/))
+    - Ubuntu 16.04+: `sudo apt install build-essential`
+    - Red Hat/CentOS 7+: `sudo yum groupinstall "Development Tools"`
+    - Arch: Grab a beer. Everything should already be set up.
+    - macOS: `xcode-select --install`
+    - Windows: https://visualstudio.microsoft.com/
 
-```sh
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+1. Download the MongoDB toolchain from [its Evergreen project](https://evergreen.mongodb.com/waterfall/toolchain-builder?task_filter=compile)
+by clicking on the left-most green box corresponding to your OS and finding 
+the link for `mongodbtoolchain.tar.gz`. This page is internal to MongoDB at the
+moment. If you're unable to access it, you can just manually install any 
+C++17 compatible compiler and skip this step.
 
-# install third-party packages and build-tools
-brew install cmake
-brew install icu4c
-brew install mongo-cxx-driver
-brew install openssl@1.1
-brew install boost      \
-    --build-from-source \
-    --include-test      \
-    --with-icu4c
+1. Extract the MongoDB toolchain to "opt" if you have one: `[sudo] tar xvf mongodbtoolchain.tar.gz -C /opt/`
 
-# may want to put this in your shell profile:
-OPENSSL_ROOT_DIR="$(brew --prefix openssl@1.1)"
+1. Fetch the latest genny toolchain, which is a [fork of Microsoft vcpkg](https://github.com/10gen/vcpkg)::
+    - Ubuntu 17.10: [US east](https://s3.amazonaws.com/genny/toolchain/genny-vcpkg-prebuilt-ubuntu-17.10.tar.gz),
+    [Sydney](https://s3-ap-southeast-2.amazonaws.com/genny-sydney/toolchain/genny-vcpkg-prebuilt-ubuntu-17.10.tar.gz)
+    - TODO move this to its evergreen project
+    
+1. Extract the toolchain: `tar xvf genny-vcpkg-prebuilt-ubuntu-17.10.tar.gz`
 
-cmake -E chdir "build" cmake ..
-make -j8 -C "build" genny
+1. `cd` into the toolchain directory `vcpkg` and run the toolchain integration script:
+`./vcpkg integrate install`. This creates `.vcpkg` in your home directory. You can undo
+the integration with `./vcpkg integrate remove` if needed.
+
+1. `cd` into the this repo. Then:
+```shell
+CMAKE_PREFIX_PATH=/home/ubuntu/vcpkg/installed/x64-linux-shared \
+/home/ubuntu/vcpkg/downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin/cmake \
+-DCMAKE_TOOLCHAIN_FILE=/home/ubuntu/vcpkg/scripts/buildsystems/vcpkg.cmake 
+-B build .
 ```
+Replace `/home/ubuntu/vcpkg` with the path to your downloaded vcpkg if different.
+You can also use your existing `cmake` instead of the one bundled with vcpkg if
+you have the same or a newer version.
 
-If you get boost errors:
-
-```sh
-brew remove boost
-brew install boost      \
-    --build-from-source \
-    --include-test      \
-    --with-icu4c
-```
-
-Other errors, run `brew doctor`.
-
-#### Notes for macOS Mojave
-
-Mojave doesn't have `/usr/local` on system roots, so you need to set
-environment variables for clang/ldd to find libraries provided by
-homebrew.
-
-Put the following in your shell profile (`~/.bashrc` or `~/.zshrc` etc):
-
-```sh
-export CPLUS_INCLUDE_PATH="$(brew --prefix)/include"
-export LIBRARY_PATH="$(brew --prefix)/lib/:$LIBRARY_PATH"
-```
-
-This needs to be run before you run `cmake`. If you have already run
-`cmake`, then `rm -rf build/*` after putting this in your profile
-and restarting your shell.
-
-TODO: TIG-1263 This is kind of a hack; using built-in package-location
-mechanisms would avoid having to have OS-specific hacks like this.
-
-### Linux Distributions
-
-Have recent versions of non-vendored dependent packages in your system,
-using the package manger. Generally this is:
-
-- boost
-- cmake (>=3.10)
-- grpc (>=1.16)
-- icu
-- mongo-cxx-driver
-- protobuf (3.6.1)
-
-To build genny use the following commands:
-
-```sh
-cmake -E chdir "build" cmake ..
-make -j8 -C "build" genny
-```
-
-You only need to run cmake once. Other useful targets include:
-
-- all
-- test_gennylib test_driver (builds tests)
-- test (run's tests if they're built)
-
-#### Ubuntu 18.04 LTS
-
-For C++17 support you need at least Ubuntu 18.04. (Before you say
-"mongodbtoolchain", note that it doesn't provide cmake.)
-
-```sh
-apt install -y \
-    build-essential \
-    cmake \
-    software-properties-common \
-    clang-6.0 \ # optional
-    libboost-all-dev
-```
-You also need `libgrpc++-dev` and `libprotobuf-dev`, but here genny is more picky about the
-versions. They need to be >=1.16 and exactly 3.6.1 respectively. To install those from source:
-
-- protobuf: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md
-- grpc: https://github.com/grpc/grpc/blob/master/src/cpp/README.md
-
-If you already installed the wrong versions with apt, you are better off
-uninstalling them:
-
-```sh
-apt remove libgrpc++-dev libprotobuf-dev
-```
-
-Finally, install mongo C++ driver from source too:
-
-- https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
-- Note that you need to specifically tell it to install into `/usr/local`!
-
-Note that on Ubuntu 18.04 you need a custom linker option:
-
-```sh
-cmake -E chdir "build" cmake -DCMAKE_EXE_LINKER_FLAGS=-Wl,--no-as-needed ..
-make -j8 -C "build" genny
-```
+TODO: remove the need for CMAKE_PREFIX_PATH. It's temporarily needed to link the shared
+mongo c++ driver library.
 
 ### IDEs and Whatnot
 
