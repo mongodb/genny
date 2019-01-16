@@ -35,20 +35,56 @@
 
 namespace {
 
-void runStepdown(mongocxx::database& database, bsoncxx::document::view& view) {
+/**
+ * @private
+ * @param command passed to run_command()
+ * @return if the command requires waiting for a stepdown/election to complete before continuing.s
+ */
+bool requiresWaitForStepdown(bsoncxx::document::view& command) {
+    return command.find("replSetStepDown") != command.end();
+}
+
+/**
+ * @private
+ * @param exception exception received from mongocxx::database::run_command()
+ * @return if the exception is a result of a connection error or timeout
+ */
+bool isTimeout(mongocxx::operation_exception& exception) {
+    auto what = std::string{exception.what()};
+    return what.find("socket error or timeout") != std::string::npos;
+}
+
+/**
+ * @private
+ * BSON document that when given to run_command requires any rs elections
+ * to be complet.
+ */
+static auto commandRequiringElectionCompleted = []() -> bsoncxx::document::value {
+    auto builder = bsoncxx::builder::stream::document{};
+    // `{ "dbStats": 1 }`
+    auto request = builder << "dbStats" << 1 << bsoncxx::builder::stream::finalize;
+    return request;
+}();
+
+/**
+ * Runs the given command, expects a timeout, and then awaits all replset
+ * elections to complete.
+ *
+ * @private
+ * @param database database on which to run `run_command()`.
+ * @param command the command to run
+ */
+void runThenAwaitElections(mongocxx::database& database, bsoncxx::document::view& command) {
     try {
-        bsoncxx::document::value val = database.run_command(view);
-    } catch (mongocxx::operation_exception& x) {
-        auto what = std::string{x.what()};
-        if (what.find("socket error or timeout") == std::string::npos) {
+        database.run_command(command);
+        throw std::logic_error("Stepdown should throw operation exception");
+    } catch (mongocxx::operation_exception& exception) {
+        if (!isTimeout(exception)) {
             throw;
         }
-        auto builder = bsoncxx::builder::stream::document{};
-        auto request = builder << "dbStats" << 1 << bsoncxx::builder::stream::finalize;
         try {
-            auto stats = database.run_command(request.view());
-        } catch (mongocxx::operation_exception& x2) {
-            BOOST_LOG_TRIVIAL(error) << "Couldn't run stats " << x2.what();
+            auto stats = database.run_command(commandRequiringElectionCompleted.view());
+        } catch (mongocxx::operation_exception& statsException) {
             throw;
         }
     }
@@ -108,8 +144,8 @@ private:
 
         try {
             // a bit of a hack
-            if (view.find("replSetStepDown") != view.end()) {
-                runStepdown(_database, view);
+            if (requiresWaitForStepdown(view)) {
+                runThenAwaitElections(_database, view);
             } else {
                 _database.run_command(view);
             }

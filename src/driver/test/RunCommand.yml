@@ -34,3 +34,13 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         currentOp: 1
+- Name: Stepdown
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+    - Repeat: 1
+      Operations:
+        - OperationMetricsName: Stepdown
+          OperationName: RunCommand
+          OperationCommand:
+            replSetStepDown: 60
