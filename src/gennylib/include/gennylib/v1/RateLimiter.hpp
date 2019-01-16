@@ -80,9 +80,9 @@ public:
      * Run the given function with certain timing guarantees
      * @param fun An Callable object to invoke
      */
-    template<typename F>
-    void run(F&& fun){
-        // Wait until we have surpassed our minimum period 
+    template <typename F>
+    void run(F&& fun) {
+        // Wait until we have surpassed our minimum period
         waitUntilNext();
 
         // Wait for a specified amount of time before
@@ -108,15 +108,15 @@ public:
     /**
      * Return a constant refence to the options for this limiter
      */
-    virtual const Options & options() const = 0;
+    virtual const Options& options() const = 0;
 
     /**
      * Return a constant refence to the current rate limit state
      */
-    virtual const State & state() const = 0;
+    virtual const State& state() const = 0;
 
 protected:
-    RateLimiter(){}
+    RateLimiter() {}
 };
 
 /**
@@ -142,11 +142,11 @@ public:
     void start() override;
     void stop() override;
 
-    const Options & options() const override {
+    const Options& options() const override {
         return _options;
     }
 
-    const State & state() const override {
+    const State& state() const override {
         return *_state;
     }
 

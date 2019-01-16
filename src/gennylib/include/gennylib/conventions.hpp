@@ -67,11 +67,11 @@ inline bool operator==(const UIntSpec& lhs, const UIntSpec& rhs) {
  * choice.
  */
 struct TimeSpec {
-public: // Typedefs/Structs
+public:  // Typedefs/Structs
     // Use the highest precision internally.
     using ValueT = std::chrono::nanoseconds;
 
-public: // Ctors/Dtors/Generators
+public:  // Ctors/Dtors/Generators
     ~TimeSpec() = default;
 
     explicit constexpr TimeSpec(ValueT v) : value{v} {}
@@ -82,10 +82,10 @@ public: // Ctors/Dtors/Generators
     // Default construct as a zero value
     constexpr TimeSpec() : TimeSpec(ValueT::zero()) {}
 
-public: // Members
+public:  // Members
     ValueT value;
 
-public: // Operators
+public:  // Operators
     constexpr operator ValueT() const {
         return value;
     }

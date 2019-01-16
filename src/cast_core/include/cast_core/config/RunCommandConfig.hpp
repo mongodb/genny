@@ -17,8 +17,8 @@
 
 #include <string>
 
-#include <gennylib/conventions.hpp>
 #include <gennylib/config/RateLimiterOptions.hpp>
+#include <gennylib/conventions.hpp>
 
 namespace genny::config {
 

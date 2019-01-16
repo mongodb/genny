@@ -127,7 +127,7 @@ tasks:
         short_name: grpc
   - func: f_compile
   - func: f_dry_run_workloads
-  - func: f_push_revision
+  - func: f_push_patch
     vars:
         display_name: Genny
         short_name: genny
@@ -241,7 +241,7 @@ functions:
   #  short_name: The name for the folder and prefix for the tarball to push
   #  display_name: The name to show in evergreen
   ###
-  f_push_revision:
+  f_push_patch:
   - command: archive.targz_pack
     params:
       source_dir: ${install_dir|dist}
@@ -260,11 +260,11 @@ functions:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
       local_file: ${short_name}.tgz
-      remote_file: ${project}/${short_name}/${short_name}-${build_variant}-patch_${build_id}.tgz
+      remote_file: ${project}/patches/${build_id}/${short_name}.tgz
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
-      display_name: "${display_name} - Patch ${build_id}"
+      display_name: "${display_name} Patch"
 
   ##
   # Copy the library tarball for a given revision to the official path
@@ -274,32 +274,35 @@ functions:
   #  display_name: The name to show in evergreen
   ###
   f_push_official:
-  - command: s3Copy.copy
+  - command: s3.get
     params:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
+      local_file: ${short_name}.tgz
+      remote_file: ${project}/patches/${build_id}/${short_name}.tgz
       bucket: mciuploads
-      s3_copy_files:
-        - source:
-            path: ${project}/${short_name}/${short_name}-${build_variant}-patch_${build_id}.tgz
-            bucket: mciuploads
-          destination:
-            path: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
-            bucket: mciuploads
-          display_name: "${display_name} - ${revision}"
-  - command: s3Copy.copy
+      permissions: public-read
+      content_type: ${content_type|application/gzip}
+  - command: s3.put
     params:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
+      local_file: ${short_name}.tgz
+      remote_file: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
       bucket: mciuploads
-      s3_copy_files:
-        - source:
-            path: ${project}/${short_name}/${short_name}-${build_variant}-patch_${build_id}.tgz
-            bucket: mciuploads
-          destination:
-            path: ${project}/${short_name}/${short_name}-${build_variant}.tgz
-            bucket: mciuploads
-          display_name: ${display_name}
+      permissions: public-read
+      content_type: ${content_type|application/gzip}
+      display_name: "${display_name} - ${revision}"
+  - command: s3.put
+    params:
+      aws_key: ${aws_key}
+      aws_secret: ${aws_secret}
+      local_file: ${short_name}.tgz
+      remote_file: ${project}/${short_name}/${short_name}-${build_variant}.tgz
+      bucket: mciuploads
+      permissions: public-read
+      content_type: ${content_type|application/gzip}
+      display_name: "${display_name}"
 
   ##
   # Download one of genny's dependencies as a tarball and expand it

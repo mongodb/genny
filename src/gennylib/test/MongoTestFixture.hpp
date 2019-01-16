@@ -33,7 +33,6 @@ private:
 
 protected:
     mongocxx::client client;
-
 };
 }  // namespace genny::testing
 
