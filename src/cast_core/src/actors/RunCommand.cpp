@@ -59,7 +59,7 @@ bool isTimeout(mongocxx::operation_exception& exception) {
  * BSON document that when given to run_command requires any rs elections
  * to be complet.
  */
-static auto commandRequiringElectionCompleted = []() -> bsoncxx::document::value {
+bsoncxx::document::value commandRequiringElectionCompleted = []() {
     auto builder = bsoncxx::builder::stream::document{};
     // `{ "dbStats": 1 }`
     auto request = builder << "dbStats" << 1 << bsoncxx::builder::stream::finalize;
