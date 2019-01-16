@@ -496,7 +496,7 @@ Actors:
 
                 REQUIRE_THROWS_WITH(
                     ([&]() { actorContext.get_noinherit<std::string, true>("Database"); })(),
-                    Matches(R"(Invalid key \[Database\] at path(.*\n*)*))"));
+                    Matches(R"(Invalid key \[Database\] at path(.*\n*)*)"));
 
                 REQUIRE(actorContext.get<std::string>("Database") == "test");
             } else if (actorName == "Actor2") {
@@ -527,7 +527,7 @@ Actors:
                             ([&]() {
                                 rawConfig->get_noinherit<std::string, true>("Collection");
                             })(),
-                            Matches(R"(Invalid key \[Collection\] at path(.*\n*)*))"));
+                            Matches(R"(Invalid key \[Collection\] at path(.*\n*)*)"));
 
                         REQUIRE(config->get<std::string>("Collection") == "mycoll");
                     } else if (phase == 1) {
@@ -555,7 +555,7 @@ Actors:
                         const auto* rawConfig = config.get();
                         REQUIRE_THROWS_WITH(
                             ([&]() { rawConfig->get_noinherit<std::string, true>("Database"); })(),
-                            Matches(R"(Invalid key \[Database\] at path(.*\n*)*))"));
+                            Matches(R"(Invalid key \[Database\] at path(.*\n*)*)"));
 
                         REQUIRE(config->get<std::string>("Database") == "test");
                     } else if (phase == 1) {
@@ -598,12 +598,12 @@ Actors:
                     actorContext.get_noinherit<std::map<std::string, std::string>, true>(
                         "MiscField");
                 })(),
-                Matches(R"(Bad conversion of \[c\] to(.*\n*)*))"));
+                Matches(R"(Bad conversion of \[c\] to(.*\n*)*)"));
             REQUIRE_THROWS_WITH(([&]() {
                                     actorContext.get<std::map<std::string, std::string>, true>(
                                         "MiscField");
                                 })(),
-                                Matches(R"(Bad conversion of \[c\] to(.*\n*)*))"));
+                                Matches(R"(Bad conversion of \[c\] to(.*\n*)*)"));
 
             for (auto&& [phase, config] : actorContext.phases()) {
                 REQUIRE(phase == 0);
@@ -618,17 +618,17 @@ Actors:
                         rawConfig->get_noinherit<std::map<std::string, std::string>, true>(
                             "MiscField");
                     })(),
-                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*))"));
+                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*)"));
                 REQUIRE_THROWS_WITH(([&]() {
                                         rawConfig->get<std::map<std::string, std::string>, true>(
                                             "MiscField");
                                     })(),
-                                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*))"));
+                                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*)"));
                 REQUIRE_THROWS_WITH(
                     ([&]() { rawConfig->get_noinherit<std::string, true>("MiscField"); })(),
-                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*))"));
+                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*)"));
                 REQUIRE_THROWS_WITH(([&]() { rawConfig->get<std::string, true>("MiscField"); })(),
-                                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*))"));
+                                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*)"));
             }
         });
     }
