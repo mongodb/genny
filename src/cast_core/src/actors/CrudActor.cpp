@@ -18,74 +18,135 @@
 #include <gennylib/MongoException.hpp>
 #include <gennylib/value_generators.hpp>
 
-namespace {
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
-
-using OpCallback = std::function<void(CrudActor::Operation&)>;
-
-enum class StageType {
-    Bucket,
-};
-
-std::unordered_map<std::string, StageType> stringToStageType = {{"bucket", StageType::Bucket}};
-
-mongocxx::pipeline& addStage(mongocxx::pipeline& p, const YAML::Node& stage) {
-    auto stageCommand = stage["StageCommand"];
-    auto stageName = stage["StageName"].as<std::string>();
-    auto stageType = stringToStageType.find(stageName);
-    if (stageType == stringToStageType.end()) {
-        throw genny::InvalidConfigurationException("Stage '" + stageName +
-                                                   "' is not supported in Crud Actor.");
-    }
-
-    switch (stageType->second) {
-        case StageType::Bucket:
-            break;
-    }
-}
-
-OpCallback aggregate = [](CrudActor::Operation& op) {
-    mongocxx::pipeline p{};
-    auto stages = op.opCommand["Stages"];
-    if (!stages.IsSequence()) {
-        throw genny::InvalidConfigurationException(
-            "'Aggregate' requires a 'Stages' node of sequence type.");
-    }
-    for (auto&& stage : stages) {
-    }
-    auto onSession = op.opCommand["Session"];
-};
-
-std::unordered_map<std::string, OpCallback&> ops = {{"aggregate", aggregate}};
-}  // namespace
+using DocGenerator = genny::value_generators::DocumentGenerator;
+using OpCallback = std::function<void(CrudActor::Operation&, const mongocxx::client_session&)>;
 
 namespace genny::actor {
-CrudActor::Operation::Operation(CrudActor::Operation::Fixture fixture,
-                                const YAML::Node& opCommand,
-                                Options opts)
-    : _database{fixture.database}, _options{opts}, callback{fixture.op}, opCommand{opCommand} {}
 
-void CrudActor::Operation::run(const mongocxx::client_session& session) {
-    callback(*this);
-}
+class CrudActor::Operation {
+
+public:
+    struct Fixture {
+        PhaseContext& phaseContext;
+        mongocxx::collection collection;
+        bool onSession;
+        YAML::Node opCommand;
+    };
+
+    using Options = config::RunCommandConfig::Operation;
+    mongocxx::collection collection;
+    const OpCallback& runOp;
+    bool onSession;
+    Fixture fixture;
+    std::vector<std::pair<std::string, std::unique_ptr<DocGenerator>>> commandDocs;
+    YAML::Node opCommand;
+
+public:
+    Operation(Fixture fixture,
+              OpCallback& op,
+              std::vector<std::pair<std::string, std::unique_ptr<DocGenerator>>> docTemplates,
+              Options opts)
+        : fixture{std::move(fixture)},
+          collection{fixture.collection},
+          _options{opts},
+          runOp{op},
+          onSession{fixture.onSession},
+          opCommand{fixture.opCommand},
+          commandDocs{std::move(docTemplates)} {}
+
+    void run(const mongocxx::client_session& session) {
+        runOp(*this, session);
+    }
+
+private:
+    mongocxx::database _database;
+    std::unique_ptr<DocGenerator> _doc;
+    Options _options;
+    std::optional<metrics::Timer> _timer;
+};
+
+namespace {
+enum class StageType {
+    Bucket,
+    Count,
+};
+
+std::unordered_map<std::string, StageType> stringToStageType = {{"bucket", StageType::Bucket},
+                                                                {"count", StageType::Count}};
+
+OpCallback aggregate = [](CrudActor::Operation& op, const mongocxx::client_session& session) {
+    mongocxx::pipeline p{};
+    for (auto&& commandDocPair : op.commandDocs) {
+        auto stageCommand = commandDocPair.first;
+        auto stageType = stringToStageType.find(stageCommand);
+        bsoncxx::builder::stream::document document{};
+        auto view = commandDocPair.second->view(document);
+        if (stageType == stringToStageType.end()) {
+            throw InvalidConfigurationException("Aggregation stage '" + stageCommand +
+                                                "' is not supported in Crud Actor.");
+        }
+        switch (stageType->second) {
+            case StageType::Bucket:
+                p.bucket(view);
+                break;
+            case StageType::Count:
+                auto field = view["field"].get_utf8().value;
+                auto fieldNamestring = std::string(field);
+                p.count(fieldNamestring);
+                break;
+        }
+    }
+    auto cursor = (op.onSession) ? op.collection.aggregate(p) : op.collection.aggregate(p);
+    // TODO: exhaust cursor
+};
+
+OpCallback bulkWrite = [](CrudActor::Operation& op, const mongocxx::client_session& session) {
+    auto bulk = op.collection.create_bulk_write();
+    for (auto&& commandDocPair : op.commandDocs) {
+        auto writeCommand = commandDocPair.first;
+        if (writeCommand == "insertOne") {
+            bsoncxx::builder::stream::document document{};
+            auto view = commandDocPair.second->view(document);
+            mongocxx::model::insert_one insert_op{view};
+            bulk.append(insert_op);
+        } else if (writeCommand == "updateOne") {
+            // append 'updateOne' model to bulk
+        } else if (writeCommand == "updateMany") {
+            // append 'updateMany' model to bulk
+        } else if (writeCommand == "deleteOne") {
+            // append 'deleteOne' model to bulk
+        } else if (writeCommand == "deleteMany") {
+            // append 'deleteMany' model to bulk
+        } else if (writeCommand == "replaceOne") {
+            // append 'replaceOne' model to bulk
+        }
+    }
+
+    auto result = bulk.execute();
+    if (!result) {
+        throw InvalidConfigurationException("bulk write failed!");
+    }
+};
+
+std::unordered_map<std::string, OpCallback&> ops = {{"aggregate", aggregate},
+                                                    {"bulk_write", bulkWrite}};
+auto registerCrudActor = Cast::registerDefault<CrudActor>();
+}  // namespace
 
 struct CrudActor::PhaseConfig {
     mongocxx::collection collection;
-    std::unique_ptr<value_generators::DocumentGenerator> docGen;
     ExecutionStrategy::RunOptions options;
     std::vector<std::unique_ptr<Operation>> operations;
 
     PhaseConfig(PhaseContext& phaseContext, genny::DefaultRandom& rng, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          docGen{value_generators::makeDoc(phaseContext.get("Document"), rng)},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
 
         auto addOperation = [&](YAML::Node node) {
             auto yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].as<std::string>();
-            auto doc = value_generators::makeDoc(yamlCommand, rng);
-
             auto options = node.as<Operation::Options>(Operation::Options{});
 
             auto op = ops.find(opName);
@@ -95,12 +156,43 @@ struct CrudActor::PhaseConfig {
                                                     "' not supported in Crud Actor.");
             }
 
-            auto fixture = Operation::Fixture{
-                phaseContext,
-                db,
-                op->second,
-            };
-            operations.push_back(std::make_unique<Operation>(fixture, yamlCommand, options));
+            std::vector<std::pair<std::string, std::unique_ptr<DocGenerator>>> docs;
+            if (opName == "aggregate") {
+                auto stages = yamlCommand["Stages"];
+                if (!stages.IsSequence()) {
+                    throw InvalidConfigurationException(
+                        "'Aggregate' requires a 'Stages' node of sequence type.");
+                }
+                for (auto&& stage : stages) {
+                    auto commandDoc = stage["Document"];
+                    auto stageCommand = stage["StageCommand"].as<std::string>();
+                    auto stageType = stringToStageType.find(stageCommand);
+                    if (stageType == stringToStageType.end()) {
+                        throw InvalidConfigurationException("Stage '" + stageCommand +
+                                                            "' is not supported in Crud Actor.");
+                    }
+                    auto doc = value_generators::makeDoc(commandDoc, rng);
+                    docs.push_back({stageCommand, std::move(doc)});
+                }
+            } else if (opName == "bulk_write") {
+                auto writeOps = yamlCommand["WriteOperations"];
+                if (!writeOps.IsSequence()) {
+                    throw InvalidConfigurationException(
+                        "'Bulk_Write' requires a 'WriteOperations' node of sequence type.");
+                }
+                for (auto&& writeOp : writeOps) {
+                    auto commandDoc = writeOp["Document"];
+                    auto writeCommand = writeOp["WriteCommand"].as<std::string>();
+                    auto doc = value_generators::makeDoc(commandDoc, rng);
+                    docs.push_back({writeCommand, std::move(doc)});
+                }
+            } else {
+                // For simpler cases like 'insert_one' where docs is a vector of pairs of size one.
+            }
+            auto onSession = yamlCommand["Session"] && yamlCommand["Session"].as<bool>();
+            auto fixture = Operation::Fixture{phaseContext, collection, onSession, yamlCommand};
+            operations.push_back(std::make_unique<Operation>(
+                std::move(fixture), op->second, std::move(docs), options));
         };
 
         auto operationList = phaseContext.get<YAML::Node, false>("Operations");
@@ -126,18 +218,14 @@ struct CrudActor::PhaseConfig {
 void CrudActor::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            try {
-                auto session = _client->start_session();
-                _strategy.run(
-                    [&]() {
-                        for (auto&& op : config->operations) {
-                            op->run(session);
-                        }
-                    },
-                    config->options);
-            } catch (mongocxx::operation_exception& e) {
-                // throw exception here.
-            }
+            auto session = _client->start_session();
+            _strategy.run(
+                [&]() {
+                    for (auto&& op : config->operations) {
+                        op->run(session);
+                    }
+                },
+                config->options);
         }
 
         _strategy.recordMetrics();
@@ -150,10 +238,4 @@ CrudActor::CrudActor(genny::ActorContext& context)
       _strategy{context, CrudActor::id(), "crud"},
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
-
-namespace {
-
-
-auto registerCrudActor = Cast::registerDefault<CrudActor>();
-}  // namespace
 }  // namespace genny::actor

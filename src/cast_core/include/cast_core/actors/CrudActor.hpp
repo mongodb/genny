@@ -21,31 +21,9 @@ namespace genny::actor {
  * TODO: document me
  */
 class CrudActor : public Actor {
+
 public:
-    class Operation {
-
-    public:
-        using OpCallback = std::function<void(CrudActor::Operation&)>;
-        using Options = config::RunCommandConfig::Operation;
-        struct Fixture {
-            PhaseContext& phaseContext;
-            mongocxx::database database;
-            OpCallback& op;
-        };
-
-        OpCallback& callback;
-        const YAML::Node& opCommand;
-
-    public:
-        Operation(Fixture fixture, const YAML::Node& opCommand, Options opts);
-        void run(const mongocxx::client_session& session);
-
-    private:
-        mongocxx::database _database;
-        std::unique_ptr<value_generators::DocumentGenerator> _doc;
-        Options _options;
-        std::optional<metrics::Timer> _timer;
-    };
+    class Operation;
 
 public:
     explicit CrudActor(ActorContext& context);
