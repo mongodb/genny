@@ -131,7 +131,7 @@ Loader::Loader(genny::ActorContext& context, uint thread)
       _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Loader::id())},
       _individualBulkLoadTimer{context.timer("individualBulkInsertTime", Loader::id())},
       _indexBuildTimer{context.timer("indexBuildTime", Loader::id())},
-      _client{context.client()},
+      _client{std::move(context.client())},
       _loop{context, _rng, _client, thread} {}
 
 class LoaderProducer : public genny::ActorProducer {
