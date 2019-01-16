@@ -66,7 +66,7 @@ std::string quoteIfNeeded(std::string value) {
 
 void checkTemplates(std::string key,
                     YAML::Node& entry,
-                    std::set<std::string>& templates,
+                    const std::unordered_set<std::string_view>& templates,
                     std::string prefix,
                     std::vector<std::tuple<std::string, std::string, YAML::Node>>& overrides) {
     if (templates.count(key) > 0) {
@@ -88,7 +88,7 @@ void checkTemplates(std::string key,
 
 bsoncxx::document::value parseMap(
     YAML::Node node,
-    std::set<std::string> templates,
+    std::unordered_set<std::string_view> templates,
     std::string prefix,
     std::vector<std::tuple<std::string, std::string, YAML::Node>>& overrides) {
     bsoncxx::builder::stream::document docbuilder{};
@@ -124,14 +124,14 @@ bsoncxx::document::value parseMap(
 
 bsoncxx::document::value parseMap(YAML::Node node) {
     // empty templates, and will throw away overrides
-    std::set<std::string> templates;
+    std::unordered_set<std::string_view> templates;
     std::vector<std::tuple<std::string, std::string, YAML::Node>> overrides;
     return (parseMap(node, templates, "", overrides));
 }
 
 bsoncxx::array::value parseSequence(
     YAML::Node node,
-    std::set<std::string> templates,
+    std::unordered_set<std::string_view> templates,
     std::string prefix,
     std::vector<std::tuple<std::string, std::string, YAML::Node>>& overrides) {
     bsoncxx::builder::stream::array arraybuilder{};
@@ -153,7 +153,7 @@ bsoncxx::array::value parseSequence(
 
 bsoncxx::array::value parseSequence(YAML::Node node) {
     // empty templates, and will throw away overrides
-    std::set<std::string> templates;
+    std::unordered_set<std::string_view> templates;
     std::vector<std::tuple<std::string, std::string, YAML::Node>> overrides;
     return (parseSequence(node, templates, "", overrides));
 }

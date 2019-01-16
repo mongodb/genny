@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #include "generators-private.hh"
+
+#include <string_view>
+#include <unordered_set>
+
 #include "../log.hh"
 #include <gennylib/InvalidConfigurationException.hpp>
 
@@ -24,10 +28,21 @@ using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
 
-// This returns a set of the value generator types with $ prefixes
-const std::set<std::string> getGeneratorTypes() {
-    return (std::set<std::string>{"$randomint", "$fastrandomstring", "$randomstring", "$useval"});
-}
+namespace {
+
+constexpr std::string_view kRandomIntType = "@RandomInt";
+constexpr std::string_view kRandomStringType = "@RandomString";
+constexpr std::string_view kFastRandomStringType = "@FastRandomString";
+constexpr std::string_view kUseValueType = "@UseValue";
+const std::unordered_set<std::string_view> kGeneratorTypes{
+    kFastRandomStringType,
+    kRandomIntType,
+    kRandomStringType,
+    kUseValueType,
+};
+
+}  // namespace
+
 BsonDocument::BsonDocument()
     : doc(bsoncxx::builder::stream::document{} << bsoncxx::builder::stream::finalize) {}
 
@@ -40,21 +55,19 @@ bsoncxx::document::view BsonDocument::view(bsoncxx::builder::stream::document&) 
 
 TemplateDocument::TemplateDocument(YAML::Node node, genny::DefaultRandom& rng)
     : DocumentGenerator() {
-    auto templates = getGeneratorTypes();
     std::vector<std::tuple<std::string, std::string, YAML::Node>> overrides;
 
     BOOST_LOG_TRIVIAL(trace) << "In TemplateDocument constructor";
-    doc.setDoc(parser::parseMap(node, templates, "", overrides));
+    doc.setDoc(parser::parseMap(node, kGeneratorTypes, "", overrides));
     BOOST_LOG_TRIVIAL(trace)
         << "In TemplateDocument constructor. Parsed the document. About to deal with overrides";
     for (auto entry : overrides) {
         auto key = std::get<0>(entry);
-        auto typeString = std::get<1>(entry);
+        auto type = std::get<1>(entry);
         YAML::Node yamlOverride = std::get<2>(entry);
         BOOST_LOG_TRIVIAL(trace) << "In TemplateDocument constructor. Dealing with an override for "
                                  << key;
 
-        auto type = typeString.substr(1, typeString.length());
         BOOST_LOG_TRIVIAL(trace) << "Making value generator for key " << key << " and type "
                                  << type;
         override[key] = makeUniqueValueGenerator(yamlOverride, type, rng);
@@ -161,13 +174,13 @@ bsoncxx::document::view TemplateDocument::view(bsoncxx::builder::stream::documen
 ValueGenerator* makeValueGenerator(YAML::Node yamlNode,
                                    std::string type,
                                    genny::DefaultRandom& rng) {
-    if (type == "randomint") {
+    if (type == kRandomIntType) {
         return new RandomIntGenerator(yamlNode, rng);
-    } else if (type == "randomstring") {
+    } else if (type == kRandomStringType) {
         return new RandomStringGenerator(yamlNode, rng);
-    } else if (type == "fastrandomstring") {
+    } else if (type == kFastRandomStringType) {
         return new FastRandomStringGenerator(yamlNode, rng);
-    } else if (type == "useval") {
+    } else if (type == kUseValueType) {
         return new UseValueGenerator(yamlNode, rng);
     }
     std::stringstream error;
@@ -181,12 +194,11 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode, genny::DefaultRandom& rn
     // If it doesn't have a type field, search for templating keys
     for (auto&& entry : yamlNode) {
         auto key = entry.first.Scalar();
-        if (getGeneratorTypes().count(key)) {
-            auto type = key.substr(1, key.length());
-            return (makeValueGenerator(entry.second, type, rng));
+        if (kGeneratorTypes.count(key)) {
+            return (makeValueGenerator(entry.second, std::move(key), rng));
         }
     }
-    return (makeValueGenerator(yamlNode, "useval", rng));
+    return (makeValueGenerator(yamlNode, std::string{kUseValueType}, rng));
 }
 
 int64_t ValueGenerator::generateInt() {
