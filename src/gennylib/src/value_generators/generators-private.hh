@@ -27,7 +27,6 @@ protected:
     genny::DefaultRandom& _rng;
 };
 
-const std::set<std::string> getGeneratorTypes();
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, genny::DefaultRandom&);
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, std::string, genny::DefaultRandom&);
 std::string valAsString(view_or_value);

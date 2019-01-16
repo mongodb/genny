@@ -15,7 +15,7 @@ Actors:
     - OperationName: RunCommand
       OperationCommand:
         insert: myCollection
-        documents: [{name: {$randomstring: {length: {$randomint: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
+        documents: [{name: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
     - OperationMetricsName: Find
       OperationCommand:
         find: restaurants

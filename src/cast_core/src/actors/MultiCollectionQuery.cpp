@@ -58,7 +58,7 @@ void MultiCollectionQuery::run() {
 
             // Select a collection
             // This area is ripe for defining a collection generator, based off a string generator.
-            // It could look like: collection: {@concat: [Collection, @randomint: {min: 0, max:
+            // It could look like: collection: {^Concat: [Collection, ^RandomInt: {min: 0, max:
             // *CollectionCount]} Requires a string concat generator, and a translation of a string
             // to a collection
             auto collectionNumber = config->uniformDistribution(_rng);
