@@ -59,10 +59,6 @@ namespace genny::actor {
 
 class RunCommand : public Actor {
 public:
-    class Operation;
-    struct PhaseState;
-
-public:
     explicit RunCommand(ActorContext& context);
     ~RunCommand() = default;
 
@@ -73,6 +69,9 @@ public:
     void run() override;
 
 private:
+    class Operation;
+    struct PhaseState;
+
     genny::DefaultRandom _rng;
     mongocxx::pool::entry _client;
 

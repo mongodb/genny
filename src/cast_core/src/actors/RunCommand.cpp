@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cast_core/actors/RunCommand.hpp>
-
 #include <chrono>
 #include <thread>
 
@@ -28,10 +26,36 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <cast_core/actors/RunCommand.hpp>
+
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/v1/RateLimiter.hpp>
 #include <gennylib/value_generators.hpp>
+
+namespace {
+
+void runStepdown(mongocxx::database& database, bsoncxx::document::view& view) {
+    try {
+        bsoncxx::document::value val = database.run_command(view);
+    } catch (mongocxx::operation_exception& x) {
+        auto what = std::string{x.what()};
+        if (what.find("socket error or timeout") == std::string::npos) {
+            throw;
+        }
+        auto builder = bsoncxx::builder::stream::document{};
+        auto request = builder << "dbStats" << 1 << bsoncxx::builder::stream::finalize;
+        try {
+            auto stats = database.run_command(request.view());
+        } catch (mongocxx::operation_exception& x2) {
+            BOOST_LOG_TRIVIAL(error) << "Couldn't run stats " << x2.what();
+            throw;
+        }
+    }
+}
+
+}  // namespace
+
 
 namespace genny {
 
@@ -47,16 +71,16 @@ public:
         mongocxx::database database;
     };
 
-    using Options = config::RunCommandConfig::Operation;
+    using OpConfig = config::RunCommandConfig::Operation;
 
 public:
     Operation(Fixture fixture,
               std::unique_ptr<value_generators::DocumentGenerator> docTemplate,
-              Options opts)
+              OpConfig opts)
         : _databaseName{fixture.databaseName},
           _database{fixture.database},
           _doc{std::move(docTemplate)},
-          _options{opts},
+          _options{std::move(opts)},
           _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)} {
         // Only record metrics if we have a name for the operation.
         if (!_options.metricsName.empty()) {
@@ -83,7 +107,12 @@ private:
                                  : std::optional<metrics::RaiiStopwatch>(std::nullopt);
 
         try {
-            _database.run_command(view);
+            // a bit of a hack
+            if (view.find("replSetStepDown") != view.end()) {
+                runStepdown(_database, view);
+            } else {
+                _database.run_command(view);
+            }
         } catch (mongocxx::operation_exception& e) {
             BOOST_THROW_EXCEPTION(MongoException(e, view));
         }
@@ -92,7 +121,7 @@ private:
     std::string _databaseName;
     mongocxx::database _database;
     std::unique_ptr<value_generators::DocumentGenerator> _doc;
-    Options _options;
+    OpConfig _options;
 
     std::unique_ptr<v1::RateLimiter> _rateLimiter;
     std::optional<metrics::Timer> _timer;
@@ -126,7 +155,7 @@ struct actor::RunCommand::PhaseState {
             auto yamlCommand = node["OperationCommand"];
             auto doc = value_generators::makeDoc(yamlCommand, rng);
 
-            auto options = node.as<Operation::Options>(Operation::Options{});
+            auto options = node.as<Operation::OpConfig>(Operation::OpConfig{});
             operations.push_back(std::make_unique<Operation>(fixture, std::move(doc), options));
         };
 
