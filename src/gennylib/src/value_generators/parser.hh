@@ -16,13 +16,13 @@ bool isBool(std::string);
 std::string quoteIfNeeded(std::string);
 bsoncxx::array::value yamlToValue(YAML::Node);
 bsoncxx::document::value parseMap(YAML::Node,
-                                  std::unordered_set<std::string_view>,
+                                  const std::unordered_set<std::string_view>&,
                                   std::string,
                                   std::vector<std::tuple<std::string, std::string, YAML::Node>>&);
 bsoncxx::document::value parseMap(YAML::Node);
 bsoncxx::array::value parseSequence(YAML::Node node);
 bsoncxx::array::value parseSequence(YAML::Node node,
-                                    std::unordered_set<std::string_view>,
+                                    const std::unordered_set<std::string_view>&,
                                     std::string,
                                     std::vector<std::tuple<std::string, std::string, YAML::Node>>&);
 }  // namespace genny::value_generators::parser

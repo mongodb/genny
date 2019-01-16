@@ -88,7 +88,7 @@ void checkTemplates(std::string key,
 
 bsoncxx::document::value parseMap(
     YAML::Node node,
-    std::unordered_set<std::string_view> templates,
+    const std::unordered_set<std::string_view>& templates,
     std::string prefix,
     std::vector<std::tuple<std::string, std::string, YAML::Node>>& overrides) {
     bsoncxx::builder::stream::document docbuilder{};
@@ -131,7 +131,7 @@ bsoncxx::document::value parseMap(YAML::Node node) {
 
 bsoncxx::array::value parseSequence(
     YAML::Node node,
-    std::unordered_set<std::string_view> templates,
+    const std::unordered_set<std::string_view>& templates,
     std::string prefix,
     std::vector<std::tuple<std::string, std::string, YAML::Node>>& overrides) {
     bsoncxx::builder::stream::array arraybuilder{};
