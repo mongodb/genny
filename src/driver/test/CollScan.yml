@@ -13,11 +13,11 @@ Actors:
     DocumentCount: 10000000 # 10M
     BatchSize: 1000
     Document:  # Documents are approximately 18 - 108 bytes in size
-      x: {@RandomInt: {distribution: geometric, p: 0.1}}
-      string0: {@RandomString: {length: {@RandomInt: {min: 5, max: 50}}}}
-      y: {@RandomInt: {min: 0, max: 2147483647}}
-      string1: {@RandomString: {length: {@RandomInt: {min: 5, max: 50}}}}
-      z: {@RandomInt: {min: 0, max: 2147483647}}
+      x: {^RandomInt: {distribution: geometric, p: 0.1}}
+      string0: {^RandomString: {length: {^RandomInt: {min: 5, max: 50}}}}
+      y: {^RandomInt: {min: 0, max: 2147483647}}
+      string1: {^RandomString: {length: {^RandomInt: {min: 5, max: 50}}}}
+      z: {^RandomInt: {min: 0, max: 2147483647}}
     Indexes:
       - keys: {y: 1}
     Phases:

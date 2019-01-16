@@ -30,10 +30,10 @@ using bsoncxx::builder::stream::open_document;
 
 namespace {
 
-constexpr std::string_view kRandomIntType = "@RandomInt";
-constexpr std::string_view kRandomStringType = "@RandomString";
-constexpr std::string_view kFastRandomStringType = "@FastRandomString";
-constexpr std::string_view kUseValueType = "@UseValue";
+constexpr std::string_view kRandomIntType = "^RandomInt";
+constexpr std::string_view kRandomStringType = "^RandomString";
+constexpr std::string_view kFastRandomStringType = "^FastRandomString";
+constexpr std::string_view kUseValueType = "^UseValue";
 const std::unordered_set<std::string_view> kGeneratorTypes{
     kFastRandomStringType,
     kRandomIntType,

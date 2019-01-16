@@ -290,8 +290,8 @@ TEST_CASE_METHOD(MongoTestFixture,
                   OperationName: RunCommand
                   OperationCommand:
                     findAndModify: testCollection
-                    query: {rating: {@RandomInt: {min: 1, max: 4}}}
-                    update: {$set: {rating: {@RandomInt: {min: 5, max: 10}}}}
+                    query: {rating: {^RandomInt: {min: 1, max: 4}}}
+                    update: {$set: {rating: {^RandomInt: {min: 5, max: 10}}}}
                     upsert: true
         )");
         auto builder = bson_stream::document{};
@@ -482,7 +482,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                 - OperationName: RunCommand
                   OperationCommand:
                     insert: testCollection
-                    documents: [{rating: {@RandomInt: {min: 1, max: 5}}, name: y}, {rating: 10, name: x}]
+                    documents: [{rating: {^RandomInt: {min: 1, max: 5}}, name: y}, {rating: 10, name: x}]
         )");
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;

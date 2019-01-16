@@ -18,5 +18,5 @@ Actors:
   - Phase: 0
     Repeat: 100
     Collection: "Inserts"
-    Document: {"a": {@RandomInt: {min: 50, max: 60}}}
+    Document: {"a": {^RandomInt: {min: 50, max: 60}}}
 

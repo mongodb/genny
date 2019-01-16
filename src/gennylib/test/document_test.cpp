@@ -68,7 +68,7 @@ TEST_CASE("Documents are created", "[documents]") {
         auto doc = makeDoc(YAML::Load(R"yaml(
         x :
           y : b
-        z : {@RandomInt: {min: 50, max: 60}}
+        z : {^RandomInt: {min: 50, max: 60}}
     )yaml"),
                            rng);
         // Test that the document is an override document, and gives the right values.
@@ -79,7 +79,7 @@ TEST_CASE("Documents are created", "[documents]") {
     }
     SECTION("DefaultRandom string") {
         auto doc = makeDoc(YAML::Load(R"yaml(
-      string: {@RandomString: {length : 15}}
+      string: {^RandomString: {length : 15}}
     )yaml"),
                            rng);
 

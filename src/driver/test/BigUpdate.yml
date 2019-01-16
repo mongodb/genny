@@ -17,12 +17,12 @@ Actors:
     DocumentCount: 1e4
     BatchSize: 1000
     Document:  # Documents are approximately 1 KiB in size
-      t: {@RandomInt: {min: 0, max: 10}}
-      w: {@RandomInt: {distribution: geometric, p: 0.1}}
+      t: {^RandomInt: {min: 0, max: 10}}
+      w: {^RandomInt: {distribution: geometric, p: 0.1}}
       x: 0
-      y: {@RandomInt: {min: 0, max: 1000}}
-      z: {@RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
-      int0: &int {@RandomInt: {distribution: binomial, t: 200, p: 0.5}}
+      y: {^RandomInt: {min: 0, max: 1000}}
+      z: {^RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
+      int0: &int {^RandomInt: {distribution: binomial, t: 200, p: 0.5}}
       int1: *int
       int2: *int
       int3: *int
@@ -44,7 +44,7 @@ Actors:
         - 7000
         - 8000
         - 9000
-      string0: &string {@RandomString: {length: {@RandomInt: {min: 5, max: 15}}}}
+      string0: &string {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}}}
       string1: *string
       string2: *string
       string3: *string
@@ -54,8 +54,8 @@ Actors:
       string7: *string
       string8: *string
       string9: *string
-      stringShort: {@RandomString: {length: 1}}
-      stringLong: {@RandomString: {length: 100}}
+      stringShort: {^RandomString: {length: 1}}
+      stringLong: {^RandomString: {length: 100}}
       compressibleStringArray:
         - &cstring AAAAAAAAAAAAAAAAAAAA
         - *cstring
@@ -91,7 +91,7 @@ Actors:
     Threads: 100
     Database: *DB
     CollectionCount: 10  # This is specifically 1% of collections
-    UpdateFilter: {y: {@RandomInt: {distribution: poisson, mean: 100}}}
+    UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
     Update: {$inc: {x: 1}}
     Phases:
       - Operation:
@@ -103,7 +103,7 @@ Actors:
     Threads: 100
     Database: *DB
     CollectionCount: 100  # This is specifically 10% of collections.
-    Filter: {y: {@RandomInt: {distribution: poisson, mean: 100}}}
+    Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
     Limit: 20
     Phases:
       - Operation:

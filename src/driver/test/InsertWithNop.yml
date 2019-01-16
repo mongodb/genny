@@ -12,14 +12,14 @@ Actors:
     Phases:
       - Operation: Nop
       - Collection: "inserts"
-        Document: {"a": {@RandomInt: {min: 50, max: 60}}}
+        Document: {"a": {^RandomInt: {min: 50, max: 60}}}
       - Operation: Nop
       - Operation: Nop
       - Collection: "inserts"
-        Document: {"b": {@RandomString: {length: {@RandomInt: {min: 5, max: 15}}, alphabet: abcde}}}
+        Document: {"b": {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}, alphabet: abcde}}}
       - Collection: "inserts"
-        Document: {"a": {@RandomInt: {min: 63, max: 70}}}
+        Document: {"a": {^RandomInt: {min: 63, max: 70}}}
       - Operation: Nop
       - Collection: "inserts"
-        Document: {"b": {@RandomString: {length: {@RandomInt: {min: 15, max: 25}}, alphabet: abcde}}}
+        Document: {"b": {^RandomString: {length: {^RandomInt: {min: 15, max: 25}}, alphabet: abcde}}}
       - Operation: Nop
