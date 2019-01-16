@@ -82,8 +82,11 @@ void runThenAwaitElections(mongocxx::database& database, bsoncxx::document::view
         if (!isTimeout(exception)) {
             throw;
         }
+        BOOST_LOG_TRIVIAL(info) << "Post stepdown, running "
+                                << bsoncxx::to_json(commandRequiringElectionCompleted.view());
         try {
-            auto stats = database.run_command(commandRequiringElectionCompleted.view());
+            // don't care about the return value
+            database.run_command(commandRequiringElectionCompleted.view());
         } catch (mongocxx::operation_exception& statsException) {
             throw;
         }

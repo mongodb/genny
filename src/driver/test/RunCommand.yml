@@ -6,7 +6,7 @@ Actors:
   Threads: 1
   Database: test
   Phases:
-  - Repeat: 10
+  - Duration: 5 minutes
     Operations:
     - OperationMetricsName: ServerStatus
       OperationName: RunCommand
@@ -38,9 +38,9 @@ Actors:
   Type: AdminCommand
   Threads: 1
   Phases:
-    - Repeat: 1
-      Operations:
-        - OperationMetricsName: Stepdown
-          OperationName: RunCommand
-          OperationCommand:
-            replSetStepDown: 60
+  - Phase: 0
+    Operation:
+      OperationMetricsName: Stepdown
+      OperationName: RunCommand
+      OperationCommand:
+        replSetStepDown: 60
