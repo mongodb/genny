@@ -61,8 +61,8 @@ bool isTimeout(mongocxx::operation_exception& exception) {
  */
 bsoncxx::document::value commandRequiringStepdownCompleted = []() {
     auto builder = bsoncxx::builder::stream::document{};
-    // `{ "dbStats": 1 }`
-    auto request = builder << "dbStats" << 1 << bsoncxx::builder::stream::finalize;
+    // `{ "collStats": "__genny-arbitrary-collection" }`
+    auto request = builder << "collStats" << "__genny-arbitrary-collection" << bsoncxx::builder::stream::finalize;
     return request;
 }();
 
