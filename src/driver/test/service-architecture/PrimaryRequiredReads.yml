@@ -18,36 +18,39 @@ Actors:
         ThrowOnFailure: false
     Phases:
       - # Phase: 0 # Load
-        Operation:
-            OperationName: Nop
+        NoOp: true
       - Phase: 1 # Run
         Repeat: 1
         Operation:
             OperationMetricsName: "Stepdown"
             OperationName: AdminCommand
-            OperationPreSleep: 5 seconds
-            OperationPostSleep: 5 seconds
+            OperationSleepBefore: 60 seconds
+            OperationSleepAfter: 120 seconds
             OperationCommand:
                 replSetStepDown: 60
   - Name: PrimaryRequiredRead
     Type: RunCommand
     Threads: 100
+    # We want to continue to send our find commands in any situation.
+    # However, failures before replSetStepDown indicate that something was wrong with the test.
+    # Ideally, post-workload analysis will show if any find failure happens before replSetStepdown.
     ExecutionStrategy:
-        Retries: 3
+        Retries: 0
+        ThrowOnFailure: false
     Database: test
     Phases:
       - # Phase: 0 # Load
-        Operation:
-            OperationName: Nop
+        NoOp: true
       - Phase: 1 # Run
         Operation: &find_one
-            MetricsName: "Find"
+            OperationMetricsName: "Find"
             OperationName: RunCommand
+            OperationIsQuiet: yes
             OperationMinPeriod: 100 microseconds
             OperationCommand:
                 find: Collection0
                 readConcern: { level: local }
-                readPreference: primary
+                $readPreference: { mode: primary }
   - Name: Loader
     Type: Loader
     Threads: 1
@@ -62,5 +65,4 @@ Actors:
     Phases:
       - Phase: 0 # Load
       - # Phase: 1 # Run
-        Operation:
-            OperationName: Nop
+        NoOp: true
