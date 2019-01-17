@@ -94,23 +94,18 @@ namespace genny {
 /** @private */
 class Operation {
 public:
-    struct Fixture {
-        PhaseContext& phaseContext;
-        ActorContext& actorContext;
-
-        ActorId id;
-        std::string databaseName;
-        mongocxx::database database;
-    };
-
     using OpConfig = config::RunCommandConfig::Operation;
 
 public:
-    Operation(Fixture fixture,
+    Operation(PhaseContext& phaseContext,
+              ActorContext& actorContext,
+              ActorId id,
+              const std::string& databaseName,
+              mongocxx::database database,
               std::unique_ptr<value_generators::DocumentGenerator> docTemplate,
               OpConfig opts)
-        : _databaseName{fixture.databaseName},
-          _database{fixture.database},
+        : _databaseName{databaseName},
+          _database{std::move(database)},
           _doc{std::move(docTemplate)},
           _options{std::move(opts)},
           _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)},
@@ -118,7 +113,7 @@ public:
         // Only record metrics if we have a name for the operation.
         if (!_options.metricsName.empty()) {
             _timer = std::make_optional<metrics::Timer>(
-                fixture.actorContext.timer(_options.metricsName, fixture.id));
+                actorContext.timer(_options.metricsName, id));
         }
     }
 
@@ -176,20 +171,20 @@ struct actor::RunCommand::PhaseConfig {
                 "AdminCommands can only be run on the 'admin' database.");
         }
 
-        auto fixture = Operation::Fixture{
-            context,
-            actorContext,
-            id,
-            database,
-            (*client)[database],
-        };
-
         auto addOperation = [&](YAML::Node node) {
             auto yamlCommand = node["OperationCommand"];
             auto doc = value_generators::makeDoc(yamlCommand, rng);
 
             auto options = node.as<Operation::OpConfig>(Operation::OpConfig{});
-            operations.push_back(std::make_unique<Operation>(fixture, std::move(doc), options));
+            operations.push_back(std::make_unique<Operation>(
+                context,
+                actorContext,
+                id,
+                database,
+                (*client)[database],
+                std::move(doc),
+                options
+            ));
         };
 
         auto operationList = context.get<YAML::Node, false>("Operations");
