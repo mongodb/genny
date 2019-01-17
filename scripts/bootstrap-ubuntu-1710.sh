@@ -32,6 +32,8 @@ if [ ! -d "genny-setup" ]; then
 fi
 cd genny-setup
 
+find . -name CMakeCache.txt | xargs rm -f
+
 # mongo c driver
 if [ ! -d "mongo-c-driver-1.13.0" ]; then
     wget https://github.com/mongodb/mongo-c-driver/releases/download/1.13.0/mongo-c-driver-1.13.0.tar.gz
@@ -62,7 +64,8 @@ pushd protobuf
 git submodule update --init --recursive
 ./autogen.sh
 ./configure
-make -j8
+make clean
+make -j24
 # make check
 sudo make install
 sudo ldconfig
@@ -76,7 +79,8 @@ if [ ! -d "grpc" ]; then
 fi
 pushd grpc
 git submodule update --init
-make -j8
+make clean
+make -j24
 sudo make install
 popd
 
@@ -99,7 +103,8 @@ if [ ! -d openssl ]; then
 fi
 pushd openssl
 CC=gcc-7 ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl
-make -j8
+make clean
+make -j24
 sudo make install
 popd
 
