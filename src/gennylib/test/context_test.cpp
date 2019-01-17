@@ -462,6 +462,45 @@ TEST_CASE("Actors Share WorkloadContext State") {
             10 * 10);
 }
 
+TEST_CASE("getPlural") {
+    auto createYaml = [](std::string actorYaml) {
+        auto doc = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Numbers: [1,2,3]
+Actors: [{}]
+)");
+        auto actor = YAML::Load(actorYaml);
+        actor["Type"] = "Op";
+        doc["Actors"][0] = actor;
+        return doc;
+    };
+
+    auto hasBothInherited = createYaml("Number: 7");
+    auto overrides = createYaml("Numbers: [3, 4, 5]");
+    auto hasBothNotInherited  = createYaml("{ Foo: 9, Foos: 1 }");
+    auto normalSingular = createYaml("Foo: 71");
+    auto normalPluralNotSequence = createYaml("Foos: 73");
+    auto normalPluralSequence = createYaml("Foos: [733]");
+
+    onContext(hasBothNotInherited, [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&](){
+            c.getPlural<int>("Foo", "Foos");
+        }(), Matches("Can't have both 'Foo' and 'Foos'."));
+    });
+
+    onContext(hasBothInherited, [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&](){
+            c.getPlural<int>("Number", "Numbers");
+        }(), Matches("Can't have both 'Number' and 'Numbers'."));
+    });
+
+    onContext(overrides, [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Number", "Numbers") == std::vector<int>{
+            3, 4, 5
+        });
+    });
+}
+
 TEST_CASE("Configuration cascades to nested context types") {
     auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01

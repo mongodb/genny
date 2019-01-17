@@ -17,6 +17,7 @@
 
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <type_traits>
 #include <vector>
@@ -169,6 +170,41 @@ public:
         // fallback to delegate node
         return this->_delegateNode->template get<Out, Required>(std::forward<Args>(args)...);
     };
+
+    template <typename T, typename F = std::function<T(YAML::Node)>>
+    std::vector<T> getPlural(
+        const std::string& singular, const std::string& plural, F&& f = [](YAML::Node n) {
+            return n.as<T>();
+        }) {
+        static_assert(std::is_same_v<T, decltype(f(YAML::Node{}))>,
+                      "Function takes YAML::Node and returns T");
+        std::vector<T> out;
+
+        auto pluralValue = this->get<YAML::Node, false>(plural);
+        auto singValue = this->get<YAML::Node, false>(singular);
+        if (pluralValue && singValue) {
+            std::stringstream str;
+            str << "Can't have both '" << singular << "' and '" << plural << "'.";
+            throw InvalidConfigurationException(str.str());
+        } else if (pluralValue) {
+            if (!pluralValue->IsSequence()) {
+                std::stringstream str;
+                str << "'" << plural << "' must be a sequence type.";
+                throw InvalidConfigurationException(str.str());
+            }
+            for (auto&& val : *pluralValue) {
+                out.push_back(std::invoke(f, val));
+            }
+        } else if (singValue) {
+            out.push_back(std::invoke(f, *singValue));
+        } else if (!singValue && !pluralValue) {
+            std::stringstream str;
+            str << "Either '" << singular << "' or '" << plural << "' required";
+            throw InvalidConfigurationException(str.str());
+        }
+
+        return out;
+    }
 
 protected:
     const YAML::Node _node;
