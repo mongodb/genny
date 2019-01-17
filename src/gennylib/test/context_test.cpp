@@ -245,7 +245,7 @@ Actors:
     }
 }
 
-void onContext(YAML::Node& yaml, std::function<void(ActorContext&)> op) {
+void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
@@ -462,6 +462,39 @@ TEST_CASE("Actors Share WorkloadContext State") {
             10 * 10);
 }
 
+struct TakesInt {
+    int value;
+    TakesInt(int x)
+    : value{x} {
+        if (x > 7) {
+            throw std::logic_error("Expected");
+        }
+    }
+};
+
+struct AnotherInt : public TakesInt {
+    // need no-arg ctor to be able to do YAML::Node::as<>()
+    AnotherInt()
+    : AnotherInt(0) {}
+    AnotherInt(int x)
+    : TakesInt(x) {}
+};
+
+namespace YAML {
+
+template<>
+struct convert<AnotherInt> {
+    static Node encode(const AnotherInt& rhs) {
+        return {};
+    }
+    static bool decode(const Node& node, AnotherInt& rhs) {
+        rhs = AnotherInt{node.as<int>()};
+        return true;
+    }
+};
+
+}
+
 TEST_CASE("getPlural") {
     auto createYaml = [](std::string actorYaml) {
         auto doc = YAML::Load(R"(
@@ -479,8 +512,46 @@ Actors: [{}]
     auto overrides = createYaml("Numbers: [3, 4, 5]");
     auto hasBothNotInherited  = createYaml("{ Foo: 9, Foos: 1 }");
     auto normalSingular = createYaml("Foo: 71");
+    auto normalSingularSmall = createYaml("Foo: 5");
     auto normalPluralNotSequence = createYaml("Foos: 73");
     auto normalPluralSequence = createYaml("Foos: [733]");
+
+    // can use built-in decode types
+    onContext(createYaml("Foo: 5"), [](ActorContext& c) {
+        c.getPlural<TakesInt>("Foo", "Foos", [](YAML::Node n){
+            return TakesInt{n.as<int>()};
+        });
+    });
+
+    onContext(createYaml("Foo: 5"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<AnotherInt>("Foo", "Foos")[0].value == 5);
+    });
+
+    onContext(createYaml("Foo: 81"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&](){
+            c.getPlural<TakesInt>("Foo", "Foos",  [](YAML::Node n){
+                return TakesInt{n.as<int>()};
+            });
+        }(), Matches("Expected"));
+    });
+
+    onContext(normalPluralSequence, [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{733});
+    });
+
+    onContext(normalPluralSequence, [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{733});
+    });
+
+    onContext(normalPluralNotSequence, [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&](){
+            c.getPlural<int>("Foo", "Foos");
+        }(), Matches("'Foos' must be a sequence type."));
+    });
+
+    onContext(normalSingular, [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{71});
+    });
 
     onContext(hasBothNotInherited, [](ActorContext& c) {
         REQUIRE_THROWS_WITH([&](){
