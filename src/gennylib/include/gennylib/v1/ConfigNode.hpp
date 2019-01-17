@@ -171,6 +171,50 @@ public:
         return this->_delegateNode->template get<Out, Required>(std::forward<Args>(args)...);
     };
 
+    /**
+     * Extract a vector of items by supporting both singular and plural keys.
+     *
+     * Example YAML that this supports:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Number","Numbers") returns [7]
+     * Foo:
+     *   Number: 7
+     *
+     * # Calling getPlural<int>("Number","Numbers") returns [1,2]
+     * Bar:
+     *   Numbers: [1,2]
+     * ```
+     *
+     * The node cannot have both keys present. The following
+     * will error:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Bad","Bads")
+     * # will throw because the node must have
+     * # exactly one of the keys
+     * BadExample:
+     *   Bad: 7
+     *   Bads: [1,2]
+     * ```
+     *
+     * If the value at the plural key isn't a sequence we also barf:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Bad","Bads") will fail
+     * # because Bads isn't a sequence.
+     * AnotherBadExample:
+     *   Bads: 3
+     * ```
+     *
+     * @tparam T the returned type. Must align with the return-type of F.
+     * @tparam F type of the callback/mapping function that maps from YAML::Node to T.
+     * @param singular the singular version of the key e.g. "Number"
+     * @param plural the plural version of the key e.g. "Numbers"
+     * @param f callback function mapping from the found node to a T instance. If not specified,
+     * will use the built-in YAML::convert<T> function.
+     * @return
+     */
     template <typename T, typename F = std::function<T(YAML::Node)>>
     std::vector<T> getPlural(
         const std::string& singular, const std::string& plural, F&& f = [](YAML::Node n) {
@@ -199,7 +243,7 @@ public:
             out.push_back(std::invoke(f, *singValue));
         } else if (!singValue && !pluralValue) {
             std::stringstream str;
-            str << "Either '" << singular << "' or '" << plural << "' required";
+            str << "Either '" << singular << "' or '" << plural << "' required.";
             throw InvalidConfigurationException(str.str());
         }
 
