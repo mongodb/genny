@@ -62,6 +62,8 @@ bool isTimeout(mongocxx::operation_exception& exception) {
 bsoncxx::document::value commandRequiringStepdownCompleted = []() {
     auto builder = bsoncxx::builder::stream::document{};
     // `{ "collStats": "__genny-arbitrary-collection" }`
+    // NB the actual collection doesn't need to exist, so just pick an arbitrary name that
+    // likely doesn't exist.
     auto request = builder << "collStats" << "__genny-arbitrary-collection" << bsoncxx::builder::stream::finalize;
     return request;
 }();
