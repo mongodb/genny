@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cast_core/actors/RunCommand.hpp>
+
 #include <chrono>
 #include <thread>
 
@@ -26,23 +28,12 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <cast_core/actors/RunCommand.hpp>
-
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/v1/RateLimiter.hpp>
 #include <gennylib/value_generators.hpp>
 
 namespace {
-
-/**
- * @private
- * @param command passed to run_command()
- * @return if the command requires waiting for a stepdown to complete before continuing.
- */
-bool requiresWaitForStepdown(bsoncxx::document::view& command) {
-    return command.find("replSetStepDown") != command.end();
-}
 
 /**
  * @private
@@ -101,7 +92,7 @@ void runThenAwaitStepdown(mongocxx::database &database, bsoncxx::document::view 
 namespace genny {
 
 /** @private */
-class actor::RunCommand::Operation {
+class Operation {
 public:
     struct Fixture {
         PhaseContext& phaseContext;
@@ -122,7 +113,8 @@ public:
           _database{fixture.database},
           _doc{std::move(docTemplate)},
           _options{std::move(opts)},
-          _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)} {
+          _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)},
+          _awaitStepdown{opts.awaitStepdown} {
         // Only record metrics if we have a name for the operation.
         if (!_options.metricsName.empty()) {
             _timer = std::make_optional<metrics::Timer>(
@@ -148,8 +140,7 @@ private:
                                  : std::optional<metrics::RaiiStopwatch>(std::nullopt);
 
         try {
-            // a bit of a hack
-            if (requiresWaitForStepdown(view)) {
+            if (_options.awaitStepdown) {
                 runThenAwaitStepdown(_database, view);
             } else {
                 _database.run_command(view);
@@ -166,11 +157,12 @@ private:
 
     std::unique_ptr<v1::RateLimiter> _rateLimiter;
     std::optional<metrics::Timer> _timer;
+    bool _awaitStepdown;
 };
 
 /** @private */
-struct actor::RunCommand::PhaseState {
-    PhaseState(PhaseContext& context,
+struct actor::RunCommand::PhaseConfig {
+    PhaseConfig(PhaseContext& context,
                ActorContext& actorContext,
                genny::DefaultRandom& rng,
                mongocxx::pool::entry& client,

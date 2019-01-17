@@ -69,13 +69,11 @@ public:
     void run() override;
 
 private:
-    class Operation;
-    struct PhaseState;
-
     genny::DefaultRandom _rng;
     mongocxx::pool::entry _client;
 
-    PhaseLoop<PhaseState> _loop;
+    struct PhaseConfig;
+    PhaseLoop<PhaseConfig> _loop;
 };
 
 

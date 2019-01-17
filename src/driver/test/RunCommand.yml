@@ -44,3 +44,5 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         replSetStepDown: 60
+      OperationAwaitStepdown: yes
+
