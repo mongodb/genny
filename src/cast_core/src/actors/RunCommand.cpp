@@ -117,6 +117,29 @@ public:
         }
     }
 
+    static std::unique_ptr<Operation> create(
+            YAML::Node node, genny::DefaultRandom& rng,
+            PhaseContext& context,
+            ActorContext& actorContext,
+            ActorId id,
+            mongocxx::pool::entry& client,
+            const std::string& database
+    ) {
+        auto yamlCommand = node["OperationCommand"];
+        auto doc = value_generators::makeDoc(yamlCommand, rng);
+
+        auto options = node.as<Operation::OpConfig>(Operation::OpConfig{});
+        return std::make_unique<Operation>(
+                context,
+                actorContext,
+                id,
+                database,
+                (*client)[database],
+                std::move(doc),
+                options
+        );
+    };
+
     void run() {
         _rateLimiter->run([&] { _run(); });
     }
@@ -171,22 +194,6 @@ struct actor::RunCommand::PhaseConfig {
                 "AdminCommands can only be run on the 'admin' database.");
         }
 
-        auto addOperation = [&](YAML::Node node) {
-            auto yamlCommand = node["OperationCommand"];
-            auto doc = value_generators::makeDoc(yamlCommand, rng);
-
-            auto options = node.as<Operation::OpConfig>(Operation::OpConfig{});
-            operations.push_back(std::make_unique<Operation>(
-                context,
-                actorContext,
-                id,
-                database,
-                (*client)[database],
-                std::move(doc),
-                options
-            ));
-        };
-
         auto operationList = context.get<YAML::Node, false>("Operations");
         auto operationUnit = context.get<YAML::Node, false>("Operation");
         if (operationList && operationUnit) {
@@ -197,10 +204,10 @@ struct actor::RunCommand::PhaseConfig {
                 throw InvalidConfigurationException("'Operations' must be of sequence type.");
             }
             for (auto&& op : *operationList) {
-                addOperation(op);
+                operations.push_back(Operation::create(op, rng, context, actorContext, id, client, database));
             }
         } else if (operationUnit) {
-            addOperation(*operationUnit);
+            operations.push_back(Operation::create(*operationUnit, rng, context, actorContext, id, client, database));
         } else if (!operationUnit && !operationList) {
             throw InvalidConfigurationException("No operations found in RunCommand Actor.");
         }
