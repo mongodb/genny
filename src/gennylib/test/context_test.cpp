@@ -464,8 +464,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
 struct TakesInt {
     int value;
-    TakesInt(int x)
-    : value{x} {
+    TakesInt(int x) : value{x} {
         if (x > 7) {
             throw std::logic_error("Expected");
         }
@@ -474,15 +473,13 @@ struct TakesInt {
 
 struct AnotherInt : public TakesInt {
     // need no-arg ctor to be able to do YAML::Node::as<>()
-    AnotherInt()
-    : AnotherInt(0) {}
-    AnotherInt(int x)
-    : TakesInt(x) {}
+    AnotherInt() : AnotherInt(0) {}
+    AnotherInt(int x) : TakesInt(x) {}
 };
 
 namespace YAML {
 
-template<>
+template <>
 struct convert<AnotherInt> {
     static Node encode(const AnotherInt& rhs) {
         return {};
@@ -493,7 +490,7 @@ struct convert<AnotherInt> {
     }
 };
 
-}
+}  // namespace YAML
 
 TEST_CASE("getPlural") {
     auto createYaml = [](std::string actorYaml) {
@@ -508,19 +505,9 @@ Actors: [{}]
         return doc;
     };
 
-    auto hasBothInherited = createYaml("Number: 7");
-    auto overrides = createYaml("Numbers: [3, 4, 5]");
-    auto hasBothNotInherited  = createYaml("{ Foo: 9, Foos: 1 }");
-    auto normalSingular = createYaml("Foo: 71");
-    auto normalSingularSmall = createYaml("Foo: 5");
-    auto normalPluralNotSequence = createYaml("Foos: 73");
-    auto normalPluralSequence = createYaml("Foos: [733]");
-
     // can use built-in decode types
     onContext(createYaml("Foo: 5"), [](ActorContext& c) {
-        c.getPlural<TakesInt>("Foo", "Foos", [](YAML::Node n){
-            return TakesInt{n.as<int>()};
-        });
+        c.getPlural<TakesInt>("Foo", "Foos", [](YAML::Node n) { return TakesInt{n.as<int>()}; });
     });
 
     onContext(createYaml("Foo: 5"), [](ActorContext& c) {
@@ -528,47 +515,39 @@ Actors: [{}]
     });
 
     onContext(createYaml("Foo: 81"), [](ActorContext& c) {
-        REQUIRE_THROWS_WITH([&](){
-            c.getPlural<TakesInt>("Foo", "Foos",  [](YAML::Node n){
-                return TakesInt{n.as<int>()};
-            });
-        }(), Matches("Expected"));
+        REQUIRE_THROWS_WITH(
+            [&]() {
+                c.getPlural<TakesInt>(
+                    "Foo", "Foos", [](YAML::Node n) { return TakesInt{n.as<int>()}; });
+            }(),
+            Matches("Expected"));
     });
 
-    onContext(normalPluralSequence, [](ActorContext& c) {
+    onContext(createYaml("Foos: [733]"), [](ActorContext& c) {
         REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{733});
     });
 
-    onContext(normalPluralSequence, [](ActorContext& c) {
-        REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{733});
+    onContext(createYaml("Foos: 73"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
+                            Matches("'Foos' must be a sequence type."));
     });
 
-    onContext(normalPluralNotSequence, [](ActorContext& c) {
-        REQUIRE_THROWS_WITH([&](){
-            c.getPlural<int>("Foo", "Foos");
-        }(), Matches("'Foos' must be a sequence type."));
-    });
-
-    onContext(normalSingular, [](ActorContext& c) {
+    onContext(createYaml("Foo: 71"), [](ActorContext& c) {
         REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{71});
     });
 
-    onContext(hasBothNotInherited, [](ActorContext& c) {
-        REQUIRE_THROWS_WITH([&](){
-            c.getPlural<int>("Foo", "Foos");
-        }(), Matches("Can't have both 'Foo' and 'Foos'."));
+    onContext(createYaml("{ Foo: 9, Foos: 1 }"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
+                            Matches("Can't have both 'Foo' and 'Foos'."));
     });
 
-    onContext(hasBothInherited, [](ActorContext& c) {
-        REQUIRE_THROWS_WITH([&](){
-            c.getPlural<int>("Number", "Numbers");
-        }(), Matches("Can't have both 'Number' and 'Numbers'."));
+    onContext(createYaml("Number: 7"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Number", "Numbers"); }(),
+                            Matches("Can't have both 'Number' and 'Numbers'."));
     });
 
-    onContext(overrides, [](ActorContext& c) {
-        REQUIRE(c.getPlural<int>("Number", "Numbers") == std::vector<int>{
-            3, 4, 5
-        });
+    onContext(createYaml("Numbers: [3, 4, 5]"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Number", "Numbers") == std::vector<int>{3, 4, 5});
     });
 }
 
