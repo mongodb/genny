@@ -38,7 +38,7 @@ namespace {
 /**
  * @private
  * @param command passed to run_command()
- * @return if the command requires waiting for a stepdown/election to complete before continuing.s
+ * @return if the command requires waiting for a stepdown to complete before continuing.
  */
 bool requiresWaitForStepdown(bsoncxx::document::view& command) {
     return command.find("replSetStepDown") != command.end();
@@ -56,10 +56,10 @@ bool isTimeout(mongocxx::operation_exception& exception) {
 
 /**
  * @private
- * BSON document that when given to run_command requires any rs elections
- * to be complet.
+ * BSON document that when given to run_command requires stepdown
+ * to be completed.
  */
-bsoncxx::document::value commandRequiringElectionCompleted = []() {
+bsoncxx::document::value commandRequiringStepdownCompleted = []() {
     auto builder = bsoncxx::builder::stream::document{};
     // `{ "dbStats": 1 }`
     auto request = builder << "dbStats" << 1 << bsoncxx::builder::stream::finalize;
@@ -68,13 +68,13 @@ bsoncxx::document::value commandRequiringElectionCompleted = []() {
 
 /**
  * Runs the given command, expects a timeout, and then awaits all replset
- * elections to complete.
+ * stepdowns to complete.
  *
  * @private
  * @param database database on which to run `run_command()`.
  * @param command the command to run
  */
-void runThenAwaitElections(mongocxx::database& database, bsoncxx::document::view& command) {
+void runThenAwaitStepdown(mongocxx::database &database, bsoncxx::document::view &command) {
     try {
         database.run_command(command);
         throw std::logic_error("Stepdown should throw operation exception");
@@ -83,10 +83,10 @@ void runThenAwaitElections(mongocxx::database& database, bsoncxx::document::view
             throw;
         }
         BOOST_LOG_TRIVIAL(info) << "Post stepdown, running "
-                                << bsoncxx::to_json(commandRequiringElectionCompleted.view());
+                                << bsoncxx::to_json(commandRequiringStepdownCompleted.view());
         try {
             // don't care about the return value
-            database.run_command(commandRequiringElectionCompleted.view());
+            database.run_command(commandRequiringStepdownCompleted.view());
         } catch (mongocxx::operation_exception& statsException) {
             throw;
         }
@@ -148,7 +148,7 @@ private:
         try {
             // a bit of a hack
             if (requiresWaitForStepdown(view)) {
-                runThenAwaitElections(_database, view);
+                runThenAwaitStepdown(_database, view);
             } else {
                 _database.run_command(view);
             }
