@@ -40,7 +40,7 @@ namespace {
  * @param exception exception received from mongocxx::database::run_command()
  * @return if the exception is a result of a connection error or timeout
  */
-bool isTimeout(mongocxx::operation_exception& exception) {
+bool isNetworkError(mongocxx::operation_exception &exception) {
     auto what = std::string{exception.what()};
     return what.find("socket error or timeout") != std::string::npos;
 }
@@ -72,7 +72,7 @@ void runThenAwaitStepdown(mongocxx::database &database, bsoncxx::document::view 
         database.run_command(command);
         throw std::logic_error("Stepdown should throw operation exception");
     } catch (mongocxx::operation_exception& exception) {
-        if (!isTimeout(exception)) {
+        if (!isNetworkError(exception)) {
             throw;
         }
         BOOST_LOG_TRIVIAL(info) << "Post stepdown, running "
