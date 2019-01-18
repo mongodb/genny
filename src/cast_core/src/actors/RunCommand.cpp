@@ -178,7 +178,6 @@ struct actor::RunCommand::PhaseConfig {
                 genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 ActorId id)
-        // TODO: record metrics
         : strategy{actorContext.operation("RunCommand", id)},
           options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")} {
         auto actorType = context.get<std::string>("Type");
