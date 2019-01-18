@@ -36,9 +36,10 @@ install(TARGETS  metrics
 
 add_executable(test_metrics
     test/metrics_test.cpp
+    $<TARGET_OBJECTS:catch2>
 )
 
-target_link_libraries(test_metrics metrics catch2 gennylib_testutil)
+target_link_libraries(test_metrics metrics gennylib_testutil)
 
 ParseAndAddCatchTests(test_metrics)
 
