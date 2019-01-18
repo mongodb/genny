@@ -57,6 +57,11 @@ function(GENNY_SUBDIR)
         endif()
     endforeach()
 
+    set(_gs_include_type "PUBLIC")
+    if(_gs_type MATCHES "^INTERFACE$")
+        set(_gs_include_type "INTERFACE")
+    endif()
+
     # debug("Deduced name=${_gs_name} type=${_gs_type} depends=${_gs_depends} test_depends=${_gs_test_depends}")
 
     # TODO: is this glob right
@@ -72,13 +77,14 @@ function(GENNY_SUBDIR)
 
     add_library("${_gs_name}" "${_gs_type}" ${_gs_files_src})
     target_include_directories(${_gs_name}
-        PUBLIC
+        "${_gs_include_type}"
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
     )
 
     target_link_libraries("${_gs_name}"
-        ${_gs_depends}
+        "${_gs_include_type}"
+            ${_gs_depends}
     )
 
     install(DIRECTORY include/
