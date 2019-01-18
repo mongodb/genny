@@ -12,19 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <memory.h>
 
 #include <yaml-cpp/yaml.h>
 
-#include "log.hh"
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/context.hpp>
-
-#include <ActorHelper.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 using Catch::Matchers::Matches;
 

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/core.hpp>
@@ -28,6 +26,8 @@
 
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/value_generators.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 using namespace genny::value_generators;
 using bsoncxx::builder::stream::close_document;

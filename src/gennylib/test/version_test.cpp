@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <gennylib/version.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 TEST_CASE("We have the right version") {
     REQUIRE(genny::getVersion() == "0.0.1");

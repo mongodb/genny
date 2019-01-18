@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <atomic>
 #include <chrono>
 #include <iostream>
@@ -30,9 +28,8 @@
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <log.hh>
-
-#include <ActorHelper.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 using namespace genny;
 using namespace genny::V1;

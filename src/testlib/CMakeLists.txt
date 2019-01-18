@@ -12,42 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(value_generators VERSION 0.0.1 LANGUAGES CXX)
+project(testlib VERSION 0.0.1 LANGUAGES CXX)
 
-add_library(value_generators STATIC
-    src/generators-private.cpp
-    src/parser.cpp
-    src/value_generators.cpp
+add_library(testlib STATIC
+    src/ActorHelper.cpp
+    src/MongoTestFixture.cpp
 )
-target_include_directories(value_generators
+target_include_directories(testlib
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(value_generators
+target_link_libraries(testlib
+PUBLIC
+    gennylib
+    MongoCxx::mongocxx
     MongoCxx::bsoncxx
+    Boost::boost
+    Boost::log
+    catch2
     yaml-cpp
-    Boost::boost Boost::log
 )
 
 install(DIRECTORY include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN *.hpp)
 
-install(TARGETS  value_generators
+install(TARGETS  testlib
         EXPORT   GennyLibraryConfig
         ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
 
 
-add_executable(value_generators_test
-    test/document_test.cpp
-    test/DefaultRandom_test.cpp
+add_executable(testlib_test
+    test/ActorHelper_test.cpp
 )
+target_link_libraries(testlib_test testlib catch2)
 
-target_link_libraries(value_generators_test value_generators testlib)
-
-ParseAndAddCatchTests(value_generators_test)
+ParseAndAddCatchTests(testlib_test)
 

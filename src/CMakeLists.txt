@@ -17,6 +17,7 @@ add_subdirectory(third_party)
 add_subdirectory(metrics)
 add_subdirectory(value_generators)
 add_subdirectory(gennylib)
+add_subdirectory(testlib)
 add_subdirectory(cast_core)
 add_subdirectory(driver)
 

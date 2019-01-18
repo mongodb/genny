@@ -25,8 +25,9 @@
 #include <boost/throw_exception.hpp>
 
 #include <DefaultDriver.hpp>
-#include <helpers.hpp>
 
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/Cast.hpp>

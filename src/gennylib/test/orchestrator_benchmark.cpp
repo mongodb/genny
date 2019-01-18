@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <atomic>
 #include <chrono>
 #include <thread>
 
 #include <gennylib/Orchestrator.hpp>
 #include <value_generators/DefaultRandom.hpp>
+#include <testlib/helpers.hpp>
 
 using namespace genny;
 using namespace std;

@@ -102,22 +102,6 @@ install(DIRECTORY include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
         FILES_MATCHING PATTERN *.hpp)
 
-# Pull together our utils, header directories, and testing dependencies into one static target
-add_library(gennylib_testutil STATIC
-    test/ActorHelper.cpp
-    test/MongoTestFixture.cpp
-)
-target_include_directories(gennylib_testutil
-    PUBLIC
-        src
-        test
-)
-target_sources(gennylib_testutil
-    PUBLIC
-        $<TARGET_OBJECTS:catch2>
-)
-target_link_libraries(gennylib_testutil gennylib catch2_headers)
-
 add_executable(test_gennylib
     test/Cast_test.cpp
     test/context_test.cpp
@@ -127,11 +111,8 @@ add_executable(test_gennylib
     test/PhaseLoop_test.cpp
     test/version_test.cpp
     test/orchestrator_test.cpp
-
-    # Test the helper
-    test/ActorHelper_test.cpp
 )
-target_link_libraries(test_gennylib gennylib_testutil)
+target_link_libraries(test_gennylib testlib)
 
 add_executable(benchmark_gennylib
     test/PhaseLoop_benchmark.cpp
@@ -139,7 +120,7 @@ add_executable(benchmark_gennylib
     test/orchestrator_benchmark.cpp
 )
 
-target_link_libraries(benchmark_gennylib gennylib_testutil)
+target_link_libraries(benchmark_gennylib testlib)
 
 
 add_executable(test_gennylib_with_server
@@ -150,7 +131,7 @@ add_executable(test_gennylib_with_server
         # ActorsTestEnd
 )
 
-target_link_libraries(test_gennylib_with_server gennylib_testutil cast_core)
+target_link_libraries(test_gennylib_with_server testlib cast_core)
 
 ParseAndAddCatchTests(test_gennylib)
 

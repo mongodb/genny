@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
 
 #include <functional>
 #include <iomanip>
@@ -23,12 +22,11 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <testlib/helpers.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <log.hh>
 #include <metrics/metrics.hpp>
-
-#include <ActorHelper.hpp>
+#include <testlib/ActorHelper.hpp>
 
 using namespace genny;
 using namespace std;

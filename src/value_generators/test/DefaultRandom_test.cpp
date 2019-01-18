@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
 
 #include <algorithm>
 #include <iostream>
 
 #include <value_generators/DefaultRandom.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 namespace genny {
 

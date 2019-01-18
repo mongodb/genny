@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <chrono>
 #include <iostream>
 #include <optional>
 
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <log.hh>
-
-#include <ActorHelper.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 using namespace genny;
 using namespace genny::V1;
