@@ -21,7 +21,7 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>

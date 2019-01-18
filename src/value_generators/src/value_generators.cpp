@@ -19,8 +19,8 @@
 #include <boost/log/trivial.hpp>
 #include <bsoncxx/json.hpp>
 
-#include <gennylib/DefaultRandom.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/value_generators.hpp>
+#include <value_generators/DefaultRandom.hpp>
 
 namespace genny::value_generators {
 

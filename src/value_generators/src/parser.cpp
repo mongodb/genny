@@ -19,6 +19,7 @@
 #include <chrono>
 #include <utility>
 
+#include <bsoncxx/types/value.hpp>
 #include <bsoncxx/builder/concatenate.hpp>
 #include <bsoncxx/json.hpp>
 

@@ -18,7 +18,7 @@
 #include <chrono>
 #include <thread>
 
-#include <gennylib/DefaultRandom.hpp>
+#include <value_generators/DefaultRandom.hpp>
 #include <gennylib/Orchestrator.hpp>
 
 using namespace genny;

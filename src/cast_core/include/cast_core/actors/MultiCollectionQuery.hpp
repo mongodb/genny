@@ -16,7 +16,7 @@
 #define HEADER_F86B8CA3_F0C0_4973_9FC8_3875A76D7610
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 #include <metrics/metrics.hpp>

@@ -17,8 +17,9 @@
 #include <string_view>
 #include <unordered_set>
 
-#include "../log.hh"
-#include <gennylib/InvalidConfigurationException.hpp>
+#include <bsoncxx/types/value.hpp>
+
+#include <boost/log/trivial.hpp>
 
 namespace genny::value_generators {
 

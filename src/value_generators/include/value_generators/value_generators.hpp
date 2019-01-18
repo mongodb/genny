@@ -17,11 +17,23 @@
 
 #include <bsoncxx/builder/stream/document.hpp>
 #include <optional>
+#include <exception>
 #include <unordered_map>
 
-#include <gennylib/DefaultRandom.hpp>
+#include <yaml-cpp/yaml.h>
+
+#include <value_generators/DefaultRandom.hpp>
 
 namespace genny::value_generators {
+
+/**
+ * Throw this to indicate bad configuration.
+ */
+class InvalidConfigurationException : public std::invalid_argument {
+public:
+    using std::invalid_argument::invalid_argument;
+};
+
 
 /*
  * This is the base class for all document generrators. A document generator generates a possibly

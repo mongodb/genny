@@ -31,7 +31,7 @@
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
 #include <gennylib/Cast.hpp>
-#include <gennylib/DefaultRandom.hpp>
+#include <value_generators/DefaultRandom.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
