@@ -38,7 +38,7 @@ target_include_directories(gennylib_core
 target_link_libraries(gennylib_core
     yaml-cpp
     loki
-
+    metrics
     Boost::boost Boost::log
     MongoCxx::mongocxx
 )
@@ -101,7 +101,9 @@ endif()
 # Link in OpenSSL
 target_link_libraries(gennylib
     PUBLIC
-        OpenSSL::Crypto OpenSSL::SSL
+        metrics
+        OpenSSL::Crypto
+        OpenSSL::SSL
 )
 
 # 'make install' to the correct locations (provided by GNUInstallDirs).
@@ -138,7 +140,6 @@ add_executable(test_gennylib
     test/PoolFactory_test.cpp
     test/PhaseLoop_test.cpp
     test/version_test.cpp
-    test/metrics_test.cpp
     test/orchestrator_test.cpp
     test/document_test.cpp
     test/DefaultRandom_test.cpp

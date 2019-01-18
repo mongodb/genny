@@ -15,8 +15,8 @@
 #include "test.h"
 
 #include <gennylib/context.hpp>
-#include <gennylib/metrics.hpp>
 #include <log.hh>
+#include <metrics/metrics.hpp>
 
 using namespace genny;
 

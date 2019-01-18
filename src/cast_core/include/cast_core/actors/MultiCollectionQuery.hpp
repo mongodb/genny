@@ -19,6 +19,7 @@
 #include <gennylib/DefaultRandom.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny::actor {
 

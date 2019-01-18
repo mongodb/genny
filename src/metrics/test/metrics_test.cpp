@@ -11,14 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-#include "test.h"
+#include <helpers.hpp>
 
 #include <iomanip>
 #include <iostream>
 
-#include <gennylib/MetricsReporter.hpp>
-#include <gennylib/metrics.hpp>
+#include <metrics/MetricsReporter.hpp>
+#include <metrics/metrics.hpp>
 
 TEST_CASE("example metrics usage") {
     genny::metrics::Registry metrics;

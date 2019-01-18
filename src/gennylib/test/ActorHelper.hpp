@@ -25,7 +25,7 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/metrics.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 

@@ -22,7 +22,7 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/config/ExecutionStrategyOptions.hpp>
-#include <gennylib/metrics.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 
