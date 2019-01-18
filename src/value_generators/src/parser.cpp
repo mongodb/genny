@@ -19,9 +19,9 @@
 #include <chrono>
 #include <utility>
 
-#include <bsoncxx/types/value.hpp>
 #include <bsoncxx/builder/concatenate.hpp>
 #include <bsoncxx/json.hpp>
+#include <bsoncxx/types/value.hpp>
 
 using bsoncxx::builder::concatenate;
 using bsoncxx::builder::stream::close_array;

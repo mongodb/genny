@@ -16,8 +16,8 @@
 #define HEADER_E6E05F14_BE21_4A9B_822D_FFD669CFB1B4_INCLUDED
 
 #include <bsoncxx/builder/stream/document.hpp>
-#include <optional>
 #include <exception>
+#include <optional>
 #include <unordered_map>
 
 #include <yaml-cpp/yaml.h>
