@@ -28,6 +28,7 @@ target_include_directories(value_generators
 target_link_libraries(value_generators
     MongoCxx::bsoncxx
     yaml-cpp
+    Boost::boost Boost::log
 )
 
 install(DIRECTORY include/
