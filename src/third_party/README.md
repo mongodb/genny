@@ -47,3 +47,29 @@ They may not have well defined recipes to build them on some distros.
 Genny currently uses:
 * gRPC
 * libmongocxx
+
+## Static Linking vs Shared Linking
+
+### Linking with Shared Objects
+
+Shared linking means that when the genny executable is run, the system linker needs to find all of
+the shared objects that the executable was linked against. These libraries can be seen by running
+`lld genny` on linux or `otool -L genny` on macOS. If a library is installed in the system path,
+for instance if installed via the package manager, the linker usually finds them trivially. Linking
+with shared objects allows reuse of the the shared object code between executables. It also
+potentially allows the user to provide their own version of the shared object tailored to their
+machine.
+
+### Linking with Static Archives
+
+Static linking means that the necessary parts of the library are included in the genny executable.
+This increases the size of the executable and can potentially cause parts of the library to be
+duplicated in separate executables. However, since no additional file needs to be passed around,
+statically linking libraries makes distribution of the end library or executable easier. There are a
+few concerns around statically linking a library:
+* If the statically linked library requires other dependency libraries, then any binary that links
+  that library needs to be linked to either static or shared forms of those dependency libraries.
+* If the statically linked library is later linked as a shared library, then there may be duplicate
+  symbol errors or unexpected behavior.
+* If the statically linked library has a restrictive license, then it is possible that any binary
+  that links that library will be subject to that same license.
