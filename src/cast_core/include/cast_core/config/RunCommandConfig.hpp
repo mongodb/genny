@@ -85,7 +85,8 @@ struct convert<genny::config::RunCommandConfig::Operation> {
 
         genny::decodeNodeInto(rhs.metricsName, node[Keys::kMetricsName], Defaults::kMetricsName);
         genny::decodeNodeInto(rhs.isQuiet, node[Keys::kIsQuiet], Defaults::kIsQuiet);
-        genny::decodeNodeInto(rhs.awaitStepdown, node[Keys::kAwaitStepdown], Defaults::kAwaitStepdown);
+        genny::decodeNodeInto(
+            rhs.awaitStepdown, node[Keys::kAwaitStepdown], Defaults::kAwaitStepdown);
 
         rhs.rateLimit.minPeriod = node[Keys::kMinPeriod].as<genny::TimeSpec>(Defaults::kMinPeriod);
         rhs.rateLimit.preSleep = node[Keys::kPreSleep].as<genny::TimeSpec>(Defaults::kPreSleep);

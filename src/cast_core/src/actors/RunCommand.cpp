@@ -40,7 +40,7 @@ namespace {
  * @param exception exception received from mongocxx::database::run_command()
  * @return if the exception is a result of a connection error or timeout
  */
-bool isNetworkError(mongocxx::operation_exception &exception) {
+bool isNetworkError(mongocxx::operation_exception& exception) {
     auto what = std::string{exception.what()};
     return what.find("socket error or timeout") != std::string::npos;
 }
@@ -55,7 +55,8 @@ bsoncxx::document::value commandRequiringStepdownCompleted = []() {
     // `{ "collStats": "__genny-arbitrary-collection" }`
     // NB the actual collection doesn't need to exist, so just pick an arbitrary name that
     // likely doesn't exist.
-    auto request = builder << "collStats" << "__genny-arbitrary-collection" << bsoncxx::builder::stream::finalize;
+    auto request = builder << "collStats"
+                           << "__genny-arbitrary-collection" << bsoncxx::builder::stream::finalize;
     return request;
 }();
 
@@ -67,7 +68,7 @@ bsoncxx::document::value commandRequiringStepdownCompleted = []() {
  * @param database database on which to run `run_command()`.
  * @param command the command to run
  */
-void runThenAwaitStepdown(mongocxx::database &database, bsoncxx::document::view &command) {
+void runThenAwaitStepdown(mongocxx::database& database, bsoncxx::document::view& command) {
     try {
         database.run_command(command);
         throw std::logic_error("Stepdown should throw operation exception");
@@ -112,32 +113,24 @@ public:
           _awaitStepdown{opts.awaitStepdown} {
         // Only record metrics if we have a name for the operation.
         if (!_options.metricsName.empty()) {
-            _timer = std::make_optional<metrics::Timer>(
-                actorContext.timer(_options.metricsName, id));
+            _timer =
+                std::make_optional<metrics::Timer>(actorContext.timer(_options.metricsName, id));
         }
     }
 
-    static std::unique_ptr<Operation> create(
-            YAML::Node node, genny::DefaultRandom& rng,
-            PhaseContext& context,
-            ActorContext& actorContext,
-            ActorId id,
-            mongocxx::pool::entry& client,
-            const std::string& database
-    ) {
+    static std::unique_ptr<Operation> create(YAML::Node node,
+                                             genny::DefaultRandom& rng,
+                                             PhaseContext& context,
+                                             ActorContext& actorContext,
+                                             ActorId id,
+                                             mongocxx::pool::entry& client,
+                                             const std::string& database) {
         auto yamlCommand = node["OperationCommand"];
         auto doc = value_generators::makeDoc(yamlCommand, rng);
 
         auto options = node.as<Operation::OpConfig>(Operation::OpConfig{});
         return std::make_unique<Operation>(
-                context,
-                actorContext,
-                id,
-                database,
-                (*client)[database],
-                std::move(doc),
-                options
-        );
+            context, actorContext, id, database, (*client)[database], std::move(doc), options);
     };
 
     void run() {
@@ -181,10 +174,10 @@ private:
 /** @private */
 struct actor::RunCommand::PhaseConfig {
     PhaseConfig(PhaseContext& context,
-               ActorContext& actorContext,
-               genny::DefaultRandom& rng,
-               mongocxx::pool::entry& client,
-               ActorId id)
+                ActorContext& actorContext,
+                genny::DefaultRandom& rng,
+                mongocxx::pool::entry& client,
+                ActorId id)
         : strategy{actorContext, id, "RunCommand"},
           options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")} {
         auto actorType = context.get<std::string>("Type");
@@ -194,23 +187,12 @@ struct actor::RunCommand::PhaseConfig {
                 "AdminCommands can only be run on the 'admin' database.");
         }
 
-        auto operationList = context.get<YAML::Node, false>("Operations");
-        auto operationUnit = context.get<YAML::Node, false>("Operation");
-        if (operationList && operationUnit) {
-            throw InvalidConfigurationException(
-                "Can't have both 'Operations' and 'Operation' in YAML config.");
-        } else if (operationList) {
-            if (!operationList->IsSequence()) {
-                throw InvalidConfigurationException("'Operations' must be of sequence type.");
-            }
-            for (auto&& op : *operationList) {
-                operations.push_back(Operation::create(op, rng, context, actorContext, id, client, database));
-            }
-        } else if (operationUnit) {
-            operations.push_back(Operation::create(*operationUnit, rng, context, actorContext, id, client, database));
-        } else if (!operationUnit && !operationList) {
-            throw InvalidConfigurationException("No operations found in RunCommand Actor.");
-        }
+        auto createOperation = [&](YAML::Node node) {
+            return Operation::create(node, rng, context, actorContext, id, client, database);
+        };
+
+        operations = context.getPlural<std::unique_ptr<Operation>>(
+            "Operation", "Operations", createOperation);
     }
 
     ExecutionStrategy strategy;
