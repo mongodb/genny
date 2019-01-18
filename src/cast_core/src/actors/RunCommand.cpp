@@ -122,31 +122,15 @@ struct actor::RunCommand::PhaseState {
             (*client)[database],
         };
 
-        auto addOperation = [&](YAML::Node node) {
+        auto createOperation = [&](YAML::Node node) {
             auto yamlCommand = node["OperationCommand"];
             auto doc = value_generators::makeDoc(yamlCommand, rng);
 
             auto options = node.as<Operation::Options>(Operation::Options{});
-            operations.push_back(std::make_unique<Operation>(fixture, std::move(doc), options));
+            return std::make_unique<Operation>(fixture, std::move(doc), options);
         };
 
-        auto operationList = context.get<YAML::Node, false>("Operations");
-        auto operationUnit = context.get<YAML::Node, false>("Operation");
-        if (operationList && operationUnit) {
-            throw InvalidConfigurationException(
-                "Can't have both 'Operations' and 'Operation' in YAML config.");
-        } else if (operationList) {
-            if (!operationList->IsSequence()) {
-                throw InvalidConfigurationException("'Operations' must be of sequence type.");
-            }
-            for (auto&& op : *operationList) {
-                addOperation(op);
-            }
-        } else if (operationUnit) {
-            addOperation(*operationUnit);
-        } else if (!operationUnit && !operationList) {
-            throw InvalidConfigurationException("No operations found in RunCommand Actor.");
-        }
+        operations = context.getPlural<std::unique_ptr<Operation>>("Operation", "Operations", createOperation);
     }
 
     ExecutionStrategy strategy;

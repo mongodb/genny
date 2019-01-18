@@ -245,7 +245,7 @@ Actors:
     }
 }
 
-void onContext(YAML::Node& yaml, std::function<void(ActorContext&)> op) {
+void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
@@ -460,6 +460,102 @@ TEST_CASE("Actors Share WorkloadContext State") {
 
     REQUIRE(WorkloadContext::getActorSharedState<DummyInsert, DummyInsert::InsertCounter>() ==
             10 * 10);
+}
+
+struct TakesInt {
+    int value;
+    TakesInt(int x) : value{x} {
+        if (x > 7) {
+            throw std::logic_error("Expected");
+        }
+    }
+};
+
+struct AnotherInt : public TakesInt {
+    // need no-arg ctor to be able to do YAML::Node::as<>()
+    AnotherInt() : AnotherInt(0) {}
+    AnotherInt(int x) : TakesInt(x) {}
+};
+
+namespace YAML {
+
+template <>
+struct convert<AnotherInt> {
+    static Node encode(const AnotherInt& rhs) {
+        return {};
+    }
+    static bool decode(const Node& node, AnotherInt& rhs) {
+        rhs = AnotherInt{node.as<int>()};
+        return true;
+    }
+};
+
+}  // namespace YAML
+
+TEST_CASE("getPlural") {
+    auto createYaml = [](std::string actorYaml) {
+        auto doc = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Numbers: [1,2,3]
+Actors: [{}]
+)");
+        auto actor = YAML::Load(actorYaml);
+        actor["Type"] = "Op";
+        doc["Actors"][0] = actor;
+        return doc;
+    };
+
+    // can use built-in decode types
+    onContext(createYaml("Foo: 5"), [](ActorContext& c) {
+        c.getPlural<TakesInt>("Foo", "Foos", [](YAML::Node n) { return TakesInt{n.as<int>()}; });
+    });
+
+    onContext(createYaml("Foo: 5"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<AnotherInt>("Foo", "Foos")[0].value == 5);
+    });
+
+    onContext(createYaml("{}"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH(
+                [&]() {
+                    c.getPlural<int>("Foo","Foos");
+                }(),
+                Matches("Either 'Foo' or 'Foos' required."));
+    });
+    onContext(createYaml("Foo: 81"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH(
+            [&]() {
+                c.getPlural<TakesInt>(
+                    "Foo", "Foos", [](YAML::Node n) { return TakesInt{n.as<int>()}; });
+            }(),
+            Matches("Expected"));
+    });
+
+    onContext(createYaml("Foos: [733]"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{733});
+    });
+
+    onContext(createYaml("Foos: 73"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
+                            Matches("'Foos' must be a sequence type."));
+    });
+
+    onContext(createYaml("Foo: 71"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{71});
+    });
+
+    onContext(createYaml("{ Foo: 9, Foos: 1 }"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
+                            Matches("Can't have both 'Foo' and 'Foos'."));
+    });
+
+    onContext(createYaml("Number: 7"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Number", "Numbers"); }(),
+                            Matches("Can't have both 'Number' and 'Numbers'."));
+    });
+
+    onContext(createYaml("Numbers: [3, 4, 5]"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Number", "Numbers") == std::vector<int>{3, 4, 5});
+    });
 }
 
 TEST_CASE("Configuration cascades to nested context types") {
