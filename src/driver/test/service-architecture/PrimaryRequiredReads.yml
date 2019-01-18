@@ -1,0 +1,71 @@
+SchemaVersion: 2018-07-01
+Pool:
+    QueryOptions:
+        maxPoolSize: 1000
+        socketTimeoutMS: 5000
+        connectTimeoutMS: 5000
+Actors:
+  - Name: StepdownCommand
+    # See https://jira.mongodb.org/browse/TIG-1322 for what Type this should be eventually
+    Type: AdminCommand
+    Threads: 1
+    # This ExecutionStrategy block says to try once and catch any exception thrown.
+    # There should be an exception because the replSetStepDown command either returns failure
+    # or disconnects its client session. That said, any other failure we did not expect would still
+    # be caught.
+    ExecutionStrategy:
+        Retries: 0
+        ThrowOnFailure: false
+    Phases:
+      - # Phase: 0 # Load
+        NoOp: true
+      - Phase: 1 # Run
+        Repeat: 1
+        Operation:
+            OperationMetricsName: "Stepdown"
+            OperationName: AdminCommand
+            OperationSleepBefore: 60 seconds
+            # Because the ExecutionStrategy goes around a set of operations,
+            # the catch and throw skips this sleep. With TIG-1322 this will no longer be an issue.
+            # OperationSleepAfter: 120 seconds
+            OperationCommand:
+                replSetStepDown: 60
+  - Name: PrimaryRequiredRead
+    Type: RunCommand
+    Threads: 100
+    # We want to continue to send our find commands in any situation.
+    # However, failures before replSetStepDown indicate that something was wrong with the test.
+    # Ideally, post-workload analysis will show if any find failure happens before replSetStepdown.
+    ExecutionStrategy:
+        Retries: 0
+        ThrowOnFailure: false
+    Database: test
+    Phases:
+      - # Phase: 0 # Load
+        NoOp: true
+      - Phase: 1 # Run
+        Duration: 180 seconds
+        Operation: &find_one
+            OperationMetricsName: "Find"
+            OperationName: RunCommand
+            OperationIsQuiet: yes
+            OperationMinPeriod: 100 microseconds
+            OperationCommand:
+                find: Collection0
+                readConcern: { level: local }
+                $readPreference: { mode: primary }
+  - Name: Loader
+    Type: Loader
+    Threads: 1
+    Database: test
+    CollectionCount: 1
+    DocumentCount: 100
+    BatchSize: 100
+    Document:
+      t: {$randomint: {min: 0, max: 10}}
+    Indexes:
+      - keys: {t: 1}
+    Phases:
+      - Phase: 0 # Load
+      - # Phase: 1 # Run
+        NoOp: true

@@ -49,10 +49,10 @@ target_link_libraries(test_driver driver gennylib_testutil)
 ParseAndAddCatchTests(test_driver)
 
 # Install all the workload documents
-file(GLOB WORKLOADS
-     test/*.yml
-     test/*.yaml
-)
-install(FILES ${WORKLOADS}
+install(DIRECTORY test/
         DESTINATION etc/genny/workloads
+        COMPONENT Workloads
+        FILES_MATCHING
+            PATTERN "*.yml"
+            PATTERN "*.yaml"
 )
