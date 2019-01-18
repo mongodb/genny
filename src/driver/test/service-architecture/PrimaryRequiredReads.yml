@@ -25,7 +25,9 @@ Actors:
             OperationMetricsName: "Stepdown"
             OperationName: AdminCommand
             OperationSleepBefore: 60 seconds
-            OperationSleepAfter: 120 seconds
+            # Because the ExecutionStrategy goes around a set of operations,
+            # the catch and throw skips this sleep. With TIG-1322 this will no longer be an issue.
+            # OperationSleepAfter: 120 seconds
             OperationCommand:
                 replSetStepDown: 60
   - Name: PrimaryRequiredRead
@@ -42,6 +44,7 @@ Actors:
       - # Phase: 0 # Load
         NoOp: true
       - Phase: 1 # Run
+        Duration: 180 seconds
         Operation: &find_one
             OperationMetricsName: "Find"
             OperationName: RunCommand
