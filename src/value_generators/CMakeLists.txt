@@ -44,9 +44,10 @@ install(TARGETS  value_generators
 add_executable(value_generators_test
     test/document_test.cpp
     test/DefaultRandom_test.cpp
+    $<TARGET_OBJECTS:catch2>
 )
 
-target_link_libraries(value_generators_test catch2 gennylib_testutil)
+target_link_libraries(value_generators_test gennylib_testutil)
 
 ParseAndAddCatchTests(value_generators_test)
 
