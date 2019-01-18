@@ -73,6 +73,8 @@ public:
     /**
      * @param out print a human-readable listing of all
      *            data-points to this ostream.
+     * @param metricsFormat the format to use. Either "csv" or "sys-perf".
+     * @param perm passkey permission (must be friends with metrics::Registry)
      */
     void report(std::ostream& out,
                 const std::string& metricsFormat,

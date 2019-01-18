@@ -32,7 +32,7 @@ class MultiCollectionUpdate : public Actor {
 
 public:
     explicit MultiCollectionUpdate(ActorContext& context);
-    ~MultiCollectionUpdate() = default;
+    ~MultiCollectionUpdate() override = default;
 
     static std::string_view defaultName() {
         return "MultiCollectionUpdate";
@@ -40,6 +40,7 @@ public:
     void run() override;
 
 private:
+    /** @private */
     struct PhaseConfig;
     genny::DefaultRandom _rng;
 

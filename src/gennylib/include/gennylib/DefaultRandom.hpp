@@ -26,6 +26,7 @@ namespace V1 {
  * Genny random number generator.
  *
  * @tparam RNGImpl Random number generator implementation to use.
+ * @private
  */
 template <class RNGImpl>
 class Random {
@@ -33,6 +34,7 @@ class Random {
 public:
     using result_type = typename RNGImpl::result_type;
 
+    /** @private */
     using Handle = Random&;
 
     /**

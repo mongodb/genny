@@ -1,7 +1,7 @@
 ## 🚀 Hitchhikers' Guide to the Genny Repo 🚀 {#mainpage}
 
 #### 🔰 Intro 🔰
-This guide is meant to serve as a readme for anyone working in the Genny Repo. This is not meant as a guide to use Genny as a tool - that is in the [README.md](README.md) file in this same directory. The Genny Repo has a lot of different layers 🍰 to it, and before getting started it is useful to know what part of it to work on. This guide should give you an overview of where to get started!
+This guide is meant to serve as a readme for anyone working in the Genny Repo. This is not meant as a guide to use Genny as a tool - that is in the README.md file in the parent directory. The Genny Repo has a lot of different layers 🍰 to it, and before getting started it is useful to know what part of it to work on. This guide should give you an overview of where to get started!
 
 ### 📂 Where are all the files? 📂
 Some of the main files that you will be working on are probably located in [src/gennylib/include/gennylib/](src/gennylib/include/gennylib). The most common files among those are [Orchestrator.hpp](src/gennylib/include/gennylib/Orchestrator.hpp), [PhaseLoop.hpp](src/gennylib/include/gennylib/PhaseLoop.hpp), and [context.hpp](src/gennylib/include/gennylib/context.hpp). The respective .cpp files for [Orchestrator](src/gennylib/src/Orchestrator.cpp) and [context](src/gennylib/src/context.cpp) are in [src/gennylib/src](src/gennylib/src), while PhaseLoop has no corresponding PhaseLoop.cpp file. To understand what kinds of 📈 metrics Genny outputs, read through the [metrics.hpp](src/gennylib/include/gennylib/metrics.hpp).

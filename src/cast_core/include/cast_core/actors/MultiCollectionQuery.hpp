@@ -32,7 +32,7 @@ class MultiCollectionQuery : public Actor {
 
 public:
     explicit MultiCollectionQuery(ActorContext& context);
-    ~MultiCollectionQuery() = default;
+    ~MultiCollectionQuery() override = default;
 
     static std::string_view defaultName() {
         return "MultiCollectionQuery";
@@ -40,6 +40,7 @@ public:
     void run() override;
 
 private:
+    /** @private */
     struct PhaseConfig;
     genny::DefaultRandom _rng;
     metrics::Timer _queryTimer;

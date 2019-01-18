@@ -32,7 +32,7 @@ class Loader : public Actor {
 
 public:
     explicit Loader(ActorContext& context, uint thread);
-    ~Loader() = default;
+    ~Loader() override = default;
 
     static std::string_view defaultName() {
         return "Loader";
@@ -40,6 +40,7 @@ public:
     void run() override;
 
 private:
+    /** @private */
     struct PhaseConfig;
     genny::DefaultRandom _rng;
     metrics::Timer _totalBulkLoadTimer;

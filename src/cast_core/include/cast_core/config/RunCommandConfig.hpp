@@ -22,12 +22,17 @@
 
 namespace genny::config {
 
+/**
+ * Configuration for `genny::actor::RunCommand`.
+ */
 struct RunCommandConfig {
     using RateLimit = RateLimiterOptions;
+    /** Represents each `Operation:` block in the `Phase:` block */
     struct Operation;
 };
 
 struct RunCommandConfig::Operation {
+    /** Default values for each of the keys */
     struct Defaults {
         static constexpr auto kMetricsName = "";
         static constexpr auto kIsQuiet = false;
@@ -36,6 +41,7 @@ struct RunCommandConfig::Operation {
         static constexpr auto kPostSleep = TimeSpec{};
     };
 
+    /** YAML keys */
     struct Keys {
         static constexpr auto kMetricsName = "OperationMetricsName";
         static constexpr auto kIsQuiet = "OperationIsQuiet";

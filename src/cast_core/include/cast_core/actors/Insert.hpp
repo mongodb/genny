@@ -32,7 +32,7 @@ class Insert : public genny::Actor {
 
 public:
     explicit Insert(ActorContext& context);
-    ~Insert() = default;
+    ~Insert() override = default;
 
     static std::string_view defaultName() {
         return "Insert";

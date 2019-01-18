@@ -59,12 +59,14 @@ namespace genny::actor {
 
 class RunCommand : public Actor {
 public:
+    /** @private */
     class Operation;
+    /** @private */
     struct PhaseState;
 
 public:
     explicit RunCommand(ActorContext& context);
-    ~RunCommand() = default;
+    ~RunCommand() override = default;
 
     static std::string_view defaultName() {
         return "RunCommand";
