@@ -220,8 +220,6 @@ public:
         const std::string& singular, const std::string& plural, F&& f = [](YAML::Node n) {
             return n.as<T>();
         }) {
-        static_assert(std::is_same_v<T, decltype(f(YAML::Node{}))>,
-                      "Function takes YAML::Node and returns T");
         std::vector<T> out;
 
         auto pluralValue = this->get<YAML::Node, false>(plural);
@@ -237,10 +235,12 @@ public:
                 throw InvalidConfigurationException(str.str());
             }
             for (auto&& val : *pluralValue) {
-                out.push_back(std::invoke(f, val));
+                T created = std::invoke(f, val);
+                out.emplace_back(std::move(created));
             }
         } else if (singValue) {
-            out.push_back(std::invoke(f, *singValue));
+            T created = std::invoke(f, *singValue);
+            out.emplace_back(std::move(created));
         } else if (!singValue && !pluralValue) {
             std::stringstream str;
             str << "Either '" << singular << "' or '" << plural << "' required.";
