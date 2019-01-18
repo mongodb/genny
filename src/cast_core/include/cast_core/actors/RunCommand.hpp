@@ -59,10 +59,6 @@ namespace genny::actor {
 
 class RunCommand : public Actor {
 public:
-    class Operation;
-    struct PhaseState;
-
-public:
     explicit RunCommand(ActorContext& context);
     ~RunCommand() = default;
 
@@ -76,7 +72,8 @@ private:
     genny::DefaultRandom _rng;
     mongocxx::pool::entry _client;
 
-    PhaseLoop<PhaseState> _loop;
+    struct PhaseConfig;
+    PhaseLoop<PhaseConfig> _loop;
 };
 
 

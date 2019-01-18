@@ -515,11 +515,8 @@ Actors: [{}]
     });
 
     onContext(createYaml("{}"), [](ActorContext& c) {
-        REQUIRE_THROWS_WITH(
-                [&]() {
-                    c.getPlural<int>("Foo","Foos");
-                }(),
-                Matches("Either 'Foo' or 'Foos' required."));
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
+                            Matches("Either 'Foo' or 'Foos' required."));
     });
     onContext(createYaml("Foo: 81"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH(
