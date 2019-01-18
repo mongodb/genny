@@ -36,6 +36,7 @@ struct RunCommandConfig::Operation {
     struct Defaults {
         static constexpr auto kMetricsName = "";
         static constexpr auto kIsQuiet = false;
+        static constexpr auto kAwaitStepdown = false;
         static constexpr auto kMinPeriod = TimeSpec{};
         static constexpr auto kPreSleep = TimeSpec{};
         static constexpr auto kPostSleep = TimeSpec{};
@@ -43,6 +44,7 @@ struct RunCommandConfig::Operation {
 
     /** YAML keys */
     struct Keys {
+        static constexpr auto kAwaitStepdown = "OperationAwaitStepdown";
         static constexpr auto kMetricsName = "OperationMetricsName";
         static constexpr auto kIsQuiet = "OperationIsQuiet";
         static constexpr auto kMinPeriod = "OperationMinPeriod";
@@ -52,6 +54,7 @@ struct RunCommandConfig::Operation {
 
     std::string metricsName = Defaults::kMetricsName;
     bool isQuiet = Defaults::kIsQuiet;
+    bool awaitStepdown = Defaults::kAwaitStepdown;
     RateLimit rateLimit =
         RateLimit{Defaults::kMinPeriod, Defaults::kPreSleep, Defaults::kPostSleep};
 };
@@ -71,12 +74,13 @@ struct convert<genny::config::RunCommandConfig::Operation> {
 
         // If we don't have a MetricsName, this key is null
         node[Keys::kMetricsName] = rhs.metricsName;
+
         node[Keys::kIsQuiet] = rhs.isQuiet;
+        node[Keys::kAwaitStepdown] = rhs.awaitStepdown;
 
         node[Keys::kMinPeriod] = genny::TimeSpec{rhs.rateLimit.minPeriod};
         node[Keys::kPreSleep] = genny::TimeSpec{rhs.rateLimit.preSleep};
         node[Keys::kPostSleep] = genny::TimeSpec{rhs.rateLimit.postSleep};
-
         return node;
     }
 
@@ -87,6 +91,8 @@ struct convert<genny::config::RunCommandConfig::Operation> {
 
         genny::decodeNodeInto(rhs.metricsName, node[Keys::kMetricsName], Defaults::kMetricsName);
         genny::decodeNodeInto(rhs.isQuiet, node[Keys::kIsQuiet], Defaults::kIsQuiet);
+        genny::decodeNodeInto(
+            rhs.awaitStepdown, node[Keys::kAwaitStepdown], Defaults::kAwaitStepdown);
 
         rhs.rateLimit.minPeriod = node[Keys::kMinPeriod].as<genny::TimeSpec>(Defaults::kMinPeriod);
         rhs.rateLimit.preSleep = node[Keys::kPreSleep].as<genny::TimeSpec>(Defaults::kPreSleep);
