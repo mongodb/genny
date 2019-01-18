@@ -178,7 +178,8 @@ struct actor::RunCommand::PhaseConfig {
                 genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 ActorId id)
-        : strategy{actorContext, id, "RunCommand"},
+        // TODO: record metrics
+        : strategy{actorContext.operation("RunCommand", id)},
           options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
@@ -204,7 +205,7 @@ void actor::RunCommand::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
             config->strategy.run(
-                [&]() {
+                [&](metrics::OperationContext& ctx) {
                     for (auto&& op : config->operations) {
                         op->run();
                     }
