@@ -24,7 +24,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <DefaultDriver.hpp>
+#include <driver/DefaultDriver.hpp>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>

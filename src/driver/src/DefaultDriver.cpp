@@ -36,7 +36,7 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
-#include <DefaultDriver.hpp>
+#include <driver/DefaultDriver.hpp>
 
 namespace {
 
