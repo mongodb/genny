@@ -14,42 +14,16 @@
 
 project(testlib VERSION 0.0.1 LANGUAGES CXX)
 
-add_library(testlib STATIC
-    src/ActorHelper.cpp
-    src/MongoTestFixture.cpp
+genny_subdir(
+    NAME    testlib
+    TYPE    STATIC
+    DEPENDS
+        gennylib
+        MongoCxx::mongocxx
+        MongoCxx::bsoncxx
+        Boost::boost
+        Boost::log
+        catch2
+        yaml-cpp
+    TEST_DEPENDS    catch2
 )
-target_include_directories(testlib
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-)
-
-target_link_libraries(testlib
-PUBLIC
-    gennylib
-    MongoCxx::mongocxx
-    MongoCxx::bsoncxx
-    Boost::boost
-    Boost::log
-    catch2
-    yaml-cpp
-)
-
-install(DIRECTORY include/
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        FILES_MATCHING PATTERN *.hpp)
-
-install(TARGETS  testlib
-        EXPORT   GennyLibraryConfig
-        ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
-
-
-add_executable(testlib_test
-    test/ActorHelper_test.cpp
-)
-target_link_libraries(testlib_test testlib catch2)
-
-ParseAndAddCatchTests(testlib_test)
-
