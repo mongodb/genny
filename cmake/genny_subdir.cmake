@@ -79,6 +79,10 @@ function(GENNY_SUBDIR)
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
          CONFIGURE_DEPENDS
          src/*.cpp)
+
+    # remove main.cpp, it must be added via EXECUTABLE
+    list(REMOVE_ITEM _gs_files_src "src/main.cpp")
+
     # TODO: is this glob right
     file(GLOB_RECURSE _gs_tests_src
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
