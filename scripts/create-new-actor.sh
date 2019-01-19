@@ -198,7 +198,7 @@ Actors:
     Retries: 7 # used by ExecutionStrategy
     # below used by PhaseConfig in ${actor_name}.cpp
     Collection: test
-    Document: {foo: {\$randomint: {min: 0, max: 100}}}
+    Document: {foo: {^RandomInt: {Min: 0, Max: 100}}}
 EOF
 }
 
@@ -255,7 +255,7 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
           Phases:
           - Repeat: 100
             Collection: mycoll
-            Document: {foo: {\$randomint: {min: 0, max: 100}}}
+            Document: {foo: {^RandomInt: {Min: 0, Max: 100}}}
     )");
 
 
@@ -314,7 +314,7 @@ echo ""
 echo "    cd build"
 echo "    cmake .."
 echo "    make -j8"
-echo "    ./src/gennylib/test_gennylib_with_server '[${actor_name}]'"
+echo "    ./src/cast_core/cast_core_test '[${actor_name}]'"
 echo "    make test"
 echo ""
 echo "Run your workload as follows:"
