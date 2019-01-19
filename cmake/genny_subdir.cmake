@@ -34,7 +34,17 @@ function(GENNY_SUBDIR)
     set(_gs_test_depends)
     set(_gs_list_target "")
 
+    # for each arg we look for caps keywords
+    # e.g. NAME and set the appropriate _gs_want_X
+    # var. Then on next iteration if we have the
+    # _gs_want_X we set the _gs_X to the current value
+    # and unset the _gs_want var. For list types
+    # e.g. DEPENDS/TEST_DEPENDS we append to the
+    # appropriate lists.
     foreach(arg IN LISTS ARGV)
+        # we could be more pedantic in here
+        # to assert that we have at most
+        # one _gs_want* set but that seems..icky.
         if(arg MATCHES "^NAME$")
             set(_gs_want_name 1)
             continue()
@@ -67,38 +77,46 @@ function(GENNY_SUBDIR)
         endif()
     endforeach()
 
+    # normally we want
+    #   target_include_directories(name PUBLIC ...)
+    # for both PUBLIC and STATIC types
+    # but for type INTERFACE we want
+    #   target_include_directories(name INTERFACE ...)
     set(_gs_include_type "PUBLIC")
     if(_gs_type MATCHES "^INTERFACE$")
         set(_gs_include_type "INTERFACE")
     endif()
 
-    # debug("Deduced name=${_gs_name} type=${_gs_type} depends=${_gs_depends} test_depends=${_gs_test_depends}")
-
-    # TODO: is this glob right
-    file(GLOB_RECURSE _gs_files_src
-         RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-         CONFIGURE_DEPENDS
-         src/*.cpp)
-
-    # remove main.cpp, it must be added via EXECUTABLE
-    list(REMOVE_ITEM _gs_files_src "src/main.cpp")
-
-    # TODO: is this glob right
-    file(GLOB_RECURSE _gs_tests_src
-         RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-         CONFIGURE_DEPENDS
-         test/*.cpp)
-
-    file(GLOB_RECURSE _gs_benchmarks_src
-            RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
-            CONFIGURE_DEPENDS
-            benchmark/*.cpp)
-
+    # set _gs_private_src "PRIVATE;src" (list)
+    # if type isn't INTERFACES. This lets
+    # e.g. value_generators #include <> files
+    # in the src direcory. Cannot do this for
+    # INTERFACE targets.
     set(_gs_private_src)
     if(NOT _gs_type MATCHES "^INTERFACE$")
         list(APPEND _gs_private_src PRIVATE)
         list(APPEND _gs_private_src src)
     endif()
+
+    # _gs_files_src = src/*.cpp
+    file(GLOB_RECURSE _gs_files_src
+         RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+         CONFIGURE_DEPENDS
+         src/*.cpp)
+    # remove main.cpp, it must be added via EXECUTABLE
+    list(REMOVE_ITEM _gs_files_src "src/main.cpp")
+
+    # _gs_tests_src = test/*.cpp
+    file(GLOB_RECURSE _gs_tests_src
+         RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+         CONFIGURE_DEPENDS
+         test/*.cpp)
+
+    # _gs_benchmark_src
+    file(GLOB_RECURSE _gs_benchmarks_src
+         RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+         CONFIGURE_DEPENDS
+         benchmark/*.cpp)
 
     add_library("${_gs_name}" "${_gs_type}" ${_gs_files_src})
     target_include_directories(${_gs_name}
