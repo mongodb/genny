@@ -12,26 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <generators-private.hh>
-
-#include <stdlib.h>
-
-#include <boost/log/trivial.hpp>
-#include <bsoncxx/json.hpp>
-
 #include <value_generators/DefaultRandom.hpp>
-#include <value_generators/value_generators.hpp>
 
-namespace genny::value_generators {
+namespace genny::V1 {
 
+// Use explicit specialization to speed up compilation.
+template <>
+class Random<std::mt19937_64>;
 
-// parse a YAML Node and make a document of the correct type
-std::unique_ptr<DocumentGenerator> makeDoc(const YAML::Node node, genny::DefaultRandom& rng) {
-    if (!node) {  // empty document should be BsonDocument
-        return std::unique_ptr<DocumentGenerator>{new BsonDocument(node)};
-    } else
-        return std::unique_ptr<DocumentGenerator>{new TemplateDocument(node, rng)};
-};
-
-
-}  // namespace genny::value_generators
+}  // namespace genny::V1
