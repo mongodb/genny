@@ -29,7 +29,7 @@ namespace genny::value_generators {
 /**
  * Throw this to indicate bad configuration.
  */
-class InvalidConfigurationException : public std::invalid_argument {
+class InvalidValueGeneratorSyntax : public std::invalid_argument {
 public:
     using std::invalid_argument::invalid_argument;
 };
