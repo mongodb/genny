@@ -123,18 +123,6 @@ add_executable(benchmark_gennylib
 target_link_libraries(benchmark_gennylib testlib)
 
 
-add_executable(test_gennylib_with_server
-        # Don't modify the following comments; they're used as anchors in scripts that create new actors.
-        # ActorsTestStart
-        test/actors_test.cpp
-        test/RunCommandActor_test.cpp
-        # ActorsTestEnd
-)
-
-target_link_libraries(test_gennylib_with_server testlib cast_core)
-
 ParseAndAddCatchTests(test_gennylib)
 
 ParseAndAddCatchTests(benchmark_gennylib)
-
-ParseAndAddCatchTests(test_gennylib_with_server)
