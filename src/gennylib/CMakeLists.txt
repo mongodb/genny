@@ -87,7 +87,6 @@ endif()
 # Link in OpenSSL
 target_link_libraries(gennylib
     PUBLIC
-        metrics
         OpenSSL::Crypto
         OpenSSL::SSL
 )
