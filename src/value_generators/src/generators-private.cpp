@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "generators-private.hh"
+#include <generators-private.hh>
 
 #include <string_view>
 #include <unordered_set>

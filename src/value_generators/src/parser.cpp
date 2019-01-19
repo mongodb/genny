@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "parser.hh"
+#include <parser.hh>
 
 #include <boost/log/trivial.hpp>
 #include <boost/regex.hpp>

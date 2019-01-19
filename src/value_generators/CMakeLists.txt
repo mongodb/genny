@@ -23,6 +23,8 @@ target_include_directories(value_generators
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
+    PRIVATE
+        src
 )
 
 target_link_libraries(value_generators
