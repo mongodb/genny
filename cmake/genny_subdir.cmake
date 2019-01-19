@@ -94,11 +94,18 @@ function(GENNY_SUBDIR)
             CONFIGURE_DEPENDS
             benchmark/*.cpp)
 
+    set(_gs_private_src)
+    if(NOT _gs_type MATCHES "^INTERFACE$")
+        list(APPEND _gs_private_src PRIVATE)
+        list(APPEND _gs_private_src src)
+    endif()
+
     add_library("${_gs_name}" "${_gs_type}" ${_gs_files_src})
     target_include_directories(${_gs_name}
         "${_gs_include_type}"
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
+         ${_gs_private_src}
     )
 
     target_link_libraries("${_gs_name}"
