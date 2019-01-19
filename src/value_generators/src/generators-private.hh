@@ -3,8 +3,8 @@
 
 #include "parser.hh"
 
-#include <gennylib/value_generators.hpp>
-#include <gennylib/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
+#include <value_generators/DefaultRandom.hpp>
 
 namespace genny::value_generators {
 

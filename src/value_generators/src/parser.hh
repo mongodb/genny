@@ -7,7 +7,6 @@
 
 #include <bsoncxx/builder/stream/array.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
-#include <mongocxx/client.hpp>
 #include <yaml-cpp/yaml.h>
 
 namespace genny::value_generators::parser {

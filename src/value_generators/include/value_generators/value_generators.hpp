@@ -16,12 +16,24 @@
 #define HEADER_E6E05F14_BE21_4A9B_822D_FFD669CFB1B4_INCLUDED
 
 #include <bsoncxx/builder/stream/document.hpp>
+#include <exception>
 #include <optional>
 #include <unordered_map>
 
-#include <gennylib/DefaultRandom.hpp>
+#include <yaml-cpp/yaml.h>
+
+#include <value_generators/DefaultRandom.hpp>
 
 namespace genny::value_generators {
+
+/**
+ * Throw this to indicate bad configuration.
+ */
+class InvalidValueGeneratorSyntax : public std::invalid_argument {
+public:
+    using std::invalid_argument::invalid_argument;
+};
+
 
 /*
  * This is the base class for all document generrators. A document generator generates a possibly

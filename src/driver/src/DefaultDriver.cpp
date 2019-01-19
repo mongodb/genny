@@ -31,8 +31,10 @@
 #include <loki/ScopeGuard.h>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/MetricsReporter.hpp>
 #include <gennylib/context.hpp>
+
+#include <metrics/MetricsReporter.hpp>
+#include <metrics/metrics.hpp>
 
 #include "DefaultDriver.hpp"
 
