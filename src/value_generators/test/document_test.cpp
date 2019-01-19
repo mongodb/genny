@@ -24,10 +24,10 @@
 #include "../src/generators-private.hh"
 #include "../src/parser.hh"
 
-#include <value_generators/DefaultRandom.hpp>
-#include <value_generators/value_generators.hpp>
 #include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
+#include <value_generators/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
 
 using namespace genny::value_generators;
 using bsoncxx::builder::stream::close_document;

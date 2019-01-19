@@ -16,9 +16,9 @@
 #include <algorithm>
 #include <iostream>
 
-#include <value_generators/DefaultRandom.hpp>
 #include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
+#include <value_generators/DefaultRandom.hpp>
 
 namespace genny {
 
