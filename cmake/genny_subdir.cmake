@@ -89,6 +89,11 @@ function(GENNY_SUBDIR)
          CONFIGURE_DEPENDS
          test/*.cpp)
 
+    file(GLOB_RECURSE _gs_benchmarks_src
+            RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+            CONFIGURE_DEPENDS
+            benchmark/*.cpp)
+
     add_library("${_gs_name}" "${_gs_type}" ${_gs_files_src})
     target_include_directories(${_gs_name}
         "${_gs_include_type}"
@@ -118,14 +123,25 @@ function(GENNY_SUBDIR)
                 RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
 
+
     add_executable("${_gs_name}_test"
         ${_gs_tests_src}
     )
-
     target_link_libraries("${_gs_name}_test"
         "${_gs_name}"
         ${_gs_test_depends}
     )
-
     ParseAndAddCatchTests("${_gs_name}_test")
+
+    if(_gs_benchmarks_src)
+        add_executable("${_gs_name}_benchmark"
+            ${_gs_benchmarks_src}
+        )
+        target_link_libraries("${_gs_name}_benchmark"
+            "${_gs_name}"
+            ${_gs_test_depends}
+        )
+        ParseAndAddCatchTests("${_gs_name}_benchmark")
+    endif()
+
 endfunction(GENNY_SUBDIR)
