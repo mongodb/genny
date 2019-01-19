@@ -27,6 +27,9 @@ function(GENNY_SUBDIR)
     set(_gs_type)
     set(_gs_want_type 0)
 
+    set(_gs_executable)
+    set(_gs_want_executable 0)
+
     set(_gs_depends)
     set(_gs_test_depends)
     set(_gs_list_target "")
@@ -45,6 +48,13 @@ function(GENNY_SUBDIR)
         elseif(_gs_want_type)
             set(_gs_type "${arg}")
             set(_gs_want_type 0)
+            continue()
+        elseif(arg MATCHES "^EXECUTABLE")
+            set(_gs_want_executable 1)
+            continue()
+        elseif(_gs_want_executable)
+            set(_gs_executable "${arg}")
+            set(_gs_want_executable 0)
             continue()
         elseif(arg MATCHES "^DEPENDS$")
             set(_gs_list_target "_gs_depends")
@@ -96,6 +106,13 @@ function(GENNY_SUBDIR)
             ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
             LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
             RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+
+    if(_gs_executable)
+        add_executable("${_gs_executable}" src/main.cpp)
+        target_link_libraries("${_gs_executable}" "${_gs_name}")
+        install(TARGETS  "${_gs_executable}"
+                RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
 
     add_executable("${_gs_name}_test"
         ${_gs_tests_src}
