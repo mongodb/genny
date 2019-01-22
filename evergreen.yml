@@ -66,8 +66,9 @@ buildvariants:
   expansions:
     cmake: "/opt/cmake/bin/cmake"
     toolchain: "/opt/mongodbtoolchain/v3/bin"
+    mongodb_archive_url: "https://s3.amazonaws.com/mciuploads/mongodb-mongo-v4.0/enterprise-amazon2/3739429dd92b92d1b0ab120911a23d50bf03c412/binaries/mongo-mongodb_mongo_v4.0_enterprise_amazon2_3739429dd92b92d1b0ab120911a23d50bf03c412_18_12_13_18_53_46.tgz"
   tasks:
-  - name: t_compile
+  - name: t_test_with_server
   - name: t_push
 
 - name: rhel70
@@ -182,7 +183,8 @@ tasks:
 ##                ⚡️ Task Groups ⚡️
 
 task_groups:
-- name: t_test
+- &test_group
+  name: t_test
   max_hosts: 1
   setup_task:
   - func: f_remove_test_results_files
@@ -197,6 +199,13 @@ task_groups:
   # dependency, causing unexpected behavior.
   #
   # For this task group, the implicit dependency is that t_*_test has to run after t_compile.
+  - t_compile
+  - t_python_test
+  - t_cmake_test
+
+- <<: *test_group
+  name: t_test_with_server
+  tasks:
   - t_compile
   - t_mongo_server
   - t_python_test
@@ -221,17 +230,20 @@ functions:
   # that contains the intended gennylib test case (SERVER-38646). Also installs resmoke dependencies.
   ##
   f_checkout_mongodb:
-  - command: shell.exec
-    params:
-      working_dir: src
-      script: |
-        pacman --noconfirm -Sy mongodb
   - command: subprocess.exec
     params:
       working_dir: src
       binary: /bin/bash
       args:
         - "${workdir}/src/scripts/get-mongo-source.sh"
+  - command: shell.exec
+    params:
+      working_dir: src/build/mongo
+      shell: /bin/bash
+      script: |
+        set -euo pipefail
+        curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
+        tar --strip-components=1 -zxvf mongodb.tgz
 
   ##
   # Archive an installed library into a tarball and upload it with revision suffix
@@ -404,7 +416,7 @@ functions:
         set -o pipefail
         set -o nounset
 
-        python setup.py nosetests
+        python3 setup.py nosetests
 
   ##
   # Reports test results to evergreen API. If you add a new file to this list, then you should also
