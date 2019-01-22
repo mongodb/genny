@@ -35,19 +35,53 @@ Actors:
   - Repeat: 1
     Collection: test
     Operations:
-    - OperationName: aggregate
-      OperationCommand:
-        Stages:
-        - StageCommand: bucket
-          Document: { groupBy: "$rating", boundaries: [0, 5, 10] }
-        - StageCommand: count
-          Document: { field: rating }
-        Session: true
-    - OperationName: bulk_write
+    - OperationName: bulkWrite
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: { b: 1 }
+          Document: { a: 1 }
+)");
+
+    SECTION("Inserts documents into the database.") {
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+}
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Test bulkWrite operation.",
+                 "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
+
+    dropAllDatabases();
+    auto db = client.database("mydb");
+
+    YAML::Node config = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: CrudActor
+  Type: CrudActor
+  Database: mydb
+  ExecutionStrategy:
+    ThrowOnFailure: true
+  Phases:
+  - Repeat: 1
+    Collection: test
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: { a: 1 }
+        Options:
+          WriteConcern:
+            Level: majority
+            TimeoutMillis: 5000
 )");
 
     SECTION("Inserts documents into the database.") {

@@ -1,5 +1,5 @@
 #include <cast_core/actors/CrudActor.hpp>
-
+#include <chrono>
 #include <memory>
 
 #include <yaml-cpp/yaml.h>
@@ -16,11 +16,204 @@
 
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
+#include <gennylib/conventions.hpp>
 #include <gennylib/value_generators.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
 using DocGenerator = genny::value_generators::DocumentGenerator;
+
+namespace YAML {
+
+template <>
+struct convert<mongocxx::read_preference> {
+    using ReadPreference = mongocxx::read_preference;
+    using ReadMode = mongocxx::read_preference::read_mode;
+    static Node encode(const ReadPreference& rhs) {
+        Node node;
+        auto mode = rhs.mode();
+        if (mode == ReadMode::k_primary) {
+            node["ReadMode"] = "primary";
+        } else if (mode == ReadMode::k_primary_preferred) {
+            node["ReadMode"] = "primaryPreferred";
+        } else if (mode == ReadMode::k_secondary) {
+            node["ReadMode"] = "secondary";
+        } else if (mode == ReadMode::k_secondary_preferred) {
+            node["ReadMode"] = "secondaryPreferred";
+        } else if (mode == ReadMode::k_nearest) {
+            node["ReadMode"] = "nearest";
+        }
+        auto maxStaleness = rhs.max_staleness();
+        if (maxStaleness) {
+            node["MaxStaleness"] = genny::TimeSpec(*maxStaleness);
+        }
+        return node;
+    }
+
+    static bool decode(const Node& node, ReadPreference& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (!node["ReadMode"]) {
+            // readPreference must have a read mode specified.
+            return false;
+        }
+        auto readMode = node["ReadMode"].as<std::string>();
+        rhs = mongocxx::read_preference{};
+        if (readMode == "primary") {
+            rhs.mode(ReadMode::k_primary);
+        } else if (readMode == "primaryPreferred") {
+            rhs.mode(ReadMode::k_primary_preferred);
+        } else if (readMode == "secondary") {
+            rhs.mode(ReadMode::k_secondary);
+        } else if (readMode == "secondaryPreferred") {
+            rhs.mode(ReadMode::k_secondary_preferred);
+        } else if (readMode == "nearest") {
+            rhs.mode(ReadMode::k_nearest);
+        } else {
+            return false;
+        }
+        if (node["MaxStaleness"]) {
+            auto maxStaleness = node["MaxStaleness"].as<genny::TimeSpec>();
+            rhs.max_staleness(std::chrono::seconds(maxStaleness));
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<mongocxx::write_concern> {
+    using WriteConcern = mongocxx::write_concern;
+    static Node encode(const WriteConcern& rhs) {
+        Node node;
+        auto timeout = rhs.timeout();
+        auto timeoutTimeSpec = genny::TimeSpec{timeout};
+        node["TimeOutMillis"] = timeoutTimeSpec;
+
+        return node;
+    }
+
+    static bool decode(const Node& node, WriteConcern& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (!node["Level"]) {
+            // writeConcern must specify the write concern level.
+            return false;
+        }
+        auto level = node["Level"].as<std::string>();
+        bool isNum = level.find_first_not_of("0123456789") == std::string::npos;
+        if (isNum) {
+            auto levelNum = node["Level"].as<int>();
+            rhs.nodes(levelNum);
+        } else if (level == "majority") {
+            rhs.majority(std::chrono::milliseconds{0});
+        } else {
+            // writeConcern level must be of valid integer or 'majority'.
+            return false;
+        }
+        BOOST_LOG_TRIVIAL(info) << "done levels";
+        if (node["TimeOutMillis"]) {
+            auto timeout = node["TimeOutMillis"].as<genny::TimeSpec>();
+            rhs.timeout(std::chrono::milliseconds(timeout));
+        }
+        BOOST_LOG_TRIVIAL(info) << "done timeout";
+        if (node["Journal"]) {
+            auto journal = node["Journal"].as<bool>();
+            rhs.journal(journal);
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<mongocxx::options::aggregate> {
+    using AggregateOptions = mongocxx::options::aggregate;
+    static Node encode(const AggregateOptions& rhs) {
+        Node node;
+        auto allowDiskUse = rhs.allow_disk_use();
+        if (allowDiskUse) {
+            node["allowDiskUse"] = *allowDiskUse;
+        }
+        auto batchSize = rhs.batch_size();
+        if (batchSize) {
+            node["batchSize"] = *batchSize;
+        }
+        return node;
+    }
+
+    static bool decode(const Node& node, AggregateOptions& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        rhs = mongocxx::options::aggregate{};
+        if (node["allowDiskUse"]) {
+            auto allowDiskUse = node["allowDiskUse"].as<bool>();
+            rhs.allow_disk_use(allowDiskUse);
+        }
+        if (node["batchSize"]) {
+            auto batchSize = node["batchSize"].as<int>();
+            rhs.batch_size(batchSize);
+        }
+        if (node["maxTime"]) {
+            auto maxTime = node["maxTime"].as<genny::TimeSpec>();
+            rhs.max_time(std::chrono::milliseconds(maxTime));
+        }
+        if (node["readPreference"]) {
+            auto readPreference = node["readPreference"].as<mongocxx::read_preference>();
+            rhs.read_preference(readPreference);
+        }
+        if (node["bypassDocumentValidation"]) {
+            auto bypassValidation = node["bypassDocumentValidation"].as<bool>();
+            rhs.bypass_document_validation(bypassValidation);
+        }
+        if (node["hint"]) {
+            auto h = node["hint"].as<std::string>();
+            auto hint = mongocxx::hint(h);
+            rhs.hint(hint);
+        }
+        if (node["writeConcern"]) {
+            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
+            rhs.write_concern(wc);
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<mongocxx::options::bulk_write> {
+    using BulkWriteOptions = mongocxx::options::bulk_write;
+    static Node encode(const BulkWriteOptions& rhs) {
+        Node node;
+        auto bypassDocValidation = rhs.bypass_document_validation();
+        if (bypassDocValidation) {
+            node["BypassDocumentValidation"] = *bypassDocValidation;
+        }
+        auto isOrdered = rhs.ordered();
+        node["Ordered"] = isOrdered;
+        return node;
+    }
+
+    static bool decode(const Node& node, BulkWriteOptions& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (node["BypassDocumentValidation"]) {
+            auto bypassDocValidation = node["BypassDocumentValidation"].as<bool>();
+            rhs.bypass_document_validation(bypassDocValidation);
+        }
+        if (node["Ordered"]) {
+            auto isOrdered = node["ordered"].as<bool>();
+            rhs.ordered(isOrdered);
+        }
+        if (node["WriteConcern"]) {
+            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
+            rhs.write_concern(wc);
+        }
+        return true;
+    }
+};
+}  // namespace YAML
 
 namespace genny::actor {
 
@@ -33,7 +226,6 @@ enum class StageType {
 
 std::unordered_map<std::string, StageType> stringToStageType = {{"bucket", StageType::Bucket},
                                                                 {"count", StageType::Count}};
-};  // namespace
 
 struct BaseOperation {
     virtual void run(const mongocxx::client_session& session) = 0;
@@ -55,7 +247,6 @@ struct AggregateOperation : public BaseOperation {
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng)
         : onSession{onSession}, collection{collection} {
-        // BOOST_LOG_TRIVIAL(info) << "json: " << bsoncxx::to_json(opNode);
         auto yamlStages = opNode["Stages"];
         if (!yamlStages.IsSequence()) {
             throw InvalidConfigurationException(
@@ -100,7 +291,7 @@ struct AggregateOperation : public BaseOperation {
             }
         }
         auto cursor = (onSession) ? collection.aggregate(p) : collection.aggregate(p);
-        // TODO: exhaust cursor
+        // TODO: exhaust cursor and report metrics
     }
 
     mongocxx::collection collection;
@@ -119,6 +310,7 @@ struct BulkWriteOperation : public BaseOperation {
     std::vector<std::unique_ptr<WriteOperation>> writeOps;
     bool onSession;
     mongocxx::collection collection;
+    mongocxx::options::bulk_write options;
 
     BulkWriteOperation(YAML::Node opNode,
                        bool onSession,
@@ -128,7 +320,7 @@ struct BulkWriteOperation : public BaseOperation {
         auto writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.IsSequence()) {
             throw InvalidConfigurationException(
-                "'Bulk_Write' requires a 'WriteOperations' node of sequence type.");
+                "'bulkWrite' requires a 'WriteOperations' node of sequence type.");
         }
         for (auto&& writeOp : writeOpsYaml) {
             auto commandDoc = writeOp["Document"];
@@ -138,10 +330,15 @@ struct BulkWriteOperation : public BaseOperation {
                 std::make_unique<WriteOperation>(WriteOperation{writeCommand, std::move(doc)});
             writeOps.push_back(std::move(writeOpObj));
         }
+        auto yamlOptions = opNode["Options"];
+        if (yamlOptions) {
+            options = yamlOptions.as<mongocxx::options::bulk_write>();
+        }
     }
 
-    void run(const mongocxx::client_session& session) {
-        auto bulk = collection.create_bulk_write();
+    virtual void run(const mongocxx::client_session& session) override {
+        auto bulk = (onSession) ? collection.create_bulk_write(session, options)
+                                : collection.create_bulk_write(options);
         for (auto&& writeOp : writeOps) {
             auto writeCommand = writeOp->opName;
             if (writeCommand == "insertOne") {
@@ -164,37 +361,34 @@ struct BulkWriteOperation : public BaseOperation {
 
         auto result = bulk.execute();
         if (!result) {
-            throw InvalidConfigurationException("bulk write failed!");
+            // throw exception
         }
     }
 };
 
-OpCallback getAggregate = [](YAML::Node opNode,
-                             bool onSession,
-                             mongocxx::collection collection,
-                             genny::DefaultRandom& rng) -> std::unique_ptr<BaseOperation> {
+struct InsertOperation : public BaseOperation {};
+
+OpCallback createAggregate = [](YAML::Node opNode,
+                                bool onSession,
+                                mongocxx::collection collection,
+                                genny::DefaultRandom& rng) -> std::unique_ptr<BaseOperation> {
     return std::make_unique<AggregateOperation>(opNode, onSession, collection, rng);
 };
 
-OpCallback getBulkWrite = [](YAML::Node opNode,
-                             bool onSession,
-                             mongocxx::collection collection,
-                             genny::DefaultRandom& rng) -> std::unique_ptr<BaseOperation> {
+OpCallback createBulkWrite = [](YAML::Node opNode,
+                                bool onSession,
+                                mongocxx::collection collection,
+                                genny::DefaultRandom& rng) -> std::unique_ptr<BaseOperation> {
     return std::make_unique<BulkWriteOperation>(opNode, onSession, collection, rng);
 };
 
+// Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
 std::unordered_map<std::string, OpCallback&> opConstructors = {
-    {"aggregate", getAggregate},
-    {"bulk_write", getBulkWrite},
+    {"aggregate", createAggregate},
+    {"bulkWrite", createBulkWrite},
 };
 
-/*
-namespace YAML {
-template <>
-struct convert<mongocxx::options::aggregate> {
-    // see conventions.hpp
-};
-}  // namespace YAML*/
+};  // namespace
 
 struct CrudActor::PhaseConfig {
     mongocxx::collection collection;
@@ -209,6 +403,8 @@ struct CrudActor::PhaseConfig {
             auto yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].as<std::string>();
             auto onSession = yamlCommand["Session"] && yamlCommand["Session"].as<bool>();
+
+            // Grab the appropriate
             auto op = opConstructors.find(opName);
             if (op == opConstructors.end()) {
                 throw InvalidConfigurationException("Operation '" + opName +
