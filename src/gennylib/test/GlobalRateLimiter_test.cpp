@@ -11,26 +11,46 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include "test.h"
 
 #include <chrono>
 #include <ratio>
 
+#include "log.hh"
+
 namespace genny::testing {
 struct DummyClock {
-    typedef std::chrono::time_point<DummyClock> time_point;
-    typedef int64_t rep;
-    typedef std::ratio<1> period;
+
+    // <clock-concept>
+    using rep = int64_t;
+    using period = std::nano;
+    using duration = std::chrono::duration<DummyClock::rep, DummyClock::period>;
+    using time_point = std::chrono::time_point<DummyClock>;
 
     const static bool is_steady = true;
+    // </clock-concept>
 
     int64_t nowRaw = 0;
 
     auto now() {
-        return DummyClock::time_point(nowRaw);
+        return DummyClock::time_point(DummyClock::duration(nowRaw));
     }
 };
 
 namespace {
+TEST_CASE("Dummy Clock self-test") {
+    auto getTicks = [](DummyClock::duration& d) {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(d).count();
+    };
+    DummyClock clock;
+    SECTION("Can be converted to nano seconds") {
+        auto now = clock.now().time_since_epoch();
+        REQUIRE(getTicks(now) == 0);
 
+        clock.nowRaw++;
+        now = clock.now().time_since_epoch();
+        REQUIRE(getTicks(now) == 1);
+    }
+}
 }
 }
