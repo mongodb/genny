@@ -66,7 +66,7 @@ buildvariants:
   expansions:
     cmake: "/opt/cmake/bin/cmake"
     toolchain: "/opt/mongodbtoolchain/v3/bin"
-    mongodb_archive_url: "https://s3.amazonaws.com/mciuploads/mongodb-mongo-v4.0/enterprise-amazon2/3739429dd92b92d1b0ab120911a23d50bf03c412/binaries/mongo-mongodb_mongo_v4.0_enterprise_amazon2_3739429dd92b92d1b0ab120911a23d50bf03c412_18_12_13_18_53_46.tgz"
+    mongodb_archive_url: "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz"
   tasks:
   - name: t_test_with_server
   - name: t_push
