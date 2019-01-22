@@ -55,7 +55,7 @@ buildvariants:
   run_on:
   - archlinux-test
   tasks:
-  - name: t_test
+  - name: tg_compile_and_test
   - name: t_push
 
 - name: amazon2
@@ -68,7 +68,7 @@ buildvariants:
     toolchain: "/opt/mongodbtoolchain/v3/bin"
     mongodb_archive_url: "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz"
   tasks:
-  - name: t_test_with_server
+  - name: tg_compile_and_test_with_server
   - name: t_push
 
 - name: rhel70
@@ -105,7 +105,7 @@ buildvariants:
 #     cmake: "/Applications/CMake.app/Contents/bin/cmake"
 #     toolchain: "/Applications/Xcode10.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
 #   tasks:
-#   - name: t_test
+#   - name: tg_compile_and_test
 
 
 ##                ⚡️ Tasks ⚡️
@@ -183,8 +183,8 @@ tasks:
 ##                ⚡️ Task Groups ⚡️
 
 task_groups:
-- &test_group
-  name: t_test
+- &a_compile_and_test
+  name: tg_compile_and_test
   max_hosts: 1
   setup_task:
   - func: f_remove_test_results_files
@@ -203,8 +203,8 @@ task_groups:
   - t_python_test
   - t_cmake_test
 
-- <<: *test_group
-  name: t_test_with_server
+- <<: *a_compile_and_test
+  name: tg_compile_and_test_with_server
   tasks:
   - t_compile
   - t_mongo_server
