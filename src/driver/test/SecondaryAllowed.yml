@@ -1,57 +1,54 @@
 SchemaVersion: 2018-07-01
-
 Actors:
-- Name: Loader
-  Type: Loader
-  Threads: 1
-  Database: test
-  CollectionCount: 1
-  DocumentCount: 100
-  BatchSize: 100
-  Document:
-      x: {$randomint: {min: 0, max: 20}}
-  Indexes:
-  - keys: {x: 1}
-  Phases:
-  - Repeat: 1
-  - Operation:
-      OperationName: Nop
-- Name: SecondaryPreferredRead
-  Type: RunCommand
-  Threads: 1
-  ExecutionStrategy:
-      Retries: 3
-  Database: test
-  Phases:
-  - Operation:
-      OperationName: Nop
-  - Phase: 1
-    Repeat: 1
-    Operation: &find_one
-      MetricsName: "Find"
-      OperationName: RunCommand
-      OperationMinPeriod: 100 microseconds
-      OperationCommand:
-            find: Collection0
-            # readConcern: { level: local }
-            # readPreference: primary
-# - Name: SecondaryAllowedInserts
-#   Type: RunCommand
-#   Threads: 1
-#   Phases:
-#   - Repeat: 1
-#     Database: test
-#     Operations:
-#     - OperationName: RunCommand
-#       OperationCommand:
-#           insert: testCollection 
-#           documents: [{rating: 9}, {rating: 10}, {rating: 8}, {rating: 4}, {rating: 3}]
-#     - OperationMetricsName: Find
-#       OperationCommand: 
-#           find: ratings
-#           filter: {rating: { $gte: 8 }}
-#           readPreference: secondaryPreferred
-#       OperationName: RunCommand
+    - Name: StepdownCommand
+      Type: AdminCommand
+      Threads: 1
+      ExecutionStrategy:
+          Retries: 0
+          ThrowOnFailure: false
+      Phases:
+        - NoOp: true
+        - Phase: 1
+          Repeat: 1
+          Operation:
+              OperationMetricsName: "Stepdown"
+              OperationName: AdminCommand
+              OperationSleepBefore: 30 seconds
+              OperationCommand:
+                  replSetStepDown: 60
+    - Name: SecondaryPreferredRead
+      Type: RunCommand
+      Threads: 10
+      ExecutionStrategy:
+          Retries: 0
+          ThrowOnFailure: false
+      Database: test
+      Phases:
+        - NoOp: true
+        - Phase: 1
+          Operation: &find_one
+              OperationMetricsName: "Find"
+              OperationName: RunCommand
+              OperationIsQuiet: yes
+              OperationMinPeriod: 100 microseconds
+              OperationCommand:
+                  find: Collection0
+                  readConcern: { level: local }
+                  $readPreference: { mode: secondary }
+    - Name: Loader
+      Type: Loader
+      Threads: 1
+      Database: test
+      CollectionCount: 1
+      DocumentCount: 100
+      BatchSize: 100
+      Document:
+          x: {$randomint: {min: 0, max: 20}}
+      Indexes:
+        - keys: {x: 1}
+      Phases:
+        - Phase: 0
+        - NoOp: true
       
           
         
