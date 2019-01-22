@@ -99,7 +99,7 @@ Actors:
     Phases:
       - Operation:
         OperationName: Nop
-      - Duration: &phase2_duration 10 seconds
+      - Duration: &phase2_duration 10 minutes
         Rate: 100 per 31 milliseconds
   - Name: MultiCollectionQuery
     Type: MultiCollectionQuery
