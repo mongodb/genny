@@ -7,11 +7,11 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
 
 #include <cast_core/config/RunCommandConfig.hpp>
 

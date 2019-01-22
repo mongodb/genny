@@ -1,5 +1,7 @@
 #include "test.h"
 
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
@@ -14,6 +16,7 @@
 
 namespace {
 using namespace genny::testing;
+namespace BasicBson = bsoncxx::builder::basic;
 namespace bson_stream = bsoncxx::builder::stream;
 
 TEST_CASE_METHOD(MongoTestFixture,
@@ -24,28 +27,33 @@ TEST_CASE_METHOD(MongoTestFixture,
     auto db = client.database("mydb");
 
     YAML::Node config = YAML::Load(R"(
-SchemaVersion: 2018-07-01
-Actors:
-- Name: CrudActor
-  Type: CrudActor
-  Database: mydb
-  ExecutionStrategy:
-    ThrowOnFailure: true
-  Phases:
-  - Repeat: 1
-    Collection: test
-    Operations:
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne
-          Document: { a: 1 }
-)");
+      SchemaVersion: 2018-07-01
+      Actors:
+      - Name: CrudActor
+        Type: CrudActor
+        Database: mydb
+        ExecutionStrategy:
+          ThrowOnFailure: true
+        Phases:
+        - Repeat: 1
+          Collection: test
+          Operations:
+          - OperationName: bulkWrite
+            OperationCommand:
+              WriteOperations:
+              - WriteCommand: insertOne
+                Document: { a: 1 }
+      )");
 
     SECTION("Inserts documents into the database.") {
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto builder = bson_stream::document{};
+            builder << "a"
+                    << "1" << bson_stream::finalize;
+            auto count = db.collection("test").count_documents(builder.view());
+            REQUIRE(count == 1);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
             INFO("CAUGHT " << diagInfo);
