@@ -98,12 +98,13 @@ public:
     }
 
     bool limitRate() const {
+        // Return if we're within the rate limit.
         return _rateLimiter->consume();
     }
 
     void wait() const {
         // Sleep for a little bit. This is not efficient if there's a large number of
-        // threads. If there's a bottleneck, we can use exponential back off or wait
+        // threads. If this is a problem, we can use exponential back off or wait
         // based on the number of actors using this rate limiter.
         std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate()));
     }
@@ -137,6 +138,8 @@ private:
 
     const std::optional<TimeSpec> _minDuration;
     const std::optional<IntegerSpec> _minIterations;
+
+    // The rate limiter is owned by the workload context.
     v1::GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
 };

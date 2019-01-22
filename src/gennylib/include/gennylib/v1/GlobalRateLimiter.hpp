@@ -33,8 +33,6 @@ namespace genny::v1 {
  *
  * Inspired by
  * https://github.com/facebook/folly/blob/7c6897aa18e71964e097fc238c93b3efa98b2c61/folly/TokenBucket.h
- * TODO: Add license.
- *
  */
 template <typename ClockT>
 class BaseGlobalRateLimiter {
@@ -69,9 +67,10 @@ public:
 
     /**
      * Request to consume _burstSize number of tokens from the bucket. Does not block
-     * if the bucket is empty; does block for concurrent accesses to the bucket to finish.
+     * if the bucket is empty; does block while waiting for concurrent accesses to the
+     * bucket to finish.
      *
-     * @return bool whether cosume() succeeded. The caller is responsible for using an
+     * @return bool whether consume() succeeded. The caller is responsible for using an
      * appropriate back-off strategy if this function returns false.
      */
     bool consume() {
