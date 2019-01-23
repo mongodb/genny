@@ -1,4 +1,9 @@
 SchemaVersion: 2018-07-01
+Pool:
+    QueryOptions:
+        maxPoolSize: 1000
+        socketTimeoutMS: 5000
+        connectTimeoutMS: 5000
 Actors:
     - Name: StepdownCommand
       Type: AdminCommand
@@ -16,9 +21,10 @@ Actors:
               OperationSleepBefore: 30 seconds
               OperationCommand:
                   replSetStepDown: 60
+              OperationAwaitStepdown: yes
     - Name: SecondaryPreferredRead
       Type: RunCommand
-      Threads: 10
+      Threads: 100
       ExecutionStrategy:
           Retries: 0
           ThrowOnFailure: false
