@@ -44,7 +44,7 @@ struct convert<mongocxx::read_preference> {
         }
         auto maxStaleness = rhs.max_staleness();
         if (maxStaleness) {
-            node["MaxStaleness"] = genny::TimeSpec(*maxStaleness);
+            node["MaxStalenessSeconds"] = genny::TimeSpec(*maxStaleness).count();
         }
         return node;
     }
@@ -73,7 +73,7 @@ struct convert<mongocxx::read_preference> {
             return false;
         }
         if (node["MaxStaleness"]) {
-            auto maxStaleness = node["MaxStaleness"].as<genny::TimeSpec>();
+            auto maxStaleness = node["MaxStalenessSeconds"].as<int>();
             rhs.max_staleness(std::chrono::seconds(maxStaleness));
         }
         return true;
@@ -212,12 +212,45 @@ struct convert<mongocxx::options::bulk_write> {
             rhs.bypass_document_validation(bypassDocValidation);
         }
         if (node["Ordered"]) {
-            auto isOrdered = node["ordered"].as<bool>();
+            auto isOrdered = node["Ordered"].as<bool>();
             rhs.ordered(isOrdered);
         }
         if (node["WriteConcern"]) {
             auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
             rhs.write_concern(wc);
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<mongocxx::options::count> {
+    using CountOptions = mongocxx::options::count;
+    static Node encode(const CountOptions& rhs) {
+        Node node;
+        return node;
+    }
+
+    static bool decode(const Node& node, CountOptions& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (node["Hint"]) {
+            auto h = node["Hint"].as<std::string>();
+            auto hint = mongocxx::hint(h);
+            rhs.hint(hint);
+        }
+        if (node["Limit"]) {
+            auto limit = node["Limit"].as<int>();
+            rhs.limit(limit);
+        }
+        if (node["MaxTimeMillis"]) {
+            auto maxTime = node["MaxTimeMillis"].as<int>();
+            rhs.max_time(std::chrono::milliseconds(maxTime));
+        }
+        if (node["ReadPreference"]) {
+            auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
+            rhs.read_preference(readPref);
         }
         return true;
     }
@@ -255,7 +288,7 @@ struct AggregateOperation : public BaseOperation {
                        bool onSession,
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng)
-        : onSession{onSession}, collection{collection} {
+        : _onSession{onSession}, _collection{collection} {
         auto yamlStages = opNode["Stages"];
         if (!yamlStages.IsSequence()) {
             throw InvalidConfigurationException(
@@ -271,16 +304,16 @@ struct AggregateOperation : public BaseOperation {
             }
             auto doc = value_generators::makeDoc(commandDoc, rng);
             auto stageObj = std::make_unique<Stage>(Stage{stageCommand, std::move(doc)});
-            stages.push_back(std::move(stageObj));
+            _stages.push_back(std::move(stageObj));
         }
         if (opNode["Options"]) {
-            options = opNode["Options"].as<mongocxx::options::aggregate>();
+            _options = opNode["Options"].as<mongocxx::options::aggregate>();
         }
     }
 
-    virtual void run(const mongocxx::client_session& session) override {
+    void run(const mongocxx::client_session& session) override {
         mongocxx::pipeline p{};
-        for (auto&& stage : stages) {
+        for (auto&& stage : _stages) {
             auto stageCommand = stage->command;
             auto stageType = stringToStageType.find(stageCommand);
             bsoncxx::builder::stream::document document{};
@@ -300,14 +333,16 @@ struct AggregateOperation : public BaseOperation {
                     break;
             }
         }
-        auto cursor = (onSession) ? collection.aggregate(p) : collection.aggregate(p);
+        auto cursor = (_onSession) ? _collection.aggregate(session, p, _options)
+                                   : _collection.aggregate(p, _options);
         // TODO: exhaust cursor and report metrics
     }
 
-    mongocxx::collection collection;
-    const bool onSession;
-    std::vector<std::unique_ptr<Stage>> stages;
-    mongocxx::options::aggregate options;
+private:
+    mongocxx::collection _collection;
+    const bool _onSession;
+    std::vector<std::unique_ptr<Stage>> _stages;
+    mongocxx::options::aggregate _options;
 };
 
 struct BulkWriteOperation : public BaseOperation {
@@ -316,7 +351,7 @@ struct BulkWriteOperation : public BaseOperation {
                        bool onSession,
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng)
-        : onSession{onSession}, collection{collection} {
+        : _onSession{onSession}, _collection{collection} {
         auto writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.IsSequence()) {
             throw InvalidConfigurationException(
@@ -326,7 +361,7 @@ struct BulkWriteOperation : public BaseOperation {
             createOps(writeOp, rng);
         }
         if (opNode["Options"]) {
-            options = opNode["Options"].as<mongocxx::options::bulk_write>();
+            _options = opNode["Options"].as<mongocxx::options::bulk_write>();
         }
     }
 
@@ -340,7 +375,7 @@ struct BulkWriteOperation : public BaseOperation {
             auto doc = value_generators::makeDoc(insertDoc, rng);
             bsoncxx::builder::stream::document document{};
             doc->view(document);
-            writeOps.push_back(mongocxx::model::insert_one{document.extract()});
+            _writeOps.push_back(mongocxx::model::insert_one{document.extract()});
         } else if (writeCommand == "deleteOne") {
             auto filter = writeOp["Filter"];
             if (!filter) {
@@ -349,7 +384,7 @@ struct BulkWriteOperation : public BaseOperation {
             auto doc = value_generators::makeDoc(filter, rng);
             bsoncxx::builder::stream::document document{};
             doc->view(document);
-            writeOps.push_back(mongocxx::model::delete_one{document.extract()});
+            _writeOps.push_back(mongocxx::model::delete_one{document.extract()});
         } else if (writeCommand == "deleteMany") {
             auto filter = writeOp["Filter"];
             if (!filter) {
@@ -358,7 +393,7 @@ struct BulkWriteOperation : public BaseOperation {
             auto doc = value_generators::makeDoc(filter, rng);
             bsoncxx::builder::stream::document document{};
             doc->view(document);
-            writeOps.push_back(mongocxx::model::delete_many{document.extract()});
+            _writeOps.push_back(mongocxx::model::delete_many{document.extract()});
         } else if (writeCommand == "replaceOne") {
             auto filter = writeOp["Filter"];
             auto replacement = writeOp["Replacement"];
@@ -372,8 +407,11 @@ struct BulkWriteOperation : public BaseOperation {
             auto replacementTemplate = value_generators::makeDoc(replacement, rng);
             bsoncxx::builder::stream::document replacementDocument{};
             replacementTemplate->view(replacementDocument);
-            writeOps.push_back(mongocxx::model::replace_one(filterDocument.extract(),
-                                                            replacementDocument.extract()));
+            BOOST_LOG_TRIVIAL(info) << "filter: " << bsoncxx::to_json(filterDocument.view());
+            BOOST_LOG_TRIVIAL(info)
+                << "replacement: " << bsoncxx::to_json(replacementDocument.view());
+            _writeOps.push_back(mongocxx::model::replace_one(filterDocument.extract(),
+                                                             replacementDocument.extract()));
         } else if (writeCommand == "updateOne") {
             auto filter = writeOp["Filter"];
             auto update = writeOp["Update"];
@@ -387,7 +425,7 @@ struct BulkWriteOperation : public BaseOperation {
             auto updateTemplate = value_generators::makeDoc(update, rng);
             bsoncxx::builder::stream::document updateDocument{};
             updateTemplate->view(updateDocument);
-            writeOps.push_back(
+            _writeOps.push_back(
                 mongocxx::model::update_one(filterDocument.extract(), updateDocument.extract()));
         } else if (writeCommand == "updateMany") {
             auto filter = writeOp["Filter"];
@@ -402,15 +440,15 @@ struct BulkWriteOperation : public BaseOperation {
             auto updateTemplate = value_generators::makeDoc(update, rng);
             bsoncxx::builder::stream::document updateDocument{};
             updateTemplate->view(updateDocument);
-            writeOps.push_back(
+            _writeOps.push_back(
                 mongocxx::model::update_many(filterDocument.extract(), updateDocument.extract()));
         }
     }
 
-    virtual void run(const mongocxx::client_session& session) override {
-        auto bulk = (onSession) ? collection.create_bulk_write(session, options)
-                                : collection.create_bulk_write(options);
-        for (auto&& writeOp : writeOps) {
+    void run(const mongocxx::client_session& session) override {
+        auto bulk = (_onSession) ? _collection.create_bulk_write(session, _options)
+                                 : _collection.create_bulk_write(_options);
+        for (auto&& writeOp : _writeOps) {
             bulk.append(writeOp);
         }
         auto result = bulk.execute();
@@ -419,10 +457,44 @@ struct BulkWriteOperation : public BaseOperation {
         }
     }
 
-    std::vector<mongocxx::model::write> writeOps;
-    bool onSession;
-    mongocxx::collection collection;
-    mongocxx::options::bulk_write options;
+private:
+    std::vector<mongocxx::model::write> _writeOps;
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::bulk_write _options;
+};
+
+struct CountOperation : public BaseOperation {
+    CountOperation(YAML::Node opNode,
+                   bool onSession,
+                   mongocxx::collection collection,
+                   genny::DefaultRandom& rng)
+        : _onSession{onSession}, _collection{collection} {
+        auto filterYaml = opNode["Filter"];
+        if (!filterYaml) {
+            throw InvalidConfigurationException("'Count' expects a 'Filter' field.");
+        }
+        auto doc = value_generators::makeDoc(filterYaml, rng);
+        _filterTemplate = std::move(doc);
+        if (opNode["Options"]) {
+            _options = opNode["Options"].as<mongocxx::options::count>();
+        }
+    }
+
+    void run(const mongocxx::client_session& session) override {
+        bsoncxx::builder::stream::document filterDoc{};
+        _filterTemplate->view(filterDoc);
+        auto view = filterDoc.view();
+        (_onSession) ? _collection.count_documents(session, view, _options)
+                     : _collection.count_documents(view, _options);
+    }
+
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::count _options;
+    std::unique_ptr<DocGenerator> _filterTemplate;
 };
 
 OpCallback createAggregate = [](YAML::Node opNode,
@@ -439,12 +511,19 @@ OpCallback createBulkWrite = [](YAML::Node opNode,
     return std::make_unique<BulkWriteOperation>(opNode, onSession, collection, rng);
 };
 
+OpCallback createCount = [](YAML::Node opNode,
+                            bool onSession,
+                            mongocxx::collection collection,
+                            genny::DefaultRandom& rng) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<CountOperation>(opNode, onSession, collection, rng);
+};
+
 // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
 std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"aggregate", createAggregate},
     {"bulkWrite", createBulkWrite},
+    {"count", createCount},
 };
-
 };  // namespace
 
 struct CrudActor::PhaseConfig {

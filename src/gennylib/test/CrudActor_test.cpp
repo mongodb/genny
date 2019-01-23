@@ -108,39 +108,286 @@ TEST_CASE_METHOD(MongoTestFixture,
     dropAllDatabases();
     auto db = client.database("mydb");
 
-    YAML::Node config = YAML::Load(R"(
-      SchemaVersion: 2018-07-01
-      Actors:
-      - Name: CrudActor
-        Type: CrudActor
-        Database: mydb
-        ExecutionStrategy:
-          ThrowOnFailure: true
-        Phases:
-        - Repeat: 1
-          Collection: test
-          Operations:
-          - OperationName: bulkWrite
-            OperationCommand:
-              WriteOperations:
-              - WriteCommand: insertOne
-                Document: { a: 1 }
-              - WriteCommand: updateOne
-                Filter: { a: 1 }
-                Update: { $set: { a: 5 } }
-              Options:
-                WriteConcern:
-                  Level: majority
-                  TimeoutMillis: 5000
-      )");
-
     SECTION("Inserts and updates document in the database.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: updateOne
+                    Filter: { a: 1 }
+                    Update: { $set: { a: 5 } }
+          )");
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             auto count = db.collection("test").count_documents(
                 BasicBson::make_document(BasicBson::kvp("a", 5)));
             REQUIRE(count == 1);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Inserts and deletes documents in the database.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: deleteOne
+                    Filter: { a: 1 }
+                  - WriteCommand: insertOne
+                    Document: { a: 2 }
+          )");
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
+            REQUIRE(count == 0);
+            count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 2)));
+            REQUIRE(count == 1);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Inserts and replaces document in the database.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: replaceOne
+                    Filter: { a : 1 }
+                    Replacement: { name: test }
+          )");
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("name", "test")));
+            REQUIRE(count == 1);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Inserts and updates with 'BypassDocumentValidation' true and 'Ordered' false.") {
+        SessionTest test;
+
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: updateOne
+                    Filter: { a: 1 }
+                    Update: { $set: { a: 5 } }
+                  Options:
+                    Ordered: false
+                    BypassDocumentValidation: true
+          )");
+        try {
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 5)));
+            REQUIRE(count == 1);
+            REQUIRE(test.events.size() > 0);
+            for (auto&& event : test.events) {
+                REQUIRE(event.command["ordered"]);
+                auto isOrdered = event.command["ordered"].get_bool().value;
+                REQUIRE(isOrdered == false);
+                REQUIRE(event.command["bypassDocumentValidation"]);
+                auto bypassDocValidation =
+                    event.command["bypassDocumentValidation"].get_bool().value;
+                REQUIRE(bypassDocValidation);
+            }
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Inserts and updates many documents in the database.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: {^RandomInt: {min: 5, max: 15} } }
+                  - WriteCommand: insertOne
+                    Document: { a: {^RandomInt: {min: 5, max: 15} } }
+                  - WriteCommand: insertOne
+                    Document: { a: {^RandomInt: {min: 5, max: 15} } }
+                  - WriteCommand: updateMany
+                    Filter: { a: {$gte: 5} }
+                    Update: { $set: { a: 1 } }
+          )");
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
+            REQUIRE(count == 3);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Inserts and deletes many documents in the database.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: {^RandomInt: {min: 5, max: 15} } }
+                  - WriteCommand: insertOne
+                    Document: { a: {^RandomInt: {min: 5, max: 15} } }
+                  - WriteCommand: insertOne
+                    Document: { a: {^RandomInt: {min: 5, max: 15} } }
+                  - WriteCommand: deleteMany
+                    Filter: { a: {$gte: 5} }
+          )");
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count = db.collection("test").count_documents(BasicBson::make_document(
+                BasicBson::kvp("a", BasicBson::make_document(BasicBson::kvp("$gte", 5)))));
+            REQUIRE(count == 0);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Insert randomly generated doc and update with write concern majority.") {
+        SessionTest test;
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: {^RandomInt: {min: 2, max: 5} }}
+                  - WriteCommand: updateOne
+                    Filter: { a: { $gte: 2 } }
+                    Update: { $set: { a: 8 } }
+                  Options:
+                    WriteConcern:
+                      Level: majority
+                      TimeoutMillis: 6000
+          )");
+        try {
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 8)));
+            REQUIRE(count == 1);
+            REQUIRE(test.events.size() > 0);
+            for (auto&& event : test.events) {
+                REQUIRE(event.command["writeConcern"]);
+                auto writeConcernLevel = event.command["writeConcern"]["w"].get_utf8().value;
+                REQUIRE(std::string(writeConcernLevel) == "majority");
+                auto timeout = event.command["writeConcern"]["wtimeout"].get_int32().value;
+                REQUIRE(timeout == 6000);
+            }
+
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
             INFO("CAUGHT " << diagInfo);
@@ -364,8 +611,6 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Options:
                     WriteConcern:
                       Level: infinite
-                      TimeoutMillis: 3000
-                      Journal: false
           )");
         try {
             REQUIRE_THROWS_AS(
