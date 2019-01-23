@@ -624,4 +624,158 @@ TEST_CASE_METHOD(MongoTestFixture,
         }
     }
 }
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Test read preference options.",
+                 "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
+
+    dropAllDatabases();
+    SessionTest test;
+    test.clearEvents();
+    auto db = client.database("mydb");
+
+    SECTION("Read preference is 'secondaryPreferred'.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: count
+                OperationCommand:
+                  Filter: { a : 1 }
+                  Options: 
+                    ReadPreference:
+                      ReadMode: secondaryPreferred
+          )");
+        try {
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            REQUIRE(test.events.size() > 0);
+            for (auto&& event : test.events) {
+                REQUIRE(event.command["$readPreference"]);
+                REQUIRE(event.command["$readPreference"]["mode"]);
+                auto readMode = event.command["$readPreference"]["mode"].get_utf8().value;
+                REQUIRE(std::string(readMode) == "secondaryPreferred");
+            }
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Read preference is 'nearest' with MaxStalenessSeconds set.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: count
+                OperationCommand:
+                  Filter: { a : 1 }
+                  Options: 
+                    ReadPreference:
+                      ReadMode: nearest
+                      MaxStalenessSeconds: 100
+          )");
+        try {
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            REQUIRE(test.events.size() > 0);
+            for (auto&& event : test.events) {
+                REQUIRE(event.command["$readPreference"]);
+                REQUIRE(event.command["$readPreference"]["mode"]);
+                auto readMode = event.command["$readPreference"]["mode"].get_utf8().value;
+                REQUIRE(std::string(readMode) == "nearest");
+                REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"]);
+                auto maxStaleness =
+                    event.command["$readPreference"]["maxStalenessSeconds"].get_int64().value;
+                REQUIRE(maxStaleness == 100);
+            }
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Read preference without 'ReadMode' should throw.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: count
+                OperationCommand:
+                  Filter: { a : 1 }
+                  Options:
+                    ReadPreference:
+                      MaxStalenessSeconds: 100
+          )");
+        try {
+            REQUIRE_THROWS_AS(
+                genny::ActorHelper(config, 1, MongoTestFixture::connectionUri().to_string()),
+                YAML::TypedBadConversion<mongocxx::v_noabi::read_preference>);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Read preference with invalid 'ReadMode' should throw.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: count
+                OperationCommand:
+                  Filter: { a : 1 }
+                  Options:
+                    ReadPreference:
+                      ReadMode: badReadMode
+          )");
+        try {
+            REQUIRE_THROWS_AS(
+                genny::ActorHelper(config, 1, MongoTestFixture::connectionUri().to_string()),
+                YAML::TypedBadConversion<mongocxx::v_noabi::read_preference>);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+}
+
 }  // namespace

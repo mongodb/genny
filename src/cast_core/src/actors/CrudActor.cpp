@@ -72,7 +72,7 @@ struct convert<mongocxx::read_preference> {
         } else {
             return false;
         }
-        if (node["MaxStaleness"]) {
+        if (node["MaxStalenessSeconds"]) {
             auto maxStaleness = node["MaxStalenessSeconds"].as<int>();
             rhs.max_staleness(std::chrono::seconds(maxStaleness));
         }
@@ -228,6 +228,20 @@ struct convert<mongocxx::options::count> {
     using CountOptions = mongocxx::options::count;
     static Node encode(const CountOptions& rhs) {
         Node node;
+        auto h = rhs.hint();
+        if (h) {
+            auto hint = h->to_value().get_utf8().value;
+            node["Hint"] = std::string(hint);
+        }
+        auto limit = rhs.limit();
+        if (limit) {
+            node["Limit"] = *limit;
+        }
+        auto maxTime = rhs.max_time();
+        if (maxTime) {
+            auto maxTimeSpec = genny::TimeSpec(*maxTime);
+            node["MaxTimeMillis"] = maxTimeSpec.count();
+        }
         return node;
     }
 
