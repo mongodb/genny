@@ -88,20 +88,22 @@ public:
      * appropriate back-off strategy if this function returns false.
      */
     bool consume() {
-        auto startTime = now();
+        // TODO: Use __builtin_expect() to speed this up if needed.
+        if (!_emptiedTimeNSHasBeenInitialized) {
+            _emptiedTimeNSHasBeenInitialized = true;
+            // Allow one burst to go through when consume() is called the first time.
+            // It's fine that this section is not atomic, a best effort is sufficient.
+            _emptiedTimeNS = now() - _rateNS;
+        }
+
+        int64_t startTime = now();
 
         // The time the bucket was emptied before this consume() call.
-        auto curEmptiedTime = _emptiedTimeNS.load();
-
-        // Check the sentinel value to see this is the first time consume() is called.
-        // If so, set the emptied time to be just recent enough to allow one consume()
-        // to go through.
-        if (curEmptiedTime == LLONG_MAX) {
-            curEmptiedTime = startTime - _rateNS;
-        }
+        int64_t curEmptiedTime = _emptiedTimeNS.load();
 
         // The time the bucket was emptied after this consume() call.
         int64_t newEmptiedTime;
+
         do {
             newEmptiedTime = curEmptiedTime + _rateNS;
 
@@ -124,8 +126,15 @@ public:
 
 private:
     // Manually align _emptiedTimeNS here to vastly improve performance.
-    // Default to an empty bucket to be populated lazily by the first call to consume().
-    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic<int64_t> _emptiedTimeNS{LLONG_MAX};
+    // Lazily initialized by the first call to consume().
+    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _emptiedTimeNS = 0;
+
+    // Flag to determine when consume() is first called.
+    std::atomic_bool _emptiedTimeNSHasBeenInitialized = false;
+
+    // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to
+    // store the burst size and the rate together, since they're specified together in
+    // the YAML as RateSpec.
     const int64_t _burstSize;
     const int64_t _rateNS;
 };

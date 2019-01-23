@@ -18,8 +18,15 @@
 
 #include "log.hh"
 
+#include <gennylib/v1/GlobalRateLimiter.hpp>
+
 namespace genny::testing {
+
+// Hack to allow different DummyClocks classes to be created so calling static methods won't
+// conflict.
+template <typename DummyT>
 struct DummyClock {
+    static int64_t nowRaw;
 
     // <clock-concept>
     using rep = int64_t;
@@ -29,26 +36,58 @@ struct DummyClock {
     const static bool is_steady = true;
     // </clock-concept>
 
-    int64_t nowRaw = 0;
-
-    auto now() {
+    static auto now() {
         return DummyClock::time_point(DummyClock::duration(nowRaw));
     }
 };
 
+template <typename DummyT>
+int64_t DummyClock<DummyT>::nowRaw = 0;
+
 namespace {
-TEST_CASE("Dummy Clock self-test") {
-    auto getTicks = [](const DummyClock::duration& d) {
+TEST_CASE("Dummy Clock") {
+    struct DummyTemplateValue {};
+    using MyDummyClock = DummyClock<DummyTemplateValue>;
+
+    auto getTicks = [](const MyDummyClock::duration& d) {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(d).count();
     };
-    DummyClock clock;
-    SECTION("Can be converted to nano seconds") {
-        auto now = clock.now().time_since_epoch();
+
+    SECTION("Can be converted to time points") {
+        auto now = MyDummyClock::now().time_since_epoch();
         REQUIRE(getTicks(now) == 0);
 
-        clock.nowRaw++;
-        now = clock.now().time_since_epoch();
+        MyDummyClock::nowRaw++;
+        now = MyDummyClock::now().time_since_epoch();
         REQUIRE(getTicks(now) == 1);
+    }
+}
+
+TEST_CASE("Global rate limiter") {
+    struct DummyTemplateValue {};
+    using MyDummyClock = DummyClock<DummyTemplateValue>;
+
+    const int64_t per = 3;
+    const int64_t burst = 2;
+    const RateSpec rs{per, burst};  // 2 operations per 3 ticks.
+    v1::BaseGlobalRateLimiter<MyDummyClock> grl{rs};
+
+    SECTION("Stores the burst size and rate") {
+        REQUIRE(grl.getBurstSize() == burst);
+        REQUIRE(grl.getRate() == per);
+    }
+
+    SECTION("Limits Rate") {
+        // First consume() goes through because we intentionally have the rate limiter do so.
+        REQUIRE(grl.consume());
+
+        // Second consume() should fail because we have not incremented the clock.
+        REQUIRE(!grl.consume());
+
+        // Increment the clock should allow consume() to succeed exactly once.
+        MyDummyClock::nowRaw = per;
+        REQUIRE(grl.consume());
+        REQUIRE(!grl.consume());
     }
 }
 }  // namespace
