@@ -101,7 +101,8 @@ public:
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
-                    const Cast& cast);
+                    const Cast& cast,
+                    mongocxx::options::client clientOpts = mongocxx::options::client{});
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
@@ -226,10 +227,11 @@ class PhaseContext;
  */
 class ActorContext final : public V1::ConfigNode {
 public:
-    ActorContext(YAML::Node node, WorkloadContext& workloadContext)
+    ActorContext(YAML::Node node, WorkloadContext& workloadContext, bool hasApmOpts)
         : ConfigNode(std::move(node), std::addressof(workloadContext)),
           _workload{&workloadContext},
-          _phaseContexts{} {
+          _phaseContexts{},
+          _hasApmOpts{hasApmOpts} {
         _phaseContexts = constructPhaseContexts(_node, this);
     }
 
@@ -420,6 +422,8 @@ private:
     constructPhaseContexts(const YAML::Node&, ActorContext*);
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
+    // TODO: Remove _hasApmOpts when CDRIVER-2931 is resolved.
+    bool _hasApmOpts;
 };
 
 

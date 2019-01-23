@@ -38,10 +38,15 @@ ActorHelper::ActorHelper(const YAML::Node& config,
     _orchestrator->addRequiredTokens(tokenCount);
 
     _cast = std::make_unique<Cast>(castInitializer);
-    _wlc = std::make_unique<WorkloadContext>(config, *_registry, *_orchestrator, uri, *_cast);
+    _clientOpts = mongocxx::options::client{};
+    _wlc = std::make_unique<WorkloadContext>(
+        config, *_registry, *_orchestrator, uri, *_cast, _clientOpts);
 }
 
-ActorHelper::ActorHelper(const YAML::Node& config, int tokenCount, const std::string& uri) {
+ActorHelper::ActorHelper(const YAML::Node& config,
+                         int tokenCount,
+                         const std::string& uri,
+                         mongocxx::options::client clientOpts) {
     if (tokenCount <= 0) {
         throw InvalidConfigurationException("Must add a positive number of tokens");
     }
@@ -51,7 +56,9 @@ ActorHelper::ActorHelper(const YAML::Node& config, int tokenCount, const std::st
     _orchestrator = std::make_unique<genny::Orchestrator>(_registry->gauge("PhaseNumber"));
     _orchestrator->addRequiredTokens(tokenCount);
 
-    _wlc = std::make_unique<WorkloadContext>(config, *_registry, *_orchestrator, uri, globalCast());
+    _clientOpts = clientOpts;
+    _wlc = std::make_unique<WorkloadContext>(
+        config, *_registry, *_orchestrator, uri, globalCast(), _clientOpts);
 }
 
 void ActorHelper::run() {

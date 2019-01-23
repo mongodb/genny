@@ -19,6 +19,45 @@ using namespace genny::testing;
 namespace BasicBson = bsoncxx::builder::basic;
 namespace bson_stream = bsoncxx::builder::stream;
 
+class SessionTest {
+public:
+    SessionTest() {
+        mongocxx::options::apm apmOpts;
+
+        apmOpts.on_command_started([&](const mongocxx::events::command_started_event& event) {
+            std::string command_name{event.command_name().data()};
+
+            // Ignore auth commands like "saslStart", and handshakes with "isMaster".
+            std::string sasl{"sasl"};
+            if (event.command_name().substr(0, sasl.size()).compare(sasl) == 0 ||
+                command_name.compare("isMaster") == 0) {
+                return;
+            }
+
+            events.emplace_back(command_name, bsoncxx::document::value(event.command()));
+        });
+        clientOpts.apm_opts(apmOpts);
+    }
+
+    void clearEvents() {
+        events.clear();
+    }
+
+    class ApmEvent {
+    public:
+        ApmEvent(const std::string& command_name_, const bsoncxx::document::value& document_)
+            : command_name(command_name_), value(document_), command(value.view()) {}
+
+        std::string command_name;
+        bsoncxx::document::value value;
+        bsoncxx::document::view command;
+    };
+
+    std::vector<ApmEvent> events;
+    mongocxx::options::client clientOpts;
+};
+
+
 TEST_CASE_METHOD(MongoTestFixture,
                  "CrudActor successfully connects to a MongoDB instance.",
                  "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
@@ -70,32 +109,269 @@ TEST_CASE_METHOD(MongoTestFixture,
     auto db = client.database("mydb");
 
     YAML::Node config = YAML::Load(R"(
-SchemaVersion: 2018-07-01
-Actors:
-- Name: CrudActor
-  Type: CrudActor
-  Database: mydb
-  ExecutionStrategy:
-    ThrowOnFailure: true
-  Phases:
-  - Repeat: 1
-    Collection: test
-    Operations:
-    - OperationName: bulkWrite
-      OperationCommand:
-        WriteOperations:
-        - WriteCommand: insertOne
-          Document: { a: 1 }
-        Options:
-          WriteConcern:
-            Level: majority
-            TimeoutMillis: 5000
-)");
+      SchemaVersion: 2018-07-01
+      Actors:
+      - Name: CrudActor
+        Type: CrudActor
+        Database: mydb
+        ExecutionStrategy:
+          ThrowOnFailure: true
+        Phases:
+        - Repeat: 1
+          Collection: test
+          Operations:
+          - OperationName: bulkWrite
+            OperationCommand:
+              WriteOperations:
+              - WriteCommand: insertOne
+                Document: { a: 1 }
+              - WriteCommand: updateOne
+                Filter: { a: 1 }
+                Update: { $set: { a: 5 } }
+              Options:
+                WriteConcern:
+                  Level: majority
+                  TimeoutMillis: 5000
+      )");
 
-    SECTION("Inserts documents into the database.") {
+    SECTION("Inserts and updates document in the database.") {
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 5)));
+            REQUIRE(count == 1);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+}
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Test write concern options.",
+                 "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
+
+    dropAllDatabases();
+    SessionTest test;
+    auto db = client.database("mydb");
+    test.clearEvents();
+
+    SECTION("Write concern majority with timeout.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: updateOne
+                    Filter: { a: 1 }
+                    Update: { $set: { a: 5 } }
+                  Options:
+                    WriteConcern:
+                      Level: majority
+                      TimeoutMillis: 5000
+          )");
+        try {
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            REQUIRE(test.events.size() > 0);
+            for (auto&& event : test.events) {
+                REQUIRE(event.command["writeConcern"]);
+                auto writeConcernLevel = event.command["writeConcern"]["w"].get_utf8().value;
+                REQUIRE(std::string(writeConcernLevel) == "majority");
+                auto timeout = event.command["writeConcern"]["wtimeout"].get_int32().value;
+                REQUIRE(timeout == 5000);
+            }
+
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Write concern 1 with timeout and journalling true.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: updateOne
+                    Filter: { a: 1 }
+                    Update: { $set: { a: 5 } }
+                  Options:
+                    WriteConcern:
+                      Level: 1
+                      TimeoutMillis: 2500
+                      Journal: true
+          )");
+        try {
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            REQUIRE(test.events.size() > 0);
+            for (auto&& event : test.events) {
+                REQUIRE(event.command["writeConcern"]);
+                auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
+                REQUIRE(writeConcernLevel == 1);
+                auto timeout = event.command["writeConcern"]["wtimeout"].get_int32().value;
+                REQUIRE(timeout == 2500);
+                auto journal = event.command["writeConcern"]["j"].get_bool().value;
+                REQUIRE(journal);
+            }
+
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Write concern 0 with timeout and journalling false.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: updateOne
+                    Filter: { a: 1 }
+                    Update: { $set: { a: 5 } }
+                  Options:
+                    WriteConcern:
+                      Level: 0
+                      TimeoutMillis: 3000
+                      Journal: false
+          )");
+        try {
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            REQUIRE(test.events.size() > 0);
+            for (auto&& event : test.events) {
+                REQUIRE(event.command["writeConcern"]);
+                auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
+                REQUIRE(writeConcernLevel == 0);
+                auto timeout = event.command["writeConcern"]["wtimeout"].get_int32().value;
+                REQUIRE(timeout == 3000);
+                auto journal = event.command["writeConcern"]["j"].get_bool().value;
+                REQUIRE(journal == false);
+            }
+
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Write concern without 'Level' field should throw.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: updateOne
+                    Filter: { a: 1 }
+                    Update: { $set: { a: 5 } }
+                  Options:
+                    WriteConcern:
+                      TimeoutMillis: 3000
+                      Journal: false
+          )");
+        try {
+            REQUIRE_THROWS_AS(
+                genny::ActorHelper(config, 1, MongoTestFixture::connectionUri().to_string()),
+                YAML::TypedBadConversion<mongocxx::v_noabi::write_concern>);
+
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Invalid write concern level should throw.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: bulkWrite
+                OperationCommand:
+                  WriteOperations:
+                  - WriteCommand: insertOne
+                    Document: { a: 1 }
+                  - WriteCommand: updateOne
+                    Filter: { a: 1 }
+                    Update: { $set: { a: 5 } }
+                  Options:
+                    WriteConcern:
+                      Level: infinite
+                      TimeoutMillis: 3000
+                      Journal: false
+          )");
+        try {
+            REQUIRE_THROWS_AS(
+                genny::ActorHelper(config, 1, MongoTestFixture::connectionUri().to_string()),
+                YAML::TypedBadConversion<mongocxx::v_noabi::write_concern>);
+
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
             INFO("CAUGHT " << diagInfo);

@@ -30,7 +30,8 @@ WorkloadContext::WorkloadContext(YAML::Node node,
                                  metrics::Registry& registry,
                                  Orchestrator& orchestrator,
                                  const std::string& mongoUri,
-                                 const Cast& cast)
+                                 const Cast& cast,
+                                 mongocxx::options::client clientOpts)
     : V1::ConfigNode(std::move(node)), _registry{&registry}, _orchestrator{&orchestrator} {
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
@@ -42,7 +43,7 @@ WorkloadContext::WorkloadContext(YAML::Node node,
     mongocxx::instance::current();
 
     // TODO: make this optional and default to mongodb://localhost:27017
-    auto poolFactory = PoolFactory(mongoUri);
+    auto poolFactory = PoolFactory(mongoUri, clientOpts);
 
     auto queryOpts =
         this->get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
@@ -58,9 +59,17 @@ WorkloadContext::WorkloadContext(YAML::Node node,
 
     _clientPool = poolFactory.makePool();
 
+    // TODO: Remove hasApmOpts when CDRIVER-2931 is resolved.
+    auto apmOpts = clientOpts.apm_opts();
+    bool hasApmOpts = false;
+    if (apmOpts) {
+        hasApmOpts = true;
+    }
+
     // Make a bunch of actor contexts
     for (const auto& actor : this->get_noinherit("Actors")) {
-        _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
+        _actorContexts.emplace_back(
+            std::make_unique<genny::ActorContext>(actor, *this, hasApmOpts));
     }
 
     // Default value selected from random.org, by selecting 2 random numbers
@@ -130,6 +139,10 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
 }
 
 mongocxx::pool::entry ActorContext::client() {
+    if (_hasApmOpts) {
+        // TODO: Remove this conditional when CDRIVER-2931 is resolved.
+        return _workload->_clientPool->acquire();
+    }
     auto entry = _workload->_clientPool->try_acquire();
     if (!entry) {
         throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");

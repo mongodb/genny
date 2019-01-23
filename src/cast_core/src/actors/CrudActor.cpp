@@ -86,9 +86,21 @@ struct convert<mongocxx::write_concern> {
     static Node encode(const WriteConcern& rhs) {
         Node node;
         auto timeout = rhs.timeout();
-        auto timeoutTimeSpec = genny::TimeSpec{timeout};
-        node["TimeOutMillis"] = timeoutTimeSpec;
+        auto timeoutCount = genny::TimeSpec{timeout}.count();
+        node["TimeoutMillis"] = timeoutCount;
 
+        auto journal = rhs.journal();
+        node["Journal"] = journal;
+
+        auto ackLevel = rhs.acknowledge_level();
+        if (ackLevel == WriteConcern::level::k_majority) {
+            node["Level"] = "majority";
+        } else if (ackLevel == WriteConcern::level::k_acknowledged) {
+            auto numNodes = rhs.nodes();
+            if (numNodes) {
+                node["Level"] = *numNodes;
+            }
+        }
         return node;
     }
 
@@ -111,8 +123,8 @@ struct convert<mongocxx::write_concern> {
             // writeConcern level must be of valid integer or 'majority'.
             return false;
         }
-        if (node["TimeOutMillis"]) {
-            auto timeout = node["TimeOutMillis"].as<genny::TimeSpec>();
+        if (node["TimeoutMillis"]) {
+            auto timeout = node["TimeoutMillis"].as<int>();
             rhs.timeout(std::chrono::milliseconds(timeout));
         }
         if (node["Journal"]) {

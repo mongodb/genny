@@ -55,7 +55,8 @@ public:
      */
     ActorHelper(const YAML::Node& config,
                 int tokenCount,
-                const std::string& uri = mongocxx::uri::k_default_uri);
+                const std::string& uri = mongocxx::uri::k_default_uri,
+                mongocxx::options::client clientOpts = mongocxx::options::client{});
 
     void run(FuncWithContext&& runnerFunc);
 
@@ -84,6 +85,7 @@ private:
     std::unique_ptr<WorkloadContext> _wlc;
 
     std::stringstream _metricsOutput;
+    mongocxx::options::client _clientOpts;
 };
 }  // namespace genny
 

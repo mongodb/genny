@@ -45,7 +45,7 @@ public:
     };
 
 public:
-    PoolFactory(std::string_view uri);
+    PoolFactory(std::string_view uri, mongocxx::options::client& clientOpts);
     ~PoolFactory();
 
     // Both `makeUri()` and `makeOptions()` are used internally. They are publicly exposed to
@@ -79,6 +79,7 @@ public:
 private:
     struct Config;
     std::unique_ptr<Config> _config;
+    mongocxx::options::client _clientOpts;
 };
 
 }  // namespace genny

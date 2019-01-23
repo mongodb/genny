@@ -177,7 +177,8 @@ struct PoolFactory::Config {
     };
 };
 
-PoolFactory::PoolFactory(std::string_view rawUri) : _config(std::make_unique<Config>(rawUri)) {}
+PoolFactory::PoolFactory(std::string_view rawUri, mongocxx::options::client& clientOpts)
+    : _config(std::make_unique<Config>(rawUri)), _clientOpts{clientOpts} {}
 PoolFactory::~PoolFactory() {}
 
 std::string PoolFactory::makeUri() const {
@@ -186,6 +187,8 @@ std::string PoolFactory::makeUri() const {
 
 mongocxx::options::pool PoolFactory::makeOptions() const {
     mongocxx::options::ssl sslOptions;
+
+    auto clientOpts = mongocxx::options::client{_clientOpts};
 
     auto allowInv = _config->getFlag(OptionType::kAccessOption, "AllowInvalidCertificates");
     if (allowInv) {
@@ -206,16 +209,17 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
         BOOST_LOG_TRIVIAL(debug) << "Using PEM Key file '" << pemKeyFile << "' for SSL/TLS";
         sslOptions = sslOptions.pem_file(pemKeyFile.data());
     }
-
-    return mongocxx::options::client{}.ssl_opts(sslOptions);
+    return clientOpts.ssl_opts(sslOptions);
 }
+
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto uriStr = makeUri();
     BOOST_LOG_TRIVIAL(info) << "Constructing pool with MongoURI '" << uriStr << "'";
 
     auto uri = mongocxx::uri{uriStr};
 
-    auto poolOptions = mongocxx::options::pool{};
+    auto poolOptions = mongocxx::options::pool{_clientOpts};
+
     auto useSsl = _config->getFlag(OptionType::kQueryOption, "ssl");
     if (useSsl) {
         poolOptions = makeOptions();
