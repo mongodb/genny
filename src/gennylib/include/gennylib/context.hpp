@@ -35,9 +35,9 @@
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/v1/ConfigNode.hpp>
+#include <gennylib/v1/GlobalRateLimiter.hpp>
 #include <metrics/metrics.hpp>
 #include <value_generators/DefaultRandom.hpp>
-#include <gennylib/v1/GlobalRateLimiter.hpp>
 
 /**
  * @file context.hpp defines WorkloadContext, ActorContext, and PhaseContext.

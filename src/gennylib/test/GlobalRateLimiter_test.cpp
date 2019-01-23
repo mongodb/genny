@@ -26,7 +26,6 @@ struct DummyClock {
     using period = std::nano;
     using duration = std::chrono::duration<DummyClock::rep, DummyClock::period>;
     using time_point = std::chrono::time_point<DummyClock>;
-
     const static bool is_steady = true;
     // </clock-concept>
 
@@ -39,7 +38,7 @@ struct DummyClock {
 
 namespace {
 TEST_CASE("Dummy Clock self-test") {
-    auto getTicks = [](DummyClock::duration& d) {
+    auto getTicks = [](const DummyClock::duration& d) {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(d).count();
     };
     DummyClock clock;
@@ -52,5 +51,5 @@ TEST_CASE("Dummy Clock self-test") {
         REQUIRE(getTicks(now) == 1);
     }
 }
-}
-}
+}  // namespace
+}  // namespace genny::testing
