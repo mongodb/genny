@@ -15,10 +15,14 @@
 
 #include <chrono>
 #include <ratio>
+#include <thread>
 
 #include "log.hh"
 
+#include <gennylib/PhaseLoop.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
+
+#include <ActorHelper.hpp>
 
 namespace genny::testing {
 
@@ -85,9 +89,82 @@ TEST_CASE("Global rate limiter") {
         REQUIRE(!grl.consume());
 
         // Increment the clock should allow consume() to succeed exactly once.
-        MyDummyClock::nowRaw = per;
+        MyDummyClock::nowRaw += per;
         REQUIRE(grl.consume());
         REQUIRE(!grl.consume());
+    }
+}
+
+TEST_CASE("Global rate limiter can be used by phase loop") {
+    using namespace std::chrono_literals;
+
+    class IncActor : public Actor {
+    public:
+        struct IncCounter : WorkloadContext::ShareableState<std::atomic_int64_t> {};
+
+        IncActor(genny::ActorContext& ac)
+            : Actor(ac),
+              _loop{ac},
+              _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {};
+
+        void run() override {
+            for (auto&& config : _loop) {
+                for (auto _ : config) {
+                    ++_counter;
+                }
+            }
+        };
+
+        static std::string_view defaultName() {
+            return "IncActor";
+        }
+
+    private:
+        struct PhaseConfig {
+            explicit PhaseConfig(PhaseContext& context){};
+        };
+
+        IncCounter& _counter;
+        PhaseLoop<PhaseConfig> _loop;
+    };
+
+    // The rate interval needs to be large enough to avoid sporadic failures, which makes
+    // this test take longer. It therefore has the "[slow]" label.
+    SECTION("Prevents execution when the rate is exceeded", "[slow]") {
+        YAML::Node config = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: IncActor
+  Threads: 2
+  Phases:
+    - Repeat: 7
+      Rate: 5 per 4 seconds
+)");
+        auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
+        int num_threads = 2;
+
+        genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+        auto getCurState = []() {
+            return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().load();
+        };
+
+        auto runInBg = [&ah]() { ah.run(); };
+        std::thread t(runInBg);
+
+        // Due to the placement of the rate limiter in operator++() in PhaseLoop, the number of
+        // completed iterations is always `rate * n + num_threads` and not an exact multiple of
+        // `rate`.
+        std::this_thread::sleep_for(1s);
+        REQUIRE(getCurState() == (5 + num_threads));
+
+        // Check for rate again after 4 seconds.
+        std::this_thread::sleep_for(4s);
+        REQUIRE(getCurState() == (5 * 2 + num_threads));
+
+        t.join();
+
+        REQUIRE(getCurState() == 14);
     }
 }
 }  // namespace

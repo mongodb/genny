@@ -94,7 +94,7 @@ public:
 
     bool shouldLimitRate(int64_t currentIteration) const {
         // Only rate limit if the current iteration is a muliple of the burst size.
-        return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() != 0);
+        return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
     bool limitRate() const {
@@ -185,19 +185,22 @@ public:
     }
 
     ActorPhaseIterator& operator++() {
-        ++_currentIteration;
-        // Limit rate after incrementing currentIteration so the first few iterations
-        // are never blocked.
+        // This function is called after each iteration, so we never rate limit the
+        // first iteration. This means the number of completed operations is always
+        // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
+        // _burstSize. `m` here is the number of threads using the rate limiter.
         if (_iterationCheck && _iterationCheck->shouldLimitRate(_currentIteration)) {
             while (true) {
                 auto success = _iterationCheck->limitRate();
-                if (!success && _orchestrator->currentPhase() == _inPhase) {
+                if (!success && (_orchestrator->currentPhase() == _inPhase)) {
                     _iterationCheck->wait();
                     continue;
                 }
                 break;
             }
         }
+        ++_currentIteration;
+
         return *this;
     }
 

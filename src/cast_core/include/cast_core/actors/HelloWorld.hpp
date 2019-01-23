@@ -60,7 +60,7 @@ private:
     /** loops over each Phase and handles Duration/Repeat/Rate */
     PhaseLoop<PhaseConfig> _loop;
     /** example of sharing data. @see HelloWorldCounter */
-    HelloWorldCounter& _hwCounter;
+    HelloWorldCounter& _helloCounter;
 };
 
 }  // namespace genny::actor
