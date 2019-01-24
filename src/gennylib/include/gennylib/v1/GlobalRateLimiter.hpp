@@ -48,7 +48,7 @@ namespace genny::v1 {
  * Inspired by
  * https://github.com/facebook/folly/blob/7c6897aa18e71964e097fc238c93b3efa98b2c61/folly/TokenBucket.h
  */
-template <typename ClockT>
+template <typename ClockT = std::chrono::steady_clock>
 class BaseGlobalRateLimiter {
 public:
     // This should be replaced with std::hardware_destructive_interference_size, which is
@@ -61,7 +61,7 @@ public:
     static_assert(ClockT::is_steady, "Clock must be steady");
 
 private:
-    auto now() const {
+    static auto now() {
         const auto nowTime = ClockT::now().time_since_epoch();
         return std::chrono::duration_cast<std::chrono::nanoseconds>(nowTime).count();
     }
@@ -88,18 +88,17 @@ public:
      * appropriate back-off strategy if this function returns false.
      */
     bool consume() {
-        // TODO: Use __builtin_expect() to speed this up if needed.
         if (!_emptiedTimeNSHasBeenInitialized) {
             _emptiedTimeNSHasBeenInitialized = true;
             // Allow one burst to go through when consume() is called the first time.
             // It's fine that this section is not atomic, a best effort is sufficient.
-            _emptiedTimeNS = now() - _rateNS;
+            _lastEmptiedTimeNS = now() - _rateNS;
         }
 
         int64_t startTime = now();
 
         // The time the bucket was emptied before this consume() call.
-        int64_t curEmptiedTime = _emptiedTimeNS.load();
+        int64_t curEmptiedTime = _lastEmptiedTimeNS.load();
 
         // The time the bucket was emptied after this consume() call.
         int64_t newEmptiedTime;
@@ -111,7 +110,9 @@ public:
             if (startTime < newEmptiedTime) {
                 return false;
             }
-        } while (!_emptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime));
+            // Use the "weak" version for performance at the expense of false negatives (i.e.
+            // `compare_exchange` not comparing equal when it should).
+        } while (!_lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime));
 
         return true;
     }
@@ -125,9 +126,9 @@ public:
     }
 
 private:
-    // Manually align _emptiedTimeNS here to vastly improve performance.
+    // Manually align _lastEmptiedTimeNS here to vastly improve performance.
     // Lazily initialized by the first call to consume().
-    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _emptiedTimeNS = 0;
+    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _lastEmptiedTimeNS = 0;
 
     // Flag to determine when consume() is first called.
     std::atomic_bool _emptiedTimeNSHasBeenInitialized = false;

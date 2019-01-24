@@ -97,16 +97,24 @@ public:
         return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
-    bool limitRate() const {
-        // Return if we're within the rate limit.
-        return _rateLimiter->consume();
-    }
-
-    void wait() const {
-        // Sleep for a little bit. This is not efficient if there's a large number of
-        // threads. If this is a problem, we can use exponential back off or wait
-        // based on the number of actors using this rate limiter.
-        std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate()));
+    void limitRate(const int64_t currentIteration, const Orchestrator& o, const PhaseNumber inPhase) const {
+        // This function is called after each iteration, so we never rate limit the
+        // first iteration. This means the number of completed operations is always
+        // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
+        // _burstSize. `m` here is the number of threads using the rate limiter.
+        if (shouldLimitRate(currentIteration)) {
+            while (true) {
+                auto success = _rateLimiter->consume();;
+                if (!success && (o.currentPhase() == inPhase)) {
+                    // Sleep for a little bit. This is not efficient if there's a large number of
+                    // threads. If this is a problem, we can use exponential back off or wait
+                    // based on the number of actors using this rate limiter.
+                    std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate()));
+                    continue;
+                }
+                break;
+            }
+        }
     }
 
     std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
@@ -185,22 +193,9 @@ public:
     }
 
     ActorPhaseIterator& operator++() {
-        // This function is called after each iteration, so we never rate limit the
-        // first iteration. This means the number of completed operations is always
-        // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
-        // _burstSize. `m` here is the number of threads using the rate limiter.
-        if (_iterationCheck && _iterationCheck->shouldLimitRate(_currentIteration)) {
-            while (true) {
-                auto success = _iterationCheck->limitRate();
-                if (!success && (_orchestrator->currentPhase() == _inPhase)) {
-                    _iterationCheck->wait();
-                    continue;
-                }
-                break;
-            }
-        }
+        if (_iterationCheck)
+            _iterationCheck->limitRate(_currentIteration, std::cref(*_orchestrator), _inPhase);
         ++_currentIteration;
-
         return *this;
     }
 
