@@ -256,8 +256,7 @@ std::string valAsString(view_or_value val) {
             throw InvalidValueGeneratorSyntax("valAsString with type unsuported type in list");
             break;
         default:
-            throw InvalidValueGeneratorSyntax(
-                "valAsString with type unsuported type not in list");
+            throw InvalidValueGeneratorSyntax("valAsString with type unsuported type not in list");
     }
     return ("");
 }
