@@ -42,7 +42,8 @@ cat << EOF >> "${SENTINEL_XML}"
 EOF
 
 # Add the mongo dir to the end of the path so we can find mongo executables
-export PATH="${PATH}:${MONGO_DIR}"
+export PATH+=":${MONGO_DIR}"
+export PATH+=":${MONGO_DIR}/bin"
 
 # The tests themselves do the reporting instead of using resmoke.
 python2 "${MONGO_DIR}/buildscripts/resmoke.py" \

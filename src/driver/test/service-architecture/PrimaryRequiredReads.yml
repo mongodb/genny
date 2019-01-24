@@ -62,7 +62,7 @@ Actors:
     DocumentCount: 100
     BatchSize: 100
     Document:
-      t: {$randomint: {min: 0, max: 10}}
+      t: {^RandomInt: {min: 0, max: 10}}
     Indexes:
       - keys: {t: 1}
     Phases:
