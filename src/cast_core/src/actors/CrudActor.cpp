@@ -1162,6 +1162,7 @@ std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"insertOne", createInsertOneOp},
     {"deleteOne", createDeleteOneOp},
     {"deleteMany", createDeleteManyOp},
+    {"updateOne", createUpdateOneOp},
     {"updateMany", createUpdateManyOp},
     {"replaceOne", createReplaceOneOp}};
 };  // namespace

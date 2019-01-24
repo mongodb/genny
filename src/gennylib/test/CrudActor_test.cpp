@@ -941,7 +941,226 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Test write operations.",
+                 "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
+
+    dropAllDatabases();
+    auto db = client.database("mydb");
+
+    SECTION("Insert a document into a collection.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operation:
+                OperationName: insertOne
+                OperationCommand:
+                  Document: { a: 1 }
+          )");
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            REQUIRE(count == 1);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Insert and replace document in a collection.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: { a: 1 }
+              - OperationName: replaceOne
+                OperationCommand:
+                  Filter: { a : 1 }
+                  Replacement: { newfile: test }
+          )");
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto countOldDoc =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto countNew = db.collection("test").count(
+                BasicBson::make_document(BasicBson::kvp("newfile", "test")));
+            REQUIRE(countOldDoc == 0);
+            REQUIRE(countNew == 1);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Insert and update document in a collection.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: { a: 1 }
+              - OperationName: updateOne
+                OperationCommand:
+                  Filter: { a: 1 }
+                  Update: { $set: { a: 10 } }   
+          )");
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto countOldDoc =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto countUpdated =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 10)));
+            REQUIRE(countOldDoc == 0);
+            REQUIRE(countUpdated == 1);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Insert and update multiple documents in a collection.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: { a: {^RandomInt: {min: 5, max: 15} } }
+              - OperationName: insertOne
+                OperationCommand:
+                  Document: { a: {^RandomInt: {min: 5, max: 15} } }
+              - OperationName: updateMany
+                OperationCommand:
+                  Filter: { a: { $gte: 5 } }
+                  Update: { $set: { a: 2 } }
+          )");
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto countOldDocs = db.collection("test").count(BasicBson::make_document(
+                BasicBson::kvp("a", BasicBson::make_document(BasicBson::kvp("$gte", 5)))));
+            auto countUpdated =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 2)));
+            REQUIRE(countOldDocs == 0);
+            REQUIRE(countUpdated == 2);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Delete a document in a collection.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: deleteOne
+                OperationCommand:
+                  Filter: { a: 1 }
+          )");
+        try {
+            db.collection("test").insert_one(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            REQUIRE(count == 1);
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            count = db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            REQUIRE(count == 0);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("Delete multiple documents in a collection.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operations:
+              - OperationName: deleteMany
+                OperationCommand:
+                  Filter: { a: 1 }
+          )");
+        try {
+            db.collection("test").insert_one(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            db.collection("test").insert_one(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count = db.collection("test").count(BasicBson::make_document());
+            REQUIRE(count == 2);
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            count = db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            REQUIRE(count == 0);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+}
+
 // TODO: add test for ReadConcern
 // TODO: add test for Find
+// TODO: add test for start and commit transaction.
 
 }  // namespace
