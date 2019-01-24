@@ -407,30 +407,30 @@ TEST_CASE_METHOD(MongoTestFixture,
 
     SECTION("Write concern majority with timeout.") {
         YAML::Node config = YAML::Load(R"(
-          SchemaVersion: 2018-07-01
-          Actors:
-          - Name: CrudActor
-            Type: CrudActor
-            Database: mydb
-            ExecutionStrategy:
-              ThrowOnFailure: true
-            Phases:
-            - Repeat: 1
-              Collection: test
-              Operations:
-              - OperationName: bulkWrite
-                OperationCommand:
-                  WriteOperations:
-                  - WriteCommand: insertOne
-                    Document: { a: 1 }
-                  - WriteCommand: updateOne
-                    Filter: { a: 1 }
-                    Update: { $set: { a: 5 } }
-                  Options:
-                    WriteConcern:
-                      Level: majority
-                      TimeoutMillis: 5000
-          )");
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Name: CrudActor
+              Type: CrudActor
+              Database: mydb
+              ExecutionStrategy:
+                ThrowOnFailure: true
+              Phases:
+              - Repeat: 1
+                Collection: test
+                Operations:
+                - OperationName: bulkWrite
+                  OperationCommand:
+                    WriteOperations:
+                    - WriteCommand: insertOne
+                      Document: { a: 1 }
+                    - WriteCommand: updateOne
+                      Filter: { a: 1 }
+                      Update: { $set: { a: 5 } }
+                    Options:
+                      WriteConcern:
+                        Level: majority
+                        TimeoutMillis: 5000
+            )");
         try {
             genny::ActorHelper ah(
                 config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
@@ -522,6 +522,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                     Filter: { a: 1 }
                     Update: { $set: { a: 5 } }
                   Options:
+                    Ordered: true
                     WriteConcern:
                       Level: 0
                       TimeoutMillis: 3000
@@ -650,7 +651,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               - OperationName: count
                 OperationCommand:
                   Filter: { a : 1 }
-                  Options: 
+                  Options:
                     ReadPreference:
                       ReadMode: secondaryPreferred
           )");
@@ -688,7 +689,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               - OperationName: count
                 OperationCommand:
                   Filter: { a : 1 }
-                  Options: 
+                  Options:
                     ReadPreference:
                       ReadMode: nearest
                       MaxStalenessSeconds: 100
@@ -777,5 +778,55 @@ TEST_CASE_METHOD(MongoTestFixture,
         }
     }
 }
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Test 'insertMany' operation.",
+                 "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
+
+    dropAllDatabases();
+    auto db = client.database("mydb");
+
+    YAML::Node config = YAML::Load(R"(
+      SchemaVersion: 2018-07-01
+      Actors:
+      - Name: CrudActor
+        Type: CrudActor
+        Database: mydb
+        ExecutionStrategy:
+          ThrowOnFailure: true
+        Phases:
+        - Repeat: 1
+          Collection: test
+          Operations:
+          - OperationName: insertMany
+            OperationCommand:
+              Documents:
+              - { a: 1 }
+              - { a : 1 }
+              - { b : 1 }
+      )");
+
+    SECTION("The correct documents are inserted.") {
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
+            REQUIRE(count == 2);
+            count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("b", 1)));
+            REQUIRE(count == 1);
+            count = db.collection("test").count_documents(BasicBson::make_document());
+            REQUIRE(count == 3);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+}
+
+// TODO: add test for ReadConcern
+// TODO: add test for DropOperation
 
 }  // namespace

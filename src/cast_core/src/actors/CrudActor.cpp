@@ -81,6 +81,42 @@ struct convert<mongocxx::read_preference> {
 };
 
 template <>
+struct convert<mongocxx::read_concern> {
+    using ReadConcern = mongocxx::read_concern;
+    using ReadConcernLevel = mongocxx::read_concern::level;
+    static Node encode(const ReadConcern& rhs) {
+        Node node;
+        auto level = std::string(rhs.acknowledge_string());
+        if (!level.empty()) {
+            node["Level"] = level;
+        }
+        return node;
+    }
+
+    static bool isValidReadConcernString(std::string_view rcString) {
+        return (rcString == "local" || rcString == "majority" || rcString == "linearizable" ||
+                rcString == "snapshot" || rcString == "available");
+    }
+
+    static bool decode(const Node& node, ReadConcern& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (!node["Level"]) {
+            // readConcern must have a read concern level specified.
+            return false;
+        }
+        auto level = node["Level"].as<std::string>();
+        if (isValidReadConcernString(level)) {
+            rhs.acknowledge_string(level);
+            return true;
+        } else {
+            return false;
+        }
+    }
+};
+
+template <>
 struct convert<mongocxx::write_concern> {
     using WriteConcern = mongocxx::write_concern;
     static Node encode(const WriteConcern& rhs) {
@@ -269,6 +305,34 @@ struct convert<mongocxx::options::count> {
         return true;
     }
 };
+
+template <>
+struct convert<mongocxx::options::transaction> {
+    using TransactionOptions = mongocxx::options::transaction;
+    static Node encode(const TransactionOptions& rhs) {
+        Node node;
+        return node;
+    }
+
+    static bool decode(const Node& node, TransactionOptions& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (node["WriteConcern"]) {
+            auto wc = node["WriteConcern"].as<mongocxx::write_concern>();
+            rhs.write_concern(wc);
+        }
+        if (node["ReadConcern"]) {
+            auto rc = node["ReadConcern"].as<mongocxx::read_concern>();
+            rhs.read_concern(rc);
+        }
+        if (node["ReadPreference"]) {
+            auto rp = node["ReadPreference"].as<mongocxx::read_preference>();
+            rhs.read_preference(rp);
+        }
+        return true;
+    }
+};
 }  // namespace YAML
 
 namespace genny::actor {
@@ -278,18 +342,19 @@ namespace {
 enum class StageType {
     Bucket,
     Count,
+    // TODO: fill in rest of aggregate stages.
 };
 
 std::unordered_map<std::string, StageType> stringToStageType = {{"bucket", StageType::Bucket},
                                                                 {"count", StageType::Count}};
 
 struct BaseOperation {
-    virtual void run(const mongocxx::client_session& session) = 0;
+    virtual void run(mongocxx::client_session& session) = 0;
     virtual ~BaseOperation() = default;
 };
 
 using OpCallback = std::function<std::unique_ptr<BaseOperation>(
-    YAML::Node, bool, mongocxx::collection, genny::DefaultRandom&)>;
+    YAML::Node, bool, mongocxx::collection, genny::DefaultRandom&, metrics::Operation)>;
 
 struct AggregateOperation : public BaseOperation {
 
@@ -301,8 +366,9 @@ struct AggregateOperation : public BaseOperation {
     AggregateOperation(YAML::Node opNode,
                        bool onSession,
                        mongocxx::collection collection,
-                       genny::DefaultRandom& rng)
-        : _onSession{onSession}, _collection{collection} {
+                       genny::DefaultRandom& rng,
+                       metrics::Operation operation)
+        : _onSession{onSession}, _collection{collection}, _operation{operation} {
         auto yamlStages = opNode["Stages"];
         if (!yamlStages.IsSequence()) {
             throw InvalidConfigurationException(
@@ -325,7 +391,7 @@ struct AggregateOperation : public BaseOperation {
         }
     }
 
-    void run(const mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         mongocxx::pipeline p{};
         for (auto&& stage : _stages) {
             auto stageCommand = stage->command;
@@ -345,11 +411,18 @@ struct AggregateOperation : public BaseOperation {
                     auto fieldNamestring = std::string(field);
                     p.count(fieldNamestring);
                     break;
+
+                    // TODO: fill in rest of aggregate stages.
             }
         }
+        auto ctx = _operation.start();
         auto cursor = (_onSession) ? _collection.aggregate(session, p, _options)
                                    : _collection.aggregate(p, _options);
-        // TODO: exhaust cursor and report metrics
+        for (auto&& doc : cursor) {
+            ctx.addOps(1);
+            ctx.addBytes(doc.length());
+        }
+        ctx.success();
     }
 
 private:
@@ -357,6 +430,7 @@ private:
     const bool _onSession;
     std::vector<std::unique_ptr<Stage>> _stages;
     mongocxx::options::aggregate _options;
+    metrics::Operation _operation;
 };
 
 struct BulkWriteOperation : public BaseOperation {
@@ -364,8 +438,9 @@ struct BulkWriteOperation : public BaseOperation {
     BulkWriteOperation(YAML::Node opNode,
                        bool onSession,
                        mongocxx::collection collection,
-                       genny::DefaultRandom& rng)
-        : _onSession{onSession}, _collection{collection} {
+                       genny::DefaultRandom& rng,
+                       metrics::Operation operation)
+        : _onSession{onSession}, _collection{collection}, _operation{operation} {
         auto writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.IsSequence()) {
             throw InvalidConfigurationException(
@@ -421,9 +496,6 @@ struct BulkWriteOperation : public BaseOperation {
             auto replacementTemplate = value_generators::makeDoc(replacement, rng);
             bsoncxx::builder::stream::document replacementDocument{};
             replacementTemplate->view(replacementDocument);
-            BOOST_LOG_TRIVIAL(info) << "filter: " << bsoncxx::to_json(filterDocument.view());
-            BOOST_LOG_TRIVIAL(info)
-                << "replacement: " << bsoncxx::to_json(replacementDocument.view());
             _writeOps.push_back(mongocxx::model::replace_one(filterDocument.extract(),
                                                              replacementDocument.extract()));
         } else if (writeCommand == "updateOne") {
@@ -459,16 +531,15 @@ struct BulkWriteOperation : public BaseOperation {
         }
     }
 
-    void run(const mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto bulk = (_onSession) ? _collection.create_bulk_write(session, _options)
                                  : _collection.create_bulk_write(_options);
         for (auto&& writeOp : _writeOps) {
             bulk.append(writeOp);
         }
+        auto ctx = _operation.start();
         auto result = bulk.execute();
-        if (!result) {
-            // throw exception
-        }
+        ctx.success();
     }
 
 private:
@@ -476,14 +547,16 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::bulk_write _options;
+    metrics::Operation _operation;
 };
 
 struct CountOperation : public BaseOperation {
     CountOperation(YAML::Node opNode,
                    bool onSession,
                    mongocxx::collection collection,
-                   genny::DefaultRandom& rng)
-        : _onSession{onSession}, _collection{collection} {
+                   genny::DefaultRandom& rng,
+                   metrics::Operation operation)
+        : _onSession{onSession}, _collection{collection}, _operation{operation} {
         auto filterYaml = opNode["Filter"];
         if (!filterYaml) {
             throw InvalidConfigurationException("'Count' expects a 'Filter' field.");
@@ -495,12 +568,14 @@ struct CountOperation : public BaseOperation {
         }
     }
 
-    void run(const mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         bsoncxx::builder::stream::document filterDoc{};
         _filterTemplate->view(filterDoc);
         auto view = filterDoc.view();
+        auto ctx = _operation.start();
         (_onSession) ? _collection.count_documents(session, view, _options)
                      : _collection.count_documents(view, _options);
+        ctx.success();
     }
 
 
@@ -509,27 +584,250 @@ private:
     mongocxx::collection _collection;
     mongocxx::options::count _options;
     std::unique_ptr<DocGenerator> _filterTemplate;
+    metrics::Operation _operation;
+};
+
+struct FindOperation : public BaseOperation {
+    FindOperation(YAML::Node opNode,
+                  bool onSession,
+                  mongocxx::collection collection,
+                  genny::DefaultRandom& rng,
+                  metrics::Operation operation)
+        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        auto filterYaml = opNode["Filter"];
+        if (!filterYaml) {
+            throw InvalidConfigurationException("'Find' expects a 'Filter' field.");
+        }
+        auto doc = value_generators::makeDoc(filterYaml, rng);
+        _filterTemplate = std::move(doc);
+        // TODO: parse Find Options
+    }
+
+    void run(mongocxx::client_session& session) override {
+        bsoncxx::builder::stream::document filterDoc{};
+        _filterTemplate->view(filterDoc);
+        auto view = filterDoc.view();
+        auto ctx = _operation.start();
+        auto cursor = (_onSession) ? _collection.find(session, view, _options)
+                                   : _collection.find(view, _options);
+        for (auto&& doc : cursor) {
+            ctx.addOps(1);
+            ctx.addBytes(doc.length());
+        }
+        ctx.success();
+    }
+
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::find _options;
+    std::unique_ptr<DocGenerator> _filterTemplate;
+    metrics::Operation _operation;
+};
+
+struct InsertManyOperation : public BaseOperation {
+
+    InsertManyOperation(YAML::Node opNode,
+                        bool onSession,
+                        mongocxx::collection collection,
+                        genny::DefaultRandom& rng,
+                        metrics::Operation operation)
+        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        auto documents = opNode["Documents"];
+        if (!documents && !documents.IsSequence()) {
+            throw InvalidConfigurationException(
+                "'insertMany' expects a 'Documents' field of sequence type.");
+        }
+        for (auto&& document : documents) {
+            auto doc = value_generators::makeDoc(document, rng);
+            bsoncxx::builder::stream::document docTemplate{};
+            doc->view(docTemplate);
+            _writeOps.push_back(docTemplate.extract());
+        }
+    }
+
+    void run(mongocxx::client_session& session) override {
+        auto ctx = _operation.start();
+        (_onSession) ? _collection.insert_many(session, _writeOps, _options)
+                     : _collection.insert_many(_writeOps, _options);
+        ctx.success();
+    }
+
+private:
+    mongocxx::collection _collection;
+    const bool _onSession;
+    std::vector<bsoncxx::document::value> _writeOps;
+    mongocxx::options::insert _options;
+    metrics::Operation _operation;
+};
+
+struct StartTransactionOperation : public BaseOperation {
+
+    StartTransactionOperation(YAML::Node opNode,
+                              bool onSession,
+                              mongocxx::collection collection,
+                              genny::DefaultRandom& rng,
+                              metrics::Operation operation) {
+        if (!opNode.IsMap())
+            return;
+        if (opNode["Options"]) {
+            _options = opNode["Options"].as<mongocxx::options::transaction>();
+        }
+    }
+
+    void run(mongocxx::client_session& session) override {
+        try {
+            session.start_transaction(_options);
+        } catch (mongocxx::operation_exception& exception) {
+            throw;
+        }
+    }
+
+private:
+    mongocxx::options::transaction _options;
+};
+
+struct CommitTransactionOperation : public BaseOperation {
+
+    CommitTransactionOperation(YAML::Node opNode,
+                               bool onSession,
+                               mongocxx::collection collection,
+                               genny::DefaultRandom& rng,
+                               metrics::Operation operation) {}
+
+    void run(mongocxx::client_session& session) override {
+        try {
+            session.commit_transaction();
+        } catch (mongocxx::operation_exception& exception) {
+            throw;
+        }
+    }
+};
+
+struct SetReadConcernOperation : public BaseOperation {
+
+    static bool isValidReadConcernString(std::string_view rcString) {
+        return (rcString == "local" || rcString == "majority" || rcString == "linearizable" ||
+                rcString == "snapshot" || rcString == "available");
+    }
+
+    SetReadConcernOperation(YAML::Node opNode,
+                            bool onSession,
+                            mongocxx::collection collection,
+                            genny::DefaultRandom& rng,
+                            metrics::Operation operation)
+        : _collection{collection} {
+        if (!opNode["ReadConcern"]) {
+            throw InvalidConfigurationException(
+                "'setReadConcern' operation expects a 'ReadConcern' field.");
+        }
+        _readConcern = opNode["ReadConcern"].as<mongocxx::read_concern>();
+    }
+
+    void run(mongocxx::client_session& session) override {
+        _collection.read_concern(_readConcern);
+        auto coll_rc = _collection.read_concern();
+        auto coll_level = coll_rc.acknowledge_string();
+        auto rc_level = _readConcern.acknowledge_string();
+        BOOST_LOG_TRIVIAL(info) << "collLevel: " << coll_level;
+        BOOST_LOG_TRIVIAL(info) << "rcLevel: " << rc_level;
+    }
+
+private:
+    mongocxx::collection _collection;
+    mongocxx::read_concern _readConcern;
+};
+
+struct DropOperation : public BaseOperation {
+
+    DropOperation(YAML::Node opNode,
+                  bool onSession,
+                  mongocxx::collection collection,
+                  genny::DefaultRandom& rng,
+                  metrics::Operation operation)
+        : _onSession{onSession}, _collection{collection}, _operation{operation} {}
+
+    void run(mongocxx::client_session& session) override {
+        auto ctx = _operation.start();
+        (_onSession) ? _collection.drop(session) : _collection.drop(session);
+        ctx.success();
+    }
+
+private:
+    mongocxx::collection _collection;
+    const bool _onSession;
+    std::vector<bsoncxx::document::value> _writeOps;
+    metrics::Operation _operation;
 };
 
 OpCallback createAggregate = [](YAML::Node opNode,
                                 bool onSession,
                                 mongocxx::collection collection,
-                                genny::DefaultRandom& rng) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<AggregateOperation>(opNode, onSession, collection, rng);
+                                genny::DefaultRandom& rng,
+                                metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<AggregateOperation>(opNode, onSession, collection, rng, operation);
 };
 
 OpCallback createBulkWrite = [](YAML::Node opNode,
                                 bool onSession,
                                 mongocxx::collection collection,
-                                genny::DefaultRandom& rng) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<BulkWriteOperation>(opNode, onSession, collection, rng);
+                                genny::DefaultRandom& rng,
+                                metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<BulkWriteOperation>(opNode, onSession, collection, rng, operation);
 };
 
 OpCallback createCount = [](YAML::Node opNode,
                             bool onSession,
                             mongocxx::collection collection,
-                            genny::DefaultRandom& rng) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<CountOperation>(opNode, onSession, collection, rng);
+                            genny::DefaultRandom& rng,
+                            metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<CountOperation>(opNode, onSession, collection, rng, operation);
+};
+
+OpCallback createFind = [](YAML::Node opNode,
+                           bool onSession,
+                           mongocxx::collection collection,
+                           genny::DefaultRandom& rng,
+                           metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<FindOperation>(opNode, onSession, collection, rng, operation);
+};
+
+OpCallback createInsertMany = [](YAML::Node opNode,
+                                 bool onSession,
+                                 mongocxx::collection collection,
+                                 genny::DefaultRandom& rng,
+                                 metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<InsertManyOperation>(opNode, onSession, collection, rng, operation);
+};
+
+OpCallback createStartTransaction =
+    [](YAML::Node opNode,
+       bool onSession,
+       mongocxx::collection collection,
+       genny::DefaultRandom& rng,
+       metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<StartTransactionOperation>(
+        opNode, onSession, collection, rng, operation);
+};
+
+OpCallback createCommitTransaction =
+    [](YAML::Node opNode,
+       bool onSession,
+       mongocxx::collection collection,
+       genny::DefaultRandom& rng,
+       metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<CommitTransactionOperation>(
+        opNode, onSession, collection, rng, operation);
+};
+
+OpCallback createSetReadConcern =
+    [](YAML::Node opNode,
+       bool onSession,
+       mongocxx::collection collection,
+       genny::DefaultRandom& rng,
+       metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
+    return std::make_unique<SetReadConcernOperation>(opNode, onSession, collection, rng, operation);
 };
 
 // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
@@ -537,7 +835,11 @@ std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"aggregate", createAggregate},
     {"bulkWrite", createBulkWrite},
     {"count", createCount},
-};
+    {"find", createFind},
+    {"insertMany", createInsertMany},
+    {"startTransaction", createStartTransaction},
+    {"commitTransaction", createCommitTransaction},
+    {"setReadConcern", createSetReadConcern}};
 };  // namespace
 
 struct CrudActor::PhaseConfig {
@@ -545,14 +847,18 @@ struct CrudActor::PhaseConfig {
     ExecutionStrategy::RunOptions options;
     std::vector<std::unique_ptr<BaseOperation>> operations;
 
-    PhaseConfig(PhaseContext& phaseContext, genny::DefaultRandom& rng, const mongocxx::database& db)
+    PhaseConfig(PhaseContext& phaseContext,
+                genny::DefaultRandom& rng,
+                const mongocxx::database& db,
+                ActorContext& actorContext,
+                ActorId id)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
 
         auto addOperation = [&](YAML::Node node) {
             auto yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].as<std::string>();
-            auto onSession = yamlCommand["Session"] && yamlCommand["Session"].as<bool>();
+            auto onSession = yamlCommand["OnSession"] && yamlCommand["OnSession"].as<bool>();
 
             // Grab the appropriate
             auto op = opConstructors.find(opName);
@@ -562,7 +868,8 @@ struct CrudActor::PhaseConfig {
             }
             auto createOperation = op->second;
             std::vector<std::pair<std::string, std::unique_ptr<DocGenerator>>> docs;
-            operations.emplace_back(createOperation(yamlCommand, onSession, collection, rng));
+            operations.emplace_back(createOperation(
+                yamlCommand, onSession, collection, rng, actorContext.operation(opName, id)));
         };
 
         auto operationList = phaseContext.get<YAML::Node, false>("Operations");
@@ -607,7 +914,11 @@ CrudActor::CrudActor(genny::ActorContext& context)
       _rng{context.workload().createRNG()},
       _strategy{context, CrudActor::id(), "crud"},
       _client{std::move(context.client())},
-      _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
+      _loop{context,
+            _rng,
+            (*_client)[context.get<std::string>("Database")],
+            context,
+            CrudActor::id()} {}
 
 namespace {
 auto registerCrudActor = Cast::registerDefault<CrudActor>();
