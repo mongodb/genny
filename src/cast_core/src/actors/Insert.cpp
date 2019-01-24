@@ -57,7 +57,6 @@ void Insert::run() {
                 },
                 config->options);
         }
-
     }
 }
 

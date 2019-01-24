@@ -20,8 +20,8 @@
 
 #include <loki/ScopeGuard.h>
 
-#include <metrics/metrics.hpp>
 #include <gennylib/config/ExecutionStrategyOptions.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 
@@ -33,10 +33,9 @@ class ActorContext;
  * This class is intended to make it painless and safe to run mongo commands that may throw
  * boost exceptions.
  *
- * The ExecutionStrategy also
- * allows the user to specify a maximum number of retries for failed operations. Note that failed
- * operations do not throw -- It is the user's responsibility to check `lastResult()` when different
- * behavior is desired for failed operations.
+ * The ExecutionStrategy also allows the user to specify a maximum number of retries for failed
+ * operations. Note that failed operations do not throw -- It is the user's responsibility to check
+ * `lastResult()` when different behavior is desired for failed operations.
  */
 class ExecutionStrategy {
 public:
@@ -48,8 +47,7 @@ public:
     using RunOptions = config::ExecutionStrategyOptions;
 
 public:
-    explicit ExecutionStrategy(metrics::Operation op)
-    : _op{std::move(op)} {}
+    explicit ExecutionStrategy(metrics::Operation op) : _op{std::move(op)} {}
     ~ExecutionStrategy() = default;
 
     /*

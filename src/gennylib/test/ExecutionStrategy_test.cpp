@@ -55,7 +55,9 @@ public:
 
 public:
     StrategyActor(ActorContext& context)
-        : Actor(context), strategy{context.operation("sipmle", StrategyActor::id())}, _loop{context} {}
+        : Actor(context),
+          strategy{context.operation("sipmle", StrategyActor::id())},
+          _loop{context} {}
 
     void run() override {
         for (auto&& config : _loop) {
