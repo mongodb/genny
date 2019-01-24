@@ -17,11 +17,10 @@
 #include <thread>
 #include <vector>
 
-#include <gennylib/MetricsReporter.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/metrics.hpp>
-
+#include <metrics/MetricsReporter.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 

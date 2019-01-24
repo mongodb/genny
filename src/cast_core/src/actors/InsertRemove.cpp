@@ -24,7 +24,7 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 
@@ -68,15 +68,19 @@ void InsertRemove::run() {
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
             _insertStrategy.run(
-                [&]() {
+                [&](metrics::OperationContext& ctx) {
                     // First we insert
-                    config->collection.insert_one(config->myDoc.view());
+                    auto view = config->myDoc.view();
+                    config->collection.insert_one(view);
+                    ctx.addBytes(view.length());
+                    ctx.addOps(1);
                 },
                 config->insertOptions);
             _removeStrategy.run(
-                [&]() {
+                [&](metrics::OperationContext& ctx) {
                     // Then we remove
-                    config->collection.delete_many(config->myDoc.view());
+                    auto results = config->collection.delete_many(config->myDoc.view());
+                    ctx.addOps(1);
                 },
                 config->removeOptions);
         }
@@ -86,8 +90,8 @@ void InsertRemove::run() {
 InsertRemove::InsertRemove(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _insertStrategy{context, InsertRemove::id(), "insert"},
-      _removeStrategy{context, InsertRemove::id(), "remove"},
+      _insertStrategy{context.operation("insert", InsertRemove::id())},
+      _removeStrategy{context.operation("remove", InsertRemove::id())},
       _client{std::move(context.client())},
       _loop{context, _rng, _client, InsertRemove::id()} {}
 

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "generators-private.hh"
+#include <generators-private.hh>
 
 #include <stdlib.h>
 
 #include <boost/log/trivial.hpp>
 #include <bsoncxx/json.hpp>
 
-#include <gennylib/DefaultRandom.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace genny::value_generators {
 

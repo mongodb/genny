@@ -1,8 +1,23 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef HEADER_F4822E1D_5AE5_4A00_B6BF_F26F05C1AC55_INCLUDED
 #define HEADER_F4822E1D_5AE5_4A00_B6BF_F26F05C1AC55_INCLUDED
 
 #include <functional>
 #include <iterator>
+#include <memory>
 #include <optional>
 #include <type_traits>
 #include <vector>
@@ -155,6 +170,85 @@ public:
         // fallback to delegate node
         return this->_delegateNode->template get<Out, Required>(std::forward<Args>(args)...);
     };
+
+    /**
+     * Extract a vector of items by supporting both singular and plural keys.
+     *
+     * Example YAML that this supports:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Number","Numbers") returns [7]
+     * Foo:
+     *   Number: 7
+     *
+     * # Calling getPlural<int>("Number","Numbers") returns [1,2]
+     * Bar:
+     *   Numbers: [1,2]
+     * ```
+     *
+     * The node cannot have both keys present. The following
+     * will error:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Bad","Bads")
+     * # will throw because the node must have
+     * # exactly one of the keys
+     * BadExample:
+     *   Bad: 7
+     *   Bads: [1,2]
+     * ```
+     *
+     * If the value at the plural key isn't a sequence we also barf:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Bad","Bads") will fail
+     * # because Bads isn't a sequence.
+     * AnotherBadExample:
+     *   Bads: 3
+     * ```
+     *
+     * @tparam T the returned type. Must align with the return-type of F.
+     * @tparam F type of the callback/mapping function that maps from YAML::Node to T.
+     * @param singular the singular version of the key e.g. "Number"
+     * @param plural the plural version of the key e.g. "Numbers"
+     * @param f callback function mapping from the found node to a T instance. If not specified,
+     * will use the built-in YAML::convert<T> function.
+     * @return
+     */
+    template <typename T, typename F = std::function<T(YAML::Node)>>
+    std::vector<T> getPlural(
+        const std::string& singular, const std::string& plural, F&& f = [](YAML::Node n) {
+            return n.as<T>();
+        }) {
+        std::vector<T> out;
+
+        auto pluralValue = this->get<YAML::Node, false>(plural);
+        auto singValue = this->get<YAML::Node, false>(singular);
+        if (pluralValue && singValue) {
+            std::stringstream str;
+            str << "Can't have both '" << singular << "' and '" << plural << "'.";
+            throw InvalidConfigurationException(str.str());
+        } else if (pluralValue) {
+            if (!pluralValue->IsSequence()) {
+                std::stringstream str;
+                str << "'" << plural << "' must be a sequence type.";
+                throw InvalidConfigurationException(str.str());
+            }
+            for (auto&& val : *pluralValue) {
+                T created = std::invoke(f, val);
+                out.emplace_back(std::move(created));
+            }
+        } else if (singValue) {
+            T created = std::invoke(f, *singValue);
+            out.emplace_back(std::move(created));
+        } else if (!singValue && !pluralValue) {
+            std::stringstream str;
+            str << "Either '" << singular << "' or '" << plural << "' required.";
+            throw InvalidConfigurationException(str.str());
+        }
+
+        return out;
+    }
 
 protected:
     const YAML::Node _node;

@@ -26,7 +26,7 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 
@@ -131,7 +131,7 @@ Loader::Loader(genny::ActorContext& context, uint thread)
       _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Loader::id())},
       _individualBulkLoadTimer{context.timer("individualBulkInsertTime", Loader::id())},
       _indexBuildTimer{context.timer("indexBuildTime", Loader::id())},
-      _client{context.client()},
+      _client{std::move(context.client())},
       _loop{context, _rng, _client, thread} {}
 
 class LoaderProducer : public genny::ActorProducer {

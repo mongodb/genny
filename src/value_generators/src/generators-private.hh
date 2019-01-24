@@ -3,8 +3,8 @@
 
 #include "parser.hh"
 
-#include <gennylib/value_generators.hpp>
-#include <gennylib/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
+#include <value_generators/DefaultRandom.hpp>
 
 namespace genny::value_generators {
 
@@ -27,7 +27,6 @@ protected:
     genny::DefaultRandom& _rng;
 };
 
-const std::set<std::string> getGeneratorTypes();
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, genny::DefaultRandom&);
 std::unique_ptr<ValueGenerator> makeUniqueValueGenerator(YAML::Node, std::string, genny::DefaultRandom&);
 std::string valAsString(view_or_value);

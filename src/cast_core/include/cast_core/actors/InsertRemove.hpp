@@ -20,10 +20,10 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 

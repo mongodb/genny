@@ -6,7 +6,7 @@ Actors:
   Threads: 1
   Database: test
   Phases:
-  - Repeat: 10
+  - Duration: 5 minutes
     Operations:
     - OperationMetricsName: ServerStatus
       OperationName: RunCommand
@@ -15,7 +15,7 @@ Actors:
     - OperationName: RunCommand
       OperationCommand:
         insert: myCollection
-        documents: [{name: {$randomstring: {length: {$randomint: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
+        documents: [{name: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
     - OperationMetricsName: Find
       OperationCommand:
         find: restaurants
@@ -34,3 +34,15 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         currentOp: 1
+- Name: Stepdown
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Phase: 0
+    Operation:
+      OperationMetricsName: Stepdown
+      OperationName: RunCommand
+      OperationCommand:
+        replSetStepDown: 60
+      OperationAwaitStepdown: yes
+

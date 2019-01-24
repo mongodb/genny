@@ -11,6 +11,6 @@ Actors:
     Database: test
     Phases:
       - Collection: inserts
-        Duration: 100
+        Duration: 100 milliseconds
       - Collection: inserts
         Count: 179

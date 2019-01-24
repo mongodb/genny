@@ -25,8 +25,8 @@
 
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/metrics.hpp>
 #include <log.hh>
+#include <metrics/metrics.hpp>
 
 #include <ActorHelper.hpp>
 
@@ -245,7 +245,7 @@ Actors:
     }
 }
 
-void onContext(YAML::Node& yaml, std::function<void(ActorContext&)> op) {
+void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
 
@@ -462,6 +462,99 @@ TEST_CASE("Actors Share WorkloadContext State") {
             10 * 10);
 }
 
+struct TakesInt {
+    int value;
+    TakesInt(int x) : value{x} {
+        if (x > 7) {
+            throw std::logic_error("Expected");
+        }
+    }
+};
+
+struct AnotherInt : public TakesInt {
+    // need no-arg ctor to be able to do YAML::Node::as<>()
+    AnotherInt() : AnotherInt(0) {}
+    AnotherInt(int x) : TakesInt(x) {}
+};
+
+namespace YAML {
+
+template <>
+struct convert<AnotherInt> {
+    static Node encode(const AnotherInt& rhs) {
+        return {};
+    }
+    static bool decode(const Node& node, AnotherInt& rhs) {
+        rhs = AnotherInt{node.as<int>()};
+        return true;
+    }
+};
+
+}  // namespace YAML
+
+TEST_CASE("getPlural") {
+    auto createYaml = [](std::string actorYaml) {
+        auto doc = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Numbers: [1,2,3]
+Actors: [{}]
+)");
+        auto actor = YAML::Load(actorYaml);
+        actor["Type"] = "Op";
+        doc["Actors"][0] = actor;
+        return doc;
+    };
+
+    // can use built-in decode types
+    onContext(createYaml("Foo: 5"), [](ActorContext& c) {
+        c.getPlural<TakesInt>("Foo", "Foos", [](YAML::Node n) { return TakesInt{n.as<int>()}; });
+    });
+
+    onContext(createYaml("Foo: 5"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<AnotherInt>("Foo", "Foos")[0].value == 5);
+    });
+
+    onContext(createYaml("{}"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
+                            Matches("Either 'Foo' or 'Foos' required."));
+    });
+    onContext(createYaml("Foo: 81"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH(
+            [&]() {
+                c.getPlural<TakesInt>(
+                    "Foo", "Foos", [](YAML::Node n) { return TakesInt{n.as<int>()}; });
+            }(),
+            Matches("Expected"));
+    });
+
+    onContext(createYaml("Foos: [733]"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{733});
+    });
+
+    onContext(createYaml("Foos: 73"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
+                            Matches("'Foos' must be a sequence type."));
+    });
+
+    onContext(createYaml("Foo: 71"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Foo", "Foos") == std::vector<int>{71});
+    });
+
+    onContext(createYaml("{ Foo: 9, Foos: 1 }"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
+                            Matches("Can't have both 'Foo' and 'Foos'."));
+    });
+
+    onContext(createYaml("Number: 7"), [](ActorContext& c) {
+        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Number", "Numbers"); }(),
+                            Matches("Can't have both 'Number' and 'Numbers'."));
+    });
+
+    onContext(createYaml("Numbers: [3, 4, 5]"), [](ActorContext& c) {
+        REQUIRE(c.getPlural<int>("Number", "Numbers") == std::vector<int>{3, 4, 5});
+    });
+}
+
 TEST_CASE("Configuration cascades to nested context types") {
     auto yaml = YAML::Load(R"(
 SchemaVersion: 2018-07-01
@@ -496,7 +589,7 @@ Actors:
 
                 REQUIRE_THROWS_WITH(
                     ([&]() { actorContext.get_noinherit<std::string, true>("Database"); })(),
-                    Matches(R"(Invalid key \[Database\] at path(.*\n*)*))"));
+                    Matches(R"(Invalid key \[Database\] at path(.*\n*)*)"));
 
                 REQUIRE(actorContext.get<std::string>("Database") == "test");
             } else if (actorName == "Actor2") {
@@ -527,7 +620,7 @@ Actors:
                             ([&]() {
                                 rawConfig->get_noinherit<std::string, true>("Collection");
                             })(),
-                            Matches(R"(Invalid key \[Collection\] at path(.*\n*)*))"));
+                            Matches(R"(Invalid key \[Collection\] at path(.*\n*)*)"));
 
                         REQUIRE(config->get<std::string>("Collection") == "mycoll");
                     } else if (phase == 1) {
@@ -555,7 +648,7 @@ Actors:
                         const auto* rawConfig = config.get();
                         REQUIRE_THROWS_WITH(
                             ([&]() { rawConfig->get_noinherit<std::string, true>("Database"); })(),
-                            Matches(R"(Invalid key \[Database\] at path(.*\n*)*))"));
+                            Matches(R"(Invalid key \[Database\] at path(.*\n*)*)"));
 
                         REQUIRE(config->get<std::string>("Database") == "test");
                     } else if (phase == 1) {
@@ -598,12 +691,12 @@ Actors:
                     actorContext.get_noinherit<std::map<std::string, std::string>, true>(
                         "MiscField");
                 })(),
-                Matches(R"(Bad conversion of \[c\] to(.*\n*)*))"));
+                Matches(R"(Bad conversion of \[c\] to(.*\n*)*)"));
             REQUIRE_THROWS_WITH(([&]() {
                                     actorContext.get<std::map<std::string, std::string>, true>(
                                         "MiscField");
                                 })(),
-                                Matches(R"(Bad conversion of \[c\] to(.*\n*)*))"));
+                                Matches(R"(Bad conversion of \[c\] to(.*\n*)*)"));
 
             for (auto&& [phase, config] : actorContext.phases()) {
                 REQUIRE(phase == 0);
@@ -618,17 +711,17 @@ Actors:
                         rawConfig->get_noinherit<std::map<std::string, std::string>, true>(
                             "MiscField");
                     })(),
-                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*))"));
+                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*)"));
                 REQUIRE_THROWS_WITH(([&]() {
                                         rawConfig->get<std::map<std::string, std::string>, true>(
                                             "MiscField");
                                     })(),
-                                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*))"));
+                                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*)"));
                 REQUIRE_THROWS_WITH(
                     ([&]() { rawConfig->get_noinherit<std::string, true>("MiscField"); })(),
-                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*))"));
+                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*)"));
                 REQUIRE_THROWS_WITH(([&]() { rawConfig->get<std::string, true>("MiscField"); })(),
-                                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*))"));
+                                    Matches(R"(Bad conversion of \[\[1, 2, 3\]\] to(.*\n*)*)"));
             }
         });
     }

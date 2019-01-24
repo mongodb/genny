@@ -23,10 +23,11 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 
-#include "../src/value_generators/generators-private.hh"
-#include "../src/value_generators/parser.hh"
-#include <gennylib/DefaultRandom.hpp>
-#include <gennylib/value_generators.hpp>
+#include "../src/generators-private.hh"
+#include "../src/parser.hh"
+
+#include <value_generators/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
 
 using namespace genny::value_generators;
 using bsoncxx::builder::stream::close_document;
@@ -68,7 +69,7 @@ TEST_CASE("Documents are created", "[documents]") {
         auto doc = makeDoc(YAML::Load(R"yaml(
         x :
           y : b
-        z : {$randomint: {min: 50, max: 60}}
+        z : {^RandomInt: {min: 50, max: 60}}
     )yaml"),
                            rng);
         // Test that the document is an override document, and gives the right values.
@@ -79,7 +80,7 @@ TEST_CASE("Documents are created", "[documents]") {
     }
     SECTION("DefaultRandom string") {
         auto doc = makeDoc(YAML::Load(R"yaml(
-      string: {$randomstring: {length : 15}}
+      string: {^RandomString: {length : 15}}
     )yaml"),
                            rng);
 

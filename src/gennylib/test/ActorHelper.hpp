@@ -22,10 +22,10 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <gennylib/metrics.hpp>
-#include <gennylib/context.hpp>
 #include <gennylib/Cast.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/context.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 

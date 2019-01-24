@@ -12,12 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "gennylib/DefaultRandom.hpp"
+#include "test.h"
 
-namespace genny::V1 {
+#include <algorithm>
+#include <iostream>
 
-// Use explicit specialization to speed up compilation.
-template <>
-class Random<std::mt19937_64>;
+#include <value_generators/DefaultRandom.hpp>
 
-}  // namespace genny::V1
+namespace genny {
+
+namespace {
+TEST_CASE("genny DefaultRandom") {
+
+    SECTION("Can be used in std::shuffle") {
+        auto output = std::vector<int>(100);
+        std::iota(std::begin(output), std::end(output), 1);
+
+        DefaultRandom rng;
+        rng.seed(12345);
+
+        const auto input = output;
+        std::shuffle(output.begin(), output.end(), rng);
+
+        REQUIRE(input != output);
+    }
+}
+}  // namespace
+
+}  // namespace genny

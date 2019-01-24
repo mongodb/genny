@@ -28,7 +28,7 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 
@@ -58,7 +58,7 @@ void MultiCollectionQuery::run() {
 
             // Select a collection
             // This area is ripe for defining a collection generator, based off a string generator.
-            // It could look like: collection: {@concat: [Collection, @randomint: {min: 0, max:
+            // It could look like: collection: {^Concat: [Collection, ^RandomInt: {min: 0, max:
             // *CollectionCount]} Requires a string concat generator, and a translation of a string
             // to a collection
             auto collectionNumber = config->uniformDistribution(_rng);
@@ -95,7 +95,7 @@ MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
       _rng{context.workload().createRNG()},
       _queryTimer{context.timer("queryTime", MultiCollectionQuery::id())},
       _documentCount{context.counter("returnedDocuments", MultiCollectionQuery::id())},
-      _client{context.client()},
+      _client{std::move(context.client())},
       _loop{context, _rng, _client} {}
 
 namespace {

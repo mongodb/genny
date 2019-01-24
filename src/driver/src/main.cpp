@@ -22,7 +22,6 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <gennylib/metrics.hpp>
 #include <gennylib/version.hpp>
 
 #include "DefaultDriver.hpp"
