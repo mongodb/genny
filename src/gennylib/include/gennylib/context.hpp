@@ -443,8 +443,10 @@ public:
 
         // Check to make sure we haven't broken our rules
         if (isNop && _node.size() > 1) {
-            throw InvalidConfigurationException(
-                "Nop cannot be used with any other keywords. Check YML configuration.");
+            if (_node.size() != 2 || !_node["Phase"]) {
+                throw InvalidConfigurationException(
+                        "Nop cannot be used with any other keywords except Phase. Check YML configuration.");
+            }
         }
 
         return isNop;
