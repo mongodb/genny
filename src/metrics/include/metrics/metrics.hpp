@@ -86,14 +86,14 @@ using count_at_time = std::pair<time_point, count_type>;
 using gauged_at_time = std::pair<time_point, gauged_type>;
 
 class Reporter;
-// The V1 namespace is here for two reasons:
+// The v1 namespace is here for two reasons:
 // 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes
 // 2) it prevents auto-completion of metrics::{X}Impl when you really want metrics::{X}
 /**
- * @namespace genny::metrics::V1 this namespace is private and only intended to be used by Genny's
- * internals. Actors should never have to type `genny::*::V1` into any types.
+ * @namespace genny::metrics::v1 this namespace is private and only intended to be used by Genny's
+ * internals. Actors should never have to type `genny::*::v1` into any types.
  */
-namespace V1 {
+namespace v1 {
 
 /**
  * Ignore this. Used for passkey for some methods.
@@ -269,7 +269,7 @@ private:
 };
 
 
-}  // namespace V1
+}  // namespace v1
 
 
 /**
@@ -292,7 +292,7 @@ private:
 class Counter {
 
 public:
-    explicit constexpr Counter(V1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
+    explicit constexpr Counter(v1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
 
     void incr(const count_type& val = 1) {
         _counter->reportValue(val);
@@ -302,7 +302,7 @@ public:
     }
 
 private:
-    V1::CounterImpl* _counter;
+    v1::CounterImpl* _counter;
 };
 
 
@@ -324,14 +324,14 @@ private:
 class Gauge {
 
 public:
-    explicit constexpr Gauge(V1::GaugeImpl& gauge) : _gauge{std::addressof(gauge)} {}
+    explicit constexpr Gauge(v1::GaugeImpl& gauge) : _gauge{std::addressof(gauge)} {}
 
     void set(const gauged_type& value) {
         _gauge->set(value);
     }
 
 private:
-    V1::GaugeImpl* _gauge;
+    v1::GaugeImpl* _gauge;
 };
 
 
@@ -358,7 +358,7 @@ private:
 class RaiiStopwatch {
 
 public:
-    explicit RaiiStopwatch(V1::TimerImpl& timer)
+    explicit RaiiStopwatch(v1::TimerImpl& timer)
         : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
     RaiiStopwatch(const RaiiStopwatch& other) = delete;
     RaiiStopwatch(RaiiStopwatch&& other) noexcept : _started{other._started} {
@@ -380,7 +380,7 @@ public:
     }
 
 private:
-    V1::TimerImpl* _timer;
+    v1::TimerImpl* _timer;
     const time_point _started;
 };
 
@@ -412,7 +412,7 @@ private:
 class Stopwatch {
 
 public:
-    explicit Stopwatch(V1::TimerImpl& timer)
+    explicit Stopwatch(v1::TimerImpl& timer)
         : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
 
     void report() {
@@ -420,7 +420,7 @@ public:
     }
 
 private:
-    V1::TimerImpl* const _timer;
+    v1::TimerImpl* const _timer;
     const time_point _started;
 };
 
@@ -428,7 +428,7 @@ private:
 class Timer {
 
 public:
-    explicit constexpr Timer(V1::TimerImpl& t) : _timer{std::addressof(t)} {}
+    explicit constexpr Timer(v1::TimerImpl& t) : _timer{std::addressof(t)} {}
 
     /**
      * @return
@@ -461,13 +461,13 @@ public:
     };
 
 private:
-    V1::TimerImpl* _timer;
+    v1::TimerImpl* _timer;
 };
 
 class OperationContext {
 
 public:
-    OperationContext(V1::OperationImpl& op)
+    OperationContext(v1::OperationImpl& op)
         : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
 
     ~OperationContext() {
@@ -505,7 +505,7 @@ private:
         this->_op->reportOps(_totalOps);
     }
 
-    V1::OperationImpl* _op;
+    v1::OperationImpl* _op;
     const time_point _started;
     count_type _totalBytes = 0;
     count_type _totalOps = 0;
@@ -516,14 +516,14 @@ private:
 class Operation {
 
 public:
-    explicit Operation(V1::OperationImpl op) : _op{std::move(op)} {}
+    explicit Operation(v1::OperationImpl op) : _op{std::move(op)} {}
 
     OperationContext start() {
         return OperationContext(this->_op);
     }
 
 private:
-    V1::OperationImpl _op;
+    v1::OperationImpl _op;
 };
 
 
@@ -566,7 +566,7 @@ public:
         return Gauge{this->_gauges[name]};
     }
     Operation operation(const std::string& name) {
-        auto op = V1::OperationImpl(name,
+        auto op = v1::OperationImpl(name,
                                     this->_timers[name + "_timer"],
                                     this->_counters[name + "_iters"],
                                     this->_counters[name + "_docs"],
@@ -575,26 +575,26 @@ public:
     }
 
     // passkey:
-    const std::unordered_map<std::string, V1::CounterImpl>& getCounters(V1::Permission) const {
+    const std::unordered_map<std::string, v1::CounterImpl>& getCounters(v1::Permission) const {
         return this->_counters;
     };
 
-    const std::unordered_map<std::string, V1::TimerImpl>& getTimers(V1::Permission) const {
+    const std::unordered_map<std::string, v1::TimerImpl>& getTimers(v1::Permission) const {
         return this->_timers;
     };
 
-    const std::unordered_map<std::string, V1::GaugeImpl>& getGauges(V1::Permission) const {
+    const std::unordered_map<std::string, v1::GaugeImpl>& getGauges(v1::Permission) const {
         return this->_gauges;
     };
 
-    const time_point now(V1::Permission) const {
+    const time_point now(v1::Permission) const {
         return metrics::clock::now();
     }
 
 private:
-    std::unordered_map<std::string, V1::CounterImpl> _counters;
-    std::unordered_map<std::string, V1::TimerImpl> _timers;
-    std::unordered_map<std::string, V1::GaugeImpl> _gauges;
+    std::unordered_map<std::string, v1::CounterImpl> _counters;
+    std::unordered_map<std::string, v1::TimerImpl> _timers;
+    std::unordered_map<std::string, v1::GaugeImpl> _gauges;
 };
 
 static_assert(std::is_move_constructible<Registry>::value, "move");

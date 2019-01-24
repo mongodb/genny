@@ -33,7 +33,8 @@ WorkloadContext::WorkloadContext(
     const std::string& mongoUri,
     const Cast& cast,
     std::function<void(const mongocxx::events::command_started_event&)> apmCallback)
-    : V1::ConfigNode(std::move(node)), _registry{&registry}, _orchestrator{&orchestrator}, _rateLimiters{10} {
+    : v1::ConfigNode(std::move(node)), _registry{&registry}, _orchestrator{&orchestrator}, _rateLimiters{10} {
+
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
     if (this->get_noinherit<std::string>("SchemaVersion") != "2018-07-01") {

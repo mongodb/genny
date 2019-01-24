@@ -235,19 +235,19 @@ TEST_CASE("Orchestrator") {
     }
 }
 
-// more easily construct V1::ActorPhase instances
+// more easily construct v1::ActorPhase instances
 using PhaseConfig =
     std::tuple<PhaseNumber, int, std::optional<IntegerSpec>, std::optional<TimeSpec>>;
 
-std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
+std::unordered_map<PhaseNumber, v1::ActorPhase<int>> makePhaseConfig(
     Orchestrator& orchestrator, const std::vector<PhaseConfig>& phaseConfigs) {
 
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> out;
+    std::unordered_map<PhaseNumber, v1::ActorPhase<int>> out;
     for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
         auto [it, success] =
             out.try_emplace(phaseNum,
                             orchestrator,
-                            std::make_unique<const V1::IterationChecker>(dur, iters, false),
+                            std::make_unique<const v1::IterationChecker>(dur, iters, false),
                             phaseNum,
                             phaseVal);
         // prevent misconfiguration within test (dupe phaseNum vals)

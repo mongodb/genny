@@ -39,9 +39,9 @@
 namespace genny {
 
 /*
- * Reminder: the V1 namespace types are *not* intended to be used directly.
+ * Reminder: the v1 namespace types are *not* intended to be used directly.
  */
-namespace V1 {
+namespace v1 {
 
 /**
  * Determine the conditions for continuing to iterate a given Phase.
@@ -373,7 +373,7 @@ private:
  * Maps from PhaseNumber to the ActorPhase<T> to be used in that PhaseNumber.
  */
 template <class T>
-using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
+using PhaseMap = std::unordered_map<PhaseNumber, v1::ActorPhase<T>>;
 
 
 /**
@@ -494,7 +494,7 @@ private:
 
 };  // class PhaseLoopIterator
 
-}  // namespace V1
+}  // namespace v1
 
 
 /**
@@ -570,30 +570,30 @@ public:
     }
 
     // Only visible for testing
-    PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)
+    PhaseLoop(Orchestrator& orchestrator, v1::PhaseMap<T> phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
     }
 
-    V1::PhaseLoopIterator<T> begin() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
+    v1::PhaseLoopIterator<T> begin() {
+        return v1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
     }
 
-    V1::PhaseLoopIterator<T> end() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
+    v1::PhaseLoopIterator<T> end() {
+        return v1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
     }
 
 private:
     template <class... Args>
-    static V1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext, Args&&... args) {
+    static v1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext, Args&&... args) {
 
         // clang-format off
         static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
         // kinda redundant with ↑ but may help error-handling
-        static_assert(std::is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&, Args...>);
+        static_assert(std::is_constructible_v<v1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&, Args...>);
         // clang-format on
 
-        V1::PhaseMap<T> out;
+        v1::PhaseMap<T> out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
             auto [it, success] = out.try_emplace(
                 // key
@@ -617,7 +617,7 @@ private:
     }
 
     Orchestrator& _orchestrator;
-    V1::PhaseMap<T> _phaseMap;
+    v1::PhaseMap<T> _phaseMap;
     // _phaseMap cannot be const since we don't want to enforce
     // the wrapped unique_ptr<T> in ActorPhase<T> to be const.
 

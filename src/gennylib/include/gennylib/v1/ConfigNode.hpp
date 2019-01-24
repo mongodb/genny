@@ -26,7 +26,7 @@
 
 #include <gennylib/InvalidConfigurationException.hpp>
 
-namespace genny::V1 {
+namespace genny::v1 {
 
 /**
  * If Required, type is Out, else it's optional<Out>
@@ -297,6 +297,6 @@ private:
     const ConfigNode* _delegateNode;
 };
 
-}  // namespace genny::V1
+}  // namespace genny::v1
 
 #endif  // HEADER_F4822E1D_5AE5_4A00_B6BF_F26F05C1AC55_INCLUDED

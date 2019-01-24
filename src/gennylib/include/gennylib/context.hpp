@@ -88,7 +88,7 @@ namespace genny {
  *     std::optional<int> maybeInt = context.get<int,false>("Actors", 0, "Count");
  * ```
  */
-class WorkloadContext : public V1::ConfigNode {
+class WorkloadContext : public v1::ConfigNode {
 public:
     /**
      * @param node top-level (file-level) YAML node
@@ -249,7 +249,7 @@ class PhaseContext;
  * auto name = cx.get<std::string>("Name");
  * ```
  */
-class ActorContext final : public V1::ConfigNode {
+class ActorContext final : public v1::ConfigNode {
 public:
     ActorContext(YAML::Node node, WorkloadContext& workloadContext)
         : ConfigNode(std::move(node), std::addressof(workloadContext)),
@@ -448,7 +448,7 @@ private:
 };
 
 
-class PhaseContext final : public V1::ConfigNode {
+class PhaseContext final : public v1::ConfigNode {
 
 public:
     PhaseContext(YAML::Node node, const ActorContext& actorContext)

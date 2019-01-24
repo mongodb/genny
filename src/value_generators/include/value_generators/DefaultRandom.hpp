@@ -20,7 +20,7 @@
 #include <random>
 
 namespace genny {
-namespace V1 {
+namespace v1 {
 
 /**
  * Genny random number generator.
@@ -100,12 +100,12 @@ private:
     // For more detail, see https://github.com/10gen/genny/pull/88#issuecomment-451014165
     RNGImpl _rng;
 };
-}  // namespace V1
+}  // namespace v1
 
 /**
  * DefaultRandom should be used if you need a random number generator.
  */
-using DefaultRandom = V1::Random<std::mt19937_64>;
+using DefaultRandom = v1::Random<std::mt19937_64>;
 
 }  // namespace genny
 #endif  // HEADER_EBA231D0_AA7A_4008_A9E8_BD1C98D9023E_INCLUDED
