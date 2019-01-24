@@ -43,12 +43,12 @@ public:
      */
     explicit Random(result_type seed = 6514393) : _rng(seed) {}
 
-    // No moves or copies.
-    Random(Random&&) = delete;
-    Random& operator=(Random&&) = delete;
+    // Allow copies and moves.
+    Random(Random&&) = default;
+    Random& operator=(Random&&) = default;
 
-    Random(const Random&) = delete;
-    Random& operator=(const Random&) = delete;
+    Random(const Random&) = default;
+    Random& operator=(const Random&) = default;
 
     ~Random() = default;
 

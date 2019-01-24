@@ -139,10 +139,11 @@ Actors:
   Threads: 2
   Phases:
     - Repeat: 7
-      Rate: 5 per 4 seconds
+      Rate: 5 per 2 seconds
 )");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 2;
+        int rate = 5;
 
         genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
         auto getCurState = []() {
@@ -156,15 +157,15 @@ Actors:
         // completed iterations is always `rate * n + num_threads` and not an exact multiple of
         // `rate`.
         std::this_thread::sleep_for(1s);
-        REQUIRE(getCurState() == (5 + num_threads));
+        REQUIRE(getCurState() == (rate + num_threads));
 
         // Check for rate again after 4 seconds.
-        std::this_thread::sleep_for(4s);
-        REQUIRE(getCurState() == (5 * 2 + num_threads));
+        std::this_thread::sleep_for(2s);
+        REQUIRE(getCurState() == (rate * 2 + num_threads));
 
         t.join();
 
-        REQUIRE(getCurState() == 14);
+        REQUIRE(getCurState() == num_threads * 7);
     }
 }
 }  // namespace

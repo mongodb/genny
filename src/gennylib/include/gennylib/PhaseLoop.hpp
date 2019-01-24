@@ -87,6 +87,7 @@ public:
             phaseContext.get<std::string, false>("RateLimiterName").value_or("defaultRateLimiter");
 
         if (rateSpec) {
+            _rng = std::make_optional(phaseContext.workload().createRNG());
             _rateLimiter =
                 phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
         }
@@ -97,7 +98,7 @@ public:
         return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
-    void limitRate(const int64_t currentIteration, const Orchestrator& o, const PhaseNumber inPhase) const {
+    void limitRate(const int64_t currentIteration, const Orchestrator& o, const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
         // first iteration. This means the number of completed operations is always
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
@@ -109,7 +110,9 @@ public:
                     // Sleep for a little bit. This is not efficient if there's a large number of
                     // threads. If this is a problem, we can use exponential back off or wait
                     // based on the number of actors using this rate limiter.
-                    std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate()));
+                    //
+                    // Add up to 10 microseconds of jitter to avoid threads waking up at once.
+                    std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate() + (_rng->nextValue() % 10000)));
                     continue;
                 }
                 break;
@@ -150,6 +153,7 @@ private:
     // The rate limiter is owned by the workload context.
     v1::GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
+    std::optional<DefaultRandom> _rng;
 };
 
 
@@ -164,12 +168,12 @@ private:
 class ActorPhaseIterator final {
 
 public:
-    // Normally we'd use const IterationChecker& (ref rather than *)
+    // Normally we'd use IterationChecker& (ref rather than *)
     // but we actually *want* nullptr for the end iterator. This is a bit of
     // an over-optimization, but it adds very little complexity at the benefit
     // of not having to construct a useless object.
     ActorPhaseIterator(Orchestrator& orchestrator,
-                       const IterationChecker* iterationCheck,
+                       IterationChecker* iterationCheck,
                        PhaseNumber inPhase,
                        bool isEndIterator)
         : _orchestrator{std::addressof(orchestrator)},
@@ -243,7 +247,7 @@ public:
 
 private:
     Orchestrator* _orchestrator;
-    const IterationChecker* _iterationCheck;
+    IterationChecker* _iterationCheck;
     const std::chrono::steady_clock::time_point _referenceStartingPoint;
     const PhaseNumber _inPhase;
     const bool _isEndIterator;
@@ -279,7 +283,7 @@ public:
      */
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
-               std::unique_ptr<const IterationChecker> iterationCheck,
+               std::unique_ptr<IterationChecker> iterationCheck,
                PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
@@ -359,7 +363,7 @@ private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
     const std::optional<std::unique_ptr<T>> _value;  // Is nullopt iff operation is Nop
-    const std::unique_ptr<const IterationChecker> _iterationCheck;
+    const std::unique_ptr<IterationChecker> _iterationCheck;
 
 };  // class ActorPhase
 
