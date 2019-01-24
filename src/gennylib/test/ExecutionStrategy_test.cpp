@@ -55,7 +55,7 @@ public:
 
 public:
     StrategyActor(ActorContext& context)
-        : Actor(context), strategy{context, StrategyActor::id(), "simple"}, _loop{context} {}
+        : Actor(context), strategy{context.operation("sipmle", StrategyActor::id())}, _loop{context} {}
 
     void run() override {
         for (auto&& config : _loop) {
@@ -80,7 +80,7 @@ public:
         });
 
         strategy.run(
-            [&]() {
+            [&](metrics::OperationContext&) {
                 if (state.throwCount > 0) {
                     --state.throwCount;
                     throw Exception(kErrorMessage);

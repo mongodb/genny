@@ -20,7 +20,7 @@
 
 #include <loki/ScopeGuard.h>
 
-#include <gennylib/metrics.hpp>
+#include <metrics/metrics.hpp>
 #include <gennylib/config/ExecutionStrategyOptions.hpp>
 
 namespace genny {

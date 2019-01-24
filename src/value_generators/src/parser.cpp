@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "parser.hh"
+#include <parser.hh>
 
 #include <boost/log/trivial.hpp>
 #include <boost/regex.hpp>
@@ -21,6 +21,7 @@
 
 #include <bsoncxx/builder/concatenate.hpp>
 #include <bsoncxx/json.hpp>
+#include <bsoncxx/types/value.hpp>
 
 using bsoncxx::builder::concatenate;
 using bsoncxx::builder::stream::close_array;

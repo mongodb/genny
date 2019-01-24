@@ -25,8 +25,8 @@
 
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/metrics.hpp>
 #include <log.hh>
+#include <metrics/metrics.hpp>
 
 #include <ActorHelper.hpp>
 

@@ -17,7 +17,6 @@
 #include <iostream>
 
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/metrics.hpp>
 
 namespace {
 

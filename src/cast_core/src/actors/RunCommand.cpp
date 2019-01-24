@@ -31,7 +31,7 @@
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/v1/RateLimiter.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace {
 

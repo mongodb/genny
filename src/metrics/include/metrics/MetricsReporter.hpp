@@ -17,7 +17,7 @@
 
 #include <iostream>
 
-#include <gennylib/metrics.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny::metrics {
 
