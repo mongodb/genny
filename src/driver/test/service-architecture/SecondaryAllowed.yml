@@ -19,6 +19,7 @@ Actors:
               OperationMetricsName: "Stepdown"
               OperationName: AdminCommand
               OperationSleepBefore: 30 seconds
+              OperationSleepAfter: 30 seconds
               OperationCommand:
                   replSetStepDown: 60
               OperationAwaitStepdown: yes
@@ -49,7 +50,7 @@ Actors:
       DocumentCount: 100
       BatchSize: 100
       Document:
-          x: {$randomint: {min: 0, max: 20}}
+          x: {^RandomInt: {min: 0, max: 20}}
       Indexes:
         - keys: {x: 1}
       Phases:
