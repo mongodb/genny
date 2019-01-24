@@ -12,7 +12,8 @@ Actors:
           Retries: 0
           ThrowOnFailure: false
       Phases:
-        - NoOp: true
+        - Phase: 0
+          NoOp: true
         - Phase: 1
           Repeat: 1
           Operation:
@@ -31,7 +32,8 @@ Actors:
           ThrowOnFailure: false
       Database: test
       Phases:
-        - NoOp: true
+        - Phase: 0
+          NoOp: true
         - Phase: 1
           Operation: &find_one
               OperationMetricsName: "Find"
