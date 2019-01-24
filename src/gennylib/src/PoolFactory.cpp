@@ -177,8 +177,10 @@ struct PoolFactory::Config {
     };
 };
 
-PoolFactory::PoolFactory(std::string_view rawUri, mongocxx::options::client& clientOpts)
-    : _config(std::make_unique<Config>(rawUri)), _clientOpts{clientOpts} {}
+PoolFactory::PoolFactory(
+    std::string_view rawUri,
+    std::function<void(const mongocxx::events::command_started_event&)> apmCallback)
+    : _config(std::make_unique<Config>(rawUri)), _apmCallback{apmCallback} {}
 PoolFactory::~PoolFactory() {}
 
 std::string PoolFactory::makeUri() const {
@@ -187,8 +189,6 @@ std::string PoolFactory::makeUri() const {
 
 mongocxx::options::pool PoolFactory::makeOptions() const {
     mongocxx::options::ssl sslOptions;
-
-    auto clientOpts = mongocxx::options::client{_clientOpts};
 
     auto allowInv = _config->getFlag(OptionType::kAccessOption, "AllowInvalidCertificates");
     if (allowInv) {
@@ -209,7 +209,7 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
         BOOST_LOG_TRIVIAL(debug) << "Using PEM Key file '" << pemKeyFile << "' for SSL/TLS";
         sslOptions = sslOptions.pem_file(pemKeyFile.data());
     }
-    return clientOpts.ssl_opts(sslOptions);
+    return mongocxx::options::client{}.ssl_opts(sslOptions);
 }
 
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
@@ -218,7 +218,7 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
 
     auto uri = mongocxx::uri{uriStr};
 
-    auto poolOptions = mongocxx::options::pool{_clientOpts};
+    auto poolOptions = mongocxx::options::pool{};
 
     auto useSsl = _config->getFlag(OptionType::kQueryOption, "ssl");
     if (useSsl) {
@@ -226,7 +226,16 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
         BOOST_LOG_TRIVIAL(debug) << "Adding ssl options to pool...";
     }
 
-    return std::make_unique<mongocxx::pool>(uri, poolOptions);
+    // option::client can be implicitly coverted into option::pool. This is to be able to set the
+    // apm options for testing.
+    auto clientOpts = mongocxx::options::client{poolOptions.client_opts()};
+    if (_apmCallback) {
+        mongocxx::options::apm apmOptions;
+        apmOptions.on_command_started(_apmCallback);
+        clientOpts.apm_opts(apmOptions);
+    }
+
+    return std::make_unique<mongocxx::pool>(uri, clientOpts);
 }
 
 void PoolFactory::setOption(OptionType type, const std::string& option, std::string value) {

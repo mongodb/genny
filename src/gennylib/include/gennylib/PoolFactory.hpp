@@ -45,7 +45,9 @@ public:
     };
 
 public:
-    PoolFactory(std::string_view uri, mongocxx::options::client& clientOpts);
+    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
+
+    PoolFactory(std::string_view uri, ApmCallback apmCallback = ApmCallback());
     ~PoolFactory();
 
     // Both `makeUri()` and `makeOptions()` are used internally. They are publicly exposed to
@@ -79,7 +81,8 @@ public:
 private:
     struct Config;
     std::unique_ptr<Config> _config;
-    mongocxx::options::client _clientOpts;
+    ApmCallback _apmCallback;
+    bool _hasApmOpts = false;
 };
 
 }  // namespace genny

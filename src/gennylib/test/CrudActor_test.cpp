@@ -21,10 +21,14 @@ namespace bson_stream = bsoncxx::builder::stream;
 
 class SessionTest {
 public:
-    SessionTest() {
-        mongocxx::options::apm apmOpts;
+    SessionTest() {}
 
-        apmOpts.on_command_started([&](const mongocxx::events::command_started_event& event) {
+    void clearEvents() {
+        events.clear();
+    }
+
+    std::function<void(const mongocxx::events::command_started_event&)> callback =
+        [&](const mongocxx::events::command_started_event& event) {
             std::string command_name{event.command_name().data()};
 
             // Ignore auth commands like "saslStart", and handshakes with "isMaster".
@@ -35,13 +39,7 @@ public:
             }
 
             events.emplace_back(command_name, bsoncxx::document::value(event.command()));
-        });
-        clientOpts.apm_opts(apmOpts);
-    }
-
-    void clearEvents() {
-        events.clear();
-    }
+        };
 
     class ApmEvent {
     public:
@@ -91,7 +89,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             auto builder = bson_stream::document{};
             builder << "a"
                     << "1" << bson_stream::finalize;
-            auto count = db.collection("test").count_documents(builder.view());
+            auto count = db.collection("test").count(builder.view());
             REQUIRE(count == 1);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -133,8 +131,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 5)));
+            auto count =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 5)));
             REQUIRE(count == 1);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -169,11 +167,10 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 0);
-            count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 2)));
+            count = db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 2)));
             REQUIRE(count == 1);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -207,7 +204,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count = db.collection("test").count_documents(
+            auto count = db.collection("test").count(
                 BasicBson::make_document(BasicBson::kvp("name", "test")));
             REQUIRE(count == 1);
         } catch (const std::exception& e) {
@@ -246,10 +243,10 @@ TEST_CASE_METHOD(MongoTestFixture,
           )");
         try {
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 5)));
+            auto count =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 5)));
             REQUIRE(count == 1);
             REQUIRE(test.events.size() > 0);
             for (auto&& event : test.events) {
@@ -297,8 +294,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 3);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -335,7 +332,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count = db.collection("test").count_documents(BasicBson::make_document(
+            auto count = db.collection("test").count(BasicBson::make_document(
                 BasicBson::kvp("a", BasicBson::make_document(BasicBson::kvp("$gte", 5)))));
             REQUIRE(count == 0);
         } catch (const std::exception& e) {
@@ -370,14 +367,14 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Options:
                     WriteConcern:
                       Level: majority
-                      TimeoutMillis: 6000
+                      TimeoutMillis: 6000 milliseconds
           )");
         try {
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 8)));
+            auto count =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 8)));
             REQUIRE(count == 1);
             REQUIRE(test.events.size() > 0);
             for (auto&& event : test.events) {
@@ -429,11 +426,11 @@ TEST_CASE_METHOD(MongoTestFixture,
                     Options:
                       WriteConcern:
                         Level: majority
-                        TimeoutMillis: 5000
+                        TimeoutMillis: 5000 milliseconds
             )");
         try {
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             REQUIRE(test.events.size() > 0);
             for (auto&& event : test.events) {
@@ -475,12 +472,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Options:
                     WriteConcern:
                       Level: 1
-                      TimeoutMillis: 2500
+                      TimeoutMillis: 2500 milliseconds
                       Journal: true
           )");
         try {
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             REQUIRE(test.events.size() > 0);
             for (auto&& event : test.events) {
@@ -525,12 +522,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                     Ordered: true
                     WriteConcern:
                       Level: 0
-                      TimeoutMillis: 3000
+                      TimeoutMillis: 3000 milliseconds
                       Journal: false
           )");
         try {
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             REQUIRE(test.events.size() > 0);
             for (auto&& event : test.events) {
@@ -573,7 +570,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                     Update: { $set: { a: 5 } }
                   Options:
                     WriteConcern:
-                      TimeoutMillis: 3000
+                      TimeoutMillis: 3000 milliseconds
                       Journal: false
           )");
         try {
@@ -657,7 +654,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           )");
         try {
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             REQUIRE(test.events.size() > 0);
             for (auto&& event : test.events) {
@@ -692,11 +689,11 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Options:
                     ReadPreference:
                       ReadMode: nearest
-                      MaxStalenessSeconds: 100
+                      MaxStalenessSeconds: 100 seconds
           )");
         try {
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), test.clientOpts);
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             REQUIRE(test.events.size() > 0);
             for (auto&& event : test.events) {
@@ -734,7 +731,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Filter: { a : 1 }
                   Options:
                     ReadPreference:
-                      MaxStalenessSeconds: 100
+                      MaxStalenessSeconds: 100 seconds
           )");
         try {
             REQUIRE_THROWS_AS(
@@ -780,7 +777,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 }
 
 TEST_CASE_METHOD(MongoTestFixture,
-                 "Test 'insertMany' operation.",
+                 "Test the 'insertMany' operation.",
                  "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
 
     dropAllDatabases();
@@ -810,13 +807,12 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count =
+                db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 2);
-            count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("b", 1)));
+            count = db.collection("test").count(BasicBson::make_document(BasicBson::kvp("b", 1)));
             REQUIRE(count == 1);
-            count = db.collection("test").count_documents(BasicBson::make_document());
+            count = db.collection("test").count(BasicBson::make_document());
             REQUIRE(count == 3);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -826,7 +822,126 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 }
 
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Test 'drop' operation.",
+                 "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
+
+    SessionTest test;
+    dropAllDatabases();
+    test.clearEvents();
+    auto db = client.database("mydb");
+
+    SECTION("The 'test' collection is dropped.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operation:
+                OperationName: drop
+          )");
+        try {
+            db.create_collection("test");
+            REQUIRE(db.has_collection("test"));
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            REQUIRE(db.has_collection("test") == false);
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+
+    SECTION("The 'test' collection is dropped with write concern majority.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operation:
+                OperationName: drop
+                OperationCommand:
+                  Options:
+                    WriteConcern:
+                     Level: majority
+          )");
+        try {
+            db.create_collection("test");
+            REQUIRE(db.has_collection("test"));
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            REQUIRE(db.has_collection("test") == false);
+            for (auto&& event : test.events) {
+                auto writeConcernLevel = event.command["writeConcern"]["w"].get_utf8().value;
+                REQUIRE(std::string(writeConcernLevel) == "majority");
+            }
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+}
+
+TEST_CASE_METHOD(MongoTestFixture,
+                 "Test 'count' operation.",
+                 "[standalone][single_node_replset][three_node_replset][sharded][CrudActor]") {
+
+    SessionTest test;
+    dropAllDatabases();
+    test.clearEvents();
+    auto db = client.database("mydb");
+
+    SECTION("Perform a count on the collection.") {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            ExecutionStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+              Operation:
+                OperationName: count
+                OperationCommand:
+                  Filter: { a: 1 }
+          )");
+        try {
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            REQUIRE(test.events.size() > 0);
+            auto countEvent = test.events[0].command;
+            auto collection = countEvent["count"].get_utf8().value;
+            REQUIRE(std::string(collection) == "test");
+            REQUIRE(countEvent["query"].get_document().view() ==
+                    BasicBson::make_document(BasicBson::kvp("a", 1)));
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO("CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
+    }
+}
+
 // TODO: add test for ReadConcern
-// TODO: add test for DropOperation
+// TODO: add test for Find
 
 }  // namespace

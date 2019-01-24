@@ -25,8 +25,6 @@ namespace Catchers = Catch::Matchers;
 
 using OptionType = genny::PoolFactory::OptionType;
 
-mongocxx::options::client clientOpts{};
-
 TEST_CASE("PoolFactory behavior") {
     mongocxx::instance::current();
 
@@ -34,7 +32,7 @@ TEST_CASE("PoolFactory behavior") {
     SECTION("Make a few trivial localhost pools") {
         constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
 
-        auto factory = genny::PoolFactory(kSourceUri, clientOpts);
+        auto factory = genny::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
         REQUIRE(factoryUri == kSourceUri);
@@ -50,7 +48,7 @@ TEST_CASE("PoolFactory behavior") {
     SECTION("Make a pool with the bare minimum uri") {
         constexpr auto kSourceUri = "127.0.0.1";
 
-        auto factory = genny::PoolFactory(kSourceUri, clientOpts);
+        auto factory = genny::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
         auto expectedUri = [&]() { return std::string{"mongodb://"} + kSourceUri; };
@@ -65,7 +63,7 @@ TEST_CASE("PoolFactory behavior") {
 
         const std::string kBaseString = "mongodb://127.0.0.1/";
 
-        auto factory = genny::PoolFactory(kSourceUri, clientOpts);
+        auto factory = genny::PoolFactory(kSourceUri);
 
         SECTION("Validate the original URI") {
             auto factoryUri = factory.makeUri();
@@ -95,7 +93,7 @@ TEST_CASE("PoolFactory behavior") {
 
         SECTION("Use the wrong case for 'Database' option") {
             auto sourceUri = [&]() { return kBaseString + kOriginalDatabase; };
-            auto factory = genny::PoolFactory(sourceUri(), clientOpts);
+            auto factory = genny::PoolFactory(sourceUri());
 
             auto expectedUri = [&]() { return sourceUri() + "?database=test"; };
             factory.setOption(OptionType::kQueryOption, "database", "test");
@@ -114,7 +112,7 @@ TEST_CASE("PoolFactory behavior") {
         // not normally consider for traditional string flags
         SECTION("Set the 'Database' option in odd ways") {
             auto sourceUri = [&]() { return kBaseString + kOriginalDatabase; };
-            auto factory = genny::PoolFactory(sourceUri(), clientOpts);
+            auto factory = genny::PoolFactory(sourceUri());
 
 
             SECTION("Use the flag option") {
@@ -144,7 +142,7 @@ TEST_CASE("PoolFactory behavior") {
 
         SECTION("Overwrite the replSet option in a variety of ways") {
             auto sourceUri = [&]() { return kBaseString + "?replSet=red"; };
-            auto factory = genny::PoolFactory(sourceUri(), clientOpts);
+            auto factory = genny::PoolFactory(sourceUri());
 
             SECTION("Overwrite with a normal string") {
                 auto expectedUri = [&]() { return kBaseString + "?replSet=blue"; };
@@ -170,7 +168,7 @@ TEST_CASE("PoolFactory behavior") {
         const std::string kSourceUri = "mongodb://127.0.0.1";
         constexpr int32_t kMaxPoolSize = 2;
 
-        auto factory = genny::PoolFactory(kSourceUri, clientOpts);
+        auto factory = genny::PoolFactory(kSourceUri);
 
         auto expectedUri = [&]() { return kSourceUri + "/?maxPoolSize=2"; };
         factory.setOptionFromInt(OptionType::kQueryOption, "maxPoolSize", kMaxPoolSize);
@@ -201,7 +199,7 @@ TEST_CASE("PoolFactory behavior") {
         constexpr auto kCAFile = "some-random-ca.pem";
 
         auto sourceUrl = [&]() { return kProtocol + kHost; };
-        auto factory = genny::PoolFactory(sourceUrl(), clientOpts);
+        auto factory = genny::PoolFactory(sourceUrl());
 
         auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?ssl=true"; };
         factory.setOptions(OptionType::kAccessOption,

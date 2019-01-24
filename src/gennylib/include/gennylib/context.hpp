@@ -97,12 +97,15 @@ public:
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
+
+    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
+
     WorkloadContext(YAML::Node node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
                     const Cast& cast,
-                    mongocxx::options::client clientOpts = mongocxx::options::client{});
+                    ApmCallback apmCallback = ApmCallback());
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
@@ -136,6 +139,12 @@ public:
     ActorId nextActorId() {
         return _nextActorId++;
     }
+
+    /**
+     * @return a pool from the "default" MongoDB connection-pool.
+     * @throws InvalidConfigurationException if no connections available.
+     */
+    mongocxx::pool::entry client();
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -190,6 +199,11 @@ private:
     // Actors should always be constructed in a single-threaded context.
     // That said, atomic integral types are very cheap to work with.
     std::atomic<ActorId> _nextActorId{0};
+
+    // A flag representing the presence of application performance monitoring options used for
+    // testing. This can be removed once CDRIVER-2931 is resolved as apm options are currently not
+    // compatible with `try_acquire()`.
+    bool _hasApmOpts;
 };
 
 // For some reason need to decl this; see impl below
@@ -227,11 +241,10 @@ class PhaseContext;
  */
 class ActorContext final : public V1::ConfigNode {
 public:
-    ActorContext(YAML::Node node, WorkloadContext& workloadContext, bool hasApmOpts)
+    ActorContext(YAML::Node node, WorkloadContext& workloadContext)
         : ConfigNode(std::move(node), std::addressof(workloadContext)),
           _workload{&workloadContext},
-          _phaseContexts{},
-          _hasApmOpts{hasApmOpts} {
+          _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
     }
 
@@ -422,8 +435,6 @@ private:
     constructPhaseContexts(const YAML::Node&, ActorContext*);
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
-    // TODO: Remove _hasApmOpts when CDRIVER-2931 is resolved.
-    bool _hasApmOpts;
 };
 
 
