@@ -3,8 +3,6 @@ SchemaVersion: 2018-07-01
 Actors:
 - Name: BulkWriteInTransaction
   Type: CrudActor
-  Database:
-  Type: CrudActor
   Database: testdb
   ExecutionStrategy:
     ThrowOnFailure: true
@@ -22,7 +20,7 @@ Actors:
             Level: snapshot
           ReadPreference:
             ReadMode: primaryPreferred
-            MaxStalenessSeconds: 1000
+            MaxStalenessSeconds: 1000 seconds
     - OperationName: bulkWrite
       OperationCommand:
         WriteOperations:
@@ -33,8 +31,6 @@ Actors:
           Update: { $set: { a: 5 } }
         Options:
           Ordered: true
-          WriteConcern:
-            Level: majority
         OnSession: true
     - OperationName: commitTransaction
   - Repeat: 1
