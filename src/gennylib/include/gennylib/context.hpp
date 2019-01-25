@@ -97,11 +97,15 @@ public:
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
+
+    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
+
     WorkloadContext(YAML::Node node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
-                    const Cast& cast);
+                    const Cast& cast,
+                    ApmCallback apmCallback = ApmCallback());
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
@@ -135,6 +139,12 @@ public:
     ActorId nextActorId() {
         return _nextActorId++;
     }
+
+    /**
+     * @return a pool from the "default" MongoDB connection-pool.
+     * @throws InvalidConfigurationException if no connections available.
+     */
+    mongocxx::pool::entry client();
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -189,6 +199,10 @@ private:
     // Actors should always be constructed in a single-threaded context.
     // That said, atomic integral types are very cheap to work with.
     std::atomic<ActorId> _nextActorId{0};
+
+    // A flag representing the presence of application performance monitoring options used for
+    // testing. This can be removed once TIG-1396 is resolved.
+    bool _hasApmOpts;
 };
 
 // For some reason need to decl this; see impl below

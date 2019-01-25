@@ -26,11 +26,13 @@
 
 namespace genny {
 
-WorkloadContext::WorkloadContext(YAML::Node node,
-                                 metrics::Registry& registry,
-                                 Orchestrator& orchestrator,
-                                 const std::string& mongoUri,
-                                 const Cast& cast)
+WorkloadContext::WorkloadContext(
+    YAML::Node node,
+    metrics::Registry& registry,
+    Orchestrator& orchestrator,
+    const std::string& mongoUri,
+    const Cast& cast,
+    std::function<void(const mongocxx::events::command_started_event&)> apmCallback)
     : V1::ConfigNode(std::move(node)), _registry{&registry}, _orchestrator{&orchestrator} {
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
@@ -42,7 +44,7 @@ WorkloadContext::WorkloadContext(YAML::Node node,
     mongocxx::instance::current();
 
     // TODO: make this optional and default to mongodb://localhost:27017
-    auto poolFactory = PoolFactory(mongoUri);
+    auto poolFactory = PoolFactory(mongoUri, apmCallback);
 
     auto queryOpts =
         this->get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
@@ -57,6 +59,9 @@ WorkloadContext::WorkloadContext(YAML::Node node,
     }
 
     _clientPool = poolFactory.makePool();
+
+    // TODO: Remove hasApmOpts when TIG-1396 is resolved.
+    _hasApmOpts = bool{apmCallback};
 
     // Make a bunch of actor contexts
     for (const auto& actor : this->get_noinherit("Actors")) {
@@ -96,6 +101,18 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
+mongocxx::pool::entry WorkloadContext::client() {
+    if (_hasApmOpts) {
+        // TODO: Remove this conditional when TIG-1396 is resolved.
+        return _clientPool->acquire();
+    }
+    auto entry = _clientPool->try_acquire();
+    if (!entry) {
+        throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
+    }
+    return std::move(*entry);
+}
+
 // Helper method to convert Phases:[...] to PhaseContexts
 std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::constructPhaseContexts(
     const YAML::Node&, ActorContext* actorContext) {
@@ -130,11 +147,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
 }
 
 mongocxx::pool::entry ActorContext::client() {
-    auto entry = _workload->_clientPool->try_acquire();
-    if (!entry) {
-        throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
-    }
-    return std::move(*entry);
+    return _workload->client();
 }
 
 bool PhaseContext::_isNop() const {

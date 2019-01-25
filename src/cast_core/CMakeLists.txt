@@ -34,6 +34,7 @@ add_library(cast_core SHARED
     src/actors/MultiCollectionQuery.cpp
     src/actors/MultiCollectionUpdate.cpp
     src/actors/RunCommand.cpp
+    src/actors/CrudActor.cpp
     # ActorsEnd
 )
 
