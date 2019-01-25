@@ -125,6 +125,12 @@ function(CreateGennyTargets)
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
             FILES_MATCHING PATTERN *.hpp)
 
+    install(TARGETS  "${CGT_NAME}"
+            EXPORT   GennyLibraryConfig
+            ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+
     ## add EXECUTABLE from src/main.cpp
 
     if(CGT_EXECUTABLE)
