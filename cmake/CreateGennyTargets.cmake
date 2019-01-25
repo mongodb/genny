@@ -13,13 +13,13 @@
 # limitations under the License.
 
 ##
-# Defines the genny_subdir function
+# Defines the CreateGennyTargets function
 ##
 
 #
 # Usage:
 #
-#     genny_subdir(
+#     CreateGennyTargets(
 #       NAME   project_name
 #       TYPE   SHARED|STATIC|INTERFACE
 #       DEPENDS
@@ -44,7 +44,7 @@
 #     `project_name_benchmark`.
 # -   Installs the library to the `GennyLibraryConfig` export
 #
-function(GENNY_SUBDIR)
+function(CreateGennyTargets)
     set(_gs_name) # value from NAME
     set(_gs_want_name 0) # prev arg was NAME
 
@@ -222,4 +222,4 @@ function(GENNY_SUBDIR)
         ParseAndAddCatchTests("${_gs_name}_benchmark")
     endif()
 
-endfunction(GENNY_SUBDIR)
+endfunction(CreateGennyTargets)

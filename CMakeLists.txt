@@ -14,7 +14,7 @@ include(Options)
 include(CheckCompiler)
 include(ConfigureInstall)
 include(ParseAndAddCatchTests)
-include(genny_subdir)
+include(CreateGennyTargets)
 
 if(${GENNY_BUILD_FLAT})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")

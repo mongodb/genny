@@ -14,7 +14,7 @@
 
 project(testlib VERSION 0.0.1 LANGUAGES CXX)
 
-genny_subdir(
+CreateGennyTargets(
     NAME    testlib
     TYPE    STATIC
     DEPENDS

@@ -14,7 +14,7 @@
 
 project(value_generators VERSION 0.0.1 LANGUAGES CXX)
 
-genny_subdir(
+CreateGennyTargets(
     NAME    value_generators
     TYPE    STATIC
     DEPENDS

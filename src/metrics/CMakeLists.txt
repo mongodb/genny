@@ -14,7 +14,7 @@
 
 project(metrics VERSION 0.0.1 LANGUAGES CXX)
 
-genny_subdir(
+CreateGennyTargets(
     NAME    metrics
     TYPE    INTERFACE
     DEPENDS

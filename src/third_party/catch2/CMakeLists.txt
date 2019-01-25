@@ -14,7 +14,7 @@
 
 project(catch2 VERSION 0.0.1 LANGUAGES CXX)
 
-genny_subdir(
+CreateGennyTargets(
     NAME    catch2
     TYPE    SHARED
 )

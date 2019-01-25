@@ -16,7 +16,7 @@
 # src/CMakeList.txt, src/gennylib/CMakeLists.txt and src/gennylib/src/version.cpp
 project(gennylib VERSION 0.0.1 LANGUAGES CXX)
 
-genny_subdir(
+CreateGennyTargets(
     NAME    gennylib
     TYPE    STATIC
     DEPENDS
