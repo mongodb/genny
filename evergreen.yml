@@ -64,9 +64,10 @@ buildvariants:
   run_on:
   - amazon2-build
   expansions:
-    cmake: "/opt/cmake/bin/cmake"
-    toolchain: "/opt/mongodbtoolchain/v3/bin"
-    mongodb_archive_url: "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz"
+    cmake:      /opt/cmake/bin/cmake
+    toolchain:  /opt/mongodbtoolchain/v3/bin
+    mongodb_archive_url:
+      https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz
   tasks:
   - name: tg_compile_and_test_with_server
   - name: t_push
@@ -77,8 +78,8 @@ buildvariants:
   run_on:
   - rhel70
   expansions:
-    cmake: "/opt/cmake/bin/cmake"
-    toolchain: "/opt/mongodbtoolchain/v3/bin"
+    cmake:      /opt/cmake/bin/cmake
+    toolchain:  /opt/mongodbtoolchain/v3/bin
   tasks:
   - name: t_compile
   - name: t_push
@@ -89,8 +90,8 @@ buildvariants:
   run_on:
   - ubuntu1804-build
   expansions:
-    cmake: "/opt/cmake/bin/cmake"
-    toolchain: "/opt/mongodbtoolchain/v3/bin"
+    cmake:      /opt/cmake/bin/cmake
+    toolchain:  /opt/mongodbtoolchain/v3/bin
   tasks:
   - name: t_compile
   - name: t_push
@@ -183,22 +184,25 @@ tasks:
 ##                ⚡️ Task Groups ⚡️
 
 task_groups:
+
 - &a_compile_and_test
   name: tg_compile_and_test
   max_hosts: 1
   setup_task:
   - func: f_remove_test_results_files
   teardown_task:
-  # Attaching results is prohibited in "teardown_group". So we call it in "teardown_task"
-  # but make the result file optional.
+  # Attaching results is prohibited in "teardown_group".
+  # So we call it in "teardown_task" but make the result file optional.
   - func: f_report_test_results
   - func: f_remove_test_results_files
   tasks:
-  # Rely on implicit dependencies in task_groups where tasks are executed in the order they're
-  # defined. Tasks with explicit "depends_on" tasks may conflict with task_group's implicit
-  # dependency, causing unexpected behavior.
+  # Rely on implicit dependencies in task_groups where tasks are executed
+  # in the order they're defined. Tasks with explicit "depends_on" tasks
+  # may conflict with task_group's implicit dependency, causing
+  # unexpected behavior.
   #
-  # For this task group, the implicit dependency is that t_*_test has to run after t_compile.
+  # For this task group, the implicit dependency is that t_*_test has to
+  # run after t_compile.
   - t_compile
   - t_python_test
   - t_cmake_test
@@ -226,8 +230,12 @@ functions:
       directory: src
 
   ##
-  # Download the mongodb binary and then clone and checkout the appropriate mongodb repository branch
-  # that contains the intended gennylib test case (SERVER-38646). Also installs resmoke dependencies.
+  # Download the mongodb binary and then clone and checkout the appropriate
+  # mongodb repository branch that contains the intended gennylib test case
+  # (SERVER-38646). Also installs resmoke dependencies.
+  #
+  # Expansions:
+  #   mongodb_archive_url: url to download pre-compiled mongo from
   ##
   f_checkout_mongodb:
   - command: subprocess.exec
@@ -246,12 +254,17 @@ functions:
         tar --strip-components=1 -zxvf mongodb.tgz
 
   ##
-  # Archive an installed library into a tarball and upload it with revision suffix
+  # Archive an installed library into a tarball and upload it with
+  # revision suffix.
   #
   # Expansions:
   #  install_dir: The directory in which this dependency was installed
   #  short_name: The name for the folder and prefix for the tarball to push
   #  display_name: The name to show in evergreen
+  #  aws_key: aws key
+  #  aws_secret: aws secret key
+  #  project: evergreen project name (genny)
+  #  build_id: evergreen build id
   ###
   f_push_patch:
   - command: archive.targz_pack
@@ -276,7 +289,7 @@ functions:
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
-      display_name: "${display_name} Patch"
+      display_name: ${display_name} Patch
 
   ##
   # Copy the library tarball for a given revision to the official path
@@ -284,6 +297,11 @@ functions:
   # Expansions:
   #  short_name: The name for the folder and prefix for the tarball to push
   #  display_name: The name to show in evergreen
+  #  aws_key: aws key
+  #  aws_secret: aws secret key
+  #  project: evergreen project name (genny)
+  #  build_id: evergreen build id
+  #  build_variant: build variant (used in s3 path)
   ###
   f_push_official:
   - command: s3.get
@@ -300,7 +318,8 @@ functions:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
       local_file: ${short_name}.tgz
-      remote_file: ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
+      remote_file:
+        ${project}/${short_name}/${short_name}-${build_variant}-${revision}.tgz
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
@@ -314,7 +333,7 @@ functions:
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
-      display_name: "${display_name}"
+      display_name: ${display_name}
 
   ##
   # Download one of genny's dependencies as a tarball and expand it
@@ -347,15 +366,16 @@ functions:
       working_dir: src
       binary: /bin/bash
       args:
-      - "${workdir}/src/scripts/bootstrap.sh"
+      - ${workdir}/src/scripts/bootstrap.sh
       - "-DENABLE_JASPER:BOOL=ON"
       - "-DGENNY_STATIC_BOOST_PATH:PATH=${workdir}/boost"
       - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
       - "-DGENNY_INSTALL_SSL:BOOL=ON"
       env:
-        MAKEFLAGS: "-j8" # This should be reasonably safe even on low memory machines
-        CMAKE: "${cmake|cmake}"
-        PATH: "${toolchain}:/usr/bin:/bin"
+        # This should be reasonably safe even on low memory machines
+        MAKEFLAGS: "-j8"
+        CMAKE: ${cmake|cmake}
+        PATH: ${toolchain}:/usr/bin:/bin
 
   ##
   # Runs each workload as a dry run
@@ -367,10 +387,10 @@ functions:
       working_dir: .
       binary: /bin/bash
       args:
-        - "${workdir}/src/scripts/dry-run-workloads.sh"
-        - "${workdir}/dist/etc/genny/workloads"
+      - ${workdir}/src/scripts/dry-run-workloads.sh
+      - ${workdir}/dist/etc/genny/workloads
       env:
-        GENNY: "${workdir}/dist/bin/genny"
+        GENNY: ${workdir}/dist/bin/genny
 
   ##
   # Runs tests via ctest.
@@ -419,9 +439,11 @@ functions:
         python3 setup.py nosetests
 
   ##
-  # Reports test results to evergreen API. If you add a new file to this list, then you should also
-  # add it to the `f_remove_test_results_files` function to ensure it is cleaned up between tasks in
-  # the task group.
+  # Reports test results to evergreen API.
+  #
+  # If you add a new file to this list, then you should also
+  # add it to the `f_remove_test_results_files` function to
+  # ensure it is cleaned up between tasks in the task group.
   ##
   f_report_test_results:
   - command: attach.xunit_results
