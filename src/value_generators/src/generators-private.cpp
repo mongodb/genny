@@ -1,6 +1,25 @@
-#include "generators-private.hh"
-#include "../log.hh"
-#include <gennylib/InvalidConfigurationException.hpp>
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <generators-private.hh>
+
+#include <string_view>
+#include <unordered_set>
+
+#include <bsoncxx/types/value.hpp>
+
+#include <boost/log/trivial.hpp>
 
 namespace genny::value_generators {
 
@@ -10,10 +29,21 @@ using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_array;
 using bsoncxx::builder::stream::open_document;
 
-// This returns a set of the value generator types with $ prefixes
-const std::set<std::string> getGeneratorTypes() {
-    return (std::set<std::string>{"$randomint", "$fastrandomstring", "$randomstring", "$useval"});
-}
+namespace {
+
+constexpr std::string_view kRandomIntType = "^RandomInt";
+constexpr std::string_view kRandomStringType = "^RandomString";
+constexpr std::string_view kFastRandomStringType = "^FastRandomString";
+constexpr std::string_view kUseValueType = "^UseValue";
+const std::unordered_set<std::string_view> kGeneratorTypes{
+    kFastRandomStringType,
+    kRandomIntType,
+    kRandomStringType,
+    kUseValueType,
+};
+
+}  // namespace
+
 BsonDocument::BsonDocument()
     : doc(bsoncxx::builder::stream::document{} << bsoncxx::builder::stream::finalize) {}
 
@@ -26,21 +56,19 @@ bsoncxx::document::view BsonDocument::view(bsoncxx::builder::stream::document&) 
 
 TemplateDocument::TemplateDocument(YAML::Node node, genny::DefaultRandom& rng)
     : DocumentGenerator() {
-    auto templates = getGeneratorTypes();
     std::vector<std::tuple<std::string, std::string, YAML::Node>> overrides;
 
     BOOST_LOG_TRIVIAL(trace) << "In TemplateDocument constructor";
-    doc.setDoc(parser::parseMap(node, templates, "", overrides));
+    doc.setDoc(parser::parseMap(node, kGeneratorTypes, "", overrides));
     BOOST_LOG_TRIVIAL(trace)
         << "In TemplateDocument constructor. Parsed the document. About to deal with overrides";
     for (auto entry : overrides) {
         auto key = std::get<0>(entry);
-        auto typeString = std::get<1>(entry);
+        auto type = std::get<1>(entry);
         YAML::Node yamlOverride = std::get<2>(entry);
         BOOST_LOG_TRIVIAL(trace) << "In TemplateDocument constructor. Dealing with an override for "
                                  << key;
 
-        auto type = typeString.substr(1, typeString.length());
         BOOST_LOG_TRIVIAL(trace) << "Making value generator for key " << key << " and type "
                                  << type;
         override[key] = makeUniqueValueGenerator(yamlOverride, type, rng);
@@ -118,7 +146,7 @@ void TemplateDocument::applyOverrideLevel(bsoncxx::builder::stream::document& ou
                            "supported "
                            "yet.";
                 default:
-                    throw InvalidConfigurationException(
+                    throw InvalidValueGeneratorSyntax(
                         "Trying to descend a level of bson in "
                         "overrides but not a map or "
                         "array");
@@ -147,18 +175,18 @@ bsoncxx::document::view TemplateDocument::view(bsoncxx::builder::stream::documen
 ValueGenerator* makeValueGenerator(YAML::Node yamlNode,
                                    std::string type,
                                    genny::DefaultRandom& rng) {
-    if (type == "randomint") {
+    if (type == kRandomIntType) {
         return new RandomIntGenerator(yamlNode, rng);
-    } else if (type == "randomstring") {
+    } else if (type == kRandomStringType) {
         return new RandomStringGenerator(yamlNode, rng);
-    } else if (type == "fastrandomstring") {
+    } else if (type == kFastRandomStringType) {
         return new FastRandomStringGenerator(yamlNode, rng);
-    } else if (type == "useval") {
+    } else if (type == kUseValueType) {
         return new UseValueGenerator(yamlNode, rng);
     }
     std::stringstream error;
     error << "In makeValueGenerator and don't know how to handle type " << type;
-    throw InvalidConfigurationException(error.str());
+    throw InvalidValueGeneratorSyntax(error.str());
 }
 
 ValueGenerator* makeValueGenerator(YAML::Node yamlNode, genny::DefaultRandom& rng) {
@@ -167,12 +195,11 @@ ValueGenerator* makeValueGenerator(YAML::Node yamlNode, genny::DefaultRandom& rn
     // If it doesn't have a type field, search for templating keys
     for (auto&& entry : yamlNode) {
         auto key = entry.first.Scalar();
-        if (getGeneratorTypes().count(key)) {
-            auto type = key.substr(1, key.length());
-            return (makeValueGenerator(entry.second, type, rng));
+        if (kGeneratorTypes.count(key)) {
+            return (makeValueGenerator(entry.second, std::move(key), rng));
         }
     }
-    return (makeValueGenerator(yamlNode, "useval", rng));
+    return (makeValueGenerator(yamlNode, std::string{kUseValueType}, rng));
 }
 
 int64_t ValueGenerator::generateInt() {
@@ -226,11 +253,10 @@ std::string valAsString(view_or_value val) {
         case bsoncxx::type::k_symbol:
         case bsoncxx::type::k_timestamp:
 
-            throw InvalidConfigurationException("valAsString with type unsuported type in list");
+            throw InvalidValueGeneratorSyntax("valAsString with type unsuported type in list");
             break;
         default:
-            throw InvalidConfigurationException(
-                "valAsString with type unsuported type not in list");
+            throw InvalidValueGeneratorSyntax("valAsString with type unsuported type not in list");
     }
     return ("");
 }
@@ -261,10 +287,10 @@ int64_t valAsInt(view_or_value val) {
         case bsoncxx::type::k_symbol:
         case bsoncxx::type::k_timestamp:
 
-            throw InvalidConfigurationException("valAsInt with type unsuported type in list");
+            throw InvalidValueGeneratorSyntax("valAsInt with type unsuported type in list");
             break;
         default:
-            throw InvalidConfigurationException("valAsInt with type unsuported type not in list");
+            throw InvalidValueGeneratorSyntax("valAsInt with type unsuported type not in list");
     }
     return (0);
 }
@@ -295,10 +321,10 @@ double valAsDouble(view_or_value val) {
         case bsoncxx::type::k_symbol:
         case bsoncxx::type::k_timestamp:
 
-            throw InvalidConfigurationException("valAsInt with type unsuported type in list");
+            throw InvalidValueGeneratorSyntax("valAsInt with type unsuported type in list");
             break;
         default:
-            throw InvalidConfigurationException("valAsInt with type unsuported type not in list");
+            throw InvalidValueGeneratorSyntax("valAsInt with type unsuported type not in list");
     }
     return (0);
 }
@@ -338,7 +364,7 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, genny::DefaultRan
                 std::stringstream error;
                 error << "In RandomIntGenerator and have unknown distribution type "
                       << distributionString;
-                throw InvalidConfigurationException(error.str());
+                throw InvalidValueGeneratorSyntax(error.str());
             }
         }
         // now read in parameters based on the distribution type
@@ -360,7 +386,7 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, genny::DefaultRan
                 if (auto probability = node["p"])
                     p = probability.as<double>();
                 else {
-                    throw InvalidConfigurationException(
+                    throw InvalidValueGeneratorSyntax(
                         "Binomial distribution in random int, but no p parameter");
                 }
                 break;
@@ -373,7 +399,7 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, genny::DefaultRan
                 if (auto probability = node["p"])
                     p = probability.as<double>();
                 else {
-                    throw InvalidConfigurationException(
+                    throw InvalidValueGeneratorSyntax(
                         "Binomial distribution in random int, but no p parameter");
                 }
                 break;
@@ -381,7 +407,7 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, genny::DefaultRan
                 if (auto probability = node["p"])
                     p = probability.as<double>();
                 else {
-                    throw InvalidConfigurationException(
+                    throw InvalidValueGeneratorSyntax(
                         "Geometric distribution in random int, but no p parameter");
                 }
                 break;
@@ -389,12 +415,12 @@ RandomIntGenerator::RandomIntGenerator(const YAML::Node& node, genny::DefaultRan
                 if (auto meannode = node["mean"])
                     mean = meannode.as<double>();
                 else {
-                    throw InvalidConfigurationException(
+                    throw InvalidValueGeneratorSyntax(
                         "Geometric distribution in random int, but no p parameter");
                 }
                 break;
             default:
-                throw InvalidConfigurationException(
+                throw InvalidValueGeneratorSyntax(
                     "Unknown generator type in RandomIntGenerator in switch statement");
                 break;
         }
@@ -424,11 +450,11 @@ int64_t RandomIntGenerator::generateInt() {
             return (distribution(_rng));
         } break;
         default:
-            throw InvalidConfigurationException(
+            throw InvalidValueGeneratorSyntax(
                 "Unknown generator type in RandomIntGenerator in switch statement");
             break;
     }
-    throw InvalidConfigurationException(
+    throw InvalidValueGeneratorSyntax(
         "Reached end of RandomIntGenerator::generateInt. Should have returned earlier");
 }
 std::string RandomIntGenerator::generateString() {

@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
@@ -17,8 +31,10 @@
 #include <loki/ScopeGuard.h>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/MetricsReporter.hpp>
 #include <gennylib/context.hpp>
+
+#include <metrics/MetricsReporter.hpp>
+#include <metrics/metrics.hpp>
 
 #include "DefaultDriver.hpp"
 
@@ -80,6 +96,11 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
 
     auto workloadContext =
         WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, globalCast()};
+
+    if (options.isDryRun) {
+        std::cout << "Workload context constructed without errors." << std::endl;
+        return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
+    }
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
@@ -172,6 +193,9 @@ genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** ar
             "Show help message")
         ("list-actors",
             "List all actors available for use")
+        ("dry-run",
+            "Exit before the run step---"
+            "this may still make network connections during workload initialization")
         ("metrics-format,m",
              po::value<std::string>()->default_value("csv"),
              "Metrics format to use")
@@ -208,6 +232,7 @@ genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** ar
 
     this->isHelp = vm.count("help") >= 1;
     this->shouldListActors = vm.count("list-actors") >= 1;
+    this->isDryRun = vm.count("dry-run") >= 1;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();

@@ -6,7 +6,7 @@ Actors:
     Threads: 2
     Phases:
     - Message: Hello Phase 0 🐳
-      Duration: 50
+      Duration: 50 milliseconds
     - Message: Hello Phase 1 👬
       Repeat: 100
   - Name: InsertTest
@@ -15,6 +15,6 @@ Actors:
     Database: "test"
     Phases:
       - Collection: "inserts"
-        Document: {"a": {$randomint: {min: 50, max: 60}}}
+        Document: {"a": {^RandomInt: {min: 50, max: 60}}}
       - Collection: "inserts"
-        Document: {"b": {$randomstring: {length: {$randomint: {min: 5, max: 15}}, alphabet: abcde}}}
+        Document: {"b": {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}, alphabet: abcde}}}

@@ -1,13 +1,31 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "ActorHelper.hpp"
 #include "test.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
 #include <cast_core/actors/RunCommand.hpp>
 #include <gennylib/MongoException.hpp>
+
+#include <mongocxx/read_preference.hpp>
 
 #include "MongoTestFixture.hpp"
 
@@ -15,6 +33,7 @@ namespace genny {
 namespace {
 
 using namespace genny::testing;
+namespace BasicBson = bsoncxx::builder::basic;
 namespace bson_stream = bsoncxx::builder::stream;
 
 const auto dropAdminTestCollConfig = YAML::Load(R"(
@@ -72,6 +91,107 @@ TEST_CASE_METHOD(MongoTestFixture,
         // runCommandHelper did not throw exception.
         REQUIRE(has_exception);
     }
+}
+
+TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three_node_replset]") {
+
+    auto makeConfig = []() {
+        return YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Name: TestInsertWriteConcern
+              Type: RunCommand
+              Threads: 1
+              Phases:
+              - Repeat: 1
+                Operation:
+                    OperationName: RunCommand
+                    OperationCommand:
+                        insert:
+                        documents: [{name: myName}]
+                        writeConcern: {wtimeout: 5000}
+
+        )");
+    };
+
+    auto makeFindOp = [](mongocxx::read_preference::read_mode readPreference, int timeout) {
+        mongocxx::options::find opts;
+        mongocxx::read_preference preference;
+
+        preference.mode(readPreference);
+        opts.read_preference(preference).max_time(std::chrono::milliseconds(timeout));
+
+        return opts;
+    };
+
+    constexpr auto readTimeout = 6000;
+
+    SECTION("verify write concern to secondaries") {
+        constexpr auto dbStr = "test";
+        constexpr auto collectionStr = "testCollection";
+
+        auto session = MongoTestFixture::client.start_session();
+
+        auto yamlConfig = makeConfig();
+
+        [&](YAML::Node yamlPhase) {
+            yamlPhase["Database"] = dbStr;
+            yamlPhase["Operation"]["OperationCommand"]["insert"] = collectionStr;
+            yamlPhase["Operation"]["OperationCommand"]["writeConcern"]["w"] = 3;
+        }(yamlConfig["Actors"][0]["Phases"][0]);
+
+        ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string());
+        ah.run();
+
+        auto coll = MongoTestFixture::client["test"]["testCollection"];
+
+        mongocxx::options::find opts =
+            makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
+
+        auto result = static_cast<bool>(coll.find_one(
+            session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts));
+
+        REQUIRE(result);
+    }
+
+
+    // TODO: Once better repl support comes in, pause replication for this test case. With
+    // replication paused, we want to test that reads to secondaries will fail on primary write
+    // concerns. Without the paused replication, the test currently is a bit flaky. Refer to
+    // jstests/libs/write_concern_util.js in the main mongo repo for pausing replication.
+    //
+    // SECTION("verify write concern to primary only") {
+    //     constexpr auto dbStr = "test";
+    //     constexpr auto collectionStr = "testOtherCollection";
+    //
+    //     auto yamlConfig = makeConfig();
+    //
+    //     [&](YAML::Node yamlPhase) {
+    //         yamlPhase["Database"] = dbStr;
+    //         yamlPhase["Operation"]["OperationCommand"]["insert"] = collectionStr;
+    //         yamlPhase["Operation"]["OperationCommand"]["writeConcern"]["w"] = 1;
+    //     }(yamlConfig["Actors"][0]["Phases"][0]);
+    //
+    //     ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string());
+    //
+    //     ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
+    //
+    //     auto session = MongoTestFixture::client.start_session();
+    //     auto coll = MongoTestFixture::client["test"]["testOtherCollection"];
+    //
+    //     mongocxx::options::find opts_primary =
+    //     makeFindOp(mongocxx::read_preference::read_mode::k_primary, readTimeout);
+    //     mongocxx::options::find opts_secondary =
+    //     makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
+    //
+    //     bool result_secondary = (bool) coll.find_one(session,
+    //     BasicBson::make_document(BasicBson::kvp("name", "myName")), opts_secondary);
+    //     REQUIRE(!result_secondary);
+    //
+    //     bool result_primary = (bool) coll.find_one(session,
+    //     BasicBson::make_document(BasicBson::kvp("name", "myName")), opts_primary);
+    //     REQUIRE(result_primary);
+    // }
 }
 
 // Don't run in a sharded cluster to avoid 'CannotImplicitlyCreateCollection' exceptions. These do
@@ -170,8 +290,8 @@ TEST_CASE_METHOD(MongoTestFixture,
                   OperationName: RunCommand
                   OperationCommand:
                     findAndModify: testCollection
-                    query: {rating: {$randomint: {min: 1, max: 4}}}
-                    update: {$set: {rating: {$randomint: {min: 5, max: 10}}}}
+                    query: {rating: {^RandomInt: {min: 1, max: 4}}}
+                    update: {$set: {rating: {^RandomInt: {min: 5, max: 10}}}}
                     upsert: true
         )");
         auto builder = bson_stream::document{};
@@ -362,7 +482,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                 - OperationName: RunCommand
                   OperationCommand:
                     insert: testCollection
-                    documents: [{rating: {$randomint: {min: 1, max: 5}}, name: y}, {rating: 10, name: x}]
+                    documents: [{rating: {^RandomInt: {min: 1, max: 5}}, name: y}, {rating: 10, name: x}]
         )");
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;

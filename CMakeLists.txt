@@ -14,6 +14,12 @@ include(Options)
 include(CheckCompiler)
 include(ConfigureInstall)
 
+if(${GENNY_BUILD_FLAT})
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib CACHE PATH "")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/bin CACHE PATH "")
+endif()
+
 find_package(Threads REQUIRED)
 
 # Grab OpenSSL right away
@@ -49,25 +55,10 @@ find_package(
 )
 # </Boost>
 
-# <Mongo Driver>
-find_package(libmongocxx REQUIRED)
-# </Mongo Driver>
-
 # Required CMAKE options
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS                OFF     CACHE BOOL "")
 set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
-
-# These libraries are almost ubiquitously required in genny
-# The AFTER tag means that our headers are considered before headers in the same folder as these
-# dependencies
-include_directories(AFTER
-    ${LIBMONGOCXX_INCLUDE_DIRS}
-)
-link_libraries(
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${LIBMONGOCXX_LIBRARIES}
-)
 
 enable_testing()
 add_subdirectory(src)

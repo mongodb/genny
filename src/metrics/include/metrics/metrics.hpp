@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
@@ -9,6 +23,7 @@
 #include <vector>
 
 #include <boost/core/noncopyable.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace genny::metrics {
 
@@ -212,27 +227,41 @@ private:
 class OperationImpl {
 
 public:
-    OperationImpl(TimerImpl& timer, CounterImpl& iters, CounterImpl& docs, CounterImpl& bytes)
-        : _timer{std::addressof(timer)},
+    OperationImpl(const std::string& name,
+                  TimerImpl& timer,
+                  CounterImpl& iters,
+                  CounterImpl& docs,
+                  CounterImpl& bytes)
+        : _opName{name},
+          _timer{std::addressof(timer)},
           _iters{std::addressof(iters)},
           _docs{std::addressof(docs)},
           _bytes{std::addressof(bytes)} {}
+
+    /**
+     * Operation name getter to help with exception reporting.
+     */
+    const std::string& getOpName() const {
+        return _opName;
+    }
+
 
     void report(const time_point& started) {
         this->_timer->report(started);
         this->_iters->reportValue(1);
     }
 
-    void setBytes(const count_type& size) {
-        this->_bytes->reportValue(size);
+    void reportBytes(const count_type& total) {
+        this->_bytes->reportValue(total);
     }
 
-    void setOps(const count_type& size) {
-        this->_docs->reportValue(size);
+    void reportOps(const count_type& total) {
+        this->_docs->reportValue(total);
     }
 
 
 private:
+    const std::string _opName;
     TimerImpl* _timer;
     CounterImpl* _iters;
     CounterImpl* _docs;
@@ -442,31 +471,52 @@ public:
         : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
 
     ~OperationContext() {
+        if (!_isClosed) {
+            BOOST_LOG_TRIVIAL(warning)
+                << "Metrics not reported because operation '" << this->_op->getOpName()
+                << "' did not close with success() or fail().";
+        }
+    }
+
+    void addBytes(const count_type& size) {
+        _totalBytes += size;
+    }
+
+    void addOps(const count_type& size) {
+        _totalOps += size;
+    }
+
+    void success() {
         this->report();
+        _isClosed = true;
     }
 
-    void setBytes(const count_type& size) {
-        this->_op->setBytes(size);
-    }
-
-    void setOps(const count_type& size) {
-        this->_op->setOps(size);
+    /**
+     * An operation does not report metrics upon failure.
+     */
+    void fail() {
+        _isClosed = true;
     }
 
 private:
     void report() {
         this->_op->report(_started);
+        this->_op->reportBytes(_totalBytes);
+        this->_op->reportOps(_totalOps);
     }
 
     V1::OperationImpl* _op;
     const time_point _started;
+    count_type _totalBytes = 0;
+    count_type _totalOps = 0;
+    bool _isClosed = false;
 };
 
 
 class Operation {
 
 public:
-    explicit Operation(V1::OperationImpl op) : _op{op} {}
+    explicit Operation(V1::OperationImpl op) : _op{std::move(op)} {}
 
     OperationContext start() {
         return OperationContext(this->_op);
@@ -516,7 +566,8 @@ public:
         return Gauge{this->_gauges[name]};
     }
     Operation operation(const std::string& name) {
-        auto op = V1::OperationImpl(this->_timers[name + "_timer"],
+        auto op = V1::OperationImpl(name,
+                                    this->_timers[name + "_timer"],
                                     this->_counters[name + "_iters"],
                                     this->_counters[name + "_docs"],
                                     this->_counters[name + "_bytes"]);

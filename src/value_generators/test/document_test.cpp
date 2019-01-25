@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "test.h"
 
 #include <bsoncxx/builder/basic/array.hpp>
@@ -9,10 +23,11 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/types/value.hpp>
 
-#include "../src/value_generators/generators-private.hh"
-#include "../src/value_generators/parser.hh"
-#include <gennylib/DefaultRandom.hpp>
-#include <gennylib/value_generators.hpp>
+#include "../src/generators-private.hh"
+#include "../src/parser.hh"
+
+#include <value_generators/DefaultRandom.hpp>
+#include <value_generators/value_generators.hpp>
 
 using namespace genny::value_generators;
 using bsoncxx::builder::stream::close_document;
@@ -54,7 +69,7 @@ TEST_CASE("Documents are created", "[documents]") {
         auto doc = makeDoc(YAML::Load(R"yaml(
         x :
           y : b
-        z : {$randomint: {min: 50, max: 60}}
+        z : {^RandomInt: {min: 50, max: 60}}
     )yaml"),
                            rng);
         // Test that the document is an override document, and gives the right values.
@@ -65,7 +80,7 @@ TEST_CASE("Documents are created", "[documents]") {
     }
     SECTION("DefaultRandom string") {
         auto doc = makeDoc(YAML::Load(R"yaml(
-      string: {$randomstring: {length : 15}}
+      string: {^RandomString: {length : 15}}
     )yaml"),
                            rng);
 

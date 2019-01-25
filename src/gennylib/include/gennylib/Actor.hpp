@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #ifndef HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 #define HEADER_00818641_6D7B_4A3D_AFC6_38CC0DBAD99B_INCLUDED
 
@@ -46,10 +60,20 @@ class Actor {
 
 
 public:
-    Actor(ActorContext& context);
-    virtual ~Actor() = default;
+    /**
+     * Construct an Actor.
+     *
+     * @param context source for configs. The top-level config has `Actors: [{Type: Foo}]`.
+     * The ActorContext exposes each of the `{Type: Foo}` maps.
+     */
+    explicit Actor(ActorContext& context);
 
     /**
+     * Destruct an Actor.
+     */
+    virtual ~Actor() = default;
+
+    /*
      * A consistent compilation-unit unique name for this actor.
      * This name is mostly intended for metrics and logging purposes.
      */
@@ -61,6 +85,11 @@ public:
      */
     virtual void run() = 0;
 
+    /**
+     * @return the id for the Actor. Each Actor should
+     * have a unique id. This is used for metrics reporting and other purposes.
+     * This is obtained from `WorkloadContext.nextActorId()` (see `Actor.cpp`)
+     */
     virtual ActorId id() const {
         return _id;
     }

@@ -1,3 +1,17 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #pragma once
 
 #include <map>
@@ -13,17 +27,20 @@ namespace genny {
 /**
  * A cast is a map of strings to shared ActorProducer instances.
  *
+ * (Actors belong to a cast. So it's a cast of actors. Get it??)
+ *
  * This class is how one conveys to a driver/workload context which ActorProducers are available.
  * There will always be a global singleton cast available via getCast(). For limited applications
  * and testing, one can make local Cast instances that behave in an identical fashion.
  *
  * To easily register a default ActorProducer to the global Cast, one can use the following in
  * a source file:
- * ```
+ *
+ * ```c++
  * auto registerMyActor = genny::Cast::registerDefault<MyActorT>();
  * ```
  * The function makes a specialization of DefaultActorProducer and hands it to the
- * Cast::Registration struct along with the `defaultName()` of MyActorT. When that struct
+ * `Cast::Registration` struct along with the `defaultName()` of MyActorT. When that struct
  * initializes, it adds its producer to the map in cast. More complex ActorProducers
  * can be registered by following this same pattern.
  *
@@ -44,7 +61,7 @@ public:
     using List = std::initializer_list<Cast::ActorProducerMap::value_type>;
 
 public:
-    Cast() {}
+    explicit Cast() {}
     Cast(List init) {
         for (const auto& [name, producer] : init) {
             add(name, producer);
