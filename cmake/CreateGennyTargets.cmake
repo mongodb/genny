@@ -45,22 +45,25 @@
 # -   Installs the library to the `GennyLibraryConfig` export
 #
 function(CreateGennyTargets)
-    set(options)
     set(oneValueArgs NAME TYPE EXECUTABLE)
     set(multiValueArgs DEPENDS TEST_DEPENDS)
-    cmake_parse_arguments(CGT "${options}" "${oneValueArgs}"
-            "${multiValueArgs}" ${ARGN})
+    cmake_parse_arguments(CGT # prefix
+        "" # boolean options; we have none
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
 
-    ## business-logic to compute linkage based on TYPE=_gs_type
+    ## business-logic to compute linkage based on TYPE=CGT_TYPE
 
     # normally we want
     #   target_include_directories(name PUBLIC ...)
     # for both SHARED and STATIC types
     # but for type INTERFACE we want
     #   target_include_directories(name INTERFACE ...)
-    set(_gs_include_type "PUBLIC")
+    set(CGT_INCLUDE_TYPE "PUBLIC")
     if(CGT_TYPE MATCHES "^INTERFACE$")
-        set(_gs_include_type "INTERFACE")
+        set(CGT_INCLUDE_TYPE "INTERFACE")
     endif()
 
     # set _gs_private_src "PRIVATE;src" (list)
@@ -105,14 +108,14 @@ function(CreateGennyTargets)
     add_library("${CGT_NAME}" "${CGT_TYPE}" ${_gs_files_src})
 
     target_include_directories("${CGT_NAME}"
-        "${_gs_include_type}"
+        "${CGT_INCLUDE_TYPE}"
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
          ${_gs_private_src}
     )
 
     target_link_libraries("${CGT_NAME}"
-        "${_gs_include_type}"
+        "${CGT_INCLUDE_TYPE}"
             ${CGT_DEPENDS}
     )
 
