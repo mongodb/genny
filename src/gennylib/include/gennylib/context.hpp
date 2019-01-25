@@ -445,7 +445,8 @@ public:
         if (isNop && _node.size() > 1) {
             if (_node.size() != 2 || !_node["Phase"]) {
                 throw InvalidConfigurationException(
-                        "Nop cannot be used with any other keywords except Phase. Check YML configuration.");
+                    "'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
+                    "configuration.");
             }
         }
 

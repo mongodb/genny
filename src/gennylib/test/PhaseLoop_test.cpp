@@ -377,7 +377,7 @@ TEST_CASE("Actual Actor Example") {
             ([&]() {
                 ActorHelper ah(config, 1, {{"Nop", genny::actor::NopActor::producer()}});
             }()),
-            Catch::Matches("Nop cannot be used with any other keywords except Phase. Check YML "
+            Catch::Matches("'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
                            "configuration."));
     }
 }
