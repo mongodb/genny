@@ -19,7 +19,7 @@
 #include <condition_variable>
 #include <shared_mutex>
 
-#include <gennylib/metrics.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 

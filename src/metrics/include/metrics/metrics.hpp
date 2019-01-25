@@ -516,7 +516,7 @@ private:
 class Operation {
 
 public:
-    explicit Operation(V1::OperationImpl op) : _op{op} {}
+    explicit Operation(V1::OperationImpl op) : _op{std::move(op)} {}
 
     OperationContext start() {
         return OperationContext(this->_op);

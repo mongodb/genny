@@ -18,6 +18,7 @@
 #include <mongocxx/client_session.hpp>
 
 #include <gennylib/PhaseLoop.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny::actor {
 

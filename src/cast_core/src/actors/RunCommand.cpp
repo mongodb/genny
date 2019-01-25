@@ -31,7 +31,7 @@
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/v1/RateLimiter.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace {
 
@@ -178,7 +178,7 @@ struct actor::RunCommand::PhaseConfig {
                 genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 ActorId id)
-        : strategy{actorContext, id, "RunCommand"},
+        : strategy{actorContext.operation("RunCommand", id)},
           options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
@@ -204,7 +204,7 @@ void actor::RunCommand::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
             config->strategy.run(
-                [&]() {
+                [&](metrics::OperationContext& ctx) {
                     for (auto&& op : config->operations) {
                         op->run();
                     }

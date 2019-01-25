@@ -16,9 +16,10 @@
 #define HEADER_D112CCC3_DF60_434E_A038_5A7AADED0E46
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+#include <metrics/metrics.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 

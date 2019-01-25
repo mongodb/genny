@@ -15,10 +15,12 @@
 #ifndef HEADER_1E8F3397_B82B_4814_9BB1_6C6D2E046E3A
 #define HEADER_1E8F3397_B82B_4814_9BB1_6C6D2E046E3A
 
+
 #include <gennylib/Actor.hpp>
-#include <gennylib/DefaultRandom.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+#include <metrics/metrics.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 

@@ -26,7 +26,7 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
-#include <gennylib/value_generators.hpp>
+#include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 

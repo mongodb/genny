@@ -15,14 +15,13 @@
 #ifndef HEADER_0BE8D22D_E93B_48FE_BC5A_CFFF2E05D861
 #define HEADER_0BE8D22D_E93B_48FE_BC5A_CFFF2E05D861
 
-#include <mongocxx/exception/operation_exception.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <loki/ScopeGuard.h>
 
-#include <gennylib/Actor.hpp>
-#include <gennylib/MongoException.hpp>
 #include <gennylib/config/ExecutionStrategyOptions.hpp>
-#include <gennylib/metrics.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 
@@ -32,11 +31,11 @@ class ActorContext;
  * A small wrapper for running Mongo commands and recording metrics.
  *
  * This class is intended to make it painless and safe to run mongo commands that may throw
- * operation_exceptions. It maintains a timer for successful operations, an always-updated genny
- * gauge for failed operations, and an amortized guage for all operation. The ExecutionStrategy also
- * allows the user to specify a maximum number of retries for failed operations. Note that failed
- * operations do not throw -- It is the user's responsibility to check `lastResult()` when different
- * behavior is desired for failed operations.
+ * boost exceptions.
+ *
+ * The ExecutionStrategy also allows the user to specify a maximum number of retries for failed
+ * operations. Note that failed operations do not throw -- It is the user's responsibility to check
+ * `lastResult()` when different behavior is desired for failed operations.
  */
 class ExecutionStrategy {
 public:
@@ -48,8 +47,8 @@ public:
     using RunOptions = config::ExecutionStrategyOptions;
 
 public:
-    ExecutionStrategy(ActorContext& context, ActorId id, const std::string& operation);
-    ~ExecutionStrategy();
+    explicit ExecutionStrategy(metrics::Operation op) : _op{std::move(op)} {}
+    ~ExecutionStrategy() = default;
 
     /*
      * Either get a set of options at the specified path in the config,
@@ -71,19 +70,18 @@ public:
 
         bool shouldContinue = true;
         while (shouldContinue) {
+            auto ctx = _op.start();
             try {
-                auto timer = _timer.start();
-                ++_ops;
                 ++result.numAttempts;
 
-                fun();
+                fun(ctx);
 
-                timer.report();
-
+                ctx.success();
                 result.wasSuccessful = true;
                 shouldContinue = false;
             } catch (const boost::exception& e) {
-                _recordError(e);
+                BOOST_LOG_TRIVIAL(debug) << "Caught error: " << boost::diagnostic_information(e);
+                ctx.fail();
 
                 // We should continue if we've attempted less than the amount of retries plus one
                 // for the original attempt
@@ -99,34 +97,15 @@ public:
         }
     }
 
-    // This function takes the existing counter metrics recorded in this class, and adds them into
-    // the metrics namespace timeseries. This may be desired in specific edge cases or at the end of
-    // each phase. This will always be called when the ExecutionStrategy is dtor'd.
-    void recordMetrics();
-
-    size_t errors() const {
-        return _errors;
-    }
     const Result& lastResult() const {
         return _lastResult;
     }
 
 private:
-    void _recordError(const boost::exception& e);
     void _finishRun(const RunOptions& options, Result result);
 
+    metrics::Operation _op;
     Result _lastResult;
-
-    // The total number of times that the execution function has not succeeded.
-    size_t _errors = 0;
-    metrics::Gauge _errorGauge;
-
-    // The total number of times that the execution function has been invoked.
-    size_t _ops = 0;
-    metrics::Gauge _opsGauge;
-
-    // The time series of execution function starts and _successful_ stops.
-    metrics::Timer _timer;
 };
 }  // namespace genny
 

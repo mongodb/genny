@@ -55,7 +55,7 @@ buildvariants:
   run_on:
   - archlinux-test
   tasks:
-  - name: t_test
+  - name: tg_compile_and_test
   - name: t_push
 
 - name: amazon2
@@ -66,8 +66,9 @@ buildvariants:
   expansions:
     cmake: "/opt/cmake/bin/cmake"
     toolchain: "/opt/mongodbtoolchain/v3/bin"
+    mongodb_archive_url: "https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz"
   tasks:
-  - name: t_compile
+  - name: tg_compile_and_test_with_server
   - name: t_push
 
 - name: rhel70
@@ -104,7 +105,7 @@ buildvariants:
 #     cmake: "/Applications/CMake.app/Contents/bin/cmake"
 #     toolchain: "/Applications/Xcode10.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
 #   tasks:
-#   - name: t_test
+#   - name: tg_compile_and_test
 
 
 ##                ⚡️ Tasks ⚡️
@@ -182,7 +183,8 @@ tasks:
 ##                ⚡️ Task Groups ⚡️
 
 task_groups:
-- name: t_test
+- &a_compile_and_test
+  name: tg_compile_and_test
   max_hosts: 1
   setup_task:
   - func: f_remove_test_results_files
@@ -197,6 +199,13 @@ task_groups:
   # dependency, causing unexpected behavior.
   #
   # For this task group, the implicit dependency is that t_*_test has to run after t_compile.
+  - t_compile
+  - t_python_test
+  - t_cmake_test
+
+- <<: *a_compile_and_test
+  name: tg_compile_and_test_with_server
+  tasks:
   - t_compile
   - t_mongo_server
   - t_python_test
@@ -221,17 +230,20 @@ functions:
   # that contains the intended gennylib test case (SERVER-38646). Also installs resmoke dependencies.
   ##
   f_checkout_mongodb:
-  - command: shell.exec
-    params:
-      working_dir: src
-      script: |
-        pacman --noconfirm -Sy mongodb
   - command: subprocess.exec
     params:
       working_dir: src
       binary: /bin/bash
       args:
         - "${workdir}/src/scripts/get-mongo-source.sh"
+  - command: shell.exec
+    params:
+      working_dir: src/build/mongo
+      shell: /bin/bash
+      script: |
+        set -euo pipefail
+        curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
+        tar --strip-components=1 -zxvf mongodb.tgz
 
   ##
   # Archive an installed library into a tarball and upload it with revision suffix
@@ -404,7 +416,7 @@ functions:
         set -o pipefail
         set -o nounset
 
-        python setup.py nosetests
+        python3 setup.py nosetests
 
   ##
   # Reports test results to evergreen API. If you add a new file to this list, then you should also
