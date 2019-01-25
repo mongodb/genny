@@ -1,0 +1,43 @@
+SchemaVersion: 2018-07-01
+
+Actors:
+- Name: BulkWriteInTransaction
+  Type: CrudActor
+  Database:
+  Type: CrudActor
+  Database: testdb
+  ExecutionStrategy:
+    ThrowOnFailure: true
+  Phases:
+  - Repeat: 1
+    Collection: test
+    Operations:
+    - OperationName: startTransaction
+      OperationCommand:
+        Options:
+          WriteConcern:
+            Level: majority
+            Journal: true
+          ReadConcern:
+            Level: snapshot
+          ReadPreference:
+            ReadMode: primaryPreferred
+            MaxStalenessSeconds: 1000
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: { a: 1 }
+        - WriteCommand: updateOne
+          Filter: { a: 1 }
+          Update: { $set: { a: 5 } }
+        Options:
+          Ordered: true
+          WriteConcern:
+            Level: majority
+        OnSession: true
+    - OperationName: commitTransaction
+  - Repeat: 1
+    Collection: test
+    Operation:
+      OperationName: drop
