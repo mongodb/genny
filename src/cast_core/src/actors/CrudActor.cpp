@@ -20,6 +20,7 @@
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
 using DocGenerator = genny::value_generators::DocumentGenerator;
+using UDocGenerator = std::unique_ptr<DocGenerator>;
 
 namespace YAML {
 
@@ -332,9 +333,9 @@ struct convert<mongocxx::options::transaction> {
 };
 }  // namespace YAML
 
-namespace genny::actor {
-
 namespace {
+
+using namespace genny;
 
 struct BaseOperation {
     virtual void run(mongocxx::client_session& session) = 0;
@@ -386,7 +387,7 @@ struct InsertOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    std::unique_ptr<DocGenerator> _docTemplate;
+    UDocGenerator _docTemplate;
     metrics::Operation _operation;
     mongocxx::options::insert _options;
 };
@@ -437,8 +438,8 @@ struct UpdateOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    std::unique_ptr<DocGenerator> _filterTemplate;
-    std::unique_ptr<DocGenerator> _updateTemplate;
+    UDocGenerator _filterTemplate;
+    UDocGenerator _updateTemplate;
     metrics::Operation _operation;
     mongocxx::options::update _options;
 };
@@ -489,8 +490,8 @@ struct UpdateManyOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    std::unique_ptr<DocGenerator> _filterTemplate;
-    std::unique_ptr<DocGenerator> _updateTemplate;
+    UDocGenerator _filterTemplate;
+    UDocGenerator _updateTemplate;
     metrics::Operation _operation;
     mongocxx::options::update _options;
 };
@@ -531,7 +532,7 @@ struct DeleteOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    std::unique_ptr<DocGenerator> _filterTemplate;
+    UDocGenerator _filterTemplate;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
 };
@@ -572,7 +573,7 @@ struct DeleteManyOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    std::unique_ptr<DocGenerator> _filterTemplate;
+    UDocGenerator _filterTemplate;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
 };
@@ -623,74 +624,29 @@ struct ReplaceOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    std::unique_ptr<DocGenerator> _filterTemplate;
-    std::unique_ptr<DocGenerator> _replacementTemplate;
+    UDocGenerator _filterTemplate;
+    UDocGenerator _replacementTemplate;
     metrics::Operation _operation;
     mongocxx::options::replace _options;
 };
 
-WriteOpCallback createInsertOne =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<WriteOperation> {
-    return std::make_unique<InsertOneOperation>(opNode, onSession, collection, rng, operation);
-};
-
-WriteOpCallback createUpdateOne =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<WriteOperation> {
-    return std::make_unique<UpdateOneOperation>(opNode, onSession, collection, rng, operation);
-};
-
-WriteOpCallback createDeleteOne =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<WriteOperation> {
-    return std::make_unique<DeleteOneOperation>(opNode, onSession, collection, rng, operation);
-};
-
-WriteOpCallback createDeleteMany =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<WriteOperation> {
-    return std::make_unique<DeleteManyOperation>(opNode, onSession, collection, rng, operation);
-};
-
-WriteOpCallback createReplaceOne =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<WriteOperation> {
-    return std::make_unique<ReplaceOneOperation>(opNode, onSession, collection, rng, operation);
-};
-
-WriteOpCallback createUpdateMany =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<WriteOperation> {
-    return std::make_unique<UpdateManyOperation>(opNode, onSession, collection, rng, operation);
+template <class P, class C, class O>
+C baseCallback = [](YAML::Node opNode,
+                    bool onSession,
+                    mongocxx::collection collection,
+                    genny::DefaultRandom& rng,
+                    metrics::Operation operation) -> std::unique_ptr<P> {
+    return std::make_unique<O>(opNode, onSession, collection, rng, operation);
 };
 
 // Maps the WriteCommand name to the constructor of the designated Operation struct.
 std::unordered_map<std::string, WriteOpCallback&> bulkWriteConstructors = {
-    {"insertOne", createInsertOne},
-    {"updateOne", createUpdateOne},
-    {"deleteOne", createDeleteOne},
-    {"deleteMany", createDeleteMany},
-    {"replaceOne", createReplaceOne},
-    {"updateMany", createUpdateMany}};
+    {"insertOne", baseCallback<WriteOperation, WriteOpCallback, InsertOneOperation>},
+    {"updateOne", baseCallback<WriteOperation, WriteOpCallback, UpdateOneOperation>},
+    {"deleteOne", baseCallback<WriteOperation, WriteOpCallback, DeleteOneOperation>},
+    {"deleteMany", baseCallback<WriteOperation, WriteOpCallback, DeleteManyOperation>},
+    {"replaceOne", baseCallback<WriteOperation, WriteOpCallback, ReplaceOneOperation>},
+    {"updateMany", baseCallback<WriteOperation, WriteOpCallback, UpdateManyOperation>}};
 
 /**
  * Example usage:
@@ -736,7 +692,7 @@ struct BulkWriteOperation : public BaseOperation {
         auto writeOpConstructor = bulkWriteConstructors.find(writeCommand);
         if (writeOpConstructor == bulkWriteConstructors.end()) {
             throw InvalidConfigurationException("WriteCommand '" + writeCommand +
-                                                "' not supported in bulkWrite perations.");
+                                                "' not supported in bulkWrite operations.");
         }
         auto createWriteOp = writeOpConstructor->second;
         _writeOps.push_back(createWriteOp(writeOp, _onSession, _collection, rng, _operation));
@@ -805,7 +761,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::count _options;
-    std::unique_ptr<DocGenerator> _filterTemplate;
+    UDocGenerator _filterTemplate;
     metrics::Operation _operation;
 };
 
@@ -844,7 +800,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::find _options;
-    std::unique_ptr<DocGenerator> _filterTemplate;
+    UDocGenerator _filterTemplate;
     metrics::Operation _operation;
 };
 
@@ -894,7 +850,7 @@ private:
     std::vector<bsoncxx::document::value> _writeOps;
     mongocxx::options::insert _options;
     metrics::Operation _operation;
-    std::vector<std::unique_ptr<DocGenerator>> _docTemplates;
+    std::vector<UDocGenerator> _docTemplates;
 };
 
 /**
@@ -928,11 +884,7 @@ struct StartTransactionOperation : public BaseOperation {
     }
 
     void run(mongocxx::client_session& session) override {
-        try {
-            session.start_transaction(_options);
-        } catch (mongocxx::operation_exception& exception) {
-            throw;
-        }
+        session.start_transaction(_options);
     }
 
 private:
@@ -1035,140 +987,25 @@ private:
     mongocxx::write_concern _wc;
 };
 
-OpCallback createBulkWrite = [](YAML::Node opNode,
-                                bool onSession,
-                                mongocxx::collection collection,
-                                genny::DefaultRandom& rng,
-                                metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<BulkWriteOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createCount = [](YAML::Node opNode,
-                            bool onSession,
-                            mongocxx::collection collection,
-                            genny::DefaultRandom& rng,
-                            metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<CountOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createFind = [](YAML::Node opNode,
-                           bool onSession,
-                           mongocxx::collection collection,
-                           genny::DefaultRandom& rng,
-                           metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<FindOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createInsertMany = [](YAML::Node opNode,
-                                 bool onSession,
-                                 mongocxx::collection collection,
-                                 genny::DefaultRandom& rng,
-                                 metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<InsertManyOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createInsertOneOp = [](YAML::Node opNode,
-                                  bool onSession,
-                                  mongocxx::collection collection,
-                                  genny::DefaultRandom& rng,
-                                  metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<InsertOneOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createUpdateOneOp = [](YAML::Node opNode,
-                                  bool onSession,
-                                  mongocxx::collection collection,
-                                  genny::DefaultRandom& rng,
-                                  metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<UpdateOneOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createUpdateManyOp = [](YAML::Node opNode,
-                                   bool onSession,
-                                   mongocxx::collection collection,
-                                   genny::DefaultRandom& rng,
-                                   metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<UpdateManyOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createDeleteOneOp = [](YAML::Node opNode,
-                                  bool onSession,
-                                  mongocxx::collection collection,
-                                  genny::DefaultRandom& rng,
-                                  metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<DeleteOneOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createDeleteManyOp = [](YAML::Node opNode,
-                                   bool onSession,
-                                   mongocxx::collection collection,
-                                   genny::DefaultRandom& rng,
-                                   metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<DeleteManyOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createReplaceOneOp = [](YAML::Node opNode,
-                                   bool onSession,
-                                   mongocxx::collection collection,
-                                   genny::DefaultRandom& rng,
-                                   metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<ReplaceOneOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createStartTransaction =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<StartTransactionOperation>(
-        opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createCommitTransaction =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<CommitTransactionOperation>(
-        opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createSetReadConcern =
-    [](YAML::Node opNode,
-       bool onSession,
-       mongocxx::collection collection,
-       genny::DefaultRandom& rng,
-       metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<SetReadConcernOperation>(opNode, onSession, collection, rng, operation);
-};
-
-OpCallback createDrop = [](YAML::Node opNode,
-                           bool onSession,
-                           mongocxx::collection collection,
-                           genny::DefaultRandom& rng,
-                           metrics::Operation operation) -> std::unique_ptr<BaseOperation> {
-    return std::make_unique<DropOperation>(opNode, onSession, collection, rng, operation);
-};
-
 // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
 std::unordered_map<std::string, OpCallback&> opConstructors = {
-    {"bulkWrite", createBulkWrite},
-    {"count", createCount},
-    {"find", createFind},
-    {"insertMany", createInsertMany},
-    {"startTransaction", createStartTransaction},
-    {"commitTransaction", createCommitTransaction},
-    {"setReadConcern", createSetReadConcern},
-    {"drop", createDrop},
-    {"insertOne", createInsertOneOp},
-    {"deleteOne", createDeleteOneOp},
-    {"deleteMany", createDeleteManyOp},
-    {"updateOne", createUpdateOneOp},
-    {"updateMany", createUpdateManyOp},
-    {"replaceOne", createReplaceOneOp}};
+    {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
+    {"count", baseCallback<BaseOperation, OpCallback, CountOperation>},
+    {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
+    {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
+    {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
+    {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
+    {"setReadConcern", baseCallback<BaseOperation, OpCallback, SetReadConcernOperation>},
+    {"drop", baseCallback<BaseOperation, OpCallback, DropOperation>},
+    {"insertOne", baseCallback<BaseOperation, OpCallback, InsertOneOperation>},
+    {"deleteOne", baseCallback<BaseOperation, OpCallback, DeleteOneOperation>},
+    {"deleteMany", baseCallback<BaseOperation, OpCallback, DeleteManyOperation>},
+    {"updateOne", baseCallback<BaseOperation, OpCallback, UpdateOneOperation>},
+    {"updateMany", baseCallback<BaseOperation, OpCallback, UpdateManyOperation>},
+    {"replaceOne", baseCallback<BaseOperation, OpCallback, ReplaceOneOperation>}};
 };  // namespace
+
+namespace genny::actor {
 
 struct CrudActor::PhaseConfig {
     mongocxx::collection collection;
@@ -1200,7 +1037,6 @@ struct CrudActor::PhaseConfig {
                                                     "' not supported in Crud Actor.");
             }
             auto createOperation = op->second;
-            std::vector<std::pair<std::string, std::unique_ptr<DocGenerator>>> docs;
             return createOperation(
                 yamlCommand, onSession, collection, rng, actorContext.operation(opName, id));
         };

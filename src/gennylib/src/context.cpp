@@ -60,7 +60,7 @@ WorkloadContext::WorkloadContext(
 
     _clientPool = poolFactory.makePool();
 
-    // TODO: Remove hasApmOpts when CDRIVER-2931 is resolved.
+    // TODO: Remove hasApmOpts when TIG-1396 is resolved.
     _hasApmOpts = bool{apmCallback};
 
     // Make a bunch of actor contexts
@@ -103,7 +103,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
 
 mongocxx::pool::entry WorkloadContext::client() {
     if (_hasApmOpts) {
-        // TODO: Remove this conditional when CDRIVER-2931 is resolved.
+        // TODO: Remove this conditional when TIG-1396 is resolved.
         return _clientPool->acquire();
     }
     auto entry = _clientPool->try_acquire();

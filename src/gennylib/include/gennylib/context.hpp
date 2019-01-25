@@ -201,8 +201,7 @@ private:
     std::atomic<ActorId> _nextActorId{0};
 
     // A flag representing the presence of application performance monitoring options used for
-    // testing. This can be removed once CDRIVER-2931 is resolved as apm options are currently not
-    // compatible with `try_acquire()`.
+    // testing. This can be removed once TIG-1396 is resolved.
     bool _hasApmOpts;
 };
 
