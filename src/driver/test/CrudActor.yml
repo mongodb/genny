@@ -7,7 +7,7 @@ Actors:
   ExecutionStrategy:
     ThrowOnFailure: true
   Phases:
-  - Repeat: 1
+  - Repeat: 10
     Collection: test
     Operations:
     - OperationName: bulkWrite
@@ -17,8 +17,22 @@ Actors:
           Document: { a: 1 }
         - WriteCommand: updateOne
           Filter: { a: 1 }
-          Update: { $set: { a: 5 } }
+          Update: { $set: { a: {^RandomInt: {min: 5, max: 15} } } }
           Options:
             WriteConcern:
               Level: majority
               TimeoutMillis: 5000
+    - OperationName: insertMany
+      OperationCommand:
+        Documents:
+        - { a: 1 }
+        - { a : {^RandomString: {length: {^RandomInt: {min: 3, max: 5} }}} }
+        - { b : {^RandomInt: {min: 5, max: 15} } }
+  - Repeat: 1
+    Collection: test
+    Operation:
+      OperationName: drop
+      OperationCommand:
+        Options:
+          WriteConcern:
+            Level: majority

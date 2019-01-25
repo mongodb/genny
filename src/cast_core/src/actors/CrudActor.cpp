@@ -871,15 +871,17 @@ struct InsertManyOperation : public BaseOperation {
                 "'insertMany' expects a 'Documents' field of sequence type.");
         }
         for (auto&& document : documents) {
-            auto doc = value_generators::makeDoc(document, rng);
-            bsoncxx::builder::stream::document docTemplate{};
-            doc->view(docTemplate);
-            _writeOps.push_back(docTemplate.extract());
+            _docTemplates.push_back(std::move(value_generators::makeDoc(document, rng)));
         }
         // TODO: parse insert options.
     }
 
     void run(mongocxx::client_session& session) override {
+        for (auto&& docTemplate : _docTemplates) {
+            bsoncxx::builder::stream::document doc{};
+            docTemplate->view(doc);
+            _writeOps.push_back(doc.extract());
+        }
         auto ctx = _operation.start();
         (_onSession) ? _collection.insert_many(session, _writeOps, _options)
                      : _collection.insert_many(_writeOps, _options);
@@ -892,6 +894,7 @@ private:
     std::vector<bsoncxx::document::value> _writeOps;
     mongocxx::options::insert _options;
     metrics::Operation _operation;
+    std::vector<std::unique_ptr<DocGenerator>> _docTemplates;
 };
 
 /**
