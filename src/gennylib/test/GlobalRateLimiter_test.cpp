@@ -174,13 +174,13 @@ SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: IncActor
-  Threads: 1500
+  Threads: 1000
   Phases:
     - Duration: 5 seconds
-      Rate: 1 per 10 nanoseconds
+      Rate: 1 per 1 microsecond
 )");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
-        int num_threads = 1500;
+        int num_threads = 1000;
 
         genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
         auto getCurState = []() {
@@ -189,10 +189,15 @@ Actors:
 
         ah.run();
 
-        // Result is greater than the expected output of 5sec * 10k per second.
+        int64_t expected = 5 * 1000 * 1000;
+        // Result is at least 90% of the expected value. There's some uncertainty
+        // due to manually induced jitter of up to 1us per op.
+        REQUIRE(getCurState() > expected * 0.90);
 
-        // Commented out for CI testing. I got about 12M ops/s on my 2.8GHz Haswell CPU.
-        // REQUIRE(getCurState() > 5 * 1000 * 1000 * 100);
+        // Result is at most 110% of the expected value. There's some
+        REQUIRE(getCurState() < expected * 1.10);
+
+        // Print out the result if both REQUIRE pass.
         BOOST_LOG_TRIVIAL(info) << getCurState();
     }
 }
