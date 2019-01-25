@@ -87,6 +87,11 @@ public:
             phaseContext.get<std::string, false>("RateLimiterName").value_or("defaultRateLimiter");
 
         if (rateSpec) {
+            if (!_doesBlock) {
+                throw InvalidConfigurationException(
+                    "Rate must be specified alongside either Duration or Repeat, otherwise there's "
+                    "no guarantee the rate limited operation will run in the correct phase");
+            }
             _rateLimiter =
                 phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
         }
@@ -97,7 +102,9 @@ public:
         return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
-    void limitRate(const int64_t currentIteration, const Orchestrator& o, const PhaseNumber inPhase) const {
+    void limitRate(const int64_t currentIteration,
+                   const Orchestrator& o,
+                   const PhaseNumber inPhase) const {
         // This function is called after each iteration, so we never rate limit the
         // first iteration. This means the number of completed operations is always
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
@@ -111,7 +118,8 @@ public:
                     // based on the number of actors using this rate limiter.
                     //
                     // Add up to 1µs of jitter to avoid threads from waking up at once.
-                    std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate() + (std::rand() % 1000)));
+                    std::this_thread::sleep_for(
+                        std::chrono::nanoseconds(_rateLimiter->getRate() + std::rand() % 1000));
                     continue;
                 }
                 break;

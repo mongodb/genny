@@ -49,6 +49,8 @@ template <typename DummyT>
 int64_t DummyClock<DummyT>::nowRaw = 0;
 
 namespace {
+using Catch::Matchers::Matches;
+
 TEST_CASE("Dummy Clock") {
     struct DummyTemplateValue {};
     using MyDummyClock = DummyClock<DummyTemplateValue>;
@@ -128,6 +130,25 @@ TEST_CASE("Global rate limiter can be used by phase loop") {
         PhaseLoop<PhaseConfig> _loop;
     };
 
+    SECTION("Fail if no Repeat or Duration") {
+        YAML::Node config = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: IncActor
+  Threads: 1
+  Phases:
+    - Rate: 5 per 4 seconds
+)");
+        auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
+        int num_threads = 2;
+
+        auto fun = [&]() {
+            genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+        };
+        REQUIRE_THROWS_WITH(fun(), Matches(R"(.*alongside either Duration or Repeat.*)"));
+    }
+
     // The rate interval needs to be large enough to avoid sporadic failures, which makes
     // this test take longer. It therefore has the "[slow]" label.
     SECTION("Prevents execution when the rate is exceeded", "[slow]") {
@@ -193,8 +214,9 @@ Actors:
         // due to manually induced jitter of up to 1us per op.
         REQUIRE(getCurState() > expected * 0.90);
 
-        // Result is at most 110% of the expected value. There's some
-        REQUIRE(getCurState() < expected * 1.10);
+        // Result is at most 140% of the expected value. The phase loop can run for
+        // longer if there's a large number of threads.
+        REQUIRE(getCurState() < expected * 1.40);
 
         // Print out the result if both REQUIRE pass.
         BOOST_LOG_TRIVIAL(info) << getCurState();
