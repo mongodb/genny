@@ -74,7 +74,6 @@ public:
      * @param removeTokens how many "tokens" should be removed.
      * @see awaitPhaseStart()
      *
-     * @example
      * ```c++
      * while (orchestrator.morePhases()) {
      *     auto phase = orchestrator.awaitPhaseStart();

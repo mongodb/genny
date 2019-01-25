@@ -90,11 +90,14 @@ private:
     double mean;  // for poisson
 };
 
-
+/**
+ * Generates random strings.
+ * @private
+ */
 class FastRandomStringGenerator : public ValueGenerator {
 public:
     FastRandomStringGenerator(const YAML::Node&, genny::DefaultRandom&);
-    virtual bsoncxx::array::value generate() override;
+    bsoncxx::array::value generate() override;
 
 private:
     // default alphabet
@@ -106,11 +109,15 @@ private:
     IntOrValue length;
 };
 
-
+/**
+ * A fast random string generator.
+ *
+ * @private
+ */
 class RandomStringGenerator : public ValueGenerator {
 public:
     RandomStringGenerator(YAML::Node&, genny::DefaultRandom&);
-    virtual bsoncxx::array::value generate() override;
+    bsoncxx::array::value generate() override;
 
 private:
     // default alphabet
@@ -126,12 +133,13 @@ private:
 class BsonDocument : public DocumentGenerator {
 public:
     BsonDocument();
-    BsonDocument(const YAML::Node);
+    explicit BsonDocument(YAML::Node);
 
     void setDoc(bsoncxx::document::value value) {
         doc = value;
     }
-    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&) override;
+
+    bsoncxx::document::view view(bsoncxx::builder::stream::document&) override;
 
 private:
     std::optional<bsoncxx::document::value> doc;
@@ -139,9 +147,8 @@ private:
 
 class TemplateDocument : public DocumentGenerator {
 public:
-    TemplateDocument();
-    TemplateDocument(const YAML::Node, genny::DefaultRandom&);
-    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document&) override;
+    TemplateDocument(YAML::Node, genny::DefaultRandom&);
+    bsoncxx::document::view view(bsoncxx::builder::stream::document&) override;
 
 protected:
     // The document to override
@@ -149,7 +156,7 @@ protected:
     std::unordered_map<std::string, std::unique_ptr<ValueGenerator>> override;
 
 private:
-    // apply the overides, one level at a time
+    // apply the overrides, one level at a time
     void applyOverrideLevel(bsoncxx::builder::stream::document&,
                             bsoncxx::document::view,
                             std::string);

@@ -28,23 +28,38 @@ namespace genny::actor {
  */
 class HelloWorld : public genny::Actor {
 
+    /**
+     * Example of shared state.
+     * @see genny::WorkloadContext::ShareableState
+     */
     struct HelloWorldCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
 public:
+    /**
+     * Construct a HelloWorld.
+     * @param context represents the `Actor` block.
+     */
     explicit HelloWorld(ActorContext& context);
-    ~HelloWorld() = default;
 
+    /** Destruct */
+    ~HelloWorld() override = default;
+
+    /** @return name to use for metrics etc. */
     static std::string_view defaultName() {
         return "HelloWorld";
     }
+
     void run() override;
 
 private:
+    /** record data about each iteration */
     metrics::Operation _operation;
 
+    /** constructed from each `Phase:` block in the `Actor:` block */
     struct PhaseConfig;
+    /** loops over each Phase and handles Duration/Repeat/Rate */
     PhaseLoop<PhaseConfig> _loop;
-
+    /** example of sharing data. @see HelloWorldCounter */
     HelloWorldCounter& _hwCounter;
 };
 

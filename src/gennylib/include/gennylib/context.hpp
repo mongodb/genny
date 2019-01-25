@@ -409,7 +409,7 @@ private:
      * Apply metrics names conventions based on configuration.
      *
      * @param operation base name of a metrics object e.g. "inserts"
-     * @param thread the thread number of the Actor owning the object.
+     * @param id the id of the Actor owning the object.
      * @return the fully-qualified metrics name e.g. "MyActor.0.inserts".
      */
     std::string metricsName(const std::string& operation, ActorId id) const {
@@ -443,8 +443,11 @@ public:
 
         // Check to make sure we haven't broken our rules
         if (isNop && _node.size() > 1) {
-            throw InvalidConfigurationException(
-                "Nop cannot be used with any other keywords. Check YML configuration.");
+            if (_node.size() != 2 || !_node["Phase"]) {
+                throw InvalidConfigurationException(
+                    "'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
+                    "configuration.");
+            }
         }
 
         return isNop;

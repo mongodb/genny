@@ -16,6 +16,7 @@
 #include <iostream>
 #include <optional>
 
+#include "NopActor.hpp"
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <testlib/ActorHelper.hpp>
@@ -331,7 +332,8 @@ TEST_CASE("Actual Actor Example") {
             Actors:
             - Type: Inc
               Phases:
-              - Operation:
+              - Phase: 0
+                Operation:
                   OperationName: Nop
               - Repeat: 10
                 Key: 71
@@ -354,5 +356,25 @@ TEST_CASE("Actual Actor Example") {
                 std::unordered_map<int, int>{
                     {72, 10},  // keys & vals came from yaml config. Keys have a +1 offset.
                     {94, 3}});
+    }
+
+    SECTION("Throws with other keywords in Nop phases") {
+        // This is how a Nop command should be specified.
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Nop
+              Phases:
+              - Phase: 0
+                Operation:
+                  OperationName: Nop
+                Duration: 7 minutes
+        )");
+        REQUIRE_THROWS_WITH(
+            ([&]() {
+                ActorHelper ah(config, 1, {{"Nop", genny::actor::NopActor::producer()}});
+            }()),
+            Catch::Matches("'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
+                           "configuration."));
     }
 }

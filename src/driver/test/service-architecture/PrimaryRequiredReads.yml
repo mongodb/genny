@@ -17,7 +17,7 @@ Actors:
         Retries: 0
         ThrowOnFailure: false
     Phases:
-      - # Phase: 0 # Load
+      - Phase: 0 # Load
         NoOp: true
       - Phase: 1 # Run
         Repeat: 1
@@ -41,7 +41,7 @@ Actors:
         ThrowOnFailure: false
     Database: test
     Phases:
-      - # Phase: 0 # Load
+      - Phase: 0 # Load
         NoOp: true
       - Phase: 1 # Run
         Duration: 180 seconds
@@ -67,5 +67,5 @@ Actors:
       - keys: {t: 1}
     Phases:
       - Phase: 0 # Load
-      - # Phase: 1 # Run
+      - Phase: 1 # Run
         NoOp: true

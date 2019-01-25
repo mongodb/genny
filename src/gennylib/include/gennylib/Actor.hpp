@@ -60,10 +60,20 @@ class Actor {
 
 
 public:
-    Actor(ActorContext& context);
-    virtual ~Actor() = default;
+    /**
+     * Construct an Actor.
+     *
+     * @param context source for configs. The top-level config has `Actors: [{Type: Foo}]`.
+     * The ActorContext exposes each of the `{Type: Foo}` maps.
+     */
+    explicit Actor(ActorContext& context);
 
     /**
+     * Destruct an Actor.
+     */
+    virtual ~Actor() = default;
+
+    /*
      * A consistent compilation-unit unique name for this actor.
      * This name is mostly intended for metrics and logging purposes.
      */
@@ -75,6 +85,11 @@ public:
      */
     virtual void run() = 0;
 
+    /**
+     * @return the id for the Actor. Each Actor should
+     * have a unique id. This is used for metrics reporting and other purposes.
+     * This is obtained from `WorkloadContext.nextActorId()` (see `Actor.cpp`)
+     */
     virtual ActorId id() const {
         return _id;
     }

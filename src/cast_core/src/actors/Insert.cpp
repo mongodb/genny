@@ -47,23 +47,23 @@ void Insert::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
             _strategy.run(
-                [&]() {
+                [&](metrics::OperationContext& ctx) {
                     bsoncxx::builder::stream::document mydoc{};
                     auto view = config->json_document->view(mydoc);
                     BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(view);
                     config->collection.insert_one(view);
+                    ctx.addOps(1);
+                    ctx.addBytes(view.length());
                 },
                 config->options);
         }
-
-        _strategy.recordMetrics();
     }
 }
 
 Insert::Insert(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _strategy{context, Insert::id(), "insert"},
+      _strategy{context.operation("insert", Insert::id())},
       _client{std::move(context.client())},
       _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
 

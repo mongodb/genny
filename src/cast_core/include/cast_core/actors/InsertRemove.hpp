@@ -37,7 +37,7 @@ class InsertRemove : public Actor {
 
 public:
     explicit InsertRemove(ActorContext& context);
-    ~InsertRemove() = default;
+    ~InsertRemove() override = default;
 
     static std::string_view defaultName() {
         return "InsertRemove";
@@ -51,6 +51,7 @@ private:
     ExecutionStrategy _removeStrategy;
     mongocxx::pool::entry _client;
 
+    /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
 };
