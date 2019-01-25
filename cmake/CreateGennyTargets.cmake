@@ -91,14 +91,14 @@ function(CreateGennyTargets)
     # remove main.cpp, it must be added via EXECUTABLE
     list(REMOVE_ITEM CGT_FILES_SRC "src/main.cpp")
 
-    # _gs_tests_src = test/*.cpp
-    file(GLOB_RECURSE _gs_tests_src
+    # CGT_TESTS_SRC = test/*.cpp
+    file(GLOB_RECURSE CGT_TESTS_SRC
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
          CONFIGURE_DEPENDS
          test/*.cpp)
 
-    # _gs_benchmark_src = benchmark/*.cpp
-    file(GLOB_RECURSE _gs_benchmarks_src
+    # CGT_BENCHMARKS_SRC = benchmark/*.cpp
+    file(GLOB_RECURSE CGT_BENCHMARKS_SRC
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
          CONFIGURE_DEPENDS
          benchmark/*.cpp)
@@ -143,9 +143,9 @@ function(CreateGennyTargets)
 
     ## regular test
 
-    if (_gs_tests_src) # if any tests
+    if (CGT_TESTS_SRC) # if any tests
         add_executable("${CGT_NAME}_test"
-            ${_gs_tests_src}
+            ${CGT_TESTS_SRC}
         )
         target_link_libraries("${CGT_NAME}_test"
             "${CGT_NAME}"
@@ -156,9 +156,9 @@ function(CreateGennyTargets)
 
     ## benchmark test
 
-    if(_gs_benchmarks_src) # if any benchmark files
+    if(CGT_BENCHMARKS_SRC) # if any benchmark files
         add_executable("${CGT_NAME}_benchmark"
-            ${_gs_benchmarks_src}
+            ${CGT_BENCHMARKS_SRC}
         )
         target_link_libraries("${CGT_NAME}_benchmark"
             "${CGT_NAME}"
