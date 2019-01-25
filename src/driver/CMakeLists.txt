@@ -14,39 +14,16 @@
 
 project(driver VERSION 0.0.1 LANGUAGES CXX)
 
-# Define an underlying core compilation unit
-add_library(driver STATIC
-    src/DefaultDriver.cpp
+CreateGennyTargets(
+    NAME    driver
+    TYPE    STATIC
+    DEPENDS
+        cast_core
+        gennylib
+        Boost::program_options
+    TEST_DEPENDS    testlib
+    EXECUTABLE      genny
 )
-target_include_directories(driver
-    PUBLIC
-        src
-)
-target_link_libraries(driver
-    cast_core
-    gennylib
-
-    Boost::program_options
-)
-
-# Make the genny driver executable
-add_executable(genny src/main.cpp)
-target_link_libraries(genny driver)
-install(TARGETS  genny
-        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-# Define our test for the driver
-add_executable(test_driver
-    test/Driver_test.cpp
-    $<TARGET_OBJECTS:catch2>
-)
-target_include_directories(test_driver
-    PRIVATE
-        src
-)
-target_link_libraries(test_driver driver gennylib_testutil)
-
-ParseAndAddCatchTests(test_driver)
 
 # Install all the workload documents
 install(DIRECTORY test/

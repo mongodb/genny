@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
-#include "ActorHelper.hpp"
-
 #include <iostream>
 
 #include <boost/log/trivial.hpp>
@@ -32,6 +28,9 @@
 #include <gennylib/MongoException.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+#include <testlib/ActorHelper.hpp>
+
+#include <testlib/helpers.hpp>
 
 namespace Catchers = Catch::Matchers;
 

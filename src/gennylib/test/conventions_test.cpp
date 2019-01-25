@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <chrono>
 #include <cmath>
 
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/conventions.hpp>
+#include <testlib/MongoTestFixture.hpp>
+
+#include <testlib/helpers.hpp>
+
 
 namespace genny {
 namespace {

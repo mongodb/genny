@@ -24,7 +24,7 @@
 
 #include <gennylib/version.hpp>
 
-#include "DefaultDriver.hpp"
+#include <driver/DefaultDriver.hpp>
 
 
 int main(int argc, char** argv) {

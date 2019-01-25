@@ -41,10 +41,10 @@ create_header_text() {
     echo "#include <mongocxx/pool.hpp>"
     echo ""
     echo "#include <gennylib/Actor.hpp>"
-    echo "#include <gennylib/DefaultRandom.hpp>"
     echo "#include <gennylib/ExecutionStrategy.hpp>"
     echo "#include <gennylib/PhaseLoop.hpp>"
     echo "#include <gennylib/context.hpp>"
+    echo "#include <value_generators/DefaultRandom.hpp>"
     echo ""
     echo "namespace genny::actor {"
     echo ""
@@ -103,20 +103,17 @@ create_impl_text() {
     echo ""
     echo "#include <yaml-cpp/yaml.h>"
     echo ""
+    echo "#include <bsoncxx/json.hpp>"
     echo "#include <mongocxx/client.hpp>"
     echo "#include <mongocxx/collection.hpp>"
     echo "#include <mongocxx/database.hpp>"
     echo ""
     echo "#include <boost/log/trivial.hpp>"
     echo ""
-    echo "#include <bsoncxx/json.hpp>"
     echo "#include <gennylib/Cast.hpp>"
     echo "#include <gennylib/context.hpp>"
-    echo "#include <gennylib/value_generators.hpp>"
-    echo "#include <boost/log/trivial.hpp>"
-    echo ""
-    echo "#include <gennylib/value_generators.hpp>"
     echo "#include <gennylib/ExecutionStrategy.hpp>"
+    echo "#include <value_generators/value_generators.hpp>"
     echo ""
     echo ""
     echo "namespace genny::actor {"
@@ -201,7 +198,7 @@ Actors:
     Retries: 7 # used by ExecutionStrategy
     # below used by PhaseConfig in ${actor_name}.cpp
     Collection: test
-    Document: {foo: {\$randomint: {min: 0, max: 100}}}
+    Document: {foo: {^RandomInt: {Min: 0, Max: 100}}}
 EOF
 }
 
@@ -209,7 +206,7 @@ create_test() {
     local actor_name
     actor_name="$1"
 
-    cat << EOF > "$(dirname "$0")/../src/gennylib/test/${actor_name}_test.cpp"
+    cat << EOF > "$(dirname "$0")/../src/cast_core/test/${actor_name}_test.cpp"
 // Copyright ${year}-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -224,8 +221,6 @@ create_test() {
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 
@@ -233,8 +228,9 @@ create_test() {
 
 #include <yaml-cpp/yaml.h>
 
-#include <MongoTestFixture.hpp>
-#include <ActorHelper.hpp>
+#include <testlib/MongoTestFixture.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 #include <gennylib/context.hpp>
 
@@ -259,7 +255,7 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
           Phases:
           - Repeat: 100
             Collection: mycoll
-            Document: {foo: {\$randomint: {min: 0, max: 100}}}
+            Document: {foo: {^RandomInt: {Min: 0, Max: 100}}}
     )");
 
 
@@ -287,36 +283,6 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
 EOF
 }
 
-recreate_cast_core_cmake_file() {
-    local uuid_tag
-    local actor_name
-    local cmake_file
-    uuid_tag="$1"
-    actor_name="$2"
-    cmake_file="$(dirname "$0")/../src/cast_core/CMakeLists.txt"
-
-    < "$cmake_file" \
-    perl -pe "s|((\\s+)# ActorsEnd)|\$2src/actors/${actor_name}.cpp\\n\$1|" \
-    > "$$.cmake.txt"
-
-    mv "$$.cmake.txt" "$cmake_file"
-}
-
-recreate_gennylib_cmake_file() {
-    local uuid_tag
-    local actor_name
-    local cmake_file
-    uuid="$1"
-    actor_name="$2"
-    cmake_file="$(dirname "$0")/../src/gennylib/CMakeLists.txt"
-
-    < "$cmake_file" \
-    perl -pe "s|((\\s+)# ActorsTestEnd)|\$2test/${actor_name}_test.cpp\\n\$1|" \
-    > "$$.cmake.txt"
-
-    mv "$$.cmake.txt" "$cmake_file"
-}
-
 if [[ "$#" != 1 ]]; then
     usage
     exit 1
@@ -336,9 +302,7 @@ uuid_tag="$("$(dirname "$0")/generate-uuid-tag.sh")"
 
 create_header                "$uuid_tag" "$actor_name"
 create_impl                  "$uuid_tag" "$actor_name"
-recreate_cast_core_cmake_file "$uuid_tag" "$actor_name"
 create_test                  "$actor_name"
-recreate_gennylib_cmake_file "$uuid_tag" "$actor_name"
 create_workload_yml          "$actor_name"
 
 echo "Successfully generated Actor skeleton for ${actor_name}:"
@@ -350,7 +314,7 @@ echo ""
 echo "    cd build"
 echo "    cmake .."
 echo "    make -j8"
-echo "    ./src/gennylib/test_gennylib_with_server '[${actor_name}]'"
+echo "    ./src/cast_core/cast_core_test '[${actor_name}]'"
 echo "    make test"
 echo ""
 echo "Run your workload as follows:"

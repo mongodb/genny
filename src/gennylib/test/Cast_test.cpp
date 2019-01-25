@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
+#include <testlib/MongoTestFixture.hpp>
+
+#include <testlib/helpers.hpp>
 
 #include <gennylib/context.hpp>
-#include <log.hh>
 #include <metrics/metrics.hpp>
 
 using namespace genny;

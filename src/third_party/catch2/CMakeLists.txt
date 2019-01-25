@@ -1,20 +1,21 @@
-# For more info on interface libraries,
-# see https://cmake.org/cmake/help/v3.10/command/add_library.html#object-libraries
-add_library(catch2_headers INTERFACE)
-target_include_directories(catch2_headers
-    INTERFACE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+# Copyright 2019-present MongoDB Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+project(catch2 VERSION 0.0.1 LANGUAGES CXX)
+
+CreateGennyTargets(
+    NAME    catch2
+    TYPE    SHARED
 )
 
-# For more info on object libraries,
-# see https://cmake.org/cmake/help/v3.10/command/add_library.html#object-libraries
-add_library(catch2 OBJECT ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-target_include_directories(catch2
-    PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
-)
-
-include(ParseAndAddCatchTests.cmake)
-set(AdditionalCatchParameters --reporter junit --durations yes --rng-seed 12345 --success)

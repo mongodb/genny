@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/core.hpp>
@@ -25,6 +23,9 @@
 
 #include "../src/generators-private.hh"
 #include "../src/parser.hh"
+
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/value_generators.hpp>

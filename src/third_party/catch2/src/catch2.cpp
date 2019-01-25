@@ -12,11 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gennylib/version.hpp>
-#include <testlib/ActorHelper.hpp>
-
-#include <testlib/helpers.hpp>
-
-TEST_CASE("We have the right version") {
-    REQUIRE(genny::getVersion() == "0.0.1");
-}
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch2.hpp>

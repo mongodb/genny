@@ -1,5 +1,3 @@
-#include "test.h"
-
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
@@ -9,8 +7,9 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <ActorHelper.hpp>
-#include <MongoTestFixture.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/MongoTestFixture.hpp>
+#include <testlib/helpers.hpp>
 
 #include <gennylib/context.hpp>
 

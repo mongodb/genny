@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "MongoTestFixture.hpp"
+#include <testlib/MongoTestFixture.hpp>
 
 #include <cstdint>
 #include <string_view>
 
-#include <mongocxx/uri.hpp>
+#include <boost/log/trivial.hpp>
 
-#include <log.hh>
+#include <mongocxx/uri.hpp>
 
 namespace genny::testing {
 

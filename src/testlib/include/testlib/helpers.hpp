@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gennylib/version.hpp>
-#include <testlib/ActorHelper.hpp>
+#ifndef HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED
+#define HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED
 
-#include <testlib/helpers.hpp>
+#include <catch2/catch2.hpp>
 
-TEST_CASE("We have the right version") {
-    REQUIRE(genny::getVersion() == "0.0.1");
-}
+#endif  // HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED

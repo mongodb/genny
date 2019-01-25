@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ActorHelper.hpp"
-#include "test.h"
-
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <bsoncxx/builder/basic/document.hpp>
@@ -24,10 +21,12 @@
 
 #include <cast_core/actors/RunCommand.hpp>
 #include <gennylib/MongoException.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/MongoTestFixture.hpp>
+
+#include <testlib/helpers.hpp>
 
 #include <mongocxx/read_preference.hpp>
-
-#include "MongoTestFixture.hpp"
 
 namespace genny {
 namespace {

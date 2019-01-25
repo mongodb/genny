@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
@@ -21,7 +19,8 @@
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
 
-#include "MongoTestFixture.hpp"
+#include <testlib/MongoTestFixture.hpp>
+#include <testlib/helpers.hpp>
 
 namespace {
 

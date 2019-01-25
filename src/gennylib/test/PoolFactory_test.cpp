@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "test.h"
-
 #include <iostream>
-
-#include <gennylib/PoolFactory.hpp>
 
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
+
+#include <gennylib/PoolFactory.hpp>
+
+#include <testlib/helpers.hpp>
+
 
 namespace Catchers = Catch::Matchers;
 
