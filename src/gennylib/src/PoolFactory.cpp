@@ -177,7 +177,10 @@ struct PoolFactory::Config {
     };
 };
 
-PoolFactory::PoolFactory(std::string_view rawUri) : _config(std::make_unique<Config>(rawUri)) {}
+PoolFactory::PoolFactory(
+    std::string_view rawUri,
+    std::function<void(const mongocxx::events::command_started_event&)> apmCallback)
+    : _config(std::make_unique<Config>(rawUri)), _apmCallback{apmCallback} {}
 PoolFactory::~PoolFactory() {}
 
 std::string PoolFactory::makeUri() const {
@@ -206,9 +209,9 @@ mongocxx::options::pool PoolFactory::makeOptions() const {
         BOOST_LOG_TRIVIAL(debug) << "Using PEM Key file '" << pemKeyFile << "' for SSL/TLS";
         sslOptions = sslOptions.pem_file(pemKeyFile.data());
     }
-
     return mongocxx::options::client{}.ssl_opts(sslOptions);
 }
+
 std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto uriStr = makeUri();
     BOOST_LOG_TRIVIAL(info) << "Constructing pool with MongoURI '" << uriStr << "'";
@@ -216,13 +219,23 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto uri = mongocxx::uri{uriStr};
 
     auto poolOptions = mongocxx::options::pool{};
+
     auto useSsl = _config->getFlag(OptionType::kQueryOption, "ssl");
     if (useSsl) {
         poolOptions = makeOptions();
         BOOST_LOG_TRIVIAL(debug) << "Adding ssl options to pool...";
     }
 
-    return std::make_unique<mongocxx::pool>(uri, poolOptions);
+    // option::client can be implicitly coverted into option::pool. This is to be able to set the
+    // apm options for testing.
+    auto clientOpts = mongocxx::options::client{poolOptions.client_opts()};
+    if (_apmCallback) {
+        mongocxx::options::apm apmOptions;
+        apmOptions.on_command_started(_apmCallback);
+        clientOpts.apm_opts(apmOptions);
+    }
+
+    return std::make_unique<mongocxx::pool>(uri, clientOpts);
 }
 
 void PoolFactory::setOption(OptionType type, const std::string& option, std::string value) {

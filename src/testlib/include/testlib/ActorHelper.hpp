@@ -35,6 +35,7 @@ namespace genny {
 class ActorHelper {
 public:
     using FuncWithContext = std::function<void(const WorkloadContext&)>;
+    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
 
     /**
      * Construct an ActorHelper with a cast.
@@ -43,19 +44,22 @@ public:
      * @param tokenCount The total number of simultaneous threads ("tokens" in
      * Orchestrator lingo) required by all actors.
      * @param l initializer list for a Cast.
-     * @param connStr optional, connection string to the mongo cluster.
+     * @param uri optional, connection string to the mongo cluster.
+     * @param clientOpts optional, options to the mongocxx::client.
      */
     ActorHelper(const YAML::Node& config,
                 int tokenCount,
                 Cast::List castInitializer,
-                const std::string& uri = mongocxx::uri::k_default_uri);
+                const std::string& uri = mongocxx::uri::k_default_uri,
+                ApmCallback apmCallback = ApmCallback());
 
     /**
      * Construct an ActorHelper with the global cast.
      */
     ActorHelper(const YAML::Node& config,
                 int tokenCount,
-                const std::string& uri = mongocxx::uri::k_default_uri);
+                const std::string& uri = mongocxx::uri::k_default_uri,
+                ApmCallback apmCallback = ApmCallback());
 
     void run(FuncWithContext&& runnerFunc);
 
