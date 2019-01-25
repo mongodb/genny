@@ -62,6 +62,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
     dropAllDatabases();
     auto db = client.database("mydb");
+    db.create_collection("test");
 
     YAML::Node config = YAML::Load(R"(
       SchemaVersion: 2018-07-01
@@ -105,6 +106,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
     dropAllDatabases();
     auto db = client.database("mydb");
+    db.create_collection("test");
 
     SECTION("Inserts and updates document in the database.") {
         YAML::Node config = YAML::Load(R"(
@@ -401,6 +403,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     SessionTest test;
     auto db = client.database("mydb");
     test.clearEvents();
+    db.create_collection("test");
 
     SECTION("Write concern majority with timeout.") {
         YAML::Node config = YAML::Load(R"(
@@ -631,6 +634,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     SessionTest test;
     test.clearEvents();
     auto db = client.database("mydb");
+    db.create_collection("test");
 
     SECTION("Read preference is 'secondaryPreferred'.") {
         YAML::Node config = YAML::Load(R"(
@@ -782,6 +786,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
     dropAllDatabases();
     auto db = client.database("mydb");
+    db.create_collection("test");
 
     YAML::Node config = YAML::Load(R"(
       SchemaVersion: 2018-07-01
@@ -830,6 +835,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     dropAllDatabases();
     test.clearEvents();
     auto db = client.database("mydb");
+    db.create_collection("test");
 
     SECTION("The 'test' collection is dropped.") {
         YAML::Node config = YAML::Load(R"(
@@ -847,7 +853,6 @@ TEST_CASE_METHOD(MongoTestFixture,
                 OperationName: drop
           )");
         try {
-            db.create_collection("test");
             REQUIRE(db.has_collection("test"));
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
@@ -879,7 +884,6 @@ TEST_CASE_METHOD(MongoTestFixture,
                      Level: majority
           )");
         try {
-            db.create_collection("test");
             REQUIRE(db.has_collection("test"));
             genny::ActorHelper ah(
                 config, 1, MongoTestFixture::connectionUri().to_string(), test.callback);
@@ -905,6 +909,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     dropAllDatabases();
     test.clearEvents();
     auto db = client.database("mydb");
+    db.create_collection("test");
 
     SECTION("Perform a count on the collection.") {
         YAML::Node config = YAML::Load(R"(
@@ -947,6 +952,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
     dropAllDatabases();
     auto db = client.database("mydb");
+    db.create_collection("test");
 
     SECTION("Insert a document into a collection.") {
         YAML::Node config = YAML::Load(R"(
