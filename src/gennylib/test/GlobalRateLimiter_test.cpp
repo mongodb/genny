@@ -167,6 +167,34 @@ Actors:
 
         REQUIRE(getCurState() == num_threads * 7);
     }
+
+    SECTION("Find max performance of rate limiter", "[benchmark]") {
+        YAML::Node config = YAML::Load(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: IncActor
+  Threads: 1500
+  Phases:
+    - Duration: 5 seconds
+      Rate: 1 per 10 nanoseconds
+)");
+        auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
+        int num_threads = 1500;
+
+        genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+        auto getCurState = []() {
+            return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().load();
+        };
+
+        ah.run();
+
+        // Result is greater than the expected output of 5sec * 10k per second.
+
+        // Commented out for CI testing. I got about 12M ops/s on my 2.8GHz Haswell CPU.
+        // REQUIRE(getCurState() > 5 * 1000 * 1000 * 100);
+        BOOST_LOG_TRIVIAL(info) << getCurState();
+    }
 }
 }  // namespace
 }  // namespace genny::testing

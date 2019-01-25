@@ -98,21 +98,25 @@ public:
         return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
-    void limitRate(const int64_t currentIteration, const Orchestrator& o, const PhaseNumber inPhase) {
+    void limitRate(const int64_t currentIteration,
+                   const Orchestrator& o,
+                   const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
         // first iteration. This means the number of completed operations is always
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
         // _burstSize. `m` here is the number of threads using the rate limiter.
         if (shouldLimitRate(currentIteration)) {
             while (true) {
-                auto success = _rateLimiter->consume();;
+                auto success = _rateLimiter->consume();
+                ;
                 if (!success && (o.currentPhase() == inPhase)) {
                     // Sleep for a little bit. This is not efficient if there's a large number of
                     // threads. If this is a problem, we can use exponential back off or wait
                     // based on the number of actors using this rate limiter.
                     //
                     // Add up to 10 microseconds of jitter to avoid threads waking up at once.
-                    std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate() + (_rng->nextValue() % 10000)));
+                    std::this_thread::sleep_for(std::chrono::nanoseconds(
+                        _rateLimiter->getRate() + (_rng->nextValue() % 10000)));
                     continue;
                 }
                 break;
