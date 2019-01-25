@@ -19,12 +19,17 @@
 
 namespace genny::config {
 
+/**
+ * Configuration for a `genny::ExecutionStrategy`.
+ */
 struct ExecutionStrategyOptions {
+    /** Default values for each key */
     struct Defaults {
         static constexpr auto kMaxRetries = size_t{0};
         static constexpr auto kThrowOnFailure = false;
     };
 
+    /** YAML keys to use */
     struct Keys {
         static constexpr auto kMaxRetries = "Retries";
         static constexpr auto kThrowOnFailure = "ThrowOnFailure";
@@ -38,6 +43,9 @@ struct ExecutionStrategyOptions {
 
 namespace YAML {
 
+/**
+ * Convert to/from `genny::config::ExecutionStrategyOptions` and YAML
+ */
 template <>
 struct convert<genny::config::ExecutionStrategyOptions> {
     using Config = genny::config::ExecutionStrategyOptions;

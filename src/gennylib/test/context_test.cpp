@@ -48,7 +48,7 @@ void errors(const string& yaml, string message, Args... args) {
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), {}};
+        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
         return context.get<Out>(std::forward<Args>(args)...);
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -63,7 +63,7 @@ void gives(const string& yaml, OutV expect, Args... args) {
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), {}};
+        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
         return context.get<Out, Required>(std::forward<Args>(args)...);
     };
     REQUIRE(test() == expect);
