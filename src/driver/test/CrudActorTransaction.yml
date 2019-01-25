@@ -20,7 +20,7 @@ Actors:
             Level: snapshot
           ReadPreference:
             ReadMode: primaryPreferred
-            MaxStalenessSeconds: 1000 seconds
+            MaxStaleness: 1000 seconds
     - OperationName: bulkWrite
       OperationCommand:
         WriteOperations:

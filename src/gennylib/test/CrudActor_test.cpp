@@ -367,7 +367,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Options:
                     WriteConcern:
                       Level: majority
-                      TimeoutMillis: 6000 milliseconds
+                      Timeout: 6000 milliseconds
           )");
         try {
             genny::ActorHelper ah(
@@ -426,7 +426,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                     Options:
                       WriteConcern:
                         Level: majority
-                        TimeoutMillis: 5000 milliseconds
+                        Timeout: 5000 milliseconds
             )");
         try {
             genny::ActorHelper ah(
@@ -472,7 +472,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Options:
                     WriteConcern:
                       Level: 1
-                      TimeoutMillis: 2500 milliseconds
+                      Timeout: 2500 milliseconds
                       Journal: true
           )");
         try {
@@ -522,7 +522,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                     Ordered: true
                     WriteConcern:
                       Level: 0
-                      TimeoutMillis: 3000 milliseconds
+                      Timeout: 3000 milliseconds
                       Journal: false
           )");
         try {
@@ -570,7 +570,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                     Update: { $set: { a: 5 } }
                   Options:
                     WriteConcern:
-                      TimeoutMillis: 3000 milliseconds
+                      Timeout: 3000 milliseconds
                       Journal: false
           )");
         try {
@@ -670,7 +670,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         }
     }
 
-    SECTION("Read preference is 'nearest' with MaxStalenessSeconds set.") {
+    SECTION("Read preference is 'nearest' with MaxStaleness set.") {
         YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01
           Actors:
@@ -689,7 +689,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Options:
                     ReadPreference:
                       ReadMode: nearest
-                      MaxStalenessSeconds: 100 seconds
+                      MaxStaleness: 100 seconds
           )");
         try {
             genny::ActorHelper ah(
@@ -731,7 +731,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Filter: { a : 1 }
                   Options:
                     ReadPreference:
-                      MaxStalenessSeconds: 100 seconds
+                      MaxStaleness: 100 seconds
           )");
         try {
             REQUIRE_THROWS_AS(

@@ -20,7 +20,7 @@
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
 using DocGenerator = genny::value_generators::DocumentGenerator;
-using UDocGenerator = std::unique_ptr<DocGenerator>;
+using UniqueDocGenerator = std::unique_ptr<DocGenerator>;
 
 namespace YAML {
 
@@ -44,7 +44,7 @@ struct convert<mongocxx::read_preference> {
         }
         auto maxStaleness = rhs.max_staleness();
         if (maxStaleness) {
-            node["MaxStalenessSeconds"] = genny::TimeSpec(*maxStaleness);
+            node["MaxStaleness"] = genny::TimeSpec(*maxStaleness);
         }
         return node;
     }
@@ -71,8 +71,8 @@ struct convert<mongocxx::read_preference> {
         } else {
             return false;
         }
-        if (node["MaxStalenessSeconds"]) {
-            auto maxStaleness = node["MaxStalenessSeconds"].as<genny::TimeSpec>();
+        if (node["MaxStaleness"]) {
+            auto maxStaleness = node["MaxStaleness"].as<genny::TimeSpec>();
             rhs.max_staleness(std::chrono::seconds{maxStaleness});
         }
         return true;
@@ -120,7 +120,7 @@ struct convert<mongocxx::write_concern> {
     using WriteConcern = mongocxx::write_concern;
     static Node encode(const WriteConcern& rhs) {
         Node node;
-        node["TimeoutMillis"] = genny::TimeSpec{rhs.timeout()};
+        node["Timeout"] = genny::TimeSpec{rhs.timeout()};
 
         auto journal = rhs.journal();
         node["Journal"] = journal;
@@ -158,8 +158,8 @@ struct convert<mongocxx::write_concern> {
                 return false;
             }
         }
-        if (node["TimeoutMillis"]) {
-            auto timeout = node["TimeoutMillis"].as<genny::TimeSpec>();
+        if (node["Timeout"]) {
+            auto timeout = node["Timeout"].as<genny::TimeSpec>();
             rhs.timeout(std::chrono::milliseconds{timeout});
         }
         if (node["Journal"]) {
@@ -274,7 +274,7 @@ struct convert<mongocxx::options::count> {
         }
         auto maxTime = rhs.max_time();
         if (maxTime) {
-            node["MaxTimeMillis"] = genny::TimeSpec(*maxTime);
+            node["MaxTime"] = genny::TimeSpec(*maxTime);
         }
         return node;
     }
@@ -292,8 +292,8 @@ struct convert<mongocxx::options::count> {
             auto limit = node["Limit"].as<int>();
             rhs.limit(limit);
         }
-        if (node["MaxTimeMillis"]) {
-            auto maxTime = node["MaxTimeMillis"].as<genny::TimeSpec>();
+        if (node["MaxTime"]) {
+            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
             rhs.max_time(std::chrono::milliseconds{maxTime});
         }
         if (node["ReadPreference"]) {
@@ -387,7 +387,7 @@ struct InsertOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UDocGenerator _docTemplate;
+    UniqueDocGenerator _docTemplate;
     metrics::Operation _operation;
     mongocxx::options::insert _options;
 };
@@ -438,8 +438,8 @@ struct UpdateOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UDocGenerator _filterTemplate;
-    UDocGenerator _updateTemplate;
+    UniqueDocGenerator _filterTemplate;
+    UniqueDocGenerator _updateTemplate;
     metrics::Operation _operation;
     mongocxx::options::update _options;
 };
@@ -490,8 +490,8 @@ struct UpdateManyOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UDocGenerator _filterTemplate;
-    UDocGenerator _updateTemplate;
+    UniqueDocGenerator _filterTemplate;
+    UniqueDocGenerator _updateTemplate;
     metrics::Operation _operation;
     mongocxx::options::update _options;
 };
@@ -532,7 +532,7 @@ struct DeleteOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UDocGenerator _filterTemplate;
+    UniqueDocGenerator _filterTemplate;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
 };
@@ -573,7 +573,7 @@ struct DeleteManyOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UDocGenerator _filterTemplate;
+    UniqueDocGenerator _filterTemplate;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
 };
@@ -624,8 +624,8 @@ struct ReplaceOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UDocGenerator _filterTemplate;
-    UDocGenerator _replacementTemplate;
+    UniqueDocGenerator _filterTemplate;
+    UniqueDocGenerator _replacementTemplate;
     metrics::Operation _operation;
     mongocxx::options::replace _options;
 };
@@ -761,7 +761,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::count _options;
-    UDocGenerator _filterTemplate;
+    UniqueDocGenerator _filterTemplate;
     metrics::Operation _operation;
 };
 
@@ -800,7 +800,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::find _options;
-    UDocGenerator _filterTemplate;
+    UniqueDocGenerator _filterTemplate;
     metrics::Operation _operation;
 };
 
@@ -850,7 +850,7 @@ private:
     std::vector<bsoncxx::document::value> _writeOps;
     mongocxx::options::insert _options;
     metrics::Operation _operation;
-    std::vector<UDocGenerator> _docTemplates;
+    std::vector<UniqueDocGenerator> _docTemplates;
 };
 
 /**
