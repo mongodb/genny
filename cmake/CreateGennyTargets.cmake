@@ -66,15 +66,15 @@ function(CreateGennyTargets)
         set(CGT_INCLUDE_TYPE "INTERFACE")
     endif()
 
-    # set _gs_private_src "PRIVATE;src" (list)
+    # set CGT_PRIVATE_SRC "PRIVATE;src" (list)
     # if type isn't INTERFACES. This lets
     # e.g. value_generators #include <> files
     # in the src direcory. Cannot do this for
     # INTERFACE targets.
-    set(_gs_private_src)
+    set(CGT_PRIVATE_SRC)
     if(NOT CGT_TYPE MATCHES "^INTERFACE$")
-        list(APPEND _gs_private_src PRIVATE)
-        list(APPEND _gs_private_src src)
+        list(APPEND CGT_PRIVATE_SRC PRIVATE)
+        list(APPEND CGT_PRIVATE_SRC src)
     endif()
 
     ## Apply conventions for files in targets
@@ -83,13 +83,13 @@ function(CreateGennyTargets)
     # glob command at `make` time so we automatically
     # find new files without having to re-run `cmake`.
 
-    # _gs_files_src = src/*.cpp
-    file(GLOB_RECURSE _gs_files_src
+    # CGT_FILES_SRC = src/*.cpp
+    file(GLOB_RECURSE CGT_FILES_SRC
          RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
          CONFIGURE_DEPENDS
          src/*.cpp)
     # remove main.cpp, it must be added via EXECUTABLE
-    list(REMOVE_ITEM _gs_files_src "src/main.cpp")
+    list(REMOVE_ITEM CGT_FILES_SRC "src/main.cpp")
 
     # _gs_tests_src = test/*.cpp
     file(GLOB_RECURSE _gs_tests_src
@@ -105,13 +105,13 @@ function(CreateGennyTargets)
 
     ## create library
 
-    add_library("${CGT_NAME}" "${CGT_TYPE}" ${_gs_files_src})
+    add_library("${CGT_NAME}" "${CGT_TYPE}" ${CGT_FILES_SRC})
 
     target_include_directories("${CGT_NAME}"
         "${CGT_INCLUDE_TYPE}"
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
-         ${_gs_private_src}
+         ${CGT_PRIVATE_SRC}
     )
 
     target_link_libraries("${CGT_NAME}"
