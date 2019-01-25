@@ -21,6 +21,7 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/context.hpp>
 #include <testlib/ActorHelper.hpp>
+
 #include <testlib/helpers.hpp>
 
 using Catch::Matchers::Matches;

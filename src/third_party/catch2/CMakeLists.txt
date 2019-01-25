@@ -1,17 +1,21 @@
+# Copyright 2019-present MongoDB Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-add_library(catch2 SHARED ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-target_include_directories(catch2
-    PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+project(catch2 VERSION 0.0.1 LANGUAGES CXX)
+
+genny_subdir(
+    NAME    catch2
+    TYPE    SHARED
 )
 
-install(TARGETS  catch2
-        EXPORT   GennyLibraryConfig
-        ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
-
-
-include(ParseAndAddCatchTests.cmake)
-set(AdditionalCatchParameters --reporter junit --durations yes --rng-seed 12345 --success)

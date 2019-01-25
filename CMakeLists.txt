@@ -13,6 +13,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(Options)
 include(CheckCompiler)
 include(ConfigureInstall)
+include(ParseAndAddCatchTests)
 include(genny_subdir)
 
 if(${GENNY_BUILD_FLAT})

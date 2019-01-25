@@ -14,6 +14,7 @@
 
 #include <gennylib/version.hpp>
 #include <testlib/ActorHelper.hpp>
+
 #include <testlib/helpers.hpp>
 
 TEST_CASE("We have the right version") {

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <testlib/MongoTestFixture.hpp>
+
 #include <testlib/helpers.hpp>
 
 #include <gennylib/context.hpp>

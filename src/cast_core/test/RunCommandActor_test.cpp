@@ -23,6 +23,7 @@
 #include <gennylib/MongoException.hpp>
 #include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>
+
 #include <testlib/helpers.hpp>
 
 #include <mongocxx/read_preference.hpp>

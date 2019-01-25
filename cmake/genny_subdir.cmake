@@ -198,14 +198,16 @@ function(GENNY_SUBDIR)
 
     ## regular test
 
-    add_executable("${_gs_name}_test"
-        ${_gs_tests_src}
-    )
-    target_link_libraries("${_gs_name}_test"
-        "${_gs_name}"
-        ${_gs_test_depends}
-    )
-    ParseAndAddCatchTests("${_gs_name}_test")
+    if (_gs_tests_src) # if any tests
+        add_executable("${_gs_name}_test"
+            ${_gs_tests_src}
+        )
+        target_link_libraries("${_gs_name}_test"
+            "${_gs_name}"
+            ${_gs_test_depends}
+        )
+        ParseAndAddCatchTests("${_gs_name}_test")
+    endif()
 
     ## benchmark test
 
