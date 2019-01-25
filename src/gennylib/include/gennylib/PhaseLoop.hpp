@@ -109,7 +109,9 @@ public:
                     // Sleep for a little bit. This is not efficient if there's a large number of
                     // threads. If this is a problem, we can use exponential back off or wait
                     // based on the number of actors using this rate limiter.
-                    std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate()));
+                    //
+                    // Add up to 1µs of jitter to avoid threads from waking up at once.
+                    std::this_thread::sleep_for(std::chrono::nanoseconds(_rateLimiter->getRate() + (std::rand() % 1000)));
                     continue;
                 }
                 break;
