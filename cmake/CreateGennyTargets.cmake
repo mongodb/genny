@@ -45,69 +45,11 @@
 # -   Installs the library to the `GennyLibraryConfig` export
 #
 function(CreateGennyTargets)
-    set(_gs_name) # value from NAME
-    set(_gs_want_name 0) # prev arg was NAME
-
-    set(_gs_type) # value from TYPE
-    set(_gs_want_type 0) # prev arg was TYPE
-
-    set(_gs_executable) # value from EXECUTABLE
-    set(_gs_want_executable 0) # prev arg was EXECUTABLE
-
-    set(_gs_depends) # list for DEPENDS
-    set(_gs_test_depends) # list for TEST_DEPENDS
-    set(_gs_list_target "") # if we're in a list, which list?
-
-    ## Parse args to set _gs_type etc
-
-    # for each arg we look for caps keywords
-    # e.g. NAME and set the appropriate _gs_want_X
-    # var. Then on next iteration if we have the
-    # _gs_want_X we set the _gs_X to the current value
-    # and unset the _gs_want var. For list types
-    # e.g. DEPENDS/TEST_DEPENDS we append to the
-    # appropriate lists.
-    foreach(arg IN LISTS ARGV)
-        # we could be more pedantic in here
-        # to assert that we have at most
-        # one _gs_want* set but that seems..icky.
-        if(arg MATCHES "^NAME$")
-            set(_gs_want_name 1)
-            continue()
-        elseif(_gs_want_name)
-            set(_gs_name "${arg}")
-            set(_gs_want_name 0)
-            continue()
-        elseif(arg MATCHES "^TYPE$")
-            set(_gs_want_type 1)
-            continue()
-        elseif(_gs_want_type)
-            set(_gs_type "${arg}")
-            set(_gs_want_type 0)
-            continue()
-        elseif(arg MATCHES "^EXECUTABLE")
-            set(_gs_want_executable 1)
-            continue()
-        elseif(_gs_want_executable)
-            set(_gs_executable "${arg}")
-            set(_gs_want_executable 0)
-            continue()
-        elseif(arg MATCHES "^DEPENDS$")
-            # append values (see else below) to _gs_depends
-            set(_gs_list_target "_gs_depends")
-            continue()
-        elseif(arg MATCHES "^TEST_DEPENDS$")
-            # append values (see else below) to _gs_test_depends
-            set(_gs_list_target "_gs_test_depends")
-            continue()
-        else()
-            # if no _gs_want* set and no keyword types
-            # like NAME/TYPE etc then we must be in a
-            # list i.e. DEPENDS or TEST_DEPENDS so
-            # add the arg to teh appropriate list
-            list(APPEND "${_gs_list_target}" "${arg}")
-        endif()
-    endforeach()
+    set(options)
+    set(oneValueArgs NAME TYPE EXECUTABLE)
+    set(multiValueArgs DEPENDS TEST_DEPENDS)
+    cmake_parse_arguments(CGT "${options}" "${oneValueArgs}"
+            "${multiValueArgs}" ${ARGN})
 
     ## business-logic to compute linkage based on TYPE=_gs_type
 
@@ -117,7 +59,7 @@ function(CreateGennyTargets)
     # but for type INTERFACE we want
     #   target_include_directories(name INTERFACE ...)
     set(_gs_include_type "PUBLIC")
-    if(_gs_type MATCHES "^INTERFACE$")
+    if(CGT_TYPE MATCHES "^INTERFACE$")
         set(_gs_include_type "INTERFACE")
     endif()
 
@@ -127,7 +69,7 @@ function(CreateGennyTargets)
     # in the src direcory. Cannot do this for
     # INTERFACE targets.
     set(_gs_private_src)
-    if(NOT _gs_type MATCHES "^INTERFACE$")
+    if(NOT CGT_TYPE MATCHES "^INTERFACE$")
         list(APPEND _gs_private_src PRIVATE)
         list(APPEND _gs_private_src src)
     endif()
@@ -160,18 +102,18 @@ function(CreateGennyTargets)
 
     ## create library
 
-    add_library("${_gs_name}" "${_gs_type}" ${_gs_files_src})
+    add_library("${CGT_NAME}" "${CGT_TYPE}" ${_gs_files_src})
 
-    target_include_directories(${_gs_name}
+    target_include_directories("${CGT_NAME}"
         "${_gs_include_type}"
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
          ${_gs_private_src}
     )
 
-    target_link_libraries("${_gs_name}"
+    target_link_libraries("${CGT_NAME}"
         "${_gs_include_type}"
-            ${_gs_depends}
+            ${CGT_DEPENDS}
     )
 
     ## install / put in export
@@ -180,7 +122,7 @@ function(CreateGennyTargets)
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
             FILES_MATCHING PATTERN *.hpp)
 
-    install(TARGETS  "${_gs_name}"
+    install(TARGETS  "${CGT_NAME}"
             EXPORT   GennyLibraryConfig
             ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
             LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -188,10 +130,10 @@ function(CreateGennyTargets)
 
     ## add EXECUTABLE from src/main.cpp
 
-    if(_gs_executable)
-        add_executable("${_gs_executable}" src/main.cpp)
-        target_link_libraries("${_gs_executable}" "${_gs_name}")
-        install(TARGETS  "${_gs_executable}"
+    if(CGT_EXECUTABLE)
+        add_executable("${CGT_EXECUTABLE}" src/main.cpp)
+        target_link_libraries("${CGT_EXECUTABLE}" "${CGT_NAME}")
+        install(TARGETS  "${CGT_EXECUTABLE}"
                 RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR})
     endif()
 
@@ -199,27 +141,27 @@ function(CreateGennyTargets)
     ## regular test
 
     if (_gs_tests_src) # if any tests
-        add_executable("${_gs_name}_test"
+        add_executable("${CGT_NAME}_test"
             ${_gs_tests_src}
         )
-        target_link_libraries("${_gs_name}_test"
-            "${_gs_name}"
-            ${_gs_test_depends}
+        target_link_libraries("${CGT_NAME}_test"
+            "${CGT_NAME}"
+            ${CGT_TEST_DEPENDS}
         )
-        ParseAndAddCatchTests("${_gs_name}_test")
+        ParseAndAddCatchTests("${CGT_NAME}_test")
     endif()
 
     ## benchmark test
 
     if(_gs_benchmarks_src) # if any benchmark files
-        add_executable("${_gs_name}_benchmark"
+        add_executable("${CGT_NAME}_benchmark"
             ${_gs_benchmarks_src}
         )
-        target_link_libraries("${_gs_name}_benchmark"
-            "${_gs_name}"
-            ${_gs_test_depends}
+        target_link_libraries("${CGT_NAME}_benchmark"
+            "${CGT_NAME}"
+            ${CGT_TEST_DEPENDS}
         )
-        ParseAndAddCatchTests("${_gs_name}_benchmark")
+        ParseAndAddCatchTests("${CGT_NAME}_benchmark")
     endif()
 
 endfunction(CreateGennyTargets)
