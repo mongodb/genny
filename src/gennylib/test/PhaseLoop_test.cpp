@@ -23,11 +23,11 @@
 
 #include <testlib/helpers.hpp>
 
-namespace {
-
 using namespace genny;
 using namespace genny::v1;
 using namespace std;
+
+namespace {
 
 //
 // Cute convenience operators -
@@ -42,6 +42,8 @@ optional<IntegerSpec> operator""_uis(unsigned long long v) {
 optional<TimeSpec> operator""_ts(unsigned long long v) {
     return make_optional(TimeSpec(chrono::milliseconds{v}));
 }
+
+}  // namespace
 
 TEST_CASE("Correctness for N iterations") {
     genny::metrics::Registry metrics;
@@ -376,4 +378,3 @@ TEST_CASE("Actual Actor Example") {
                            "configuration."));
     }
 }
-}  // namespace
