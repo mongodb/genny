@@ -481,7 +481,9 @@ TEST_CASE_METHOD(MongoTestFixture,
                 - OperationName: RunCommand
                   OperationCommand:
                     insert: testCollection
-                    documents: [{rating: {^RandomInt: {min: 1, max: 5}}, name: y}, {rating: 10, name: x}]
+                    documents:
+                    - {rating: {^RandomInt: {min: 10, max: 10}}, name: y}
+                    - {rating: 10, name: x}
         )");
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
@@ -490,7 +492,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto verifyFn = [&db, adminDb, view](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection"));
-            REQUIRE(db.collection("testCollection").count(view) == 1);
+            REQUIRE(db.collection("testCollection").count(view) == 2);
         };
         ah.runDefaultAndVerify(verifyFn);
     }
