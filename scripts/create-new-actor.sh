@@ -181,7 +181,7 @@ create_impl() {
 create_workload_yml() {
     local actor_name
     actor_name="$1"
-cat << EOF > "$(dirname "$0")/../workloads/docs/${actor_name}.yml"
+cat << EOF > "$(dirname "$0")/../workloads/docs/${actor_name}.yaml"
 SchemaVersion: 2018-07-01
 
 # TODO: delete this file or add a meaningful workload using or
