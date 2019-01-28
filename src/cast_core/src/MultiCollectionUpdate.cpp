@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <scale/actors/MultiCollectionUpdate.hpp>
+#include <cast_core/actors/MultiCollectionUpdate.hpp>
 
 #include <chrono>
 #include <memory>

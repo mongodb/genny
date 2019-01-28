@@ -19,12 +19,11 @@ add_subdirectory(cast_core)
 add_subdirectory(driver)
 add_subdirectory(gennylib)
 add_subdirectory(metrics)
-add_subdirectory(scale)
 add_subdirectory(testlib)
 add_subdirectory(value_generators)
 
 # This makes the project importable from the build directory
-export(TARGETS value_generators metrics gennylib loki cast_core scale
+export(TARGETS value_generators metrics gennylib loki cast_core
        FILE GennyLibraryConfig.cmake)
 
 # Below generates a cmake module so if you make install from this

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <scale/actors/Insert.hpp>
+#include <cast_core/actors/Insert.hpp>
 
 #include <memory>
 

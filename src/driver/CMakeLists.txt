@@ -19,7 +19,6 @@ CreateGennyTargets(
     TYPE    STATIC
     DEPENDS
         cast_core
-        scale
         gennylib
         Boost::program_options
     TEST_DEPENDS    testlib

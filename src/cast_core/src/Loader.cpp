@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <scale/actors/Loader.hpp>
+#include <cast_core/actors/Loader.hpp>
 
 #include <algorithm>
 #include <memory>
