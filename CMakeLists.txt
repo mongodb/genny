@@ -64,4 +64,3 @@ set(CMAKE_POSITION_INDEPENDENT_CODE     ON)
 
 enable_testing()
 add_subdirectory(src)
-add_subdirectory(workloads)
