@@ -19,7 +19,8 @@
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
-#include <cast_core/actors/RunCommand.hpp>
+#include <stm/actors/RunCommand.hpp>
+
 #include <gennylib/MongoException.hpp>
 #include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>

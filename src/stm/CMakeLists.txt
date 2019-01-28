@@ -12,25 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(driver VERSION 0.0.1 LANGUAGES CXX)
+project(stm VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
-    NAME    driver
-    TYPE    STATIC
+    NAME    stm
+    TYPE    SHARED
     DEPENDS
-        stm
-        product-perf
         gennylib
-        Boost::program_options
     TEST_DEPENDS    testlib
-    EXECUTABLE      genny
-)
-
-# Install all the workload documents
-install(DIRECTORY test/
-        DESTINATION etc/genny/workloads
-        COMPONENT Workloads
-        FILES_MATCHING
-            PATTERN "*.yml"
-            PATTERN "*.yaml"
 )

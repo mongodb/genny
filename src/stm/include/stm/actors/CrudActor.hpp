@@ -13,7 +13,7 @@
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/value_generators.hpp>
 
-#include <cast_core/config/RunCommandConfig.hpp>
+#include <stm/config/RunCommandConfig.hpp>
 
 namespace genny::actor {
 
@@ -67,8 +67,6 @@ namespace genny::actor {
  *     Operation:
  *       OperationName: drop
  * ```
- *
- * Owner: STM
  */
 class CrudActor : public Actor {
 

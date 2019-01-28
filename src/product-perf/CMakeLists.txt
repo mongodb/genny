@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(cast_core VERSION 0.0.1 LANGUAGES CXX)
+project(product-perf VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
-    NAME    cast_core
+    NAME    product-perf
     TYPE    SHARED
     DEPENDS
         gennylib

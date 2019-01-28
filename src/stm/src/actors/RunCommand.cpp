@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cast_core/actors/RunCommand.hpp>
+#include <stm/actors/RunCommand.hpp>
 
 #include <chrono>
 #include <thread>
