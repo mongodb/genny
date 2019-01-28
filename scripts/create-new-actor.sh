@@ -97,7 +97,7 @@ create_impl_text() {
     echo "// See the License for the specific language governing permissions and"
     echo "// limitations under the License."
     echo ""
-    echo "#include <stm/actors/${actor_name}.hpp>"
+    echo "#include <cast_core/actors/${actor_name}.hpp>"
     echo ""
     echo "#include <memory>"
     echo ""
@@ -166,7 +166,7 @@ create_header() {
     uuid_tag="$1"
     actor_name="$2"
 
-    create_header_text "$@" > "$(dirname "$0")/../src/stm/include/stm/actors/${actor_name}.hpp"
+    create_header_text "$@" > "$(dirname "$0")/../src/cast_core/include/cast_core/actors/${actor_name}.hpp"
 }
 
 create_impl() {
@@ -175,13 +175,13 @@ create_impl() {
     uuid_tag="$1"
     actor_name="$2"
 
-    create_impl_text "$@" > "$(dirname "$0")/../src/stm/src/actors/${actor_name}.cpp"
+    create_impl_text "$@" > "$(dirname "$0")/../src/cast_core/src/${actor_name}.cpp"
 }
 
 create_workload_yml() {
     local actor_name
     actor_name="$1"
-cat << EOF > "$(dirname "$0")/../src/driver/test/${actor_name}.yml"
+cat << EOF > "$(dirname "$0")/../workloads/docs/${actor_name}.yml"
 SchemaVersion: 2018-07-01
 
 # TODO: delete this file or add a meaningful workload using or
@@ -206,7 +206,7 @@ create_test() {
     local actor_name
     actor_name="$1"
 
-    cat << EOF > "$(dirname "$0")/../src/stm/test/${actor_name}_test.cpp"
+    cat << EOF > "$(dirname "$0")/../src/cast_core/test/${actor_name}_test.cpp"
 // Copyright ${year}-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -314,13 +314,13 @@ echo ""
 echo "    cd build"
 echo "    cmake .."
 echo "    make -j8"
-echo "    ./src/stm/cast_core_test '[${actor_name}]'"
+echo "    ./src/cast_core/cast_core_test '[${actor_name}]'"
 echo "    make test"
 echo ""
 echo "Run your workload as follows:"
 echo ""
 echo "    ./build/src/driver/genny                                   \\"
-echo "        --workload-file       src/driver/test/${actor_name}.yml \\"
+echo "        --workload-file       ./workloads/docs/${actor_name}.yml" \\"
 echo "        --metrics-format      csv                              \\"
 echo "        --metrics-output-file build/genny-metrics.csv          \\"
 echo "        --mongo-uri           'mongodb://localhost:27017'"
