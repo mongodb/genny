@@ -15,13 +15,15 @@
 #ifndef HEADER_200B4990_6EF5_4516_98E7_41033D1BDCF7_INCLUDED
 #define HEADER_200B4990_6EF5_4516_98E7_41033D1BDCF7_INCLUDED
 
+#include <iostream>
+
 #include <boost/exception/all.hpp>
 #include <boost/exception/error_info.hpp>
 
 #include <bsoncxx/json.hpp>
+
 #include <mongocxx/exception/operation_exception.hpp>
 
-#include <iostream>
 
 namespace genny {
 

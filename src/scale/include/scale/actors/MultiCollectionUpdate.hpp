@@ -12,52 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HEADER_A5170346_CB57_4438_854F_20C3D99FF187_INCLUDED
-#define HEADER_A5170346_CB57_4438_854F_20C3D99FF187_INCLUDED
-
-#include <iostream>
-
-#include <mongocxx/pool.hpp>
+#ifndef HEADER_D112CCC3_DF60_434E_A038_5A7AADED0E46
+#define HEADER_D112CCC3_DF60_434E_A038_5A7AADED0E46
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+
+#include <metrics/metrics.hpp>
+
 #include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 
 /**
- * InsertRemove is a simple actor that inserts and then removes the same document from a
- * collection. It uses `PhaseLoop` for looping.  Each instance of the actor uses a
- * different document, indexed by an integer `_id` field. The actor records the latency of each
- * insert and each remove.
+ * MultiCollectionUpdate is an actor that performs updates across parameterizable number of
+ * collections. Updates are performed in a loop using `PhaseLoop` and each iteration picks a
+ * random collection to update. The actor records the latency of each update, and the total number
+ * of documents updated.
  *
  * Owner: product-perf
  */
-class InsertRemove : public Actor {
+class MultiCollectionUpdate : public Actor {
 
 public:
-    explicit InsertRemove(ActorContext& context);
-    ~InsertRemove() override = default;
+    explicit MultiCollectionUpdate(ActorContext& context);
+    ~MultiCollectionUpdate() override = default;
 
     static std::string_view defaultName() {
-        return "InsertRemove";
+        return "MultiCollectionUpdate";
     }
     void run() override;
 
 private:
-    genny::DefaultRandom _rng;
-
-    ExecutionStrategy _insertStrategy;
-    ExecutionStrategy _removeStrategy;
-    mongocxx::pool::entry _client;
-
     /** @private */
     struct PhaseConfig;
+    genny::DefaultRandom _rng;
+
+    metrics::Timer _updateTimer;
+    metrics::Counter _updateCount;
+    mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
 };
 
 }  // namespace genny::actor
 
-#endif  // HEADER_A5170346_CB57_4438_854F_20C3D99FF187_INCLUDED
+#endif  // HEADER_D112CCC3_DF60_434E_A038_5A7AADED0E46

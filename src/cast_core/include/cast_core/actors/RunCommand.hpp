@@ -19,7 +19,7 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
-#include <stm/config/RunCommandConfig.hpp>
+#include <cast_core/config/RunCommandConfig.hpp>
 
 namespace genny::actor {
 
@@ -55,8 +55,9 @@ namespace genny::actor {
  *       OperationCommand:
  *         currentOp: 1
  * ```
+ *
+ * Owner: STM
  */
-
 class RunCommand : public Actor {
 public:
     explicit RunCommand(ActorContext& context);

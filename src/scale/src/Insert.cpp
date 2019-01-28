@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <product-perf/actors/Insert.hpp>
+#include <scale/actors/Insert.hpp>
 
 #include <memory>
 
@@ -25,8 +25,10 @@
 #include <boost/log/trivial.hpp>
 
 #include <bsoncxx/json.hpp>
+
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+
 #include <value_generators/value_generators.hpp>
 
 namespace genny::actor {

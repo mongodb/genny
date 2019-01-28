@@ -18,8 +18,8 @@ CreateGennyTargets(
     NAME    driver
     TYPE    STATIC
     DEPENDS
-        stm
-        product-perf
+        cast_core
+        scale
         gennylib
         Boost::program_options
     TEST_DEPENDS    testlib

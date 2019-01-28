@@ -17,8 +17,8 @@
 
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
-#include <testlib/ActorHelper.hpp>
 
+#include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
 TEST_CASE("example metrics usage") {

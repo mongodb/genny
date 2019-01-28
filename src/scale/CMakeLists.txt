@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(stm VERSION 0.0.1 LANGUAGES CXX)
+project(scale VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
-    NAME    stm
+    NAME    scale
     TYPE    SHARED
     DEPENDS
         gennylib

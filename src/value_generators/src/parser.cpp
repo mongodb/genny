@@ -14,10 +14,11 @@
 
 #include <parser.hh>
 
-#include <boost/log/trivial.hpp>
-#include <boost/regex.hpp>
 #include <chrono>
 #include <utility>
+
+#include <boost/log/trivial.hpp>
+#include <boost/regex.hpp>
 
 #include <bsoncxx/builder/concatenate.hpp>
 #include <bsoncxx/json.hpp>
