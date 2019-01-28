@@ -113,13 +113,10 @@ public:
             while (true) {
                 auto success = _rateLimiter->consume();
                 if (!success && (o.currentPhase() == inPhase)) {
-                    // Sleep for a little bit. This is not efficient if there's a large number of
-                    // threads. If this is a problem, we can use exponential back off or wait
-                    // based on the number of actors using this rate limiter.
-                    //
                     // Add up to 1µs of jitter to avoid threads from waking up at once.
                     std::this_thread::sleep_for(
-                        std::chrono::nanoseconds(_rateLimiter->getRate() + std::rand() % 1000));
+                        std::chrono::nanoseconds(
+                            (_rateLimiter->getRate() + std::rand() % 1000) * _rateLimiter->getNumUsers()));
                     continue;
                 }
                 break;
@@ -134,11 +131,12 @@ public:
     }
 
     bool isDone(std::chrono::steady_clock::time_point startedAt, uint64_t currentIteration) const {
-        return (!_minIterations || currentIteration >= (*_minIterations).value) &&
+        return
+            (!_minIterations || currentIteration >= (*_minIterations).value) &&
             (!_minDuration ||
-             // check is last to avoid doing now() call unnecessarily
-             (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                          std::chrono::steady_clock::now() - startedAt));
+            // check is last to avoid doing now() call unnecessarily
+            (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
+                std::chrono::steady_clock::now() - startedAt));
     }
 
     bool operator==(const IterationChecker& other) const {

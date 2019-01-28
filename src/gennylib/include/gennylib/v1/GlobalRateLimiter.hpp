@@ -125,6 +125,14 @@ public:
         return _rateNS;
     }
 
+    constexpr int64_t getNumUsers() const {
+        return _numUsers;
+    }
+
+    void addUser() {
+        _numUsers++;
+    }
+
 private:
     // Manually align _lastEmptiedTimeNS here to vastly improve performance.
     // Lazily initialized by the first call to consume().
@@ -138,6 +146,9 @@ private:
     // the YAML as RateSpec.
     const int64_t _burstSize;
     const int64_t _rateNS;
+
+    // Number of threads using this rate limiter.
+    int64_t _numUsers = 0;
 };
 
 using GlobalRateLimiter = BaseGlobalRateLimiter<std::chrono::steady_clock>;

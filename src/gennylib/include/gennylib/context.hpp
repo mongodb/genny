@@ -181,7 +181,9 @@ public:
             _rateLimiters.emplace(
                 std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
         }
-        return _rateLimiters[name].get();
+        auto rl =  _rateLimiters[name].get();
+        rl->addUser();
+        return rl;
     }
 
 private:
