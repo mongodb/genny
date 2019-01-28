@@ -24,12 +24,3 @@ CreateGennyTargets(
     TEST_DEPENDS    testlib
     EXECUTABLE      genny
 )
-
-# Install all the workload documents
-install(DIRECTORY test/
-        DESTINATION etc/genny/workloads
-        COMPONENT Workloads
-        FILES_MATCHING
-            PATTERN "*.yml"
-            PATTERN "*.yaml"
-)
