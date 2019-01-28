@@ -29,6 +29,8 @@ namespace genny::actor {
  * `MultiCollectionQuery` actors. It loads a set of documents into multiple collections with
  * indexes. Each collection is identically configured. The document shape, number of documents,
  * number of collections, and list of indexes are all adjustable from the yaml configuration.
+ *
+ * Owner: product-perf
  */
 class Loader : public Actor {
 

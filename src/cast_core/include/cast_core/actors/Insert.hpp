@@ -28,6 +28,9 @@
 
 namespace genny::actor {
 
+/**
+ * Owner: product-perf
+ */
 class Insert : public genny::Actor {
 
 public:

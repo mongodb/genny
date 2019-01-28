@@ -199,10 +199,10 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-./build/src/driver/genny                                    \
-    --workload-file       src/driver/test/InsertRemove.yml  \
-    --metrics-format      csv                               \
-    --metrics-output-file build/genny-metrics.csv           \
+./build/src/driver/genny                                            \
+    --workload-file       ./workloads/product-perf/InsertRemove.yml \
+    --metrics-format      csv                                       \
+    --metrics-output-file build/genny-metrics.csv                   \
     --mongo-uri           'mongodb://localhost:27017'
 ```
 
@@ -258,18 +258,18 @@ Running with TSAN:
     FLAGS="-pthread -fsanitize=thread -g -O1"
     cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
     make -j8 -C "build" test
-    ./build/src/driver/genny src/driver/test/Workload.yml
+    ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with ASAN:
 
     FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
     cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
     make -j8 -C "build" test
-    ./build/src/driver/genny src/driver/test/Workload.yml
+    ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
     cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
     make -j8 -C "build" test
-    ./build/src/driver/genny src/driver/test/Workload.yml
+    ./build/src/driver/genny ./workloads/docs/Workload.yml

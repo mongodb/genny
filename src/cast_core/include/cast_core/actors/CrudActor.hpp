@@ -66,6 +66,9 @@ namespace genny::actor {
  *     Collection: test
  *     Operation:
  *       OperationName: drop
+ * ```
+ *
+ * Owner: STM
  */
 class CrudActor : public Actor {
 

@@ -2,3 +2,14 @@
 
 # global match unless overridden below
 * @mongodb/stm
+
+# product-perf
+workloads/product-perf/*                                    @mongodb/product-perf
+src/cast_core/include/cast_core/*/InsertRemove.*            @mongodb/product-perf
+src/cast_core/include/cast_core/*/Loader.*                  @mongodb/product-perf
+src/cast_core/include/cast_core/*/MultiCollectionQuery.*    @mongodb/product-perf
+src/cast_core/include/cast_core/*/MultiCollectionUpdate.*   @mongodb/product-perf
+
+# service-architecture
+workloads/service-architecture/* @mongodb/service-architecture
+

@@ -25,6 +25,8 @@ namespace genny::actor {
 /**
  * A "Proof of Concept" dumb Actor that we use
  * to smoke-test framework features.
+ *
+ * Owner: STM
  */
 class HelloWorld : public genny::Actor {
 
