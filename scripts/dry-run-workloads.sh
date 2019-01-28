@@ -13,9 +13,9 @@ CMD=(
 )
 
 # Find all of the workload yamls at the specified directory
-WORKLOAD_DIR="${1:-src}"
+WORKLOAD_DIR="${1:-workloads}"
 WORKLOAD_LIST="${BUILD_DIR}/workload-list.txt"
-find "${WORKLOAD_DIR}" \( -iname "*.yml" -or -iname "*.yaml" \) -print >"${WORKLOAD_LIST}"
+find "${WORKLOAD_DIR}" -name "*.yaml" -print >"${WORKLOAD_LIST}"
 
 # Dry run each file
 while read -r FILE; do
