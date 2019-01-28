@@ -84,16 +84,18 @@ TEST_CASE("Global rate limiter") {
     }
 
     SECTION("Limits Rate") {
-        // First consume() goes through because we intentionally have the rate limiter do so.
-        REQUIRE(grl.consume());
+        auto now = MyDummyClock::now();
+        // First consumeIfWithinRate() goes through because we intentionally have the rate limiter do so.
+        REQUIRE(grl.consumeIfWithinRate(now));
 
-        // Second consume() should fail because we have not incremented the clock.
-        REQUIRE(!grl.consume());
+        // Second consumeIfWithinRate() should fail because we have not incremented the clock.
+        REQUIRE(!grl.consumeIfWithinRate(now));
 
-        // Increment the clock should allow consume() to succeed exactly once.
+        // Increment the clock should allow consumeIfWithinRate() to succeed exactly once.
         MyDummyClock::nowRaw += per;
-        REQUIRE(grl.consume());
-        REQUIRE(!grl.consume());
+        now = MyDummyClock::now();
+        REQUIRE(grl.consumeIfWithinRate(now));
+        REQUIRE(!grl.consumeIfWithinRate(now));
     }
 }
 
@@ -216,7 +218,7 @@ Actors:
 
         // Result is at most 140% of the expected value. The phase loop can run for
         // longer if there's a large number of threads.
-        REQUIRE(getCurState() < expected * 1.40);
+        REQUIRE(getCurState() < expected * 1.10);
 
         // Print out the result if both REQUIRE pass.
         BOOST_LOG_TRIVIAL(info) << getCurState();

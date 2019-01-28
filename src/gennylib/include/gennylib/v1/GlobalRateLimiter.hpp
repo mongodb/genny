@@ -61,8 +61,8 @@ public:
     static_assert(ClockT::is_steady, "Clock must be steady");
 
 private:
-    static auto now() {
-        const auto nowTime = ClockT::now().time_since_epoch();
+    static auto ticks(const typename ClockT::time_point& now) {
+        const auto nowTime = now.time_since_epoch();
         return std::chrono::duration_cast<std::chrono::nanoseconds>(nowTime).count();
     }
 
@@ -87,27 +87,26 @@ public:
      * @return bool whether consume() succeeded. The caller is responsible for using an
      * appropriate back-off strategy if this function returns false.
      */
-    bool consume() {
+    bool consumeIfWithinRate(const typename ClockT::time_point& now) {
         if (!_emptiedTimeNSHasBeenInitialized) {
             _emptiedTimeNSHasBeenInitialized = true;
-            // Allow one burst to go through when consume() is called the first time.
+            // Allow one burst to go through when consumeIfWithinRate() is called the first time.
             // It's fine that this section is not atomic, a best effort is sufficient.
-            _lastEmptiedTimeNS = now() - _rateNS;
+            _lastEmptiedTimeNS = ticks(now) - _rateNS;
         }
 
-        int64_t startTime = now();
-
-        // The time the bucket was emptied before this consume() call.
+        // The time the bucket was emptied before this consumeIfWithinRate() call.
         int64_t curEmptiedTime = _lastEmptiedTimeNS.load();
 
-        // The time the bucket was emptied after this consume() call.
+        // The time the bucket was emptied after this consumeIfWithinRate() call.
         int64_t newEmptiedTime;
 
+        auto nowInTicks = ticks(now);
         do {
             newEmptiedTime = curEmptiedTime + _rateNS;
 
             // If the new emptied time is in the future, the bucket is empty. Return early.
-            if (startTime < newEmptiedTime) {
+            if (nowInTicks < newEmptiedTime) {
                 return false;
             }
             // Use the "weak" version for performance at the expense of false negatives (i.e.
@@ -135,10 +134,10 @@ public:
 
 private:
     // Manually align _lastEmptiedTimeNS here to vastly improve performance.
-    // Lazily initialized by the first call to consume().
+    // Lazily initialized by the first call to consumeIfWithinRate().
     alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _lastEmptiedTimeNS = 0;
 
-    // Flag to determine when consume() is first called.
+    // Flag to determine when consumeIfWithinRate() is first called.
     std::atomic_bool _emptiedTimeNSHasBeenInitialized = false;
 
     // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to

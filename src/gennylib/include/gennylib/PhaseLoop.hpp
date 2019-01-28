@@ -43,6 +43,8 @@ namespace genny {
  */
 namespace v1 {
 
+using SteadyClock = std::chrono::steady_clock;
+
 /**
  * Determine the conditions for continuing to iterate a given Phase.
  *
@@ -104,16 +106,16 @@ public:
 
     void limitRate(const int64_t currentIteration,
                    const Orchestrator& o,
-                   const PhaseNumber inPhase) const {
+                   const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
         // first iteration. This means the number of completed operations is always
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
         // _burstSize. `m` here is the number of threads using the rate limiter.
         if (shouldLimitRate(currentIteration)) {
             while (true) {
-                auto success = _rateLimiter->consume();
+                auto success = _rateLimiter->consumeIfWithinRate(_now());
                 if (!success && (o.currentPhase() == inPhase)) {
-                    // Add up to 1µs of jitter to avoid threads from waking up at once.
+                    // Add some jitter to avoid threads waking up at once.
                     std::this_thread::sleep_for(
                         std::chrono::nanoseconds(
                             (_rateLimiter->getRate() + std::rand() % 1000) * _rateLimiter->getNumUsers()));
@@ -124,19 +126,18 @@ public:
         }
     }
 
-    std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
+    SteadyClock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
-        return _minDuration ? std::chrono::steady_clock::now()
-                            : std::chrono::time_point<std::chrono::steady_clock>::min();
+        return _minDuration ? SteadyClock::now() : SteadyClock::time_point::min();
     }
 
-    bool isDone(std::chrono::steady_clock::time_point startedAt, uint64_t currentIteration) const {
+    bool isDone(SteadyClock::time_point startedAt, int64_t currentIteration) {
         return
             (!_minIterations || currentIteration >= (*_minIterations).value) &&
             (!_minDuration ||
             // check is last to avoid doing now() call unnecessarily
             (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
-                std::chrono::steady_clock::now() - startedAt));
+                _cachedNow - startedAt));
     }
 
     bool operator==(const IterationChecker& other) const {
@@ -152,12 +153,20 @@ private:
     // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
     // .end() iterator needs an instance of this, so it's weird
 
+    SteadyClock::time_point& _now() {
+        _cachedNow = SteadyClock::now();
+        return _cachedNow;
+    }
+
     const std::optional<TimeSpec> _minDuration;
     const std::optional<IntegerSpec> _minIterations;
 
     // The rate limiter is owned by the workload context.
     v1::GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
+
+    // Cache a copy of now() to limit the number of calls to SteadyClock::now()
+    SteadyClock::time_point _cachedNow;
 };
 
 
@@ -177,14 +186,12 @@ public:
     // an over-optimization, but it adds very little complexity at the benefit
     // of not having to construct a useless object.
     ActorPhaseIterator(Orchestrator& orchestrator,
-                       const IterationChecker* iterationCheck,
+                       IterationChecker* iterationCheck,
                        PhaseNumber inPhase,
                        bool isEndIterator)
         : _orchestrator{std::addressof(orchestrator)},
           _iterationCheck{iterationCheck},
-          _referenceStartingPoint{isEndIterator
-                                      ? std::chrono::time_point<std::chrono::steady_clock>::min()
-                                      : _iterationCheck->computeReferenceStartingPoint()},
+          _referenceStartingPoint{isEndIterator ? SteadyClock::time_point::min() : _iterationCheck->computeReferenceStartingPoint()},
           _inPhase{inPhase},
           _isEndIterator{isEndIterator},
           _currentIteration{0} {
@@ -251,8 +258,8 @@ public:
 
 private:
     Orchestrator* _orchestrator;
-    const IterationChecker* _iterationCheck;
-    const std::chrono::steady_clock::time_point _referenceStartingPoint;
+    IterationChecker* _iterationCheck;
+    const SteadyClock::time_point _referenceStartingPoint;
     const PhaseNumber _inPhase;
     const bool _isEndIterator;
     int64_t _currentIteration;
@@ -287,7 +294,7 @@ public:
      */
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
-               std::unique_ptr<const IterationChecker> iterationCheck,
+               std::unique_ptr<IterationChecker> iterationCheck,
                PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
@@ -367,7 +374,7 @@ private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
     const std::optional<std::unique_ptr<T>> _value;  // Is nullopt iff operation is Nop
-    const std::unique_ptr<const IterationChecker> _iterationCheck;
+    const std::unique_ptr<IterationChecker> _iterationCheck;
 
 };  // class ActorPhase
 
