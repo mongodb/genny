@@ -14,5 +14,7 @@ list(APPEND CMAKE_PREFIX_PATH "${GENNY_INSTALL_DIR}")
 
 include(GNUInstallDirs)
 
-set(CMAKE_MACOSX_RPATH  true                          CACHE BOOL "Ensure that RPATH is used on OSX")
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "")
+set(CMAKE_MACOSX_RPATH                  true                          CACHE BOOL "Ensure that RPATH is used on OSX")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH   true                          CACHE BOOL "")
+set(CMAKE_INSTALL_RPATH                 "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "")
+set(CMAKE_SKIP_INSTALL_RPATH            false                         CACHE BOOL "")
