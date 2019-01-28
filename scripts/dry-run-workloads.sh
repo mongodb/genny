@@ -13,7 +13,7 @@ CMD=(
 )
 
 # Find all of the workload yamls at the specified directory
-WORKLOAD_DIR="${1}"
+WORKLOAD_DIR="${1:-src}"
 WORKLOAD_LIST="${BUILD_DIR}/workload-list.txt"
 find "${WORKLOAD_DIR}" \( -iname "*.yml" -or -iname "*.yaml" \) -print >"${WORKLOAD_LIST}"
 
