@@ -371,8 +371,8 @@ public:
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    UniqueExpression _length;
-    std::optional<std::string> _alphabet;
+    const UniqueExpression _length;
+    const std::optional<std::string> _alphabet;
 };
 
 /**
@@ -389,7 +389,7 @@ public:
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    UniqueExpression _length;
+    const UniqueExpression _length;
 };
 
 }  // namespace genny::value_generators
