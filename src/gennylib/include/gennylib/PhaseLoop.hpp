@@ -113,7 +113,7 @@ public:
         // _burstSize. `m` here is the number of threads using the rate limiter.
         if (shouldLimitRate(currentIteration)) {
             while (true) {
-                auto success = _rateLimiter->consumeIfWithinRate(_now());
+                auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
                 if (!success && (o.currentPhase() == inPhase)) {
                     // Add some jitter to avoid threads waking up at once.
                     std::this_thread::sleep_for(
@@ -137,7 +137,7 @@ public:
             (!_minDuration ||
             // check is last to avoid doing now() call unnecessarily
             (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
-                _cachedNow - startedAt));
+                SteadyClock::now() - startedAt));
     }
 
     bool operator==(const IterationChecker& other) const {
@@ -153,20 +153,12 @@ private:
     // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
     // .end() iterator needs an instance of this, so it's weird
 
-    SteadyClock::time_point& _now() {
-        _cachedNow = SteadyClock::now();
-        return _cachedNow;
-    }
-
     const std::optional<TimeSpec> _minDuration;
     const std::optional<IntegerSpec> _minIterations;
 
     // The rate limiter is owned by the workload context.
     v1::GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
-
-    // Cache a copy of now() to limit the number of calls to SteadyClock::now()
-    SteadyClock::time_point _cachedNow;
 };
 
 
