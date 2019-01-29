@@ -24,6 +24,8 @@
 #include <variant>
 #include <vector>
 
+#include <bsoncxx/builder/basic/array.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/view_or_value.hpp>
@@ -86,22 +88,74 @@ std::unique_ptr<DocumentGenerator> makeDoc(YAML::Node, genny::DefaultRandom&);
  * bsoncxx::types::value do not allow for BSON documents or arrays to own their underlying buffer
  * and can only be constructed from their respective view types.
  *
- * Note that we explicitly subclass from std::variant rather than alias it in order to define a
+ * Note that the Value class encapsulates std::variant rather than aliases it in order to define a
  * custom std::ostream::operator<< for it.
  */
-class Value : public std::variant<bool,
-                                  int32_t,
-                                  int64_t,
-                                  double,
-                                  std::string,
-                                  bsoncxx::types::b_null,
-                                  bsoncxx::document::view_or_value,
-                                  bsoncxx::array::view_or_value> {
+class Value {
 public:
-    int64_t getInt64(std::string_view name);
+    //
+    // Constructors
+    //
+
+    explicit Value(bool value);
+    explicit Value(int32_t value);
+    explicit Value(int64_t value);
+    explicit Value(double value);
+    explicit Value(std::string value);
+    explicit Value(bsoncxx::types::b_null value);
+    explicit Value(bsoncxx::document::view_or_value value);
+    explicit Value(bsoncxx::array::view_or_value value);
+
+    //
+    // Getters
+    //
+
+    bool getBool() const;
+    int32_t getInt32() const;
+    int64_t getInt64() const;
+    double getDouble() const;
+    std::string getString() const;
+    bsoncxx::types::b_null getNull() const;
+    bsoncxx::document::view_or_value getDocument() const;
+    bsoncxx::array::view_or_value getArray() const;
+
+    /**
+     * Return `_value` as an int64_t if it is of type int32_t or int64_t, or std::nullopt if it is
+     * some other type.
+     */
+    std::optional<int64_t> tryAsInt64() const;
+
+    /**
+     * Append the underlying `_value` to the document `doc` using the field name `key`.
+     *
+     * @warning
+     *  After calling appendToBuilder() it is illegal to call any methods on this instance, unless
+     *  it is subsequenly moved into.
+     */
+    void appendToBuilder(bsoncxx::builder::basic::document& doc, std::string key);
+
+    /**
+     * Append the underlying `_value` to the array `arr`.
+     *
+     * @warning
+     *  After calling appendToBuilder() it is illegal to call any methods on this instance, unless
+     *  it is subsequenly moved into.
+     */
+    void appendToBuilder(bsoncxx::builder::basic::array& arr);
 
 private:
+    using VariantType = std::variant<bool,
+                                     int32_t,
+                                     int64_t,
+                                     double,
+                                     std::string,
+                                     bsoncxx::types::b_null,
+                                     bsoncxx::document::view_or_value,
+                                     bsoncxx::array::view_or_value>;
+
     friend std::ostream& operator<<(std::ostream& out, const Value& value);
+
+    VariantType _value;
 };
 
 

@@ -131,8 +131,14 @@ public:
         auto commandExpr = value_generators::Expression::parseOperand(yamlCommand);
 
         auto options = node.as<Operation::OpConfig>(Operation::OpConfig{});
-        return std::make_unique<Operation>(
-            context, actorContext, id, database, (*client)[database], rng, std::move(commandExpr), options);
+        return std::make_unique<Operation>(context,
+                                           actorContext,
+                                           id,
+                                           database,
+                                           (*client)[database],
+                                           rng,
+                                           std::move(commandExpr),
+                                           options);
     };
 
     void run() {
@@ -141,7 +147,7 @@ public:
 
 private:
     void _run() {
-        auto command = std::get<bsoncxx::document::view_or_value>(_commandExpr->evaluate(_rng));
+        auto command = _commandExpr->evaluate(_rng).getDocument();
         auto view = command.view();
 
         if (!_options.isQuiet) {

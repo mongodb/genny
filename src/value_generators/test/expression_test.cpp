@@ -245,7 +245,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 
         auto expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<int32_t>(expr->evaluate(rng)) == 1);
+        REQUIRE(expr->evaluate(rng).getInt32() == 1);
 
         yaml = YAML::Load(R"(
 269849313357703264
@@ -253,7 +253,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<int64_t>(expr->evaluate(rng)) == 269849313357703264LL);
+        REQUIRE(expr->evaluate(rng).getInt64() == 269849313357703264LL);
 
         yaml = YAML::Load(R"(
 3.14
@@ -261,7 +261,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<double>(expr->evaluate(rng)) == 3.14);
+        REQUIRE(expr->evaluate(rng).getDouble() == 3.14);
 
         yaml = YAML::Load(R"(
 string
@@ -269,7 +269,7 @@ string
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<std::string>(expr->evaluate(rng)) == "string");
+        REQUIRE(expr->evaluate(rng).getString() == "string");
 
         yaml = YAML::Load(R"(
 '5'
@@ -277,7 +277,7 @@ string
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<std::string>(expr->evaluate(rng)) == "5");
+        REQUIRE(expr->evaluate(rng).getString() == "5");
 
         yaml = YAML::Load(R"(
 null
@@ -285,7 +285,7 @@ null
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<BsonTypes::b_null>(expr->evaluate(rng)) == BsonTypes::b_null{});
+        REQUIRE(expr->evaluate(rng).getNull() == BsonTypes::b_null{});
     }
 
     SECTION("valid syntax for boolean values") {
@@ -295,7 +295,7 @@ true
 
         auto expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<bool>(expr->evaluate(rng)) == true);
+        REQUIRE(expr->evaluate(rng).getBool() == true);
 
         yaml = YAML::Load(R"(
 false
@@ -303,7 +303,7 @@ false
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<bool>(expr->evaluate(rng)) == false);
+        REQUIRE(expr->evaluate(rng).getBool() == false);
 
         yaml = YAML::Load(R"(
 on
@@ -311,7 +311,7 @@ on
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<bool>(expr->evaluate(rng)) == true);
+        REQUIRE(expr->evaluate(rng).getBool() == true);
 
         yaml = YAML::Load(R"(
 off
@@ -319,7 +319,7 @@ off
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<bool>(expr->evaluate(rng)) == false);
+        REQUIRE(expr->evaluate(rng).getBool() == false);
 
         yaml = YAML::Load(R"(
 yes
@@ -327,7 +327,7 @@ yes
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<bool>(expr->evaluate(rng)) == true);
+        REQUIRE(expr->evaluate(rng).getBool() == true);
 
         yaml = YAML::Load(R"(
 no
@@ -335,7 +335,7 @@ no
 
         expr = ConstantExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        REQUIRE(std::get<bool>(expr->evaluate(rng)) == false);
+        REQUIRE(expr->evaluate(rng).getBool() == false);
     }
 
     SECTION("must not be a mapping or sequence type") {
@@ -377,7 +377,7 @@ TEST_CASE("Expression parsing with DocumentExpression::parse") {
         auto expr = DocumentExpression::parse(yaml);
         REQUIRE(expr != nullptr);
         assert_documents_equal(
-            std::get<bsoncxx::document::view_or_value>(expr->evaluate(rng)),
+            expr->evaluate(rng).getDocument(),
             BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
                                      BasicBson::kvp("max", BsonTypes::b_int32{60})));
 
@@ -387,8 +387,7 @@ TEST_CASE("Expression parsing with DocumentExpression::parse") {
 
         expr = DocumentExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        assert_documents_equal(std::get<bsoncxx::document::view_or_value>(expr->evaluate(rng)),
-                               BasicBson::make_document());
+        assert_documents_equal(expr->evaluate(rng).getDocument(), BasicBson::make_document());
     }
 
     SECTION("must be a mapping type") {
@@ -443,7 +442,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 
         auto expr = ArrayExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        assert_arrays_equal(std::get<bsoncxx::array::view_or_value>(expr->evaluate(rng)),
+        assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array("sequence", "type"));
 
         yaml = YAML::Load(R"(
@@ -452,8 +451,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 
         expr = ArrayExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        assert_arrays_equal(std::get<bsoncxx::array::view_or_value>(expr->evaluate(rng)),
-                            BasicBson::make_array());
+        assert_arrays_equal(expr->evaluate(rng).getArray(), BasicBson::make_array());
     }
 
     SECTION("valid syntax for heterogeneous elements") {
@@ -463,7 +461,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 
         auto expr = ArrayExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        assert_arrays_equal(std::get<bsoncxx::array::view_or_value>(expr->evaluate(rng)),
+        assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array(BsonTypes::b_int32{1},
                                                   BsonTypes::b_int64{269849313357703264LL},
                                                   BsonTypes::b_double{3.14},
@@ -481,7 +479,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 
         auto expr = ArrayExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        assert_arrays_equal(std::get<bsoncxx::array::view_or_value>(expr->evaluate(rng)),
+        assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array(BsonTypes::b_int64{10},
                                                   BsonTypes::b_int64{10},
                                                   BsonTypes::b_int32{10}));
@@ -494,7 +492,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 
         expr = ArrayExpression::parse(yaml);
         REQUIRE(expr != nullptr);
-        assert_arrays_equal(std::get<bsoncxx::array::view_or_value>(expr->evaluate(rng)),
+        assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array(BsonTypes::b_int64{20},
                                                   BsonTypes::b_int64{20},
                                                   BsonTypes::b_int32{20}));
@@ -539,7 +537,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<int64_t>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getInt64();
             REQUIRE(value >= 50);
             REQUIRE(value <= 60);
         }
@@ -592,7 +590,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<int64_t>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getInt64();
             REQUIRE(value >= 0);
             REQUIRE(value <= 100);
         }
@@ -637,7 +635,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<int64_t>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getInt64();
             REQUIRE(value >= 0);
         }
     }
@@ -681,7 +679,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<int64_t>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getInt64();
             REQUIRE(value >= 0);
         }
     }
@@ -703,7 +701,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<int64_t>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getInt64();
             REQUIRE(value >= 0);
         }
     }
@@ -743,7 +741,7 @@ TEST_CASE("Expression parsing with RandomStringExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<std::string>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getString();
             INFO("Generated string: " << value);
             REQUIRE(value.size() == 15);
         }
@@ -756,7 +754,7 @@ TEST_CASE("Expression parsing with RandomStringExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<std::string>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getString();
             INFO("Generated string: " << value);
             REQUIRE(value.size() == 15);
             for (auto&& c : value) {
@@ -772,7 +770,7 @@ TEST_CASE("Expression parsing with RandomStringExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<std::string>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getString();
             REQUIRE(value == std::string(15, 'x'));
         }
     }
@@ -818,7 +816,7 @@ TEST_CASE("Expression parsing with FastRandomStringExpression") {
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
-            auto value = std::get<std::string>(expr->evaluate(rng));
+            auto value = expr->evaluate(rng).getString();
             INFO("Generated string: " << value);
             REQUIRE(value.size() == 15);
         }

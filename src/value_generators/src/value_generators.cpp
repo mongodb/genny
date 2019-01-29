@@ -21,8 +21,6 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <bsoncxx/builder/basic/array.hpp>
-#include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/json.hpp>
 
@@ -48,6 +46,47 @@ const auto parserMap = std::unordered_map<std::string, Expression::Parser>{
 
 }  // namespace
 
+Value::Value(bool value) : _value(value) {}
+Value::Value(int32_t value) : _value(value) {}
+Value::Value(int64_t value) : _value(value) {}
+Value::Value(double value) : _value(value) {}
+Value::Value(std::string value) : _value(std::move(value)) {}
+Value::Value(bsoncxx::types::b_null value) : _value(std::move(value)) {}
+Value::Value(bsoncxx::document::view_or_value value) : _value(std::move(value)) {}
+Value::Value(bsoncxx::array::view_or_value value) : _value(std::move(value)) {}
+
+bool Value::getBool() const {
+    return std::get<bool>(_value);
+}
+
+int32_t Value::getInt32() const {
+    return std::get<int32_t>(_value);
+}
+
+int64_t Value::getInt64() const {
+    return std::get<int64_t>(_value);
+}
+
+double Value::getDouble() const {
+    return std::get<double>(_value);
+}
+
+std::string Value::getString() const {
+    return std::get<std::string>(_value);
+}
+
+bsoncxx::types::b_null Value::getNull() const {
+    return std::get<bsoncxx::types::b_null>(_value);
+}
+
+bsoncxx::document::view_or_value Value::getDocument() const {
+    return std::get<bsoncxx::document::view_or_value>(_value);
+}
+
+bsoncxx::array::view_or_value Value::getArray() const {
+    return std::get<bsoncxx::array::view_or_value>(_value);
+}
+
 template <class... Ts>
 struct overloaded : Ts... {
     using Ts::operator()...;
@@ -56,22 +95,40 @@ struct overloaded : Ts... {
 template <class... Ts>
 overloaded(Ts...)->overloaded<Ts...>;
 
-int64_t Value::getInt64(std::string_view name) {
-    int64_t ret;
+std::optional<int64_t> Value::tryAsInt64() const {
+    std::optional<int64_t> ret;
 
-    std::visit(
-        overloaded{
-            [&](int32_t arg) { ret = arg; },
-            [&](int64_t arg) { ret = arg; },
-            [&](auto&& arg) {
-                std::stringstream error;
-                error << "Expected integer for parameter '" << name << "', but got " << *this;
-                throw InvalidValueGeneratorSyntax(error.str());
-            },
-        },
-        *this);
+    std::visit(overloaded{[&](int32_t arg) { ret = arg; },
+                          [&](int64_t arg) { ret = arg; },
+                          [&](auto&& arg) {}},
+               _value);
 
     return ret;
+}
+
+namespace {
+
+int64_t getInt64Parameter(const Value& value, std::string_view name) {
+    auto ret = value.tryAsInt64();
+
+    if (!ret) {
+        std::stringstream error;
+        error << "Expected integer for parameter '" << name << "', but got " << value;
+        throw InvalidValueGeneratorSyntax(error.str());
+    }
+
+    return *ret;
+}
+
+}  // namespace
+
+void Value::appendToBuilder(bsoncxx::builder::basic::document& doc, std::string key) {
+    std::visit([&](auto&& arg) { doc.append(bsoncxx::builder::basic::kvp(std::move(key), arg)); },
+               std::move(_value));
+}
+
+void Value::appendToBuilder(bsoncxx::builder::basic::array& arr) {
+    std::visit([&](auto&& arg) { arr.append(arg); }, std::move(_value));
 }
 
 std::ostream& operator<<(std::ostream& out, const Value& value) {
@@ -96,7 +153,7 @@ std::ostream& operator<<(std::ostream& out, const Value& value) {
                 out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
             },
         },
-        value);
+        value._value);
 
     return out;
 }
@@ -237,10 +294,7 @@ Value DocumentExpression::evaluate(genny::DefaultRandom& rng) const {
     auto doc = bsoncxx::builder::basic::document{};
 
     for (auto&& elem : _elements) {
-        auto value = elem.second->evaluate(rng);
-
-        std::visit([&](auto&& arg) { doc.append(bsoncxx::builder::basic::kvp(elem.first, arg)); },
-                   std::move(value));
+        elem.second->evaluate(rng).appendToBuilder(doc, elem.first);
     }
 
     return Value{doc.extract()};
@@ -266,9 +320,7 @@ Value ArrayExpression::evaluate(genny::DefaultRandom& rng) const {
     auto arr = bsoncxx::builder::basic::array{};
 
     for (auto&& elem : _elements) {
-        auto value = elem->evaluate(rng);
-
-        std::visit([&](auto&& arg) { arr.append(arg); }, std::move(value));
+        elem->evaluate(rng).appendToBuilder(arr);
     }
 
     return Value{arr.extract()};
@@ -361,8 +413,8 @@ UniformIntExpression::UniformIntExpression(UniqueExpression min, UniqueExpressio
     : _min(std::move(min)), _max(std::move(max)) {}
 
 Value UniformIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto min = _min->evaluate(rng).getInt64("min");
-    auto max = _max->evaluate(rng).getInt64("max");
+    auto min = getInt64Parameter(_min->evaluate(rng), "min");
+    auto max = getInt64Parameter(_max->evaluate(rng), "max");
 
     auto distribution = std::uniform_int_distribution<int64_t>{min, max};
     return Value{distribution(rng)};
@@ -372,7 +424,7 @@ BinomialIntExpression::BinomialIntExpression(UniqueExpression t, double p)
     : _t(std::move(t)), _p(p) {}
 
 Value BinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto t = _t->evaluate(rng).getInt64("t");
+    auto t = getInt64Parameter(_t->evaluate(rng), "t");
 
     auto distribution = std::binomial_distribution<int64_t>{t, _p};
     return Value{distribution(rng)};
@@ -382,7 +434,7 @@ NegativeBinomialIntExpression::NegativeBinomialIntExpression(UniqueExpression k,
     : _k(std::move(k)), _p(p) {}
 
 Value NegativeBinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto k = _k->evaluate(rng).getInt64("k");
+    auto k = getInt64Parameter(_k->evaluate(rng), "k");
 
     auto distribution = std::negative_binomial_distribution<int64_t>{k, _p};
     return Value{distribution(rng)};
@@ -435,7 +487,7 @@ Value RandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
 
     auto distribution = std::uniform_int_distribution<size_t>{0, alphabetLength - 1};
 
-    auto length = _length->evaluate(rng).getInt64("length");
+    auto length = getInt64Parameter(_length->evaluate(rng), "length");
     std::string str(length, '\0');
 
     for (int i = 0; i < length; ++i) {
@@ -461,7 +513,7 @@ UniqueExpression FastRandomStringExpression::parse(YAML::Node node) {
 }
 
 Value FastRandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto length = _length->evaluate(rng).getInt64("length");
+    auto length = getInt64Parameter(_length->evaluate(rng), "length");
     std::string str(length, '\0');
 
     auto randomValue = rng();
