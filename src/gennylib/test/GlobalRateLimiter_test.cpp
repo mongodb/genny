@@ -85,7 +85,8 @@ TEST_CASE("Global rate limiter") {
 
     SECTION("Limits Rate") {
         auto now = MyDummyClock::now();
-        // First consumeIfWithinRate() goes through because we intentionally have the rate limiter do so.
+        // First consumeIfWithinRate() goes through because we intentionally have the rate limiter
+        // do so.
         REQUIRE(grl.consumeIfWithinRate(now));
 
         // Second consumeIfWithinRate() should fail because we have not incremented the clock.
@@ -112,9 +113,13 @@ TEST_CASE("Global rate limiter can be used by phase loop") {
               _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {};
 
         void run() override {
+            std::chrono::nanoseconds minDelay{1000 * 1000};
+
             for (auto&& config : _loop) {
                 for (auto _ : config) {
+                    auto startTime = std::chrono::steady_clock::now();
                     ++_counter;
+                    std::this_thread::sleep_for(std::chrono::steady_clock::now() - startTime);
                 }
             }
         };
@@ -198,8 +203,8 @@ Actors:
   Type: IncActor
   Threads: 1000
   Phases:
-    - Duration: 5 seconds
-      Rate: 1 per 1 microsecond
+    - Duration: 10 seconds
+      # Rate: 1 per 1 microsecond
 )");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 1000;
@@ -211,7 +216,7 @@ Actors:
 
         ah.run();
 
-        int64_t expected = 5 * 1000 * 1000;
+        int64_t expected = 10 * 1000 * 1000;
         // Result is at least 90% of the expected value. There's some uncertainty
         // due to manually induced jitter of up to 1us per op.
         REQUIRE(getCurState() > expected * 0.90);

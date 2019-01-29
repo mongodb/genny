@@ -59,16 +59,14 @@ public:
     static const int CacheLineSize = 64;
 
     static_assert(ClockT::is_steady, "Clock must be steady");
-
-private:
-    static auto ticks(const typename ClockT::time_point& now) {
-        const auto nowTime = now.time_since_epoch();
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(nowTime).count();
-    }
+    static_assert(std::is_same<typename ClockT::duration, std::chrono::nanoseconds>::value,
+                  "Clock representation must be nano seconds");
 
 public:
     explicit BaseGlobalRateLimiter(const RateSpec& rs)
-        : _burstSize(rs.operations), _rateNS(rs.per.count()){};
+        : _burstSize(rs.operations),
+          _rateNS(rs.per.count()),
+          _lastEmptiedTimeNS{ClockT::now().time_since_epoch().count()} {};
 
     // No copies or moves.
     BaseGlobalRateLimiter(const BaseGlobalRateLimiter& other) = delete;
@@ -88,20 +86,13 @@ public:
      * appropriate back-off strategy if this function returns false.
      */
     bool consumeIfWithinRate(const typename ClockT::time_point& now) {
-        if (!_emptiedTimeNSHasBeenInitialized) {
-            _emptiedTimeNSHasBeenInitialized = true;
-            // Allow one burst to go through when consumeIfWithinRate() is called the first time.
-            // It's fine that this section is not atomic, a best effort is sufficient.
-            _lastEmptiedTimeNS = ticks(now) - _rateNS;
-        }
-
         // The time the bucket was emptied before this consumeIfWithinRate() call.
         int64_t curEmptiedTime = _lastEmptiedTimeNS.load();
 
         // The time the bucket was emptied after this consumeIfWithinRate() call.
         int64_t newEmptiedTime;
 
-        auto nowInTicks = ticks(now);
+        auto nowInTicks = now.time_since_epoch().count();
         do {
             newEmptiedTime = curEmptiedTime + _rateNS;
 
@@ -135,10 +126,8 @@ public:
 private:
     // Manually align _lastEmptiedTimeNS here to vastly improve performance.
     // Lazily initialized by the first call to consumeIfWithinRate().
+    // Note that std::chrono::time_point is not trivially copyable and can't be used here.
     alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _lastEmptiedTimeNS = 0;
-
-    // Flag to determine when consumeIfWithinRate() is first called.
-    std::atomic_bool _emptiedTimeNSHasBeenInitialized = false;
 
     // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to
     // store the burst size and the rate together, since they're specified together in

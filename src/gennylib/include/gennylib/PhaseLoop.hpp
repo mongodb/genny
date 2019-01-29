@@ -117,8 +117,8 @@ public:
                 if (!success && (o.currentPhase() == inPhase)) {
                     // Add some jitter to avoid threads waking up at once.
                     std::this_thread::sleep_for(
-                        std::chrono::nanoseconds(
-                            (_rateLimiter->getRate() + std::rand() % 1000) * _rateLimiter->getNumUsers()));
+                        std::chrono::nanoseconds((_rateLimiter->getRate() + std::rand() % 1000) *
+                                                 _rateLimiter->getNumUsers()));
                     continue;
                 }
                 break;
@@ -132,12 +132,11 @@ public:
     }
 
     bool isDone(SteadyClock::time_point startedAt, int64_t currentIteration) {
-        return
-            (!_minIterations || currentIteration >= (*_minIterations).value) &&
+        return (!_minIterations || currentIteration >= (*_minIterations).value) &&
             (!_minDuration ||
-            // check is last to avoid doing now() call unnecessarily
-            (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
-                SteadyClock::now() - startedAt));
+             // check is last to avoid doing now() call unnecessarily
+             (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                          SteadyClock::now() - startedAt));
     }
 
     bool operator==(const IterationChecker& other) const {
@@ -183,7 +182,8 @@ public:
                        bool isEndIterator)
         : _orchestrator{std::addressof(orchestrator)},
           _iterationCheck{iterationCheck},
-          _referenceStartingPoint{isEndIterator ? SteadyClock::time_point::min() : _iterationCheck->computeReferenceStartingPoint()},
+          _referenceStartingPoint{isEndIterator ? SteadyClock::time_point::min()
+                                                : _iterationCheck->computeReferenceStartingPoint()},
           _inPhase{inPhase},
           _isEndIterator{isEndIterator},
           _currentIteration{0} {
