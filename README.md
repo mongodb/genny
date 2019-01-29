@@ -86,7 +86,7 @@ make -j8 -C "build" genny
 You only need to run cmake once. Other useful targets include:
 
 - all
-- test_gennylib test_driver (builds tests)
+- gennylib_test driver_test (builds tests)
 - test (run's tests if they're built)
 
 #### Ubuntu 18.04 LTS
@@ -142,7 +142,7 @@ it's not going to make common editing environments go wonky.
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-make -j8 -C "build" test_gennylib test_driver test
+make -j8 -C "build" gennylib_test driver_test test
 ```
 
 ### Benchmark Tests
@@ -156,8 +156,8 @@ If you want to run all the tests except perf tests you can manually
 invoke the test binaries and exclude perf tests:
 
 ```sh
-make -j8 -C "build" benchmark_gennylib test
-./build/src/gennylib/test_gennylib '~[benchmark]'
+make -j8 -C "build" gennylib_benchmark test
+./build/src/gennylib/gennylib_test '~[benchmark]'
 ```
 
 Read more about specifying what tests to run [here][s].

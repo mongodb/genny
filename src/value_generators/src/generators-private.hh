@@ -1,10 +1,13 @@
 #ifndef HEADER_48C0CEE4_FC42_4B98_AABE_5980BF83A174
 #define HEADER_48C0CEE4_FC42_4B98_AABE_5980BF83A174
 
-#include "parser.hh"
+#include <optional>
+#include <unordered_map>
 
 #include <value_generators/value_generators.hpp>
 #include <value_generators/DefaultRandom.hpp>
+
+#include "parser.hh"
 
 namespace genny::value_generators {
 
