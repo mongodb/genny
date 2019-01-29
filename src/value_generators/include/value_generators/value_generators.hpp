@@ -85,8 +85,13 @@ std::unique_ptr<DocumentGenerator> makeDoc(YAML::Node, genny::DefaultRandom&);
  * instance.
  *
  * The bsoncxx::types::b_document and bsoncxx::types::b_array cases that are part of
- * bsoncxx::types::value do not allow for BSON documents or arrays to own their underlying buffer
- * and can only be constructed from their respective view types.
+ * bsoncxx::types::value do not allow for BSON documents or arrays which own their underlying buffer
+ * and instead can only be constructed from their respective view types. This is incompatible with
+ * Expression::evaluate() because the generated (owning) BSON document or array must outlive its
+ * view. Additionally, the Value class uses the bsoncxx::document::view_or_value and
+ * bsoncxx::array::view_or_value types to represent BSON documents and arrays that may optionally
+ * own their underlying buffer. Allowing for view types leaves the possibility open for never
+ * copying a fixed document or array value once it is parsed from the configuration file.
  *
  * Note that the Value class encapsulates std::variant rather than aliases it in order to define a
  * custom std::ostream::operator<< for it.
