@@ -163,6 +163,8 @@ UniqueExpression Expression::parseOperand(YAML::Node node) {
                 "C++ programmer error: Failed to check for node's existence before attempting to"
                 " parse it");
     }
+
+    std::abort();
 }
 
 ConstantExpression::ConstantExpression(Value value) : _value(Value{std::move(value)}) {}
