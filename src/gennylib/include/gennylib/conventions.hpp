@@ -85,27 +85,6 @@ public:  // Operators
         return value;
     }
 
-    // TODO: TIG-1155 remove these conversion operators if they're not used.
-    explicit constexpr operator std::chrono::microseconds() const {
-        return std::chrono::duration_cast<std::chrono::microseconds>(value);
-    }
-
-    explicit constexpr operator std::chrono::milliseconds() const {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(value);
-    }
-
-    explicit constexpr operator std::chrono::seconds() const {
-        return std::chrono::duration_cast<std::chrono::seconds>(value);
-    }
-
-    explicit constexpr operator std::chrono::minutes() const {
-        return std::chrono::duration_cast<std::chrono::minutes>(value);
-    }
-
-    explicit constexpr operator std::chrono::hours() const {
-        return std::chrono::duration_cast<std::chrono::hours>(value);
-    }
-
     constexpr auto count() const {
         return value.count();
     }

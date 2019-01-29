@@ -135,8 +135,7 @@ public:
         return (!_minIterations || currentIteration >= (*_minIterations).value) &&
             (!_minDuration ||
              // check is last to avoid doing now() call unnecessarily
-             (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                          SteadyClock::now() - startedAt));
+             (*_minDuration).value <= SteadyClock::now() - startedAt);
     }
 
     bool operator==(const IterationChecker& other) const {

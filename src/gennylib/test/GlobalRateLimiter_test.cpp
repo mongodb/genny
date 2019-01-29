@@ -117,9 +117,9 @@ TEST_CASE("Global rate limiter can be used by phase loop") {
 
             for (auto&& config : _loop) {
                 for (auto _ : config) {
-                    auto startTime = std::chrono::steady_clock::now();
+//                    auto startTime = std::chrono::steady_clock::now();
                     ++_counter;
-                    std::this_thread::sleep_for(std::chrono::steady_clock::now() - startTime);
+//                    std::this_thread::sleep_for(std::chrono::steady_clock::now() - startTime);
                 }
             }
         };
@@ -201,13 +201,13 @@ SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: IncActor
-  Threads: 1000
+  Threads: 100
   Phases:
     - Duration: 10 seconds
-      # Rate: 1 per 1 microsecond
+      Rate: 1 per 100 microseconds
 )");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
-        int num_threads = 1000;
+        int num_threads = 100;
 
         genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
         auto getCurState = []() {
@@ -216,7 +216,7 @@ Actors:
 
         ah.run();
 
-        int64_t expected = 10 * 1000 * 1000;
+        int64_t expected = 10 * 1000 * 10;
         // Result is at least 90% of the expected value. There's some uncertainty
         // due to manually induced jitter of up to 1us per op.
         REQUIRE(getCurState() > expected * 0.90);
