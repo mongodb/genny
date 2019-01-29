@@ -113,13 +113,9 @@ TEST_CASE("Global rate limiter can be used by phase loop") {
               _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {};
 
         void run() override {
-            std::chrono::nanoseconds minDelay{1000 * 1000};
-
             for (auto&& config : _loop) {
                 for (auto _ : config) {
-//                    auto startTime = std::chrono::steady_clock::now();
                     ++_counter;
-//                    std::this_thread::sleep_for(std::chrono::steady_clock::now() - startTime);
                 }
             }
         };
@@ -216,13 +212,16 @@ Actors:
 
         ah.run();
 
+        // 10 * 1000 ops per second * 10 seconds.
         int64_t expected = 10 * 1000 * 10;
-        // Result is at least 90% of the expected value. There's some uncertainty
-        // due to manually induced jitter of up to 1us per op.
+
+        // Result is at least 95% of the expected value. There's some uncertainty
+        // due to manually induced jitter.
         REQUIRE(getCurState() > expected * 0.90);
 
-        // Result is at most 140% of the expected value. The phase loop can run for
-        // longer if there's a large number of threads.
+        // Result is at most 110% of the expected value. The steady clock
+        // time is cached for threads so threads can run for longer than the
+        // specified duration.
         REQUIRE(getCurState() < expected * 1.10);
 
         // Print out the result if both REQUIRE pass.
