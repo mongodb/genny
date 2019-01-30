@@ -467,7 +467,7 @@ private:
  *
  *     private:
  *         // Actor-private struct that the Actor uses to determine what
- *         // to do for each Phase. Likely holds ValueGenerators or other
+ *         // to do for each Phase. Likely holds Expressions or other
  *         // expensive-to-construct objects. PhaseLoop will construct these
  *         // at Actor setup time rather than at runtime.
  *         struct MyActorConfig {

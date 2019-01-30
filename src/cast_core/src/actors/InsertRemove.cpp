@@ -16,6 +16,7 @@
 
 #include <memory>
 
+#include <bsoncxx/builder/stream/document.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 #include <yaml-cpp/yaml.h>

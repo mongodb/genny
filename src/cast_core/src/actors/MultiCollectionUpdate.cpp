@@ -34,20 +34,20 @@ namespace genny::actor {
 
 /** @private */
 struct MultiCollectionUpdate::PhaseConfig {
-    PhaseConfig(PhaseContext& context, genny::DefaultRandom& rng, mongocxx::pool::entry& client)
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<UIntSpec, true>("CollectionCount")},
-          queryDocument{value_generators::makeDoc(context.get("UpdateFilter"), rng)},
-          updateDocument{value_generators::makeDoc(context.get("Update"), rng)},
+          queryExpr{value_generators::Expression::parseOperand(context.get("UpdateFilter"))},
+          updateExpr{value_generators::Expression::parseOperand(context.get("Update"))},
           uniformDistribution{0, numCollections},
           minDelay{context.get<TimeSpec, false>("MinDelay").value_or(TimeSpec(0))} {}
 
     mongocxx::database database;
     size_t numCollections;
-    std::unique_ptr<value_generators::DocumentGenerator> queryDocument;
-    std::unique_ptr<value_generators::DocumentGenerator> updateDocument;
+    value_generators::UniqueExpression queryExpr;
+    value_generators::UniqueExpression updateExpr;
     // TODO: Enable passing in update options.
-    //    std::unique_ptr<value_generators::DocumentGenerator>  updateOptions;
+    //    value_generators::UniqueExpression  updateOptionsExpr;
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<size_t> uniformDistribution;
@@ -66,17 +66,15 @@ void MultiCollectionUpdate::run() {
             auto collection = config->database[collectionName];
 
             // Perform update
-            bsoncxx::builder::stream::document updateFilter{};
-            bsoncxx::builder::stream::document update{};
-            auto filterView = config->queryDocument->view(updateFilter);
-            auto updateView = config->updateDocument->view(update);
-            // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filterView);
-            // BOOST_LOG_TRIVIAL(info) << "Update is " << bsoncxx::to_json(updateView);
+            auto filter = config->queryExpr->evaluate(_rng).getDocument();
+            auto update = config->updateExpr->evaluate(_rng).getDocument();
+            // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
+            // BOOST_LOG_TRIVIAL(info) << "Update is " << bsoncxx::to_json(update.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
                 // Only time the actual update, not the setup of arguments
                 auto op = _updateTimer.raii();
-                auto result = collection.update_many(filterView, updateView);
+                auto result = collection.update_many(std::move(filter), std::move(update));
                 _updateCount.incr(result->modified_count());
             }
             // make sure enough time has passed. Sleep if needed -- remove after TIG-1155
@@ -93,7 +91,7 @@ MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
       _updateTimer{context.timer("updateTime", MultiCollectionUpdate::id())},
       _updateCount{context.counter("updatedDocuments", MultiCollectionUpdate::id())},
       _client{std::move(context.client())},
-      _loop{context, _rng, _client} {}
+      _loop{context, _client} {}
 
 namespace {
 auto registerMultiCollectionUpdate =

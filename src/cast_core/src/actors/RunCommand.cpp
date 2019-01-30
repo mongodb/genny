@@ -22,6 +22,7 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
+#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -108,8 +109,8 @@ public:
               OpConfig opts)
         : _databaseName{databaseName},
           _database{std::move(database)},
-          _rng(rng),
-          _commandExpr(std::move(commandExpr)),
+          _rng{rng},
+          _commandExpr{std::move(commandExpr)},
           _options{std::move(opts)},
           _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)},
           _awaitStepdown{opts.awaitStepdown} {

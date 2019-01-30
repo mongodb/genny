@@ -19,8 +19,6 @@
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
-using DocGenerator = genny::value_generators::DocumentGenerator;
-using UniqueDocGenerator = std::unique_ptr<DocGenerator>;
 
 namespace YAML {
 
@@ -358,36 +356,34 @@ struct InsertOneOperation : public WriteOperation {
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng,
                        metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto insertDoc = opNode["Document"];
         if (!insertDoc) {
             throw InvalidConfigurationException("'insertOne' expects a 'Document' field.");
         }
-        _docTemplate = value_generators::makeDoc(insertDoc, rng);
+        _docExpr = value_generators::Expression::parseOperand(insertDoc);
 
         // TODO: parse insert options.
     }
 
     mongocxx::model::write getModel() override {
-        bsoncxx::builder::stream::document document{};
-        _docTemplate->view(document);
-        return mongocxx::model::insert_one{document.extract()};
+        auto document = _docExpr->evaluate(_rng).getDocument();
+        return mongocxx::model::insert_one{std::move(document)};
     }
 
     void run(mongocxx::client_session& session) override {
-        bsoncxx::builder::stream::document insertDoc{};
-        _docTemplate->view(insertDoc);
-        auto view = insertDoc.view();
+        auto document = _docExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.insert_one(session, view, _options)
-                     : _collection.insert_one(view, _options);
+        (_onSession) ? _collection.insert_one(session, std::move(document), _options)
+                     : _collection.insert_one(std::move(document), _options);
         ctx.success();
     }
 
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UniqueDocGenerator _docTemplate;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _docExpr;
     metrics::Operation _operation;
     mongocxx::options::insert _options;
 };
@@ -398,48 +394,41 @@ struct UpdateOneOperation : public WriteOperation {
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng,
                        metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto filter = opNode["Filter"];
         auto update = opNode["Update"];
         if (!filter || !update) {
             throw InvalidConfigurationException(
                 "'updateOne' expects 'Filter' and 'Update' fields.");
         }
-        _filterTemplate = value_generators::makeDoc(filter, rng);
-        _updateTemplate = value_generators::makeDoc(update, rng);
+        _filterExpr = value_generators::Expression::parseOperand(filter);
+        _updateExpr = value_generators::Expression::parseOperand(update);
 
         // TODO: parse update options.
     }
 
     mongocxx::model::write getModel() override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-
-        bsoncxx::builder::stream::document updateDocument{};
-        _updateTemplate->view(updateDocument);
-        return mongocxx::model::update_one{filterDocument.extract(), updateDocument.extract()};
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
+        auto update = _updateExpr->evaluate(_rng).getDocument();
+        return mongocxx::model::update_one{std::move(filter), std::move(update)};
     }
 
     void run(mongocxx::client_session& session) override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-
-        bsoncxx::builder::stream::document updateDocument{};
-        _updateTemplate->view(updateDocument);
-
-        auto filterView = filterDocument.view();
-        auto updateView = updateDocument.view();
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
+        auto update = _updateExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.update_one(session, filterView, updateView, _options)
-                     : _collection.update_one(filterView, updateView, _options);
+        (_onSession)
+            ? _collection.update_one(session, std::move(filter), std::move(update), _options)
+            : _collection.update_one(std::move(filter), std::move(update), _options);
         ctx.success();
     }
 
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UniqueDocGenerator _filterTemplate;
-    UniqueDocGenerator _updateTemplate;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _filterExpr;
+    value_generators::UniqueExpression _updateExpr;
     metrics::Operation _operation;
     mongocxx::options::update _options;
 };
@@ -450,48 +439,41 @@ struct UpdateManyOperation : public WriteOperation {
                         mongocxx::collection collection,
                         genny::DefaultRandom& rng,
                         metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto filter = opNode["Filter"];
         auto update = opNode["Update"];
         if (!filter || !update) {
             throw InvalidConfigurationException(
                 "'updateMany' expects 'Filter' and 'Update' fields.");
         }
-        _filterTemplate = value_generators::makeDoc(filter, rng);
-        _updateTemplate = value_generators::makeDoc(update, rng);
+        _filterExpr = value_generators::Expression::parseOperand(filter);
+        _updateExpr = value_generators::Expression::parseOperand(update);
 
         // TODO: parse update options.
     }
 
     mongocxx::model::write getModel() override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-
-        bsoncxx::builder::stream::document updateDocument{};
-        _updateTemplate->view(updateDocument);
-        return mongocxx::model::update_many{filterDocument.extract(), updateDocument.extract()};
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
+        auto update = _updateExpr->evaluate(_rng).getDocument();
+        return mongocxx::model::update_many{std::move(filter), std::move(update)};
     }
 
     void run(mongocxx::client_session& session) override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-
-        bsoncxx::builder::stream::document updateDocument{};
-        _updateTemplate->view(updateDocument);
-
-        auto filterView = filterDocument.view();
-        auto updateView = updateDocument.view();
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
+        auto update = _updateExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.update_many(session, filterView, updateView, _options)
-                     : _collection.update_many(filterView, updateView, _options);
+        (_onSession)
+            ? _collection.update_many(session, std::move(filter), std::move(update), _options)
+            : _collection.update_many(std::move(filter), std::move(update), _options);
         ctx.success();
     }
 
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UniqueDocGenerator _filterTemplate;
-    UniqueDocGenerator _updateTemplate;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _filterExpr;
+    value_generators::UniqueExpression _updateExpr;
     metrics::Operation _operation;
     mongocxx::options::update _options;
 };
@@ -502,37 +484,34 @@ struct DeleteOneOperation : public WriteOperation {
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng,
                        metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto filter = opNode["Filter"];
         if (!filter) {
             throw InvalidConfigurationException("'deleteOne' expects a 'Filter' field.");
         }
-        _filterTemplate = value_generators::makeDoc(filter, rng);
+        _filterExpr = value_generators::Expression::parseOperand(filter);
 
         // TODO: parse delete options.
     }
 
     mongocxx::model::write getModel() override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-        return mongocxx::model::delete_one{filterDocument.extract()};
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
+        return mongocxx::model::delete_one{std::move(filter)};
     }
 
     void run(mongocxx::client_session& session) override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-
-        auto filterView = filterDocument.view();
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.delete_one(session, filterView, _options)
-                     : _collection.delete_one(filterView, _options);
+        (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
+                     : _collection.delete_one(std::move(filter), _options);
         ctx.success();
     }
 
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UniqueDocGenerator _filterTemplate;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _filterExpr;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
 };
@@ -543,37 +522,34 @@ struct DeleteManyOperation : public WriteOperation {
                         mongocxx::collection collection,
                         genny::DefaultRandom& rng,
                         metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto filter = opNode["Filter"];
         if (!filter) {
             throw InvalidConfigurationException("'deleteMany' expects a 'Filter' field.");
         }
-        _filterTemplate = value_generators::makeDoc(filter, rng);
+        _filterExpr = value_generators::Expression::parseOperand(filter);
 
         // TODO: parse delete options.
     }
 
     mongocxx::model::write getModel() override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-        return mongocxx::model::delete_many{filterDocument.extract()};
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
+        return mongocxx::model::delete_many{std::move(filter)};
     }
 
     void run(mongocxx::client_session& session) override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-
-        auto filterView = filterDocument.view();
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.delete_many(session, filterView, _options)
-                     : _collection.delete_many(filterView, _options);
+        (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
+                     : _collection.delete_many(std::move(filter), _options);
         ctx.success();
     }
 
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UniqueDocGenerator _filterTemplate;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _filterExpr;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
 };
@@ -584,48 +560,41 @@ struct ReplaceOneOperation : public WriteOperation {
                         mongocxx::collection collection,
                         genny::DefaultRandom& rng,
                         metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto filter = opNode["Filter"];
         auto replacement = opNode["Replacement"];
         if (!filter || !replacement) {
             throw InvalidConfigurationException(
                 "'replaceOne' expects 'Filter' and 'Replacement' fields.");
         }
-        _filterTemplate = value_generators::makeDoc(filter, rng);
-        _replacementTemplate = value_generators::makeDoc(replacement, rng);
+        _filterExpr = value_generators::Expression::parseOperand(filter);
+        _replacementExpr = value_generators::Expression::parseOperand(replacement);
 
         // TODO: parse replace options.
     }
 
     mongocxx::model::write getModel() override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-
-        bsoncxx::builder::stream::document replaceDocument{};
-        _replacementTemplate->view(replaceDocument);
-        return mongocxx::model::replace_one{filterDocument.extract(), replaceDocument.extract()};
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
+        auto replacement = _replacementExpr->evaluate(_rng).getDocument();
+        return mongocxx::model::replace_one{std::move(filter), std::move(replacement)};
     }
 
     void run(mongocxx::client_session& session) override {
-        bsoncxx::builder::stream::document filterDocument{};
-        _filterTemplate->view(filterDocument);
-
-        bsoncxx::builder::stream::document replaceDocument{};
-        _replacementTemplate->view(replaceDocument);
-
-        auto filterView = filterDocument.view();
-        auto replaceView = replaceDocument.view();
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
+        auto replacement = _replacementExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.replace_one(session, filterView, replaceView, _options)
-                     : _collection.replace_one(filterView, replaceView, _options);
+        (_onSession)
+            ? _collection.replace_one(session, std::move(filter), std::move(replacement), _options)
+            : _collection.replace_one(std::move(filter), std::move(replacement), _options);
         ctx.success();
     }
 
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    UniqueDocGenerator _filterTemplate;
-    UniqueDocGenerator _replacementTemplate;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _filterExpr;
+    value_generators::UniqueExpression _replacementExpr;
     metrics::Operation _operation;
     mongocxx::options::replace _options;
 };
@@ -734,25 +703,22 @@ struct CountOperation : public BaseOperation {
                    mongocxx::collection collection,
                    genny::DefaultRandom& rng,
                    metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto filterYaml = opNode["Filter"];
         if (!filterYaml) {
             throw InvalidConfigurationException("'Count' expects a 'Filter' field.");
         }
-        auto doc = value_generators::makeDoc(filterYaml, rng);
-        _filterTemplate = std::move(doc);
+        _filterExpr = value_generators::Expression::parseOperand(filterYaml);
         if (opNode["Options"]) {
             _options = opNode["Options"].as<mongocxx::options::count>();
         }
     }
 
     void run(mongocxx::client_session& session) override {
-        bsoncxx::builder::stream::document filterDoc{};
-        _filterTemplate->view(filterDoc);
-        auto view = filterDoc.view();
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.count(session, view, _options)
-                     : _collection.count(view, _options);
+        (_onSession) ? _collection.count(session, std::move(filter), _options)
+                     : _collection.count(std::move(filter), _options);
         ctx.success();
     }
 
@@ -761,7 +727,8 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::count _options;
-    UniqueDocGenerator _filterTemplate;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _filterExpr;
     metrics::Operation _operation;
 };
 
@@ -771,23 +738,20 @@ struct FindOperation : public BaseOperation {
                   mongocxx::collection collection,
                   genny::DefaultRandom& rng,
                   metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto filterYaml = opNode["Filter"];
         if (!filterYaml) {
             throw InvalidConfigurationException("'Find' expects a 'Filter' field.");
         }
-        auto doc = value_generators::makeDoc(filterYaml, rng);
-        _filterTemplate = std::move(doc);
+        _filterExpr = value_generators::Expression::parseOperand(filterYaml);
         // TODO: parse Find Options
     }
 
     void run(mongocxx::client_session& session) override {
-        bsoncxx::builder::stream::document filterDoc{};
-        _filterTemplate->view(filterDoc);
-        auto view = filterDoc.view();
+        auto filter = _filterExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        auto cursor = (_onSession) ? _collection.find(session, view, _options)
-                                   : _collection.find(view, _options);
+        auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
+                                   : _collection.find(std::move(filter), _options);
         for (auto&& doc : cursor) {
             ctx.addOps(1);
             ctx.addBytes(doc.length());
@@ -800,7 +764,8 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::find _options;
-    UniqueDocGenerator _filterTemplate;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _filterExpr;
     metrics::Operation _operation;
 };
 
@@ -820,23 +785,22 @@ struct InsertManyOperation : public BaseOperation {
                         mongocxx::collection collection,
                         genny::DefaultRandom& rng,
                         metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{collection}, _operation{operation}, _rng{rng} {
         auto documents = opNode["Documents"];
         if (!documents && !documents.IsSequence()) {
             throw InvalidConfigurationException(
                 "'insertMany' expects a 'Documents' field of sequence type.");
         }
         for (auto&& document : documents) {
-            _docTemplates.push_back(std::move(value_generators::makeDoc(document, rng)));
+            _docExprs.push_back(value_generators::Expression::parseOperand(document));
         }
         // TODO: parse insert options.
     }
 
     void run(mongocxx::client_session& session) override {
-        for (auto&& docTemplate : _docTemplates) {
-            bsoncxx::builder::stream::document doc{};
-            docTemplate->view(doc);
-            _writeOps.push_back(doc.extract());
+        for (auto&& docExpr : _docExprs) {
+            auto doc = docExpr->evaluate(_rng).getDocument();
+            _writeOps.push_back(std::move(doc));
         }
         auto ctx = _operation.start();
         (_onSession) ? _collection.insert_many(session, _writeOps, _options)
@@ -847,10 +811,11 @@ struct InsertManyOperation : public BaseOperation {
 private:
     mongocxx::collection _collection;
     const bool _onSession;
-    std::vector<bsoncxx::document::value> _writeOps;
+    std::vector<bsoncxx::document::view_or_value> _writeOps;
     mongocxx::options::insert _options;
     metrics::Operation _operation;
-    std::vector<UniqueDocGenerator> _docTemplates;
+    genny::DefaultRandom& _rng;
+    std::vector<value_generators::UniqueExpression> _docExprs;
 };
 
 /**
