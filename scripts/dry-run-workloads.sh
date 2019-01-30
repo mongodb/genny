@@ -13,7 +13,7 @@ CMD=(
 )
 
 # Find all of the workload yamls at the specified directory
-WORKLOAD_DIR="${1:-src/workloads}"
+WORKLOAD_DIR="${1:-${ROOT_DIR}/src/workloads}"
 
 WORKLOAD_LIST="${BUILD_DIR}/workload-list.txt"
 if [ -e "${WORKLOAD_LIST}" ]; then
