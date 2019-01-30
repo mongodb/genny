@@ -725,3 +725,27 @@ Actors:
         });
     }
 }
+
+TEST_CASE("If no producer exists for an actor, then we should throw an error") {
+    genny::metrics::Registry metrics;
+    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+
+    auto cast = Cast{
+        {"Foo", std::make_shared<NoOpProducer>()},
+    };
+
+    auto yaml = YAML::Load(R"(
+    SchemaVersion: 2018-07-01
+    Database: test
+    Actors:
+    - Name: Actor1
+      Type: Bar
+    )");
+
+    SECTION("Incorrect type value inputted") {
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+        };
+        REQUIRE_THROWS_WITH(test(), Matches("Unable to construct actors: No producer for 'Bar'.\n"));
+    }
+}
