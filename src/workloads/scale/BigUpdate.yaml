@@ -7,7 +7,7 @@
 # updated.
 
 SchemaVersion: 2018-07-01
-Owner: @mongodb/product-perf
+Owner: "@mongodb/product-perf"
 
 Pool:
   QueryOptions:
