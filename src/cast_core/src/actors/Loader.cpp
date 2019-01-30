@@ -92,7 +92,7 @@ void genny::actor::Loader::run() {
                         }
                         {
                             auto individualOp = _individualBulkLoadTimer.raii();
-                            auto result = collection.insert_many(docs);
+                            auto result = collection.insert_many(std::move(docs));
                             remainingInserts -= result->inserted_count();
                         }
                     }
