@@ -31,7 +31,7 @@ void Cast::add(const std::string_view& castName, std::shared_ptr<ActorProducer> 
 }
 
 std::ostream& Cast::streamProducersTo(std::ostream& out) const {
-    for (const auto& [castName, producer] : globalCast().getProducers()) {
+    for (const auto& [castName, producer] : _producers) {
         out << castName << " is " << producer->name() << std::endl;
     }
     return out;
