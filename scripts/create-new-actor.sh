@@ -50,6 +50,8 @@ create_header_text() {
     echo ""
     echo "/**"
     echo " * TODO: document me"
+    echo " *"
+    echo " * Owner: TODO (which github team owns this Actor?)"
     echo " */"
     echo "class $actor_name : public Actor {"
     echo ""
