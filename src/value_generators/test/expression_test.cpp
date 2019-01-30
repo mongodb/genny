@@ -338,30 +338,48 @@ no
         REQUIRE(expr->evaluate(rng).getBool() == false);
     }
 
-    SECTION("must not be a mapping or sequence type") {
+    SECTION("valid syntax for literal objects") {
         auto yaml = YAML::Load(R"(
 {min: 50, max: 60}
         )");
 
-        REQUIRE_THROWS_AS(ConstantExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        auto expr = ConstantExpression::parse(yaml);
+        REQUIRE(expr != nullptr);
+
+        assert_documents_equal(
+            expr->evaluate(rng).getDocument(),
+            BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                     BasicBson::kvp("max", BsonTypes::b_int32{60})));
 
         yaml = YAML::Load(R"(
 {}
         )");
 
-        REQUIRE_THROWS_AS(ConstantExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        expr = ConstantExpression::parse(yaml);
+        REQUIRE(expr != nullptr);
 
-        yaml = YAML::Load(R"(
+        assert_documents_equal(expr->evaluate(rng).getDocument(), BasicBson::make_document());
+    }
+
+    SECTION("valid syntax for literal arrays") {
+        auto yaml = YAML::Load(R"(
 [sequence, value]
         )");
 
-        REQUIRE_THROWS_AS(ConstantExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        auto expr = ConstantExpression::parse(yaml);
+        REQUIRE(expr != nullptr);
+
+        assert_arrays_equal(expr->evaluate(rng).getArray(),
+                            BasicBson::make_array("sequence", "value"));
 
         yaml = YAML::Load(R"(
 []
         )");
 
-        REQUIRE_THROWS_AS(ConstantExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        expr = ConstantExpression::parse(yaml);
+        REQUIRE(expr != nullptr);
+
+        assert_arrays_equal(expr->evaluate(rng).getArray(), BasicBson::make_array());
     }
 }
 
@@ -828,6 +846,112 @@ TEST_CASE("Expression parsing with FastRandomStringExpression") {
         )");
 
         REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+    }
+}
+
+TEST_CASE("Expression parsing with ConstantExpression") {
+    genny::DefaultRandom rng{};
+    rng.seed(269849313357703264LL);
+
+    // We call Expression::evaluate() multiple times on the same Expression instance to verify
+    // nothing goes wrong. The method is currently marked const but that could change in the future
+    // as could the introduction of `mutable` members for caching purposes.
+    const int kNumSamples = 10;
+
+    SECTION("valid syntax for literal objects") {
+        auto yaml = YAML::Load(R"(
+{^Verbatim: {^RandomInt: {min: 50, max: 60}}}
+        )");
+
+        auto expr = Expression::parseExpression(yaml);
+        REQUIRE(expr != nullptr);
+
+        for (int i = 0; i < kNumSamples; ++i) {
+            assert_documents_equal(
+                expr->evaluate(rng).getDocument(),
+                BasicBson::make_document(BasicBson::kvp(
+                    "^RandomInt",
+                    BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                             BasicBson::kvp("max", BsonTypes::b_int32{60})))));
+        }
+
+        yaml = YAML::Load(R"(
+{^Verbatim: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}}
+        )");
+
+        expr = Expression::parseExpression(yaml);
+        REQUIRE(expr != nullptr);
+
+        for (int i = 0; i < kNumSamples; ++i) {
+            assert_documents_equal(
+                expr->evaluate(rng).getDocument(),
+                BasicBson::make_document(
+                    BasicBson::kvp("otherKey", BsonTypes::b_int32{1}),
+                    BasicBson::kvp(
+                        "^RandomInt",
+                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                                 BasicBson::kvp("max", BsonTypes::b_int32{60})))));
+        }
+
+        yaml = YAML::Load(R"(
+{^Verbatim: {^RandomInt: {min: 50, max: 60}, otherKey: 1}}
+        )");
+
+        expr = Expression::parseExpression(yaml);
+        REQUIRE(expr != nullptr);
+
+        for (int i = 0; i < kNumSamples; ++i) {
+            assert_documents_equal(
+                expr->evaluate(rng).getDocument(),
+                BasicBson::make_document(
+                    BasicBson::kvp(
+                        "^RandomInt",
+                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                                 BasicBson::kvp("max", BsonTypes::b_int32{60}))),
+                    BasicBson::kvp("otherKey", BsonTypes::b_int32{1})));
+        }
+
+        yaml = YAML::Load(R"(
+{^Verbatim: {^RandomString: {length: 15}}}
+        )");
+
+        expr = Expression::parseExpression(yaml);
+        REQUIRE(expr != nullptr);
+
+        for (int i = 0; i < kNumSamples; ++i) {
+            assert_documents_equal(
+                expr->evaluate(rng).getDocument(),
+                BasicBson::make_document(BasicBson::kvp(
+                    "^RandomString",
+                    BasicBson::make_document(BasicBson::kvp("length", BsonTypes::b_int32{15})))));
+        }
+    }
+
+    SECTION("valid syntax for literal arrays") {
+        auto yaml = YAML::Load(R"(
+^Verbatim:
+- ^RandomInt: {min: 50, max: 60}
+- ^RandomString: {length: 15}
+- scalarValue
+        )");
+
+        auto expr = Expression::parseExpression(yaml);
+        REQUIRE(expr != nullptr);
+
+        for (int i = 0; i < kNumSamples; ++i) {
+            assert_arrays_equal(
+                expr->evaluate(rng).getArray(),
+                BasicBson::make_array(
+                    BasicBson::make_document(BasicBson::kvp(
+                        "^RandomInt",
+                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                                 BasicBson::kvp("max", BsonTypes::b_int32{60})))),
+                    BasicBson::make_document(
+                        BasicBson::kvp("^RandomString",
+                                       BasicBson::make_document(
+                                           BasicBson::kvp("length", BsonTypes::b_int32{15})))),
+                    "scalarValue"));
+        }
     }
 }
 
