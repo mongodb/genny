@@ -92,7 +92,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
         std::ostringstream stream;
         stream << "Unable to construct actors: No producer for '" << name << "'." << std::endl;
         cast.streamProducersTo(stream);
-        throw std::out_of_range(stream.str());
+        throw InvalidConfigurationException(stream.str());
     }
 
     for (auto&& actor : producer->produce(*actorContext)) {
