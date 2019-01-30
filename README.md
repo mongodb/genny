@@ -221,6 +221,18 @@ To create a new Actor, run the following:
 ./scripts/create-new-actor.sh NameOfYourNewActor
 ```
 
+## Workload YAMLs
+
+Workload YAMLs live in `src/workloads` and are organized by "theme". Theme
+is a bit of an organic (contrived) concept so please reach out to us on Slack
+or mention it in your PR if you're not sure which directory your workload
+YAML belongs in.
+
+All workload yamls must have an `Owners` field indicating which github team
+should receive PRs for the YAML. The files must end with the `.yaml` suffix.
+Workload YAML itself is not currently linted but please try to make the files
+look tidy.
+
 ## Code Style and Limitations
 
 > Don't get cute.
