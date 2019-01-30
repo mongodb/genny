@@ -183,6 +183,7 @@ create_workload_yml() {
     actor_name="$1"
 cat << EOF > "$(dirname "$0")/../workloads/docs/${actor_name}.yaml"
 SchemaVersion: 2018-07-01
+Owner: TODO put your github team name here e.g. @mongodb/stm
 
 # TODO: delete this file or add a meaningful workload using or
 #       demonstrating your Actor

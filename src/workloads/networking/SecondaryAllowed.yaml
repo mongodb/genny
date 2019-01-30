@@ -1,4 +1,6 @@
 SchemaVersion: 2018-07-01
+Owner: @mongodb/service-architecture
+
 Pool:
     QueryOptions:
         maxPoolSize: 1000

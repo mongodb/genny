@@ -5,8 +5,7 @@
 
 # product-perf
 workloads/product-perf/* @mongodb/product-perf
-src/product-perf/*       @mongodb/product-perf
 
 # service-architecture
-workloads/service-architecture/* @mongodb/service-architecture
+workloads/networking/*  @mongodb/service-architecture
 
