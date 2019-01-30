@@ -26,7 +26,6 @@
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
-#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/view_or_value.hpp>
 
@@ -43,41 +42,6 @@ class InvalidValueGeneratorSyntax : public std::invalid_argument {
 public:
     using std::invalid_argument::invalid_argument;
 };
-
-
-/*
- * This is the base class for all document generrators. A document generator generates a possibly
- * random bson view that can be used in generating interesting mongodb requests.
- *
- */
-class DocumentGenerator {
-public:
-    virtual ~DocumentGenerator(){};
-
-    /*
-     * @param doc
-     *  The bson stream builder used to hold state for the view. The view lifetime is tied to that
-     * doc.
-     *
-     * @return
-     *  Returns a bson view of the generated document.
-     */
-    virtual bsoncxx::document::view view(bsoncxx::builder::stream::document& doc) {
-        return doc.view();
-    };
-};
-
-
-/*
- * Factory function to parse a YAML Node and make a document generator of the correct type.
- *
- * @param Node
- *  The YAML node with the configuration for this document generator.
- * @param DefaultRandom
- *  A reference to the random number generator for the owning thread. Internal object may save a
- * reference to this random number generator.
- */
-std::unique_ptr<DocumentGenerator> makeDoc(YAML::Node, genny::DefaultRandom&);
 
 
 /**

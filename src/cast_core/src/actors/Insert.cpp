@@ -34,12 +34,12 @@ namespace genny::actor {
 /** @private */
 struct Insert::PhaseConfig {
     mongocxx::collection collection;
-    std::unique_ptr<value_generators::DocumentGenerator> json_document;
+    value_generators::UniqueExpression documentExpr;
     ExecutionStrategy::RunOptions options;
 
-    PhaseConfig(PhaseContext& phaseContext, genny::DefaultRandom& rng, const mongocxx::database& db)
+    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          json_document{value_generators::makeDoc(phaseContext.get("Document"), rng)},
+          documentExpr{value_generators::Expression::parseOperand(phaseContext.get("Document"))},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
 };
 
@@ -48,12 +48,11 @@ void Insert::run() {
         for (const auto&& _ : config) {
             _strategy.run(
                 [&](metrics::OperationContext& ctx) {
-                    bsoncxx::builder::stream::document mydoc{};
-                    auto view = config->json_document->view(mydoc);
-                    BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(view);
-                    config->collection.insert_one(view);
+                    auto document = config->documentExpr->evaluate(_rng).getDocument();
+                    BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(document.view());
+                    config->collection.insert_one(document.view());
                     ctx.addOps(1);
-                    ctx.addBytes(view.length());
+                    ctx.addBytes(document.view().length());
                 },
                 config->options);
         }
@@ -65,7 +64,7 @@ Insert::Insert(genny::ActorContext& context)
       _rng{context.workload().createRNG()},
       _strategy{context.operation("insert", Insert::id())},
       _client{std::move(context.client())},
-      _loop{context, _rng, (*_client)[context.get<std::string>("Database")]} {}
+      _loop{context, (*_client)[context.get<std::string>("Database")]} {}
 
 namespace {
 auto registerInsert = genny::Cast::registerDefault<genny::actor::Insert>();

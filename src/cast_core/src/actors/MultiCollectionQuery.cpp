@@ -34,16 +34,16 @@ namespace genny::actor {
 
 /** @private */
 struct MultiCollectionQuery::PhaseConfig {
-    PhaseConfig(PhaseContext& context, genny::DefaultRandom& rng, mongocxx::pool::entry& client)
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<UIntSpec, true>("CollectionCount")},
-          filterDocument{value_generators::makeDoc(context.get("Filter"), rng)},
+          filterExpr{value_generators::Expression::parseOperand(context.get("Filter"))},
           uniformDistribution{0, numCollections},
           minDelay{context.get<TimeSpec, false>("MinDelay").value_or(genny::TimeSpec(0))} {}
 
     mongocxx::database database;
     size_t numCollections;
-    std::unique_ptr<value_generators::DocumentGenerator> filterDocument;
+    value_generators::UniqueExpression filterExpr;
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<size_t> uniformDistribution;
     std::chrono::milliseconds minDelay;
@@ -66,14 +66,13 @@ void MultiCollectionQuery::run() {
             auto collection = config->database[collectionName];
 
             // Perform a query
-            bsoncxx::builder::stream::document filter{};
-            auto filterView = config->filterDocument->view(filter);
-            // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filterView);
+            auto filter = config->filterExpr->evaluate(_rng).getDocument();
+            // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
                 // Only time the actual update, not the setup of arguments
                 auto op = _queryTimer.raii();
-                auto cursor = collection.find(filterView, config->options);
+                auto cursor = collection.find(std::move(filter), config->options);
                 // exhaust the cursor
                 uint count = 0;
                 for (auto&& doc : cursor) {
@@ -96,7 +95,7 @@ MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
       _queryTimer{context.timer("queryTime", MultiCollectionQuery::id())},
       _documentCount{context.counter("returnedDocuments", MultiCollectionQuery::id())},
       _client{std::move(context.client())},
-      _loop{context, _rng, _client} {}
+      _loop{context, _client} {}
 
 namespace {
 auto registerMultiCollectionQuery =
