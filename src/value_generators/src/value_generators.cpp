@@ -30,7 +30,8 @@ namespace {
 const auto parserMap = std::unordered_map<std::string, Expression::Parser>{
     {"^FastRandomString", FastRandomStringExpression::parse},
     {"^RandomInt", RandomIntExpression::parse},
-    {"^RandomString", RandomStringExpression::parse}};
+    {"^RandomString", RandomStringExpression::parse},
+    {"^Verbatim", ConstantExpression::parse}};
 
 }  // namespace
 
@@ -215,8 +216,30 @@ UniqueExpression Expression::parseOperand(YAML::Node node) {
 ConstantExpression::ConstantExpression(Value value) : _value(Value{std::move(value)}) {}
 
 UniqueExpression ConstantExpression::parse(YAML::Node node) {
-    if (node.IsNull()) {
-        return std::make_unique<ConstantExpression>(Value{bsoncxx::types::b_null{}});
+    switch (node.Type()) {
+        case YAML::NodeType::Map: {
+            auto elements = std::vector<DocumentExpression::ElementType>{};
+            for (auto&& entry : node) {
+                elements.emplace_back(entry.first.as<std::string>(),
+                                      ConstantExpression::parse(entry.second));
+            }
+
+            return std::make_unique<DocumentExpression>(std::move(elements));
+        }
+        case YAML::NodeType::Sequence: {
+            auto elements = std::vector<ArrayExpression::ElementType>{};
+            for (auto&& entry : node) {
+                elements.emplace_back(ConstantExpression::parse(entry));
+            }
+
+            return std::make_unique<ArrayExpression>(std::move(elements));
+        }
+        case YAML::NodeType::Null:
+            return std::make_unique<ConstantExpression>(Value{bsoncxx::types::b_null{}});
+        case YAML::NodeType::Scalar:
+        case YAML::NodeType::Undefined:
+            // YAML::NodeType::Scalar and YAML::NodeType::Undefined are handled below.
+            break;
     }
 
     if (!node.IsScalar()) {
