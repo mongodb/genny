@@ -22,6 +22,7 @@
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
 
+#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -104,11 +105,13 @@ public:
               ActorId id,
               const std::string& databaseName,
               mongocxx::database database,
-              std::unique_ptr<value_generators::DocumentGenerator> docTemplate,
+              genny::DefaultRandom& rng,
+              value_generators::UniqueExpression commandExpr,
               OpConfig opts)
         : _databaseName{databaseName},
           _database{std::move(database)},
-          _doc{std::move(docTemplate)},
+          _rng{rng},
+          _commandExpr{std::move(commandExpr)},
           _options{std::move(opts)},
           _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)},
           _awaitStepdown{opts.awaitStepdown} {
@@ -127,11 +130,17 @@ public:
                                              mongocxx::pool::entry& client,
                                              const std::string& database) {
         auto yamlCommand = node["OperationCommand"];
-        auto doc = value_generators::makeDoc(yamlCommand, rng);
+        auto commandExpr = value_generators::Expression::parseOperand(yamlCommand);
 
         auto options = node.as<Operation::OpConfig>(Operation::OpConfig{});
-        return std::make_unique<Operation>(
-            context, actorContext, id, database, (*client)[database], std::move(doc), options);
+        return std::make_unique<Operation>(context,
+                                           actorContext,
+                                           id,
+                                           database,
+                                           (*client)[database],
+                                           rng,
+                                           std::move(commandExpr),
+                                           options);
     };
 
     void run() {
@@ -140,8 +149,9 @@ public:
 
 private:
     void _run() {
-        bsoncxx::builder::stream::document document{};
-        auto view = _doc->view(document);
+        auto command = _commandExpr->evaluate(_rng).getDocument();
+        auto view = command.view();
+
         if (!_options.isQuiet) {
             BOOST_LOG_TRIVIAL(info) << " Running command: " << bsoncxx::to_json(view)
                                     << " on database: " << _databaseName;
@@ -164,7 +174,8 @@ private:
 
     std::string _databaseName;
     mongocxx::database _database;
-    std::unique_ptr<value_generators::DocumentGenerator> _doc;
+    genny::DefaultRandom& _rng;
+    value_generators::UniqueExpression _commandExpr;
     OpConfig _options;
 
     std::unique_ptr<v1::RateLimiter> _rateLimiter;
