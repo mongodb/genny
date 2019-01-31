@@ -115,6 +115,15 @@ public:
         return _rateNS;
     }
 
+    /**
+     * Get the number of threads using this rate limiter. This number can help the caller
+     * decide how congested the rate limiter is and find an appropriate time to wait until
+     * retrying.
+     *
+     * E.g. if there are X users, each caller on average gets called per (_rateNS * _numUsers).
+     * So it makes sense for each caller to wait for a duration of the same magnitude.
+     * @return
+     */
     constexpr int64_t getNumUsers() const {
         return _numUsers;
     }
