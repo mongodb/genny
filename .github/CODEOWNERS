@@ -4,8 +4,8 @@
 * @mongodb/stm
 
 # product-perf
-workloads/product-perf/* @mongodb/product-perf
+src/workloads/scale/* @mongodb/product-perf
 
 # service-architecture
-workloads/networking/*  @mongodb/service-architecture
+src/workloads/networking/* @mongodb/service-architecture
 
