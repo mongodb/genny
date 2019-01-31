@@ -54,6 +54,9 @@ buildvariants:
   modules: ~
   run_on:
   - archlinux-test
+  expansions:
+    toolchain_build_id: genny_toolchain_archlinux_be5b0e2cb8a014632d43531f9f80567578d44f40_19_01_31_14_48_07
+    os_family: linux
   tasks:
   - name: tg_compile_and_test
   - name: t_push
@@ -64,8 +67,8 @@ buildvariants:
   run_on:
   - amazon2-build
   expansions:
-    cmake:      /opt/cmake/bin/cmake
-    toolchain:  /opt/mongodbtoolchain/v3/bin
+    toolchain_build_id: genny_toolchain_amazon2_be5b0e2cb8a014632d43531f9f80567578d44f40_19_01_31_14_48_07
+    os_family: linux
     mongodb_archive_url:
       https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz
   tasks:
@@ -78,8 +81,8 @@ buildvariants:
   run_on:
   - rhel70
   expansions:
-    cmake:      /opt/cmake/bin/cmake
-    toolchain:  /opt/mongodbtoolchain/v3/bin
+    toolchain_build_id: genny_toolchain_rhel70_be5b0e2cb8a014632d43531f9f80567578d44f40_19_01_31_14_48_07
+    os_family: linux
   tasks:
   - name: t_compile
   - name: t_push
@@ -90,8 +93,8 @@ buildvariants:
   run_on:
   - ubuntu1804-build
   expansions:
-    cmake:      /opt/cmake/bin/cmake
-    toolchain:  /opt/mongodbtoolchain/v3/bin
+    toolchain_build_id: genny_toolchain_ubuntu1804_be5b0e2cb8a014632d43531f9f80567578d44f40_19_01_31_14_48_07
+    os_family: linux
   tasks:
   - name: t_compile
   - name: t_push
@@ -115,18 +118,7 @@ tasks:
 - name: t_compile
   commands:
   - func: f_fetch_source
-  - func: f_fetch_library
-    vars:
-      install_dir: boost
-      short_name: boost
-  - func: f_fetch_library
-    vars:
-      install_dir: dist
-      short_name: mongocxx
-  - func: f_fetch_library
-    vars:
-      install_dir: dist
-      short_name: grpc
+  - func: f_fetch_toolchain
   - func: f_compile
   - func: f_dry_run_workloads
   - func: f_push_patch
@@ -336,19 +328,15 @@ functions:
       display_name: ${display_name}
 
   ##
-  # Download one of genny's dependencies as a tarball and expand it
-  #
-  # Expansions:
-  #  install_dir: The directory to install this dependency
-  #  short_name: The name for the folder and prefix for the tarball to fetch
-  ###
-  f_fetch_library:
+  # Download the genny toolchain
+  ##
+  f_fetch_toolchain:
   - command: s3.get
     params:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
-      extract_to: ${install_dir}
-      remote_file: ${project}/${short_name}/${short_name}-${build_variant}.tgz
+      extract_to: toolchain
+      remote_file: genny-toolchain/${toolchain_build_id}/genny-toolchain.tgz
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
@@ -359,23 +347,24 @@ functions:
   # Expansions:
   #  cmake: The CMake executable to use
   #  toolchain: A toolchain directory to add to the PATH
-  ###
+  ##
   f_compile:
   - command: subprocess.exec
     params:
       working_dir: src
       binary: /bin/bash
       args:
-      - ${workdir}/src/scripts/bootstrap.sh
+      - "${workdir}/src/scripts/bootstrap.sh"
+      - "-DCMAKE_PREFIX_PATH=${workdir}/src/toolchain/shared/x64-${os_family}-shared"
+      - "-DCMAKE_TOOLCHAIN_FILE=${workdir}/src/toolchain/static/scripts/buildsystems/vcpkg.cmake"
+      - "-DVCPKG_TARGET_TRIPLET=x64-${os_family}-static"
       - "-DENABLE_JASPER:BOOL=ON"
-      - "-DGENNY_STATIC_BOOST_PATH:PATH=${workdir}/boost"
       - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
       - "-DGENNY_INSTALL_SSL:BOOL=ON"
       env:
         # This should be reasonably safe even on low memory machines
         MAKEFLAGS: "-j8"
         CMAKE: ${cmake|cmake}
-        PATH: ${toolchain}:/usr/bin:/bin
 
   ##
   # Runs each workload as a dry run
