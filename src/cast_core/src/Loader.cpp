@@ -87,7 +87,8 @@ void genny::actor::Loader::run() {
                     auto totalOp = _totalBulkLoadTimer.raii();
                     while (remainingInserts > 0) {
                         // insert the next batch
-                        int64_t numberToInsert = std::min<int64_t>(config->batchSize, remainingInserts);
+                        int64_t numberToInsert =
+                            std::min<int64_t>(config->batchSize, remainingInserts);
                         auto docs = std::vector<bsoncxx::document::view_or_value>{};
                         docs.reserve(remainingInserts);
                         for (uint j = 0; j < numberToInsert; j++) {

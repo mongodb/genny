@@ -121,28 +121,27 @@ void Value::appendToBuilder(bsoncxx::builder::basic::array& arr) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Value& value) {
-    std::visit(
-        overloaded{
-            [&](bool arg) { out << arg; },
-            [&](int32_t arg) { out << arg; },
-            [&](int64_t arg) { out << arg; },
-            [&](double arg) { out << arg; },
-            [&](const std::string& arg) { out << arg; },
-            [&](bsoncxx::types::b_null arg) { out << "null"; },
-            [&](const bsoncxx::document::value& arg) {
-                out << bsoncxx::to_json(arg.view(), bsoncxx::ExtendedJsonMode::k_canonical);
-            },
-            [&](bsoncxx::document::view arg) {
-                out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
-            },
-            [&](const bsoncxx::array::value& arg) {
-                out << bsoncxx::to_json(arg.view(), bsoncxx::ExtendedJsonMode::k_canonical);
-            },
-            [&](bsoncxx::array::view arg) {
-                out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
-            },
-        },
-        value._value);
+    std::visit(overloaded{
+                   [&](bool arg) { out << arg; },
+                   [&](int32_t arg) { out << arg; },
+                   [&](int64_t arg) { out << arg; },
+                   [&](double arg) { out << arg; },
+                   [&](const std::string& arg) { out << arg; },
+                   [&](bsoncxx::types::b_null arg) { out << "null"; },
+                   [&](const bsoncxx::document::value& arg) {
+                       out << bsoncxx::to_json(arg.view(), bsoncxx::ExtendedJsonMode::k_canonical);
+                   },
+                   [&](bsoncxx::document::view arg) {
+                       out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
+                   },
+                   [&](const bsoncxx::array::value& arg) {
+                       out << bsoncxx::to_json(arg.view(), bsoncxx::ExtendedJsonMode::k_canonical);
+                   },
+                   [&](bsoncxx::array::view arg) {
+                       out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
+                   },
+               },
+               value._value);
 
     return out;
 }
