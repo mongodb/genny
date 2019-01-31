@@ -88,6 +88,14 @@ public:  // Operators
     constexpr auto count() const {
         return value.count();
     }
+
+    explicit constexpr operator std::chrono::seconds() const {
+        return std::chrono::duration_cast<std::chrono::seconds>(value);
+    }
+
+    explicit constexpr operator std::chrono::milliseconds() const {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(value);
+    }
 };
 
 inline bool operator==(const TimeSpec& lhs, const TimeSpec& rhs) {

@@ -11,18 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "test.h"
+#include <boost/log/trivial.hpp>
 
 #include <chrono>
 #include <ratio>
 #include <thread>
 
-#include "log.hh"
-
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
 
-#include <ActorHelper.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <testlib/helpers.hpp>
 
 namespace genny::testing {
 
