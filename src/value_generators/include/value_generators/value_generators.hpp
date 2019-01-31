@@ -29,6 +29,8 @@
 #include <bsoncxx/types.hpp>
 #include <bsoncxx/view_or_value.hpp>
 
+#include <bsoncxx/builder/stream/document.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <value_generators/DefaultRandom.hpp>

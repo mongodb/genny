@@ -18,14 +18,17 @@
 #include <memory>
 
 #include <bsoncxx/json.hpp>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+
 #include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
@@ -84,7 +87,8 @@ void genny::actor::Loader::run() {
                     auto totalOp = _totalBulkLoadTimer.raii();
                     while (remainingInserts > 0) {
                         // insert the next batch
-                        int64_t numberToInsert = std::min<int64_t>(config->batchSize, remainingInserts);
+                        int64_t numberToInsert =
+                            std::min<int64_t>(config->batchSize, remainingInserts);
                         auto docs = std::vector<bsoncxx::document::view_or_value>{};
                         docs.reserve(remainingInserts);
                         for (uint j = 0; j < numberToInsert; j++) {

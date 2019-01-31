@@ -2,6 +2,7 @@
 # This workload loads 10M rows into a collection, then executes collection scans in a single thread.
 
 SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
 
 Actors:
   - Name: Loader

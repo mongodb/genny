@@ -746,6 +746,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(Unable to construct actors: No producer for 'Bar'(.*\n*)*)"));
+        REQUIRE_THROWS_WITH(
+            test(), Matches(R"(Unable to construct actors: No producer for 'Bar'(.*\n*)*)"));
     }
 }
