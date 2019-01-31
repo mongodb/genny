@@ -229,7 +229,7 @@ or mention it in your PR if you're not sure which directory your workload
 YAML belongs in.
 
 All workload yamls must have an `Owners` field indicating which github team
-should receive PRs for the YAML. The files must end with the `.yaml` suffix.
+should receive PRs for the YAML. The files must end with the `.yml` suffix.
 Workload YAML itself is not currently linted but please try to make the files
 look tidy.
 

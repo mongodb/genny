@@ -183,7 +183,7 @@ create_impl() {
 create_workload_yml() {
     local actor_name
     actor_name="$1"
-cat << EOF > "$(dirname "$0")/../workloads/docs/${actor_name}.yaml"
+cat << EOF > "$(dirname "$0")/../workloads/docs/${actor_name}.yml"
 SchemaVersion: 2018-07-01
 Owner: TODO put your github team name here e.g. @mongodb/stm
 

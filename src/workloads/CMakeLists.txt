@@ -17,5 +17,5 @@ install(DIRECTORY .
         DESTINATION etc/genny/workloads
         COMPONENT Workloads
         FILES_MATCHING
-            PATTERN "*.yaml"
+            PATTERN "*.yml"
 )

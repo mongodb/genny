@@ -20,7 +20,7 @@ if [ -e "${WORKLOAD_LIST}" ]; then
     rm "${WORKLOAD_LIST}"
 fi
 
-find "${WORKLOAD_DIR}" -name "*.yaml" -print >"${WORKLOAD_LIST}"
+find "${WORKLOAD_DIR}" -name "*.yml" -print >"${WORKLOAD_LIST}"
 
 # Dry run each file
 while read -r FILE; do
