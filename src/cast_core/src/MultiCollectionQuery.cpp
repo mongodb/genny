@@ -39,26 +39,22 @@ namespace genny::actor {
 struct MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
-          numCollections{context.get<UIntSpec, true>("CollectionCount")},
+          numCollections{context.get<IntegerSpec, true>("CollectionCount")},
           filterExpr{value_generators::Expression::parseOperand(context.get("Filter"))},
-          uniformDistribution{0, numCollections},
-          minDelay{context.get<TimeSpec, false>("MinDelay").value_or(genny::TimeSpec(0))} {}
+          uniformDistribution{0, numCollections} {}
 
     mongocxx::database database;
-    size_t numCollections;
+    int64_t numCollections;
     value_generators::UniqueExpression filterExpr;
+
     // uniform distribution random int for selecting collection
-    std::uniform_int_distribution<size_t> uniformDistribution;
-    std::chrono::milliseconds minDelay;
+    std::uniform_int_distribution<int64_t> uniformDistribution;
     mongocxx::options::find options;
 };
 
 void MultiCollectionQuery::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            // Take a timestamp -- remove after TIG-1155
-            auto startTime = std::chrono::steady_clock::now();
-
             // Select a collection
             // This area is ripe for defining a collection generator, based off a string generator.
             // It could look like: collection: {^Concat: [Collection, ^RandomInt: {min: 0, max:
@@ -84,10 +80,6 @@ void MultiCollectionQuery::run() {
                 }
                 _documentCount.incr(count);
             }
-            // make sure enough time has passed. Sleep if needed -- remove after TIG-1155
-            auto elapsedTime = std::chrono::steady_clock::now() - startTime;
-            if (elapsedTime < config->minDelay)
-                std::this_thread::sleep_for(config->minDelay - elapsedTime);
         }
     }
 }

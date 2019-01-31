@@ -40,12 +40,12 @@ std::mutex asserting;
 
 //
 // Cute convenience operators -
-//  100_uis   gives optional<UIntSpec>     holding 100
+//  100_uis   gives optional<IntegerSpec>     holding 100
 //  100_ts  gives optional<millis>  holding 100
 //
 // These are copy/pasta in PhaseLoop_test and orchestrator_test. Refactor.
-optional<UIntSpec> operator""_uis(unsigned long long v) {
-    return make_optional(UIntSpec(v));
+optional<IntegerSpec> operator""_uis(unsigned long long v) {
+    return make_optional(IntegerSpec(v));
 }
 optional<TimeSpec> operator""_ts(unsigned long long v) {
     return make_optional(TimeSpec(chrono::milliseconds{v}));
@@ -235,18 +235,19 @@ TEST_CASE("Orchestrator") {
     }
 }
 
-// more easily construct V1::ActorPhase instances
-using PhaseConfig = std::tuple<PhaseNumber, int, std::optional<UIntSpec>, std::optional<TimeSpec>>;
+// more easily construct v1::ActorPhase instances
+using PhaseConfig =
+    std::tuple<PhaseNumber, int, std::optional<IntegerSpec>, std::optional<TimeSpec>>;
 
-std::unordered_map<PhaseNumber, V1::ActorPhase<int>> makePhaseConfig(
+std::unordered_map<PhaseNumber, v1::ActorPhase<int>> makePhaseConfig(
     Orchestrator& orchestrator, const std::vector<PhaseConfig>& phaseConfigs) {
 
-    std::unordered_map<PhaseNumber, V1::ActorPhase<int>> out;
+    std::unordered_map<PhaseNumber, v1::ActorPhase<int>> out;
     for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
         auto [it, success] =
             out.try_emplace(phaseNum,
                             orchestrator,
-                            std::make_unique<const V1::IterationCompletionCheck>(dur, iters, false),
+                            std::make_unique<v1::IterationChecker>(dur, iters, false),
                             phaseNum,
                             phaseVal);
         // prevent misconfiguration within test (dupe phaseNum vals)

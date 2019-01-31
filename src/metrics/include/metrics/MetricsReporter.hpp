@@ -38,35 +38,35 @@ public:
     constexpr explicit Reporter(const Registry& registry) : _registry{std::addressof(registry)} {}
 
     /** @return how many distinct gauges were registered */
-    auto getGaugeCount(V1::Permission perm = {}) const {
+    auto getGaugeCount(v1::Permission perm = {}) const {
         auto& x = _registry->getGauges(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many gauge data-points were recorded */
-    long getGaugePointsCount(V1::Permission perm = {}) const {
+    long getGaugePointsCount(v1::Permission perm = {}) const {
         return dataPointsCount(_registry->getGauges(perm), perm);
     }
 
     /** @return how many distinct timers were registered */
-    auto getTimerCount(V1::Permission perm = {}) const {
+    auto getTimerCount(v1::Permission perm = {}) const {
         auto& x = _registry->getTimers(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many timer data-points were recorded */
-    long getTimerPointsCount(V1::Permission perm = {}) const {
+    long getTimerPointsCount(v1::Permission perm = {}) const {
         return dataPointsCount(_registry->getTimers(perm), perm);
     }
 
     /** @return how many counters were registered */
-    auto getCounterCount(V1::Permission perm = {}) const {
+    auto getCounterCount(v1::Permission perm = {}) const {
         auto& x = _registry->getCounters(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many counter data-points were recorded */
-    long getCounterPointsCount(V1::Permission perm = {}) const {
+    long getCounterPointsCount(v1::Permission perm = {}) const {
         return dataPointsCount(_registry->getCounters(perm), perm);
     }
 
@@ -78,7 +78,7 @@ public:
      */
     void report(std::ostream& out,
                 const std::string& metricsFormat,
-                V1::Permission perm = {}) const {
+                v1::Permission perm = {}) const {
         // should these values come from the registry, and should they be recorded at
         // time of registry-creation?
         auto systemTime = std::chrono::system_clock::now().time_since_epoch().count();
@@ -102,7 +102,7 @@ private:
     void reportSysperf(std::ostream& out,
                        long long int,
                        long long int,
-                       const V1::Permission& perm) const {
+                       const v1::Permission& perm) const {
 
         // TODO: Followup from TIG-1070, make this report real data; for now just report
         //       the number of timer data-points that we saw.
@@ -127,7 +127,7 @@ private:
     void reportCsv(std::ostream& out,
                    long long int systemTime,
                    long long int metricsTime,
-                   const V1::Permission& perm) const {
+                   const v1::Permission& perm) const {
         out << "Clocks" << std::endl;
         doClocks(out, systemTime, metricsTime);
         out << std::endl;
@@ -159,7 +159,7 @@ private:
     template <typename X>
     static void doReport(std::ostream& out,
                          const X& haveTimeSeries,
-                         genny::metrics::V1::Permission perm) {
+                         genny::metrics::v1::Permission perm) {
         for (const auto& c : haveTimeSeries) {
             for (const auto& v : c.second.getTimeSeries(perm).getVals(perm)) {
                 out << v.first.time_since_epoch().count() << "," << c.first << "," << v.second
@@ -173,7 +173,7 @@ private:
      * @return the number of data-points held by a map with values CounterImpl, GaugeImpl, etc.
      */
     template <class X>
-    static long dataPointsCount(const X& x, genny::metrics::V1::Permission perm) {
+    static long dataPointsCount(const X& x, genny::metrics::v1::Permission perm) {
         auto out = 0L;
         for (const auto& v : x) {
             out += v.second.getTimeSeries(perm).getDataPointCount(perm);

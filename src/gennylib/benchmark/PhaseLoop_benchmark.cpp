@@ -33,7 +33,7 @@
 #include <testlib/helpers.hpp>
 
 using namespace genny;
-using namespace genny::V1;
+using namespace genny::v1;
 using namespace std;
 using namespace std::chrono;
 
