@@ -355,8 +355,8 @@ functions:
       binary: /bin/bash
       args:
       - "${workdir}/src/scripts/bootstrap.sh"
-      - "-DCMAKE_PREFIX_PATH=${workdir}/src/toolchain/shared/x64-${os_family}-shared"
-      - "-DCMAKE_TOOLCHAIN_FILE=${workdir}/src/toolchain/static/scripts/buildsystems/vcpkg.cmake"
+      - "-DCMAKE_PREFIX_PATH=${workdir}/toolchain/shared/x64-${os_family}-shared"
+      - "-DCMAKE_TOOLCHAIN_FILE=${workdir}/toolchain/static/scripts/buildsystems/vcpkg.cmake"
       - "-DVCPKG_TARGET_TRIPLET=x64-${os_family}-static"
       - "-DENABLE_JASPER:BOOL=ON"
       - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
