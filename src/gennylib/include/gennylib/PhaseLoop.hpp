@@ -20,6 +20,7 @@
 #include <iterator>
 #include <optional>
 #include <sstream>
+#include <thread>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -27,6 +28,7 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/v1/GlobalRateLimiter.hpp>
 
 /**
  * @file
@@ -37,12 +39,14 @@
 namespace genny {
 
 /*
- * Reminder: the V1 namespace types are *not* intended to be used directly.
+ * Reminder: the v1 namespace types are *not* intended to be used directly.
  */
-namespace V1 {
+namespace v1 {
+
+using SteadyClock = std::chrono::steady_clock;
 
 /**
- * Determine if we're done iterating for a given Phase.
+ * Determine the conditions for continuing to iterate a given Phase.
  *
  * One of these is constructed for each `ActorPhase<T>` (below)
  * using a PhaseContext's `Repeat` and `Duration` keys. It is
@@ -54,17 +58,16 @@ namespace V1 {
  * iteration start time) are passed into the IterationCompletionCheck
  * to determine if the loop should continue iterating.
  */
-class IterationCompletionCheck final {
+class IterationChecker final {
 
 public:
-    IterationCompletionCheck(std::optional<TimeSpec> minDuration,
-                             std::optional<UIntSpec> minIterations,
-                             bool isNop)
+    IterationChecker(std::optional<TimeSpec> minDuration,
+                     std::optional<IntegerSpec> minIterations,
+                     bool isNop)
         : _minDuration{minDuration},
           // If it is a nop then should iterate 0 times.
-          _minIterations{isNop ? UIntSpec(0l) : minIterations},
+          _minIterations{isNop ? IntegerSpec(0l) : minIterations},
           _doesBlock{_minIterations || _minDuration} {
-
         if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
             str << "Need non-negative duration. Gave " << minDuration->count() << " milliseconds";
@@ -77,30 +80,69 @@ public:
         }
     }
 
-    explicit IterationCompletionCheck(PhaseContext& phaseContext)
-        : IterationCompletionCheck(phaseContext.get<TimeSpec, false>("Duration"),
-                                   phaseContext.get<UIntSpec, false>("Repeat"),
-                                   phaseContext.isNop()) {}
+    explicit IterationChecker(PhaseContext& phaseContext)
+        : IterationChecker(phaseContext.get<TimeSpec, false>("Duration"),
+                           phaseContext.get<IntegerSpec, false>("Repeat"),
+                           phaseContext.isNop()) {
+        auto rateSpec = phaseContext.get<RateSpec, false>("Rate");
+        const auto rateLimiterName =
+            phaseContext.get<std::string, false>("RateLimiterName").value_or("defaultRateLimiter");
 
-    std::chrono::steady_clock::time_point computeReferenceStartingPoint() const {
-        // avoid doing now() if no minDuration configured
-        return _minDuration ? std::chrono::steady_clock::now()
-                            : std::chrono::time_point<std::chrono::steady_clock>::min();
+        if (rateSpec) {
+            if (!_doesBlock) {
+                throw InvalidConfigurationException(
+                    "Rate must be specified alongside either Duration or Repeat, otherwise there's "
+                    "no guarantee the rate limited operation will run in the correct phase");
+            }
+            _rateLimiter =
+                phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
+        }
     }
 
-    bool isDone(std::chrono::steady_clock::time_point startedAt, uint64_t currentIteration) const {
+    bool shouldLimitRate(int64_t currentIteration) const {
+        // Only rate limit if the current iteration is a muliple of the burst size.
+        return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
+    }
+
+    void limitRate(const int64_t currentIteration,
+                   const Orchestrator& o,
+                   const PhaseNumber inPhase) {
+        // This function is called after each iteration, so we never rate limit the
+        // first iteration. This means the number of completed operations is always
+        // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
+        // _burstSize. `m` here is the number of threads using the rate limiter.
+        if (shouldLimitRate(currentIteration)) {
+            while (true) {
+                auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
+                if (!success && (o.currentPhase() == inPhase)) {
+                    // Add some jitter to avoid threads waking up at once.
+                    std::this_thread::sleep_for(
+                        std::chrono::nanoseconds((_rateLimiter->getRate() + std::rand() % 1000) *
+                                                 _rateLimiter->getNumUsers()));
+                    continue;
+                }
+                break;
+            }
+        }
+    }
+
+    SteadyClock::time_point computeReferenceStartingPoint() const {
+        // avoid doing now() if no minDuration configured
+        return _minDuration ? SteadyClock::now() : SteadyClock::time_point::min();
+    }
+
+    bool isDone(SteadyClock::time_point startedAt, int64_t currentIteration) {
         return (!_minIterations || currentIteration >= (*_minIterations).value) &&
             (!_minDuration ||
              // check is last to avoid doing now() call unnecessarily
-             (*_minDuration).value <= std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                          std::chrono::steady_clock::now() - startedAt));
+             (*_minDuration).value <= SteadyClock::now() - startedAt);
     }
 
-    bool operator==(const IterationCompletionCheck& other) const {
+    bool operator==(const IterationChecker& other) const {
         return _minDuration == other._minDuration && _minIterations == other._minIterations;
     }
 
-    bool doesBlock() const {
+    bool doesBlockCompletion() const {
         return _doesBlock;
     }
 
@@ -110,7 +152,10 @@ private:
     // .end() iterator needs an instance of this, so it's weird
 
     const std::optional<TimeSpec> _minDuration;
-    const std::optional<UIntSpec> _minIterations;
+    const std::optional<IntegerSpec> _minIterations;
+
+    // The rate limiter is owned by the workload context.
+    v1::GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
 };
 
@@ -126,19 +171,18 @@ private:
 class ActorPhaseIterator final {
 
 public:
-    // Normally we'd use const IterationCompletionCheck& (ref rather than *)
+    // Normally we'd use const IterationChecker& (ref rather than *)
     // but we actually *want* nullptr for the end iterator. This is a bit of
     // an over-optimization, but it adds very little complexity at the benefit
     // of not having to construct a useless object.
     ActorPhaseIterator(Orchestrator& orchestrator,
-                       const IterationCompletionCheck* iterationCheck,
+                       IterationChecker* iterationCheck,
                        PhaseNumber inPhase,
                        bool isEndIterator)
         : _orchestrator{std::addressof(orchestrator)},
           _iterationCheck{iterationCheck},
-          _referenceStartingPoint{isEndIterator
-                                      ? std::chrono::time_point<std::chrono::steady_clock>::min()
-                                      : _iterationCheck->computeReferenceStartingPoint()},
+          _referenceStartingPoint{isEndIterator ? SteadyClock::time_point::min()
+                                                : _iterationCheck->computeReferenceStartingPoint()},
           _inPhase{inPhase},
           _isEndIterator{isEndIterator},
           _currentIteration{0} {
@@ -155,6 +199,8 @@ public:
     }
 
     ActorPhaseIterator& operator++() {
+        if (_iterationCheck)
+            _iterationCheck->limitRate(_currentIteration, std::cref(*_orchestrator), _inPhase);
         ++_currentIteration;
         return *this;
     }
@@ -169,7 +215,7 @@ public:
                      // ...or...
                      // if we block, then check to see if we're done in current phase
                      // else check to see if current phase has expired
-                     (_iterationCheck->doesBlock() ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration)
+                     (_iterationCheck->doesBlockCompletion() ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration)
                                                    : _orchestrator->currentPhase() != _inPhase)))
 
                 // Below checks are mostly for pure correctness;
@@ -203,11 +249,11 @@ public:
 
 private:
     Orchestrator* _orchestrator;
-    const IterationCompletionCheck* _iterationCheck;
-    const std::chrono::steady_clock::time_point _referenceStartingPoint;
+    IterationChecker* _iterationCheck;
+    const SteadyClock::time_point _referenceStartingPoint;
     const PhaseNumber _inPhase;
     const bool _isEndIterator;
-    unsigned int _currentIteration;
+    int64_t _currentIteration;
 
 public:
     // <iterator-concept>
@@ -239,7 +285,7 @@ public:
      */
     template <class... Args>
     ActorPhase(Orchestrator& orchestrator,
-               std::unique_ptr<const IterationCompletionCheck> iterationCheck,
+               std::unique_ptr<IterationChecker> iterationCheck,
                PhaseNumber currentPhase,
                Args&&... args)
         : _orchestrator{orchestrator},
@@ -262,7 +308,7 @@ public:
           _value{!phaseContext.isNop()
                      ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
                      : std::nullopt},
-          _iterationCheck{std::make_unique<IterationCompletionCheck>(phaseContext)} {
+          _iterationCheck{std::make_unique<IterationChecker>(phaseContext)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
 
@@ -274,9 +320,9 @@ public:
         return ActorPhaseIterator{_orchestrator, nullptr, _currentPhase, true};
     };
 
-    // Used by PhaseLoopIterator::doesBlock()
+    // Used by PhaseLoopIterator::doesBlockCompletion()
     bool doesBlock() const {
-        return _iterationCheck->doesBlock();
+        return _iterationCheck->doesBlockCompletion();
     }
 
     // Checks if the actor is performing a nullOp. Used only for testing.
@@ -319,7 +365,7 @@ private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
     const std::optional<std::unique_ptr<T>> _value;  // Is nullopt iff operation is Nop
-    const std::unique_ptr<const IterationCompletionCheck> _iterationCheck;
+    const std::unique_ptr<IterationChecker> _iterationCheck;
 
 };  // class ActorPhase
 
@@ -328,7 +374,7 @@ private:
  * Maps from PhaseNumber to the ActorPhase<T> to be used in that PhaseNumber.
  */
 template <class T>
-using PhaseMap = std::unordered_map<PhaseNumber, V1::ActorPhase<T>>;
+using PhaseMap = std::unordered_map<PhaseNumber, v1::ActorPhase<T>>;
 
 
 /**
@@ -449,7 +495,7 @@ private:
 
 };  // class PhaseLoopIterator
 
-}  // namespace V1
+}  // namespace v1
 
 
 /**
@@ -525,30 +571,30 @@ public:
     }
 
     // Only visible for testing
-    PhaseLoop(Orchestrator& orchestrator, V1::PhaseMap<T> phaseMap)
+    PhaseLoop(Orchestrator& orchestrator, v1::PhaseMap<T> phaseMap)
         : _orchestrator{orchestrator}, _phaseMap{std::move(phaseMap)} {
         // propagate this Actor's set up PhaseNumbers to Orchestrator
     }
 
-    V1::PhaseLoopIterator<T> begin() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
+    v1::PhaseLoopIterator<T> begin() {
+        return v1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, false};
     }
 
-    V1::PhaseLoopIterator<T> end() {
-        return V1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
+    v1::PhaseLoopIterator<T> end() {
+        return v1::PhaseLoopIterator<T>{this->_orchestrator, this->_phaseMap, true};
     }
 
 private:
     template <class... Args>
-    static V1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext, Args&&... args) {
+    static v1::PhaseMap<T> constructPhaseMap(ActorContext& actorContext, Args&&... args) {
 
         // clang-format off
         static_assert(std::is_constructible_v<T, PhaseContext&, Args...>);
         // kinda redundant with ↑ but may help error-handling
-        static_assert(std::is_constructible_v<V1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&, Args...>);
+        static_assert(std::is_constructible_v<v1::ActorPhase<T>, Orchestrator&, PhaseContext&, PhaseNumber, PhaseContext&, Args...>);
         // clang-format on
 
-        V1::PhaseMap<T> out;
+        v1::PhaseMap<T> out;
         for (auto&& [num, phaseContext] : actorContext.phases()) {
             auto [it, success] = out.try_emplace(
                 // key
@@ -572,7 +618,7 @@ private:
     }
 
     Orchestrator& _orchestrator;
-    V1::PhaseMap<T> _phaseMap;
+    v1::PhaseMap<T> _phaseMap;
     // _phaseMap cannot be const since we don't want to enforce
     // the wrapped unique_ptr<T> in ActorPhase<T> to be const.
 
