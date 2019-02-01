@@ -1,0 +1,12 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+
+Actors:
+  - Name: HelloWorld
+    Type: HelloWorld
+    Threads: 2
+    Phases:
+    - Message: Hello Phase 0 🐳
+      Duration: 50 milliseconds
+    - Message: Hello Phase 1 👬
+      Repeat: 100

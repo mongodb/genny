@@ -28,8 +28,8 @@
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <testlib/ActorHelper.hpp>
 
+#include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
 using namespace genny;

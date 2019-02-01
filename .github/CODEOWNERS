@@ -2,3 +2,10 @@
 
 # global match unless overridden below
 * @mongodb/stm
+
+# product-perf
+src/workloads/scale/* @mongodb/product-perf
+
+# service-architecture
+src/workloads/networking/* @mongodb/service-architecture
+

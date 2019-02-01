@@ -13,12 +13,18 @@ CMD=(
 )
 
 # Find all of the workload yamls at the specified directory
-WORKLOAD_DIR="${1}"
+WORKLOAD_DIR="${1:-${ROOT_DIR}/src/workloads}"
+
 WORKLOAD_LIST="${BUILD_DIR}/workload-list.txt"
-find "${WORKLOAD_DIR}" \( -iname "*.yml" -or -iname "*.yaml" \) -print >"${WORKLOAD_LIST}"
+if [ -e "${WORKLOAD_LIST}" ]; then
+    rm "${WORKLOAD_LIST}"
+fi
+
+find "${WORKLOAD_DIR}" -name "*.yml" -print >"${WORKLOAD_LIST}"
 
 # Dry run each file
 while read -r FILE; do
     1>&2 echo "-- Testing workload at '${FILE}' via --dry-run..."
     "${CMD[@]}" "${FILE}"
 done <"${WORKLOAD_LIST}"
+

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cast_core/actors/MultiCollectionQuery.hpp>
+#include <cast_core/actors/MultiCollectionUpdate.hpp>
 
 #include <chrono>
 #include <memory>
@@ -20,77 +20,75 @@
 #include <thread>
 
 #include <bsoncxx/json.hpp>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+
 #include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
 
 /** @private */
-struct MultiCollectionQuery::PhaseConfig {
+struct MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          filterExpr{value_generators::Expression::parseOperand(context.get("Filter"))},
+          queryExpr{value_generators::Expression::parseOperand(context.get("UpdateFilter"))},
+          updateExpr{value_generators::Expression::parseOperand(context.get("Update"))},
           uniformDistribution{0, numCollections} {}
 
     mongocxx::database database;
     int64_t numCollections;
-    value_generators::UniqueExpression filterExpr;
+    value_generators::UniqueExpression queryExpr;
+    value_generators::UniqueExpression updateExpr;
+    // TODO: Enable passing in update options.
+    //    value_generators::UniqueExpression  updateOptionsExpr;
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;
-    mongocxx::options::find options;
 };
 
-void MultiCollectionQuery::run() {
+void MultiCollectionUpdate::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
             // Select a collection
-            // This area is ripe for defining a collection generator, based off a string generator.
-            // It could look like: collection: {^Concat: [Collection, ^RandomInt: {min: 0, max:
-            // *CollectionCount]} Requires a string concat generator, and a translation of a string
-            // to a collection
             auto collectionNumber = config->uniformDistribution(_rng);
             auto collectionName = "Collection" + std::to_string(collectionNumber);
             auto collection = config->database[collectionName];
 
-            // Perform a query
-            auto filter = config->filterExpr->evaluate(_rng).getDocument();
+            // Perform update
+            auto filter = config->queryExpr->evaluate(_rng).getDocument();
+            auto update = config->updateExpr->evaluate(_rng).getDocument();
             // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
+            // BOOST_LOG_TRIVIAL(info) << "Update is " << bsoncxx::to_json(update.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
                 // Only time the actual update, not the setup of arguments
-                auto op = _queryTimer.raii();
-                auto cursor = collection.find(std::move(filter), config->options);
-                // exhaust the cursor
-                uint count = 0;
-                for (auto&& doc : cursor) {
-                    doc.length();
-                    count++;
-                }
-                _documentCount.incr(count);
+                auto op = _updateTimer.raii();
+                auto result = collection.update_many(std::move(filter), std::move(update));
+                _updateCount.incr(result->modified_count());
             }
         }
     }
 }
 
-MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
+MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _queryTimer{context.timer("queryTime", MultiCollectionQuery::id())},
-      _documentCount{context.counter("returnedDocuments", MultiCollectionQuery::id())},
+      _updateTimer{context.timer("updateTime", MultiCollectionUpdate::id())},
+      _updateCount{context.counter("updatedDocuments", MultiCollectionUpdate::id())},
       _client{std::move(context.client())},
       _loop{context, _client} {}
 
 namespace {
-auto registerMultiCollectionQuery =
-    genny::Cast::registerDefault<genny::actor::MultiCollectionQuery>();
+auto registerMultiCollectionUpdate =
+    genny::Cast::registerDefault<genny::actor::MultiCollectionUpdate>();
 }
 }  // namespace genny::actor

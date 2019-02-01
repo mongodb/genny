@@ -1,5 +1,4 @@
 *.d
-mwg
 
 # clion
 .idea
@@ -11,3 +10,7 @@ cmake-build-debug
 [._]s[a-rt-v][a-z]
 [._]ss[a-gi-z]
 [._]sw[a-p]
+
+# generated
+build
+dist

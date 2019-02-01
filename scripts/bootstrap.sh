@@ -6,8 +6,8 @@ set -o nounset
 
 set -x
 
-SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
-ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+SCRIPTS_DIR="${ROOT_DIR}/scripts"
 BUILD_DIR="${ROOT_DIR}/build"
 
 cd "${BUILD_DIR}"

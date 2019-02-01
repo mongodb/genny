@@ -25,8 +25,10 @@
 #include <boost/log/trivial.hpp>
 
 #include <bsoncxx/json.hpp>
+
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+
 #include <value_generators/value_generators.hpp>
 
 namespace genny::actor {

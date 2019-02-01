@@ -384,7 +384,6 @@ functions:
       binary: /bin/bash
       args:
       - ${workdir}/src/scripts/dry-run-workloads.sh
-      - ${workdir}/dist/etc/genny/workloads
       env:
         GENNY: ${workdir}/dist/bin/genny
 
