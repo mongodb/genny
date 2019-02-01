@@ -50,6 +50,8 @@ create_header_text() {
     echo ""
     echo "/**"
     echo " * TODO: document me"
+    echo " *"
+    echo " * Owner: TODO (which github team owns this Actor?)"
     echo " */"
     echo "class $actor_name : public Actor {"
     echo ""
@@ -175,14 +177,15 @@ create_impl() {
     uuid_tag="$1"
     actor_name="$2"
 
-    create_impl_text "$@" > "$(dirname "$0")/../src/cast_core/src/actors/${actor_name}.cpp"
+    create_impl_text "$@" > "$(dirname "$0")/../src/cast_core/src/${actor_name}.cpp"
 }
 
 create_workload_yml() {
     local actor_name
     actor_name="$1"
-cat << EOF > "$(dirname "$0")/../src/driver/test/${actor_name}.yml"
+cat << EOF > "$(dirname "$0")/../workloads/docs/${actor_name}.yml"
 SchemaVersion: 2018-07-01
+Owner: TODO put your github team name here e.g. @mongodb/stm
 
 # TODO: delete this file or add a meaningful workload using or
 #       demonstrating your Actor
@@ -320,7 +323,7 @@ echo ""
 echo "Run your workload as follows:"
 echo ""
 echo "    ./build/src/driver/genny                                   \\"
-echo "        --workload-file       src/driver/test/${actor_name}.yml \\"
+echo "        --workload-file       ./workloads/docs/${actor_name}.yml" \\"
 echo "        --metrics-format      csv                              \\"
 echo "        --metrics-output-file build/genny-metrics.csv          \\"
 echo "        --mongo-uri           'mongodb://localhost:27017'"

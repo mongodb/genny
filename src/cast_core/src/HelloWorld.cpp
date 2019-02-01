@@ -34,8 +34,8 @@ void HelloWorld::run() {
         for (auto _ : config) {
             auto ctx = this->_operation.start();
             BOOST_LOG_TRIVIAL(info) << config->message;
-            ++_hwCounter;
-            BOOST_LOG_TRIVIAL(info) << "Counter: " << _hwCounter;
+            ++_helloCounter;
+            BOOST_LOG_TRIVIAL(info) << "Counter: " << _helloCounter;
             ctx.addOps(1);
             ctx.addBytes(config->message.size());
             ctx.success();
@@ -46,7 +46,7 @@ void HelloWorld::run() {
 HelloWorld::HelloWorld(genny::ActorContext& context)
     : Actor(context),
       _operation{context.operation("op", HelloWorld::id())},
-      _hwCounter{WorkloadContext::getActorSharedState<HelloWorld, HelloWorldCounter>()},
+      _helloCounter{WorkloadContext::getActorSharedState<HelloWorld, HelloWorldCounter>()},
       _loop{context} {}
 
 namespace {

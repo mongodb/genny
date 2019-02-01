@@ -199,10 +199,10 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-./build/src/driver/genny                                    \
-    --workload-file       src/driver/test/InsertRemove.yml  \
-    --metrics-format      csv                               \
-    --metrics-output-file build/genny-metrics.csv           \
+./build/src/driver/genny                                            \
+    --workload-file       ./workloads/product-perf/InsertRemove.yml \
+    --metrics-format      csv                                       \
+    --metrics-output-file build/genny-metrics.csv                   \
     --mongo-uri           'mongodb://localhost:27017'
 ```
 
@@ -220,6 +220,18 @@ To create a new Actor, run the following:
 ```sh
 ./scripts/create-new-actor.sh NameOfYourNewActor
 ```
+
+## Workload YAMLs
+
+Workload YAMLs live in `src/workloads` and are organized by "theme". Theme
+is a bit of an organic (contrived) concept so please reach out to us on Slack
+or mention it in your PR if you're not sure which directory your workload
+YAML belongs in.
+
+All workload yamls must have an `Owners` field indicating which github team
+should receive PRs for the YAML. The files must end with the `.yml` suffix.
+Workload YAML itself is not currently linted but please try to make the files
+look tidy.
 
 ## Code Style and Limitations
 
@@ -258,18 +270,18 @@ Running with TSAN:
     FLAGS="-pthread -fsanitize=thread -g -O1"
     cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
     make -j8 -C "build" test
-    ./build/src/driver/genny src/driver/test/Workload.yml
+    ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with ASAN:
 
     FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
     cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
     make -j8 -C "build" test
-    ./build/src/driver/genny src/driver/test/Workload.yml
+    ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
     cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
     make -j8 -C "build" test
-    ./build/src/driver/genny src/driver/test/Workload.yml
+    ./build/src/driver/genny ./workloads/docs/Workload.yml

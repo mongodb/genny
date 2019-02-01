@@ -1,4 +1,5 @@
 SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
 
 Actors:
 - Name: ServerStatusInsertFind

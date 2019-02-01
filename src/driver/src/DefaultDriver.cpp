@@ -22,7 +22,6 @@
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/exception/exception.hpp>
-
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 

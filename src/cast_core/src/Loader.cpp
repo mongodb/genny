@@ -18,14 +18,17 @@
 #include <memory>
 
 #include <bsoncxx/json.hpp>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/pool.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+
 #include <value_generators/value_generators.hpp>
 
 namespace genny::actor {
@@ -39,10 +42,10 @@ struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, uint thread)
         : database{(*client)[context.get<std::string>("Database")]},
           // The next line uses integer division. The Remainder is accounted for below.
-          numCollections{context.get<UIntSpec, true>("CollectionCount") /
-                         context.get<UIntSpec, true>("Threads")},
-          numDocuments{context.get<UIntSpec, true>("DocumentCount")},
-          batchSize{context.get<UIntSpec, true>("BatchSize")},
+          numCollections{context.get<IntegerSpec, true>("CollectionCount") /
+                         context.get<IntegerSpec, true>("Threads")},
+          numDocuments{context.get<IntegerSpec, true>("DocumentCount")},
+          batchSize{context.get<IntegerSpec, true>("BatchSize")},
           documentExpr{value_generators::Expression::parseOperand(context.get("Document"))},
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");
@@ -61,12 +64,13 @@ struct Loader::PhaseConfig {
     }
 
     mongocxx::database database;
-    size_t numCollections;
-    size_t numDocuments;
-    size_t batchSize;
+
+    int64_t numCollections;
+    int64_t numDocuments;
+    int64_t batchSize;
     value_generators::UniqueExpression documentExpr;
     std::vector<index_type> indexes;
-    size_t collectionOffset;
+    int64_t collectionOffset;
 };
 
 void genny::actor::Loader::run() {
@@ -83,7 +87,8 @@ void genny::actor::Loader::run() {
                     auto totalOp = _totalBulkLoadTimer.raii();
                     while (remainingInserts > 0) {
                         // insert the next batch
-                        uint numberToInsert = std::min<size_t>(config->batchSize, remainingInserts);
+                        int64_t numberToInsert =
+                            std::min<int64_t>(config->batchSize, remainingInserts);
                         auto docs = std::vector<bsoncxx::document::view_or_value>{};
                         docs.reserve(remainingInserts);
                         for (uint j = 0; j < numberToInsert; j++) {

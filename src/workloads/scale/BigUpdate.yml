@@ -7,6 +7,7 @@
 # updated.
 
 SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
 
 Pool:
   QueryOptions:
@@ -98,9 +99,9 @@ Actors:
     Update: {$inc: {x: 1}}
     Phases:
       - Operation:
-          OperationName: Nop
+        OperationName: Nop
       - Duration: &phase2_duration 10 minutes
-        MinDelay: 31 milliseconds
+        Rate: 100 per 31 milliseconds
   - Name: MultiCollectionQuery
     Type: MultiCollectionQuery
     Threads: 100
@@ -110,6 +111,6 @@ Actors:
     Limit: 20
     Phases:
       - Operation:
-          OperationName: Nop
+        OperationName: Nop
       - Duration: *phase2_duration
-        MinDelay: 9 milliseconds
+        Rate: 100 per 9 milliseconds
