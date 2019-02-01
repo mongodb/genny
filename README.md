@@ -304,15 +304,15 @@ evergreen set-module -m dsi -i <sys-perf-build-id>
 ```
 
 Then navigate to the build URL and select the workloads you wish to run. Good
-examples are Linux Standalone / big_update and Linux Standalone /
-genny_workloads (`genny_workloads` recently renamed).
+examples are Linux Standalone / `big_update` and Linux Standalone /
+`insert_remove`
 
 The task will compile mongodb and will then run your workloads. Expect to
 wait around 25 minutes.
 
 NB: After the task runs you can call `set-module` again with a different
 genny tarball URL and just re-run the workload tasks using the same patch
-build ID. That is: you don't need to re-compile the mongo server.
+build ID. This lets you skip the 20 minute wait to recompile the server.
 
 ## Code Style and Limitations
 
