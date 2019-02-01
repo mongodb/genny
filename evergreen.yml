@@ -99,16 +99,16 @@ buildvariants:
   - name: t_compile
   - name: t_push
 
- - name: macos-1014
-   display_name: macOS Mojave
-   modules: ~
-   run_on:
-   - macos-1014
-   expansions:
-     a: b
-   tasks:
-   - name: tg_compile_and_test
-   - name: t_push
+- name: macos-1014
+  display_name: macOS Mojave
+  modules: ~
+  run_on:
+  - macos-1014
+  expansions:
+    a: b
+  tasks:
+  - name: tg_compile_and_test
+  - name: t_push
 
 
 ##                ⚡️ Tasks ⚡️
