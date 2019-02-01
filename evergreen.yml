@@ -56,6 +56,7 @@ buildvariants:
   - archlinux-test
   expansions:
     toolchain_build_id: genny_toolchain_archlinux_be5b0e2cb8a014632d43531f9f80567578d44f40_19_01_31_14_48_07
+    cmake: ${workdir}/gennytoolchain/downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin/cmake
     os_family: linux
   tasks:
   - name: tg_compile_and_test
@@ -68,6 +69,7 @@ buildvariants:
   - amazon2-build
   expansions:
     toolchain_build_id: genny_toolchain_amazon2_be5b0e2cb8a014632d43531f9f80567578d44f40_19_01_31_14_48_07
+    cmake: ${workdir}/gennytoolchain/downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin/cmake
     os_family: linux
     mongodb_archive_url:
       https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz
@@ -82,6 +84,7 @@ buildvariants:
   - rhel70
   expansions:
     toolchain_build_id: genny_toolchain_rhel70_be5b0e2cb8a014632d43531f9f80567578d44f40_19_01_31_14_48_07
+    cmake: ${workdir}/gennytoolchain/downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin/cmake
     os_family: linux
   tasks:
   - name: t_compile
@@ -94,6 +97,7 @@ buildvariants:
   - ubuntu1804-build
   expansions:
     toolchain_build_id: genny_toolchain_ubuntu1804_be5b0e2cb8a014632d43531f9f80567578d44f40_19_01_31_14_48_07
+    cmake: ${workdir}/gennytoolchain/downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin/cmake
     os_family: linux
   tasks:
   - name: t_compile
@@ -105,7 +109,9 @@ buildvariants:
   run_on:
   - macos-1014
   expansions:
-    a: b
+    toolchain_build_id: genny_toolchain_macos_1014_bf8591a82e3aaba86dd21b7196701778e0780fbc_19_01_31_21_23_08
+    cmake: ${workdir}/gennytoolchain/downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin/cmake
+    os_family: osx
   tasks:
   - name: tg_compile_and_test
   - name: t_push
@@ -339,14 +345,6 @@ functions:
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
-  - command: shell.exec
-    params:
-      script: |
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        mv -f gennytoolchain /opt/
 
   ##
   # Compile the project in src/build.
@@ -362,7 +360,7 @@ functions:
       binary: /bin/bash
       args:
       - "${workdir}/src/scripts/bootstrap.sh"
-      - "-DCMAKE_PREFIX_PATH=${workdir}/toolchain/shared/x64-${os_family}-shared"
+      - "-DCMAKE_PREFIX_PATH=${workdir}/gennytoolchain/shared/installed/x64-${os_family}-shared"
       - "-DCMAKE_TOOLCHAIN_FILE=${workdir}/toolchain/static/scripts/buildsystems/vcpkg.cmake"
       - "-DVCPKG_TARGET_TRIPLET=x64-${os_family}-static"
       - "-DENABLE_JASPER:BOOL=ON"
@@ -372,6 +370,7 @@ functions:
         # This should be reasonably safe even on low memory machines
         MAKEFLAGS: "-j8"
         CMAKE: ${cmake|cmake}
+        PATH: "/opt/mongodbtoolchain/v3/bin:/usr/bin:/bin"
 
   ##
   # Runs each workload as a dry run
