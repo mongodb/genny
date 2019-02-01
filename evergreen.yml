@@ -99,17 +99,16 @@ buildvariants:
   - name: t_compile
   - name: t_push
 
-# TODO: TIG-1056 the OS X image doesn't have a recent CMake or C++ compiler
-# - name: macos-1014
-#   display_name: OS X Mojave
-#   modules: ~
-#   run_on:
-#   - macos-1014
-#   expansions:
-#     cmake: "/Applications/CMake.app/Contents/bin/cmake"
-#     toolchain: "/Applications/Xcode10.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
-#   tasks:
-#   - name: tg_compile_and_test
+ - name: macos-1014
+   display_name: macOS Mojave
+   modules: ~
+   run_on:
+   - macos-1014
+   expansions:
+     a: b
+   tasks:
+   - name: tg_compile_and_test
+   - name: t_push
 
 
 ##                ⚡️ Tasks ⚡️
@@ -335,11 +334,19 @@ functions:
     params:
       aws_key: ${aws_key}
       aws_secret: ${aws_secret}
-      extract_to: toolchain
+      extract_to: gennytoolchain
       remote_file: genny-toolchain/${toolchain_build_id}/genny-toolchain.tgz
       bucket: mciuploads
       permissions: public-read
       content_type: ${content_type|application/gzip}
+  - command: shell.exec
+    params:
+      script: |
+        set -o errexit
+        set -o pipefail
+        set -o nounset
+
+        mv -f gennytoolchain /opt/
 
   ##
   # Compile the project in src/build.
