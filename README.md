@@ -8,6 +8,9 @@ C++17.
 
 ### macOS
 
+Note you have to upgrade to Mojave. Earlier versions of macOS do not
+have compliant C++ compilers.
+
 1. [Download XCode 10](https://developer.apple.com/download/) (around 10GB) and install.
 2. Drag `Xcode.app` into `Applications`. For some reason the installer may put it in `~/Downloads`.
 3. Run the below shell (requires [`brew`](https://brew.sh/))
