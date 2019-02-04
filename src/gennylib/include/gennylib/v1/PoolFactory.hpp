@@ -85,6 +85,6 @@ private:
     bool _hasApmOpts = false;
 };
 
-}  // namespace genny
+}  // namespace genny::v1
 
 #endif  // HEADER_3BB17688_900D_4AFB_B736_C9EC8DA9E33B

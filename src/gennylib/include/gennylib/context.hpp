@@ -18,8 +18,8 @@
 #include <cassert>
 #include <map>
 #include <memory>
-#include <string>
 #include <shared_mutex>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -151,7 +151,7 @@ public:
      * @return a pool from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client(const std::string& name = "Default", int instance=0);
+    mongocxx::pool::entry client(const std::string& name = "Default", int instance = 0);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -334,8 +334,8 @@ public:
      * @return a pool from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
-    template<class...Args>
-    mongocxx::pool::entry client(Args&&...args) {
+    template <class... Args>
+    mongocxx::pool::entry client(Args&&... args) {
         return this->_workload->client(std::forward<Args>(args)...);
     }
 

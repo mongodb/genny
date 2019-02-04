@@ -257,4 +257,4 @@ std::optional<std::string_view> PoolFactory::getOption(OptionType type,
     return _config->get(type, option);
 }
 
-}  // namespace genny
+}  // namespace genny::v1

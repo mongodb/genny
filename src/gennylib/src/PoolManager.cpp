@@ -1,8 +1,8 @@
 
 #include <gennylib/PoolManager.hpp>
 // TODO: move PoolFactory to v1
-#include <gennylib/v1/PoolFactory.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/v1/PoolFactory.hpp>
 
 namespace {
 
@@ -14,13 +14,13 @@ auto createPool(std::string mongoUri,
     auto poolFactory = genny::v1::PoolFactory(mongoUri, apmCallback);
 
     auto queryOpts =
-            context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
+        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
     if (queryOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kQueryOption, *queryOpts);
     }
 
     auto accessOpts =
-            context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
+        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
     if (accessOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
@@ -31,7 +31,9 @@ auto createPool(std::string mongoUri,
 }  // namespace
 
 
-mongocxx::pool::entry genny::PoolManager::client(const std::string &name, int instance, genny::WorkloadContext& context) {
+mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
+                                                 int instance,
+                                                 genny::WorkloadContext& context) {
     // Only one thread can access pools.operator[] at a time...
     this->_poolsGet.lock();
     LockAndPools& lap = this->_pools[name];

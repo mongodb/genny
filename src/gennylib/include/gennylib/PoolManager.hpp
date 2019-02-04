@@ -16,11 +16,11 @@
 #define HEADER_088A462A_CF7B_4114_841E_C19AA8D29774_INCLUDED
 
 #include <functional>
+#include <memory>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <shared_mutex>
-#include <memory>
 
 #include <mongocxx/pool.hpp>
 
@@ -28,17 +28,20 @@ namespace genny {
 
 class PoolManager {
 public:
-    PoolManager(const std::string& mongoUri,std::function<void(const mongocxx::events::command_started_event&)> callback)
-    : _mongoUri{mongoUri}, _apmCallback{callback},
-    // TODO: Remove hasApmOpts when TIG-1396 is resolved.
-    _hasApmOpts{bool{callback}}
-    {}
+    PoolManager(const std::string& mongoUri,
+                std::function<void(const mongocxx::events::command_started_event&)> callback)
+        : _mongoUri{mongoUri},
+          _apmCallback{callback},
+          // TODO: Remove hasApmOpts when TIG-1396 is resolved.
+          _hasApmOpts{bool{callback}} {}
 
-    mongocxx::pool::entry client(const std::string& name, int instance, class WorkloadContext& context);
+    mongocxx::pool::entry client(const std::string& name,
+                                 int instance,
+                                 class WorkloadContext& context);
 
 private:
     using Pools = std::vector<std::unique_ptr<mongocxx::pool>>;
-    using LockAndPools = std::pair<std::shared_mutex,Pools>;
+    using LockAndPools = std::pair<std::shared_mutex, Pools>;
     std::unordered_map<std::string, LockAndPools> _pools;
     std::shared_mutex _poolsGet;
     // TODO: is cast to bool right here?
@@ -54,4 +57,3 @@ private:
 }  // namespace genny
 
 #endif  // HEADER_088A462A_CF7B_4114_841E_C19AA8D29774_INCLUDED
-
