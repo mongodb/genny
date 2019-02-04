@@ -144,11 +144,10 @@ public:
     }
 
     /**
-     * TODO: doc me
-     * @return a pool from the "default" MongoDB connection-pool.
+     * @return a pool from the given MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client(const std::string& name = "Default", int instance = 0);
+    mongocxx::pool::entry client(const std::string& name = "Default", unsigned long instance = 0ul);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.

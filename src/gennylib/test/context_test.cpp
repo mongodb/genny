@@ -47,7 +47,8 @@ void errors(const string& yaml, string message, Args... args) {
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}, std::nullopt};
+        auto context =
+            WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}, std::nullopt};
         return context.get<Out>(std::forward<Args>(args)...);
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -62,7 +63,8 @@ void gives(const string& yaml, OutV expect, Args... args) {
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}, std::nullopt};
+        auto context =
+            WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}, std::nullopt};
         return context.get<Out, Required>(std::forward<Args>(args)...);
     };
     REQUIRE(test() == expect);
@@ -219,7 +221,8 @@ Actors:
             {"Count", countProducer},
         };
 
-        auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), twoActorCast, std::nullopt};
+        auto context = WorkloadContext{
+            yaml, metrics, orchestrator, mongoUri.data(), twoActorCast, std::nullopt};
 
         REQUIRE(someListProducer->calls == 1);
         REQUIRE(countProducer->calls == 1);
@@ -351,8 +354,9 @@ TEST_CASE("Duplicate Phase Numbers") {
         {"NoOp", std::make_shared<NoOpProducer>()},
     };
 
-    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt}),
-                        Catch::Matches("Duplicate phase 0"));
+    REQUIRE_THROWS_WITH(
+        (WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt}),
+        Catch::Matches("Duplicate phase 0"));
 }
 
 TEST_CASE("No PhaseContexts") {

@@ -25,13 +25,12 @@
 
 namespace genny {
 
-WorkloadContext::WorkloadContext(
-    YAML::Node node,
-    metrics::Registry& registry,
-    Orchestrator& orchestrator,
-    const std::string& mongoUri,
-    const Cast& cast,
-    PoolManager::CallMeMaybe apmCallback)
+WorkloadContext::WorkloadContext(YAML::Node node,
+                                 metrics::Registry& registry,
+                                 Orchestrator& orchestrator,
+                                 const std::string& mongoUri,
+                                 const Cast& cast,
+                                 PoolManager::CallMeMaybe apmCallback)
     : v1::ConfigNode(std::move(node)),
       _registry{&registry},
       _orchestrator{&orchestrator},
@@ -85,7 +84,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
-mongocxx::pool::entry WorkloadContext::client(const std::string& name, int instance) {
+mongocxx::pool::entry WorkloadContext::client(const std::string& name, unsigned long instance) {
     return _poolManager.client(name, instance, *this);
 }
 

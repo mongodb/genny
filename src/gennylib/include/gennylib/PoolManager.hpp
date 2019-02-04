@@ -17,11 +17,12 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <optional>
+#include <utility>
 
 #include <mongocxx/pool.hpp>
 
@@ -29,25 +30,27 @@ namespace genny {
 
 class PoolManager {
 public:
-    using CallMeMaybe = std::optional<std::function<void(const mongocxx::events::command_started_event&)>>;
+    using CallMeMaybe =
+        std::optional<std::function<void(const mongocxx::events::command_started_event&)>>;
 
-    PoolManager(const std::string& mongoUri,
-                CallMeMaybe callback)
-        : _mongoUri{mongoUri},
-          _apmCallback{callback}
-        {}
+    PoolManager(std::string mongoUri, CallMeMaybe callback)
+        : _mongoUri{std::move(mongoUri)}, _apmCallback{std::move(callback)} {}
 
     mongocxx::pool::entry client(const std::string& name,
-                                 int instance,
+                                 unsigned long instance,
                                  class WorkloadContext& context);
 
 private:
+    std::string _mongoUri;
+    CallMeMaybe _apmCallback;
+
+    // vector of pool ptrs
     using Pools = std::vector<std::unique_ptr<mongocxx::pool>>;
+    // pair each vector ↑ with a mutex for adding new pools
     using LockAndPools = std::pair<std::shared_mutex, Pools>;
+
     std::unordered_map<std::string, LockAndPools> _pools;
     std::shared_mutex _poolsGet;
-    CallMeMaybe _apmCallback;
-    std::string _mongoUri;
 };
 
 }  // namespace genny

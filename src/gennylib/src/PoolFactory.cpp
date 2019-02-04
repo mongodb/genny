@@ -178,9 +178,7 @@ struct PoolFactory::Config {
     };
 };
 
-PoolFactory::PoolFactory(
-    std::string_view rawUri,
-    PoolManager::CallMeMaybe apmCallback)
+PoolFactory::PoolFactory(std::string_view rawUri, PoolManager::CallMeMaybe apmCallback)
     : _config(std::make_unique<Config>(rawUri)), _apmCallback{apmCallback} {}
 PoolFactory::~PoolFactory() {}
 

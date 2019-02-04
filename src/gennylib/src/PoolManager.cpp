@@ -18,11 +18,9 @@
 
 namespace {
 
-auto createPool(std::string mongoUri,
-                std::string name,
+auto createPool(const std::string& mongoUri,
                 genny::PoolManager::CallMeMaybe& apmCallback,
                 genny::WorkloadContext& context) {
-    // TODO: make this optional and default to mongodb://localhost:27017
     auto poolFactory = genny::v1::PoolFactory(mongoUri, apmCallback);
 
     auto queryOpts =
@@ -44,7 +42,7 @@ auto createPool(std::string mongoUri,
 
 
 mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
-                                                 int instance,
+                                                 unsigned long instance,
                                                  genny::WorkloadContext& context) {
     // Only one thread can access pools.operator[] at a time...
     this->_poolsGet.lock();
@@ -60,7 +58,7 @@ mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
     Pools& pools = lap.second;
 
     while (pools.empty() || pools.size() - 1 < instance) {
-        pools.push_back(createPool(this->_mongoUri, name, this->_apmCallback, context));
+        pools.push_back(createPool(this->_mongoUri, this->_apmCallback, context));
     }
     // .at does range-checking to help catch bugs with above logic :)
     auto& pool = pools.at(instance);
