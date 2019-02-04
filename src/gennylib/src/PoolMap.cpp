@@ -1,7 +1,7 @@
 
 #include <gennylib/PoolMap.hpp>
 // TODO: move PoolFactory to v1
-#include <gennylib/PoolFactory.hpp>
+#include <gennylib/v1/PoolFactory.hpp>
 #include <gennylib/context.hpp>
 
 namespace {

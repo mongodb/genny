@@ -22,7 +22,6 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/PoolFactory.hpp>
 
 namespace genny {
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gennylib/PoolFactory.hpp>
+#include <gennylib/v1/PoolFactory.hpp>
 
 #include <iostream>
 #include <map>

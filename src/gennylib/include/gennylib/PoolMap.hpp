@@ -24,7 +24,6 @@
 
 #include <mongocxx/pool.hpp>
 
-
 namespace genny {
 
 class PoolMap {
