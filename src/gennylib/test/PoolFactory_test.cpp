@@ -18,7 +18,11 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/v1/PoolFactory.hpp>
+#include <gennylib/PoolManager.hpp>
 
+#include <metrics/metrics.hpp>
+
+#include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
 
@@ -224,5 +228,18 @@ TEST_CASE("PoolFactory behavior") {
 
         auto pool = factory.makePool();
         REQUIRE(pool);
+    }
+
+    SECTION("PoolManager can construct multiple pools") {
+        auto yaml = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+        Database: test
+        Actors: []
+        )");
+        genny::ActorHelper ah{yaml, 1, {}};
+        auto w = ah.workload();
+        w->client("Foo", 0);
+        w->client("Foo", 10);
+        w->client("Bar", 1);
     }
 }
