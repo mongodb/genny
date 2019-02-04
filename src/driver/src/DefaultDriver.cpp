@@ -16,6 +16,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <thread>
 #include <vector>
@@ -94,7 +95,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     auto orchestrator = Orchestrator{phaseNumberGauge};
 
     auto workloadContext =
-        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, globalCast()};
+        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, globalCast(), std::nullopt};
 
     if (options.isDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;

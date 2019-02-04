@@ -41,7 +41,7 @@ ActorHelper::ActorHelper(const YAML::Node& config,
 
     _cast = std::make_unique<Cast>(castInitializer);
     _wlc = std::make_unique<WorkloadContext>(
-        config, *_registry, *_orchestrator, uri, *_cast, apmCallback);
+        config, *_registry, *_orchestrator, uri, *_cast, std::make_optional(apmCallback));
 }
 
 ActorHelper::ActorHelper(const YAML::Node& config,

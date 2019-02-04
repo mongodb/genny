@@ -8,7 +8,7 @@ namespace {
 
 auto createPool(std::string mongoUri,
                 std::string name,
-                std::function<void(const mongocxx::events::command_started_event&)> apmCallback,
+                genny::PoolManager::CallMeMaybe& apmCallback,
                 genny::WorkloadContext& context) {
     // TODO: make this optional and default to mongodb://localhost:27017
     auto poolFactory = genny::v1::PoolFactory(mongoUri, apmCallback);
@@ -56,7 +56,7 @@ mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
     // no need to keep it past this point; pool is thread-safe
     lock.unlock();
 
-    if (_hasApmOpts) {
+    if (_apmCallback) {
         // TODO: Remove this conditional when TIG-1396 is resolved.
         return pool->acquire();
     }

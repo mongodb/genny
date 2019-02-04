@@ -103,15 +103,12 @@ public:
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
-
-    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
-
     WorkloadContext(YAML::Node node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
                     const Cast& cast,
-                    ApmCallback apmCallback = ApmCallback());
+                    PoolManager::CallMeMaybe apmCallback);
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;

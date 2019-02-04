@@ -51,7 +51,7 @@ public:
           _orchestratorGauge{_registry.gauge("Genny.Orchestrator")},
           _orchestrator{_orchestratorGauge},
           _workloadContext{
-              _node, _registry, _orchestrator, "mongodb://localhost:27017", genny::globalCast()} {}
+              _node, _registry, _orchestrator, "mongodb://localhost:27017", genny::globalCast(), std::nullopt} {}
 
     void run() {
         for (auto&& actor : _workloadContext.actors()) {

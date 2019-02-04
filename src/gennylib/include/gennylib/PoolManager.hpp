@@ -21,6 +21,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
 #include <mongocxx/pool.hpp>
 
@@ -28,12 +29,13 @@ namespace genny {
 
 class PoolManager {
 public:
+    using CallMeMaybe = std::optional<std::function<void(const mongocxx::events::command_started_event&)>>;
+
     PoolManager(const std::string& mongoUri,
-                std::function<void(const mongocxx::events::command_started_event&)> callback)
+                CallMeMaybe callback)
         : _mongoUri{mongoUri},
-          _apmCallback{callback},
-          // TODO: Remove hasApmOpts when TIG-1396 is resolved.
-          _hasApmOpts{bool{callback}} {}
+          _apmCallback{callback}
+        {}
 
     mongocxx::pool::entry client(const std::string& name,
                                  int instance,
@@ -44,14 +46,8 @@ private:
     using LockAndPools = std::pair<std::shared_mutex, Pools>;
     std::unordered_map<std::string, LockAndPools> _pools;
     std::shared_mutex _poolsGet;
-    // TODO: is cast to bool right here?
-    // TODO: should this be a ref? who owns the callback?
-    std::function<void(const mongocxx::events::command_started_event&)> _apmCallback;
+    CallMeMaybe _apmCallback;
     std::string _mongoUri;
-
-    // A flag representing the presence of application performance monitoring options used for
-    // testing. This can be removed once TIG-1396 is resolved.
-    bool _hasApmOpts;
 };
 
 }  // namespace genny

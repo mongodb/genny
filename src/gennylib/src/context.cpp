@@ -31,7 +31,7 @@ WorkloadContext::WorkloadContext(
     Orchestrator& orchestrator,
     const std::string& mongoUri,
     const Cast& cast,
-    std::function<void(const mongocxx::events::command_started_event&)> apmCallback)
+    PoolManager::CallMeMaybe apmCallback)
     : v1::ConfigNode(std::move(node)),
       _registry{&registry},
       _orchestrator{&orchestrator},
