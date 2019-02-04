@@ -120,12 +120,11 @@ mongocxx::pool::entry WorkloadContext::client(const std::string& name, int insta
     // TODO: lock
     LockAndPools& lap = this->_pools[name];
     Pools& pools = lap.second;
-    for (int i = 0; i <= instance; ++i) {
-        if (pools.empty() || pools.size() - 1 < instance) {
-            pools.push_back(createPool(this->_mongoUri, name, this->_apmCallback, *this));
-        }
+    while (pools.empty() || pools.size() - 1 < instance) {
+        pools.push_back(createPool(this->_mongoUri, name, this->_apmCallback, *this));
     }
     auto& pool = pools[instance];
+
     if (_hasApmOpts) {
         // TODO: Remove this conditional when TIG-1396 is resolved.
         return pool->acquire();
