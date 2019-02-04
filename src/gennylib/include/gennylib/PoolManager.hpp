@@ -17,8 +17,8 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <optional>
-#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -47,10 +47,10 @@ private:
     // vector of pool ptrs
     using Pools = std::vector<std::unique_ptr<mongocxx::pool>>;
     // pair each vector ↑ with a mutex for adding new pools
-    using LockAndPools = std::pair<std::shared_mutex, Pools>;
+    using LockAndPools = std::pair<std::mutex, Pools>;
 
     std::unordered_map<std::string, LockAndPools> _pools;
-    std::shared_mutex _poolsGet;
+    std::mutex _poolsGet;
 };
 
 }  // namespace genny
