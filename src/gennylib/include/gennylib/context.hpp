@@ -35,6 +35,7 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/PoolMap.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/v1/ConfigNode.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
@@ -201,14 +202,7 @@ private:
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
 
-    using Pools = std::vector<std::unique_ptr<mongocxx::pool>>;
-    using LockAndPools = std::pair<std::shared_mutex,Pools>;
-    std::unordered_map<std::string, LockAndPools> _pools;
-    std::shared_mutex _poolsGet;
-    // TODO: is cast to bool right here?
-    // TODO: should this be a ref? who owns the callback?
-    std::function<void(const mongocxx::events::command_started_event&)> _apmCallback;
-    std::string _mongoUri;
+    PoolMap _poolMap;
 
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
@@ -222,10 +216,6 @@ private:
     // Actors should always be constructed in a single-threaded context.
     // That said, atomic integral types are very cheap to work with.
     std::atomic<ActorId> _nextActorId{0};
-
-    // A flag representing the presence of application performance monitoring options used for
-    // testing. This can be removed once TIG-1396 is resolved.
-    bool _hasApmOpts;
 
     std::unordered_map<std::string, std::unique_ptr<v1::GlobalRateLimiter>> _rateLimiters;
 };

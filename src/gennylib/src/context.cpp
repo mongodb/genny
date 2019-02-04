@@ -24,32 +24,6 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/PoolFactory.hpp>
 
-namespace {
-
-auto createPool(std::string mongoUri,
-                std::string name,
-                std::function<void(const mongocxx::events::command_started_event&)> apmCallback,
-                genny::WorkloadContext& context) {
-    // TODO: make this optional and default to mongodb://localhost:27017
-    auto poolFactory = genny::PoolFactory(mongoUri, apmCallback);
-
-    auto queryOpts =
-        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
-    if (queryOpts) {
-        poolFactory.setOptions(genny::PoolFactory::kQueryOption, *queryOpts);
-    }
-
-    auto accessOpts =
-        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
-    if (accessOpts) {
-        poolFactory.setOptions(genny::PoolFactory::kAccessOption, *accessOpts);
-    }
-
-    return poolFactory.makePool();
-}
-
-}  // namespace
-
 namespace genny {
 
 WorkloadContext::WorkloadContext(
@@ -63,8 +37,7 @@ WorkloadContext::WorkloadContext(
       _registry{&registry},
       _orchestrator{&orchestrator},
       _rateLimiters{10},
-      _mongoUri{mongoUri},
-      _apmCallback{apmCallback} {
+      _poolMap{mongoUri, apmCallback} {
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
@@ -74,9 +47,6 @@ WorkloadContext::WorkloadContext(
 
     // Make sure we have a valid mongocxx instance happening here
     mongocxx::instance::current();
-
-    // TODO: Remove hasApmOpts when TIG-1396 is resolved.
-    _hasApmOpts = bool{apmCallback};
 
     // Make a bunch of actor contexts
     for (const auto& actor : this->get_noinherit("Actors")) {
@@ -117,38 +87,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
 }
 
 mongocxx::pool::entry WorkloadContext::client(const std::string& name, int instance) {
-    // Only one thread can access pools.operator[] at a time...
-    this->_poolsGet.lock();
-    LockAndPools& lap = this->_pools[name];
-    // ...but no need to keep the lock open past this.
-    // Two threads trying access client("foo",0) at the same
-    // time will subsequently block on the unique_lock.
-    this->_poolsGet.unlock();
-
-    // only one thread can access the vector of pools at once
-    std::unique_lock lock{lap.first};
-
-    Pools& pools = lap.second;
-
-    while (pools.empty() || pools.size() - 1 < instance) {
-        pools.push_back(createPool(this->_mongoUri, name, this->_apmCallback, *this));
-    }
-    // .at does range-checking to help catch bugs with above logic :)
-    auto& pool = pools.at(instance);
-
-    // no need to keep it past this point; pool is thread-safe
-    lock.unlock();
-
-    if (_hasApmOpts) {
-        // TODO: Remove this conditional when TIG-1396 is resolved.
-        return pool->acquire();
-    }
-    auto entry = pool->try_acquire();
-    if (!entry) {
-        // TODO: better error handling
-        throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
-    }
-    return std::move(*entry);
+    return _poolMap.client(name, instance, *this);
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts
