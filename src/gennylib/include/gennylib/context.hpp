@@ -204,6 +204,7 @@ private:
     using Pools = std::vector<std::unique_ptr<mongocxx::pool>>;
     using LockAndPools = std::pair<std::shared_mutex,Pools>;
     std::unordered_map<std::string, LockAndPools> _pools;
+    std::shared_mutex _poolsGet;
     // TODO: is cast to bool right here?
     // TODO: should this be a ref? who owns the callback?
     std::function<void(const mongocxx::events::command_started_event&)> _apmCallback;

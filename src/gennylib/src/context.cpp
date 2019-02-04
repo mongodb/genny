@@ -117,14 +117,27 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
 }
 
 mongocxx::pool::entry WorkloadContext::client(const std::string& name, int instance) {
-    // TODO: lock
+    // Only one thread can access pools.operator[] at a time...
+    this->_poolsGet.lock();
     LockAndPools& lap = this->_pools[name];
+    // ...but no need to keep the lock open past this.
+    // Two threads trying access client("foo",0) at the same
+    // time will subsequently block on the unique_lock.
+    this->_poolsGet.unlock();
+
+    // only one thread can access the vector of pools at once
+    std::unique_lock lock{lap.first};
+
     Pools& pools = lap.second;
+
     while (pools.empty() || pools.size() - 1 < instance) {
         pools.push_back(createPool(this->_mongoUri, name, this->_apmCallback, *this));
     }
     // .at does range-checking to help catch bugs with above logic :)
     auto& pool = pools.at(instance);
+
+    // no need to keep it past this point; pool is thread-safe
+    lock.unlock();
 
     if (_hasApmOpts) {
         // TODO: Remove this conditional when TIG-1396 is resolved.
