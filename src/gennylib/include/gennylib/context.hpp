@@ -35,7 +35,7 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/PoolMap.hpp>
+#include <gennylib/PoolManager.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/v1/ConfigNode.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
@@ -202,7 +202,7 @@ private:
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
 
-    PoolMap _poolMap;
+    PoolManager _poolManager;
 
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;

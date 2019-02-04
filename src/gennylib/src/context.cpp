@@ -36,7 +36,7 @@ WorkloadContext::WorkloadContext(
       _registry{&registry},
       _orchestrator{&orchestrator},
       _rateLimiters{10},
-      _poolMap{mongoUri, apmCallback} {
+      _poolManager{mongoUri, apmCallback} {
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
@@ -86,7 +86,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
 }
 
 mongocxx::pool::entry WorkloadContext::client(const std::string& name, int instance) {
-    return _poolMap.client(name, instance, *this);
+    return _poolManager.client(name, instance, *this);
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts

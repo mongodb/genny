@@ -1,5 +1,5 @@
 
-#include <gennylib/PoolMap.hpp>
+#include <gennylib/PoolManager.hpp>
 // TODO: move PoolFactory to v1
 #include <gennylib/v1/PoolFactory.hpp>
 #include <gennylib/context.hpp>
@@ -31,7 +31,7 @@ auto createPool(std::string mongoUri,
 }  // namespace
 
 
-mongocxx::pool::entry genny::PoolMap::client(const std::string &name, int instance, genny::WorkloadContext& context) {
+mongocxx::pool::entry genny::PoolManager::client(const std::string &name, int instance, genny::WorkloadContext& context) {
     // Only one thread can access pools.operator[] at a time...
     this->_poolsGet.lock();
     LockAndPools& lap = this->_pools[name];

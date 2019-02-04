@@ -26,9 +26,9 @@
 
 namespace genny {
 
-class PoolMap {
+class PoolManager {
 public:
-    PoolMap(const std::string& mongoUri,std::function<void(const mongocxx::events::command_started_event&)> callback)
+    PoolManager(const std::string& mongoUri,std::function<void(const mongocxx::events::command_started_event&)> callback)
     : _mongoUri{mongoUri}, _apmCallback{callback},
     // TODO: Remove hasApmOpts when TIG-1396 is resolved.
     _hasApmOpts{bool{callback}}
