@@ -123,7 +123,8 @@ mongocxx::pool::entry WorkloadContext::client(const std::string& name, int insta
     while (pools.empty() || pools.size() - 1 < instance) {
         pools.push_back(createPool(this->_mongoUri, name, this->_apmCallback, *this));
     }
-    auto& pool = pools[instance];
+    // .at does range-checking to help catch bugs with above logic :)
+    auto& pool = pools.at(instance);
 
     if (_hasApmOpts) {
         // TODO: Remove this conditional when TIG-1396 is resolved.
