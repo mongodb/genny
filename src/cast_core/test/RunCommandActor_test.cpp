@@ -126,6 +126,8 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
     constexpr auto readTimeout = 6000;
 
     SECTION("verify write concern to secondaries") {
+        MongoTestFixture::clearEvents();
+
         constexpr auto dbStr = "test";
         constexpr auto collectionStr = "testCollection";
 
@@ -139,18 +141,20 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
             yamlPhase["Operation"]["OperationCommand"]["writeConcern"]["w"] = 3;
         }(yamlConfig["Actors"][0]["Phases"][0]);
 
-        ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string());
-        ah.run();
-
-        auto coll = MongoTestFixture::client["test"]["testCollection"];
-
-        mongocxx::options::find opts =
-            makeFindOp(mongocxx::read_preference::read_mode::k_secondary, readTimeout);
-
-        auto result = static_cast<bool>(coll.find_one(
-            session, BasicBson::make_document(BasicBson::kvp("name", "myName")), opts));
-
-        REQUIRE(result);
+        try {
+            ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string(),
+                MongoTestFixture::apmCallback);
+            ah.run();
+            auto coll = MongoTestFixture::client["test"]["testCollection"];
+            REQUIRE(MongoTestFixture::events.size() > 0);
+            auto&& event = MongoTestFixture::events.front();
+            REQUIRE(event.command["writeConcern"]);
+            auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
+            REQUIRE(writeConcernLevel == 3);
+        } catch (const std::exception& e) {
+            // We check that the right command is sent to the server and ignore
+            // any result or exception thrown.
+        }
     }
 
 

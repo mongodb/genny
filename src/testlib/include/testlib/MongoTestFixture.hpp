@@ -29,10 +29,37 @@ public:
     static mongocxx::uri connectionUri();
 
 private:
+    class ApmEvent {
+        public:
+        ApmEvent(const std::string& command_name_, const bsoncxx::document::value& document_)
+            : command_name(command_name_), value(document_), command(value.view()) {}
+
+        std::string command_name;
+        bsoncxx::document::value value;
+        bsoncxx::document::view command;
+    };
     mongocxx::instance& instance;
 
 protected:
     mongocxx::client client;
+    std::vector<ApmEvent> events;
+    std::function<void(const mongocxx::events::command_started_event&)> apmCallback =
+        [&](const mongocxx::events::command_started_event& event) {
+            std::string command_name{event.command_name().data()};
+
+            // Ignore auth commands like "saslStart", and handshakes with "isMaster".
+            std::string sasl{"sasl"};
+            if (event.command_name().substr(0, sasl.size()).compare(sasl) == 0 ||
+                command_name.compare("isMaster") == 0) {
+                return;
+            }
+
+            events.emplace_back(command_name, bsoncxx::document::value(event.command()));
+        };
+    void clearEvents(){
+        events.clear();
+    };
+
 };
 }  // namespace genny::testing
 
