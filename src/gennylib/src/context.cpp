@@ -105,7 +105,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
-mongocxx::pool::entry WorkloadContext::client() {
+mongocxx::pool::entry WorkloadContext::client(const std::string& name, int instance) {
     if (_hasApmOpts) {
         // TODO: Remove this conditional when TIG-1396 is resolved.
         return _clientPool->acquire();
@@ -148,10 +148,6 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     }
     actorContext->orchestrator().phasesAtLeastTo(out.size() - 1);
     return out;
-}
-
-mongocxx::pool::entry ActorContext::client() {
-    return _workload->client();
 }
 
 bool PhaseContext::_isNop() const {

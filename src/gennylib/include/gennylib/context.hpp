@@ -144,10 +144,11 @@ public:
     }
 
     /**
+     * TODO: doc me
      * @return a pool from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client();
+    mongocxx::pool::entry client(const std::string& name = "Default", int instance=0);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -334,7 +335,10 @@ public:
      * @return a pool from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client();
+    template<class...Args>
+    mongocxx::pool::entry client(Args&&...args) {
+        return this->_workload->client(std::forward<Args>(args)...);
+    }
 
     // <Forwarding to delegates>
 
