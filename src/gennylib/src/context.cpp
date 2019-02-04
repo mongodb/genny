@@ -24,6 +24,32 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/PoolFactory.hpp>
 
+namespace {
+
+auto createPool(std::string mongoUri,
+                std::string name,
+                std::function<void(const mongocxx::events::command_started_event&)> apmCallback,
+                genny::WorkloadContext& context) {
+    // TODO: make this optional and default to mongodb://localhost:27017
+    auto poolFactory = genny::PoolFactory(mongoUri, apmCallback);
+
+    auto queryOpts =
+        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
+    if (queryOpts) {
+        poolFactory.setOptions(genny::PoolFactory::kQueryOption, *queryOpts);
+    }
+
+    auto accessOpts =
+        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
+    if (accessOpts) {
+        poolFactory.setOptions(genny::PoolFactory::kAccessOption, *accessOpts);
+    }
+
+    return poolFactory.makePool();
+}
+
+}  // namespace
+
 namespace genny {
 
 WorkloadContext::WorkloadContext(
@@ -36,7 +62,9 @@ WorkloadContext::WorkloadContext(
     : v1::ConfigNode(std::move(node)),
       _registry{&registry},
       _orchestrator{&orchestrator},
-      _rateLimiters{10} {
+      _rateLimiters{10},
+      _mongoUri{mongoUri},
+      _apmCallback{apmCallback} {
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
@@ -46,23 +74,6 @@ WorkloadContext::WorkloadContext(
 
     // Make sure we have a valid mongocxx instance happening here
     mongocxx::instance::current();
-
-    // TODO: make this optional and default to mongodb://localhost:27017
-    auto poolFactory = PoolFactory(mongoUri, apmCallback);
-
-    auto queryOpts =
-        this->get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
-    if (queryOpts) {
-        poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
-    }
-
-    auto accessOpts =
-        this->get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
-    if (accessOpts) {
-        poolFactory.setOptions(PoolFactory::kAccessOption, *accessOpts);
-    }
-
-    _clientPool = poolFactory.makePool();
 
     // TODO: Remove hasApmOpts when TIG-1396 is resolved.
     _hasApmOpts = bool{apmCallback};
@@ -106,12 +117,22 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
 }
 
 mongocxx::pool::entry WorkloadContext::client(const std::string& name, int instance) {
+    // TODO: lock
+    LockAndPools& lap = this->_pools[name];
+    Pools& pools = lap.second;
+    for (int i = 0; i <= instance; ++i) {
+        if (pools.empty() || pools.size() - 1 < instance) {
+            pools.push_back(createPool(this->_mongoUri, name, this->_apmCallback, *this));
+        }
+    }
+    auto& pool = pools[instance];
     if (_hasApmOpts) {
         // TODO: Remove this conditional when TIG-1396 is resolved.
-        return _clientPool->acquire();
+        return pool->acquire();
     }
-    auto entry = _clientPool->try_acquire();
+    auto entry = pool->try_acquire();
     if (!entry) {
+        // TODO: better error handling
         throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
     }
     return std::move(*entry);

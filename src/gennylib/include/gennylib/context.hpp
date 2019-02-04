@@ -19,6 +19,8 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <shared_mutex>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/noncopyable.hpp>
@@ -199,7 +201,13 @@ private:
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
 
-    std::unique_ptr<mongocxx::pool> _clientPool;
+    using Pools = std::vector<std::unique_ptr<mongocxx::pool>>;
+    using LockAndPools = std::pair<std::shared_mutex,Pools>;
+    std::unordered_map<std::string, LockAndPools> _pools;
+    // TODO: is cast to bool right here?
+    // TODO: should this be a ref? who owns the callback?
+    std::function<void(const mongocxx::events::command_started_event&)> _apmCallback;
+    std::string _mongoUri;
 
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
