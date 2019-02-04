@@ -25,7 +25,7 @@
 
 #include <gennylib/InvalidConfigurationException.hpp>
 
-namespace genny {
+namespace genny::v1 {
 
 /** @private */
 struct PoolFactory::Config {

@@ -25,7 +25,7 @@
 
 #include <mongocxx/pool.hpp>
 
-namespace genny {
+namespace genny::v1 {
 
 /**
  * A pool factory takes in a MongoURI, modifies its components, and makes a pool from it
