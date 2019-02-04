@@ -103,18 +103,19 @@ buildvariants:
   - name: t_compile
   - name: t_push
 
-- name: macos-1014
-  display_name: macOS Mojave
-  modules: ~
-  run_on:
-  - macos-1014
-  expansions:
-    toolchain_build_id: genny_toolchain_macos_1014_bf8591a82e3aaba86dd21b7196701778e0780fbc_19_01_31_21_23_08
-    cmake_relative_path: "downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin/cmake"
-    os_family: osx
-  tasks:
-  - name: tg_compile_and_test
-  - name: t_push
+# Commented out because of https://github.com/Microsoft/vcpkg/issues/4437
+# - name: macos-1014
+#   display_name: macOS Mojave
+#   modules: ~
+#   run_on:
+#   - macos-1014
+#   expansions:
+#     toolchain_build_id: genny_toolchain_macos_1014_bf8591a82e3aaba86dd21b7196701778e0780fbc_19_01_31_21_23_08
+#     cmake_relative_path: "downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin/cmake"
+#     os_family: osx
+#   tasks:
+#   - name: tg_compile_and_test
+#   - name: t_push
 
 
 ##                ⚡️ Tasks ⚡️
