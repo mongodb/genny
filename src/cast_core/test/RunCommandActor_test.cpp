@@ -141,8 +141,7 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
         }(yamlConfig["Actors"][0]["Phases"][0]);
 
         auto apmCallback = makeApmCallback(events);
-        ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string(),
-            apmCallback);
+        ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
         ah.run();
         auto coll = MongoTestFixture::client["test"]["testCollection"];
         REQUIRE(events.size() > 0);

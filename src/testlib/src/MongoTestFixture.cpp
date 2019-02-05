@@ -45,7 +45,8 @@ void MongoTestFixture::dropAllDatabases() {
     }
 };
 
-MongoTestFixture::ApmCallback MongoTestFixture::makeApmCallback(MongoTestFixture::ApmEvents& events) {
+MongoTestFixture::ApmCallback MongoTestFixture::makeApmCallback(
+    MongoTestFixture::ApmEvents& events) {
     return [&](const mongocxx::events::command_started_event& event) {
         std::string command_name{event.command_name().data()};
 

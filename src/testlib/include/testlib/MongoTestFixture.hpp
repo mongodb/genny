@@ -30,7 +30,7 @@ public:
 
 private:
     mongocxx::instance& instance;
-    
+
 protected:
     class ApmEvent {
     public:
@@ -41,7 +41,7 @@ protected:
         bsoncxx::document::value value;
         bsoncxx::document::view command;
     };
-    
+
     using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
     using ApmEvents = std::vector<ApmEvent>;
     static ApmCallback makeApmCallback(ApmEvents& events);
