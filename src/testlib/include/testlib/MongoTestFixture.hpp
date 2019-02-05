@@ -32,6 +32,8 @@ private:
     mongocxx::instance& instance;
 
 protected:
+    // This was copied from
+    // github.com/mongodb/mongo-cxx-driver/blob/r3.4.0/src/mongocxx/test/client_session.cpp#L285
     class ApmEvent {
     public:
         ApmEvent(const std::string& command_name_, const bsoncxx::document::value& document_)
