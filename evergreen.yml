@@ -68,7 +68,7 @@ buildvariants:
   run_on:
   - amazon2-build
   expansions:
-    toolchain_build_id: genny_toolchain_amazon2_8bb0ea5400066f2d1ae37cffd3ad55f00d5fda30_19_02_05_05_22_53
+    toolchain_url: http://genny.s3.amazonaws.com/toolchain/gennytoolchain-Linux-4.9.76-38.79.amzn2.x86_64-x86_64-with-glibc2.2.5.tgz
     cmake_relative_path: "downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin/cmake"
     os_family: linux
     mongodb_archive_url:
@@ -336,20 +336,15 @@ functions:
   # Download the genny toolchain
   ##
   f_fetch_toolchain:
-  - command: s3.get
-    params:
-      aws_key: ${aws_key}
-      aws_secret: ${aws_secret}
-      extract_to: gennytoolchain
-      remote_file: genny-toolchain/${toolchain_build_id}/genny-toolchain.tgz
-      bucket: mciuploads
-      permissions: public-read
-      content_type: ${content_type|application/gzip}
   - command: shell.exec
     params:
       script: |
-        # TODO Take out
-        ls gennytoolchain
+        set -o errexit
+        set -o verbose
+
+        curl -fLSs -o gennytoolchain.tgz ${toolchain_url}
+        tar -xvf gennytoolchain gennytoolchain.tgz
+        mv -f gennytoolchain /opt
 
   ##
   # Compile the project in src/build.
@@ -365,8 +360,8 @@ functions:
       binary: /bin/bash
       args:
       - "${workdir}/src/scripts/bootstrap.sh"
-      - "-DCMAKE_PREFIX_PATH=${workdir}/gennytoolchain/shared/installed/x64-${os_family}-shared"
-      - "-DCMAKE_TOOLCHAIN_FILE=${workdir}/gennytoolchain/static/scripts/buildsystems/vcpkg.cmake"
+      - "-DCMAKE_PREFIX_PATH=/opt/gennytoolchain/installed/x64-${os_family}-shared"
+      - "-DCMAKE_TOOLCHAIN_FILE=/opt/gennytoolchain/scripts/buildsystems/vcpkg.cmake"
       - "-DVCPKG_TARGET_TRIPLET=x64-${os_family}-static"
       - "-DENABLE_JASPER:BOOL=ON"
       - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
