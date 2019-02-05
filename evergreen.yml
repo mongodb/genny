@@ -103,18 +103,18 @@ buildvariants:
   - name: t_compile
   - name: t_push
 
- - name: macos-1014
-   display_name: macOS Mojave
-   modules: ~
-   run_on:
-   - macos-1014
-   expansions:
-     toolchain_build_id: genny_toolchain_macos_1014_8bb0ea5400066f2d1ae37cffd3ad55f00d5fda30_19_02_05_05_22_53
-     cmake_relative_path: "downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin/cmake"
-     os_family: osx
-   tasks:
-   - name: tg_compile_and_test
-   - name: t_push
+- name: macos-1014
+  display_name: macOS Mojave
+  modules: ~
+  run_on:
+  - macos-1014
+  expansions:
+    toolchain_build_id: genny_toolchain_macos_1014_8bb0ea5400066f2d1ae37cffd3ad55f00d5fda30_19_02_05_05_22_53
+    cmake_relative_path: "downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin/cmake"
+    os_family: osx
+  tasks:
+  - name: tg_compile_and_test
+  - name: t_push
 
 
 ##                ⚡️ Tasks ⚡️
