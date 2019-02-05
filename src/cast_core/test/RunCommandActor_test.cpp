@@ -93,6 +93,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 }
 
 TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three_node_replset]") {
+    auto events = ApmEvents{};
 
     auto makeConfig = []() {
         return YAML::Load(R"(
@@ -126,8 +127,6 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
     constexpr auto readTimeout = 6000;
 
     SECTION("verify write concern to secondaries") {
-        MongoTestFixture::clearEvents();
-
         constexpr auto dbStr = "test";
         constexpr auto collectionStr = "testCollection";
 
@@ -141,20 +140,16 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
             yamlPhase["Operation"]["OperationCommand"]["writeConcern"]["w"] = 3;
         }(yamlConfig["Actors"][0]["Phases"][0]);
 
-        try {
-            ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string(),
-                MongoTestFixture::apmCallback);
-            ah.run();
-            auto coll = MongoTestFixture::client["test"]["testCollection"];
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            auto&& event = MongoTestFixture::events.front();
-            REQUIRE(event.command["writeConcern"]);
-            auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
-            REQUIRE(writeConcernLevel == 3);
-        } catch (const std::exception& e) {
-            // We check that the right command is sent to the server and ignore
-            // any result or exception thrown.
-        }
+        auto apmCallback = makeApmCallback(events);
+        ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string(),
+            apmCallback);
+        ah.run();
+        auto coll = MongoTestFixture::client["test"]["testCollection"];
+        REQUIRE(events.size() > 0);
+        auto&& event = events.front();
+        REQUIRE(event.command["writeConcern"]);
+        auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
+        REQUIRE(writeConcernLevel == 3);
     }
 
 

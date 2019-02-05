@@ -66,7 +66,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "[standalone][single_node_replset][three_node_replset][CrudActor]") {
 
     dropAllDatabases();
-    MongoTestFixture::clearEvents();
+    auto events = ApmEvents{};
     auto db = client.database("mydb");
 
     SECTION("Inserts and updates document in the database.") {
@@ -203,14 +203,15 @@ TEST_CASE_METHOD(MongoTestFixture,
                     BypassDocumentValidation: true
           )");
         try {
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             auto count =
                 db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 5)));
             REQUIRE(count == 1);
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            for (auto&& event : MongoTestFixture::events) {
+            REQUIRE(events.size() > 0);
+            for (auto&& event : events) {
                 REQUIRE(event.command["ordered"]);
                 auto isOrdered = event.command["ordered"].get_bool().value;
                 REQUIRE(isOrdered == false);
@@ -330,14 +331,15 @@ TEST_CASE_METHOD(MongoTestFixture,
                       Timeout: 6000 milliseconds
           )");
         try {
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             auto count =
                 db.collection("test").count(BasicBson::make_document(BasicBson::kvp("a", 8)));
             REQUIRE(count == 1);
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            for (auto&& event : MongoTestFixture::events) {
+            REQUIRE(events.size() > 0);
+            for (auto&& event : events) {
                 REQUIRE(event.command["writeConcern"]);
                 auto writeConcernLevel = event.command["writeConcern"]["w"].get_utf8().value;
                 REQUIRE(std::string(writeConcernLevel) == "majority");
@@ -358,7 +360,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "[standalone][single_node_replset][three_node_replset][CrudActor]") {
 
     dropAllDatabases();
-    MongoTestFixture::clearEvents();
+    auto events = ApmEvents{};
     auto db = client.database("mydb");
 
     SECTION("Write concern majority with timeout.") {
@@ -388,11 +390,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                         Timeout: 5000 milliseconds
             )");
         try {
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            for (auto&& event : MongoTestFixture::events) {
+            REQUIRE(events.size() > 0);
+            for (auto&& event : events) {
                 REQUIRE(event.command["writeConcern"]);
                 auto writeConcernLevel = event.command["writeConcern"]["w"].get_utf8().value;
                 REQUIRE(std::string(writeConcernLevel) == "majority");
@@ -435,11 +438,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                       Journal: true
           )");
         try {
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            for (auto&& event : MongoTestFixture::events) {
+            REQUIRE(events.size() > 0);
+            for (auto&& event : events) {
                 REQUIRE(event.command["writeConcern"]);
                 auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
                 REQUIRE(writeConcernLevel == 1);
@@ -485,11 +489,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                       Journal: false
           )");
         try {
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            for (auto&& event : MongoTestFixture::events) {
+            REQUIRE(events.size() > 0);
+            for (auto&& event : events) {
                 REQUIRE(event.command["writeConcern"]);
                 auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
                 REQUIRE(writeConcernLevel == 0);
@@ -587,7 +592,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "[standalone][single_node_replset][three_node_replset][CrudActor]") {
 
     dropAllDatabases();
-    MongoTestFixture::clearEvents();
+    auto events = ApmEvents{};
     auto db = client.database("mydb");
 
     SECTION("Read preference is 'secondaryPreferred'.") {
@@ -611,11 +616,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                       ReadMode: secondaryPreferred
           )");
         try {
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            for (auto&& event : MongoTestFixture::events) {
+            REQUIRE(events.size() > 0);
+            for (auto&& event : events) {
                 REQUIRE(event.command["$readPreference"]);
                 REQUIRE(event.command["$readPreference"]["mode"]);
                 auto readMode = event.command["$readPreference"]["mode"].get_utf8().value;
@@ -650,11 +656,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                       MaxStaleness: 100 seconds
           )");
         try {
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            for (auto&& event : MongoTestFixture::events) {
+            REQUIRE(events.size() > 0);
+            for (auto&& event : events) {
                 REQUIRE(event.command["$readPreference"]);
                 REQUIRE(event.command["$readPreference"]["mode"]);
                 auto readMode = event.command["$readPreference"]["mode"].get_utf8().value;
@@ -785,7 +792,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "[standalone][single_node_replset][three_node_replset][CrudActor]") {
 
     dropAllDatabases();
-    MongoTestFixture::clearEvents();
+    auto events = ApmEvents{};
     auto db = client.database("mydb");
 
     SECTION("The 'test' collection is dropped.") {
@@ -838,11 +845,12 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             db.create_collection("test");
             REQUIRE(db.has_collection("test"));
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             REQUIRE(db.has_collection("test") == false);
-            for (auto&& event : MongoTestFixture::events) {
+            for (auto&& event : events) {
                 auto writeConcernLevel = event.command["writeConcern"]["w"].get_utf8().value;
                 REQUIRE(std::string(writeConcernLevel) == "majority");
             }
@@ -859,7 +867,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "[standalone][single_node_replset][three_node_replset][CrudActor]") {
 
     dropAllDatabases();
-    MongoTestFixture::clearEvents();
+    auto events = ApmEvents{};
     auto db = client.database("mydb");
 
     SECTION("Perform a count on the collection.") {
@@ -880,11 +888,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                   Filter: { a: 1 }
           )");
         try {
+            auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), MongoTestFixture::apmCallback);
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            REQUIRE(MongoTestFixture::events.size() > 0);
-            auto countEvent = MongoTestFixture::events[0].command;
+            REQUIRE(events.size() > 0);
+            auto countEvent = events[0].command;
             auto collection = countEvent["count"].get_utf8().value;
             REQUIRE(std::string(collection) == "test");
             REQUIRE(countEvent["query"].get_document().view() ==
