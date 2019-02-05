@@ -68,7 +68,6 @@ buildvariants:
   run_on:
   - amazon2-build
   expansions:
-    toolchain_url: http://genny.s3.amazonaws.com/toolchain/gennytoolchain-Linux-4.9.76-38.79.amzn2.x86_64-x86_64-with-glibc2.2.5.tgz
     cmake_relative_path: "downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin/cmake"
     os_family: linux
     mongodb_archive_url:
@@ -333,20 +332,6 @@ functions:
       display_name: ${display_name}
 
   ##
-  # Download the genny toolchain
-  ##
-  f_fetch_toolchain:
-  - command: shell.exec
-    params:
-      script: |
-        set -o errexit
-        set -o verbose
-
-        curl -fLSs -o gennytoolchain.tgz ${toolchain_url}
-        tar -xvf gennytoolchain gennytoolchain.tgz
-        mv -f gennytoolchain /opt
-
-  ##
   # Compile the project in src/build.
   #
   # Expansions:
@@ -359,18 +344,11 @@ functions:
       working_dir: src
       binary: /bin/bash
       args:
-      - "${workdir}/src/scripts/bootstrap.sh"
-      - "-DCMAKE_PREFIX_PATH=/opt/gennytoolchain/installed/x64-${os_family}-shared"
-      - "-DCMAKE_TOOLCHAIN_FILE=/opt/gennytoolchain/scripts/buildsystems/vcpkg.cmake"
-      - "-DVCPKG_TARGET_TRIPLET=x64-${os_family}-static"
+      - "${workdir}/src/bootstrap.sh"
       - "-DENABLE_JASPER:BOOL=ON"
       - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
       - "-DGENNY_INSTALL_SSL:BOOL=ON"
       env:
-        # This should be reasonably safe even on low memory machines
-        MAKEFLAGS: "-j8"
-        CMAKE: "${workdir}/gennytoolchain/${cmake_relative_path}"
-        PATH: "/opt/mongodbtoolchain/v3/bin:/usr/bin:/bin"
         DEVELOPER_DIR: "/Applications/Xcode10.1.app"
 
   ##
