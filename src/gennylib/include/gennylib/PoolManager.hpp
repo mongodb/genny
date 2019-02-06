@@ -41,7 +41,7 @@ private:
     std::string _mongoUri;
     OnCommandStartCallback _apmCallback;
 
-    using Pools = std::unordered_map<size_t,std::unique_ptr<mongocxx::pool>>;
+    using Pools = std::unordered_map<size_t, std::unique_ptr<mongocxx::pool>>;
     // pair each map ↑ with a mutex for adding new pools
     using LockAndPools = std::pair<std::mutex, Pools>;
 
