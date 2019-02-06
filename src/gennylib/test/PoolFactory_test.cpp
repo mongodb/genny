@@ -17,8 +17,8 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
 
-#include <gennylib/v1/PoolManager.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 
 #include <metrics/metrics.hpp>
 
@@ -231,26 +231,15 @@ TEST_CASE("PoolFactory behavior") {
     }
 
     SECTION("PoolManager can construct multiple pools") {
-        auto yaml = YAML::Load(R"(
-        SchemaVersion: 2018-07-01
-        Database: test
-        Actors: []
-        )");
-        genny::ActorHelper ah{yaml, 1, {}};
+        genny::v1::PoolManager manager{"mongodb:://localhost:27017", {}};
+        genny::v1::ConfigNode config{YAML::Load(R"()")};
 
-        auto w = ah.workload();
-        auto foo0 = w->client("Foo", 0);
-        auto foo0again = w->client("Foo", 0);
+        auto foo0 = manager.client("Foo", 0, config);
+        auto foo0again = manager.client("Foo", 0, config);
+        auto foo100 = manager.client("Foo", 10, config);
+        auto bar0 = manager.client("Bar", 0, config);
 
-        // operator* returns the client used for the connection
-        REQUIRE(&(*foo0) == &(*foo0again));
-
-        auto foo100 = w->client("Foo", 10);
-
-        // different instances
-        REQUIRE(&(*foo0) != &(*foo100));
-
-        auto bar0 = w->client("Bar", 0);
-        REQUIRE(&(*bar0) != &(*foo0));
+        REQUIRE((manager.instanceCount() ==
+                 std::unordered_map<std::string, size_t>({{"Foo", 2}, {"Bar", 1}})));
     }
 }

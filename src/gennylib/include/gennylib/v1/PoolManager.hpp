@@ -74,6 +74,10 @@ public:
                                  size_t instance,
                                  const ConfigNode& context);
 
+    // Only used for testing
+    /** @private */
+    std::unordered_map<std::string,size_t> instanceCount();
+
 private:
     /** base uri passed into ctor */
     std::string _mongoUri;

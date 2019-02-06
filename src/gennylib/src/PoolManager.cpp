@@ -79,3 +79,11 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
     }
     return std::move(*entry);
 }
+
+std::unordered_map<std::string, size_t> genny::v1::PoolManager::instanceCount() {
+    auto out = std::unordered_map<std::string, size_t>();
+    for(auto&& [k,v] : this->_pools) {
+        out[k] = v.second.size();
+    }
+    return out;
+}
