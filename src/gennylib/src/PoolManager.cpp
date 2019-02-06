@@ -60,10 +60,10 @@ mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
 
     Pools& pools = lap.second;
 
-    if (pools.find(instance) == pools.end()) {
-        pools[instance] = createPool(this->_mongoUri, this->_apmCallback, context);
-    }
     auto& pool = pools[instance];
+    if (pool == nullptr) {
+        pool = createPool(this->_mongoUri, this->_apmCallback, context);
+    }
 
     // no need to keep it past this point; pool is thread-safe
     lock.unlock();
