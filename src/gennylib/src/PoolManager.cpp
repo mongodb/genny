@@ -55,16 +55,15 @@ mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
     // time will subsequently block on the unique_lock.
     getLock.unlock();
 
-    // only one thread can access the vector of pools at once
+    // only one thread can access the map of pools at once
     std::unique_lock<std::mutex> lock{lap.first};
 
     Pools& pools = lap.second;
 
-    while (pools.empty() || pools.size() - 1 < instance) {
-        pools.push_back(createPool(this->_mongoUri, this->_apmCallback, context));
+    if (pools.find(instance) == pools.end()) {
+        pools[instance] = createPool(this->_mongoUri, this->_apmCallback, context);
     }
-    // .at does range-checking to help catch bugs with above logic :)
-    auto& pool = pools.at(instance);
+    auto& pool = pools[instance];
 
     // no need to keep it past this point; pool is thread-safe
     lock.unlock();
