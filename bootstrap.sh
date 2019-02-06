@@ -2,7 +2,6 @@
 
 set -o errexit
 set -o pipefail
-set -o nounset
 
 function download_toolchain {
     OS_FAMILY=$(python -c "import platform;print(platform.system())")
@@ -82,11 +81,9 @@ export PATH=/opt/gennytoolchain/downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-
 # For ninja
 export PATH=/opt/gennytoolchain/downloads/tools/ninja-1.8.2-linux/:$PATH
 
-# Set flags so cmake can find vcpkg
-CMAKE_FLAGS="-DCMAKE_PREFIX_PATH=/opt/gennytoolchain/installed/x64-linux-shared -DCMAKE_TOOLCHAIN_FILE=/opt/gennytoolchain/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-static"
-
 # Positional arguments are treated as cmake flags.
-cmake "$CMAKE_FLAGS" -C build -G Ninja "$@"
+cmake -DCMAKE_PREFIX_PATH=/opt/gennytoolchain/installed/x64-linux-shared -DCMAKE_TOOLCHAIN_FILE=/opt/gennytoolchain/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-static -B build -G Ninja "$@"
 
 export NINJA_STATUS='[%f/%t (%p) %es] ' # make the ninja output even nicer
 ninja -C build
+ninja -C build install
