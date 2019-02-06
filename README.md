@@ -305,7 +305,7 @@ evergreen set-module -m dsi -i <sys-perf-build-id>
 
 Then navigate to the build URL and select the workloads you wish to run. Good
 examples are Linux Standalone / `big_update` and Linux Standalone /
-`insert_remove`
+`insert_remove`.
 
 The task will compile mongodb and will then run your workloads. Expect to
 wait around 25 minutes.
