@@ -25,22 +25,23 @@ auto createPool(const std::string& mongoUri,
     auto poolFactory = genny::v1::PoolFactory(mongoUri, apmCallback);
 
     auto queryOpts =
-            context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
+        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
     if (queryOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kQueryOption, *queryOpts);
     }
 
     auto accessOpts =
-            context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
+        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
     if (accessOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
 
     return poolFactory.makePool();
-}  // namespace
-}  // namespace genny
+}
 
 }  // namespace
+
+}  // namespace genny
 
 
 mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
