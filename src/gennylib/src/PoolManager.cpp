@@ -42,7 +42,7 @@ auto createPool(const std::string& mongoUri,
 
 
 mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
-                                                 unsigned long instance,
+                                                 size_t instance,
                                                  genny::WorkloadContext& context) {
     // Only one thread can access pools.operator[] at a time...
     this->_poolsGet.lock();

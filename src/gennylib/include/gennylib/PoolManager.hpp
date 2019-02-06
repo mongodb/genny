@@ -37,7 +37,7 @@ public:
         : _mongoUri{std::move(mongoUri)}, _apmCallback{std::move(callback)} {}
 
     mongocxx::pool::entry client(const std::string& name,
-                                 unsigned long instance,
+                                 size_t instance,
                                  class WorkloadContext& context);
 
 private:
