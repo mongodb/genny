@@ -48,15 +48,15 @@ mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
                                                  size_t instance,
                                                  genny::WorkloadContext& context) {
     // Only one thread can access pools.operator[] at a time...
-    this->_poolsGet.lock();
+    std::unique_lock<std::mutex> getLock{this->_poolsGet};
     LockAndPools& lap = this->_pools[name];
     // ...but no need to keep the lock open past this.
     // Two threads trying access client("foo",0) at the same
     // time will subsequently block on the unique_lock.
-    this->_poolsGet.unlock();
+    getLock.unlock();
 
     // only one thread can access the vector of pools at once
-    std::unique_lock lock{lap.first};
+    std::unique_lock<std::mutex> lock{lap.first};
 
     Pools& pools = lap.second;
 
