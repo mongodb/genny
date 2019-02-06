@@ -34,10 +34,10 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/v1/PoolManager.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/v1/ConfigNode.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 
 #include <metrics/metrics.hpp>
 
@@ -143,10 +143,22 @@ public:
     }
 
     /**
-     * @return a pool from the given MongoDB connection-pool.
-     * @throws InvalidConfigurationException if no connections available.
+     * Return a named connection pool instance.
+     *
+     * @warning
+     *   it is advised to only call this during setup since creating a connection pool
+     *   can be an expensive operation
+     *
+     * @param name
+     *   the named pool to use. Corresponds to a key in the `Clients:` configuration keyword.
+     * @param instance
+     *   which instance of the pool to use
+     * @return
+     *   a pool from the given MongoDB connection-pool. Pools are created on-demand.
+     * @throws
+     *   InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0ul);
+    mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
