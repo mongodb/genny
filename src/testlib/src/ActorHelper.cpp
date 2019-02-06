@@ -29,7 +29,7 @@ ActorHelper::ActorHelper(const YAML::Node& config,
                          int tokenCount,
                          Cast::List castInitializer,
                          const std::string& uri,
-                         PoolManager::CallMeMaybe apmCallback) {
+                         PoolManager::OnCommandStartCallback apmCallback) {
     if (tokenCount <= 0) {
         throw InvalidConfigurationException("Must add a positive number of tokens");
     }
@@ -47,7 +47,7 @@ ActorHelper::ActorHelper(const YAML::Node& config,
 ActorHelper::ActorHelper(const YAML::Node& config,
                          int tokenCount,
                          const std::string& uri,
-                         PoolManager::CallMeMaybe apmCallback) {
+                         PoolManager::OnCommandStartCallback apmCallback) {
     if (tokenCount <= 0) {
         throw InvalidConfigurationException("Must add a positive number of tokens");
     }

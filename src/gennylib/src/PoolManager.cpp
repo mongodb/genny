@@ -19,7 +19,7 @@
 namespace {
 
 auto createPool(const std::string& mongoUri,
-                genny::PoolManager::CallMeMaybe& apmCallback,
+                genny::PoolManager::OnCommandStartCallback& apmCallback,
                 genny::WorkloadContext& context) {
     auto poolFactory = genny::v1::PoolFactory(mongoUri, apmCallback);
 

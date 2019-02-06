@@ -48,7 +48,7 @@ void errors(const string& yaml, string message, Args... args) {
     auto read = YAML::Load(modified);
     auto test = [&]() {
         auto context =
-            WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}, std::nullopt};
+            WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
         return context.get<Out>(std::forward<Args>(args)...);
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -64,7 +64,7 @@ void gives(const string& yaml, OutV expect, Args... args) {
     auto read = YAML::Load(modified);
     auto test = [&]() {
         auto context =
-            WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}, std::nullopt};
+            WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
         return context.get<Out, Required>(std::forward<Args>(args)...);
     };
     REQUIRE(test() == expect);
@@ -106,7 +106,7 @@ Actors:
   Count: 7
         )");
 
-        WorkloadContext w{yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt};
+        WorkloadContext w{yaml, metrics, orchestrator, mongoUri.data(), cast};
         auto actors = w.get("Actors");
     }
 
@@ -114,7 +114,7 @@ Actors:
         auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
 
         auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt);
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
     }
@@ -162,14 +162,14 @@ Actors:
     SECTION("Empty Yaml") {
         auto yaml = YAML::Load("Actors: []");
         auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt);
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
     }
     SECTION("No Actors") {
         auto yaml = YAML::Load("SchemaVersion: 2018-07-01");
         auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt);
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path(.*\n*)*)"));
     }
@@ -222,7 +222,7 @@ Actors:
         };
 
         auto context = WorkloadContext{
-            yaml, metrics, orchestrator, mongoUri.data(), twoActorCast, std::nullopt};
+            yaml, metrics, orchestrator, mongoUri.data(), twoActorCast};
 
         REQUIRE(someListProducer->calls == 1);
         REQUIRE(countProducer->calls == 1);
@@ -251,7 +251,7 @@ void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
         {"NoOp", std::make_shared<NoOpProducer>()},
     };
 
-    WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt};
+    WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast};
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
@@ -355,7 +355,7 @@ TEST_CASE("Duplicate Phase Numbers") {
     };
 
     REQUIRE_THROWS_WITH(
-        (WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt}),
+        (WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
         Catch::Matches("Duplicate phase 0"));
 }
 
@@ -743,7 +743,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
 
     SECTION("Incorrect type value inputted") {
         auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast, std::nullopt);
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(
             test(), Matches(R"(Unable to construct actors: No producer for 'Bar'(.*\n*)*)"));

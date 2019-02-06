@@ -178,7 +178,7 @@ struct PoolFactory::Config {
     };
 };
 
-PoolFactory::PoolFactory(std::string_view rawUri, PoolManager::CallMeMaybe apmCallback)
+PoolFactory::PoolFactory(std::string_view rawUri, PoolManager::OnCommandStartCallback apmCallback)
     : _config(std::make_unique<Config>(rawUri)), _apmCallback{apmCallback} {}
 PoolFactory::~PoolFactory() {}
 
@@ -230,7 +230,7 @@ std::unique_ptr<mongocxx::pool> PoolFactory::makePool() const {
     auto clientOpts = mongocxx::options::client{poolOptions.client_opts()};
     if (_apmCallback) {
         mongocxx::options::apm apmOptions;
-        apmOptions.on_command_started(*_apmCallback);
+        apmOptions.on_command_started(_apmCallback);
         clientOpts.apm_opts(apmOptions);
     }
 

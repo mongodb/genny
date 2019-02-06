@@ -46,7 +46,7 @@ public:
     };
 
 public:
-    PoolFactory(std::string_view uri, PoolManager::CallMeMaybe callback);
+    PoolFactory(std::string_view uri, PoolManager::OnCommandStartCallback callback = {});
     ~PoolFactory();
 
     // Both `makeUri()` and `makeOptions()` are used internally. They are publicly exposed to
@@ -80,7 +80,7 @@ public:
 private:
     struct Config;
     std::unique_ptr<Config> _config;
-    PoolManager::CallMeMaybe _apmCallback;
+    PoolManager::OnCommandStartCallback _apmCallback;
 };
 
 }  // namespace genny::v1

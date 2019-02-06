@@ -54,8 +54,7 @@ public:
                            _registry,
                            _orchestrator,
                            "mongodb://localhost:27017",
-                           genny::globalCast(),
-                           std::nullopt} {}
+                           genny::globalCast()} {}
 
     void run() {
         for (auto&& actor : _workloadContext.actors()) {

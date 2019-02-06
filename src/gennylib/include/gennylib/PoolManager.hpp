@@ -30,10 +30,10 @@ namespace genny {
 
 class PoolManager {
 public:
-    using CallMeMaybe =
-        std::optional<std::function<void(const mongocxx::events::command_started_event&)>>;
+    using OnCommandStartCallback =
+        std::function<void(const mongocxx::events::command_started_event&)>;
 
-    PoolManager(std::string mongoUri, CallMeMaybe callback)
+    PoolManager(std::string mongoUri, OnCommandStartCallback callback)
         : _mongoUri{std::move(mongoUri)}, _apmCallback{std::move(callback)} {}
 
     mongocxx::pool::entry client(const std::string& name,
@@ -42,7 +42,7 @@ public:
 
 private:
     std::string _mongoUri;
-    CallMeMaybe _apmCallback;
+    OnCommandStartCallback _apmCallback;
 
     // vector of pool ptrs
     using Pools = std::vector<std::unique_ptr<mongocxx::pool>>;

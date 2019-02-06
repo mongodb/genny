@@ -108,7 +108,7 @@ public:
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
                     const Cast& cast,
-                    PoolManager::CallMeMaybe apmCallback);
+                    PoolManager::OnCommandStartCallback apmCallback = {});
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;

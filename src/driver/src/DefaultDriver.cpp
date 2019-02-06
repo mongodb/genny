@@ -95,7 +95,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     auto orchestrator = Orchestrator{phaseNumberGauge};
 
     auto workloadContext =
-        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, globalCast(), std::nullopt};
+        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, globalCast()};
 
     if (options.isDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;
