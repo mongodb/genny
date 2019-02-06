@@ -4,7 +4,7 @@ Genny 🧞‍
 Genny is a workload-generator library and tool. It is implemented using
 C++17.
 
-## Build and install
+## Build and Install
 
 1. Install the development tools for your OS.
 
@@ -14,23 +14,17 @@ Arch: Grab a beer. Everything should already be set up.
 macOS: xcode-select --install
 Windows: https://visualstudio.microsoft.com/
 
-1. Download the MongoDB toolchain from its Evergreen project by clicking on the left-most green
-box corresponding to your OS and finding the link for `mongodbtoolchain.tar.gz`. This page is
-internal to MongoDB at the moment. You can instead use any C++17 compatible compiler of your choice
-and skip this step.
+1. Make sure you have a C++17 compatible compiler and Python 3. 
+The ones from mongodbtoolchain are safe bets if you're unsure.
+(mongodbtoolchain is internal to MongoDB).
 
-1. Extract the MongoDB toolchain to "opt" if you're using it: `[sudo] tar xvf mongodbtoolchain.tar.gz -C /opt/`
-
-1. Fetch and extract the latest genny toolchain, which is a fork of Microsoft vcpkg: 
-https://evergreen.mongodb.com/waterfall/genny-toolchain Click on the left-most green box
-corresponding to your OS and download `genny-toolchain-vcpkg.tgz` listed in the "Files" section.
-
-1. cd into the toolchain directory `vcpkg` and run the toolchain integration script:
-`./vcpkg integrate install`. This creates .vcpkg in your home directory with the path to your
-vcpkg location You can undo the integration with `./vcpkg integrate remove` if needed.
-
-1. cd into the this repo; run `./bootstrap.sh`. Rerun `bootstrap.sh` every time you delete your
-build directory.
+1. 
+```sh
+python3 lamp.py [--linux-distro ubuntu1804/rhel7/amazon2/arch]
+```
+ 
+If your OS isn't one of the supported ones, please let us know on
+\#workload-generation or GitHub.
 
 ### IDEs and Whatnot
 
@@ -47,7 +41,8 @@ it's not going to make common editing environments go wonky.
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-make -j8 -C "build" gennylib_test driver_test test
+python3 lamp.py [--linux-distro] 
+python3 lamp.py cmake-test
 ```
 
 ### Benchmark Tests

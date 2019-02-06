@@ -54,6 +54,8 @@ buildvariants:
   modules: ~
   run_on:
   - archlinux-test
+  expansions:
+    distro: arch
   tasks:
   - name: tg_compile_and_test
   - name: t_push
@@ -64,6 +66,7 @@ buildvariants:
   run_on:
   - amazon2-build
   expansions:
+    distro: amazon2
     mongodb_archive_url:
       https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz
   tasks:
@@ -73,6 +76,8 @@ buildvariants:
 - name: rhel70
   display_name: RHEL 7
   modules: ~
+  expansions:
+    distro: rhel7
   run_on:
   - rhel70
   tasks:
@@ -82,20 +87,23 @@ buildvariants:
 - name: ubuntu1804
   display_name: Ubuntu 18.04
   modules: ~
+  expansions:
+    distro: ubuntu1804
   run_on:
   - ubuntu1804-build
   tasks:
   - name: t_compile
   - name: t_push
 
-#- name: macos-1014
-#  display_name: macOS Mojave
-#  modules: ~
-#  run_on:
-#  - macos-1014
-#  tasks:
-#  - name: tg_compile_and_test
-#  - name: t_push
+- name: macos-1014
+  display_name: macOS Mojave
+  modules: ~
+  run_on:
+  - macos-1014
+  tasks:
+  - name: t_rm_toolchain_dir
+  - name: tg_compile_and_test
+  - name: t_push
 
 
 ##                ⚡️ Tasks ⚡️
@@ -111,7 +119,9 @@ tasks:
       display_name: Genny
       short_name: genny
       install_dir: dist
-
+- name: t_rm_toolchain_dir
+  commands:
+  - func: f_rm_toolchain_dir
 - name: t_push
   depends_on: t_compile
   patchable: no
@@ -230,6 +240,13 @@ functions:
         curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
         tar --strip-components=1 -zxvf mongodb.tgz
 
+  f_rm_toolchain_dir:
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |
+          rm -rf /data/mci/gennytoolchain
+
   ##
   # Archive an installed library into a tarball and upload it with
   # revision suffix.
@@ -253,6 +270,7 @@ functions:
   - command: shell.exec
     params:
       working_dir: .
+      shell: bash
       script: |
         set -o errexit
         # Make sure we have a file, give more info
@@ -319,13 +337,18 @@ functions:
   - command: shell.exec
     params:
       working_dir: src
+      shell: bash
       script: |
         set -o errexit
         set -o pipefail
 
+        # for python3
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
 
-        echo 4 | ${workdir}/src/bootstrap.sh \
+        python3 lamp.py \
+          -d=${distro|not-linux} \
           -DENABLE_JASPER:BOOL=ON \
           -DGENNY_INSTALL_DIR:PATH=${workdir}/dist \
           -DGENNY_INSTALL_SSL:BOOL=ON
@@ -353,6 +376,7 @@ functions:
     params:
       continue_on_err: true
       working_dir: src/build
+      shell: bash
       script: |
         set -o errexit
         set -o pipefail
@@ -383,6 +407,7 @@ functions:
     params:
       continue_on_err: true
       working_dir: src/src/python
+      shell: bash
       script: |
         set -o errexit
         set -o pipefail
@@ -417,6 +442,7 @@ functions:
   f_remove_test_results_files:
   - command: shell.exec
     params:
+      shell: bash
       script: |
         set -o errexit
         set -o pipefail
