@@ -242,14 +242,15 @@ TEST_CASE("PoolFactory behavior") {
         auto foo0 = w->client("Foo", 0);
         auto foo0again = w->client("Foo", 0);
 
-        REQUIRE(&foo0 == &foo0again);
+        // operator* returns the client used for the connection
+        REQUIRE(&(*foo0) == &(*foo0again));
 
         auto foo100 = w->client("Foo", 10);
 
         // different instances
-        REQUIRE(&foo0 != &foo100);
+        REQUIRE(&(*foo0) != &(*foo100));
 
         auto bar0 = w->client("Bar", 0);
-        REQUIRE(&bar0 != &foo0);
+        REQUIRE(&(*bar0) != &(*foo0));
     }
 }
