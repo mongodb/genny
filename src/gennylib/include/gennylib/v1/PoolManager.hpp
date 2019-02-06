@@ -23,7 +23,9 @@
 
 #include <mongocxx/pool.hpp>
 
-namespace genny {
+#include <gennylib/v1/ConfigNode.hpp>
+
+namespace genny::v1 {
 
 class PoolManager {
 public:
@@ -35,7 +37,7 @@ public:
 
     mongocxx::pool::entry client(const std::string& name,
                                  size_t instance,
-                                 class WorkloadContext& context);
+                                 ConfigNode& context);
 
 private:
     std::string _mongoUri;

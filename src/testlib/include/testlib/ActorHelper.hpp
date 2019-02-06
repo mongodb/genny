@@ -51,7 +51,7 @@ public:
                 int tokenCount,
                 Cast::List castInitializer,
                 const std::string& uri = mongocxx::uri::k_default_uri,
-                PoolManager::OnCommandStartCallback apmCallback = {});
+                v1::PoolManager::OnCommandStartCallback apmCallback = {});
 
     /**
      * Construct an ActorHelper with the global cast.
@@ -59,7 +59,7 @@ public:
     ActorHelper(const YAML::Node& config,
                 int tokenCount,
                 const std::string& uri = mongocxx::uri::k_default_uri,
-                PoolManager::OnCommandStartCallback apmCallback = {});
+                v1::PoolManager::OnCommandStartCallback apmCallback = {});
 
     void run(FuncWithContext&& runnerFunc);
 

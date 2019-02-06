@@ -17,7 +17,7 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
 
-#include <gennylib/PoolManager.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
 
 #include <metrics/metrics.hpp>

@@ -12,22 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gennylib/PoolManager.hpp>
-#include <gennylib/context.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
 
-namespace genny {
+namespace genny::v1 {
 namespace {
 
 auto createPool(const std::string& mongoUri,
                 PoolManager::OnCommandStartCallback& apmCallback,
-                const WorkloadContext& context) {
-    auto poolFactory = genny::v1::PoolFactory(mongoUri, apmCallback);
+                const ConfigNode& context) {
+    auto poolFactory = PoolFactory(mongoUri, apmCallback);
 
     auto queryOpts =
         context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
     if (queryOpts) {
-        poolFactory.setOptions(genny::v1::PoolFactory::kQueryOption, *queryOpts);
+        poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
     }
 
     auto accessOpts =
@@ -44,9 +43,9 @@ auto createPool(const std::string& mongoUri,
 }  // namespace genny
 
 
-mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
+mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
                                                  size_t instance,
-                                                 genny::WorkloadContext& context) {
+                                                 genny::v1::ConfigNode& context) {
     // Only one thread can access pools.operator[] at a time...
     std::unique_lock<std::mutex> getLock{this->_poolsGet};
     LockAndPools& lap = this->_pools[name];
