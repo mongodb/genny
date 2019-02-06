@@ -21,7 +21,7 @@ namespace {
 
 auto createPool(const std::string& mongoUri,
                 PoolManager::OnCommandStartCallback& apmCallback,
-                WorkloadContext& context) {
+                const WorkloadContext& context) {
     auto poolFactory = genny::v1::PoolFactory(mongoUri, apmCallback);
 
     auto queryOpts =
