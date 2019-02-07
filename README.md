@@ -258,10 +258,9 @@ You will see an output like this:
       Finalized : No
 ```
 
-Copy the value of the "ID" field.
-Open a browser window to the "Build" URL.
+Copy the value of the "ID" field and a browser window to the "Build" URL.
 
-Set the genny module in DSI with your local genny repo.
+Then, set the genny module in DSI with your local genny repo.
 ```
 cd genny
 evergreen set-module -m dsi -i <ID> # Use the build ID from the previous step.
