@@ -375,7 +375,7 @@ functions:
   - command: shell.exec
     params:
       continue_on_err: true
-      working_dir: src/build
+      working_dir: src
       shell: bash
       script: |
         set -o errexit
