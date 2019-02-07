@@ -49,9 +49,9 @@ private:
     /** @private */
     struct PhaseConfig;
     genny::DefaultRandom _rng;
-    metrics::Timer _totalBulkLoadTimer;
-    metrics::Timer _individualBulkLoadTimer;
-    metrics::Timer _indexBuildTimer;
+    metrics::Operation _totalBulkLoad;
+    metrics::Operation _individualBulkLoad;
+    metrics::Operation _indexBuild;
     mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
 };

@@ -66,7 +66,7 @@ private:
     Cast::Registration _registration;
     YAML::Node _node;
     metrics::Registry _registry;
-    metrics::Gauge _orchestratorGauge;
+    metrics::v1::Gauge _orchestratorGauge;
     Orchestrator _orchestrator;
     WorkloadContext _workloadContext;
 };

@@ -33,7 +33,7 @@ using PhaseNumber = unsigned int;
 class Orchestrator {
 
 public:
-    explicit Orchestrator(metrics::Gauge phaseNumberGauge) : _phaseNumberGauge{phaseNumberGauge} {}
+    explicit Orchestrator(metrics::v1::Gauge phaseNumberGauge) : _phaseNumberGauge{phaseNumberGauge} {}
 
     /**
      * @return the current phase number
@@ -107,7 +107,7 @@ private:
     PhaseNumber _current = 0;
 
     // _phaseNumberGauge should keep up to date with _current.
-    metrics::Gauge _phaseNumberGauge;
+    metrics::v1::Gauge _phaseNumberGauge;
 
     // Having this lets us avoid locking on _mutex for every call of
     // continueRunning(). This gave two orders of magnitude speedup.

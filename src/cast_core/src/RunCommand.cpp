@@ -95,52 +95,51 @@ void runThenAwaitStepdown(mongocxx::database& database, bsoncxx::document::view&
 namespace genny {
 
 /** @private */
-class Operation {
+class DatabaseOperation {
 public:
     using OpConfig = config::RunCommandConfig::Operation;
 
 public:
-    Operation(PhaseContext& phaseContext,
-              ActorContext& actorContext,
-              ActorId id,
-              const std::string& databaseName,
-              mongocxx::database database,
-              genny::DefaultRandom& rng,
-              value_generators::UniqueExpression commandExpr,
-              OpConfig opts)
+    DatabaseOperation(PhaseContext& phaseContext,
+                      ActorContext& actorContext,
+                      ActorId id,
+                      const std::string& databaseName,
+                      mongocxx::database database,
+                      genny::DefaultRandom& rng,
+                      value_generators::UniqueExpression commandExpr,
+                      OpConfig opts)
         : _databaseName{databaseName},
           _database{std::move(database)},
           _rng{rng},
           _commandExpr{std::move(commandExpr)},
           _options{std::move(opts)},
           _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)},
-          _awaitStepdown{opts.awaitStepdown} {
-        // Only record metrics if we have a name for the operation.
-        if (!_options.metricsName.empty()) {
-            _timer =
-                std::make_optional<metrics::Timer>(actorContext.timer(_options.metricsName, id));
-        }
-    }
+          _awaitStepdown{opts.awaitStepdown},
+          // Only record metrics if we have a name for the operation.
+          _operation{!_options.metricsName.empty()
+                         ? std::make_optional<metrics::Operation>(
+                               actorContext.operation(_options.metricsName, id))
+                         : std::nullopt} {}
 
-    static std::unique_ptr<Operation> create(YAML::Node node,
-                                             genny::DefaultRandom& rng,
-                                             PhaseContext& context,
-                                             ActorContext& actorContext,
-                                             ActorId id,
-                                             mongocxx::pool::entry& client,
-                                             const std::string& database) {
+    static std::unique_ptr<DatabaseOperation> create(YAML::Node node,
+                                                     genny::DefaultRandom& rng,
+                                                     PhaseContext& context,
+                                                     ActorContext& actorContext,
+                                                     ActorId id,
+                                                     mongocxx::pool::entry& client,
+                                                     const std::string& database) {
         auto yamlCommand = node["OperationCommand"];
         auto commandExpr = value_generators::Expression::parseOperand(yamlCommand);
 
-        auto options = node.as<Operation::OpConfig>(Operation::OpConfig{});
-        return std::make_unique<Operation>(context,
-                                           actorContext,
-                                           id,
-                                           database,
-                                           (*client)[database],
-                                           rng,
-                                           std::move(commandExpr),
-                                           options);
+        auto options = node.as<DatabaseOperation::OpConfig>(DatabaseOperation::OpConfig{});
+        return std::make_unique<DatabaseOperation>(context,
+                                                   actorContext,
+                                                   id,
+                                                   database,
+                                                   (*client)[database],
+                                                   rng,
+                                                   std::move(commandExpr),
+                                                   options);
     };
 
     void run() {
@@ -157,18 +156,28 @@ private:
                                     << " on database: " << _databaseName;
         }
 
-        // If we have a timer, then we have a watch
-        auto maybeWatch = _timer ? std::make_optional<metrics::RaiiStopwatch>(_timer->raii())
-                                 : std::optional<metrics::RaiiStopwatch>(std::nullopt);
+        // If we have an operation, then we have a watch
+        auto maybeWatch = _operation
+            ? std::make_optional<metrics::OperationContext>(_operation->start())
+            : std::optional<metrics::OperationContext>(std::nullopt);
 
         try {
             if (_options.awaitStepdown) {
                 runThenAwaitStepdown(_database, view);
+                if (maybeWatch) {
+                    maybeWatch->success();
+                }
             } else {
                 _database.run_command(view);
+                if (maybeWatch) {
+                    maybeWatch->success();
+                }
             }
         } catch (mongocxx::operation_exception& e) {
             BOOST_THROW_EXCEPTION(MongoException(e, view));
+            if (maybeWatch) {
+                maybeWatch->fail();
+            }
         }
     }
 
@@ -179,7 +188,7 @@ private:
     OpConfig _options;
 
     std::unique_ptr<v1::RateLimiter> _rateLimiter;
-    std::optional<metrics::Timer> _timer;
+    std::optional<metrics::Operation> _operation;
     bool _awaitStepdown;
 };
 
@@ -200,16 +209,17 @@ struct actor::RunCommand::PhaseConfig {
         }
 
         auto createOperation = [&](YAML::Node node) {
-            return Operation::create(node, rng, context, actorContext, id, client, database);
+            return DatabaseOperation::create(
+                node, rng, context, actorContext, id, client, database);
         };
 
-        operations = context.getPlural<std::unique_ptr<Operation>>(
+        operations = context.getPlural<std::unique_ptr<DatabaseOperation>>(
             "Operation", "Operations", createOperation);
     }
 
     ExecutionStrategy strategy;
     ExecutionStrategy::RunOptions options;
-    std::vector<std::unique_ptr<Operation>> operations;
+    std::vector<std::unique_ptr<DatabaseOperation>> operations;
 };
 
 void actor::RunCommand::run() {
