@@ -8,17 +8,18 @@ C++17.
 
 Here're the steps to get genny up and running locally:
 
-1. Install the development tools for your OS.
-
 Ubuntu 16.04+: sudo apt install build-essential
 Red Hat/CentOS 7+: sudo yum groupinstall "Development Tools"
 Arch: Grab a beer. Everything should already be set up.
-macOS: xcode-select --install
+macOS 10.14 Mojave: xcode-select --install
 Windows: https://visualstudio.microsoft.com/
 
 1. Make sure you have a C++17 compatible compiler and Python 3. 
 The ones from mongodbtoolchain are safe bets if you're unsure.
 (mongodbtoolchain is internal to MongoDB).
+
+If you're using macOS, you have to upgrade to mojave. Earlier versions
+don't have compliant C++ compilers.
 
 1. `python3 lamp.py [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
  
@@ -133,6 +134,84 @@ All workload yamls must have an `Owners` field indicating which github team
 should receive PRs for the YAML. The files must end with the `.yml` suffix.
 Workload YAML itself is not currently linted but please try to make the files
 look tidy.
+
+## Patch-Testing Genny Changes with Sys-Perf / DSI
+
+This requires the [evergreen command-line client](https://evergreen.mongodb.com/settings).
+
+Create a `genny` patch-build to compile genny and upload the result to S3.
+(You can skip this if you've got a github PR open: it automatically schedules
+patch-builds.)
+
+```sh
+cd genny
+evergreen patch -p genny
+```
+
+That will output something like this:
+
+```
+	     ID : 5c533a2732f4174bbcb8bb2e
+	Created : 35.656ms ago
+    Description : <none>
+	  Build : https://evergreen.mongodb.com/patch/5c533a2732f4174bbcb8bb2e
+      Finalized : No
+```
+
+Navigate to the build URL and schedule `t_compile` on the Amazon Linux 2
+variant. Clever folks could maybe put this all into the `evergreen patch`
+invocation.
+
+Wait for the task to complete and copy the URL for the "Genny Patch" File. It
+will look similar to this:
+
+```
+https://s3.amazonaws.com/mciuploads/genny/patches/genny_amazon2_patch_ca6805464c1ef7e580496070beea97c88277f067_5c533a2732f4174bbcb8bb2e_19_01_31_18_11_51/genny.tgz
+```
+
+Now create a sys-perf patch:
+
+```sh
+cd mongo
+evergreen patch -p sys-perf
+```
+
+This will give you a different Build URL.
+
+Now modify DSI to point to your Genny binary. Modify
+`workload_setup.common.yml` to look like the following:
+
+```yaml
+  # Get Genny's distribution
+  - on_workload_client:
+      exec: |
+        set -eou pipefail
+
+        cd genny
+
+        genny_revision="$(git rev-parse HEAD)"
+        ....
+        # genny_custom_url="${bootstrap.genny_custom_url}"
+        genny_custom_url="--- >>> PUT YOUR URL HERE <<<---"
+```
+
+Then `set-module` on your sys-perf build from the previous step:
+
+```sh
+cd dsi
+evergreen set-module -m dsi -i <sys-perf-build-id>
+```
+
+Then navigate to the build URL and select the workloads you wish to run. Good
+examples are Linux Standalone / `big_update` and Linux Standalone /
+`insert_remove`.
+
+The task will compile mongodb and will then run your workloads. Expect to
+wait around 25 minutes.
+
+NB: After the task runs you can call `set-module` again with a different
+genny tarball URL and just re-run the workload tasks using the same patch
+build ID. This lets you skip the 20 minute wait to recompile the server.
 
 ## Code Style and Limitations
 
