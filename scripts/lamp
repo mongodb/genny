@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
+"""
+Because genies come from lamps.
+"""
+
 from __future__ import print_function
 
 import argparse
 import logging
 import os
 import platform
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -14,6 +17,8 @@ import urllib.request
 
 
 def get_toolchain_url(os_family, distro=None):
+    # These build IDs are from the genny-toolchain Evergreen task.
+    # https://evergreen.mongodb.com/waterfall/genny-toolchain
     if os_family == 'Darwin':
         build_id = 'genny_toolchain_macos_1014_b15f51760a9e651fb66bc0593e2eea738e15ffa2_19_02_07_07_04_06'
     elif os_family == 'Linux':
@@ -30,10 +35,8 @@ def get_toolchain_url(os_family, distro=None):
     else:
         raise ValueError('Unsupported platform: {}'.format(os_family))
 
-    url = 'https://s3.amazonaws.com/mciuploads/genny-toolchain/{}/gennytoolchain.tgz'.format(
+    return 'https://s3.amazonaws.com/mciuploads/genny-toolchain/{}/gennytoolchain.tgz'.format(
         build_id)
-    logging.debug('gennytoolchain URL: %s', url)
-    return url
 
 
 def fetch_and_install_toolchain(url, install_dir):
@@ -61,7 +64,7 @@ def fetch_and_install_toolchain(url, install_dir):
     if os.path.exists(toolchain_dir):
         logging.info('Skipping extracting the toolchain into: %s', toolchain_dir)
     else:
-        logging.info('Extracting gennytoolchain, please wait...')
+        logging.info('Extracting gennytoolchain into %s, please wait...', toolchain_dir)
         tarball = tarfile.open(toolchain_tarball)
         tarball.extractall(toolchain_dir)
         logging.info('Finished extracting gennytoolchain into %s', toolchain_dir)

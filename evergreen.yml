@@ -101,8 +101,8 @@ buildvariants:
   run_on:
   - macos-1014
   tasks:
-  - name: t_rm_toolchain_dir
-  - name: tg_compile_and_test
+  - name: t_rm_toolchain_dir_mac
+  - name: t_compile_mac
   - name: t_push
 
 
@@ -119,9 +119,19 @@ tasks:
       display_name: Genny
       short_name: genny
       install_dir: dist
-- name: t_rm_toolchain_dir
+# 
+- name: t_compile_mac
   commands:
-  - func: f_rm_toolchain_dir
+    - func: f_fetch_source
+    - func: f_compile
+    - func: f_push_patch
+      vars:
+        display_name: Genny
+        short_name: genny
+        install_dir: dist
+- name: t_rm_toolchain_dir_mac
+  commands:
+  - func: f_rm_toolchain_dir_mac
 - name: t_push
   depends_on: t_compile
   patchable: no
@@ -240,7 +250,7 @@ functions:
         curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
         tar --strip-components=1 -zxvf mongodb.tgz
 
-  f_rm_toolchain_dir:
+  f_rm_toolchain_dir_mac:
     - command: shell.exec
       params:
         shell: bash
@@ -347,7 +357,7 @@ functions:
 
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
 
-        ./lamp \
+        ./scripts/lamp \
           -d=${distro|not-linux} \
           -DENABLE_JASPER:BOOL=ON \
           -DGENNY_INSTALL_DIR:PATH=${workdir}/dist \
@@ -385,7 +395,7 @@ functions:
         # for python3
         export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
-        ./lamp cmake-test
+        ./scripts/lamp cmake-test
 
   ##
   # Runs tests via resmoke.

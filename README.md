@@ -20,7 +20,7 @@ Here're the steps to get genny up and running locally:
     The ones from mongodbtoolchain are safe bets if you're unsure.
     (mongodbtoolchain is internal to MongoDB).
 
-1. `./lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
+1. `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
  
     This command downloads genny's toolchain, compiles genny and
     installs genny to `dist/`. You can rerun this command at any time
@@ -42,8 +42,8 @@ it's not going to make common editing environments go wonky.
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-# Build genny first: `./lamp [...]`
-./lamp cmake-test
+# Build genny first: `./scripts/lamp [...]`
+./scripts/lamp cmake-test
 ```
 
 ### Benchmark Tests
@@ -57,7 +57,7 @@ If you want to run all the tests except perf tests you can manually
 invoke the test binaries and exclude perf tests:
 
 ```sh
-# Build genny first: `./lamp [...]`
+# Build genny first: `./scripts/lamp [...]`
 ./build/src/gennylib/gennylib_test '~[benchmark]'
 ```
 
@@ -247,20 +247,20 @@ etc, you can run the clang sanitizers yourself easily.
 Running with TSAN:
 
     FLAGS="-pthread -fsanitize=thread -g -O1"
-    ./lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./lamp cmake-test
+    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./scripts/lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with ASAN:
 
     FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
-    ./lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./lamp cmake-test
+    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./scripts/lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
-    ./lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./lamp cmake-test
+    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./scripts/lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
