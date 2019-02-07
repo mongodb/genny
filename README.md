@@ -6,6 +6,8 @@ C++17.
 
 ## Build and Install
 
+Here're the steps to get genny up and running locally:
+
 1. Install the development tools for your OS.
 
 Ubuntu 16.04+: sudo apt install build-essential
@@ -18,13 +20,12 @@ Windows: https://visualstudio.microsoft.com/
 The ones from mongodbtoolchain are safe bets if you're unsure.
 (mongodbtoolchain is internal to MongoDB).
 
-1. 
-```sh
-python3 lamp.py [--linux-distro ubuntu1804/rhel7/amazon2/arch]
-```
+1. `python3 lamp.py [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
  
-If your OS isn't one of the supported ones, please let us know on
-\#workload-generation or GitHub.
+This command downloads genny's toolchain, compiles genny and installs
+genny to `dist/`. You can rerun this command at any time to rebuild genny.
+If your OS isn't the supported, please let us know in
+\#workload-generation or on GitHub. 
 
 ### IDEs and Whatnot
 
@@ -41,7 +42,7 @@ it's not going to make common editing environments go wonky.
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-python3 lamp.py [--linux-distro] 
+# Build genny first: `python3 lamp.py [...]`
 python3 lamp.py cmake-test
 ```
 
@@ -56,7 +57,7 @@ If you want to run all the tests except perf tests you can manually
 invoke the test binaries and exclude perf tests:
 
 ```sh
-make -j8 -C "build" gennylib_benchmark test
+# Build genny first: `python3 lamp.py [...]`
 ./build/src/gennylib/gennylib_test '~[benchmark]'
 ```
 
@@ -168,20 +169,20 @@ etc, you can run the clang sanitizers yourself easily.
 Running with TSAN:
 
     FLAGS="-pthread -fsanitize=thread -g -O1"
-    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
-    make -j8 -C "build" test
+    python3 lamp.py -DCMAKE_CXX_FLAGS="$FLAGS"
+    python3 lamp.py cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with ASAN:
 
     FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
-    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
-    make -j8 -C "build" test
+    python3 lamp.py -DCMAKE_CXX_FLAGS="$FLAGS"
+    python3 lamp.py cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
-    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
-    make -j8 -C "build" test
+    python3 lamp.py -DCMAKE_CXX_FLAGS="$FLAGS"
+    python3 lamp.py cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
