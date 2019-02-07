@@ -111,19 +111,19 @@ def cmake(toolchain_dir, cmdline_cmake_args, triplet_os, env):
 
     cmake_cmd += cmdline_cmake_args
 
-    logging.info('Running cmake: %s', cmake_cmd)
+    logging.info('Running cmake: %s', ' '.join(cmake_cmd))
     subprocess.run(cmake_cmd, env=env)
 
 
 def compile(env):
     compile_cmd = ['ninja', '-C', 'build']
-    logging.info('Running ninja: %s', compile_cmd)
+    logging.info('Running ninja: %s', ' '.join(compile_cmd))
     subprocess.run(compile_cmd, env=env)
 
 
 def install(env):
     install_cmd = ['ninja', '-C', 'build', 'install']
-    logging.info('Running ninja install: %s', install_cmd)
+    logging.info('Running ninja install: %s', ' '.join(install_cmd))
     subprocess.run(install_cmd, env=env)
 
 

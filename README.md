@@ -8,25 +8,24 @@ C++17.
 
 Here're the steps to get genny up and running locally:
 
-Ubuntu 16.04+: sudo apt install build-essential
-Red Hat/CentOS 7+: sudo yum groupinstall "Development Tools"
-Arch: Grab a beer. Everything should already be set up.
-macOS 10.14 Mojave: xcode-select --install
-Windows: https://visualstudio.microsoft.com/
+1. Install the development tools for your OS.
 
-1. Make sure you have a C++17 compatible compiler and Python 3. 
-The ones from mongodbtoolchain are safe bets if you're unsure.
-(mongodbtoolchain is internal to MongoDB).
+    - Ubuntu 18.04: `sudo apt install build-essential`
+    - Red Hat/CentOS 7/Amazon Linux 2: `sudo yum groupinstall "Development Tools"`
+    - Arch: Grab a beer. Everything should already be set up.
+    - macOS: `xcode-select --install`
+    - Windows: <https://visualstudio.microsoft.com/>
 
-If you're using macOS, you have to upgrade to mojave. Earlier versions
-don't have compliant C++ compilers.
+1.  Make sure you have a C++17 compatible compiler and Python 3. 
+    The ones from mongodbtoolchain are safe bets if you're unsure.
+    (mongodbtoolchain is internal to MongoDB).
 
-1. `python3 lamp.py [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
+1. `./lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
  
-This command downloads genny's toolchain, compiles genny and installs
-genny to `dist/`. You can rerun this command at any time to rebuild genny.
-If your OS isn't the supported, please let us know in
-\#workload-generation or on GitHub. 
+    This command downloads genny's toolchain, compiles genny and
+    installs genny to `dist/`. You can rerun this command at any time
+    to rebuild genny. If your OS isn't the supported, please let us
+    know in \#workload-generation or on GitHub.
 
 ### IDEs and Whatnot
 
@@ -43,13 +42,13 @@ it's not going to make common editing environments go wonky.
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-# Build genny first: `python3 lamp.py [...]`
-python3 lamp.py cmake-test
+# Build genny first: `./lamp [...]`
+./lamp cmake-test
 ```
 
 ### Benchmark Tests
 
-The above `make test` line also runs so-called "benchmark" tests. They
+The above `cmake-test` line also runs so-called "benchmark" tests. They
 can take a while to run and may fail occasionally on local developer
 machines, especially if you have an IDE or web browser open while the
 test runs.
@@ -58,7 +57,7 @@ If you want to run all the tests except perf tests you can manually
 invoke the test binaries and exclude perf tests:
 
 ```sh
-# Build genny first: `python3 lamp.py [...]`
+# Build genny first: `./lamp [...]`
 ./build/src/gennylib/gennylib_test '~[benchmark]'
 ```
 
@@ -248,20 +247,20 @@ etc, you can run the clang sanitizers yourself easily.
 Running with TSAN:
 
     FLAGS="-pthread -fsanitize=thread -g -O1"
-    python3 lamp.py -DCMAKE_CXX_FLAGS="$FLAGS"
-    python3 lamp.py cmake-test
+    ./lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with ASAN:
 
     FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
-    python3 lamp.py -DCMAKE_CXX_FLAGS="$FLAGS"
-    python3 lamp.py cmake-test
+    ./lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
-    python3 lamp.py -DCMAKE_CXX_FLAGS="$FLAGS"
-    python3 lamp.py cmake-test
+    ./lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
