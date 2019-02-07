@@ -382,7 +382,10 @@ functions:
         set -o pipefail
         set -o nounset
 
-        ctest --label-exclude "(standalone|sharded|single_node_replset|three_node_replset)"
+        # for python3
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        python3 lamp.py cmake-test
 
   ##
   # Runs tests via resmoke.
