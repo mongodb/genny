@@ -17,7 +17,7 @@ include(GNUInstallDirs)
 # This line allows us to run genny executables from a distribution folder where libraries live in
 # bin/../lib64. This is a nice thing for driver-like applications, because you can pass around
 # archives trivially.
-set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}" "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "")
+set(CMAKE_INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}" "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}" CACHE PATH "")
 
 # Since we're shooting for redistribution, we change up the RPATH configuration
 set(CMAKE_SKIP_BUILD_RPATH              false   CACHE BOOL "")

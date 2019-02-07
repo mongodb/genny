@@ -119,7 +119,7 @@ tasks:
       display_name: Genny
       short_name: genny
       install_dir: dist
-# 
+# macs can't dry_run_workloads: https://jira.mongodb.org/browse/TIG-1435
 - name: t_compile_mac
   commands:
     - func: f_fetch_source
