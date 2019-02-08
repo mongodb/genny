@@ -88,6 +88,16 @@ mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t in
     return _poolManager.client(name, instance, *this);
 }
 
+v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
+                                                       const RateSpec& spec) {
+    if (_rateLimiters.count(name) == 0) {
+        _rateLimiters.emplace(std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
+    }
+    auto rl = _rateLimiters[name].get();
+    rl->addUser();
+    return rl;
+}
+
 // Helper method to convert Phases:[...] to PhaseContexts
 std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::constructPhaseContexts(
     const YAML::Node&, ActorContext* actorContext) {

@@ -112,7 +112,7 @@ public:
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
     void operator=(WorkloadContext&) = delete;
-    WorkloadContext(WorkloadContext&&) = default;
+    WorkloadContext(WorkloadContext&&) = delete;
     void operator=(WorkloadContext&&) = delete;
 
     /**
@@ -172,20 +172,30 @@ public:
      * @tparam T type of the shareable state.
      */
     template <typename T>
-    struct ShareableState : T {
+    struct ShareableState : public T {
         ShareableState() = default;
         ~ShareableState() = default;
     };
 
-    v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec) {
-        if (_rateLimiters.count(name) == 0) {
-            _rateLimiters.emplace(
-                std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
-        }
-        auto rl = _rateLimiters[name].get();
-        rl->addUser();
-        return rl;
-    }
+    /**
+     * Access global rate-limiters.
+     *
+     * @warning
+     *   This is intended to only be used internally. It is called
+     *   by PhaseLoop in response to the `Rate:` yaml keyword.
+     *
+     * @param name
+     *   name/id to use
+     * @param spec
+     *   rate spec to use if creating a new instance. it is undefined what will
+     *   be returned if the getRateLimiter() is called twice with the same name but with different
+     *   ratespecs.
+     * @return
+     *   the existing Subsequent calls with the same name will return the same instance.
+     *
+     * @private
+     */
+    v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
 
 private:
     friend class ActorContext;
@@ -194,8 +204,8 @@ private:
     static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
-    metrics::Registry* const _registry;
-    Orchestrator* const _orchestrator;
+    metrics::Registry* _registry;
+    Orchestrator* _orchestrator;
 
     PoolManager _poolManager;
 
@@ -409,13 +419,13 @@ class PhaseContext final : public v1::ConfigNode {
 
 public:
     PhaseContext(YAML::Node node, const ActorContext& actorContext)
-        : ConfigNode(std::move(node), std::addressof(actorContext)),
+        : ConfigNode(node, std::addressof(actorContext)),
           _actor{std::addressof(actorContext)} {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
     void operator=(PhaseContext&) = delete;
-    PhaseContext(PhaseContext&&) = default;
+    PhaseContext(PhaseContext&&) = delete;
     void operator=(PhaseContext&&) = delete;
 
     /**
