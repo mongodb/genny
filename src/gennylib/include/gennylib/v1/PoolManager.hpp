@@ -76,7 +76,7 @@ public:
 
     // Only used for testing
     /** @private */
-    std::unordered_map<std::string,size_t> instanceCount();
+    std::unordered_map<std::string, size_t> instanceCount();
 
 private:
     /** base uri passed into ctor */

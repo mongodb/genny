@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gennylib/v1/PoolManager.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 
 namespace genny::v1 {
 namespace {
@@ -24,14 +24,14 @@ auto createPool(const std::string& mongoUri,
                 const ConfigNode& context) {
     auto poolFactory = PoolFactory(mongoUri, apmCallback);
 
-    auto queryOpts =
-        context.get_noinherit<std::map<std::string, std::string>, false>("Clients", name, "QueryOptions");
+    auto queryOpts = context.get_noinherit<std::map<std::string, std::string>, false>(
+        "Clients", name, "QueryOptions");
     if (queryOpts) {
         poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
     }
 
-    auto accessOpts =
-        context.get_noinherit<std::map<std::string, std::string>, false>("Clients", name, "AccessOptions");
+    auto accessOpts = context.get_noinherit<std::map<std::string, std::string>, false>(
+        "Clients", name, "AccessOptions");
     if (accessOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
@@ -41,12 +41,12 @@ auto createPool(const std::string& mongoUri,
 
 }  // namespace
 
-}  // namespace genny
+}  // namespace genny::v1
 
 
 mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
-                                                 size_t instance,
-                                                 const genny::v1::ConfigNode& context) {
+                                                     size_t instance,
+                                                     const genny::v1::ConfigNode& context) {
     // Only one thread can access pools.operator[] at a time...
     std::unique_lock<std::mutex> getLock{this->_poolsGet};
     LockAndPools& lap = this->_pools[name];
@@ -82,7 +82,7 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 
 std::unordered_map<std::string, size_t> genny::v1::PoolManager::instanceCount() {
     auto out = std::unordered_map<std::string, size_t>();
-    for(auto&& [k,v] : this->_pools) {
+    for (auto&& [k, v] : this->_pools) {
         out[k] = v.second.size();
     }
     return out;
