@@ -384,51 +384,6 @@ public:
         return this->_workload->_registry->operation(name);
     }
 
-    /**
-     * @return if there are any more phases.
-     * @see Orchestrator::morePhases()
-     */
-    auto morePhases() {
-        return this->_workload->_orchestrator->morePhases();
-    }
-
-    /**
-     * @return the current PhaseNumber from the Orchestrator
-     * @see Orchestrator::currentPhase()
-     */
-    auto currentPhase() {
-        return this->_workload->_orchestrator->currentPhase();
-    }
-
-    /**
-     * Block until Phase starts.
-     * @return value from Orchestrator::awaitPhaseStart()
-     * @see Orchestrator::awaitPhaseStart()
-     */
-    auto awaitPhaseStart() {
-        return this->_workload->_orchestrator->awaitPhaseStart();
-    }
-
-    /**
-     * Block until Phase ends.
-     * @return value from Orchestrator::awaitPhaseEnd()
-     * @see Orchestrator::awaitPhaseEnd()
-     */
-    template <class... Args>
-    auto awaitPhaseEnd(Args&&... args) {
-        return this->_workload->_orchestrator->awaitPhaseEnd(std::forward<Args>(args)...);
-    }
-
-    /**
-     * Indicate a problem that should cause all Actors that are using
-     * the Orchestrator to abort.
-     * @return value from Orchestrator::abort()
-     * @see Orchestrator::abort()
-     */
-    auto abort() {
-        return this->_workload->_orchestrator->abort();
-    }
-
     // </Forwarding to delegates>
 
 private:
