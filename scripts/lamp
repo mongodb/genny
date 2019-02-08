@@ -20,16 +20,16 @@ def get_toolchain_url(os_family, distro=None):
     # These build IDs are from the genny-toolchain Evergreen task.
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
     if os_family == 'Darwin':
-        build_id = 'genny_toolchain_macos_1014_b15f51760a9e651fb66bc0593e2eea738e15ffa2_19_02_07_07_04_06'
+        build_id = 'genny_toolchain_macos_1014_bf2880ecc088eed510b057fa57997800d5bd6e0a_19_02_08_17_27_32'
     elif os_family == 'Linux':
         if distro == 'ubuntu1804':
-            build_id = 'genny_toolchain_ubuntu1804_b15f51760a9e651fb66bc0593e2eea738e15ffa2_19_02_07_07_04_06'
+            build_id = 'genny_toolchain_ubuntu1804_bf2880ecc088eed510b057fa57997800d5bd6e0a_19_02_08_17_27_32'
         elif distro == 'rhel7':
-            build_id = 'genny_toolchain_rhel70_b15f51760a9e651fb66bc0593e2eea738e15ffa2_19_02_07_07_04_06'
+            build_id = 'genny_toolchain_rhel70_bf2880ecc088eed510b057fa57997800d5bd6e0a_19_02_08_17_27_32'
         elif distro == 'amazon2':
-            build_id = 'genny_toolchain_amazon2_b15f51760a9e651fb66bc0593e2eea738e15ffa2_19_02_07_07_04_06'
+            build_id = 'genny_toolchain_amazon2_bf2880ecc088eed510b057fa57997800d5bd6e0a_19_02_08_17_27_32'
         elif distro == 'arch':
-            build_id = 'genny_toolchain_archlinux_b15f51760a9e651fb66bc0593e2eea738e15ffa2_19_02_07_07_04_06'
+            build_id = 'genny_toolchain_archlinux_bf2880ecc088eed510b057fa57997800d5bd6e0a_19_02_08_17_27_32'
         else:
             raise ValueError('Unknown Linux distro {}; please set "--linux-distro"'.format(distro))
     else:
@@ -176,9 +176,9 @@ def main():
     args, cmake_args = parse_args(sys.argv[1:], os_family)
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
-    # This code is temporary. BUILD-7624 will consolidate the locations on mac and Linux.
+    # This code is temporary. BUILD-7624 will move things over to /opt/.
     toolchain_parent = {
-        'Linux': '/opt',
+        'Linux': '/data/mci',
         'Darwin': '/data/mci'
     }
 
