@@ -51,6 +51,7 @@ class ActorContext;
 class ActorProducer {
 public:
     explicit ActorProducer(std::string_view name) : _name{name} {}
+
     ActorProducer(const ActorProducer&) = delete;
     ActorProducer& operator=(const ActorProducer&) = delete;
     ActorProducer(ActorProducer&&) = default;
