@@ -102,7 +102,7 @@ public:
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
-    WorkloadContext(YAML::Node node,
+    WorkloadContext(const YAML::Node& node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
@@ -260,8 +260,8 @@ class PhaseContext;
  */
 class ActorContext final : public v1::ConfigNode {
 public:
-    ActorContext(YAML::Node node, WorkloadContext& workloadContext)
-        : ConfigNode(std::move(node), std::addressof(workloadContext)),
+    ActorContext(const YAML::Node &node, WorkloadContext& workloadContext)
+        : ConfigNode(node, std::addressof(workloadContext)),
           _workload{&workloadContext},
           _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
@@ -270,7 +270,7 @@ public:
     // no copy or move
     ActorContext(ActorContext&) = delete;
     void operator=(ActorContext&) = delete;
-    ActorContext(ActorContext&&) = default;
+    ActorContext(ActorContext&&) = delete;
     void operator=(ActorContext&&) = delete;
 
     /**
@@ -431,21 +431,11 @@ public:
     /**
      * Called in PhaseLoop during the IterationCompletionCheck constructor.
      */
-    bool isNop() const {
-        auto isNop = _isNop();
+    bool isNop() const;
 
-        // Check to make sure we haven't broken our rules
-        if (isNop && _node.size() > 1) {
-            if (_node.size() != 2 || !_node["Phase"]) {
-                throw InvalidConfigurationException(
-                    "'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
-                    "configuration.");
-            }
-        }
-
-        return isNop;
-    }
-
+    /**
+     * @return the parent workload context
+     */
     WorkloadContext& workload() {
         return _actor->workload();
     }
