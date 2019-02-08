@@ -36,7 +36,6 @@ namespace genny {
 class ActorHelper {
 public:
     using FuncWithContext = std::function<void(const WorkloadContext&)>;
-    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
 
     /**
      * Construct an ActorHelper with a cast.
@@ -52,7 +51,7 @@ public:
                 int tokenCount,
                 Cast::List castInitializer,
                 const std::string& uri = mongocxx::uri::k_default_uri,
-                ApmCallback apmCallback = ApmCallback());
+                PoolManager::OnCommandStartCallback apmCallback = {});
 
     /**
      * Construct an ActorHelper with the global cast.
@@ -60,7 +59,7 @@ public:
     ActorHelper(const YAML::Node& config,
                 int tokenCount,
                 const std::string& uri = mongocxx::uri::k_default_uri,
-                ApmCallback apmCallback = ApmCallback());
+                PoolManager::OnCommandStartCallback apmCallback = {});
 
     void run(FuncWithContext&& runnerFunc);
 
@@ -77,6 +76,10 @@ public:
 
     const std::string_view getMetricsOutput() {
         return _metricsOutput.str();
+    }
+
+    WorkloadContext* workload() {
+        return _wlc.get();
     }
 
 private:

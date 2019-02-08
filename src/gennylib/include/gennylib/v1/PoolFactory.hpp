@@ -23,9 +23,10 @@
 #include <string>
 #include <string_view>
 
+#include <gennylib/PoolManager.hpp>
 #include <mongocxx/pool.hpp>
 
-namespace genny {
+namespace genny::v1 {
 
 /**
  * A pool factory takes in a MongoURI, modifies its components, and makes a pool from it
@@ -45,9 +46,7 @@ public:
     };
 
 public:
-    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
-
-    PoolFactory(std::string_view uri, ApmCallback apmCallback = ApmCallback());
+    PoolFactory(std::string_view uri, PoolManager::OnCommandStartCallback callback = {});
     ~PoolFactory();
 
     // Both `makeUri()` and `makeOptions()` are used internally. They are publicly exposed to
@@ -81,10 +80,9 @@ public:
 private:
     struct Config;
     std::unique_ptr<Config> _config;
-    ApmCallback _apmCallback;
-    bool _hasApmOpts = false;
+    PoolManager::OnCommandStartCallback _apmCallback;
 };
 
-}  // namespace genny
+}  // namespace genny::v1
 
 #endif  // HEADER_3BB17688_900D_4AFB_B736_C9EC8DA9E33B

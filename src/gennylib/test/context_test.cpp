@@ -171,11 +171,6 @@ Actors:
         };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path(.*\n*)*)"));
     }
-    SECTION("Invalid MongoUri") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01\nActors: []");
-        auto test = [&]() { WorkloadContext w(yaml, metrics, orchestrator, "::notValid::", cast); };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(an invalid MongoDB URI was provided)"));
-    }
 
     SECTION("Can call two actor producers") {
         auto yaml = YAML::Load(R"(

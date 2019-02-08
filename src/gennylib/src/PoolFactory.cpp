@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gennylib/PoolFactory.hpp>
+#include <gennylib/v1/PoolFactory.hpp>
 
 #include <iostream>
 #include <map>
@@ -24,8 +24,9 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/PoolManager.hpp>
 
-namespace genny {
+namespace genny::v1 {
 
 /** @private */
 struct PoolFactory::Config {
@@ -177,9 +178,7 @@ struct PoolFactory::Config {
     };
 };
 
-PoolFactory::PoolFactory(
-    std::string_view rawUri,
-    std::function<void(const mongocxx::events::command_started_event&)> apmCallback)
+PoolFactory::PoolFactory(std::string_view rawUri, PoolManager::OnCommandStartCallback apmCallback)
     : _config(std::make_unique<Config>(rawUri)), _apmCallback{apmCallback} {}
 PoolFactory::~PoolFactory() {}
 
@@ -257,4 +256,4 @@ std::optional<std::string_view> PoolFactory::getOption(OptionType type,
     return _config->get(type, option);
 }
 
-}  // namespace genny
+}  // namespace genny::v1

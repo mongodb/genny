@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/noncopyable.hpp>
@@ -33,6 +34,7 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
+#include <gennylib/PoolManager.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/v1/ConfigNode.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
@@ -100,15 +102,12 @@ public:
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
-
-    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
-
     WorkloadContext(YAML::Node node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
                     const Cast& cast,
-                    ApmCallback apmCallback = ApmCallback());
+                    PoolManager::OnCommandStartCallback apmCallback = {});
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
@@ -144,10 +143,10 @@ public:
     }
 
     /**
-     * @return a pool from the "default" MongoDB connection-pool.
+     * @return a pool from the given MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client();
+    mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0ul);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -198,7 +197,7 @@ private:
     metrics::Registry* const _registry;
     Orchestrator* const _orchestrator;
 
-    std::unique_ptr<mongocxx::pool> _clientPool;
+    PoolManager _poolManager;
 
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
@@ -212,10 +211,6 @@ private:
     // Actors should always be constructed in a single-threaded context.
     // That said, atomic integral types are very cheap to work with.
     std::atomic<ActorId> _nextActorId{0};
-
-    // A flag representing the presence of application performance monitoring options used for
-    // testing. This can be removed once TIG-1396 is resolved.
-    bool _hasApmOpts;
 
     std::unordered_map<std::string, std::unique_ptr<v1::GlobalRateLimiter>> _rateLimiters;
 };
@@ -334,7 +329,10 @@ public:
      * @return a pool from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client();
+    template <class... Args>
+    mongocxx::pool::entry client(Args&&... args) {
+        return this->_workload->client(std::forward<Args>(args)...);
+    }
 
     // <Forwarding to delegates>
 

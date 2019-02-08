@@ -17,14 +17,18 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
 
-#include <gennylib/PoolFactory.hpp>
+#include <gennylib/PoolManager.hpp>
+#include <gennylib/v1/PoolFactory.hpp>
 
+#include <metrics/metrics.hpp>
+
+#include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
 
 namespace Catchers = Catch::Matchers;
 
-using OptionType = genny::PoolFactory::OptionType;
+using OptionType = genny::v1::PoolFactory::OptionType;
 
 TEST_CASE("PoolFactory behavior") {
     mongocxx::instance::current();
@@ -33,7 +37,7 @@ TEST_CASE("PoolFactory behavior") {
     SECTION("Make a few trivial localhost pools") {
         constexpr auto kSourceUri = "mongodb://127.0.0.1:27017";
 
-        auto factory = genny::PoolFactory(kSourceUri);
+        auto factory = genny::v1::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
         REQUIRE(factoryUri == kSourceUri);
@@ -49,7 +53,7 @@ TEST_CASE("PoolFactory behavior") {
     SECTION("Make a pool with the bare minimum uri") {
         constexpr auto kSourceUri = "127.0.0.1";
 
-        auto factory = genny::PoolFactory(kSourceUri);
+        auto factory = genny::v1::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
         auto expectedUri = [&]() { return std::string{"mongodb://"} + kSourceUri; };
@@ -64,7 +68,7 @@ TEST_CASE("PoolFactory behavior") {
 
         const std::string kBaseString = "mongodb://127.0.0.1/";
 
-        auto factory = genny::PoolFactory(kSourceUri);
+        auto factory = genny::v1::PoolFactory(kSourceUri);
 
         SECTION("Validate the original URI") {
             auto factoryUri = factory.makeUri();
@@ -94,7 +98,7 @@ TEST_CASE("PoolFactory behavior") {
 
         SECTION("Use the wrong case for 'Database' option") {
             auto sourceUri = [&]() { return kBaseString + kOriginalDatabase; };
-            auto factory = genny::PoolFactory(sourceUri());
+            auto factory = genny::v1::PoolFactory(sourceUri());
 
             auto expectedUri = [&]() { return sourceUri() + "?database=test"; };
             factory.setOption(OptionType::kQueryOption, "database", "test");
@@ -113,7 +117,7 @@ TEST_CASE("PoolFactory behavior") {
         // not normally consider for traditional string flags
         SECTION("Set the 'Database' option in odd ways") {
             auto sourceUri = [&]() { return kBaseString + kOriginalDatabase; };
-            auto factory = genny::PoolFactory(sourceUri());
+            auto factory = genny::v1::PoolFactory(sourceUri());
 
 
             SECTION("Use the flag option") {
@@ -143,7 +147,7 @@ TEST_CASE("PoolFactory behavior") {
 
         SECTION("Overwrite the replSet option in a variety of ways") {
             auto sourceUri = [&]() { return kBaseString + "?replSet=red"; };
-            auto factory = genny::PoolFactory(sourceUri());
+            auto factory = genny::v1::PoolFactory(sourceUri());
 
             SECTION("Overwrite with a normal string") {
                 auto expectedUri = [&]() { return kBaseString + "?replSet=blue"; };
@@ -169,7 +173,7 @@ TEST_CASE("PoolFactory behavior") {
         const std::string kSourceUri = "mongodb://127.0.0.1";
         constexpr int32_t kMaxPoolSize = 2;
 
-        auto factory = genny::PoolFactory(kSourceUri);
+        auto factory = genny::v1::PoolFactory(kSourceUri);
 
         auto expectedUri = [&]() { return kSourceUri + "/?maxPoolSize=2"; };
         factory.setOptionFromInt(OptionType::kQueryOption, "maxPoolSize", kMaxPoolSize);
@@ -200,7 +204,7 @@ TEST_CASE("PoolFactory behavior") {
         constexpr auto kCAFile = "some-random-ca.pem";
 
         auto sourceUrl = [&]() { return kProtocol + kHost; };
-        auto factory = genny::PoolFactory(sourceUrl());
+        auto factory = genny::v1::PoolFactory(sourceUrl());
 
         auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?ssl=true"; };
         factory.setOptions(OptionType::kAccessOption,
@@ -224,5 +228,18 @@ TEST_CASE("PoolFactory behavior") {
 
         auto pool = factory.makePool();
         REQUIRE(pool);
+    }
+
+    SECTION("PoolManager can construct multiple pools") {
+        auto yaml = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+        Database: test
+        Actors: []
+        )");
+        genny::ActorHelper ah{yaml, 1, {}};
+        auto w = ah.workload();
+        w->client("Foo", 0);
+        w->client("Foo", 10);
+        w->client("Bar", 1);
     }
 }
