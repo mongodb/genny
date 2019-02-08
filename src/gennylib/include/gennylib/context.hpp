@@ -250,12 +250,7 @@ class PhaseContext;
  */
 class ActorContext final : public v1::ConfigNode {
 public:
-    ActorContext(const YAML::Node &node, WorkloadContext& workloadContext)
-        : ConfigNode(node, std::addressof(workloadContext)),
-          _workload{&workloadContext},
-          _phaseContexts{} {
-        _phaseContexts = constructPhaseContexts(_node, this);
-    }
+    ActorContext(const YAML::Node &node, WorkloadContext& workloadContext);
 
     // no copy or move
     ActorContext(ActorContext&) = delete;
@@ -266,16 +261,12 @@ public:
     /**
      * @return top-level workload configuration
      */
-    WorkloadContext& workload() const {
-        return *this->_workload;
-    }
+    WorkloadContext& workload() const;
 
     /**
      * @return the workload-wide Orchestrator
      */
-    Orchestrator& orchestrator() {
-        return *this->_workload->_orchestrator;
-    }
+    Orchestrator& orchestrator();
 
     /**
      * @return a structure representing the `Phases:` block in the Actor config.
@@ -321,9 +312,7 @@ public:
      * configuration in other mechanisms if desired. The `Phases:` structure and
      * related PhaseContext type are purely for conventional convenience.
      */
-    const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
-        return _phaseContexts;
-    };
+    const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const;
 
     /**
      * @return a pool from the "default" MongoDB connection-pool.
@@ -410,9 +399,7 @@ private:
 class PhaseContext final : public v1::ConfigNode {
 
 public:
-    PhaseContext(const YAML::Node &node, const ActorContext& actorContext)
-        : ConfigNode(node, std::addressof(actorContext)),
-          _actor{std::addressof(actorContext)} {}
+    PhaseContext(const YAML::Node &node, const ActorContext& actorContext);
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -428,9 +415,7 @@ public:
     /**
      * @return the parent workload context
      */
-    WorkloadContext& workload() {
-        return _actor->workload();
-    }
+    WorkloadContext& workload();
 
 private:
     bool _isNop() const;
