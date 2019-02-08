@@ -14,8 +14,15 @@
 
 project(catch2 VERSION 0.0.1 LANGUAGES CXX)
 
+# <Catch2>
+find_package(Catch2 CONFIG REQUIRED)
+# </Catch2>
+
+# Wrapper around vanilla catch2 to automatically provide a main() functin.
 CreateGennyTargets(
     NAME    catch2
     TYPE    SHARED
+    DEPENDS
+        Catch2::Catch2
 )
 

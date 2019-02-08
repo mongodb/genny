@@ -19,7 +19,7 @@ import urllib.request
 def get_toolchain_url(os_family, distro=None):
     # These build IDs are from the genny-toolchain Evergreen task.
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
-    build_id = 'bf2880ecc088eed510b057fa57997800d5bd6e0a_19_02_08_17_27_32'
+    build_id = '01872107be2d3399d1e31c1a8834dc269857d206_19_02_08_23_12_03'
     if os_family == 'Darwin':
         distro = 'macos_14'
 
