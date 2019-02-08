@@ -118,29 +118,19 @@ public:
     /**
      * @return all the actors produced. This should only be called by workload drivers.
      */
-    constexpr const ActorVector& actors() const {
-        return _actors;
-    }
+    const ActorVector& actors() const;
 
     /**
      * @return a new seeded random number generator.
      * @warning This should only be called during construction to ensure reproducibility.
      */
-    auto createRNG() {
-        if (_done) {
-            throw InvalidConfigurationException(
-                "Tried to create a random number generator after construction");
-        }
-        return DefaultRandom{_rng()};
-    }
+    DefaultRandom createRNG();
 
     /**
      * Get a WorkloadContext-unique ActorId
      * @return The next sequential id
      */
-    ActorId nextActorId() {
-        return _nextActorId++;
-    }
+    ActorId nextActorId();
 
     /**
      * @return a pool from the given MongoDB connection-pool.
@@ -414,11 +404,13 @@ private:
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
 
-
+/**
+ * Represents each `Phase:` block in the YAML configuration.
+ */
 class PhaseContext final : public v1::ConfigNode {
 
 public:
-    PhaseContext(YAML::Node node, const ActorContext& actorContext)
+    PhaseContext(const YAML::Node &node, const ActorContext& actorContext)
         : ConfigNode(node, std::addressof(actorContext)),
           _actor{std::addressof(actorContext)} {}
 

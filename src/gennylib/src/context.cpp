@@ -84,6 +84,10 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
     return actors;
 }
 
+const ActorVector &WorkloadContext::actors() const {
+    return _actors;
+}
+
 mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t instance) {
     return _poolManager.client(name, instance, *this);
 }
@@ -96,6 +100,18 @@ v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
     auto rl = _rateLimiters[name].get();
     rl->addUser();
     return rl;
+}
+
+ActorId WorkloadContext::nextActorId() {
+    return _nextActorId++;
+}
+
+DefaultRandom WorkloadContext::createRNG()  {
+    if (_done) {
+        throw InvalidConfigurationException(
+                "Tried to create a random number generator after construction");
+    }
+    return DefaultRandom{_rng()};
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts
