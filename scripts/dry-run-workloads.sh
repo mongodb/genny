@@ -24,6 +24,10 @@ find "${WORKLOAD_DIR}" -name "*.yml" -print >"${WORKLOAD_LIST}"
 
 # Dry run each file
 while read -r FILE; do
+    if [[ "${OSTYPE}" == "darwin"* ]] && [[ "${FILE}" == *"AuthNInsert"* ]]; then
+      echo "TIG-1435 skipping dry run AuthNInsert.yml on macOS"
+      continue;
+    fi;
     1>&2 echo "-- Testing workload at '${FILE}' via --dry-run..."
     "${CMD[@]}" "${FILE}"
 done <"${WORKLOAD_LIST}"
