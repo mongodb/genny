@@ -14,10 +14,8 @@
 
 project(catch2 VERSION 0.0.1 LANGUAGES CXX)
 
-
-
 CreateGennyTargets(
     NAME    catch2
-    TYPE    STATIC
+    TYPE    SHARED
 )
 
