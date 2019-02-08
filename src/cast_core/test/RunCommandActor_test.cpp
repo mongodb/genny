@@ -223,7 +223,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
-            REQUIRE(db.collection("testCollection").count(view) == 1);
+            REQUIRE(db.collection("testCollection").count_documents(view) == 1);
         };
         ah.runDefaultAndVerify(verifyFn);
     }
@@ -268,7 +268,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
-            REQUIRE(db.collection("testCollection").count(view) == 1);
+            REQUIRE(db.collection("testCollection").count_documents(view) == 1);
         };
         ah.runDefaultAndVerify(verifyFn);
     }
@@ -300,7 +300,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
-            REQUIRE(db.collection("testCollection").count(view) == 1);
+            REQUIRE(db.collection("testCollection").count_documents(view) == 1);
         };
         ah.runDefaultAndVerify(verifyFn);
     }
@@ -352,7 +352,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto adminDb = client.database("admin");
         auto verifyFn = [&adminDb, view](const WorkloadContext& context) {
             REQUIRE(adminDb.has_collection("testCollection"));
-            REQUIRE(adminDb.collection("testCollection").count(view) == 1);
+            REQUIRE(adminDb.collection("testCollection").count_documents(view) == 1);
         };
 
         ah.runDefaultAndVerify(verifyFn);
@@ -491,7 +491,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto verifyFn = [&db, adminDb, view](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection"));
-            REQUIRE(db.collection("testCollection").count(view) == 2);
+            REQUIRE(db.collection("testCollection").count_documents(view) == 2);
         };
         ah.runDefaultAndVerify(verifyFn);
     }

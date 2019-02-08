@@ -49,7 +49,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         bsoncxx::document::view view = doc_value.view();
         db.collection("test").insert_one(view);
 
-        REQUIRE(db.collection("test").count(view) == 1);
+        REQUIRE(db.collection("test").count_documents(view) == 1);
     }
 }
 }  // namespace

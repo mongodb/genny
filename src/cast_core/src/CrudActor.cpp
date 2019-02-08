@@ -731,8 +731,8 @@ struct CountOperation : public BaseOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr->evaluate(_rng).getDocument();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.count(session, std::move(filter), _options)
-                     : _collection.count(std::move(filter), _options);
+        (_onSession) ? _collection.count_documents(session, std::move(filter), _options)
+                     : _collection.count_documents(std::move(filter), _options);
         ctx.success();
     }
 
