@@ -18,17 +18,18 @@
 
 namespace genny {
 
-Cast::Cast(Cast::List init)  {
+Cast::Cast(Cast::List init) {
     for (const auto& [name, producer] : init) {
         add(name, producer);
     }
 }
 
-std::shared_ptr<ActorProducer> Cast::getProducer(const std::string &name) const {
+std::shared_ptr<ActorProducer> Cast::getProducer(const std::string& name) const {
     return _producers.at(name);
 }
 
-Cast::Registration::Registration(const std::string_view &name, std::shared_ptr<ActorProducer> producer) {
+Cast::Registration::Registration(const std::string_view& name,
+                                 std::shared_ptr<ActorProducer> producer) {
     globalCast().add(name, std::move(producer));
 }
 

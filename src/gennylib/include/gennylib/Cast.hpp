@@ -58,11 +58,11 @@ public:
     /**
      * `Cast::Registration` is a struct that registers a single ActorProducer to the global Cast.
      *
-     * This struct is a vehicle for its ctor function which takes a name for the specific ActorProducer
-     * in the Cast and a `shared_ptr` to the instance of the ActorProducer. This allows for pre-main
-     * invocations of the registration via global variables of type `Cast::Registration`. The vast
-     * majority of cases will want to use `registerDefault()` below and avoid most concerns on
-     * this struct.
+     * This struct is a vehicle for its ctor function which takes a name for the specific
+     * ActorProducer in the Cast and a `shared_ptr` to the instance of the ActorProducer. This
+     * allows for pre-main invocations of the registration via global variables of type
+     * `Cast::Registration`. The vast majority of cases will want to use `registerDefault()` below
+     * and avoid most concerns on this struct.
      */
     struct Registration {
         Registration(const std::string_view& name, std::shared_ptr<ActorProducer> producer);

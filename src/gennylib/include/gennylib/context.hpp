@@ -250,7 +250,7 @@ class PhaseContext;
  */
 class ActorContext final : public v1::ConfigNode {
 public:
-    ActorContext(const YAML::Node &node, WorkloadContext& workloadContext);
+    ActorContext(const YAML::Node& node, WorkloadContext& workloadContext);
 
     // no copy or move
     ActorContext(ActorContext&) = delete;
@@ -399,7 +399,7 @@ private:
 class PhaseContext final : public v1::ConfigNode {
 
 public:
-    PhaseContext(const YAML::Node &node, const ActorContext& actorContext);
+    PhaseContext(const YAML::Node& node, const ActorContext& actorContext);
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
