@@ -15,16 +15,17 @@ import sys
 import tarfile
 import urllib.request
 
+TOOLCHAIN_BUILD_ID = '01872107be2d3399d1e31c1a8834dc269857d206_19_02_08_23_12_03'
+
 
 def get_toolchain_url(os_family, distro=None):
     # These build IDs are from the genny-toolchain Evergreen task.
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
-    build_id = '01872107be2d3399d1e31c1a8834dc269857d206_19_02_08_23_12_03'
     if os_family == 'Darwin':
-        distro = 'macos_14'
+        distro = 'macos_1014'
 
     return 'https://s3.amazonaws.com/mciuploads/genny-toolchain/' \
-           'genny_toolchain_{}_{}/gennytoolchain.tgz'.format(distro, build_id)
+           'genny_toolchain_{}_{}/gennytoolchain.tgz'.format(distro, TOOLCHAIN_BUILD_ID)
 
 
 def fetch_and_install_toolchain(url, install_dir):

@@ -55,7 +55,7 @@ buildvariants:
   run_on:
   - archlinux-test
   expansions:
-    distro: arch
+    distro: archlinux
   tasks:
   - name: tg_compile_and_test
   - name: t_push
@@ -77,7 +77,7 @@ buildvariants:
   display_name: RHEL 7
   modules: ~
   expansions:
-    distro: rhel7
+    distro: rhel70
   run_on:
   - rhel70
   tasks:
