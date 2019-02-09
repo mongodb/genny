@@ -19,8 +19,8 @@ import urllib.request
 
 class Context:
     # Permanent constants.
-    TOOLCHAIN_BUILD_ID = '01872107be2d3399d1e31c1a8834dc269857d206_19_02_08_23_12_03'
-    TOOLCHAIN_GIT_HASH = '7297534c3dc1df9f6d315098174171eaf75c5846'
+    TOOLCHAIN_BUILD_ID = '7297534c3dc1df9f6d315098174171eaf75c5846_19_02_09_02_19_44'
+    TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split('_')[0]
 
     # User configurable constants.
     IGNORE_TOOLCHAIN_VERSION = False
@@ -70,8 +70,8 @@ def fetch_and_install_toolchain(url, install_dir):
 
         logging.info('Extracting gennytoolchain into %s, please wait...', toolchain_dir)
         tarball = tarfile.open(toolchain_tarball)
-        
-        shutil.rmtree(toolchain_dir)
+
+        shutil.rmtree(toolchain_dir, ignore_errors=True)
         tarball.extractall(toolchain_dir)
         logging.info('Finished extracting gennytoolchain into %s', toolchain_dir)
 
