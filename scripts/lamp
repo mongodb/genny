@@ -10,12 +10,20 @@ import argparse
 import logging
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import tarfile
 import urllib.request
 
-TOOLCHAIN_BUILD_ID = '01872107be2d3399d1e31c1a8834dc269857d206_19_02_08_23_12_03'
+
+class Context:
+    # Permanent constants.
+    TOOLCHAIN_BUILD_ID = '01872107be2d3399d1e31c1a8834dc269857d206_19_02_08_23_12_03'
+    TOOLCHAIN_GIT_HASH = '7297534c3dc1df9f6d315098174171eaf75c5846'
+
+    # User configurable constants.
+    IGNORE_TOOLCHAIN_VERSION = False
 
 
 def get_toolchain_url(os_family, distro=None):
@@ -25,7 +33,12 @@ def get_toolchain_url(os_family, distro=None):
         distro = 'macos_1014'
 
     return 'https://s3.amazonaws.com/mciuploads/genny-toolchain/' \
-           'genny_toolchain_{}_{}/gennytoolchain.tgz'.format(distro, TOOLCHAIN_BUILD_ID)
+           'genny_toolchain_{}_{}/gennytoolchain.tgz'.format(distro, Context.TOOLCHAIN_BUILD_ID)
+
+
+def check_toolchain_githash(toolchain_dir):
+    res = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=toolchain_dir, capture_output=True, text=True)
+    return res.stdout.strip() == Context.TOOLCHAIN_GIT_HASH
 
 
 def fetch_and_install_toolchain(url, install_dir):
@@ -41,22 +54,29 @@ def fetch_and_install_toolchain(url, install_dir):
             '`sudo chown $USER %s`', install_dir)
         sys.exit(1)
 
-    toolchain_tarball = os.path.join(install_dir, 'gennytoolchain.tgz')
-    if os.path.isfile(toolchain_tarball):
-        logging.info('Skipping downloading %s', toolchain_tarball)
-    else:
-        logging.info('Downloading gennytoolchain, please wait...')
-        urllib.request.urlretrieve(url, toolchain_tarball)
-        logging.info('Finished Downloading gennytoolchain as %s', toolchain_tarball)
-
     toolchain_dir = os.path.join(install_dir, 'gennytoolchain')
-    if os.path.exists(toolchain_dir):
-        logging.info('Skipping extracting the toolchain into: %s', toolchain_dir)
+    # If the toolchain dir is outdated or we ignore the toolchain version.
+    if os.path.exists(toolchain_dir) and (
+            Context.IGNORE_TOOLCHAIN_VERSION or check_toolchain_githash(toolchain_dir)):
+        logging.info('Skipping installing the toolchain into: %s', toolchain_dir)
     else:
+        toolchain_tarball = os.path.join(install_dir, 'gennytoolchain.tgz')
+        if os.path.isfile(toolchain_tarball):
+            logging.info('Skipping downloading %s', toolchain_tarball)
+        else:
+            logging.info('Downloading gennytoolchain, please wait...')
+            urllib.request.urlretrieve(url, toolchain_tarball)
+            logging.info('Finished Downloading gennytoolchain as %s', toolchain_tarball)
+
         logging.info('Extracting gennytoolchain into %s, please wait...', toolchain_dir)
         tarball = tarfile.open(toolchain_tarball)
+        
+        shutil.rmtree(toolchain_dir)
         tarball.extractall(toolchain_dir)
         logging.info('Finished extracting gennytoolchain into %s', toolchain_dir)
+
+        # Get 1GB back.
+        os.remove(toolchain_tarball)
 
     return toolchain_dir
 
@@ -142,6 +162,8 @@ def parse_args(args, os_family):
                         help='specify the linux distro you\'re on; if your system isn\'t available,'
                              ' please contact us at #workload-generation')
     parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-i', '--ignore-toolchain-version', action='store_true',
+                        help='ignore the toolchain version, allow use of a custom toolchain version')
 
     subparsers = parser.add_subparsers(
         dest='subcommand',
@@ -160,10 +182,15 @@ def parse_args(args, os_family):
     return known_args, unknown_args
 
 
+def add_args_to_context(args):
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+    Context.IGNORE_TOOLCHAIN_VERSION = args.ignore_toolchain_version
+
+
 def main():
     os_family = platform.system()
     args, cmake_args = parse_args(sys.argv[1:], os_family)
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+    add_args_to_context(args)
 
     # This code is temporary. BUILD-7624 will move things over to /opt/.
     toolchain_parent = {
