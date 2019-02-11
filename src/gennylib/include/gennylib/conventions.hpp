@@ -48,7 +48,7 @@ struct IntegerSpec {
     // int64_t is used by default, you can explicitly cast to another type if needed.
     int64_t value;
 
-    operator int64_t() {  // NOLINT(google-explicit-constructor)
+    operator int64_t() const {  // NOLINT(google-explicit-constructor)
         return value;
     }
 };
