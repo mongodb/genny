@@ -40,7 +40,7 @@ public:
     using BsonView = bsoncxx::document::view;
 
     // Dummy MongoException for testing.
-    MongoException(const std::string& message = "") {
+    explicit MongoException(const std::string& message = "") {
         *this << MongoException::Message("SOME MESSAGE");
     }
 

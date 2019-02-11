@@ -25,13 +25,13 @@
 
 namespace genny {
 
-WorkloadContext::WorkloadContext(YAML::Node node,
+WorkloadContext::WorkloadContext(const YAML::Node& node,
                                  metrics::Registry& registry,
                                  Orchestrator& orchestrator,
                                  const std::string& mongoUri,
                                  const Cast& cast,
                                  PoolManager::OnCommandStartCallback apmCallback)
-    : v1::ConfigNode(std::move(node)),
+    : v1::ConfigNode(node),
       _registry{&registry},
       _orchestrator{&orchestrator},
       _rateLimiters{10},
@@ -88,6 +88,24 @@ mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t in
     return _poolManager.client(name, instance, *this);
 }
 
+v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
+                                                       const RateSpec& spec) {
+    if (_rateLimiters.count(name) == 0) {
+        _rateLimiters.emplace(std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
+    }
+    auto rl = _rateLimiters[name].get();
+    rl->addUser();
+    return rl;
+}
+
+DefaultRandom WorkloadContext::createRNG() {
+    if (_done) {
+        throw InvalidConfigurationException(
+            "Tried to create a random number generator after construction");
+    }
+    return DefaultRandom{_rng()};
+}
+
 // Helper method to convert Phases:[...] to PhaseContexts
 std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::constructPhaseContexts(
     const YAML::Node&, ActorContext* actorContext) {
@@ -121,6 +139,8 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     return out;
 }
 
+// this could probably be made into a free-function rather than an
+// instance method
 bool PhaseContext::_isNop() const {
     auto hasNoOp = get<bool, false>("Nop").value_or(false)  //
         || get<bool, false>("nop").value_or(false)          //
@@ -155,6 +175,21 @@ bool PhaseContext::_isNop() const {
         || (opName == "nop")   //
         || (opName == "NoOp")  //
         || (opName == "noop");
+}
+
+bool PhaseContext::isNop() const {
+    auto isNop = _isNop();
+
+    // Check to make sure we haven't broken our rules
+    if (isNop && _node.size() > 1) {
+        if (_node.size() != 2 || !_node["Phase"]) {
+            throw InvalidConfigurationException(
+                "'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
+                "configuration.");
+        }
+    }
+
+    return isNop;
 }
 
 }  // namespace genny

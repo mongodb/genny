@@ -102,7 +102,7 @@ public:
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
-    WorkloadContext(YAML::Node node,
+    WorkloadContext(const YAML::Node& node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
@@ -112,7 +112,7 @@ public:
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
     void operator=(WorkloadContext&) = delete;
-    WorkloadContext(WorkloadContext&&) = default;
+    WorkloadContext(WorkloadContext&&) = delete;
     void operator=(WorkloadContext&&) = delete;
 
     /**
@@ -126,13 +126,7 @@ public:
      * @return a new seeded random number generator.
      * @warning This should only be called during construction to ensure reproducibility.
      */
-    auto createRNG() {
-        if (_done) {
-            throw InvalidConfigurationException(
-                "Tried to create a random number generator after construction");
-        }
-        return DefaultRandom{_rng()};
-    }
+    DefaultRandom createRNG();
 
     /**
      * Get a WorkloadContext-unique ActorId
@@ -172,20 +166,30 @@ public:
      * @tparam T type of the shareable state.
      */
     template <typename T>
-    struct ShareableState : T {
+    struct ShareableState : public T {
         ShareableState() = default;
         ~ShareableState() = default;
     };
 
-    v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec) {
-        if (_rateLimiters.count(name) == 0) {
-            _rateLimiters.emplace(
-                std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
-        }
-        auto rl = _rateLimiters[name].get();
-        rl->addUser();
-        return rl;
-    }
+    /**
+     * Access global rate-limiters.
+     *
+     * @warning
+     *   This is intended to only be used internally. It is called
+     *   by PhaseLoop in response to the `Rate:` yaml keyword.
+     *
+     * @param name
+     *   name/id to use
+     * @param spec
+     *   rate spec to use if creating a new instance. it is undefined what will
+     *   be returned if the getRateLimiter() is called twice with the same name but with different
+     *   ratespecs.
+     * @return
+     *   the existing Subsequent calls with the same name will return the same instance.
+     *
+     * @private
+     */
+    v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
 
 private:
     friend class ActorContext;
@@ -194,8 +198,8 @@ private:
     static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
-    metrics::Registry* const _registry;
-    Orchestrator* const _orchestrator;
+    metrics::Registry* _registry;
+    Orchestrator* _orchestrator;
 
     PoolManager _poolManager;
 
@@ -250,8 +254,8 @@ class PhaseContext;
  */
 class ActorContext final : public v1::ConfigNode {
 public:
-    ActorContext(YAML::Node node, WorkloadContext& workloadContext)
-        : ConfigNode(std::move(node), std::addressof(workloadContext)),
+    ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
+        : ConfigNode(node, std::addressof(workloadContext)),
           _workload{&workloadContext},
           _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
@@ -260,21 +264,21 @@ public:
     // no copy or move
     ActorContext(ActorContext&) = delete;
     void operator=(ActorContext&) = delete;
-    ActorContext(ActorContext&&) = default;
+    ActorContext(ActorContext&&) = delete;
     void operator=(ActorContext&&) = delete;
 
     /**
      * @return top-level workload configuration
      */
-    WorkloadContext& workload() const {
+    constexpr WorkloadContext& workload() const {
         return *this->_workload;
     }
 
     /**
      * @return the workload-wide Orchestrator
      */
-    Orchestrator& orchestrator() {
-        return *this->_workload->_orchestrator;
+    constexpr Orchestrator& orchestrator() const {
+        return *this->workload()._orchestrator;
     }
 
     /**
@@ -321,9 +325,9 @@ public:
      * configuration in other mechanisms if desired. The `Phases:` structure and
      * related PhaseContext type are purely for conventional convenience.
      */
-    const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
+    constexpr const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
         return _phaseContexts;
-    };
+    }
 
     /**
      * @return a pool from the "default" MongoDB connection-pool.
@@ -384,51 +388,6 @@ public:
         return this->_workload->_registry->operation(name);
     }
 
-    /**
-     * @return if there are any more phases.
-     * @see Orchestrator::morePhases()
-     */
-    auto morePhases() {
-        return this->_workload->_orchestrator->morePhases();
-    }
-
-    /**
-     * @return the current PhaseNumber from the Orchestrator
-     * @see Orchestrator::currentPhase()
-     */
-    auto currentPhase() {
-        return this->_workload->_orchestrator->currentPhase();
-    }
-
-    /**
-     * Block until Phase starts.
-     * @return value from Orchestrator::awaitPhaseStart()
-     * @see Orchestrator::awaitPhaseStart()
-     */
-    auto awaitPhaseStart() {
-        return this->_workload->_orchestrator->awaitPhaseStart();
-    }
-
-    /**
-     * Block until Phase ends.
-     * @return value from Orchestrator::awaitPhaseEnd()
-     * @see Orchestrator::awaitPhaseEnd()
-     */
-    template <class... Args>
-    auto awaitPhaseEnd(Args&&... args) {
-        return this->_workload->_orchestrator->awaitPhaseEnd(std::forward<Args>(args)...);
-    }
-
-    /**
-     * Indicate a problem that should cause all Actors that are using
-     * the Orchestrator to abort.
-     * @return value from Orchestrator::abort()
-     * @see Orchestrator::abort()
-     */
-    auto abort() {
-        return this->_workload->_orchestrator->abort();
-    }
-
     // </Forwarding to delegates>
 
 private:
@@ -449,39 +408,30 @@ private:
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
 
-
+/**
+ * Represents each `Phase:` block in the YAML configuration.
+ */
 class PhaseContext final : public v1::ConfigNode {
 
 public:
-    PhaseContext(YAML::Node node, const ActorContext& actorContext)
-        : ConfigNode(std::move(node), std::addressof(actorContext)),
-          _actor{std::addressof(actorContext)} {}
+    PhaseContext(const YAML::Node& node, const ActorContext& actorContext)
+        : ConfigNode(node, std::addressof(actorContext)), _actor{std::addressof(actorContext)} {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
     void operator=(PhaseContext&) = delete;
-    PhaseContext(PhaseContext&&) = default;
+    PhaseContext(PhaseContext&&) = delete;
     void operator=(PhaseContext&&) = delete;
 
     /**
      * Called in PhaseLoop during the IterationCompletionCheck constructor.
      */
-    bool isNop() const {
-        auto isNop = _isNop();
+    bool isNop() const;
 
-        // Check to make sure we haven't broken our rules
-        if (isNop && _node.size() > 1) {
-            if (_node.size() != 2 || !_node["Phase"]) {
-                throw InvalidConfigurationException(
-                    "'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
-                    "configuration.");
-            }
-        }
-
-        return isNop;
-    }
-
-    WorkloadContext& workload() {
+    /**
+     * @return the parent workload context
+     */
+    WorkloadContext& workload() const {
         return _actor->workload();
     }
 

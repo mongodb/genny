@@ -99,12 +99,12 @@ public:
         }
     }
 
-    bool shouldLimitRate(int64_t currentIteration) const {
+    constexpr bool shouldLimitRate(int64_t currentIteration) const {
         // Only rate limit if the current iteration is a muliple of the burst size.
         return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
-    void limitRate(const int64_t currentIteration,
+    constexpr void limitRate(const int64_t currentIteration,
                    const Orchestrator& o,
                    const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
@@ -126,23 +126,23 @@ public:
         }
     }
 
-    SteadyClock::time_point computeReferenceStartingPoint() const {
+    constexpr SteadyClock::time_point computeReferenceStartingPoint() const {
         // avoid doing now() if no minDuration configured
         return _minDuration ? SteadyClock::now() : SteadyClock::time_point::min();
     }
 
-    bool isDone(SteadyClock::time_point startedAt, int64_t currentIteration) {
+    constexpr bool isDone(SteadyClock::time_point startedAt, int64_t currentIteration) {
         return (!_minIterations || currentIteration >= (*_minIterations).value) &&
             (!_minDuration ||
              // check is last to avoid doing now() call unnecessarily
              (*_minDuration).value <= SteadyClock::now() - startedAt);
     }
 
-    bool operator==(const IterationChecker& other) const {
+    constexpr bool operator==(const IterationChecker& other) const {
         return _minDuration == other._minDuration && _minIterations == other._minIterations;
     }
 
-    bool doesBlockCompletion() const {
+    constexpr bool doesBlockCompletion() const {
         return _doesBlock;
     }
 
@@ -206,7 +206,7 @@ public:
     }
 
     // clang-format off
-    bool operator==(const ActorPhaseIterator& rhs) const {
+    constexpr bool operator==(const ActorPhaseIterator& rhs) const {
         return
                 // we're comparing against the .end() iterator (the common case)
                 (rhs._isEndIterator && !this->_isEndIterator &&
@@ -243,7 +243,7 @@ public:
 
     // Iterator concepts only require !=, but the logic is much easier to reason about
     // for ==, so just negate that logic 😎 (compiler should inline it)
-    bool operator!=(const ActorPhaseIterator& rhs) const {
+    constexpr bool operator!=(const ActorPhaseIterator& rhs) const {
         return !(*this == rhs);
     }
 
@@ -321,12 +321,12 @@ public:
     };
 
     // Used by PhaseLoopIterator::doesBlockCompletion()
-    bool doesBlock() const {
+    constexpr bool doesBlock() const {
         return _iterationCheck->doesBlockCompletion();
     }
 
     // Checks if the actor is performing a nullOp. Used only for testing.
-    bool isNop() const {
+    constexpr bool isNop() const {
         return !_value;
     }
 
@@ -436,17 +436,17 @@ public:
         return *this;
     }
 
-    bool operator!=(const PhaseLoopIterator& other) const {
+    constexpr bool operator!=(const PhaseLoopIterator& other) const {
         // Intentionally don't handle self-equality or other "normal" cases.
         return !(other._isEnd && !this->morePhases());
     }
 
 private:
-    bool morePhases() const {
+    constexpr bool morePhases() const {
         return this->_orchestrator.morePhases();
     }
 
-    bool doesBlockOn(PhaseNumber phase) const {
+    constexpr bool doesBlockOn(PhaseNumber phase) const {
         if (auto item = _phaseMap.find(phase); item != _phaseMap.end()) {
             return item->second.doesBlock();
         }
