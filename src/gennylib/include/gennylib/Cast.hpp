@@ -77,7 +77,9 @@ public:
 
     void add(const std::string_view& castName, std::shared_ptr<ActorProducer> entry);
 
-    std::shared_ptr<ActorProducer> getProducer(const std::string& name) const;
+    std::shared_ptr<ActorProducer> getProducer(const std::string& name) const {
+        return _producers.at(name);
+    }
 
     std::ostream& streamProducersTo(std::ostream&) const;
 

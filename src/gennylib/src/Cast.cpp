@@ -24,10 +24,6 @@ Cast::Cast(Cast::List init) {
     }
 }
 
-std::shared_ptr<ActorProducer> Cast::getProducer(const std::string& name) const {
-    return _producers.at(name);
-}
-
 Cast::Registration::Registration(const std::string_view& name,
                                  std::shared_ptr<ActorProducer> producer) {
     globalCast().add(name, std::move(producer));
