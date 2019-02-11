@@ -30,7 +30,8 @@ public:
     using OnCommandStartCallback =
         std::function<void(const mongocxx::events::command_started_event&)>;
 
-    PoolManager(std::string mongoUri, OnCommandStartCallback callback);
+    PoolManager(std::string mongoUri, OnCommandStartCallback callback)
+        : _mongoUri{std::move(mongoUri)}, _apmCallback{std::move(callback)} {}
 
     mongocxx::pool::entry client(const std::string& name,
                                  size_t instance,

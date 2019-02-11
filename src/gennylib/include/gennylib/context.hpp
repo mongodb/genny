@@ -118,7 +118,9 @@ public:
     /**
      * @return all the actors produced. This should only be called by workload drivers.
      */
-    const ActorVector& actors() const;
+    const ActorVector& actors() const {
+        return _actors;
+    }
 
     /**
      * @return a new seeded random number generator.
@@ -130,7 +132,9 @@ public:
      * Get a WorkloadContext-unique ActorId
      * @return The next sequential id
      */
-    ActorId nextActorId();
+    ActorId nextActorId() {
+        return _nextActorId++;
+    }
 
     /**
      * @return a pool from the given MongoDB connection-pool.
@@ -250,7 +254,12 @@ class PhaseContext;
  */
 class ActorContext final : public v1::ConfigNode {
 public:
-    ActorContext(const YAML::Node& node, WorkloadContext& workloadContext);
+    ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
+            : ConfigNode(std::move(node), std::addressof(workloadContext)),
+              _workload{&workloadContext},
+              _phaseContexts{} {
+        _phaseContexts = constructPhaseContexts(_node, this);
+    }
 
     // no copy or move
     ActorContext(ActorContext&) = delete;
@@ -261,12 +270,16 @@ public:
     /**
      * @return top-level workload configuration
      */
-    WorkloadContext& workload() const;
+    WorkloadContext& workload() const {
+        return *this->_workload;
+    }
 
     /**
      * @return the workload-wide Orchestrator
      */
-    Orchestrator& orchestrator();
+    Orchestrator& orchestrator() const {
+        return *this->workload()._orchestrator;
+    }
 
     /**
      * @return a structure representing the `Phases:` block in the Actor config.
@@ -312,7 +325,9 @@ public:
      * configuration in other mechanisms if desired. The `Phases:` structure and
      * related PhaseContext type are purely for conventional convenience.
      */
-    const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const;
+    const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
+        return _phaseContexts;
+    }
 
     /**
      * @return a pool from the "default" MongoDB connection-pool.
@@ -399,7 +414,9 @@ private:
 class PhaseContext final : public v1::ConfigNode {
 
 public:
-    PhaseContext(const YAML::Node& node, const ActorContext& actorContext);
+    PhaseContext(const YAML::Node& node, const ActorContext& actorContext)
+            : ConfigNode(std::move(node), std::addressof(actorContext)),
+              _actor{std::addressof(actorContext)} {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -415,7 +432,9 @@ public:
     /**
      * @return the parent workload context
      */
-    WorkloadContext& workload();
+    WorkloadContext& workload() const {
+        return _actor->workload();
+    }
 
 private:
     bool _isNop() const;

@@ -44,10 +44,6 @@ auto createPool(const std::string& mongoUri,
 }  // namespace genny
 
 
-genny::PoolManager::PoolManager(std::string mongoUri,
-                                genny::PoolManager::OnCommandStartCallback callback)
-    : _mongoUri{std::move(mongoUri)}, _apmCallback{std::move(callback)} {}
-
 mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
                                                  size_t instance,
                                                  genny::WorkloadContext& context) {
