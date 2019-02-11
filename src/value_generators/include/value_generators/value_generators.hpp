@@ -190,7 +190,7 @@ class ConstantExpression : public Expression {
 public:
     static UniqueExpression parse(YAML::Node node);
 
-    ConstantExpression(Value value);
+    explicit ConstantExpression(Value value);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
@@ -208,7 +208,7 @@ public:
 
     static UniqueExpression parse(YAML::Node node);
 
-    DocumentExpression(std::vector<ElementType> elements);
+    explicit DocumentExpression(std::vector<ElementType> elements);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
@@ -226,7 +226,7 @@ public:
 
     static UniqueExpression parse(YAML::Node node);
 
-    ArrayExpression(std::vector<ElementType> elements);
+    explicit ArrayExpression(std::vector<ElementType> elements);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
@@ -298,7 +298,7 @@ private:
  */
 class GeometricIntExpression : public RandomIntExpression {
 public:
-    GeometricIntExpression(double p);
+    explicit GeometricIntExpression(double p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
@@ -313,7 +313,7 @@ private:
  */
 class PoissonIntExpression : public RandomIntExpression {
 public:
-    PoissonIntExpression(double mean);
+    explicit PoissonIntExpression(double mean);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
@@ -351,7 +351,7 @@ public:
 
     static UniqueExpression parse(YAML::Node node);
 
-    FastRandomStringExpression(UniqueExpression length);
+    explicit FastRandomStringExpression(UniqueExpression length);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:

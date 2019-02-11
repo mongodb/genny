@@ -118,7 +118,7 @@ public:
     /**
      * @return all the actors produced. This should only be called by workload drivers.
      */
-    const ActorVector& actors() const {
+    constexpr const ActorVector& actors() const {
         return _actors;
     }
 
@@ -270,14 +270,14 @@ public:
     /**
      * @return top-level workload configuration
      */
-    WorkloadContext& workload() const {
+    constexpr WorkloadContext& workload() const {
         return *this->_workload;
     }
 
     /**
      * @return the workload-wide Orchestrator
      */
-    Orchestrator& orchestrator() const {
+    constexpr Orchestrator& orchestrator() const {
         return *this->workload()._orchestrator;
     }
 
@@ -325,7 +325,7 @@ public:
      * configuration in other mechanisms if desired. The `Phases:` structure and
      * related PhaseContext type are purely for conventional convenience.
      */
-    const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
+    constexpr const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
         return _phaseContexts;
     }
 

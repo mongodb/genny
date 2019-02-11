@@ -57,7 +57,7 @@ public:
     ActorProducer(ActorProducer&&) = default;
     ActorProducer& operator=(ActorProducer&&) = default;
 
-    const std::string_view& name() const {
+    constexpr const std::string_view& name() const {
         return _name;
     }
 
