@@ -337,7 +337,8 @@ public:
      * configuration in other mechanisms if desired. The `Phases:` structure and
      * related PhaseContext type are purely for conventional convenience.
      */
-    constexpr const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
+    constexpr const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases()
+        const {
         return _phaseContexts;
     }
 
