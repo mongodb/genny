@@ -55,27 +55,30 @@ namespace genny {
  */
 class Cast {
 public:
-    struct Registration;
+    /**
+     * `Cast::Registration` is a struct that registers a single ActorProducer to the global Cast.
+     *
+     * This struct is a vehicle for its ctor function which takes a name for the specific
+     * ActorProducer in the Cast and a `shared_ptr` to the instance of the ActorProducer. This
+     * allows for pre-main invocations of the registration via global variables of type
+     * `Cast::Registration`. The vast majority of cases will want to use `registerDefault()` below
+     * and avoid most concerns on this struct.
+     */
+    struct Registration {
+        Registration(const std::string_view& name, std::shared_ptr<ActorProducer> producer);
+    };
 
     using ActorProducerMap = std::map<std::string_view, std::shared_ptr<ActorProducer>>;
     using List = std::initializer_list<Cast::ActorProducerMap::value_type>;
 
-public:
-    explicit Cast() {}
-    Cast(List init) {
-        for (const auto& [name, producer] : init) {
-            add(name, producer);
-        }
-    }
+    explicit Cast() = default;
+
+    Cast(List init);
 
     void add(const std::string_view& castName, std::shared_ptr<ActorProducer> entry);
 
     std::shared_ptr<ActorProducer> getProducer(const std::string& name) const {
         return _producers.at(name);
-    }
-
-    const ActorProducerMap& getProducers() const {
-        return _producers;
     }
 
     std::ostream& streamProducersTo(std::ostream&) const;
@@ -105,21 +108,6 @@ inline Cast& globalCast() {
     static Cast _cast;
     return _cast;
 }
-
-/**
- * `Cast::Registration` is a struct that registers a single ActorProducer to the global Cast.
- *
- * This struct is a vehicle for its ctor function which takes a name for the specific ActorProducer
- * in the Cast and a `shared_ptr` to the instance of the ActorProducer. This allows for pre-main
- * invocations of the registration via global variables of type `Cast::Registration`. The vast
- * majority of cases will want to use `registerDefault()` below and avoid most concerns on
- * this struct.
- */
-struct Cast::Registration {
-    Registration(const std::string_view& name, std::shared_ptr<ActorProducer> producer) {
-        globalCast().add(name, std::move(producer));
-    }
-};
 
 template <typename ProducerT>
 Cast::Registration Cast::registerCustom(std::shared_ptr<ProducerT> producer) {

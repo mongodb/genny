@@ -17,6 +17,19 @@
 #include <sstream>
 
 namespace genny {
+
+Cast::Cast(Cast::List init) {
+    for (const auto& [name, producer] : init) {
+        add(name, producer);
+    }
+}
+
+Cast::Registration::Registration(const std::string_view& name,
+                                 std::shared_ptr<ActorProducer> producer) {
+    globalCast().add(name, std::move(producer));
+}
+
+
 void Cast::add(const std::string_view& castName, std::shared_ptr<ActorProducer> entry) {
     const auto& [it, success] = _producers.emplace(castName, entry);
 
@@ -36,4 +49,5 @@ std::ostream& Cast::streamProducersTo(std::ostream& out) const {
     }
     return out;
 }
+
 }  // namespace genny

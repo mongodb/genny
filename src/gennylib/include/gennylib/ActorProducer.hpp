@@ -51,12 +51,13 @@ class ActorContext;
 class ActorProducer {
 public:
     explicit ActorProducer(std::string_view name) : _name{name} {}
+
     ActorProducer(const ActorProducer&) = delete;
     ActorProducer& operator=(const ActorProducer&) = delete;
     ActorProducer(ActorProducer&&) = default;
     ActorProducer& operator=(ActorProducer&&) = default;
 
-    const std::string_view& name() const {
+    constexpr const std::string_view& name() const {
         return _name;
     }
 
