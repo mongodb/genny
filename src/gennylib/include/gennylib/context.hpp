@@ -255,9 +255,9 @@ class PhaseContext;
 class ActorContext final : public v1::ConfigNode {
 public:
     ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
-            : ConfigNode(node, std::addressof(workloadContext)),
-              _workload{&workloadContext},
-              _phaseContexts{} {
+        : ConfigNode(node, std::addressof(workloadContext)),
+          _workload{&workloadContext},
+          _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
     }
 
@@ -415,8 +415,7 @@ class PhaseContext final : public v1::ConfigNode {
 
 public:
     PhaseContext(const YAML::Node& node, const ActorContext& actorContext)
-            : ConfigNode(node, std::addressof(actorContext)),
-              _actor{std::addressof(actorContext)} {}
+        : ConfigNode(node, std::addressof(actorContext)), _actor{std::addressof(actorContext)} {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
