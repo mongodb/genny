@@ -236,9 +236,19 @@ TEST_CASE("PoolFactory behavior") {
 
         auto foo0 = manager.client("Foo", 0, config);
         auto foo0again = manager.client("Foo", 0, config);
-        auto foo100 = manager.client("Foo", 10, config);
+        auto foo10 = manager.client("Foo", 10, config);
         auto bar0 = manager.client("Bar", 0, config);
 
+        // Note to future maintainers:
+        //
+        // This assertion doesn't actually verify that we aren't calling
+        // `createPool()` again when running `manager.client("Foo", 0, config)` a
+        // second time.
+        //
+        // A different style of trying to write this test is to register a
+        // callback which gets called by `createPool()` and use that to "spy on"
+        // the `name` and `instance` for which `createPool()` gets called.
+        // Something like TIG-1191 would probably be helpful.
         REQUIRE((manager.instanceCount() ==
                  std::unordered_map<std::string, size_t>({{"Foo", 2}, {"Bar", 1}})));
     }

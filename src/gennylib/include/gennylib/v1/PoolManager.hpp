@@ -91,7 +91,7 @@ private:
     /** the pools themselves */
     std::unordered_map<std::string, LockAndPools> _pools;
     /** lock on finding/creating the LockAndPools for a given string */
-    std::mutex _poolsGet;
+    std::mutex _poolsLock;
 };
 
 }  // namespace genny::v1
