@@ -17,8 +17,8 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/pool.hpp>
 
-#include <gennylib/PoolManager.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 
 #include <metrics/metrics.hpp>
 
@@ -231,15 +231,25 @@ TEST_CASE("PoolFactory behavior") {
     }
 
     SECTION("PoolManager can construct multiple pools") {
-        auto yaml = YAML::Load(R"(
-        SchemaVersion: 2018-07-01
-        Database: test
-        Actors: []
-        )");
-        genny::ActorHelper ah{yaml, 1, {}};
-        auto w = ah.workload();
-        w->client("Foo", 0);
-        w->client("Foo", 10);
-        w->client("Bar", 1);
+        genny::v1::PoolManager manager{"mongodb:://localhost:27017", {}};
+        genny::v1::ConfigNode config{YAML::Load(R"()")};
+
+        auto foo0 = manager.client("Foo", 0, config);
+        auto foo0again = manager.client("Foo", 0, config);
+        auto foo10 = manager.client("Foo", 10, config);
+        auto bar0 = manager.client("Bar", 0, config);
+
+        // Note to future maintainers:
+        //
+        // This assertion doesn't actually verify that we aren't calling
+        // `createPool()` again when running `manager.client("Foo", 0, config)` a
+        // second time.
+        //
+        // A different style of trying to write this test is to register a
+        // callback which gets called by `createPool()` and use that to "spy on"
+        // the `name` and `instance` for which `createPool()` gets called.
+        // Something like TIG-1191 would probably be helpful.
+        REQUIRE((manager.instanceCount() ==
+                 std::unordered_map<std::string, size_t>({{"Foo", 2}, {"Bar", 1}})));
     }
 }

@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gennylib/PoolManager.hpp>
-#include <gennylib/context.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 
-namespace genny {
+namespace genny::v1 {
 namespace {
 
 auto createPool(const std::string& mongoUri,
+                const std::string& name,
                 PoolManager::OnCommandStartCallback& apmCallback,
-                const WorkloadContext& context) {
-    auto poolFactory = genny::v1::PoolFactory(mongoUri, apmCallback);
+                const ConfigNode& context) {
+    auto poolFactory = PoolFactory(mongoUri, apmCallback);
 
-    auto queryOpts =
-        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "QueryOptions");
+    auto queryOpts = context.get_noinherit<std::map<std::string, std::string>, false>(
+        "Clients", name, "QueryOptions");
     if (queryOpts) {
-        poolFactory.setOptions(genny::v1::PoolFactory::kQueryOption, *queryOpts);
+        poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
     }
 
-    auto accessOpts =
-        context.get_noinherit<std::map<std::string, std::string>, false>("Pool", "AccessOptions");
+    auto accessOpts = context.get_noinherit<std::map<std::string, std::string>, false>(
+        "Clients", name, "AccessOptions");
     if (accessOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
@@ -41,14 +41,14 @@ auto createPool(const std::string& mongoUri,
 
 }  // namespace
 
-}  // namespace genny
+}  // namespace genny::v1
 
 
-mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
-                                                 size_t instance,
-                                                 genny::WorkloadContext& context) {
+mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
+                                                     size_t instance,
+                                                     const genny::v1::ConfigNode& context) {
     // Only one thread can access pools.operator[] at a time...
-    std::unique_lock<std::mutex> getLock{this->_poolsGet};
+    std::unique_lock<std::mutex> getLock{this->_poolsLock};
     LockAndPools& lap = this->_pools[name];
     // ...but no need to keep the lock open past this.
     // Two threads trying access client("foo",0) at the same
@@ -62,7 +62,7 @@ mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
 
     auto& pool = pools[instance];
     if (pool == nullptr) {
-        pool = createPool(this->_mongoUri, this->_apmCallback, context);
+        pool = createPool(this->_mongoUri, name, this->_apmCallback, context);
     }
 
     // no need to keep it past this point; pool is thread-safe
@@ -78,4 +78,14 @@ mongocxx::pool::entry genny::PoolManager::client(const std::string& name,
         throw InvalidConfigurationException("Failed to acquire an entry from the client pool.");
     }
     return std::move(*entry);
+}
+
+std::unordered_map<std::string, size_t> genny::v1::PoolManager::instanceCount() {
+    std::lock_guard<std::mutex> getLock{this->_poolsLock};
+
+    auto out = std::unordered_map<std::string, size_t>();
+    for (auto&& [k, v] : this->_pools) {
+        out[k] = v.second.size();
+    }
+    return out;
 }

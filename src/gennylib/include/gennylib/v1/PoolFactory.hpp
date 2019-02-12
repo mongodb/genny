@@ -23,7 +23,8 @@
 #include <string>
 #include <string_view>
 
-#include <gennylib/PoolManager.hpp>
+#include <gennylib/v1/PoolManager.hpp>
+
 #include <mongocxx/pool.hpp>
 
 namespace genny::v1 {

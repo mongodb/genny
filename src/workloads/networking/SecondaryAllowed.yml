@@ -1,11 +1,13 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/service-architecture"
 
-Pool:
-    QueryOptions:
-        maxPoolSize: 1000
-        socketTimeoutMS: 5000
-        connectTimeoutMS: 5000
+Clients:
+    Default:
+      QueryOptions:
+          maxPoolSize: 1000
+          socketTimeoutMS: 5000
+          connectTimeoutMS: 5000
+
 Actors:
     - Name: StepdownCommand
       Type: AdminCommand

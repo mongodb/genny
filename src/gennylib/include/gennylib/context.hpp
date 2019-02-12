@@ -34,10 +34,10 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
-#include <gennylib/PoolManager.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/v1/ConfigNode.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 
 #include <metrics/metrics.hpp>
 
@@ -107,7 +107,7 @@ public:
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
                     const Cast& cast,
-                    PoolManager::OnCommandStartCallback apmCallback = {});
+                    v1::PoolManager::OnCommandStartCallback apmCallback = {});
 
     // no copy or move
     WorkloadContext(WorkloadContext&) = delete;
@@ -137,10 +137,22 @@ public:
     }
 
     /**
-     * @return a pool from the given MongoDB connection-pool.
-     * @throws InvalidConfigurationException if no connections available.
+     * Return a named connection pool instance.
+     *
+     * @warning
+     *   it is advised to only call this during setup since creating a connection pool
+     *   can be an expensive operation
+     *
+     * @param name
+     *   the named pool to use. Corresponds to a key in the `Clients:` configuration keyword.
+     * @param instance
+     *   which instance of the pool to use
+     * @return
+     *   a pool from the given MongoDB connection-pool. Pools are created on-demand.
+     * @throws
+     *   InvalidConfigurationException if no connections available.
      */
-    mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0ul);
+    mongocxx::pool::entry client(const std::string& name = "Default", size_t instance = 0);
 
     /**
      * Get states that can be shared across actors using the same WorkloadContext.
@@ -201,7 +213,7 @@ private:
     metrics::Registry* _registry;
     Orchestrator* _orchestrator;
 
-    PoolManager _poolManager;
+    v1::PoolManager _poolManager;
 
     // we own the child ActorContexts
     std::vector<std::unique_ptr<ActorContext>> _actorContexts;
@@ -325,7 +337,8 @@ public:
      * configuration in other mechanisms if desired. The `Phases:` structure and
      * related PhaseContext type are purely for conventional convenience.
      */
-    constexpr const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases() const {
+    constexpr const std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>& phases()
+        const {
         return _phaseContexts;
     }
 

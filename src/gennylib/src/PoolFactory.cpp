@@ -24,7 +24,7 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/PoolManager.hpp>
+#include <gennylib/v1/PoolManager.hpp>
 
 namespace genny::v1 {
 

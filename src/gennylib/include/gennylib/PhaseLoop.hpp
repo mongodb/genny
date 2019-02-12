@@ -105,8 +105,8 @@ public:
     }
 
     constexpr void limitRate(const int64_t currentIteration,
-                   const Orchestrator& o,
-                   const PhaseNumber inPhase) {
+                             const Orchestrator& o,
+                             const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
         // first iteration. This means the number of completed operations is always
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of

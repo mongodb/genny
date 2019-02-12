@@ -30,7 +30,7 @@ WorkloadContext::WorkloadContext(const YAML::Node& node,
                                  Orchestrator& orchestrator,
                                  const std::string& mongoUri,
                                  const Cast& cast,
-                                 PoolManager::OnCommandStartCallback apmCallback)
+                                 v1::PoolManager::OnCommandStartCallback apmCallback)
     : v1::ConfigNode(node),
       _registry{&registry},
       _orchestrator{&orchestrator},
