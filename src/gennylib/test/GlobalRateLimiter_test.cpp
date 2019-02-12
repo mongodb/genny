@@ -84,11 +84,8 @@ TEST_CASE("Global rate limiter") {
 
     SECTION("Limits Rate") {
         auto now = MyDummyClock::now();
-        // First consumeIfWithinRate() goes through because we intentionally have the rate limiter
-        // do so.
-        REQUIRE(grl.consumeIfWithinRate(now));
 
-        // Second consumeIfWithinRate() should fail because we have not incremented the clock.
+        // consumeIfWithinRate() should fail because we have not incremented the clock.
         REQUIRE(!grl.consumeIfWithinRate(now));
 
         // Increment the clock should allow consumeIfWithinRate() to succeed exactly once.
@@ -109,7 +106,9 @@ TEST_CASE("Global rate limiter can be used by phase loop") {
         IncActor(genny::ActorContext& ac)
             : Actor(ac),
               _loop{ac},
-              _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {};
+              _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {
+            _counter.store(0);
+        };
 
         void run() override {
             for (auto&& config : _loop) {
@@ -153,7 +152,7 @@ Actors:
 
     // The rate interval needs to be large enough to avoid sporadic failures, which makes
     // this test take longer. It therefore has the "[slow]" label.
-    SECTION("Prevents execution when the rate is exceeded", "[slow]") {
+    SECTION("Prevents execution when the rate is exceeded") {
         YAML::Node config = YAML::Load(R"(
 SchemaVersion: 2018-07-01
 Actors:
@@ -162,10 +161,11 @@ Actors:
   Threads: 2
   Phases:
     - Repeat: 7
-      Rate: 5 per 4 seconds
+      Rate: 3 per 200 milliseconds
 )");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 2;
+        int rate = 3;
 
         genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
         auto getCurState = []() {
@@ -178,53 +178,12 @@ Actors:
         // Due to the placement of the rate limiter in operator++() in PhaseLoop, the number of
         // completed iterations is always `rate * n + num_threads` and not an exact multiple of
         // `rate`.
-        std::this_thread::sleep_for(1s);
-        REQUIRE(getCurState() == (5 + num_threads));
-
-        // Check for rate again after 4 seconds.
-        std::this_thread::sleep_for(4s);
-        REQUIRE(getCurState() == (5 * 2 + num_threads));
+        std::this_thread::sleep_for(500ms);
+        REQUIRE(getCurState() == (rate * 2 + num_threads));
 
         t.join();
 
         REQUIRE(getCurState() == 14);
-    }
-
-    SECTION("Find max performance of rate limiter", "[benchmark]") {
-        YAML::Node config = YAML::Load(R"(
-SchemaVersion: 2018-07-01
-Actors:
-- Name: One
-  Type: IncActor
-  Threads: 100
-  Phases:
-    - Duration: 10 seconds
-      Rate: 1 per 100 microseconds
-)");
-        auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
-        int num_threads = 100;
-
-        genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
-        auto getCurState = []() {
-            return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().load();
-        };
-
-        ah.run();
-
-        // 10 * 1000 ops per second * 10 seconds.
-        int64_t expected = 10 * 1000 * 10;
-
-        // Result is at least 95% of the expected value. There's some uncertainty
-        // due to manually induced jitter.
-        REQUIRE(getCurState() > expected * 0.90);
-
-        // Result is at most 110% of the expected value. The steady clock
-        // time is cached for threads so threads can run for longer than the
-        // specified duration.
-        REQUIRE(getCurState() < expected * 1.10);
-
-        // Print out the result if both REQUIRE pass.
-        BOOST_LOG_TRIVIAL(info) << getCurState();
     }
 }
 }  // namespace

@@ -138,6 +138,7 @@ tasks:
 - name: t_python_test
   commands:
   - func: f_python_test
+  - func: f_lamplib_test
 
 - name: t_cmake_test
   commands:
@@ -417,6 +418,25 @@ functions:
         set -o nounset
 
         python3 setup.py nosetests
+
+  ##
+  # Runs python nosetests.
+  ##
+  f_lamplib_test:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      working_dir: src
+      shell: bash
+      script: |
+        set -o errexit
+        set -o pipefail
+        set -o nounset
+
+        # for python3
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        ./scripts/lamp self-test
 
   ##
   # Reports test results to evergreen API.
