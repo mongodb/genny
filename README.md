@@ -16,7 +16,7 @@ Here're the steps to get genny up and running locally:
     - macOS: `xcode-select --install`
     - Windows: <https://visualstudio.microsoft.com/>
 
-1.  Make sure you have a C++17 compatible compiler and Python 3. 
+1.  Make sure you have a C++17 compatible compiler and Python 3.
     The ones from mongodbtoolchain are safe bets if you're unsure.
     (mongodbtoolchain is internal to MongoDB).
 
@@ -27,6 +27,8 @@ Here're the steps to get genny up and running locally:
     to rebuild genny. If your OS isn't the supported, please let us
     know in \#workload-generation or on GitHub.
 
+    Note that the `--linux-distro` argument is not needed on macOS.
+
 ### IDEs and Whatnot
 
 We follow CMake and C++17 best-practices so anything that doesn't work
@@ -36,6 +38,23 @@ We support using CLion and any conventional editors or IDEs (VSCode,
 emacs, vim, etc.). Before doing anything cute (see
 [CONTRIBUTING.md](./CONTRIBUTING.md)), please do due-diligence to ensure
 it's not going to make common editing environments go wonky.
+
+If you're using CLion, make sure to set `CMake options`
+(in settings/preferences) so it can find the toolchain.
+
+The cmake command is printed when `lamp` runs, you can
+copy and paste the options into Clion. The options
+should look something like this:
+
+```bash
+-G Ninja \
+-DCMAKE_PREFIX_PATH=/data/mci/gennytoolchain/installed/x64-osx-shared \
+-DCMAKE_TOOLCHAIN_FILE=/data/mci/gennytoolchain/scripts/buildsystems/vcpkg.cmake \
+-DVCPKG_TARGET_TRIPLET=x64-osx-static
+```
+
+Replace `osx` with `linux` if you're on Linux and remove `-G Ninja` if you
+don't have `ninja` installed locally.
 
 ## Running Genny Self-Tests
 

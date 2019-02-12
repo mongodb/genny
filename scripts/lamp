@@ -64,7 +64,7 @@ def fetch_and_install_toolchain(url, install_dir):
         if os.path.isfile(toolchain_tarball):
             logging.info('Skipping downloading %s', toolchain_tarball)
         else:
-            logging.info('Downloading gennytoolchain, please wait...')
+            logging.info('Downloading gennytoolchain (>1GB), please wait...')
             urllib.request.urlretrieve(url, toolchain_tarball)
             logging.info('Finished Downloading gennytoolchain as %s', toolchain_tarball)
 
