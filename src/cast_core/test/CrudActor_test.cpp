@@ -622,7 +622,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Repeat: 1
               Collection: test
               Operations:
-              - OperationName: count
+              - OperationName: countDocuments
                 OperationCommand:
                   Filter: { a : 1 }
                   Options:
@@ -661,7 +661,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Repeat: 1
               Collection: test
               Operations:
-              - OperationName: count
+              - OperationName: countDocuments
                 OperationCommand:
                   Filter: { a : 1 }
                   Options:
@@ -705,7 +705,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Repeat: 1
               Collection: test
               Operations:
-              - OperationName: count
+              - OperationName: countDocuments
                 OperationCommand:
                   Filter: { a : 1 }
                   Options:
@@ -736,7 +736,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Repeat: 1
               Collection: test
               Operations:
-              - OperationName: count
+              - OperationName: countDocuments
                 OperationCommand:
                   Filter: { a : 1 }
                   Options:
@@ -877,14 +877,14 @@ TEST_CASE_METHOD(MongoTestFixture,
 }
 
 TEST_CASE_METHOD(MongoTestFixture,
-                 "Test 'count' operation.",
+                 "Test 'count_documents' operation.",
                  "[standalone][single_node_replset][three_node_replset][CrudActor]") {
 
     dropAllDatabases();
     auto events = ApmEvents{};
     auto db = client.database("mydb");
 
-    SECTION("Perform a count on the collection.") {
+    SECTION("Perform a count_documents on the collection.") {
         YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01
           Actors:
@@ -897,7 +897,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Repeat: 1
               Collection: test
               Operation:
-                OperationName: count
+                OperationName: countDocuments
                 OperationCommand:
                   Filter: { a: 1 }
           )");
@@ -908,9 +908,10 @@ TEST_CASE_METHOD(MongoTestFixture,
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             REQUIRE(events.size() > 0);
             auto countEvent = events[0].command;
-            auto collection = countEvent["count"].get_utf8().value;
+            auto collection = countEvent["aggregate"].get_utf8().value;
             REQUIRE(std::string(collection) == "test");
-            REQUIRE(countEvent["query"].get_document().view() ==
+
+            REQUIRE(countEvent["pipeline"][0]["$match"].get_document().view() ==
                     BasicBson::make_document(BasicBson::kvp("a", 1)));
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
