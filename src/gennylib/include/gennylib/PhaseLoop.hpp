@@ -346,7 +346,7 @@ public:
     typename std::add_pointer_t<std::remove_reference_t<T>> operator->() const noexcept {
 #ifndef NDEBUG
         if (!_value) {
-            BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference -> a T in a Nop phase."));
+            BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference via -> in a Nop phase."));
         }
 #endif
         return _value.operator->();
@@ -362,7 +362,7 @@ public:
     typename std::add_lvalue_reference_t<T> operator*() const {
 #ifndef NDEBUG
         if (!_value) {
-            BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference -> a T in a Nop phase."));
+            BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference via * in a Nop phase."));
         }
 #endif
         return _value.operator*();
