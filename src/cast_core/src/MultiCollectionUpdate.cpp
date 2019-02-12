@@ -83,7 +83,7 @@ void MultiCollectionUpdate::run() {
 MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _updateOp{context.operation("updateOperation", MultiCollectionUpdate::id())},
+      _updateOp{context.operation("update", MultiCollectionUpdate::id())},
       _client{std::move(context.client())},
       _loop{context, _client} {}
 

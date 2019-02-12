@@ -43,7 +43,7 @@ static constexpr std::string_view mongoUri = "mongodb://localhost:27017";
 template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
@@ -58,7 +58,7 @@ template <class Out,
           class... Args>
 void gives(const string& yaml, OutV expect, Args... args) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = YAML::Load(modified);
     auto test = [&]() {
@@ -89,7 +89,7 @@ struct OpProducer : public ActorProducer {
 
 TEST_CASE("loads configuration okay") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
         {"NoOp", std::make_shared<NoOpProducer>()},
@@ -246,7 +246,7 @@ Actors:
 
 void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
         {"Op", std::make_shared<OpProducer>(op)},
@@ -350,7 +350,7 @@ TEST_CASE("Duplicate Phase Numbers") {
     )");
 
     metrics::Registry metrics;
-    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
         {"NoOp", std::make_shared<NoOpProducer>()},
@@ -728,7 +728,7 @@ Actors:
 
 TEST_CASE("If no producer exists for an actor, then we should throw an error") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator orchestrator{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
         {"Foo", std::make_shared<NoOpProducer>()},

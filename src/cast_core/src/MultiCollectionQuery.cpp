@@ -88,7 +88,7 @@ void MultiCollectionQuery::run() {
 MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _queryOp{context.operation("queryOperation", MultiCollectionQuery::id())},
+      _queryOp{context.operation("query", MultiCollectionQuery::id())},
       _client{std::move(context.client())},
       _loop{context, _client} {}
 

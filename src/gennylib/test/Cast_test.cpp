@@ -48,8 +48,7 @@ public:
           _registration{globalCast().registerCustom(_producer)},
           _node{createWorkloadYaml(name, actorYaml)},
           _registry{},
-          _orchestratorGauge{_registry.gauge("Genny.Orchestrator")},
-          _orchestrator{_orchestratorGauge},
+          _orchestrator{},
           _workloadContext{
               _node, _registry, _orchestrator, "mongodb://localhost:27017", genny::globalCast()} {}
 
@@ -66,7 +65,6 @@ private:
     Cast::Registration _registration;
     YAML::Node _node;
     metrics::Registry _registry;
-    metrics::v1::Gauge _orchestratorGauge;
     Orchestrator _orchestrator;
     WorkloadContext _workloadContext;
 };
