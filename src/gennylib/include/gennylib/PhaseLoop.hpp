@@ -309,8 +309,8 @@ public:
         : _orchestrator{orchestrator},
           _currentPhase{currentPhase},
           _value{!phaseContext.isNop()
-                     ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
-                     : std::nullopt},
+                     ? std::make_unique<T>(std::forward<Args>(args)...)
+                     : nullptr},
           _iterationCheck{std::make_unique<IterationChecker>(phaseContext)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
@@ -349,7 +349,7 @@ public:
             BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference -> a T in a Nop phase."));
         }
 #endif
-        return (*_value).operator->();
+        return _value.operator->();
     }
 
     // Could use `auto` for return-type of operator-> and operator*, but
@@ -365,7 +365,7 @@ public:
             BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference -> a T in a Nop phase."));
         }
 #endif
-        return (*_value).operator*();
+        return _value.operator*();
     }
 
     PhaseNumber phaseNumber() const {
@@ -375,7 +375,7 @@ public:
 private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
-    const std::optional<std::unique_ptr<T>> _value;  // Is nullopt iff operation is Nop
+    const std::unique_ptr<T> _value;  // nullptr iff operation is Nop
     const std::unique_ptr<IterationChecker> _iterationCheck;
 
 };  // class ActorPhase
