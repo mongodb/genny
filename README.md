@@ -21,7 +21,7 @@ Here're the steps to get genny up and running locally:
     (mongodbtoolchain is internal to MongoDB).
 
 1. `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
- 
+
     This command downloads genny's toolchain, compiles genny and
     installs genny to `dist/`. You can rerun this command at any time
     to rebuild genny. If your OS isn't the supported, please let us
