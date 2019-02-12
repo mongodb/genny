@@ -711,8 +711,8 @@ private:
  *          Limit: 5
  *        OnSession: false
  */
-struct CountOperation : public BaseOperation {
-    CountOperation(YAML::Node opNode,
+struct CountDocumentsOperation : public BaseOperation {
+    CountDocumentsOperation(YAML::Node opNode,
                    bool onSession,
                    mongocxx::collection collection,
                    genny::DefaultRandom& rng,
@@ -969,7 +969,7 @@ private:
 // Maps the yaml 'OperationName' string to the appropriate constructor of 'BaseOperation' type.
 std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
-    {"count", baseCallback<BaseOperation, OpCallback, CountOperation>},
+    {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
     {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
     {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
     {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
