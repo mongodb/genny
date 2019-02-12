@@ -54,6 +54,8 @@ buildvariants:
   modules: ~
   run_on:
   - archlinux-test
+  expansions:
+    distro: archlinux
   tasks:
   - name: tg_compile_and_test
   - name: t_push
@@ -64,8 +66,7 @@ buildvariants:
   run_on:
   - amazon2-build
   expansions:
-    cmake:      /opt/cmake/bin/cmake
-    toolchain:  /opt/mongodbtoolchain/v3/bin
+    distro: amazon2
     mongodb_archive_url:
       https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-amazon2-4.1.7.tgz
   tasks:
@@ -75,11 +76,10 @@ buildvariants:
 - name: rhel70
   display_name: RHEL 7
   modules: ~
+  expansions:
+    distro: rhel70
   run_on:
   - rhel70
-  expansions:
-    cmake:      /opt/cmake/bin/cmake
-    toolchain:  /opt/mongodbtoolchain/v3/bin
   tasks:
   - name: t_compile
   - name: t_push
@@ -87,26 +87,23 @@ buildvariants:
 - name: ubuntu1804
   display_name: Ubuntu 18.04
   modules: ~
+  expansions:
+    distro: ubuntu1804
   run_on:
   - ubuntu1804-build
-  expansions:
-    cmake:      /opt/cmake/bin/cmake
-    toolchain:  /opt/mongodbtoolchain/v3/bin
   tasks:
   - name: t_compile
   - name: t_push
 
-# TODO: TIG-1056 the OS X image doesn't have a recent CMake or C++ compiler
-# - name: macos-1014
-#   display_name: OS X Mojave
-#   modules: ~
-#   run_on:
-#   - macos-1014
-#   expansions:
-#     cmake: "/Applications/CMake.app/Contents/bin/cmake"
-#     toolchain: "/Applications/Xcode10.0.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin"
-#   tasks:
-#   - name: tg_compile_and_test
+- name: macos-1014
+  display_name: macOS Mojave
+  modules: ~
+  run_on:
+  - macos-1014
+  tasks:
+  - name: t_rm_toolchain_dir_mac
+  - name: t_compile
+  - name: t_push
 
 
 ##                ⚡️ Tasks ⚡️
@@ -115,18 +112,6 @@ tasks:
 - name: t_compile
   commands:
   - func: f_fetch_source
-  - func: f_fetch_library
-    vars:
-      install_dir: boost
-      short_name: boost
-  - func: f_fetch_library
-    vars:
-      install_dir: dist
-      short_name: mongocxx
-  - func: f_fetch_library
-    vars:
-      install_dir: dist
-      short_name: grpc
   - func: f_compile
   - func: f_dry_run_workloads
   - func: f_push_patch
@@ -134,7 +119,9 @@ tasks:
       display_name: Genny
       short_name: genny
       install_dir: dist
-
+- name: t_rm_toolchain_dir_mac
+  commands:
+  - func: f_rm_toolchain_dir_mac
 - name: t_push
   depends_on: t_compile
   patchable: no
@@ -253,6 +240,13 @@ functions:
         curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
         tar --strip-components=1 -zxvf mongodb.tgz
 
+  f_rm_toolchain_dir_mac:
+    - command: shell.exec
+      params:
+        shell: bash
+        script: |
+          rm -rf /data/mci/gennytoolchain
+
   ##
   # Archive an installed library into a tarball and upload it with
   # revision suffix.
@@ -276,6 +270,7 @@ functions:
   - command: shell.exec
     params:
       working_dir: .
+      shell: bash
       script: |
         set -o errexit
         # Make sure we have a file, give more info
@@ -336,46 +331,27 @@ functions:
       display_name: ${display_name}
 
   ##
-  # Download one of genny's dependencies as a tarball and expand it
-  #
-  # Expansions:
-  #  install_dir: The directory to install this dependency
-  #  short_name: The name for the folder and prefix for the tarball to fetch
-  ###
-  f_fetch_library:
-  - command: s3.get
-    params:
-      aws_key: ${aws_key}
-      aws_secret: ${aws_secret}
-      extract_to: ${install_dir}
-      remote_file: ${project}/${short_name}/${short_name}-${build_variant}.tgz
-      bucket: mciuploads
-      permissions: public-read
-      content_type: ${content_type|application/gzip}
-
-  ##
   # Compile the project in src/build.
-  #
-  # Expansions:
-  #  cmake: The CMake executable to use
-  #  toolchain: A toolchain directory to add to the PATH
-  ###
+  ##
   f_compile:
-  - command: subprocess.exec
+  - command: shell.exec
     params:
       working_dir: src
-      binary: /bin/bash
-      args:
-      - ${workdir}/src/scripts/bootstrap.sh
-      - "-DENABLE_JASPER:BOOL=ON"
-      - "-DGENNY_STATIC_BOOST_PATH:PATH=${workdir}/boost"
-      - "-DGENNY_INSTALL_DIR:PATH=${workdir}/dist"
-      - "-DGENNY_INSTALL_SSL:BOOL=ON"
-      env:
-        # This should be reasonably safe even on low memory machines
-        MAKEFLAGS: "-j8"
-        CMAKE: ${cmake|cmake}
-        PATH: ${toolchain}:/usr/bin:/bin
+      shell: bash
+      script: |
+        set -o errexit
+        set -o pipefail
+
+        # for python3
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        export DEVELOPER_DIR="/Applications/Xcode10.1.app"
+
+        ./scripts/lamp \
+          -d=${distro|not-linux} \
+          -DENABLE_JASPER:BOOL=ON \
+          -DGENNY_INSTALL_DIR:PATH=${workdir}/dist \
+          -DGENNY_INSTALL_SSL:BOOL=ON
 
   ##
   # Runs each workload as a dry run
@@ -399,13 +375,17 @@ functions:
   - command: shell.exec
     params:
       continue_on_err: true
-      working_dir: src/build
+      working_dir: src
+      shell: bash
       script: |
         set -o errexit
         set -o pipefail
         set -o nounset
 
-        ctest --label-exclude "(standalone|sharded|single_node_replset|three_node_replset)"
+        # for python3
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        ./scripts/lamp cmake-test
 
   ##
   # Runs tests via resmoke.
@@ -430,6 +410,7 @@ functions:
     params:
       continue_on_err: true
       working_dir: src/src/python
+      shell: bash
       script: |
         set -o errexit
         set -o pipefail
@@ -464,6 +445,7 @@ functions:
   f_remove_test_results_files:
   - command: shell.exec
     params:
+      shell: bash
       script: |
         set -o errexit
         set -o pipefail

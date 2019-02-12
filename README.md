@@ -4,131 +4,30 @@ Genny 🧞‍
 Genny is a workload-generator library and tool. It is implemented using
 C++17.
 
-## Build and install
+## Build and Install
 
-### macOS
+Here're the steps to get genny up and running locally:
 
-Note you have to upgrade to Mojave. Earlier versions of macOS do not
-have compliant C++ compilers.
+1. Install the development tools for your OS.
 
-1. [Download XCode 10](https://developer.apple.com/download/) (around 10GB) and install.
-2. Drag `Xcode.app` into `Applications`. For some reason the installer may put it in `~/Downloads`.
-3. Run the below shell (requires [`brew`](https://brew.sh/))
+    - Ubuntu 18.04: `sudo apt install build-essential`
+    - Red Hat/CentOS 7/Amazon Linux 2: `sudo yum groupinstall "Development Tools"`
+    - Arch: Grab a beer. Everything should already be set up.
+    - macOS: `xcode-select --install`
+    - Windows: <https://visualstudio.microsoft.com/>
 
-```sh
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+1.  Make sure you have a C++17 compatible compiler and Python 3.
+    The ones from mongodbtoolchain are safe bets if you're unsure.
+    (mongodbtoolchain is internal to MongoDB).
 
-# install third-party packages and build-tools
-brew install cmake
-brew install icu4c
-brew install mongo-cxx-driver
-brew install openssl@1.1
-brew install boost      \
-    --build-from-source \
-    --include-test      \
-    --with-icu4c
+1. `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
 
-# may want to put this in your shell profile:
-OPENSSL_ROOT_DIR="$(brew --prefix openssl@1.1)"
+    This command downloads genny's toolchain, compiles genny and
+    installs genny to `dist/`. You can rerun this command at any time
+    to rebuild genny. If your OS isn't the supported, please let us
+    know in \#workload-generation or on GitHub.
 
-cmake -E chdir "build" cmake ..
-make -j8 -C "build" genny
-```
-
-If you get boost errors:
-
-```sh
-brew remove boost
-brew install boost      \
-    --build-from-source \
-    --include-test      \
-    --with-icu4c
-```
-
-Other errors, run `brew doctor`.
-
-#### Notes for macOS Mojave
-
-Mojave doesn't have `/usr/local` on system roots, so you need to set
-environment variables for clang/ldd to find libraries provided by
-homebrew.
-
-Put the following in your shell profile (`~/.bashrc` or `~/.zshrc` etc):
-
-```sh
-export CPLUS_INCLUDE_PATH="$(brew --prefix)/include"
-export LIBRARY_PATH="$(brew --prefix)/lib/:$LIBRARY_PATH"
-```
-
-This needs to be run before you run `cmake`. If you have already run
-`cmake`, then `rm -rf build/*` after putting this in your profile
-and restarting your shell.
-
-TODO: TIG-1263 This is kind of a hack; using built-in package-location
-mechanisms would avoid having to have OS-specific hacks like this.
-
-### Linux Distributions
-
-Have recent versions of non-vendored dependent packages in your system,
-using the package manger. Generally this is:
-
-- boost
-- cmake (>=3.10)
-- grpc (>=1.16)
-- icu
-- mongo-cxx-driver
-- protobuf (3.6.1)
-
-To build genny use the following commands:
-
-```sh
-cmake -E chdir "build" cmake ..
-make -j8 -C "build" genny
-```
-
-You only need to run cmake once. Other useful targets include:
-
-- all
-- gennylib_test driver_test (builds tests)
-- test (run's tests if they're built)
-
-#### Ubuntu 18.04 LTS
-
-For C++17 support you need at least Ubuntu 18.04. (Before you say
-"mongodbtoolchain", note that it doesn't provide cmake.)
-
-```sh
-apt install -y \
-    build-essential \
-    cmake \
-    software-properties-common \
-    clang-6.0 \ # optional
-    libboost-all-dev
-```
-You also need `libgrpc++-dev` and `libprotobuf-dev`, but here genny is more picky about the
-versions. They need to be >=1.16 and exactly 3.6.1 respectively. To install those from source:
-
-- protobuf: https://github.com/protocolbuffers/protobuf/blob/master/src/README.md
-- grpc: https://github.com/grpc/grpc/blob/master/src/cpp/README.md
-
-If you already installed the wrong versions with apt, you are better off
-uninstalling them:
-
-```sh
-apt remove libgrpc++-dev libprotobuf-dev
-```
-
-Finally, install mongo C++ driver from source too:
-
-- https://mongodb.github.io/mongo-cxx-driver/mongocxx-v3/installation/
-- Note that you need to specifically tell it to install into `/usr/local`!
-
-Note that on Ubuntu 18.04 you need a custom linker option:
-
-```sh
-cmake -E chdir "build" cmake -DCMAKE_EXE_LINKER_FLAGS=-Wl,--no-as-needed ..
-make -j8 -C "build" genny
-```
+    Note that the `--linux-distro` argument is not needed on macOS.
 
 ### IDEs and Whatnot
 
@@ -140,17 +39,35 @@ emacs, vim, etc.). Before doing anything cute (see
 [CONTRIBUTING.md](./CONTRIBUTING.md)), please do due-diligence to ensure
 it's not going to make common editing environments go wonky.
 
+If you're using CLion, make sure to set `CMake options`
+(in settings/preferences) so it can find the toolchain.
+
+The cmake command is printed when `lamp` runs, you can
+copy and paste the options into Clion. The options
+should look something like this:
+
+```bash
+-G Ninja \
+-DCMAKE_PREFIX_PATH=/data/mci/gennytoolchain/installed/x64-osx-shared \
+-DCMAKE_TOOLCHAIN_FILE=/data/mci/gennytoolchain/scripts/buildsystems/vcpkg.cmake \
+-DVCPKG_TARGET_TRIPLET=x64-osx-static
+```
+
+Replace `osx` with `linux` if you're on Linux and remove `-G Ninja` if you
+don't have `ninja` installed locally.
+
 ## Running Genny Self-Tests
 
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-make -j8 -C "build" gennylib_test driver_test test
+# Build genny first: `./scripts/lamp [...]`
+./scripts/lamp cmake-test
 ```
 
 ### Benchmark Tests
 
-The above `make test` line also runs so-called "benchmark" tests. They
+The above `cmake-test` line also runs so-called "benchmark" tests. They
 can take a while to run and may fail occasionally on local developer
 machines, especially if you have an IDE or web browser open while the
 test runs.
@@ -159,7 +76,7 @@ If you want to run all the tests except perf tests you can manually
 invoke the test binaries and exclude perf tests:
 
 ```sh
-make -j8 -C "build" gennylib_benchmark test
+# Build genny first: `./scripts/lamp [...]`
 ./build/src/gennylib/gennylib_test '~[benchmark]'
 ```
 
@@ -349,20 +266,20 @@ etc, you can run the clang sanitizers yourself easily.
 Running with TSAN:
 
     FLAGS="-pthread -fsanitize=thread -g -O1"
-    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
-    make -j8 -C "build" test
+    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./scripts/lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with ASAN:
 
     FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
-    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
-    make -j8 -C "build" test
+    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./scripts/lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
 
 Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
-    cmake -E chdir "build" cmake -DCMAKE_CXX_FLAGS="$FLAGS" ..
-    make -j8 -C "build" test
+    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
+    ./scripts/lamp cmake-test
     ./build/src/driver/genny ./workloads/docs/Workload.yml
