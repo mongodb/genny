@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# 3.10.2 comes with Ubuntu 18.04.1 LTS
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 cmake_policy(VERSION 3.13)
 
