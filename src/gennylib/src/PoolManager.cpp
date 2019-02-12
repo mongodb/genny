@@ -81,7 +81,7 @@ mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
 }
 
 std::unordered_map<std::string, size_t> genny::v1::PoolManager::instanceCount() {
-    std::unique_lock<std::mutex> getLock{this->_poolsLock};
+    std::lock_guard<std::mutex> getLock{this->_poolsLock};
 
     auto out = std::unordered_map<std::string, size_t>();
     for (auto&& [k, v] : this->_pools) {
