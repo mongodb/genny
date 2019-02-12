@@ -52,7 +52,7 @@ copy and paste the options into Clion. The options
 should look something like this:
 
 ```bash
--G "Unix Makefiles" \
+-G some-build-system \
 -DCMAKE_PREFIX_PATH=/data/mci/gennytoolchain/installed/x64-osx-shared \
 -DCMAKE_TOOLCHAIN_FILE=/data/mci/gennytoolchain/scripts/buildsystems/vcpkg.cmake \
 -DVCPKG_TARGET_TRIPLET=x64-osx-static
