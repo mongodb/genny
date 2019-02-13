@@ -88,7 +88,9 @@ class Reporter;
 // The v1 namespace is here for two reasons:
 // 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes.
 // 2) it prevents auto-completion of metrics::{X}Impl when you really want metrics::{X}.
-// 3) Counter, Timer and Guage have been deprecated. Use Operation instead when writing actors.
+//
+// Note: Counter, Timer and Guage have been deprecated. Use Operation instead when writing actors.
+
 /**
  * @namespace genny::metrics::v1 this namespace is private and only intended to be used by Genny's
  * internals. Actors should never have to type `genny::*::v1` into any types.
