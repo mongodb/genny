@@ -25,6 +25,9 @@
 #include <unordered_map>
 #include <utility>
 
+#include <boost/exception/exception.hpp>
+#include <boost/throw_exception.hpp>
+
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
@@ -305,9 +308,8 @@ public:
                Args&&... args)
         : _orchestrator{orchestrator},
           _currentPhase{currentPhase},
-          _value{!phaseContext.isNop()
-                     ? std::make_optional<>(std::make_unique<T>(std::forward<Args>(args)...))
-                     : std::nullopt},
+          _value{!phaseContext.isNop() ? std::make_unique<T>(std::forward<Args>(args)...)
+                                       : nullptr},
           _iterationCheck{std::make_unique<IterationChecker>(phaseContext)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }
@@ -341,8 +343,12 @@ public:
     // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator->()`
     //      so we trust the STL to do the right thing™️
     typename std::add_pointer_t<std::remove_reference_t<T>> operator->() const noexcept {
-        assert(_value);
-        return (*_value).operator->();
+#ifndef NDEBUG
+        if (!_value) {
+            BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference via -> in a Nop phase."));
+        }
+#endif
+        return _value.operator->();
     }
 
     // Could use `auto` for return-type of operator-> and operator*, but
@@ -353,8 +359,12 @@ public:
     // BUT: this is just duplicated from the signature of `std::unique_ptr<T>::operator*()`
     //      so we trust the STL to do the right thing™️
     typename std::add_lvalue_reference_t<T> operator*() const {
-        assert(_value);
-        return (*_value).operator*();
+#ifndef NDEBUG
+        if (!_value) {
+            BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference via * in a Nop phase."));
+        }
+#endif
+        return _value.operator*();
     }
 
     PhaseNumber phaseNumber() const {
@@ -364,7 +374,7 @@ public:
 private:
     Orchestrator& _orchestrator;
     const PhaseNumber _currentPhase;
-    const std::optional<std::unique_ptr<T>> _value;  // Is nullopt iff operation is Nop
+    const std::unique_ptr<T> _value;  // nullptr iff operation is Nop
     const std::unique_ptr<IterationChecker> _iterationCheck;
 
 };  // class ActorPhase

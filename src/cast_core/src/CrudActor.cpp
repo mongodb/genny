@@ -713,10 +713,10 @@ private:
  */
 struct CountDocumentsOperation : public BaseOperation {
     CountDocumentsOperation(YAML::Node opNode,
-                   bool onSession,
-                   mongocxx::collection collection,
-                   genny::DefaultRandom& rng,
-                   metrics::Operation operation)
+                            bool onSession,
+                            mongocxx::collection collection,
+                            genny::DefaultRandom& rng,
+                            metrics::Operation operation)
         : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
         auto filterYaml = opNode["Filter"];
         if (!filterYaml) {
