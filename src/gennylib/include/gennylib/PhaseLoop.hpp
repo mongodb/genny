@@ -25,8 +25,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include <boost/throw_exception.hpp>
 #include <boost/exception/exception.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
@@ -308,9 +308,8 @@ public:
                Args&&... args)
         : _orchestrator{orchestrator},
           _currentPhase{currentPhase},
-          _value{!phaseContext.isNop()
-                     ? std::make_unique<T>(std::forward<Args>(args)...)
-                     : nullptr},
+          _value{!phaseContext.isNop() ? std::make_unique<T>(std::forward<Args>(args)...)
+                                       : nullptr},
           _iterationCheck{std::make_unique<IterationChecker>(phaseContext)} {
         static_assert(std::is_constructible_v<T, Args...>);
     }

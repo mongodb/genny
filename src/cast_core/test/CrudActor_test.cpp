@@ -108,8 +108,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 5)));
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 5)));
             REQUIRE(count == 1);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -144,10 +144,11 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 0);
-            count = db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 2)));
+            count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 2)));
             REQUIRE(count == 1);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -221,8 +222,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             genny::ActorHelper ah(
                 config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 5)));
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 5)));
             REQUIRE(count == 1);
             REQUIRE(events.size() > 0);
             for (auto&& event : events) {
@@ -270,8 +271,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 3);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -349,8 +350,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             genny::ActorHelper ah(
                 config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 8)));
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 8)));
             REQUIRE(count == 1);
             REQUIRE(events.size() > 0);
             for (auto&& event : events) {
@@ -786,10 +787,11 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 2);
-            count = db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("b", 1)));
+            count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("b", 1)));
             REQUIRE(count == 1);
             count = db.collection("test").count_documents(BasicBson::make_document());
             REQUIRE(count == 3);
@@ -948,8 +950,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto count =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 1);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -982,8 +984,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto countOldDoc =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto countOldDoc = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
             auto countNew = db.collection("test").count_documents(
                 BasicBson::make_document(BasicBson::kvp("newfile", "test")));
             REQUIRE(countOldDoc == 0);
@@ -1019,10 +1021,10 @@ TEST_CASE_METHOD(MongoTestFixture,
         try {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            auto countOldDoc =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
-            auto countUpdated =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 10)));
+            auto countOldDoc = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto countUpdated = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 10)));
             REQUIRE(countOldDoc == 0);
             REQUIRE(countUpdated == 1);
         } catch (const std::exception& e) {
@@ -1061,8 +1063,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             auto countOldDocs = db.collection("test").count_documents(BasicBson::make_document(
                 BasicBson::kvp("a", BasicBson::make_document(BasicBson::kvp("$gte", 5)))));
-            auto countUpdated =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 2)));
+            auto countUpdated = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 2)));
             REQUIRE(countOldDocs == 0);
             REQUIRE(countUpdated == 2);
         } catch (const std::exception& e) {
@@ -1091,12 +1093,13 @@ TEST_CASE_METHOD(MongoTestFixture,
           )");
         try {
             db.collection("test").insert_one(BasicBson::make_document(BasicBson::kvp("a", 1)));
-            auto count =
-                db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            auto count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 1);
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            count = db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 0);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
@@ -1129,7 +1132,8 @@ TEST_CASE_METHOD(MongoTestFixture,
             REQUIRE(count == 2);
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            count = db.collection("test").count_documents(BasicBson::make_document(BasicBson::kvp("a", 1)));
+            count = db.collection("test").count_documents(
+                BasicBson::make_document(BasicBson::kvp("a", 1)));
             REQUIRE(count == 0);
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
