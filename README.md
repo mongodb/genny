@@ -29,6 +29,11 @@ Here're the steps to get genny up and running locally:
 
     Note that the `--linux-distro` argument is not needed on macOS.
 
+    You can also specify `--build-system make` if you prefer to build
+    using `make` rather than `ninja`. Building using `make` may make
+    some IDEs happier.
+
+
 ### IDEs and Whatnot
 
 We follow CMake and C++17 best-practices so anything that doesn't work
@@ -47,14 +52,14 @@ copy and paste the options into Clion. The options
 should look something like this:
 
 ```bash
--G Ninja \
+-G some-build-system \
 -DCMAKE_PREFIX_PATH=/data/mci/gennytoolchain/installed/x64-osx-shared \
 -DCMAKE_TOOLCHAIN_FILE=/data/mci/gennytoolchain/scripts/buildsystems/vcpkg.cmake \
 -DVCPKG_TARGET_TRIPLET=x64-osx-static
 ```
 
-Replace `osx` with `linux` if you're on Linux and remove `-G Ninja` if you
-don't have `ninja` installed locally.
+If you run `./scripts/lamp -b make` it should set up everything for you.
+You just need to set the "Generation Path" to your `build` directory.
 
 ## Running Genny Self-Tests
 

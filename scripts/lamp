@@ -107,8 +107,12 @@ def _create_compile_environment(toolchain_dir, triplet_os):
     return env
 
 
-def cmake(toolchain_dir, cmdline_cmake_args, triplet_os, env):
-    cmake_cmd = ['cmake', '-B', 'build', '-G', 'Ninja']
+def cmake(toolchain_dir, cmdline_args, cmdline_cmake_args, triplet_os, env):
+    generators = {
+        'make': 'Unix Makefiles',
+        'ninja': 'Ninja'
+    }
+    cmake_cmd = ['cmake', '-B', 'build', '-G', generators[cmdline_args.build_system]]
     # We set both the prefix path and the toolchain file here as a hack to allow cmake
     # to find both shared and static libraries. vcpkg doesn't natively support a project
     # using both.
@@ -127,19 +131,19 @@ def cmake(toolchain_dir, cmdline_cmake_args, triplet_os, env):
     subprocess.run(cmake_cmd, env=env)
 
 
-def compile(env):
-    compile_cmd = ['ninja', '-C', 'build']
-    logging.info('Running ninja: %s', ' '.join(compile_cmd))
+def compile(env, args):
+    compile_cmd = [args.build_system, '-C', 'build']
+    logging.info('Compiling: %s', ' '.join(compile_cmd))
     subprocess.run(compile_cmd, env=env)
 
 
-def install(env):
-    install_cmd = ['ninja', '-C', 'build', 'install']
-    logging.info('Running ninja install: %s', ' '.join(install_cmd))
+def install(env, args):
+    install_cmd = [args.build_system, '-C', 'build', 'install']
+    logging.info('Running install: %s', ' '.join(install_cmd))
     subprocess.run(install_cmd, env=env)
 
 
-def cmake_test(env):
+def cmake_test(env, args):
     workdir = os.path.join(os.getcwd(), 'build')
     ctest_cmd = [
         'ctest',
@@ -164,7 +168,9 @@ def parse_args(args, os_family):
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-i', '--ignore-toolchain-version', action='store_true',
                         help='ignore the toolchain version, allow use of a custom toolchain version')
-
+    parser.add_argument('-b', '--build-system',
+                        choices=['make', 'ninja'], default='ninja',
+                        help='Which build-system to use for compilation. May need to use make for IDEs.')
     subparsers = parser.add_subparsers(
         dest='subcommand',
         description='subcommands perform specific actions; make sure you run this script without any '
@@ -211,17 +217,17 @@ def main():
 
     if not args.subcommand:
         logging.info('No subcommand specified; running cmake, compile and install')
-        cmake(toolchain_dir, cmdline_cmake_args=cmake_args, triplet_os=triplet_os, env=env)
-        compile(env)
-        install(env)
+        cmake(toolchain_dir, cmdline_args=args, cmdline_cmake_args=cmake_args, triplet_os=triplet_os, env=env)
+        compile(env, args)
+        install(env, args)
     else:
         # Always compile genny regardless of the subcommand.
-        compile(env)
+        compile(env, args)
 
     if args.subcommand == 'install':
-        install(env)
+        install(env, args)
     if args.subcommand == 'cmake-test':
-        cmake_test(env)
+        cmake_test(env, args)
 
 
 if __name__ == '__main__':
