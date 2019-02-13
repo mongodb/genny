@@ -46,17 +46,17 @@ def main():
 
     if not args.subcommand:
         logging.info('No subcommand specified; running cmake, compile and install')
-        tasks.cmake(toolchain_dir, cmdline_cmake_args=cmake_args, triplet_os=triplet_os, env=env)
-        tasks.compile_all(env)
-        tasks.install(env)
+        tasks.cmake(toolchain_dir, cmdline_args=args, cmdline_cmake_args=cmake_args, triplet_os=triplet_os, env=env)
+        tasks.compile_all(env, args)
+        tasks.install(env, args)
     else:
         # Always compile genny regardless of the subcommand.
-        tasks.compile_all(env)
+        tasks.compile_all(env, args)
 
     if args.subcommand == 'install':
-        tasks.install(env)
+        tasks.install(env, args)
     elif args.subcommand == 'cmake-test':
-        tasks.run_tests.cmake_test(env)
+        tasks.run_tests.cmake_test(env, args)
 
 
 if __name__ == '__main__':

@@ -19,6 +19,9 @@ def parse_args(args, os_family):
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-i', '--ignore-toolchain-version', action='store_true',
                         help='ignore the toolchain version, allow use of a custom toolchain version')
+    parser.add_argument('-b', '--build-system',
+                        choices=['make', 'ninja'], default='ninja',
+                        help='Which build-system to use for compilation. May need to use make for IDEs.')
 
     subparsers = parser.add_subparsers(
         dest='subcommand',

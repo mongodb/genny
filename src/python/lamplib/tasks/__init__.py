@@ -3,8 +3,12 @@ import os
 import subprocess
 
 
-def cmake(toolchain_dir, cmdline_cmake_args, triplet_os, env):
-    cmake_cmd = ['cmake', '-B', 'build', '-G', 'Ninja']
+def cmake(toolchain_dir, cmdline_args, cmdline_cmake_args, triplet_os, env):
+    generators = {
+        'make': 'Unix Makefiles',
+        'ninja': 'Ninja'
+    }
+    cmake_cmd = ['cmake', '-B', 'build', '-G', generators[cmdline_args.build_system]]
     # We set both the prefix path and the toolchain file here as a hack to allow cmake
     # to find both shared and static libraries. vcpkg doesn't natively support a project
     # using both.
@@ -23,13 +27,13 @@ def cmake(toolchain_dir, cmdline_cmake_args, triplet_os, env):
     subprocess.run(cmake_cmd, env=env)
 
 
-def compile_all(env):
-    compile_cmd = ['ninja', '-C', 'build']
-    logging.info('Running ninja: %s', ' '.join(compile_cmd))
+def compile_all(env, args):
+    compile_cmd = [args.build_system, '-C', 'build']
+    logging.info('Compiling: %s', ' '.join(compile_cmd))
     subprocess.run(compile_cmd, env=env)
 
 
-def install(env):
-    install_cmd = ['ninja', '-C', 'build', 'install']
-    logging.info('Running ninja install: %s', ' '.join(install_cmd))
+def install(env, args):
+    install_cmd = [args.build_system, '-C', 'build', 'install']
+    logging.info('Running install: %s', ' '.join(install_cmd))
     subprocess.run(install_cmd, env=env)
