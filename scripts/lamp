@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
 # Because genies come from lamps.
 
-SCRIPTS_DIR=$(dirname "${BASH_SOURCE[0]}")
-
-python3 "$SCRIPTS_DIR/lamplib" $@
+python3 "$PWD/src/python/lamplib" $@

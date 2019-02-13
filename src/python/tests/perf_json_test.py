@@ -15,7 +15,7 @@
 import unittest
 
 import genny.perf_json as perf_json
-import tests.parser_test_lib as test_lib
+import tests as test_lib
 
 
 class PerfJsonTests(unittest.TestCase):
