@@ -269,6 +269,8 @@ private:
 };
 
 /**
+ * Counter is deprecated in favor of Operation.
+ *
  * A Counter lets callers indicate <b>deltas</b> of a value at a particular time.
  * A Counter has an (internal, hidden) current value that can be incremented or
  * decremented over time.
@@ -303,6 +305,8 @@ private:
 
 
 /**
+ * Gauge is deprecated in favor of Operation.
+ *
  * A Gauge lets you record a known value. E.g. the number
  * of active sessions, how many threads are waiting on something, etc.
  * It is defined by each metric what the value is interpreted to be
@@ -420,7 +424,9 @@ private:
     const time_point _started;
 };
 
-
+/**
+ * Timer is deprecated in favor of Operation.
+ */
 class Timer {
 
 public:
