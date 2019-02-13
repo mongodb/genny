@@ -110,6 +110,14 @@ When creating a new actor, `create-new-actor.sh` will generate a new test case
 template to ensure the new actor can run against different MongoDB topologies,
 please update the template as needed so it uses the newly created actor.
 
+### Debugging
+
+IDEs can debug Genny if it is built with the `Debug` build type:
+
+```sh
+./scripts/lamp -DCMAKE_BUILD_TYPE=Debug
+```
+
 ## Running Genny Workloads
 
 First install mongodb and start a mongod process:
