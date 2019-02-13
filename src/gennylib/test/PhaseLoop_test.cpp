@@ -47,7 +47,7 @@ optional<TimeSpec> operator""_ts(unsigned long long v) {
 
 TEST_CASE("Correctness for N iterations") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
 
     SECTION("Loops 0 Times") {
         v1::ActorPhase<int> loop{
@@ -77,7 +77,7 @@ TEST_CASE("Correctness for N iterations") {
 
 TEST_CASE("Correctness for N milliseconds") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     SECTION("Loops 0 milliseconds so zero times") {
         v1::ActorPhase<int> loop{
             o, std::make_unique<v1::IterationChecker>(0_ts, nullopt, false), 0};
@@ -106,7 +106,7 @@ TEST_CASE("Correctness for N milliseconds") {
 
 TEST_CASE("Combinations of duration and iterations") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     SECTION("Loops 0 milliseconds but 100 times") {
         v1::ActorPhase<int> loop{
             o, std::make_unique<v1::IterationChecker>(0_ts, 100_uis, false), 0};
@@ -147,7 +147,7 @@ TEST_CASE("Combinations of duration and iterations") {
 
 TEST_CASE("Can do without either iterations or duration") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     v1::ActorPhase<int> actorPhase{
         o, std::make_unique<v1::IterationChecker>(nullopt, nullopt, false), 0};
     auto iters = 0;
@@ -164,7 +164,7 @@ TEST_CASE("Can do without either iterations or duration") {
 
 TEST_CASE("Iterator concept correctness") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     v1::ActorPhase<int> loop{o, std::make_unique<v1::IterationChecker>(nullopt, 1_uis, false), 0};
 
     // can deref

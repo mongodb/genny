@@ -86,8 +86,11 @@ using gauged_at_time = std::pair<time_point, gauged_type>;
 
 class Reporter;
 // The v1 namespace is here for two reasons:
-// 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes
-// 2) it prevents auto-completion of metrics::{X}Impl when you really want metrics::{X}
+// 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes.
+// 2) it prevents auto-completion of metrics::{X}Impl when you really want metrics::{X}.
+//
+// Note: Counter, Timer and Guage have been deprecated. Use Operation instead when writing actors.
+
 /**
  * @namespace genny::metrics::v1 this namespace is private and only intended to be used by Genny's
  * internals. Actors should never have to type `genny::*::v1` into any types.
@@ -267,11 +270,9 @@ private:
     CounterImpl* _bytes;
 };
 
-
-}  // namespace v1
-
-
 /**
+ * Counter is deprecated in favor of Operation.
+ *
  * A Counter lets callers indicate <b>deltas</b> of a value at a particular time.
  * A Counter has an (internal, hidden) current value that can be incremented or
  * decremented over time.
@@ -306,6 +307,8 @@ private:
 
 
 /**
+ * Gauge is deprecated in favor of Operation.
+ *
  * A Gauge lets you record a known value. E.g. the number
  * of active sessions, how many threads are waiting on something, etc.
  * It is defined by each metric what the value is interpreted to be
@@ -423,7 +426,9 @@ private:
     const time_point _started;
 };
 
-
+/**
+ * Timer is deprecated in favor of Operation.
+ */
 class Timer {
 
 public:
@@ -462,6 +467,8 @@ public:
 private:
     v1::TimerImpl* _timer;
 };
+
+}  // namespace v1
 
 class OperationContext {
 
@@ -505,7 +512,7 @@ private:
     }
 
     v1::OperationImpl* _op;
-    const time_point _started;
+    time_point _started;
     count_type _totalBytes = 0;
     count_type _totalOps = 0;
     bool _isClosed = false;
@@ -555,14 +562,14 @@ class Registry {
 public:
     explicit Registry() = default;
 
-    Counter counter(const std::string& name) {
-        return Counter{this->_counters[name]};
+    v1::Counter counter(const std::string& name) {
+        return v1::Counter{this->_counters[name]};
     }
-    Timer timer(const std::string& name) {
-        return Timer{this->_timers[name]};
+    v1::Timer timer(const std::string& name) {
+        return v1::Timer{this->_timers[name]};
     }
-    Gauge gauge(const std::string& name) {
-        return Gauge{this->_gauges[name]};
+    v1::Gauge gauge(const std::string& name) {
+        return v1::Gauge{this->_gauges[name]};
     }
     Operation operation(const std::string& name) {
         auto op = v1::OperationImpl(name,

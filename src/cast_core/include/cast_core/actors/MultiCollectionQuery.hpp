@@ -46,8 +46,7 @@ private:
     /** @private */
     struct PhaseConfig;
     genny::DefaultRandom _rng;
-    metrics::Timer _queryTimer;
-    metrics::Counter _documentCount;
+    metrics::Operation _queryOp;
     mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
 };

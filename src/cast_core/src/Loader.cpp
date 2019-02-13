@@ -84,7 +84,7 @@ void genny::actor::Loader::run() {
                 // Insert the documents
                 uint remainingInserts = config->numDocuments;
                 {
-                    auto totalOp = _totalBulkLoadTimer.raii();
+                    auto totalOpCtx = _totalBulkLoad.start();
                     while (remainingInserts > 0) {
                         // insert the next batch
                         int64_t numberToInsert =
@@ -96,11 +96,13 @@ void genny::actor::Loader::run() {
                             docs.push_back(std::move(newDoc));
                         }
                         {
-                            auto individualOp = _individualBulkLoadTimer.raii();
+                            auto individualOpCtx = _individualBulkLoad.start();
                             auto result = collection.insert_many(std::move(docs));
                             remainingInserts -= result->inserted_count();
+                            individualOpCtx.success();
                         }
                     }
+                    totalOpCtx.success();
                 }
                 // For each index
                 for (auto&& [keys, options] : config->indexes) {
@@ -112,11 +114,13 @@ void genny::actor::Loader::run() {
                         auto indexOptions = (*options)->evaluate(_rng).getDocument();
                         BOOST_LOG_TRIVIAL(debug)
                             << "With options " << bsoncxx::to_json(indexOptions.view());
-                        auto op = _indexBuildTimer.raii();
+                        auto indexOpCtx = _indexBuild.start();
                         collection.create_index(std::move(indexKey), std::move(indexOptions));
+                        indexOpCtx.success();
                     } else {
-                        auto op = _indexBuildTimer.raii();
+                        auto indexOpCtx = _indexBuild.start();
                         collection.create_index(std::move(indexKey));
+                        indexOpCtx.success();
                     }
                 }
             }
@@ -128,9 +132,9 @@ void genny::actor::Loader::run() {
 Loader::Loader(genny::ActorContext& context, uint thread)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _totalBulkLoadTimer{context.timer("totalBulkInsertTime", Loader::id())},
-      _individualBulkLoadTimer{context.timer("individualBulkInsertTime", Loader::id())},
-      _indexBuildTimer{context.timer("indexBuildTime", Loader::id())},
+      _totalBulkLoad{context.operation("TotalBulkInsert", Loader::id())},
+      _individualBulkLoad{context.operation("IndividualBulkInsert", Loader::id())},
+      _indexBuild{context.operation("IndexBuild", Loader::id())},
       _client{std::move(context.client())},
       _loop{context, _client, thread} {}
 

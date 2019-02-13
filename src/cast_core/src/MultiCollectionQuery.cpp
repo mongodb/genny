@@ -70,7 +70,7 @@ void MultiCollectionQuery::run() {
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
                 // Only time the actual update, not the setup of arguments
-                auto op = _queryTimer.raii();
+                auto opCtx = _queryOp.start();
                 auto cursor = collection.find(std::move(filter), config->options);
                 // exhaust the cursor
                 uint count = 0;
@@ -78,7 +78,8 @@ void MultiCollectionQuery::run() {
                     doc.length();
                     count++;
                 }
-                _documentCount.incr(count);
+                opCtx.addOps(count);
+                opCtx.success();
             }
         }
     }
@@ -87,8 +88,7 @@ void MultiCollectionQuery::run() {
 MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _queryTimer{context.timer("queryTime", MultiCollectionQuery::id())},
-      _documentCount{context.counter("returnedDocuments", MultiCollectionQuery::id())},
+      _queryOp{context.operation("Query", MultiCollectionQuery::id())},
       _client{std::move(context.client())},
       _loop{context, _client} {}
 

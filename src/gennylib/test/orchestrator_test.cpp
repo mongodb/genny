@@ -93,7 +93,7 @@ bool advancePhase(Orchestrator& o) {
 
 TEST_CASE("Non-Blocking start") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(2);
 
     // 2 tokens but we only count down 1 so normally would block
@@ -103,7 +103,7 @@ TEST_CASE("Non-Blocking start") {
 
 TEST_CASE("Non-Blocking end (background progression)") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(2);
 
     auto bgIters = 0;
@@ -136,7 +136,7 @@ TEST_CASE("Non-Blocking end (background progression)") {
 
 TEST_CASE("Can add more tokens at start") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(2);
 
     auto t1 = start(o, 0, false, 2);
@@ -155,7 +155,7 @@ TEST_CASE("Can add more tokens at start") {
 
 TEST_CASE("Set minimum number of phases") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     REQUIRE(o.currentPhase() == 0);
     o.phasesAtLeastTo(1);
     REQUIRE(advancePhase(o));  // 0->1
@@ -181,7 +181,7 @@ TEST_CASE("Set minimum number of phases") {
 
 TEST_CASE("Orchestrator") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(2);
     o.phasesAtLeastTo(1);
 
@@ -262,7 +262,7 @@ std::unordered_map<PhaseNumber, v1::ActorPhase<int>> makePhaseConfig(
 
 TEST_CASE("Two non-blocking Phases") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
@@ -287,7 +287,7 @@ TEST_CASE("Two non-blocking Phases") {
 
 TEST_CASE("Single Blocking Phase") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(1);
 
     std::unordered_set<PhaseNumber> seen{};
@@ -302,7 +302,7 @@ TEST_CASE("Single Blocking Phase") {
 
 TEST_CASE("single-threaded range-based for loops all phases blocking") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
@@ -329,7 +329,7 @@ TEST_CASE("single-threaded range-based for loops all phases blocking") {
 
 TEST_CASE("single-threaded range-based for loops no phases blocking") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(2);
 
@@ -356,7 +356,7 @@ TEST_CASE("single-threaded range-based for loops no phases blocking") {
 
 TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
@@ -380,7 +380,7 @@ TEST_CASE("single-threaded range-based for loops non-blocking then blocking") {
 
 TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
@@ -406,7 +406,7 @@ TEST_CASE("single-threaded range-based for loops blocking then non-blocking") {
 
 TEST_CASE("single-threaded range-based for loops blocking then blocking") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(1);
     o.phasesAtLeastTo(1);
 
@@ -432,7 +432,7 @@ TEST_CASE("single-threaded range-based for loops blocking then blocking") {
 
 TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(2);
 
     std::atomic_bool blockingDone = false;
@@ -467,7 +467,7 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
 
 TEST_CASE("Multi-threaded Range-based for loops") {
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(2);
     o.phasesAtLeastTo(1);
 
