@@ -132,9 +132,9 @@ void genny::actor::Loader::run() {
 Loader::Loader(genny::ActorContext& context, uint thread)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _totalBulkLoad{context.operation("totalBulkInsert", Loader::id())},
-      _individualBulkLoad{context.operation("individualBulkInsert", Loader::id())},
-      _indexBuild{context.operation("indexBuild", Loader::id())},
+      _totalBulkLoad{context.operation("TotalBulkInsert", Loader::id())},
+      _individualBulkLoad{context.operation("IndividualBulkInsert", Loader::id())},
+      _indexBuild{context.operation("IndexBuild", Loader::id())},
       _client{std::move(context.client())},
       _loop{context, _client, thread} {}
 

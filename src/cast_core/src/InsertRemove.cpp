@@ -93,8 +93,8 @@ void InsertRemove::run() {
 InsertRemove::InsertRemove(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _insertStrategy{context.operation("insert", InsertRemove::id())},
-      _removeStrategy{context.operation("remove", InsertRemove::id())},
+      _insertStrategy{context.operation("Insert", InsertRemove::id())},
+      _removeStrategy{context.operation("Remove", InsertRemove::id())},
       _client{std::move(context.client())},
       _loop{context, _rng, _client, InsertRemove::id()} {}
 
