@@ -57,7 +57,7 @@ TEST_CASE("RateLimiter", "[benchmark]") {
         auto expectedPeriod = std::max<genny::Duration>({options.preSleep + options.postSleep,
                                                          options.minPeriod,
                                                          std::chrono::nanoseconds{50}});
-        auto maxDuration = numLoops * toMetricDuration(expectedPeriod) * 1050 / 1000;
+        auto maxDuration = numLoops * toMetricDuration(expectedPeriod) * 100 / 1;
 
         auto counter = Counter{};
 
@@ -83,7 +83,7 @@ TEST_CASE("RateLimiter", "[benchmark]") {
         auto expectedPeriod = std::max<genny::Duration>({options.preSleep + options.postSleep,
                                                          options.minPeriod,
                                                          std::chrono::nanoseconds{50}});
-        auto periodThreshold = toMetricDuration(expectedPeriod) * 950 / 1000;
+        auto periodThreshold = toMetricDuration(expectedPeriod) * 1 / 100;
 
         auto counter = Counter{};
 
