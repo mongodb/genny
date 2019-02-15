@@ -101,7 +101,7 @@ def _create_compile_environment(toolchain_dir, triplet_os):
     paths.insert(0, ninja_bin_dir)
 
     env['PATH'] = ':'.join(paths)
-    env['NINJA_STATUS'] = '[%f/%t (%p) %es]'  # make the ninja output even nicer
+    env['NINJA_STATUS'] = '[%f/%t (%p) %es] '  # make the ninja output even nicer
 
     logging.debug('Using environment: %s', env)
     return env
