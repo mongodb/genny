@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 # Because genies come from lamps.
 
-python3 "$PWD/src/python/lamplib" $@
+python3 "$PWD/src/lamplib" $@

@@ -17,7 +17,7 @@
 import unittest
 
 import genny.metrics_output_parser as parser
-import tests as test_lib
+import tests.parser_test_lib as test_lib
 
 
 class GennyOutputParserTest(unittest.TestCase):

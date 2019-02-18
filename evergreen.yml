@@ -101,8 +101,7 @@ buildvariants:
   run_on:
   - macos-1014
   tasks:
-  - name: t_rm_toolchain_dir_mac
-  - name: t_compile
+  - name: tg_compile_static_host
   - name: t_push
 
 
@@ -119,9 +118,9 @@ tasks:
       display_name: Genny
       short_name: genny
       install_dir: dist
-- name: t_rm_toolchain_dir_mac
+- name: t_rm_toolchain_dir_static_host
   commands:
-  - func: f_rm_toolchain_dir_mac
+  - func: f_rm_toolchain_dir_static_host
 - name: t_push
   depends_on: t_compile
   patchable: no
@@ -206,6 +205,12 @@ task_groups:
   - t_integration_test_three_node_replset
   - t_integration_test_sharded
 
+- name: tg_compile_static_host
+  max_hosts: 1
+  tasks:
+  - t_rm_toolchain_dir_static_host
+  - t_compile
+
 
 ##                ⚡️ Functions ⚡️
 
@@ -240,7 +245,9 @@ functions:
         curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
         tar --strip-components=1 -zxvf mongodb.tgz
 
-  f_rm_toolchain_dir_mac:
+  # Static hosts may have outdated toolchains that don't support versioning.
+  # Manually remove them until BUILD-7624 is done.
+  f_rm_toolchain_dir_static_host:
     - command: shell.exec
       params:
         shell: bash
