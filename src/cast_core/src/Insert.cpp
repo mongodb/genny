@@ -64,7 +64,7 @@ void Insert::run() {
 Insert::Insert(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _strategy{context.operation("insert", Insert::id())},
+      _strategy{context.operation("Insert", Insert::id())},
       _client{std::move(context.client())},
       _loop{context, (*_client)[context.get<std::string>("Database")]} {}
 

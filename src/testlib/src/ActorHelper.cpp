@@ -36,7 +36,7 @@ ActorHelper::ActorHelper(const YAML::Node& config,
 
     _registry = std::make_unique<genny::metrics::Registry>();
 
-    _orchestrator = std::make_unique<genny::Orchestrator>(_registry->gauge("PhaseNumber"));
+    _orchestrator = std::make_unique<genny::Orchestrator>();
     _orchestrator->addRequiredTokens(tokenCount);
 
     _cast = std::make_unique<Cast>(castInitializer);
@@ -54,7 +54,7 @@ ActorHelper::ActorHelper(const YAML::Node& config,
 
     _registry = std::make_unique<genny::metrics::Registry>();
 
-    _orchestrator = std::make_unique<genny::Orchestrator>(_registry->gauge("PhaseNumber"));
+    _orchestrator = std::make_unique<genny::Orchestrator>();
     _orchestrator->addRequiredTokens(tokenCount);
 
     _wlc = std::make_unique<WorkloadContext>(

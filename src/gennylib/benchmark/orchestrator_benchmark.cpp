@@ -31,7 +31,7 @@ TEST_CASE("Orchestrator Perf", "[benchmark]") {
     const auto dur = milliseconds{200};
 
     genny::metrics::Registry metrics;
-    genny::Orchestrator o{metrics.gauge("PhaseNumber")};
+    genny::Orchestrator o{};
     o.addRequiredTokens(2);
 
     atomic_long regIters(0);

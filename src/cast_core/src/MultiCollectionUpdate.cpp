@@ -71,9 +71,10 @@ void MultiCollectionUpdate::run() {
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
                 // Only time the actual update, not the setup of arguments
-                auto op = _updateTimer.raii();
+                auto opCtx = _updateOp.start();
                 auto result = collection.update_many(std::move(filter), std::move(update));
-                _updateCount.incr(result->modified_count());
+                opCtx.addOps(result->modified_count());
+                opCtx.success();
             }
         }
     }
@@ -82,8 +83,7 @@ void MultiCollectionUpdate::run() {
 MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().createRNG()},
-      _updateTimer{context.timer("updateTime", MultiCollectionUpdate::id())},
-      _updateCount{context.counter("updatedDocuments", MultiCollectionUpdate::id())},
+      _updateOp{context.operation("Update", MultiCollectionUpdate::id())},
       _client{std::move(context.client())},
       _loop{context, _client} {}
 

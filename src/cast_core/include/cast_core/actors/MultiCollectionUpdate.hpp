@@ -49,8 +49,7 @@ private:
     struct PhaseConfig;
     genny::DefaultRandom _rng;
 
-    metrics::Timer _updateTimer;
-    metrics::Counter _updateCount;
+    metrics::Operation _updateOp;
     mongocxx::pool::entry _client;
     PhaseLoop<PhaseConfig> _loop;
 };
