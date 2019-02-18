@@ -252,7 +252,7 @@ functions:
       params:
         shell: bash
         script: |
-          rm -rf /data/mci/gennytoolchain
+          rm -rf /data/mci/gennytoolchain*
 
   ##
   # Archive an installed library into a tarball and upload it with
