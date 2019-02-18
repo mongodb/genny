@@ -423,6 +423,9 @@ functions:
         set -o pipefail
         set -o nounset
 
+        # for python3
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
         # Run Genny result processor unit tests
         pushd src/python
           python3 setup.py nosetests
