@@ -416,7 +416,7 @@ functions:
   - command: shell.exec
     params:
       continue_on_err: true
-      working_dir: src/src
+      working_dir: src
       shell: bash
       script: |
         set -o errexit
@@ -424,14 +424,12 @@ functions:
         set -o nounset
 
         # Run Genny result processor unit tests
-        pushd python
+        pushd src/python
           python3 setup.py nosetests
         popd
 
         # Run Genny build scripts unit tests
-        pushd lamplib
-          python3 -m unittest
-        popd
+        ./scripts/lamp self-test
 
   ##
   # Reports test results to evergreen API.
