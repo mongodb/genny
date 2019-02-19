@@ -84,6 +84,18 @@ using duration_at_time = std::pair<time_point, period>;
 using count_at_time = std::pair<time_point, count_type>;
 using gauged_at_time = std::pair<time_point, gauged_type>;
 
+class ClockSource {
+public:
+    virtual time_point now() const = 0;
+};
+
+class MetricsClockSource final : public ClockSource {
+public:
+    time_point now() const override {
+        return metrics::clock::now();
+    }
+};
+
 class Reporter;
 // The v1 namespace is here for two reasons:
 // 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes.
@@ -125,7 +137,7 @@ template <class T>
 class TimeSeries : private boost::noncopyable {
 
 public:
-    explicit constexpr TimeSeries() {
+    explicit constexpr TimeSeries(const ClockSource& clockSource) : _clockSource(clockSource) {
         // could make 10000*10000 a param passed down
         // from Registry if needed
         _vals.reserve(1000 * 1000);
@@ -137,7 +149,7 @@ public:
      */
     template <class... Args>
     void add(Args&&... args) {
-        _vals.emplace_back(metrics::clock::now(), std::forward<Args>(args)...);
+        _vals.emplace_back(_clockSource.now(), std::forward<Args>(args)...);
     }
 
     // passkey:
@@ -157,6 +169,7 @@ public:
     }
 
 private:
+    const ClockSource& _clockSource;
     std::vector<std::pair<time_point, T>> _vals;
 };
 
@@ -168,6 +181,8 @@ private:
 class CounterImpl : private boost::noncopyable {
 
 public:
+    CounterImpl(const ClockSource& clockSource) : _timeSeries(clockSource) {}
+
     void reportValue(const count_type& delta) {
         auto nval = (this->_count += delta);
         _timeSeries.add(nval);
@@ -191,6 +206,8 @@ private:
 class GaugeImpl : private boost::noncopyable {
 
 public:
+    GaugeImpl(const ClockSource& clockSource) : _timeSeries(clockSource) {}
+
     void set(const gauged_type& count) {
         _timeSeries.add(count);
     }
@@ -212,8 +229,15 @@ private:
 class TimerImpl : private boost::noncopyable {
 
 public:
+    TimerImpl(const ClockSource& clockSource)
+        : _clockSource(clockSource), _timeSeries(clockSource) {}
+
+    time_point now() const {
+        return _clockSource.now();
+    }
+
     void report(const time_point& started) {
-        _timeSeries.add(metrics::clock::now() - started);
+        _timeSeries.add(_clockSource.now() - started);
     }
 
     // passkey:
@@ -222,6 +246,7 @@ public:
     }
 
 private:
+    const ClockSource& _clockSource;
     TimeSeries<period> _timeSeries;
 };
 
@@ -247,6 +272,9 @@ public:
         return _opName;
     }
 
+    time_point now() const {
+        return this->_timer->now();
+    }
 
     void report(const time_point& started) {
         this->_timer->report(started);
@@ -361,7 +389,7 @@ class RaiiStopwatch {
 
 public:
     explicit RaiiStopwatch(v1::TimerImpl& timer)
-        : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
+        : _timer{std::addressof(timer)}, _started{_timer->now()} {}
     RaiiStopwatch(const RaiiStopwatch& other) = delete;
     RaiiStopwatch(RaiiStopwatch&& other) noexcept : _started{other._started} {
         this->_timer = other._timer;
@@ -415,7 +443,7 @@ class Stopwatch {
 
 public:
     explicit Stopwatch(v1::TimerImpl& timer)
-        : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
+        : _timer{std::addressof(timer)}, _started{_timer->now()} {}
 
     void report() {
         this->_timer->report(_started);
@@ -473,8 +501,7 @@ private:
 class OperationContext {
 
 public:
-    OperationContext(v1::OperationImpl& op)
-        : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
+    OperationContext(v1::OperationImpl& op) : _op{std::addressof(op)}, _started{_op->now()} {}
 
     ~OperationContext() {
         if (!_isClosed) {
@@ -540,7 +567,7 @@ private:
  * - Gauges:     a "current" number of things; a value that can be known and observed
  * - Timers:     recordings of how long certain operations took
  *
- * All data-points are recorded along with the clock::now() value of when
+ * All data-points are recorded along with the ClockSource::now() value of when
  * the points are recorded.
  *
  * It is expensive to create a distinct metric name but cheap to record new values.
@@ -560,23 +587,29 @@ private:
 class Registry {
 
 public:
-    explicit Registry() = default;
+    explicit Registry() : Registry(&kMetricsClockSource) {}
+    explicit Registry(const ClockSource* clockSource) : _clockSource(clockSource) {}
 
     v1::Counter counter(const std::string& name) {
-        return v1::Counter{this->_counters[name]};
+        auto counterIt = this->_counters.try_emplace(name, *this->_clockSource).first;
+        return v1::Counter{counterIt->second};
     }
     v1::Timer timer(const std::string& name) {
-        return v1::Timer{this->_timers[name]};
+        auto timerIt = this->_timers.try_emplace(name, *this->_clockSource).first;
+        return v1::Timer{timerIt->second};
     }
     v1::Gauge gauge(const std::string& name) {
-        return v1::Gauge{this->_gauges[name]};
+        auto gaugeIt = this->_gauges.try_emplace(name, *this->_clockSource).first;
+        return v1::Gauge{gaugeIt->second};
     }
     Operation operation(const std::string& name) {
-        auto op = v1::OperationImpl(name,
-                                    this->_timers[name + "_timer"],
-                                    this->_counters[name + "_iters"],
-                                    this->_counters[name + "_docs"],
-                                    this->_counters[name + "_bytes"]);
+        auto timerIt = this->_timers.try_emplace(name + "_timer", *this->_clockSource).first;
+        auto itersIt = this->_counters.try_emplace(name + "_iters", *this->_clockSource).first;
+        auto docsIt = this->_counters.try_emplace(name + "_docs", *this->_clockSource).first;
+        auto bytesIt = this->_counters.try_emplace(name + "_bytes", *this->_clockSource).first;
+
+        auto op = v1::OperationImpl(
+            name, timerIt->second, itersIt->second, docsIt->second, bytesIt->second);
         return Operation{std::move(op)};
     }
 
@@ -593,11 +626,14 @@ public:
         return this->_gauges;
     };
 
-    const time_point now(v1::Permission) const {
-        return metrics::clock::now();
+    time_point now(v1::Permission) const {
+        return this->_clockSource->now();
     }
 
 private:
+    static constexpr MetricsClockSource kMetricsClockSource{};
+
+    const ClockSource* _clockSource;
     std::unordered_map<std::string, v1::CounterImpl> _counters;
     std::unordered_map<std::string, v1::TimerImpl> _timers;
     std::unordered_map<std::string, v1::GaugeImpl> _gauges;
