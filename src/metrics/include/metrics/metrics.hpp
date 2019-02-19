@@ -79,6 +79,11 @@ public:
     }
 };
 
+using time_point = std::chrono::time_point<clock>;
+using duration_at_time = std::pair<time_point, period>;
+using count_at_time = std::pair<time_point, count_type>;
+using gauged_at_time = std::pair<time_point, gauged_type>;
+
 class Reporter;
 // The v1 namespace is here for two reasons:
 // 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes.
@@ -116,12 +121,10 @@ static_assert(std::is_empty<Permission>::value, "empty");
  *
  * @tparam T The value to record at a particular time-point.
  */
-template <class ClockSource, class T>
+template <class T>
 class TimeSeries : private boost::noncopyable {
 
 public:
-    using time_point = std::chrono::time_point<ClockSource>;
-
     explicit constexpr TimeSeries() {
         // could make 10000*10000 a param passed down
         // from Registry if needed
@@ -134,7 +137,7 @@ public:
      */
     template <class... Args>
     void add(Args&&... args) {
-        _vals.emplace_back(ClockSource::now(), std::forward<Args>(args)...);
+        _vals.emplace_back(metrics::clock::now(), std::forward<Args>(args)...);
     }
 
     // passkey:
@@ -162,7 +165,6 @@ private:
  * Data-storage backing a `Counter`.
  * Please see the documentation there.
  */
-template <class ClockSource>
 class CounterImpl : private boost::noncopyable {
 
 public:
@@ -172,12 +174,12 @@ public:
     }
 
     // passkey:
-    const TimeSeries<ClockSource, count_type>& getTimeSeries(Permission) const {
+    const TimeSeries<count_type>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
-    TimeSeries<ClockSource, count_type> _timeSeries;
+    TimeSeries<count_type> _timeSeries;
     count_type _count{};
 };
 
@@ -186,7 +188,6 @@ private:
  * Data-storage backing a `Gauge`.
  * Please see the documentation there.
  */
-template <class ClockSource>
 class GaugeImpl : private boost::noncopyable {
 
 public:
@@ -195,12 +196,12 @@ public:
     }
 
     // passkey:
-    const TimeSeries<ClockSource, count_type>& getTimeSeries(Permission) const {
+    const TimeSeries<count_type>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
-    TimeSeries<ClockSource, count_type> _timeSeries;
+    TimeSeries<count_type> _timeSeries;
 };
 
 
@@ -208,33 +209,31 @@ private:
  * Data-storage backing a `Timer`.
  * Please see the documentation there.
  */
-template <class ClockSource>
 class TimerImpl : private boost::noncopyable {
 
 public:
-    void report(const std::chrono::time_point<ClockSource>& started) {
-        _timeSeries.add(ClockSource::now() - started);
+    void report(const time_point& started) {
+        _timeSeries.add(metrics::clock::now() - started);
     }
 
     // passkey:
-    const TimeSeries<ClockSource, period>& getTimeSeries(Permission) const {
+    const TimeSeries<period>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
-    TimeSeries<ClockSource, period> _timeSeries;
+    TimeSeries<period> _timeSeries;
 };
 
 
-template <class ClockSource>
 class OperationImpl {
 
 public:
     OperationImpl(const std::string& name,
-                  TimerImpl<ClockSource>& timer,
-                  CounterImpl<ClockSource>& iters,
-                  CounterImpl<ClockSource>& docs,
-                  CounterImpl<ClockSource>& bytes)
+                  TimerImpl& timer,
+                  CounterImpl& iters,
+                  CounterImpl& docs,
+                  CounterImpl& bytes)
         : _opName{name},
           _timer{std::addressof(timer)},
           _iters{std::addressof(iters)},
@@ -249,7 +248,7 @@ public:
     }
 
 
-    void report(const std::chrono::time_point<ClockSource>& started) {
+    void report(const time_point& started) {
         this->_timer->report(started);
         this->_iters->reportValue(1);
     }
@@ -265,10 +264,10 @@ public:
 
 private:
     const std::string _opName;
-    TimerImpl<ClockSource>* _timer;
-    CounterImpl<ClockSource>* _iters;
-    CounterImpl<ClockSource>* _docs;
-    CounterImpl<ClockSource>* _bytes;
+    TimerImpl* _timer;
+    CounterImpl* _iters;
+    CounterImpl* _docs;
+    CounterImpl* _bytes;
 };
 
 /**
@@ -290,12 +289,10 @@ private:
  * }
  * ```
  */
-template <class ClockSource>
 class Counter {
 
 public:
-    explicit constexpr Counter(v1::CounterImpl<ClockSource>& counter)
-        : _counter{std::addressof(counter)} {}
+    explicit constexpr Counter(v1::CounterImpl& counter) : _counter{std::addressof(counter)} {}
 
     void incr(const count_type& val = 1) {
         _counter->reportValue(val);
@@ -305,7 +302,7 @@ public:
     }
 
 private:
-    v1::CounterImpl<ClockSource>* _counter;
+    v1::CounterImpl* _counter;
 };
 
 
@@ -326,18 +323,17 @@ private:
  * How to determine the value for the "do something" time-period
  * needs to be interpreted for each metric individually.
  */
-template <class ClockSource>
 class Gauge {
 
 public:
-    explicit constexpr Gauge(v1::GaugeImpl<ClockSource>& gauge) : _gauge{std::addressof(gauge)} {}
+    explicit constexpr Gauge(v1::GaugeImpl& gauge) : _gauge{std::addressof(gauge)} {}
 
     void set(const gauged_type& value) {
         _gauge->set(value);
     }
 
 private:
-    v1::GaugeImpl<ClockSource>* _gauge;
+    v1::GaugeImpl* _gauge;
 };
 
 
@@ -361,19 +357,18 @@ private:
  * but that does not prevent the timer from reporting on
  * its own in its dtor.
  */
-template <class ClockSource>
 class RaiiStopwatch {
 
 public:
-    explicit RaiiStopwatch(v1::TimerImpl<ClockSource>& timer)
-        : _timer{std::addressof(timer)}, _started{ClockSource::now()} {}
-    RaiiStopwatch(const RaiiStopwatch<ClockSource>& other) = delete;
-    RaiiStopwatch(RaiiStopwatch<ClockSource>&& other) noexcept : _started{other._started} {
+    explicit RaiiStopwatch(v1::TimerImpl& timer)
+        : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
+    RaiiStopwatch(const RaiiStopwatch& other) = delete;
+    RaiiStopwatch(RaiiStopwatch&& other) noexcept : _started{other._started} {
         this->_timer = other._timer;
         other._timer = nullptr;
     }
 
-    RaiiStopwatch<ClockSource>& operator=(RaiiStopwatch<ClockSource> other) noexcept = delete;
+    RaiiStopwatch& operator=(RaiiStopwatch other) noexcept = delete;
 
     ~RaiiStopwatch() {
         if (this->_timer != nullptr) {
@@ -387,9 +382,7 @@ public:
     }
 
 private:
-    using time_point = std::chrono::time_point<ClockSource>;
-
-    v1::TimerImpl<ClockSource>* _timer;
+    v1::TimerImpl* _timer;
     const time_point _started;
 };
 
@@ -418,32 +411,28 @@ private:
  * The `.report()` is only called in the successful
  * scenarios, not if an exception is thrown.
  */
-template <class ClockSource>
 class Stopwatch {
 
 public:
-    explicit Stopwatch(v1::TimerImpl<ClockSource>& timer)
-        : _timer{std::addressof(timer)}, _started{ClockSource::now()} {}
+    explicit Stopwatch(v1::TimerImpl& timer)
+        : _timer{std::addressof(timer)}, _started{metrics::clock::now()} {}
 
     void report() {
         this->_timer->report(_started);
     }
 
 private:
-    using time_point = std::chrono::time_point<ClockSource>;
-
-    v1::TimerImpl<ClockSource>* const _timer;
+    v1::TimerImpl* const _timer;
     const time_point _started;
 };
 
 /**
  * Timer is deprecated in favor of Operation.
  */
-template <class ClockSource>
 class Timer {
 
 public:
-    explicit constexpr Timer(v1::TimerImpl<ClockSource>& t) : _timer{std::addressof(t)} {}
+    explicit constexpr Timer(v1::TimerImpl& t) : _timer{std::addressof(t)} {}
 
     /**
      * @return
@@ -456,8 +445,8 @@ public:
      *  Both `Stopwatch` and `RaiiStopwatch` record timing data, and they can share names.
      *  They are simply two APIs for reporting timing data.
      */
-    [[nodiscard]] Stopwatch<ClockSource> start() const {
-        return Stopwatch<ClockSource>{*_timer};
+    [[nodiscard]] Stopwatch start() const {
+        return Stopwatch{*_timer};
     }
 
     /**
@@ -471,22 +460,21 @@ public:
      * Both `Stopwatch` and `RaiiStopwatch` record timing data, and they can share names.
      * They are simply two APIs for reporting timing data.
      */
-    [[nodiscard]] RaiiStopwatch<ClockSource> raii() const {
-        return RaiiStopwatch<ClockSource>{*_timer};
+    [[nodiscard]] RaiiStopwatch raii() const {
+        return RaiiStopwatch{*_timer};
     };
 
 private:
-    v1::TimerImpl<ClockSource>* _timer;
+    v1::TimerImpl* _timer;
 };
 
 }  // namespace v1
 
-template <class ClockSource>
 class OperationContext {
 
 public:
-    OperationContext(v1::OperationImpl<ClockSource>& op)
-        : _op{std::addressof(op)}, _started{ClockSource::now()} {}
+    OperationContext(v1::OperationImpl& op)
+        : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
 
     ~OperationContext() {
         if (!_isClosed) {
@@ -517,15 +505,13 @@ public:
     }
 
 private:
-    using time_point = std::chrono::time_point<ClockSource>;
-
     void report() {
         this->_op->report(_started);
         this->_op->reportBytes(_totalBytes);
         this->_op->reportOps(_totalOps);
     }
 
-    v1::OperationImpl<ClockSource>* _op;
+    v1::OperationImpl* _op;
     time_point _started;
     count_type _totalBytes = 0;
     count_type _totalOps = 0;
@@ -533,18 +519,17 @@ private:
 };
 
 
-template <class ClockSource>
 class Operation {
 
 public:
-    explicit Operation(v1::OperationImpl<ClockSource> op) : _op{std::move(op)} {}
+    explicit Operation(v1::OperationImpl op) : _op{std::move(op)} {}
 
-    OperationContext<ClockSource> start() {
-        return OperationContext<ClockSource>(this->_op);
+    OperationContext start() {
+        return OperationContext(this->_op);
     }
 
 private:
-    v1::OperationImpl<ClockSource> _op;
+    v1::OperationImpl _op;
 };
 
 
@@ -555,7 +540,7 @@ private:
  * - Gauges:     a "current" number of things; a value that can be known and observed
  * - Timers:     recordings of how long certain operations took
  *
- * All data-points are recorded along with the ClockSource::now() value of when
+ * All data-points are recorded along with the clock::now() value of when
  * the points are recorded.
  *
  * It is expensive to create a distinct metric name but cheap to record new values.
@@ -572,59 +557,51 @@ private:
  * only be used by workload-drivers to produce a report of the metrics at specific-points
  * in their workload lifecycle.
  */
-
-// TODO: Rename the class to Registry and the using alias to DefaultRegistry.
-template <class ClockSource>
-class RegistryT {
+class Registry {
 
 public:
-    explicit RegistryT() = default;
+    explicit Registry() = default;
 
-    v1::Counter<ClockSource> counter(const std::string& name) {
-        return v1::Counter<ClockSource>{this->_counters[name]};
+    v1::Counter counter(const std::string& name) {
+        return v1::Counter{this->_counters[name]};
     }
-    v1::Timer<ClockSource> timer(const std::string& name) {
-        return v1::Timer<ClockSource>{this->_timers[name]};
+    v1::Timer timer(const std::string& name) {
+        return v1::Timer{this->_timers[name]};
     }
-    v1::Gauge<ClockSource> gauge(const std::string& name) {
-        return v1::Gauge<ClockSource>{this->_gauges[name]};
+    v1::Gauge gauge(const std::string& name) {
+        return v1::Gauge{this->_gauges[name]};
     }
-    Operation<ClockSource> operation(const std::string& name) {
-        auto op = v1::OperationImpl<ClockSource>(name,
-                                                 this->_timers[name + "_timer"],
-                                                 this->_counters[name + "_iters"],
-                                                 this->_counters[name + "_docs"],
-                                                 this->_counters[name + "_bytes"]);
+    Operation operation(const std::string& name) {
+        auto op = v1::OperationImpl(name,
+                                    this->_timers[name + "_timer"],
+                                    this->_counters[name + "_iters"],
+                                    this->_counters[name + "_docs"],
+                                    this->_counters[name + "_bytes"]);
         return Operation{std::move(op)};
     }
 
     // passkey:
-    const std::unordered_map<std::string, v1::CounterImpl<ClockSource>>& getCounters(
-        v1::Permission) const {
+    const std::unordered_map<std::string, v1::CounterImpl>& getCounters(v1::Permission) const {
         return this->_counters;
     };
 
-    const std::unordered_map<std::string, v1::TimerImpl<ClockSource>>& getTimers(
-        v1::Permission) const {
+    const std::unordered_map<std::string, v1::TimerImpl>& getTimers(v1::Permission) const {
         return this->_timers;
     };
 
-    const std::unordered_map<std::string, v1::GaugeImpl<ClockSource>>& getGauges(
-        v1::Permission) const {
+    const std::unordered_map<std::string, v1::GaugeImpl>& getGauges(v1::Permission) const {
         return this->_gauges;
     };
 
-    const std::chrono::time_point<ClockSource> now(v1::Permission) const {
-        return ClockSource::now();
+    const time_point now(v1::Permission) const {
+        return metrics::clock::now();
     }
 
 private:
-    std::unordered_map<std::string, v1::CounterImpl<ClockSource>> _counters;
-    std::unordered_map<std::string, v1::TimerImpl<ClockSource>> _timers;
-    std::unordered_map<std::string, v1::GaugeImpl<ClockSource>> _gauges;
+    std::unordered_map<std::string, v1::CounterImpl> _counters;
+    std::unordered_map<std::string, v1::TimerImpl> _timers;
+    std::unordered_map<std::string, v1::GaugeImpl> _gauges;
 };
-
-using Registry = RegistryT<std::chrono::steady_clock>;
 
 static_assert(std::is_move_constructible<Registry>::value, "move");
 static_assert(std::is_move_assignable<Registry>::value, "move");
