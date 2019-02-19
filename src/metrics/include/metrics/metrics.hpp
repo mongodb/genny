@@ -473,8 +473,17 @@ private:
 class OperationContext {
 
 public:
-    OperationContext(v1::OperationImpl& op)
+    explicit OperationContext(v1::OperationImpl& op)
         : _op{std::addressof(op)}, _started{metrics::clock::now()} {}
+
+    OperationContext(OperationContext&& rhs) noexcept
+        : _op{std::move(rhs._op)},
+          _started{std::move(rhs._started)},
+          _isClosed{std::move(rhs._isClosed)},
+          _totalBytes{std::move(rhs._totalBytes)},
+          _totalOps{std::move(rhs._totalOps)} {
+        rhs._isClosed = true;
+    }
 
     ~OperationContext() {
         if (!_isClosed) {
