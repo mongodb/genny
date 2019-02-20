@@ -1,8 +1,17 @@
 import logging
 import os
 
+# Map of platform.system() to vcpkg's OS names.
+_triplet_os_map = {
+    'Darwin': 'osx',
+    'Linux': 'linux',
+    'NT': 'windows'
+}
 
-def _create_compile_environment(toolchain_dir, triplet_os):
+
+# Define complex operations as private methods on the module to keep the
+# public Context object clean.
+def _create_compile_environment(triplet_os, toolchain_dir):
     env = os.environ.copy()
     paths = [env['PATH']]
 
@@ -32,9 +41,28 @@ class Context:
     # Permanent constants.
     TOOLCHAIN_BUILD_ID = '7297534c3dc1df9f6d315098174171eaf75c5846_19_02_09_02_19_44'
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split('_')[0]
+    TOOLCHAIN_ROOT = '/data/mci'  # TODO BUILD-7624 change this to /opt.
 
-    # User configurable constants.
+    # Command line configurable and runtime values.
     IGNORE_TOOLCHAIN_VERSION = False
+    TRIPLET_OS = None
+    BUILD_SYSTEM = None
 
-    # User configurable dynamic context.
-    get_compile_environment = _create_compile_environment
+    # Dynamic context
+    _compile_environment = None
+
+    @staticmethod
+    def get_compile_environment(toolchain_dir=None):
+        if not Context._compile_environment:
+            if not toolchain_dir:
+                raise ValueError(
+                    'toolchain_dir must be specified when getting the compile environment for the '
+                    'first time')
+            Context._compile_environment = _create_compile_environment(Context.TRIPLET_OS,
+                                                                       toolchain_dir)
+        return Context._compile_environment
+
+    # Helper methods
+    @staticmethod
+    def set_triplet_os(os_family):
+        Context.TRIPLET_OS = _triplet_os_map[os_family]

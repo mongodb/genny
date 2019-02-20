@@ -2,7 +2,7 @@ import os
 import subprocess
 
 
-def cmake_test(env, args):
+def cmake_test(env):
     # We rely on catch2 to report test failures, but it doesn't always do so.
     # See https://github.com/catchorg/Catch2/issues/1210
     # As a workaround, we generate a dummy report with a failed test that is
@@ -37,3 +37,7 @@ def cmake_test(env, args):
 
     if res.returncode == 0:
         os.remove(sentinel_file)
+
+
+def resmoke_test(env):
+    pass
