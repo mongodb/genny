@@ -73,7 +73,7 @@ public:
     /**
      * @param out print a human-readable listing of all
      *            data-points to this ostream.
-     * @param metricsFormat the format to use. Either "csv" or "sys-perf".
+     * @param metricsFormat the format to use. Must be "csv".
      * @param perm passkey permission (must be friends with metrics::Registry)
      */
     void report(std::ostream& out,
@@ -88,42 +88,12 @@ public:
         // check & throw in the driver/main program
         if (metricsFormat == "csv") {
             return reportCsv(out, systemTime, metricsTime, perm);
-        } else if (metricsFormat == "sys-perf") {
-            return reportSysperf(out, systemTime, metricsTime, perm);
         } else {
             throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
         }
     }
 
 private:
-    template <class T>
-    class TD;
-
-    void reportSysperf(std::ostream& out,
-                       long long int,
-                       long long int,
-                       const v1::Permission& perm) const {
-
-        // TODO: Followup from TIG-1070, make this report real data; for now just report
-        //       the number of timer data-points that we saw.
-
-        genny::metrics::clock::duration total;
-        for (const auto& [name, timer] : _registry->getTimers(perm)) {
-            auto& vals = timer.getTimeSeries(perm).getVals(perm);
-            for (const auto& [when, dur] : vals) {
-                total += dur;
-            }
-        }
-
-        auto micros = std::chrono::duration_cast<std::chrono::microseconds>(total);
-
-        out << R"({"storageEngine":"wiredTiger", "results":[{
- "name":"dummy_inserts", "workload":"genny_dummy_workload",
- "start":1537815283.968272, "end":1537817860.423682,
- "results":{"4":{"ops_per_sec":)"
-            << micros.count() << R"(, "ops_per_sec_values":[)" << micros.count() << R"(]}}}]}
-)";
-    }
     void reportCsv(std::ostream& out,
                    long long int systemTime,
                    long long int metricsTime,
