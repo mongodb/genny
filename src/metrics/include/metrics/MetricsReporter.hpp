@@ -22,112 +22,103 @@
 namespace genny::metrics {
 
 /**
- * A Reporter is the only object in the system that
+ * @namespace genny::metrics::v1 this namespace is private and only intended to be used by Genny's
+ * internals. Actors should never have to type `genny::*::v1` into any types.
+ */
+namespace v1 {
+
+/**
+ * A ReporterT is the only object in the system that
  * has read access to metrics data-points. It is not
  * intended to be used by actors, only by drivers.
  *
- * The Reporter is given read-access to metrics data
+ * The ReporterT is given read-access to metrics data
  * for the purposes of reporting data.
  * This class is not ABI-safe.
  *
  * @private
  */
-class Reporter {
+template <typename MetricsClockSource>
+class ReporterT {
 
 public:
-    constexpr explicit Reporter(const Registry& registry) : _registry{std::addressof(registry)} {}
+    constexpr explicit ReporterT(const v1::RegistryT<MetricsClockSource>& registry)
+        : _registry{std::addressof(registry)} {}
 
     /** @return how many distinct gauges were registered */
-    auto getGaugeCount(v1::Permission perm = {}) const {
-        auto& x = _registry->getGauges(perm);
+    auto getGaugeCount() const {
+        auto& x = _registry->getGauges(v1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many gauge data-points were recorded */
-    long getGaugePointsCount(v1::Permission perm = {}) const {
+    long getGaugePointsCount() const {
+        v1::Permission perm;
         return dataPointsCount(_registry->getGauges(perm), perm);
     }
 
     /** @return how many distinct timers were registered */
-    auto getTimerCount(v1::Permission perm = {}) const {
-        auto& x = _registry->getTimers(perm);
+    auto getTimerCount() const {
+        auto& x = _registry->getTimers(v1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many timer data-points were recorded */
-    long getTimerPointsCount(v1::Permission perm = {}) const {
+    long getTimerPointsCount() const {
+        v1::Permission perm;
         return dataPointsCount(_registry->getTimers(perm), perm);
     }
 
     /** @return how many counters were registered */
-    auto getCounterCount(v1::Permission perm = {}) const {
-        auto& x = _registry->getCounters(perm);
+    auto getCounterCount() const {
+        auto& x = _registry->getCounters(v1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many counter data-points were recorded */
-    long getCounterPointsCount(v1::Permission perm = {}) const {
+    long getCounterPointsCount() const {
+        v1::Permission perm;
         return dataPointsCount(_registry->getCounters(perm), perm);
     }
 
+private:
+    struct SystemClockSource {
+        using clock = std::chrono::system_clock;
+
+        static std::chrono::time_point<clock> now() {
+            return clock::now();
+        }
+    };
+
+public:
     /**
      * @param out print a human-readable listing of all
      *            data-points to this ostream.
-     * @param metricsFormat the format to use. Either "csv" or "sys-perf".
-     * @param perm passkey permission (must be friends with metrics::Registry)
+     * @param metricsFormat the format to use. Must be "csv".
      */
-    void report(std::ostream& out,
-                const std::string& metricsFormat,
-                v1::Permission perm = {}) const {
+    template <typename ReporterClockSource = SystemClockSource>
+    void report(std::ostream& out, const std::string& metricsFormat) const {
+        v1::Permission perm;
+
         // should these values come from the registry, and should they be recorded at
         // time of registry-creation?
-        auto systemTime = std::chrono::system_clock::now().time_since_epoch().count();
-        auto metricsTime = _registry->now(perm).time_since_epoch().count();
+        auto systemTime = nanosecondsCount(ReporterClockSource::now().time_since_epoch());
+        auto metricsTime = nanosecondsCount(_registry->now(perm).time_since_epoch());
 
         // if this lives more than a hot-second, put the formats into an enum and do this
         // check & throw in the driver/main program
         if (metricsFormat == "csv") {
             return reportCsv(out, systemTime, metricsTime, perm);
-        } else if (metricsFormat == "sys-perf") {
-            return reportSysperf(out, systemTime, metricsTime, perm);
         } else {
             throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
         }
     }
 
 private:
-    template <class T>
-    class TD;
-
-    void reportSysperf(std::ostream& out,
-                       long long int,
-                       long long int,
-                       const v1::Permission& perm) const {
-
-        // TODO: Followup from TIG-1070, make this report real data; for now just report
-        //       the number of timer data-points that we saw.
-
-        genny::metrics::clock::duration total;
-        for (const auto& [name, timer] : _registry->getTimers(perm)) {
-            auto& vals = timer.getTimeSeries(perm).getVals(perm);
-            for (const auto& [when, dur] : vals) {
-                total += dur;
-            }
-        }
-
-        auto micros = std::chrono::duration_cast<std::chrono::microseconds>(total);
-
-        out << R"({"storageEngine":"wiredTiger", "results":[{
- "name":"dummy_inserts", "workload":"genny_dummy_workload",
- "start":1537815283.968272, "end":1537817860.423682,
- "results":{"4":{"ops_per_sec":)"
-            << micros.count() << R"(, "ops_per_sec_values":[)" << micros.count() << R"(]}}}]}
-)";
-    }
     void reportCsv(std::ostream& out,
                    long long int systemTime,
                    long long int metricsTime,
-                   const v1::Permission& perm) const {
+                   v1::Permission perm) const {
         out << "Clocks" << std::endl;
         doClocks(out, systemTime, metricsTime);
         out << std::endl;
@@ -162,8 +153,8 @@ private:
                          genny::metrics::v1::Permission perm) {
         for (const auto& c : haveTimeSeries) {
             for (const auto& v : c.second.getTimeSeries(perm).getVals(perm)) {
-                out << v.first.time_since_epoch().count() << "," << c.first << "," << v.second
-                    << std::endl;
+                out << nanosecondsCount(v.first.time_since_epoch()) << "," << c.first << ","
+                    << v.second << std::endl;
             }
         }
     }
@@ -180,8 +171,23 @@ private:
         }
         return out;
     }
-    const Registry* _registry;
+
+    /**
+     * @return the number of nanoseconds represented by the duration.
+     * @param dur the duration
+     * @tparam DurationIn the duration's type
+     */
+    template <typename DurationIn>
+    static long long nanosecondsCount(const DurationIn& dur) {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
+    }
+
+    const v1::RegistryT<MetricsClockSource>* _registry;
 };
+
+}  // namespace v1
+
+using Reporter = v1::ReporterT<Registry::clock>;
 
 }  // namespace genny::metrics
 

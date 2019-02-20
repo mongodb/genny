@@ -14,6 +14,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
@@ -21,8 +22,48 @@
 #include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
+namespace genny::metrics {
+namespace {
+
+using namespace std::literals::chrono_literals;
+
+class RegistryClockSourceStub {
+private:
+    using clock_type = std::chrono::steady_clock;
+
+public:
+    using duration = clock_type::duration;
+    using time_point = std::chrono::time_point<clock_type>;
+
+    static void advance(period<clock_type> duration = 1ns) {
+        _now += duration;
+    }
+
+    static void reset() {
+        _now = {};
+    }
+
+    static time_point now() {
+        return _now;
+    }
+
+private:
+    static time_point _now;
+};
+
+RegistryClockSourceStub::time_point RegistryClockSourceStub::_now;
+
+struct ReporterClockSourceStub {
+    using time_point = std::chrono::time_point<std::chrono::system_clock>;
+
+    static time_point now() {
+        return time_point{42ms};
+    }
+};
+
 TEST_CASE("example metrics usage") {
-    genny::metrics::Registry metrics;
+    RegistryClockSourceStub::reset();
+    v1::RegistryT<RegistryClockSourceStub> metrics;
 
     // pretend this is an actor's implementation
 
@@ -35,14 +76,17 @@ TEST_CASE("example metrics usage") {
 
     // in each phase, do something things
     for (int phase = 0; phase < 10; ++phase) {
+        RegistryClockSourceStub::advance();
         auto thisIter = phaseTime.raii();
 
         try {
+            RegistryClockSourceStub::advance();
             auto q = queryTime.raii();
             sessions.set(1);
 
             // do something with the driver
             if (phase % 3 == 0) {
+                RegistryClockSourceStub::advance();
                 throw std::exception{};
             }
 
@@ -53,8 +97,7 @@ TEST_CASE("example metrics usage") {
     }
 
     // would be done by framework / outside code:
-    auto reporter = genny::metrics::Reporter(metrics);
-    reporter.report(std::cout, "csv");
+    auto reporter = genny::metrics::v1::ReporterT(metrics);
 
     REQUIRE(reporter.getGaugeCount() == 1);
     REQUIRE(reporter.getTimerCount() == 2);
@@ -63,6 +106,62 @@ TEST_CASE("example metrics usage") {
     REQUIRE(reporter.getGaugePointsCount() == 10);
     REQUIRE(reporter.getTimerPointsCount() == 20);
     REQUIRE(reporter.getCounterPointsCount() == 10);
+
+    auto expected =
+        "Clocks\n"
+        "SystemTime,42000000\n"
+        "MetricsTime,24\n"
+        "\n"
+        "Counters\n"
+        "3,actor.failures,1\n"
+        "10,actor.failures,2\n"
+        "17,actor.failures,3\n"
+        "24,actor.failures,4\n"
+        "5,actor.operations,1\n"
+        "7,actor.operations,2\n"
+        "12,actor.operations,3\n"
+        "14,actor.operations,4\n"
+        "19,actor.operations,5\n"
+        "21,actor.operations,6\n"
+        "\n"
+        "Gauges\n"
+        "2,actor.sessions,1\n"
+        "5,actor.sessions,1\n"
+        "7,actor.sessions,1\n"
+        "9,actor.sessions,1\n"
+        "12,actor.sessions,1\n"
+        "14,actor.sessions,1\n"
+        "16,actor.sessions,1\n"
+        "19,actor.sessions,1\n"
+        "21,actor.sessions,1\n"
+        "23,actor.sessions,1\n"
+        "\n"
+        "Timers\n"
+        "3,actor.phase,2\n"
+        "5,actor.phase,1\n"
+        "7,actor.phase,1\n"
+        "10,actor.phase,2\n"
+        "12,actor.phase,1\n"
+        "14,actor.phase,1\n"
+        "17,actor.phase,2\n"
+        "19,actor.phase,1\n"
+        "21,actor.phase,1\n"
+        "24,actor.phase,2\n"
+        "3,client.query,1\n"
+        "5,client.query,0\n"
+        "7,client.query,0\n"
+        "10,client.query,1\n"
+        "12,client.query,0\n"
+        "14,client.query,0\n"
+        "17,client.query,1\n"
+        "19,client.query,0\n"
+        "21,client.query,0\n"
+        "24,client.query,1\n"
+        "\n";
+
+    std::ostringstream out;
+    reporter.report<ReporterClockSourceStub>(out, "csv");
+    REQUIRE(out.str() == expected);
 }
 
 TEST_CASE("metrics reporter") {
@@ -238,3 +337,6 @@ TEST_CASE("metrics tests") {
 
     reporter.report(std::cout, "csv");
 }
+
+}  // namespace
+}  // namespace genny::metrics
