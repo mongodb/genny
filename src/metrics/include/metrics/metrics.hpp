@@ -483,8 +483,17 @@ template <typename ClockSource>
 class OperationContextT {
 
 public:
-    OperationContextT(v1::OperationImpl<ClockSource>& op)
+    explicit OperationContextT(v1::OperationImpl<ClockSource>& op)
         : _op{std::addressof(op)}, _started{ClockSource::now()} {}
+
+    OperationContextT(OperationContextT<ClockSource>&& rhs) noexcept
+        : _op{std::move(rhs._op)},
+          _started{std::move(rhs._started)},
+          _isClosed{std::move(rhs._isClosed)},
+          _totalBytes{std::move(rhs._totalBytes)},
+          _totalOps{std::move(rhs._totalOps)} {
+        rhs._isClosed = true;
+    }
 
     ~OperationContextT() {
         if (!_isClosed) {

@@ -16,6 +16,8 @@
 #include <chrono>
 #include <thread>
 
+#include <metrics/metrics.hpp>
+
 #include <testlib/helpers.hpp>
 
 #include <gennylib/Orchestrator.hpp>
