@@ -70,27 +70,18 @@ public:
         return dataPointsCount(_registry->getCounters(perm), perm);
     }
 
-private:
-    struct SystemClockSource {
-        static std::chrono::time_point<std::chrono::system_clock> now() {
-            return std::chrono::system_clock::now();
-        }
-    };
-
-public:
     /**
      * @param out print a human-readable listing of all
      *            data-points to this ostream.
      * @param metricsFormat the format to use. Either "csv" or "sys-perf".
+     * @param perm passkey permission (must be friends with metrics::Registry)
      */
-    template <class ClockSource = SystemClockSource>
     void report(std::ostream& out,
-                const std::string& metricsFormat) const {
-        v1::Permission perm;
-
+                const std::string& metricsFormat,
+                v1::Permission perm = {}) const {
         // should these values come from the registry, and should they be recorded at
         // time of registry-creation?
-        auto systemTime = ClockSource::now().time_since_epoch().count();
+        auto systemTime = std::chrono::system_clock::now().time_since_epoch().count();
         auto metricsTime = _registry->now(perm).time_since_epoch().count();
 
         // if this lives more than a hot-second, put the formats into an enum and do this
