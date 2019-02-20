@@ -109,7 +109,7 @@ TEST_CASE("example metrics usage") {
 
     auto expected =
         "Clocks\n"
-        "SystemTime,42000\n"
+        "SystemTime,42000000\n"
         "MetricsTime,24\n"
         "\n"
         "Counters\n"

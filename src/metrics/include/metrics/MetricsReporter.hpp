@@ -105,8 +105,12 @@ public:
 
         // should these values come from the registry, and should they be recorded at
         // time of registry-creation?
-        auto systemTime = ReporterClockSource::now().time_since_epoch().count();
-        auto metricsTime = _registry->now(perm).time_since_epoch().count();
+        auto systemTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                              ReporterClockSource::now().time_since_epoch())
+                              .count();
+        auto metricsTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                               _registry->now(perm).time_since_epoch())
+                               .count();
 
         // if this lives more than a hot-second, put the formats into an enum and do this
         // check & throw in the driver/main program
