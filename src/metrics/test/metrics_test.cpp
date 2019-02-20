@@ -27,19 +27,31 @@ namespace {
 
 using namespace std::literals::chrono_literals;
 
-class RegistryClockSourceStub final : public ClockSource {
+class RegistryClockSourceStub {
+private:
+    using clock_type = std::chrono::steady_clock;
+
 public:
-    void advance(period duration = 1ns) {
+    using duration = clock_type::duration;
+    using time_point = std::chrono::time_point<clock_type>;
+
+    static void advance(period<clock_type> duration = 1ns) {
         _now += duration;
     }
 
-    time_point now() const override {
+    static void reset() {
+        _now = {};
+    }
+
+    static time_point now() {
         return _now;
     }
 
 private:
-    time_point _now;
+    static time_point _now;
 };
+
+RegistryClockSourceStub::time_point RegistryClockSourceStub::_now;
 
 struct ReporterClockSourceStub {
     using time_point = std::chrono::time_point<std::chrono::system_clock>;
@@ -50,8 +62,8 @@ struct ReporterClockSourceStub {
 };
 
 TEST_CASE("example metrics usage") {
-    RegistryClockSourceStub clockSource;
-    Registry metrics{&clockSource};
+    RegistryClockSourceStub::reset();
+    v1::RegistryT<RegistryClockSourceStub> metrics;
 
     // pretend this is an actor's implementation
 
@@ -64,17 +76,17 @@ TEST_CASE("example metrics usage") {
 
     // in each phase, do something things
     for (int phase = 0; phase < 10; ++phase) {
-        clockSource.advance();
+        RegistryClockSourceStub::advance();
         auto thisIter = phaseTime.raii();
 
         try {
-            clockSource.advance();
+            RegistryClockSourceStub::advance();
             auto q = queryTime.raii();
             sessions.set(1);
 
             // do something with the driver
             if (phase % 3 == 0) {
-                clockSource.advance();
+                RegistryClockSourceStub::advance();
                 throw std::exception{};
             }
 
@@ -85,7 +97,7 @@ TEST_CASE("example metrics usage") {
     }
 
     // would be done by framework / outside code:
-    auto reporter = genny::metrics::Reporter(metrics);
+    auto reporter = genny::metrics::v1::ReporterT(metrics);
 
     REQUIRE(reporter.getGaugeCount() == 1);
     REQUIRE(reporter.getTimerCount() == 2);

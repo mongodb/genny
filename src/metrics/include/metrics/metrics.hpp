@@ -26,14 +26,6 @@
 
 namespace genny::metrics {
 
-/**
- * The Reporter is given read-access to metrics data for the purposes
- * of reporting data. The Reporter class is the only "non-header"/separately-compiled
- * component of the metrics library. It is not ABI safe.
- */
-class Reporter;
-
-
 /*
  * Could add a template policy class on Registry to let the following types be templatized.
  */
@@ -79,7 +71,6 @@ public:
     }
 };
 
-class Reporter;
 // The v1 namespace is here for two reasons:
 // 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes.
 // 2) it prevents auto-completion of metrics::{X}Impl when you really want metrics::{X}.
@@ -93,6 +84,14 @@ class Reporter;
 namespace v1 {
 
 /**
+ * The ReporterT is given read-access to metrics data for the purposes
+ * of reporting data. The ReporterT class is the only separately-compiled
+ * component of the metrics library. It is not ABI safe.
+ */
+template <typename MetricsClockSource>
+class ReporterT;
+
+/**
  * Ignore this. Used for passkey for some methods.
  */
 class Evil {
@@ -103,8 +102,9 @@ class Permission : private Evil {
 
 private:
     constexpr Permission() = default;
-    // template <typename T>
-    friend class genny::metrics::Reporter;
+
+    template <typename MetricsClockSource>
+    friend class ReporterT;
 };
 
 static_assert(std::is_empty<Permission>::value, "empty");
@@ -120,7 +120,7 @@ template <class ClockSource, class T>
 class TimeSeries : private boost::noncopyable {
 
 public:
-    using time_point = std::chrono::time_point<ClockSource>;
+    using time_point = typename ClockSource::time_point;
 
     explicit constexpr TimeSeries() {
         // could make 10000*10000 a param passed down
@@ -212,7 +212,7 @@ template <typename ClockSource>
 class TimerImpl : private boost::noncopyable {
 
 public:
-    void report(const std::chrono::time_point<ClockSource>& started) {
+    void report(const typename ClockSource::time_point& started) {
         _timeSeries.add(ClockSource::now() - started);
     }
 
@@ -249,7 +249,7 @@ public:
     }
 
 
-    void report(const std::chrono::time_point<ClockSource>& started) {
+    void report(const typename ClockSource::time_point& started) {
         this->_timer->report(started);
         this->_iters->reportValue(1);
     }
@@ -387,7 +387,7 @@ public:
     }
 
 private:
-    using time_point = std::chrono::time_point<ClockSource>;
+    using time_point = typename ClockSource::time_point;
 
     v1::TimerImpl<ClockSource>* _timer;
     const time_point _started;
@@ -430,7 +430,7 @@ public:
     }
 
 private:
-    using time_point = std::chrono::time_point<ClockSource>;
+    using time_point = typename ClockSource::time_point;
 
     v1::TimerImpl<ClockSource>* const _timer;
     const time_point _started;
@@ -515,7 +515,7 @@ public:
     }
 
 private:
-    using time_point = std::chrono::time_point<ClockSource>;
+    using time_point = typename ClockSource::time_point;
 
     void report() {
         this->_op->report(_started);
@@ -612,7 +612,7 @@ public:
         return this->_gauges;
     };
 
-    const std::chrono::time_point<ClockSource> now(v1::Permission) const {
+    const typename ClockSource::time_point now(v1::Permission) const {
         return ClockSource::now();
     }
 
@@ -624,14 +624,30 @@ private:
 
 }  // namespace v1
 
-using OperationContext = v1::OperationContextT<std::chrono::steady_clock>;
-using Operation = v1::OperationT<std::chrono::steady_clock>;
-using Registry = v1::RegistryT<std::chrono::steady_clock>;
+class MetricsClockSource {
+private:
+    using clock_type = std::chrono::steady_clock;
+
+public:
+    using duration = clock_type::duration;
+    using time_point = std::chrono::time_point<clock_type>;
+
+    static time_point now() {
+        return clock_type::now();
+    }
+};
+
+using Registry = v1::RegistryT<MetricsClockSource>;
 
 static_assert(std::is_move_constructible<Registry>::value, "move");
 static_assert(std::is_move_assignable<Registry>::value, "move");
-static_assert(Registry::clock::is_steady, "clock must be steady");
 
+// Registry::clock is actually the ClockSource template parameter, so we check the underlying
+// clock_type in a roundabout way by going through the time_point type it exposes.
+static_assert(Registry::clock::time_point::clock::is_steady, "clock must be steady");
+
+using Operation = v1::OperationT<Registry::clock>;
+using OperationContext = v1::OperationContextT<Registry::clock>;
 
 }  // namespace genny::metrics
 

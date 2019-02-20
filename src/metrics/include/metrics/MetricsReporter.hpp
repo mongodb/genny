@@ -22,58 +22,74 @@
 namespace genny::metrics {
 
 /**
- * A Reporter is the only object in the system that
+ * @namespace genny::metrics::v1 this namespace is private and only intended to be used by Genny's
+ * internals. Actors should never have to type `genny::*::v1` into any types.
+ */
+namespace v1 {
+
+/**
+ * A ReporterT is the only object in the system that
  * has read access to metrics data-points. It is not
  * intended to be used by actors, only by drivers.
  *
- * The Reporter is given read-access to metrics data
+ * The ReporterT is given read-access to metrics data
  * for the purposes of reporting data.
  * This class is not ABI-safe.
  *
  * @private
  */
-class Reporter {
+template <typename MetricsClockSource>
+class ReporterT {
 
 public:
-    constexpr explicit Reporter(const Registry& registry) : _registry{std::addressof(registry)} {}
+    constexpr explicit ReporterT(const v1::RegistryT<MetricsClockSource>& registry)
+        : _registry{std::addressof(registry)} {}
 
     /** @return how many distinct gauges were registered */
-    auto getGaugeCount(v1::Permission perm = {}) const {
+    auto getGaugeCount() const {
+        v1::Permission perm;
         auto& x = _registry->getGauges(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many gauge data-points were recorded */
-    long getGaugePointsCount(v1::Permission perm = {}) const {
+    long getGaugePointsCount() const {
+        v1::Permission perm;
         return dataPointsCount(_registry->getGauges(perm), perm);
     }
 
     /** @return how many distinct timers were registered */
-    auto getTimerCount(v1::Permission perm = {}) const {
+    auto getTimerCount() const {
+        v1::Permission perm;
         auto& x = _registry->getTimers(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many timer data-points were recorded */
-    long getTimerPointsCount(v1::Permission perm = {}) const {
+    long getTimerPointsCount() const {
+        v1::Permission perm;
         return dataPointsCount(_registry->getTimers(perm), perm);
     }
 
     /** @return how many counters were registered */
-    auto getCounterCount(v1::Permission perm = {}) const {
+    auto getCounterCount() const {
+        v1::Permission perm;
         auto& x = _registry->getCounters(perm);
         return std::distance(x.begin(), x.end());
     }
 
     /** @return how many counter data-points were recorded */
-    long getCounterPointsCount(v1::Permission perm = {}) const {
+    long getCounterPointsCount() const {
+        v1::Permission perm;
         return dataPointsCount(_registry->getCounters(perm), perm);
     }
 
 private:
     struct SystemClockSource {
-        static std::chrono::time_point<std::chrono::system_clock> now() {
-            return std::chrono::system_clock::now();
+        using clock = std::chrono::system_clock;
+
+        static std::chrono::time_point<clock> now() {
+            return clock::now();
         }
     };
 
@@ -83,14 +99,13 @@ public:
      *            data-points to this ostream.
      * @param metricsFormat the format to use. Must be "csv".
      */
-    template <class ClockSource = SystemClockSource>
-    void report(std::ostream& out,
-                const std::string& metricsFormat) const {
+    template <typename ReporterClockSource = SystemClockSource>
+    void report(std::ostream& out, const std::string& metricsFormat) const {
         v1::Permission perm;
 
         // should these values come from the registry, and should they be recorded at
         // time of registry-creation?
-        auto systemTime = ClockSource::now().time_since_epoch().count();
+        auto systemTime = ReporterClockSource::now().time_since_epoch().count();
         auto metricsTime = _registry->now(perm).time_since_epoch().count();
 
         // if this lives more than a hot-second, put the formats into an enum and do this
@@ -159,8 +174,12 @@ private:
         }
         return out;
     }
-    const Registry* _registry;
+    const v1::RegistryT<MetricsClockSource>* _registry;
 };
+
+}  // namespace v1
+
+using Reporter = v1::ReporterT<Registry::clock>;
 
 }  // namespace genny::metrics
 
