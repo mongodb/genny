@@ -173,7 +173,8 @@ function(ParseFile SourceFile TestTarget)
             endif()
 
             # Add the test and set its properties
-            add_test(NAME "\"${CTestName}\"" COMMAND ${OptionalCatchTestLauncher} ${TestTarget} ${Name} ${AdditionalCatchParameters} --out ${CTestName}.junit.xml)
+            add_test(NAME "\"${CTestName}\"" COMMAND ${OptionalCatchTestLauncher} ${TestTarget} ${Name} ${AdditionalCatchParameters}
+                     --reporter junit --out ${CTestName}.junit.xml)
             set_tests_properties("\"${CTestName}\"" PROPERTIES FAIL_REGULAR_EXPRESSION "No tests ran"
                 LABELS "${Labels}")
         endif()
