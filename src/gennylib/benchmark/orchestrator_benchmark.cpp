@@ -16,8 +16,6 @@
 #include <chrono>
 #include <thread>
 
-#include <metrics/metrics.hpp>
-
 #include <testlib/helpers.hpp>
 
 #include <gennylib/Orchestrator.hpp>
@@ -32,7 +30,6 @@ using namespace std::chrono;
 TEST_CASE("Orchestrator Perf", "[benchmark]") {
     const auto dur = milliseconds{200};
 
-    genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     o.addRequiredTokens(2);
 
