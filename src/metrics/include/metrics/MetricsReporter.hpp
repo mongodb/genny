@@ -47,8 +47,7 @@ public:
 
     /** @return how many distinct gauges were registered */
     auto getGaugeCount() const {
-        v1::Permission perm;
-        auto& x = _registry->getGauges(perm);
+        auto& x = _registry->getGauges(v1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
@@ -60,8 +59,7 @@ public:
 
     /** @return how many distinct timers were registered */
     auto getTimerCount() const {
-        v1::Permission perm;
-        auto& x = _registry->getTimers(perm);
+        auto& x = _registry->getTimers(v1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
@@ -73,8 +71,7 @@ public:
 
     /** @return how many counters were registered */
     auto getCounterCount() const {
-        v1::Permission perm;
-        auto& x = _registry->getCounters(perm);
+        auto& x = _registry->getCounters(v1::Permission{});
         return std::distance(x.begin(), x.end());
     }
 
@@ -125,7 +122,7 @@ private:
     void reportCsv(std::ostream& out,
                    long long int systemTime,
                    long long int metricsTime,
-                   const v1::Permission& perm) const {
+                   v1::Permission perm) const {
         out << "Clocks" << std::endl;
         doClocks(out, systemTime, metricsTime);
         out << std::endl;
