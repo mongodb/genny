@@ -546,6 +546,20 @@ private:
 };
 
 
+class MetricsClockSource {
+private:
+    using clock_type = std::chrono::steady_clock;
+
+public:
+    using duration = clock_type::duration;
+    using time_point = std::chrono::time_point<clock_type>;
+
+    static time_point now() {
+        return clock_type::now();
+    }
+};
+
+
 /**
  * Supports recording a number of types of Time-Series Values:
  *
@@ -624,20 +638,7 @@ private:
 
 }  // namespace v1
 
-class MetricsClockSource {
-private:
-    using clock_type = std::chrono::steady_clock;
-
-public:
-    using duration = clock_type::duration;
-    using time_point = std::chrono::time_point<clock_type>;
-
-    static time_point now() {
-        return clock_type::now();
-    }
-};
-
-using Registry = v1::RegistryT<MetricsClockSource>;
+using Registry = v1::RegistryT<v1::MetricsClockSource>;
 
 static_assert(std::is_move_constructible<Registry>::value, "move");
 static_assert(std::is_move_assignable<Registry>::value, "move");
