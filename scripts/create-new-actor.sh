@@ -197,7 +197,7 @@ create_impl() {
 create_workload_yml() {
     local actor_name
     actor_name="$1"
-cat << EOF > "$(dirname "$0")/../workloads/docs/${actor_name}.yml"
+cat << EOF > "$(dirname "$0")/../src/workloads/docs/${actor_name}.yml"
 SchemaVersion: 2018-07-01
 Owner: TODO put your github team name here e.g. @mongodb/stm
 
@@ -215,7 +215,7 @@ Actors:
     Retries: 7 # used by ExecutionStrategy
     # below used by PhaseConfig in ${actor_name}.cpp
     Collection: test
-    Document: {foo: {^RandomInt: {Min: 0, Max: 100}}}
+    Document: {foo: {^RandomInt: {min: 0, max: 100}}}
 EOF
 }
 
@@ -322,24 +322,23 @@ create_impl                  "$uuid_tag" "$actor_name"
 create_test                  "$actor_name"
 create_workload_yml          "$actor_name"
 
+actor_name_lowercase=$(echo "$actor_name" | tr '[:upper:]' '[:lower:]');
+
 echo "Successfully generated Actor skeleton for ${actor_name}:"
 echo ""
 git status --porcelain=v1 | sed 's/^/    /'
 echo ""
 echo "Build and test ${actor_name} with the following command:"
 echo ""
-echo "    cd build"
-echo "    cmake .."
-echo "    make -j8"
-echo "    ./src/cast_core/cast_core_test '[${actor_name}]'"
-echo "    make test"
+echo "    ./scripts/lamp"
+echo "    ./scripts/lamp resmoke-test --label-regex '${actor_name_lowercase}'"
+echo "    ./scripts/lamp cmake-test --label-regex '${actor_name_lowercase}'"
 echo ""
 echo "Run your workload as follows:"
 echo ""
-echo "    ./build/src/driver/genny                                   \\"
-echo "        --workload-file       ./workloads/docs/${actor_name}.yml" \\"
-echo "        --metrics-format      csv                              \\"
-echo "        --metrics-output-file build/genny-metrics.csv          \\"
+echo "    ./dist/bin/genny                                             \\"
+echo "        --workload-file       ./workloads/docs/${actor_name}.yml \\"
+echo "        --metrics-format      csv                                \\"
+echo "        --metrics-output-file build/genny-metrics.csv            \\"
 echo "        --mongo-uri           'mongodb://localhost:27017'"
 echo ""
-
