@@ -157,9 +157,8 @@ private:
         }
 
         // If we have an operation, then we have a watch
-        auto maybeWatch = _operation
-            ? std::make_optional<metrics::OperationContext>(_operation->start())
-            : std::optional<metrics::OperationContext>(std::nullopt);
+        std::optional<metrics::OperationContext> maybeWatch =
+            _operation ? std::make_optional(std::move(_operation->start())) : std::nullopt;
 
         try {
             if (_options.awaitStepdown) {
@@ -174,10 +173,10 @@ private:
                 }
             }
         } catch (mongocxx::operation_exception& e) {
-            BOOST_THROW_EXCEPTION(MongoException(e, view));
             if (maybeWatch) {
                 maybeWatch->fail();
             }
+            BOOST_THROW_EXCEPTION(MongoException(e, view));
         }
     }
 

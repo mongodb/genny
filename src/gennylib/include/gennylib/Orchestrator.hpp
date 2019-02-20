@@ -19,8 +19,6 @@
 #include <condition_variable>
 #include <shared_mutex>
 
-#include <metrics/metrics.hpp>
-
 namespace genny {
 
 // May eventually want a proper type for Phase, but for now just a typedef is sufficient.
@@ -33,7 +31,7 @@ using PhaseNumber = unsigned int;
 class Orchestrator {
 
 public:
-    explicit Orchestrator() {}
+    explicit Orchestrator() = default;
 
     /**
      * @return the current phase number
