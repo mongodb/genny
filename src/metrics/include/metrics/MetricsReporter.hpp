@@ -102,12 +102,8 @@ public:
 
         // should these values come from the registry, and should they be recorded at
         // time of registry-creation?
-        auto systemTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                              ReporterClockSource::now().time_since_epoch())
-                              .count();
-        auto metricsTime = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                               _registry->now(perm).time_since_epoch())
-                               .count();
+        auto systemTime = nanosecondsCount(ReporterClockSource::now().time_since_epoch());
+        auto metricsTime = nanosecondsCount(_registry->now(perm).time_since_epoch());
 
         // if this lives more than a hot-second, put the formats into an enum and do this
         // check & throw in the driver/main program
@@ -157,8 +153,8 @@ private:
                          genny::metrics::v1::Permission perm) {
         for (const auto& c : haveTimeSeries) {
             for (const auto& v : c.second.getTimeSeries(perm).getVals(perm)) {
-                out << v.first.time_since_epoch().count() << "," << c.first << "," << v.second
-                    << std::endl;
+                out << nanosecondsCount(v.first.time_since_epoch()) << "," << c.first << ","
+                    << v.second << std::endl;
             }
         }
     }
@@ -175,6 +171,17 @@ private:
         }
         return out;
     }
+
+    /**
+     * @return the number of nanoseconds represented by the duration.
+     * @param dur the duration
+     * @tparam DurationIn the duration's type
+     */
+    template <typename DurationIn>
+    static long long nanosecondsCount(const DurationIn& dur) {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
+    }
+
     const v1::RegistryT<MetricsClockSource>* _registry;
 };
 
