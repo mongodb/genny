@@ -118,9 +118,11 @@ tasks:
       display_name: Genny
       short_name: genny
       install_dir: dist
+
 - name: t_rm_toolchain_dir_static_host
   commands:
   - func: f_rm_toolchain_dir_static_host
+
 - name: t_push
   depends_on: t_compile
   patchable: no
@@ -146,25 +148,35 @@ tasks:
   commands:
   - func: f_resmoke_test
     vars:
-      resmoke_suite: genny_standalone.yml
+      resmoke_test_args: "--suites genny_standalone.yml"
 
 - name: t_integration_test_single_node_replset
   commands:
   - func: f_resmoke_test
     vars:
-      resmoke_suite: genny_single_node_replset.yml
+      resmoke_test_args: "--suites genny_single_node_replset.yml"
 
 - name: t_integration_test_three_node_replset
   commands:
   - func: f_resmoke_test
     vars:
-      resmoke_suite: genny_three_node_replset.yml
+      resmoke_test_args: "--suites genny_three_node_replset.yml"
 
 - name: t_integration_test_sharded
   commands:
   - func: f_resmoke_test
     vars:
-      resmoke_suite: genny_sharded.yml
+      resmoke_test_args: "--suites genny_sharded.yml"
+
+# Must run this task last to avoid polluting test results with tests generated
+# by the new actor.
+- name: t_test_create_new_actor_script
+  commands:
+    - func: f_run_create_new_actor_script
+    - func: f_dry_run_workloads  # Test the generated yaml file is valid.
+    - func: f_resmoke_test
+      vars:
+        resmoke_test_args: "--create-new-actor-test-suite"
 
 
 ##                ⚡️ Task Groups ⚡️
@@ -204,6 +216,7 @@ task_groups:
   - t_integration_test_single_node_replset
   - t_integration_test_three_node_replset
   - t_integration_test_sharded
+  - t_test_create_new_actor_script  # Must run this task last.
 
 - name: tg_compile_static_host
   max_hosts: 1
@@ -399,16 +412,40 @@ functions:
   # Requires f_compile to have been run first.
   ##
   f_resmoke_test:
-  - command: subprocess.exec
+  - command: shell.exec
     params:
       continue_on_err: true
       working_dir: src
-      binary: /bin/bash
-      args:
-      - ${workdir}/src/scripts/run-resmoke.sh
-      env:
-        RESMOKE_SUITE: ${resmoke_suite}
+      shell: bash
+      script: |
+        set -o errexit
+        set -o pipefail
+        set -o nounset
 
+        # for python3
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        ./scripts/lamp resmoke-test ${resmoke_test_args}
+
+  ##
+  # Runs tests for the create_new_actor script.
+  ##
+  f_run_create_new_actor_script:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      working_dir: src
+      shell: bash
+      script: |
+        set +o errexit  # don't errexit, in case the create-new-actor.sh script fails to run at all.
+        set -o pipefail
+        set -o nounset
+
+        # for python3
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        ./scripts/create-new-actor.sh SelfTestActor
+        ./scripts/lamp  # compile and install the new actor.
   ##
   # Runs python unit tests.
   ##

@@ -35,10 +35,13 @@ def parse_args(args, os_family):
     resmoke_test_parser = subparsers.add_parser(
         'resmoke-test', help='run cmake unit tests that connect to a MongoDB cluster')
     group = resmoke_test_parser.add_mutually_exclusive_group()
-    group.add_argument('--suites', help='equivalent to resmoke.py\'s "--suites" option')
-    group.add_argument('--create-new-actor-test-suite', action='store_true',
+    group.add_argument('--suites', dest='resmoke_suites',
+                       help='equivalent to resmoke.py\'s "--suites" option')
+    group.add_argument('--create-new-actor-test-suite', action='store_true', dest='resmoke_cnats',
                        help='Run the "genny_create_new_actor" resmoke test suite,'
                             ' incompatible with the --suites options')
+    resmoke_test_parser.add_argument('--mongo-dir', dest='resmoke_mongo_dir',
+                       help='path to the mongo repo, which contains buildscripts/resmoke.py')
 
     subparsers.add_parser('compile', help='just run the compile step for genny')
     subparsers.add_parser('install', help='just run the install step for genny')

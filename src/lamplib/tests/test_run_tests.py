@@ -21,7 +21,7 @@ class TestRunTests(unittest.TestCase):
                 return res
 
             mock_subprocess_run.side_effect = fail
-            cmake_test(env={}, args={})
+            cmake_test(env={})
             self.assertTrue(os.path.isfile(expected_file))
 
             def succeed(*args, **kwargs):
@@ -30,5 +30,5 @@ class TestRunTests(unittest.TestCase):
                 return res
 
             mock_subprocess_run.side_effect = succeed
-            cmake_test(env={}, args={})
+            cmake_test(env={})
             self.assertFalse(os.path.isfile(expected_file))
