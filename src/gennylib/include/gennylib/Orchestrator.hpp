@@ -31,7 +31,9 @@ using PhaseNumber = unsigned int;
 class Orchestrator {
 
 public:
-    explicit Orchestrator() = default;
+    // TODO TIG-1098: Writing `Orchestrator() = default` causes a performance regression in the
+    // "Orchestrator Perf" benchmark where as low as 75% of `regIters` occur.
+    explicit Orchestrator() {}
 
     /**
      * @return the current phase number
