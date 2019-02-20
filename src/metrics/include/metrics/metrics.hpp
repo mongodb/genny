@@ -37,22 +37,20 @@ class Reporter;
 /*
  * Could add a template policy class on Registry to let the following types be templatized.
  */
-using clock = std::chrono::steady_clock;
 using count_type = long long;
 using gauged_type = long long;
 
-static_assert(clock::is_steady, "clock must be steady");
-
 // Convenience (wouldn't want to be configurable in the future)
 
+template <typename ClockSource>
 class period {
 private:
-    clock::duration duration;
+    typename ClockSource::duration duration;
 
 public:
     period() = default;
 
-    operator clock::duration() const {
+    operator typename ClockSource::duration() const {
         return duration;
     }
 
@@ -61,16 +59,18 @@ public:
     period(Arg0 arg0, Args&&... args)
         : duration(std::forward<Arg0>(arg0), std::forward<Args>(args)...) {}
 
-    // base-case for arg that is implicitly-convertible to clock::duration
+    // base-case for arg that is implicitly-convertible to ClockSource::duration
     template <typename Arg,
-              typename = typename std::enable_if<std::is_convertible<Arg, clock::duration>::value,
-                                                 void>::type>
+              typename = typename std::enable_if<
+                  std::is_convertible<Arg, typename ClockSource::duration>::value,
+                  void>::type>
     period(Arg&& arg) : duration(std::forward<Arg>(arg)) {}
 
-    // base-case for arg that isn't explicitly-convertible to clock::duration; marked explicit
+    // base-case for arg that isn't explicitly-convertible to ClockSource::duration; marked explicit
     template <typename Arg,
-              typename = typename std::enable_if<!std::is_convertible<Arg, clock::duration>::value,
-                                                 void>::type,
+              typename = typename std::enable_if<
+                  !std::is_convertible<Arg, typename ClockSource::duration>::value,
+                  void>::type,
               typename = void>
     explicit period(Arg&& arg) : duration(std::forward<Arg>(arg)) {}
 
@@ -162,7 +162,7 @@ private:
  * Data-storage backing a `Counter`.
  * Please see the documentation there.
  */
-template <class ClockSource>
+template <typename ClockSource>
 class CounterImpl : private boost::noncopyable {
 
 public:
@@ -186,7 +186,7 @@ private:
  * Data-storage backing a `Gauge`.
  * Please see the documentation there.
  */
-template <class ClockSource>
+template <typename ClockSource>
 class GaugeImpl : private boost::noncopyable {
 
 public:
@@ -208,7 +208,7 @@ private:
  * Data-storage backing a `Timer`.
  * Please see the documentation there.
  */
-template <class ClockSource>
+template <typename ClockSource>
 class TimerImpl : private boost::noncopyable {
 
 public:
@@ -217,16 +217,16 @@ public:
     }
 
     // passkey:
-    const TimeSeries<ClockSource, period>& getTimeSeries(Permission) const {
+    const TimeSeries<ClockSource, period<ClockSource>>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
-    TimeSeries<ClockSource, period> _timeSeries;
+    TimeSeries<ClockSource, period<ClockSource>> _timeSeries;
 };
 
 
-template <class ClockSource>
+template <typename ClockSource>
 class OperationImpl {
 
 public:
@@ -290,7 +290,7 @@ private:
  * }
  * ```
  */
-template <class ClockSource>
+template <typename ClockSource>
 class Counter {
 
 public:
@@ -326,7 +326,7 @@ private:
  * How to determine the value for the "do something" time-period
  * needs to be interpreted for each metric individually.
  */
-template <class ClockSource>
+template <typename ClockSource>
 class Gauge {
 
 public:
@@ -361,7 +361,7 @@ private:
  * but that does not prevent the timer from reporting on
  * its own in its dtor.
  */
-template <class ClockSource>
+template <typename ClockSource>
 class RaiiStopwatch {
 
 public:
@@ -418,7 +418,7 @@ private:
  * The `.report()` is only called in the successful
  * scenarios, not if an exception is thrown.
  */
-template <class ClockSource>
+template <typename ClockSource>
 class Stopwatch {
 
 public:
@@ -439,7 +439,7 @@ private:
 /**
  * Timer is deprecated in favor of Operation.
  */
-template <class ClockSource>
+template <typename ClockSource>
 class Timer {
 
 public:
@@ -479,16 +479,14 @@ private:
     v1::TimerImpl<ClockSource>* _timer;
 };
 
-}  // namespace v1
-
-template <class ClockSource>
-class OperationContext {
+template <typename ClockSource>
+class OperationContextT {
 
 public:
-    OperationContext(v1::OperationImpl<ClockSource>& op)
+    OperationContextT(v1::OperationImpl<ClockSource>& op)
         : _op{std::addressof(op)}, _started{ClockSource::now()} {}
 
-    ~OperationContext() {
+    ~OperationContextT() {
         if (!_isClosed) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Metrics not reported because operation '" << this->_op->getOpName()
@@ -533,14 +531,14 @@ private:
 };
 
 
-template <class ClockSource>
-class Operation {
+template <typename ClockSource>
+class OperationT {
 
 public:
-    explicit Operation(v1::OperationImpl<ClockSource> op) : _op{std::move(op)} {}
+    explicit OperationT(v1::OperationImpl<ClockSource> op) : _op{std::move(op)} {}
 
-    OperationContext<ClockSource> start() {
-        return OperationContext<ClockSource>(this->_op);
+    OperationContextT<ClockSource> start() {
+        return OperationContextT<ClockSource>(this->_op);
     }
 
 private:
@@ -572,12 +570,12 @@ private:
  * only be used by workload-drivers to produce a report of the metrics at specific-points
  * in their workload lifecycle.
  */
-
-// TODO: Rename the class to Registry and the using alias to DefaultRegistry.
-template <class ClockSource>
+template <typename ClockSource>
 class RegistryT {
 
 public:
+    using clock = ClockSource;
+
     explicit RegistryT() = default;
 
     v1::Counter<ClockSource> counter(const std::string& name) {
@@ -589,13 +587,13 @@ public:
     v1::Gauge<ClockSource> gauge(const std::string& name) {
         return v1::Gauge<ClockSource>{this->_gauges[name]};
     }
-    Operation<ClockSource> operation(const std::string& name) {
+    OperationT<ClockSource> operation(const std::string& name) {
         auto op = v1::OperationImpl<ClockSource>(name,
                                                  this->_timers[name + "_timer"],
                                                  this->_counters[name + "_iters"],
                                                  this->_counters[name + "_docs"],
                                                  this->_counters[name + "_bytes"]);
-        return Operation{std::move(op)};
+        return OperationT{std::move(op)};
     }
 
     // passkey:
@@ -624,10 +622,15 @@ private:
     std::unordered_map<std::string, v1::GaugeImpl<ClockSource>> _gauges;
 };
 
-using Registry = RegistryT<std::chrono::steady_clock>;
+}  // namespace v1
+
+using OperationContext = v1::OperationContextT<std::chrono::steady_clock>;
+using Operation = v1::OperationT<std::chrono::steady_clock>;
+using Registry = v1::RegistryT<std::chrono::steady_clock>;
 
 static_assert(std::is_move_constructible<Registry>::value, "move");
 static_assert(std::is_move_assignable<Registry>::value, "move");
+static_assert(Registry::clock::is_steady, "clock must be steady");
 
 
 }  // namespace genny::metrics
