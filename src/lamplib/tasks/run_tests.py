@@ -21,7 +21,7 @@ _sentinel_report = """
 """.strip()
 
 
-def _run_command_with_sentinel_report(cmd_func, checker_func=lambda: False):
+def _run_command_with_sentinel_report(cmd_func, checker_func=None):
     sentinel_file = os.path.join(os.getcwd(), 'build', 'sentinel.junit.xml')
 
     with open(sentinel_file, 'w') as f:
@@ -29,7 +29,12 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=lambda: False):
 
     res = cmd_func()
 
-    if res.returncode == 0 or checker_func():
+    if checker_func:
+        success = checker_func()
+    else:
+        success = (res.returncode == 0)
+
+    if success:
         logging.debug('Test succeeded, removing sentinel report')
         os.remove(sentinel_file)
     else:
@@ -74,7 +79,7 @@ def _check_create_new_actor_test_report(workdir):
 
 def resmoke_test(env, suites, mongo_dir, is_cnats):
     workdir = os.getcwd()
-    checker_func = lambda: False
+    checker_func = None
 
     if is_cnats:
         suites = os.path.join(workdir, 'src', 'resmokeconfig', 'genny_create_new_actor.yml')
