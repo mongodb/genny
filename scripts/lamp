@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 # Because genies come from lamps.
 
+# for mongodbtoolchain python3
+export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
 python3 "$PWD/src/lamplib" $@

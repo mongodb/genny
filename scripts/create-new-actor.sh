@@ -322,8 +322,6 @@ create_impl                  "$uuid_tag" "$actor_name"
 create_test                  "$actor_name"
 create_workload_yml          "$actor_name"
 
-actor_name_lowercase=$(echo "$actor_name" | tr '[:upper:]' '[:lower:]');
-
 echo "Successfully generated Actor skeleton for ${actor_name}:"
 echo ""
 git status --porcelain=v1 | sed 's/^/    /'
@@ -331,7 +329,7 @@ echo ""
 echo "Build and test ${actor_name} with the following command:"
 echo ""
 echo "    ./scripts/lamp"
-echo "    ./scripts/lamp resmoke-test --suites '${actor_name_lowercase}'"
+echo "    ./scripts/lamp resmoke-test --suites src/resmokeconfig/genny_standalone.yml"
 echo "    ./scripts/lamp cmake-test"
 echo ""
 echo "Run your workload as follows:"

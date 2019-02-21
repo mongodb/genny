@@ -360,11 +360,7 @@ functions:
       working_dir: src
       shell: bash
       script: |
-        set -o errexit
-        set -o pipefail
-
-        # for python3
-        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+        set -eo pipefail
 
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
 
@@ -399,13 +395,7 @@ functions:
       working_dir: src
       shell: bash
       script: |
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        # for python3
-        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
-
+        set -euo pipefail
         ./scripts/lamp cmake-test
 
   ##
@@ -419,13 +409,7 @@ functions:
       working_dir: src
       shell: bash
       script: |
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        # for python3
-        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
-
+        set -eou pipefail
         ./scripts/lamp resmoke-test ${resmoke_test_args}
 
   ##
@@ -450,12 +434,7 @@ functions:
       working_dir: src
       shell: bash
       script: |
-        set -o errexit
-        set -o pipefail
-        set -o nounset
-
-        # for python3
-        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+        set -eou pipefail
 
         # Run Genny result processor unit tests
         pushd src/python
@@ -494,9 +473,7 @@ functions:
     params:
       shell: bash
       script: |
-        set -o errexit
-        set -o pipefail
-        set -o nounset
+        set -eou pipefail
 
         rm -f \
         src/build/*.junit.xml \

@@ -8,7 +8,7 @@ def parse_args(args, os_family):
     parser = argparse.ArgumentParser(
         description='Script for building genny',
         epilog='Unknown positional arguments will be forwarded verbatim to the cmake'
-               'invocation where relevant'
+               ' invocation where relevant'
     )
 
     # Python can't natively check the distros of our supported platforms.
