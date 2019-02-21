@@ -166,7 +166,7 @@ tasks:
   commands:
   - func: f_resmoke_test
     vars:
-      resmoke_test_args: "--suites genny_sharded.yml"
+      resmoke_test_args: "--suites src/resmokeconfig/genny_sharded.yml"
 
 # Must run this task last to avoid polluting test results with tests generated
 # by the new actor.
@@ -434,7 +434,7 @@ functions:
   f_run_create_new_actor_script:
   - command: subprocess.exec
     params:
-      working_dir: .
+      working_dir: src
       binary: /bin/bash
       args:
         - ${workdir}/src/scripts/create-new-actor.sh

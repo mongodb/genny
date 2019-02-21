@@ -86,6 +86,8 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
     if not mongo_dir:
         # Default mongo directory in Evergreen.
         mongo_dir = os.path.join(workdir, 'build', 'mongo')
+        # Default download location for MongoDB binaries.
+        env['PATH'] += ':' + os.path.join(mongo_dir, 'bin') + ':' + mongo_dir
 
     evg_venv_dir = os.path.join(workdir, 'build', 'venv')
 
