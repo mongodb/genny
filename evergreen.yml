@@ -148,19 +148,19 @@ tasks:
   commands:
   - func: f_resmoke_test
     vars:
-      resmoke_test_args: "--suites genny_standalone.yml"
+      resmoke_test_args: "--suites src/resmokeconfig/genny_standalone.yml"
 
 - name: t_integration_test_single_node_replset
   commands:
   - func: f_resmoke_test
     vars:
-      resmoke_test_args: "--suites genny_single_node_replset.yml"
+      resmoke_test_args: "--suites src/resmokeconfig/genny_single_node_replset.yml"
 
 - name: t_integration_test_three_node_replset
   commands:
   - func: f_resmoke_test
     vars:
-      resmoke_test_args: "--suites genny_three_node_replset.yml"
+      resmoke_test_args: "--suites src/resmokeconfig/genny_three_node_replset.yml"
 
 - name: t_integration_test_sharded
   commands:
@@ -173,6 +173,7 @@ tasks:
 - name: t_test_create_new_actor_script
   commands:
     - func: f_run_create_new_actor_script
+    - func: f_compile
     - func: f_dry_run_workloads  # Test the generated yaml file is valid.
     - func: f_resmoke_test
       vars:
@@ -431,21 +432,14 @@ functions:
   # Runs tests for the create_new_actor script.
   ##
   f_run_create_new_actor_script:
-  - command: shell.exec
+  - command: subprocess.exec
     params:
-      continue_on_err: true
-      working_dir: src
-      shell: bash
-      script: |
-        set +o errexit  # don't errexit, in case the create-new-actor.sh script fails to run at all.
-        set -o pipefail
-        set -o nounset
+      working_dir: .
+      binary: /bin/bash
+      args:
+        - ${workdir}/src/scripts/create-new-actor.sh
+        - SelfTestActor
 
-        # for python3
-        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
-
-        ./scripts/create-new-actor.sh SelfTestActor
-        ./scripts/lamp  # compile and install the new actor.
   ##
   # Runs python unit tests.
   ##
