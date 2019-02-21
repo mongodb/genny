@@ -7,7 +7,8 @@ from context import Context
 def parse_args(args, os_family):
     parser = argparse.ArgumentParser(
         description='Script for building genny',
-        epilog='Unknown positional arguments will be forwarded verbatim to the cmake invocation'
+        epilog='Unknown positional arguments will be forwarded verbatim to the cmake'
+               ' invocation where relevant'
     )
 
     # Python can't natively check the distros of our supported platforms.
@@ -18,17 +19,30 @@ def parse_args(args, os_family):
                              ' please contact us at #workload-generation')
     parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('-i', '--ignore-toolchain-version', action='store_true',
-                        help='ignore the toolchain version, allow use of a custom toolchain version')
+                        help='ignore the toolchain version, useful for testing toolchain changes')
     parser.add_argument('-b', '--build-system',
                         choices=['make', 'ninja'], default='ninja',
-                        help='Which build-system to use for compilation. May need to use make for IDEs.')
+                        help='Which build-system to use for compilation. May need to use make for '
+                             'IDEs.')
 
     subparsers = parser.add_subparsers(
         dest='subcommand',
-        description='subcommands perform specific actions; make sure you run this script without any '
-                    'subcommand first to initialize the environment')
+        description='subcommands perform specific actions; make sure you run this script without '
+                    'any subcommand first to initialize the environment')
     subparsers.add_parser(
         'cmake-test', help='run cmake unit tests that don\'t connect to a MongoDB cluster')
+
+    resmoke_test_parser = subparsers.add_parser(
+        'resmoke-test', help='run cmake unit tests that connect to a MongoDB cluster')
+    group = resmoke_test_parser.add_mutually_exclusive_group()
+    group.add_argument('--suites', dest='resmoke_suites',
+                       help='equivalent to resmoke.py\'s "--suites" option')
+    group.add_argument('--create-new-actor-test-suite', action='store_true', dest='resmoke_cnats',
+                       help='Run the "genny_create_new_actor" resmoke test suite,'
+                            ' incompatible with the --suites options')
+    resmoke_test_parser.add_argument('--mongo-dir', dest='resmoke_mongo_dir',
+                       help='path to the mongo repo, which contains buildscripts/resmoke.py')
+
     subparsers.add_parser('compile', help='just run the compile step for genny')
     subparsers.add_parser('install', help='just run the install step for genny')
     subparsers.add_parser('self-test', help='run lamplib unittests')
@@ -42,5 +56,15 @@ def parse_args(args, os_family):
 
 
 def add_args_to_context(args):
+    """
+    Add command line arguments to the global context object to be used later on.
+
+    Consider putting command line arguments onto the context if it is used by more
+    than one caller.
+
+    :param args:
+    :return:
+    """
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     Context.IGNORE_TOOLCHAIN_VERSION = args.ignore_toolchain_version
+    Context.BUILD_SYSTEM = args.build_system

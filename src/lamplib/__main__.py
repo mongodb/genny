@@ -7,56 +7,53 @@ import sys
 import parser
 import tasks
 import tasks.run_tests
-
 from context import Context
 from parser import add_args_to_context
-
 from tasks.toolchain import get_toolchain_url, fetch_and_install_toolchain
 
 
+def run_self_test():
+    res = subprocess.run(['python3', '-m', 'unittest'],
+                         cwd=os.path.dirname(os.path.abspath(__file__)))
+    res.check_returncode()
+    sys.exit(0)
+
+
 def main():
+    # Initialize the global context.
     os_family = platform.system()
+    Context.set_triplet_os(os_family)
     args, cmake_args = parser.parse_args(sys.argv[1:], os_family)
-
-    # Execute the minimum amount of code possible to run self tests.
-    if args.subcommand == 'self-test':
-        res = subprocess.run(['python3', '-m', 'unittest'],
-                             cwd=os.path.dirname(os.path.abspath(__file__)))
-        res.check_returncode()
-        sys.exit(0)
-
     add_args_to_context(args)
+    # Pass around Context instead of using the global one to facilitate testing.
+    context = Context
 
-    # This code is temporary. BUILD-7624 will move things over to /opt/.
-    toolchain_parent = {
-        'Linux': '/data/mci',
-        'Darwin': '/data/mci'
-    }
-
-    # Map of platform.system() to vcpkg's OS names.
-    triplet_os = {
-        'Darwin': 'osx',
-        'Linux': 'linux',
-        'NT': 'windows'
-    }[os_family]
+    # Execute the minimum amount of code possible to run self tests to minimize
+    # untestable code (i.e. code that runs the self-test).
+    if args.subcommand == 'self-test':
+        run_self_test()
 
     url = get_toolchain_url(os_family, args.linux_distro)
-    toolchain_dir = fetch_and_install_toolchain(url, toolchain_parent[os_family])
-    env = Context.get_compile_environment(toolchain_dir, triplet_os=triplet_os)
+    toolchain_dir = fetch_and_install_toolchain(url, Context.TOOLCHAIN_ROOT)
+    compile_env = context.get_compile_environment(toolchain_dir)
 
     if not args.subcommand:
         logging.info('No subcommand specified; running cmake, compile and install')
-        tasks.cmake(toolchain_dir, cmdline_args=args, cmdline_cmake_args=cmake_args, triplet_os=triplet_os, env=env)
-        tasks.compile_all(env, args)
-        tasks.install(env, args)
+        tasks.cmake(context, toolchain_dir=toolchain_dir,
+                    env=compile_env, cmdline_cmake_args=cmake_args)
+        tasks.compile_all(context, compile_env)
+        tasks.install(context, compile_env)
     else:
         # Always compile genny regardless of the subcommand.
-        tasks.compile_all(env, args)
+        tasks.compile_all(context, compile_env)
 
     if args.subcommand == 'install':
-        tasks.install(env, args)
+        tasks.install(context, compile_env)
     elif args.subcommand == 'cmake-test':
-        tasks.run_tests.cmake_test(env, args)
+        tasks.run_tests.cmake_test(compile_env)
+    elif args.subcommand == 'resmoke-test':
+        tasks.run_tests.resmoke_test(compile_env, suites=args.resmoke_suites,
+                                     mongo_dir=args.resmoke_mongo_dir, is_cnats=args.resmoke_cnats)
 
 
 if __name__ == '__main__':

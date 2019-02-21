@@ -141,7 +141,7 @@ function(ParseFile SourceFile TestTarget)
         set(Labels ${TestTarget})
         if(TestStringsLength EQUAL 2)
             list(GET TestStrings 1 Tags)
-            string(TOLOWER "${Tags}" Tags)
+#            string(TOLOWER "${Tags}" Tags)
             # remove target from labels if the test is hidden
             if("${Tags}" MATCHES ".*\\[!?(hide|\\.)\\].*")
                 list(REMOVE_ITEM Labels ${TestTarget})

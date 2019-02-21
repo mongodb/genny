@@ -1,0 +1,25 @@
+# Test the create-new-actor script by running the generated test
+# against a standalone mongod. The resmoke invocation is expected
+# to fail.
+
+test_kind: gennylib_test
+
+executor:
+  config:
+    program_executable: build/src/cast_core/cast_core_test
+    verbatim_arguments:
+    - "--reporter"
+    - "junit"
+    - "--durations"
+    - "yes"
+    - "--rng-seed"
+    - "12345"
+    - "--success"
+    - "--out"
+    - "build/create_new_actor_test.junit.xml"
+    - "[SelfTestActor]"
+  fixture:
+    class: MongoDFixture
+    mongod_options:
+      set_parameters:
+        enableTestCommands: 1
