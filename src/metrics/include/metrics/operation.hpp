@@ -185,8 +185,8 @@ private:
         _isClosed = true;
     }
 
-    v1::OperationImpl<ClockSource>* _op;
-    time_point _started;
+    v1::OperationImpl<ClockSource>* const _op;
+    const time_point _started;
 
     OperationEvent<ClockSource> _event;
     bool _isClosed = false;
