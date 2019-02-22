@@ -46,7 +46,16 @@ public:
      */
     template <class... Args>
     void add(Args&&... args) {
-        _vals.emplace_back(ClockSource::now(), std::forward<Args>(args)...);
+        addAt(ClockSource::now(), std::forward<Args>(args)...);
+    }
+
+    /**
+     * Add a TSD data point occurring at `when`.
+     * Args are forwarded to the `T` constructor.
+     */
+    template <class... Args>
+    void addAt(time_point when, Args&&... args) {
+        _vals.emplace_back(when, std::forward<Args>(args)...);
     }
 
     // passkey:

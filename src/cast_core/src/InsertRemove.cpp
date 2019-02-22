@@ -76,14 +76,14 @@ void InsertRemove::run() {
                     auto view = config->myDoc.view();
                     config->collection.insert_one(view);
                     ctx.addBytes(view.length());
-                    ctx.addOps(1);
+                    ctx.addDocuments(1);
                 },
                 config->insertOptions);
             _removeStrategy.run(
                 [&](metrics::OperationContext& ctx) {
                     // Then we remove
                     auto results = config->collection.delete_many(config->myDoc.view());
-                    ctx.addOps(1);
+                    ctx.addDocuments(1);
                 },
                 config->removeOptions);
         }

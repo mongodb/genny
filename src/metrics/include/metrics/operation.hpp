@@ -70,9 +70,6 @@ struct OperationEvent {
 
 template <typename ClockSource>
 class OperationImpl {
-private:
-    using OutcomeType = typename OperationEvent<ClockSource>::OutcomeType;
-
 public:
     using time_point = typename ClockSource::time_point;
     using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
@@ -87,64 +84,32 @@ public:
         return _desc.opName;
     }
 
-    void reportNumIterations(count_type total) {
-        _curr.iters = total;
-    }
-
-    void reportNumOps(count_type total) {
-        _curr.ops = total;
-    }
-
-    void reportNumBytes(count_type total) {
-        _curr.size = total;
-    }
-
-    void reportNumErrors(count_type total) {
-        _curr.errors = total;
-    }
-
-    void reportSuccess(time_point started) {
-        reportOutcome(started, OutcomeType::kSuccess);
-    }
-
-    void reportFailure(time_point started) {
-        reportOutcome(started, OutcomeType::kFailure);
-    }
-
-    void discard() {
-        _curr = OperationEvent<ClockSource>{};
+    void reportAt(time_point finished, OperationEvent<ClockSource>&& event) {
+        _events->addAt(finished, event);
     }
 
 private:
-    void reportOutcome(time_point started, OutcomeType outcome) {
-        // TODO: We shouldn't be calling ClockSource::now() again as part of TimeSeries::add().
-        _curr.duration = ClockSource::now() - started;
-        _curr.outcome = outcome;
-
-        _events->add(std::move(_curr));
-        _curr = OperationEvent<ClockSource>{};
-    }
-
-    OperationEvent<ClockSource> _curr;
     const OperationDescriptor _desc;
     EventSeries* _events;
 };
 
 
 template <typename ClockSource>
-class OperationContextT {
+class OperationContextT : private boost::noncopyable {
+private:
+    using OutcomeType = typename OperationEvent<ClockSource>::OutcomeType;
+
 public:
+    using time_point = typename ClockSource::time_point;
+
     explicit OperationContextT(v1::OperationImpl<ClockSource>& op)
         : _op{std::addressof(op)}, _started{ClockSource::now()} {}
 
     OperationContextT(OperationContextT<ClockSource>&& rhs) noexcept
         : _op{std::move(rhs._op)},
           _started{std::move(rhs._started)},
-          _isClosed{std::move(rhs._isClosed)},
-          _totalBytes{std::move(rhs._totalBytes)},
-          _totalOps{std::move(rhs._totalOps)} {
-        rhs._isClosed = true;
-    }
+          _event{std::move(rhs._event)},
+          _isClosed{std::exchange(rhs._isClosed, true)} {}
 
     ~OperationContextT() {
         if (!_isClosed) {
@@ -154,43 +119,48 @@ public:
         }
     }
 
-    void addBytes(const count_type& size) {
-        _totalBytes += size;
+    void addIterations(count_type iters) {
+        _event.iters += iters;
     }
 
-    void addOps(const count_type& size) {
-        _totalOps += size;
+    void addDocuments(count_type ops) {
+        _event.ops += ops;
+    }
+
+    void addBytes(count_type size) {
+        _event.size += size;
+    }
+
+    void addErrors(count_type errors) {
+        _event.errors += errors;
     }
 
     void success() {
-        this->report();
-        _isClosed = true;
+        reportOutcome(OutcomeType::kSuccess);
     }
 
-    /**
-     * An operation does not report metrics upon failure.
-     *
-     * TODO: Update this comment and rename it to failure(). We should consider exposing a discard()
-     * method if we really don't want to report metrics.
-     */
-    void fail() {
+    void failure() {
+        reportOutcome(OutcomeType::kFailure);
+    }
+
+    void discard() {
         _isClosed = true;
     }
 
 private:
-    using time_point = typename ClockSource::time_point;
+    void reportOutcome(OutcomeType outcome) {
+        auto finished = ClockSource::now();
+        _event.duration = finished - _started;
+        _event.outcome = outcome;
 
-    void report() {
-        this->_op->reportSuccess(_started);
-        this->_op->reportNumBytes(_totalBytes);
-        this->_op->reportNumOps(_totalOps);
+        _op->reportAt(finished, std::move(_event));
+        _isClosed = true;
     }
 
     v1::OperationImpl<ClockSource>* _op;
     time_point _started;
-    OperationEvent<ClockSource> _curr;
-    count_type _totalBytes = 0;
-    count_type _totalOps = 0;
+
+    OperationEvent<ClockSource> _event;
     bool _isClosed = false;
 };
 

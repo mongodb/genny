@@ -347,7 +347,7 @@ TEST_CASE("metrics operation test") {
     RegistryClockSourceStub::advance();
     {
         auto ctx = op.start();
-        ctx.addOps(6);
+        ctx.addDocuments(6);
         ctx.addBytes(40);
 
         RegistryClockSourceStub::advance();

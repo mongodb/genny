@@ -140,16 +140,23 @@ the Phase.
 
 ### ⏱`Metrics` ⏱
 
-Genny records metrics using the `metrics::operation` type found in `metrics.hpp`. An instance of `metrics::operation` can capture several different data points about the operation it references. 
+Genny records metrics using the `metrics::operation` type found in
+`metrics.hpp`. An instance of `metrics::operation` can capture several
+different data points about the operation it references.
 
-#### Usage: 
-In your actor class, declare a metrics::operation: 
+#### Usage:
+
+TODO: Give a concrete example by defining an actual class.
+
+In your actor class, declare a metrics::operation:
 ` metrics::Operation _operation;` and
 `_operation{context.operation("insert", Insert::id())}`
 
 Begin timing the operation:
 `auto ctx = this->_operation.start();`
 (then write the code to perform the operation)
+
+TODO: Change addOps() -> addDocuments().
 
 You can increment a counter (for example, increment all documents inserted in a bulkinsert):
 `ctx.addOps(1);`
@@ -160,7 +167,10 @@ You can also count bytes:
 Ending the metrics::operation (this will stop the timer):
 `ctx.success();`
 
-If you can expect an exception, wrap the operation code in a try/catch block, and use `ctx.fail()` in the catch statement. If neither `success()` nor `fail()` are called, a warning will be printed. This indicates a programming error or an unexpected uncaught exception. 
+TODO: Update the following paragraph to mention fail() -> failure() or discard()
+depending on whether you want to track the result.
+
+If you can expect an exception, wrap the operation code in a try/catch block, and use `ctx.fail()` in the catch statement. If neither `success()` nor `fail()` are called, a warning will be printed. This indicates a programming error or an unexpected uncaught exception.
 
 
 

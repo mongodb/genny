@@ -36,7 +36,7 @@ void HelloWorld::run() {
             BOOST_LOG_TRIVIAL(info) << config->message;
             ++_helloCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _helloCounter;
-            ctx.addOps(1);
+            ctx.addDocuments(1);
             ctx.addBytes(config->message.size());
             ctx.success();
         }

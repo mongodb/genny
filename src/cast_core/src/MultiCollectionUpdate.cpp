@@ -73,7 +73,7 @@ void MultiCollectionUpdate::run() {
                 // Only time the actual update, not the setup of arguments
                 auto opCtx = _updateOp.start();
                 auto result = collection.update_many(std::move(filter), std::move(update));
-                opCtx.addOps(result->modified_count());
+                opCtx.addDocuments(result->modified_count());
                 opCtx.success();
             }
         }
