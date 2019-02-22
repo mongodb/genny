@@ -39,31 +39,54 @@ class CSV2:
             self.parse_operations
         ]
 
-        # The number to add to the timestamp (a.k.a. system_time) to get
+        # The number to add to the metrics timestamp (a.k.a. c++ system_time) to get
         # the UNIX time.
         self._unix_epoch_offset_ns = None
 
-        # map of (actor, operation) to thread count
+        # Map of (actor, operation) to thread count.
         self._operation_thread_count_map = {}
 
-        with open(csv2_file_name, 'r')  as f:
-            reader = csv.reader(f, dialect=_CSV2Dialect)
-            for parser in header_parsers:
-                parser(reader)
+        # Column headers in the csv2 file.
+        self._column_headers = None
+
+        try:
+            with open(csv2_file_name, 'r')  as f:
+                reader = csv.reader(f, dialect=_CSV2Dialect)
+                for parser in header_parsers:
+                    parser(reader)
+        except Exception as e:
+            raise ValueError('Error parsing CSV file: ', csv2_file_name) from e
 
     def parse_clocks(self, reader):
-        title = next(reader)
-        if not title:
-            raise ValueError('Expected title line, got: %s', title)
+        title = next(reader)[0]
+        if title != 'Clocks':
+            raise ValueError('Expected tile to be "Clocks", got %s', title)
 
-        if title[0] != 'Clocks':
-            raise ValueError('Expected tile to be "Clocks", got %s', title[0])
+        unix_time = int(next(reader)[1])
+        metrics_time = int(next(reader)[1])
 
+        self._unix_epoch_offset_ns = unix_time - metrics_time
 
-
+        next(reader)  # Read the next empty line.
 
     def parse_thread_count(self, reader):
-        pass
+        title = next(reader)[0]
+        if title != 'OperationThreadCounts':
+            raise ValueError('Expected title to be "OperationThreadCounts", got %s', title)
+
+        for line in reader:
+            if not line:
+                # Reached a blank line, finish parsing.
+                break
+            actor = line[0]
+            op = line[1]
+            thread_count = line[2]
+
+            self._operation_thread_count_map[(actor, op)] = thread_count
 
     def parse_operations(self, reader):
-        pass
+        title = next(reader)[0]
+        if title != 'Operations':
+            raise ValueError('Expected title to be "Operations", got %s', title)
+
+        self._column_headers = [h.strip() for h in next(reader)]
