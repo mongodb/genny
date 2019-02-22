@@ -19,7 +19,7 @@ import csv
 import sys
 from os.path import join as pjoin
 
-from csvsort import csvsort
+from third_party.csvsort import csvsort
 
 from genny.csv2 import CSV2
 

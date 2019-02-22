@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+MongoDB Modifications:
+1. add the quoting=quoting argument to csv.reader()
+"""
+
 import csv, heapq, logging, os, sys, tempfile
 from optparse import OptionParser
 csv.field_size_limit(sys.maxsize)
@@ -39,7 +44,7 @@ def csvsort(input_filename,
     """
 
     with open(input_filename) as input_fp:
-        reader = csv.reader(input_fp, delimiter=delimiter)
+        reader = csv.reader(input_fp, delimiter=delimiter, quoting=quoting)
         if has_header:
             header = next(reader)
         else:
@@ -61,7 +66,7 @@ def csvsort(input_filename,
         if header:
             writer.writerow(header)
         with open(sorted_filename) as sorted_fp:
-            for row in csv.reader(sorted_fp):
+            for row in csv.reader(sorted_fp, quoting=quoting):
                 writer.writerow(row)
 
     os.remove(sorted_filename)
