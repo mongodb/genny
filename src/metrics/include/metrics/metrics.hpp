@@ -26,52 +26,19 @@
 
 #include <gennylib/Actor.hpp>
 
+#include <metrics/TimeSeries.hpp>
+#include <metrics/operation.hpp>
+#include <metrics/passkey.hpp>
+
 namespace genny::metrics {
 
 /*
  * Could add a template policy class on Registry to let the following types be templatized.
+ *
+ * TODO: Remove these type aliases and just have the version defined in Operation.hpp.
  */
 using count_type = long long;
 using gauged_type = long long;
-
-// Convenience (wouldn't want to be configurable in the future)
-
-template <typename ClockSource>
-class period {
-private:
-    typename ClockSource::duration duration;
-
-public:
-    period() = default;
-
-    operator typename ClockSource::duration() const {
-        return duration;
-    }
-
-    // recursive case
-    template <typename Arg0, typename... Args>
-    period(Arg0 arg0, Args&&... args)
-        : duration(std::forward<Arg0>(arg0), std::forward<Args>(args)...) {}
-
-    // base-case for arg that is implicitly-convertible to ClockSource::duration
-    template <typename Arg,
-              typename = typename std::enable_if<
-                  std::is_convertible<Arg, typename ClockSource::duration>::value,
-                  void>::type>
-    period(Arg&& arg) : duration(std::forward<Arg>(arg)) {}
-
-    // base-case for arg that isn't explicitly-convertible to ClockSource::duration; marked explicit
-    template <typename Arg,
-              typename = typename std::enable_if<
-                  !std::is_convertible<Arg, typename ClockSource::duration>::value,
-                  void>::type,
-              typename = void>
-    explicit period(Arg&& arg) : duration(std::forward<Arg>(arg)) {}
-
-    friend std::ostream& operator<<(std::ostream& os, const period& p) {
-        return os << p.duration.count();
-    }
-};
 
 // The v1 namespace is here for two reasons:
 // 1) it's a step towards an ABI. These classes are basically the pimpls of the outer classes.
@@ -84,81 +51,6 @@ public:
  * internals. Actors should never have to type `genny::*::v1` into any types.
  */
 namespace v1 {
-
-/**
- * The ReporterT is given read-access to metrics data for the purposes
- * of reporting data. The ReporterT class is the only separately-compiled
- * component of the metrics library. It is not ABI safe.
- */
-template <typename MetricsClockSource>
-class ReporterT;
-
-/**
- * Ignore this. Used for passkey for some methods.
- */
-class Evil {
-protected:
-    Evil() = default;
-};
-class Permission : private Evil {
-
-private:
-    constexpr Permission() = default;
-
-    template <typename MetricsClockSource>
-    friend class ReporterT;
-};
-
-static_assert(std::is_empty<Permission>::value, "empty");
-
-
-/**
- * Not intended to be used directly.
- * This is used by the *Impl classes as storage for TSD values.
- *
- * @tparam T The value to record at a particular time-point.
- */
-template <class ClockSource, class T>
-class TimeSeries : private boost::noncopyable {
-
-public:
-    using time_point = typename ClockSource::time_point;
-
-    explicit constexpr TimeSeries() {
-        // could make 10000*10000 a param passed down
-        // from Registry if needed
-        _vals.reserve(1000 * 1000);
-    }
-
-    /**
-     * Add a TSD data point occurring `now()`.
-     * Args are forwarded to the `T` constructor.
-     */
-    template <class... Args>
-    void add(Args&&... args) {
-        _vals.emplace_back(ClockSource::now(), std::forward<Args>(args)...);
-    }
-
-    // passkey:
-    /**
-     * Internal method to expose data-points for reporting, etc.
-     * @return raw data
-     */
-    const std::vector<std::pair<time_point, T>>& getVals(Permission) const {
-        return _vals;
-    }
-
-    /**
-     * @return number of data points
-     */
-    long getDataPointCount(Permission) const {
-        return std::distance(_vals.begin(), _vals.end());
-    }
-
-private:
-    std::vector<std::pair<time_point, T>> _vals;
-};
-
 
 /**
  * Data-storage backing a `Counter`.
@@ -219,117 +111,12 @@ public:
     }
 
     // passkey:
-    const TimeSeries<ClockSource, period<ClockSource>>& getTimeSeries(Permission) const {
+    const TimeSeries<ClockSource, Period<ClockSource>>& getTimeSeries(Permission) const {
         return this->_timeSeries;
     }
 
 private:
-    TimeSeries<ClockSource, period<ClockSource>> _timeSeries;
-};
-
-
-struct OperationDescriptor {
-    // TODO: The ActorId is enough to rely on for uniqueness so we probably don't need to include
-    // `actorName` or `opName` in the Hasher or operator== implementations actually.
-    struct Hasher {
-        size_t operator()(const OperationDescriptor& desc) const {
-            size_t seed = 0;
-
-            boost::hash_combine(seed, desc.actorId);
-            boost::hash_combine(seed, desc.actorName);
-            boost::hash_combine(seed, desc.opName);
-
-            return seed;
-        }
-    };
-
-    OperationDescriptor(ActorId actorId, std::string actorName, std::string opName)
-        : actorId(actorId), actorName(std::move(actorName)), opName(std::move(opName)) {}
-
-    bool operator==(const OperationDescriptor& other) const {
-        return actorId == other.actorId && actorName == other.actorName && opName == other.opName;
-    }
-
-    const ActorId actorId;
-    const std::string actorName;
-    const std::string opName;
-};
-
-
-template <typename ClockSource>
-struct OperationEvent {
-    enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
-
-    count_type iters = 1;  // # iterations, usually 1
-    count_type ops = 0;    // # docs
-    count_type size = 0;   // # bytes
-    count_type errors = 0;
-    period<ClockSource> duration = {};
-    OutcomeType outcome = OutcomeType::kUnknown;
-};
-
-
-template <typename ClockSource>
-class OperationImpl {
-
-private:
-    using OutcomeType = typename OperationEvent<ClockSource>::OutcomeType;
-
-public:
-    using time_point = typename ClockSource::time_point;
-    using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
-
-    OperationImpl(OperationDescriptor desc, EventSeries& events)
-        : _desc(std::move(desc)), _events(std::addressof(events)) {}
-
-    /**
-     * Operation name getter to help with exception reporting.
-     */
-    const std::string& getOpName() const {
-        return _desc.opName;
-    }
-
-    void reportNumIterations(count_type total) {
-        _curr.iters = total;
-    }
-
-    void reportNumOps(count_type total) {
-        _curr.ops = total;
-    }
-
-    void reportNumBytes(count_type total) {
-        _curr.size = total;
-    }
-
-    void reportNumErrors(count_type total) {
-        _curr.errors = total;
-    }
-
-    void reportSuccess(time_point started) {
-        reportOutcome(started, OutcomeType::kSuccess);
-    }
-
-    void reportFailure(time_point started) {
-        reportOutcome(started, OutcomeType::kFailure);
-    }
-
-    void discard() {
-        _curr = OperationEvent<ClockSource>{};
-    }
-
-private:
-    void reportOutcome(time_point started, OutcomeType outcome) {
-        // TODO: We shouldn't be calling ClockSource::now() again as part of TimeSeries::add().
-        _curr.duration = ClockSource::now() - started;
-        _curr.outcome = outcome;
-
-        _events->add(std::move(_curr));
-        _curr = OperationEvent<ClockSource>{};
-    }
-
-    OperationEvent<ClockSource> _curr;
-    const OperationDescriptor _desc;
-    EventSeries* _events;
+    TimeSeries<ClockSource, Period<ClockSource>> _timeSeries;
 };
 
 
@@ -539,81 +326,6 @@ public:
 
 private:
     v1::TimerImpl<ClockSource>* _timer;
-};
-
-template <typename ClockSource>
-class OperationContextT {
-
-public:
-    explicit OperationContextT(v1::OperationImpl<ClockSource>& op)
-        : _op{std::addressof(op)}, _started{ClockSource::now()} {}
-
-    OperationContextT(OperationContextT<ClockSource>&& rhs) noexcept
-        : _op{std::move(rhs._op)},
-          _started{std::move(rhs._started)},
-          _isClosed{std::move(rhs._isClosed)},
-          _totalBytes{std::move(rhs._totalBytes)},
-          _totalOps{std::move(rhs._totalOps)} {
-        rhs._isClosed = true;
-    }
-
-    ~OperationContextT() {
-        if (!_isClosed) {
-            BOOST_LOG_TRIVIAL(warning)
-                << "Metrics not reported because operation '" << this->_op->getOpName()
-                << "' did not close with success() or fail().";
-        }
-    }
-
-    void addBytes(const count_type& size) {
-        _totalBytes += size;
-    }
-
-    void addOps(const count_type& size) {
-        _totalOps += size;
-    }
-
-    void success() {
-        this->report();
-        _isClosed = true;
-    }
-
-    /**
-     * An operation does not report metrics upon failure.
-     */
-    void fail() {
-        _isClosed = true;
-    }
-
-private:
-    using time_point = typename ClockSource::time_point;
-
-    void report() {
-        this->_op->reportSuccess(_started);
-        this->_op->reportNumBytes(_totalBytes);
-        this->_op->reportNumOps(_totalOps);
-    }
-
-    v1::OperationImpl<ClockSource>* _op;
-    time_point _started;
-    count_type _totalBytes = 0;
-    count_type _totalOps = 0;
-    bool _isClosed = false;
-};
-
-
-template <typename ClockSource>
-class OperationT {
-
-public:
-    explicit OperationT(v1::OperationImpl<ClockSource> op) : _op{std::move(op)} {}
-
-    OperationContextT<ClockSource> start() {
-        return OperationContextT<ClockSource>(this->_op);
-    }
-
-private:
-    v1::OperationImpl<ClockSource> _op;
 };
 
 
