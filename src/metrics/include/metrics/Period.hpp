@@ -30,10 +30,6 @@ public:
 
     Period() = default;
 
-    operator duration() const {
-        return _duration;
-    }
-
     // recursive case
     template <typename Arg0, typename... Args>
     Period(Arg0 arg0, Args&&... args)
@@ -51,6 +47,14 @@ public:
         typename = typename std::enable_if<!std::is_convertible<Arg, duration>::value, void>::type,
         typename = void>
     explicit Period(Arg&& arg) : _duration(std::forward<Arg>(arg)) {}
+
+    operator duration() const {
+        return _duration;
+    }
+
+    bool operator==(const Period<ClockSource>& other) const {
+        return _duration == other._duration;
+    }
 
     friend std::ostream& operator<<(std::ostream& os, const Period& period) {
         return os << period._duration.count();

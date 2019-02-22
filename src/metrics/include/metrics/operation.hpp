@@ -15,6 +15,7 @@
 #ifndef HEADER_3D319F23_C539_4B6B_B4E7_23D23E2DCD52_INCLUDED
 #define HEADER_3D319F23_C539_4B6B_B4E7_23D23E2DCD52_INCLUDED
 
+#include <ostream>
 #include <string>
 
 #include <gennylib/Actor.hpp>
@@ -59,6 +60,11 @@ template <typename ClockSource>
 struct OperationEvent {
     enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
+    bool operator==(const OperationEvent<ClockSource>& other) const {
+        return iters == other.iters && ops == other.ops && size == other.size &&
+            errors == other.errors && duration == other.duration && outcome == other.outcome;
+    }
+
     count_type iters = 1;  // # iterations, usually 1
     count_type ops = 0;    // # docs
     count_type size = 0;   // # bytes
@@ -66,6 +72,22 @@ struct OperationEvent {
     Period<ClockSource> duration = {};
     OutcomeType outcome = OutcomeType::kUnknown;
 };
+
+
+template <typename ClockSource>
+std::ostream& operator<<(std::ostream& out, const OperationEvent<ClockSource>& event) {
+    out << "OperationEvent{ ";
+    out << "iters: " << event.iters;
+    out << ", ops: " << event.ops;
+    out << ", size: " << event.size;
+    out << ", errors: " << event.errors;
+    out << ", duration: " << event.duration;
+    // Casting to uint8_t causes ostream to use its unsigned char overload and treat the value as
+    // invisible text.
+    out << ", outcome: " << static_cast<uint16_t>(event.outcome);
+    out << " }";
+    return out;
+}
 
 
 template <typename ClockSource>

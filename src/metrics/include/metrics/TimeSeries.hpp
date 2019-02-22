@@ -58,7 +58,14 @@ public:
         _vals.emplace_back(when, std::forward<Args>(args)...);
     }
 
-    // passkey:
+    const std::pair<time_point, T>& operator[](size_t pos) {
+        return _vals[pos];
+    }
+
+    size_t size() const {
+        return _vals.size();
+    }
+
     /**
      * Internal method to expose data-points for reporting, etc.
      * @return raw data
