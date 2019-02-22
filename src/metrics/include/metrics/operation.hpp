@@ -119,6 +119,7 @@ public:
         }
     }
 
+    // TODO: Need to somehow account for how OperationEvent::iters is default to 1.
     void addIterations(count_type iters) {
         _event.iters += iters;
     }
