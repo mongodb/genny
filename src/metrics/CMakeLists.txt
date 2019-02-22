@@ -16,7 +16,7 @@ project(metrics VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
     NAME    metrics
-    TYPE    STATIC
+    TYPE    INTERFACE
     DEPENDS
         MongoCxx::bsoncxx
         yaml-cpp

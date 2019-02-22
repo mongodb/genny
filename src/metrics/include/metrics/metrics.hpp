@@ -24,9 +24,9 @@
 #include <boost/core/noncopyable.hpp>
 #include <boost/log/trivial.hpp>
 
-namespace genny::metrics {
+#include <gennylib/Actor.hpp>
 
-using ActorId = unsigned int;
+namespace genny::metrics {
 
 /*
  * Could add a template policy class on Registry to let the following types be templatized.
@@ -545,27 +545,54 @@ template <typename ClockSource>
 class OperationContextT {
 
 public:
-    explicit OperationContextT(v1::OperationImpl<ClockSource>& op);
+    explicit OperationContextT(v1::OperationImpl<ClockSource>& op)
+        : _op{std::addressof(op)}, _started{ClockSource::now()} {}
 
-    OperationContextT(OperationContextT<ClockSource>&& rhs) noexcept;
+    OperationContextT(OperationContextT<ClockSource>&& rhs) noexcept
+        : _op{std::move(rhs._op)},
+          _started{std::move(rhs._started)},
+          _isClosed{std::move(rhs._isClosed)},
+          _totalBytes{std::move(rhs._totalBytes)},
+          _totalOps{std::move(rhs._totalOps)} {
+        rhs._isClosed = true;
+    }
 
-    ~OperationContextT();
+    ~OperationContextT() {
+        if (!_isClosed) {
+            BOOST_LOG_TRIVIAL(warning)
+                << "Metrics not reported because operation '" << this->_op->getOpName()
+                << "' did not close with success() or fail().";
+        }
+    }
 
-    void addBytes(const count_type& size);
+    void addBytes(const count_type& size) {
+        _totalBytes += size;
+    }
 
-    void addOps(const count_type& size);
+    void addOps(const count_type& size) {
+        _totalOps += size;
+    }
 
-    void success();
+    void success() {
+        this->report();
+        _isClosed = true;
+    }
 
     /**
      * An operation does not report metrics upon failure.
      */
-    void fail();
+    void fail() {
+        _isClosed = true;
+    }
 
 private:
     using time_point = typename ClockSource::time_point;
 
-    void report();
+    void report() {
+        this->_op->reportSuccess(_started);
+        this->_op->reportNumBytes(_totalBytes);
+        this->_op->reportNumOps(_totalOps);
+    }
 
     v1::OperationImpl<ClockSource>* _op;
     time_point _started;
