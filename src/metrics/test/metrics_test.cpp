@@ -338,5 +338,68 @@ TEST_CASE("metrics tests") {
     reporter.report(std::cout, "csv");
 }
 
+TEST_CASE("metrics operation test") {
+    RegistryClockSourceStub::reset();
+    v1::RegistryT<RegistryClockSourceStub> metrics;
+
+    auto op = metrics.operation("Insert", 0u);
+
+    RegistryClockSourceStub::advance();
+    {
+        auto ctx = op.start();
+        ctx.addOps(6);
+        ctx.addBytes(40);
+
+        RegistryClockSourceStub::advance();
+        ctx.success();
+    }
+    RegistryClockSourceStub::advance();
+
+    // would be done by framework / outside code:
+    auto reporter = genny::metrics::v1::ReporterT(metrics);
+
+    SECTION("csv reporting") {
+        // TODO: The thread number should be included in the name of the metrics.
+        auto expected =
+            "Clocks\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,3\n"
+            "\n"
+            "Counters\n"
+            "2,Insert_bytes,40\n"
+            "2,Insert_docs,6\n"
+            "2,Insert_iters,1\n"
+            "\n"
+            "Gauges\n"
+            "\n"
+            "Timers\n"
+            "2,Insert_timer,1\n"
+            "\n";
+
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "csv");
+        REQUIRE(out.str() == expected);
+    }
+
+    SECTION("cedar-csv reporting") {
+        auto expected =
+            "Clocks\n"
+            "MetricsTime,3\n"
+            "SystemTime,42000000\n"
+            "\n"
+            "OperationThreadCounts\n"
+            "InsertRemove,Insert,1"
+            "\n"
+            "Operations\n"
+            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size"
+            "2,InsertRemove,0,Insert,1,0,1,6,2,40\n"
+            "\n";
+
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        REQUIRE(out.str() == expected);
+    }
+}
+
 }  // namespace
 }  // namespace genny::metrics

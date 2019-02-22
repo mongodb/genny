@@ -24,6 +24,8 @@
 #include <boost/core/noncopyable.hpp>
 #include <boost/log/trivial.hpp>
 
+#include <gennylib/Actor.hpp>
+
 namespace genny::metrics {
 
 /*
@@ -610,7 +612,7 @@ public:
     v1::Gauge<ClockSource> gauge(const std::string& name) {
         return v1::Gauge<ClockSource>{this->_gauges[name]};
     }
-    OperationT<ClockSource> operation(const std::string& name) {
+    OperationT<ClockSource> operation(const std::string& name, ActorId id = 0u) {
         auto op = v1::OperationImpl<ClockSource>(name,
                                                  this->_timers[name + "_timer"],
                                                  this->_counters[name + "_iters"],
