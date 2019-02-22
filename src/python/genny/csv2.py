@@ -66,7 +66,11 @@ class _DataReader:
         # Convert nanoseconds to milliseconds
         line[_Columns.TIMESTAMP] /= 1000 * 1000
 
-        return line
+        # Remove the actor and operation columns to save space.
+        actor = line.pop(_Columns.OPERATION)
+        op = line.pop(_Columns.ACTOR)
+
+        return line, actor, op
 
 
 class _Columns:
@@ -80,6 +84,9 @@ class _Columns:
     OPS = 7
     ERRORS = 8
     SIZE = 9
+
+    assert ACTOR < OPERATION, 'We remove these two columns later on. ACTOR is removed ' \
+                              'after OPERATION so it needs to come first'
 
 
 class CSV2:
@@ -136,21 +143,6 @@ class CSV2:
         if not self._data_reader:
             raise ValueError('CSV2 data_reader has not been initialized yet')
         return self._data_reader
-
-    @staticmethod
-    def get_actor_op_pair(line):
-        return line[_Columns.ACTOR], line[_Columns.OPERATION]
-
-    @staticmethod
-    def _set_actor_op_pair(dummy_list, actor, op):
-        """
-        Set the actor and operation in-place in "dummy_list".
-
-        Useful for tests to set (actor, op) without having to remember their column numbers.
-        """
-        dummy_list[_Columns.ACTOR] = actor
-        dummy_list[_Columns.OPERATION] = op
-        return dummy_list
 
     def _parse_clocks(self, reader):
         title = next(reader)[0]

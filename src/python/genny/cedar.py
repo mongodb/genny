@@ -19,7 +19,9 @@ import csv
 import sys
 from os.path import join as pjoin
 
-from genny import csv2
+from csvsort import csvsort
+
+from genny.csv2 import CSV2
 
 """
 Convert raw genny csv output to a format expected by Cedar
@@ -71,18 +73,16 @@ def split_into_actor_operation_csv_files(data_reader, out_dir):
     cur_actor_op_pair = (None, None)
     output_files = []
 
-    for line in data_reader:
-        actor_op_pair = csv2.CSV2.get_actor_op_pair(line)
-
-        if actor_op_pair != cur_actor_op_pair:
-            cur_actor_op_pair = actor_op_pair
+    for line, actor, op in data_reader:
+        if (actor, op) != cur_actor_op_pair:
+            cur_actor_op_pair = (actor, op)
 
             # Close out old file.
             if cur_out_fh:
                 cur_out_fh.close()
 
             # Open new csv file.
-            file_name = actor_op_pair[0] + '-' + actor_op_pair[1] + '.csv'
+            file_name = actor + '-' + op + '.csv'
             output_files.append(file_name)
             cur_out_fh = open(pjoin(out_dir, file_name), 'w', newline='')
 
@@ -94,6 +94,13 @@ def split_into_actor_operation_csv_files(data_reader, out_dir):
     cur_out_fh.close()
 
     return output_files
+
+
+def sort_csv_files(files, out_dir):
+    for f in files:
+        # Sort on Timestamp and Thread.
+        csvsort(pjoin(out_dir, f), [0, 1], quoting=csv.QUOTE_NONNUMERIC, has_header=False,
+                show_progress=True)
 
 
 def parse_args(argv):
@@ -111,10 +118,12 @@ def main__cedar(argv=sys.argv[1:]):
     args = parse_args(argv)
 
     # Read CSV2 file
-    my_csv2 = csv2.CSV2(args.input_file)
+    my_csv2 = CSV2(args.input_file)
 
     # Separate into actor-operation
-    split_into_actor_operation_csv_files(my_csv2.data_reader(), args.output_dir)
+    files = split_into_actor_operation_csv_files(my_csv2.data_reader(), args.output_dir)
 
     # csvsort by timestamp, thread
+    sort_csv_files(files, args.output_dir)
+
     # stream output to bson file
