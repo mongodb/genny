@@ -342,7 +342,7 @@ TEST_CASE("metrics operation test") {
     RegistryClockSourceStub::reset();
     v1::RegistryT<RegistryClockSourceStub> metrics;
 
-    auto op = metrics.operation("Insert", 0u);
+    auto op = metrics.operation(0u, "InsertRemove", "Insert");
 
     RegistryClockSourceStub::advance();
     {

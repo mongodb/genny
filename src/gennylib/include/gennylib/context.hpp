@@ -397,8 +397,8 @@ public:
     }
 
     auto operation(const std::string& operationName, ActorId id = 0u) const {
-        auto name = this->metricsName(operationName, id);
-        return this->_workload->_registry->operation(name);
+        return this->_workload->_registry->operation(
+            id, this->get<std::string>("Name"), operationName);
     }
 
     // </Forwarding to delegates>

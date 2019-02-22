@@ -228,50 +228,110 @@ private:
 };
 
 
+struct OperationDescriptor {
+    // TODO: The ActorId is enough to rely on for uniqueness so we probably don't need to include
+    // `actorName` or `opName` in the Hasher or operator== implementations actually.
+    struct Hasher {
+        size_t operator()(const OperationDescriptor& desc) const {
+            size_t seed = 0;
+
+            boost::hash_combine(seed, desc.actorId);
+            boost::hash_combine(seed, desc.actorName);
+            boost::hash_combine(seed, desc.opName);
+
+            return seed;
+        }
+    };
+
+    OperationDescriptor(ActorId actorId, std::string actorName, std::string opName)
+        : actorId(actorId), actorName(std::move(actorName)), opName(std::move(opName)) {}
+
+    bool operator==(const OperationDescriptor& other) const {
+        return actorId == other.actorId && actorName == other.actorName && opName == other.opName;
+    }
+
+    const ActorId actorId;
+    const std::string actorName;
+    const std::string opName;
+};
+
+
+template <typename ClockSource>
+struct OperationEvent {
+    enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
+
+    count_type iters = 1;  // # iterations, usually 1
+    count_type ops = 0;    // # docs
+    count_type size = 0;   // # bytes
+    count_type errors = 0;
+    period<ClockSource> duration = {};
+    OutcomeType outcome = OutcomeType::kUnknown;
+};
+
+
 template <typename ClockSource>
 class OperationImpl {
 
+private:
+    using OutcomeType = typename OperationEvent<ClockSource>::OutcomeType;
+
 public:
-    OperationImpl(const std::string& name,
-                  TimerImpl<ClockSource>& timer,
-                  CounterImpl<ClockSource>& iters,
-                  CounterImpl<ClockSource>& docs,
-                  CounterImpl<ClockSource>& bytes)
-        : _opName{name},
-          _timer{std::addressof(timer)},
-          _iters{std::addressof(iters)},
-          _docs{std::addressof(docs)},
-          _bytes{std::addressof(bytes)} {}
+    using time_point = typename ClockSource::time_point;
+    using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
+
+    OperationImpl(OperationDescriptor desc, EventSeries& events)
+        : _desc(std::move(desc)), _events(std::addressof(events)) {}
 
     /**
      * Operation name getter to help with exception reporting.
      */
     const std::string& getOpName() const {
-        return _opName;
+        return _desc.opName;
     }
 
-
-    void report(const typename ClockSource::time_point& started) {
-        this->_timer->report(started);
-        this->_iters->reportValue(1);
+    void reportNumIterations(count_type total) {
+        _curr.iters = total;
     }
 
-    void reportBytes(const count_type& total) {
-        this->_bytes->reportValue(total);
+    void reportNumOps(count_type total) {
+        _curr.ops = total;
     }
 
-    void reportOps(const count_type& total) {
-        this->_docs->reportValue(total);
+    void reportNumBytes(count_type total) {
+        _curr.size = total;
     }
 
+    void reportNumErrors(count_type total) {
+        _curr.errors = total;
+    }
+
+    void reportSuccess(time_point started) {
+        reportOutcome(started, OutcomeType::kSuccess);
+    }
+
+    void reportFailure(time_point started) {
+        reportOutcome(started, OutcomeType::kFailure);
+    }
+
+    void discard() {
+        _curr = OperationEvent<ClockSource>{};
+    }
 
 private:
-    const std::string _opName;
-    TimerImpl<ClockSource>* _timer;
-    CounterImpl<ClockSource>* _iters;
-    CounterImpl<ClockSource>* _docs;
-    CounterImpl<ClockSource>* _bytes;
+    void reportOutcome(time_point started, OutcomeType outcome) {
+        // TODO: We shouldn't be calling ClockSource::now() again as part of TimeSeries::add().
+        _curr.duration = ClockSource::now() - started;
+        _curr.outcome = outcome;
+
+        _events->add(std::move(_curr));
+        _curr = OperationEvent<ClockSource>{};
+    }
+
+    OperationEvent<ClockSource> _curr;
+    const OperationDescriptor _desc;
+    EventSeries* _events;
 };
+
 
 /**
  * Counter is deprecated in favor of Operation.
@@ -529,9 +589,9 @@ private:
     using time_point = typename ClockSource::time_point;
 
     void report() {
-        this->_op->report(_started);
-        this->_op->reportBytes(_totalBytes);
-        this->_op->reportOps(_totalOps);
+        this->_op->reportSuccess(_started);
+        this->_op->reportNumBytes(_totalBytes);
+        this->_op->reportNumOps(_totalOps);
     }
 
     v1::OperationImpl<ClockSource>* _op;
@@ -612,12 +672,10 @@ public:
     v1::Gauge<ClockSource> gauge(const std::string& name) {
         return v1::Gauge<ClockSource>{this->_gauges[name]};
     }
-    OperationT<ClockSource> operation(const std::string& name, ActorId id = 0u) {
-        auto op = v1::OperationImpl<ClockSource>(name,
-                                                 this->_timers[name + "_timer"],
-                                                 this->_counters[name + "_iters"],
-                                                 this->_counters[name + "_docs"],
-                                                 this->_counters[name + "_bytes"]);
+    OperationT<ClockSource> operation(ActorId id, std::string actorName, std::string opName) {
+        auto desc = OperationDescriptor{id, std::move(actorName), std::move(opName)};
+        auto it = this->_ops.try_emplace(desc).first;
+        auto op = v1::OperationImpl<ClockSource>{std::move(desc), it->second};
         return OperationT{std::move(op)};
     }
 
@@ -642,9 +700,12 @@ public:
     }
 
 private:
+    using EventSeries = typename v1::OperationImpl<ClockSource>::EventSeries;
+
     std::unordered_map<std::string, v1::CounterImpl<ClockSource>> _counters;
     std::unordered_map<std::string, v1::TimerImpl<ClockSource>> _timers;
     std::unordered_map<std::string, v1::GaugeImpl<ClockSource>> _gauges;
+    std::unordered_map<OperationDescriptor, EventSeries, OperationDescriptor::Hasher> _ops;
 };
 
 }  // namespace v1
