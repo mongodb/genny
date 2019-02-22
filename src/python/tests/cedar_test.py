@@ -22,7 +22,6 @@ from os.path import join as pjoin
 from bson import CodecOptions, decode_file_iter
 
 from genny import cedar
-from genny.csv2 import CSV2
 
 
 class CedarTest(unittest.TestCase):
@@ -91,8 +90,9 @@ class CedarTest(unittest.TestCase):
 
     def test_sort_csv(self):
         file_name = 'intermediate_unsorted.csv'
+
+        # Copy the file into a temp dir so we can do in-place sorting.
         with tempfile.TemporaryDirectory() as output_dir:
-            # Copy the file into a temp dir so we can do in-place sorting.
             shutil.copy(self.get_fixture('cedar', file_name), output_dir)
             cedar.sort_csv_files([file_name], output_dir)
             with open(pjoin(output_dir, file_name)) as f:

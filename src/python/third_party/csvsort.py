@@ -5,8 +5,14 @@ MongoDB Modifications:
 1. add the quoting=quoting argument to csv.reader()
 """
 
-import csv, heapq, logging, os, sys, tempfile
+import csv
+import heapq
+import logging
+import os
+import sys
+import tempfile
 from optparse import OptionParser
+
 csv.field_size_limit(sys.maxsize)
 
 
