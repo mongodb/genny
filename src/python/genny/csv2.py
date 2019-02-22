@@ -32,15 +32,44 @@ class CSV2ParsingError(BaseException):
     pass
 
 
+class _CSV2DataReader:
+    """
+    Thin wrapper around csv.DictReader() that eagerly converts any digits to native
+    Python integers.
+    """
+    def __init__(self, csv_reader):
+        self.raw_reader = csv_reader
+
+    def __iter__(self):
+        for line in self.raw_reader:
+            yield self._process(line)
+
+    def __next__(self):
+        return self._process(next(self.raw_reader))
+
+    @staticmethod
+    def _process(line):
+        for i in range(len(line)):
+
+            # Strip spaces from lines
+            if isinstance(line[i], str):
+                line[i] = line[i].strip()
+
+                # Convert string digits to ints
+                if line[i].isdigit():
+                    line[i] = int(line[i])
+        return line
+
+
 class CSV2:
 
     def __init__(self, csv2_file_name):
         # parsers for newline-delimited header sections at the top of each
         # csv2 file.
         header_parsers = [
-            self.parse_clocks,
-            self.parse_thread_count,
-            self.parse_operations
+            self._parse_clocks,
+            self._parse_thread_count,
+            self._parse_operations
         ]
 
         # The number to add to the metrics timestamp (a.k.a. c++ system_time) to get
@@ -53,15 +82,43 @@ class CSV2:
         # Column headers in the csv2 file.
         self._column_headers = None
 
+        # Store a reader that starts at the first line of actual csv data after the headers
+        # have been parsed.
+        self._data_reader = None
+        self._can_get_data_reader = False
+        self._csv_file = None
+
         try:
-            with open(csv2_file_name, 'r') as f:
-                reader = csv.reader(f, dialect=_CSV2Dialect)
-                for parser in header_parsers:
-                    parser(reader)
+            # Keep this file open for the duration of this object's lifecycle.
+            self._csv_file = open(csv2_file_name, 'r')
+            reader = csv.reader(self._csv_file, dialect=_CSV2Dialect)
+
+            for parser in header_parsers:
+                parser(reader)
+
+            self._data_reader = _CSV2DataReader(reader)
+            self._can_get_data_reader = True
+
         except (IndexError, ValueError) as e:
             raise CSV2ParsingError('Error parsing CSV file: ', csv2_file_name) from e
 
-    def parse_clocks(self, reader):
+    def __del__(self):
+        if self._csv_file:
+            self._csv_file.close()
+            self._can_get_data_reader = False
+
+    def data_reader(self):
+        if not self._data_reader:
+            raise ValueError('CSV2 data_reader has not been initialized yet')
+
+        if not self._can_get_data_reader:
+            raise ValueError(
+                'data_reader not available, maybe you\'re trying to get it more than once?')
+
+        self._can_get_data_reader = False
+        return self._data_reader
+
+    def _parse_clocks(self, reader):
         title = next(reader)[0]
         if title != 'Clocks':
             raise CSV2ParsingError('Expected title to be "Clocks", got %s', title)
@@ -73,7 +130,7 @@ class CSV2:
 
         next(reader)  # Read the next empty line.
 
-    def parse_thread_count(self, reader):
+    def _parse_thread_count(self, reader):
         title = next(reader)[0]
         if title != 'OperationThreadCounts':
             raise CSV2ParsingError('Expected title to be "OperationThreadCounts", got %s', title)
@@ -88,7 +145,7 @@ class CSV2:
 
             self._operation_thread_count_map[(actor, op)] = thread_count
 
-    def parse_operations(self, reader):
+    def _parse_operations(self, reader):
         title = next(reader)[0]
         if title != 'Operations':
             raise CSV2ParsingError('Expected title to be "Operations", got %s', title)

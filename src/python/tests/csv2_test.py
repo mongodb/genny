@@ -22,6 +22,22 @@ class CSV2Test(unittest.TestCase):
         self.assertEqual(col_hdrs[2], 'thread')
         self.assertEqual(col_hdrs[3], 'operation')
 
+    def test_data_reader(self):
+        test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))
+        dr = test_csv.data_reader()
+        self.assertEqual(next(dr), [
+            10007,
+            'MyActor',
+            0,
+            'MyOperation',
+            100,
+            0,
+            1,
+            6,
+            2,
+            40
+        ])
+
     def test_invalid_field_value(self):
         self.assertRaisesRegex(csv2.CSV2ParsingError, 'Error parsing CSV file',
                                csv2.CSV2, self.get_fixture('invalid_clocks.csv'))
