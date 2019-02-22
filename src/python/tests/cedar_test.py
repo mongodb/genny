@@ -97,4 +97,5 @@ class CedarTest(unittest.TestCase):
             cedar.sort_csv_files([file_name], output_dir)
             with open(pjoin(output_dir, file_name)) as f:
                 ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
-                print(ll)
+                self.assertEqual(ll[0][0], 10000)
+                self.assertEqual(ll[-1][0], 10573)
