@@ -24,9 +24,9 @@
 #include <boost/core/noncopyable.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/Actor.hpp>
-
 namespace genny::metrics {
+
+using ActorId = unsigned int;
 
 /*
  * Could add a template policy class on Registry to let the following types be templatized.
@@ -545,54 +545,27 @@ template <typename ClockSource>
 class OperationContextT {
 
 public:
-    explicit OperationContextT(v1::OperationImpl<ClockSource>& op)
-        : _op{std::addressof(op)}, _started{ClockSource::now()} {}
+    explicit OperationContextT(v1::OperationImpl<ClockSource>& op);
 
-    OperationContextT(OperationContextT<ClockSource>&& rhs) noexcept
-        : _op{std::move(rhs._op)},
-          _started{std::move(rhs._started)},
-          _isClosed{std::move(rhs._isClosed)},
-          _totalBytes{std::move(rhs._totalBytes)},
-          _totalOps{std::move(rhs._totalOps)} {
-        rhs._isClosed = true;
-    }
+    OperationContextT(OperationContextT<ClockSource>&& rhs) noexcept;
 
-    ~OperationContextT() {
-        if (!_isClosed) {
-            BOOST_LOG_TRIVIAL(warning)
-                << "Metrics not reported because operation '" << this->_op->getOpName()
-                << "' did not close with success() or fail().";
-        }
-    }
+    ~OperationContextT();
 
-    void addBytes(const count_type& size) {
-        _totalBytes += size;
-    }
+    void addBytes(const count_type& size);
 
-    void addOps(const count_type& size) {
-        _totalOps += size;
-    }
+    void addOps(const count_type& size);
 
-    void success() {
-        this->report();
-        _isClosed = true;
-    }
+    void success();
 
     /**
      * An operation does not report metrics upon failure.
      */
-    void fail() {
-        _isClosed = true;
-    }
+    void fail();
 
 private:
     using time_point = typename ClockSource::time_point;
 
-    void report() {
-        this->_op->reportSuccess(_started);
-        this->_op->reportNumBytes(_totalBytes);
-        this->_op->reportNumOps(_totalOps);
-    }
+    void report();
 
     v1::OperationImpl<ClockSource>* _op;
     time_point _started;
