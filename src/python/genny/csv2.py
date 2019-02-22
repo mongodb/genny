@@ -28,6 +28,10 @@ class _CSV2Dialect(csv.unix_dialect):
     # escapechar = '\\'
 
 
+class CSV2ParsingError(BaseException):
+    pass
+
+
 class CSV2:
 
     def __init__(self, csv2_file_name):
@@ -50,17 +54,17 @@ class CSV2:
         self._column_headers = None
 
         try:
-            with open(csv2_file_name, 'r')  as f:
+            with open(csv2_file_name, 'r') as f:
                 reader = csv.reader(f, dialect=_CSV2Dialect)
                 for parser in header_parsers:
                     parser(reader)
-        except Exception as e:
-            raise ValueError('Error parsing CSV file: ', csv2_file_name) from e
+        except (IndexError, ValueError) as e:
+            raise CSV2ParsingError('Error parsing CSV file: ', csv2_file_name) from e
 
     def parse_clocks(self, reader):
         title = next(reader)[0]
         if title != 'Clocks':
-            raise ValueError('Expected tile to be "Clocks", got %s', title)
+            raise CSV2ParsingError('Expected title to be "Clocks", got %s', title)
 
         unix_time = int(next(reader)[1])
         metrics_time = int(next(reader)[1])
@@ -72,7 +76,7 @@ class CSV2:
     def parse_thread_count(self, reader):
         title = next(reader)[0]
         if title != 'OperationThreadCounts':
-            raise ValueError('Expected title to be "OperationThreadCounts", got %s', title)
+            raise CSV2ParsingError('Expected title to be "OperationThreadCounts", got %s', title)
 
         for line in reader:
             if not line:
@@ -87,6 +91,6 @@ class CSV2:
     def parse_operations(self, reader):
         title = next(reader)[0]
         if title != 'Operations':
-            raise ValueError('Expected title to be "Operations", got %s', title)
+            raise CSV2ParsingError('Expected title to be "Operations", got %s', title)
 
         self._column_headers = [h.strip() for h in next(reader)]
