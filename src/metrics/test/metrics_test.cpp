@@ -93,9 +93,9 @@ TEST_CASE("metrics::OperationContext interface") {
     expected.ops = 200;
     expected.size = 3000;
     expected.errors = 4;
-    expected.duration = 67ns;
 
     SECTION("success() reports the operation") {
+        expected.duration = 67ns;
         ctx->success();
         REQUIRE(events.size() == 1);
 
@@ -107,6 +107,7 @@ TEST_CASE("metrics::OperationContext interface") {
     }
 
     SECTION("failure() reports the operation") {
+        expected.duration = 67ns;
         ctx->failure();
         REQUIRE(events.size() == 1);
 
@@ -120,6 +121,32 @@ TEST_CASE("metrics::OperationContext interface") {
     SECTION("discard() doesn't report the operation") {
         ctx.reset();
         REQUIRE(events.size() == 0);
+    }
+
+    SECTION("add*() methods can be called multiple times") {
+        // TODO: Add a test case for addIterations() after reconciling how it initializes to 1.
+        // ctx->addIterations(10);
+        ctx->addDocuments(200);
+        ctx->addBytes(3000);
+        ctx->addErrors(4);
+        RegistryClockSourceStub::advance(67ns);
+
+        REQUIRE(events.size() == 0);
+
+        // expected.iters += 10;
+        expected.ops += 200;
+        expected.size += 3000;
+        expected.errors += 4;
+
+        expected.duration = 134ns;
+        ctx->success();
+        REQUIRE(events.size() == 1);
+
+        ctx.reset();
+
+        expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
+        assertDurationsEqual(events[0].first.time_since_epoch(), 139ns);
+        REQUIRE(events[0].second == expected);
     }
 }
 
