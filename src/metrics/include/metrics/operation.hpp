@@ -65,7 +65,7 @@ struct OperationEvent {
             errors == other.errors && duration == other.duration && outcome == other.outcome;
     }
 
-    count_type iters = 1;  // # iterations, usually 1
+    count_type iters = 0;  // # iterations, usually 1
     count_type ops = 0;    // # docs
     count_type size = 0;   // # bytes
     count_type errors = 0;
@@ -141,7 +141,6 @@ public:
         }
     }
 
-    // TODO: Need to somehow account for how OperationEvent::iters is default to 1.
     void addIterations(count_type iters) {
         _event.iters += iters;
     }
@@ -175,6 +174,12 @@ private:
         auto finished = ClockSource::now();
         _event.duration = finished - _started;
         _event.outcome = outcome;
+
+        if (_event.iters == 0) {
+            // We default the event to represent a single iteration of a loop if addIterations() was
+            // never called.
+            _event.iters = 1;
+        }
 
         _op->reportAt(finished, std::move(_event));
         _isClosed = true;

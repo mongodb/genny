@@ -79,8 +79,6 @@ TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(op);
 
-    // TODO: Add a test case for addIterations() after reconciling how it initializes to 1.
-    // ctx->addIterations(10);
     ctx->addDocuments(200);
     ctx->addBytes(3000);
     ctx->addErrors(4);
@@ -89,7 +87,7 @@ TEST_CASE("metrics::OperationContext interface") {
     REQUIRE(events.size() == 0);
 
     auto expected = v1::OperationEvent<RegistryClockSourceStub>{};
-    // expected.iters = 10;
+    expected.iters = 1;
     expected.ops = 200;
     expected.size = 3000;
     expected.errors = 4;
@@ -124,8 +122,8 @@ TEST_CASE("metrics::OperationContext interface") {
     }
 
     SECTION("add*() methods can be called multiple times") {
-        // TODO: Add a test case for addIterations() after reconciling how it initializes to 1.
-        // ctx->addIterations(10);
+        ctx->addIterations(8);
+        ctx->addIterations(9);
         ctx->addDocuments(200);
         ctx->addBytes(3000);
         ctx->addErrors(4);
@@ -133,7 +131,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         REQUIRE(events.size() == 0);
 
-        // expected.iters += 10;
+        expected.iters = 17;
         expected.ops += 200;
         expected.size += 3000;
         expected.errors += 4;
