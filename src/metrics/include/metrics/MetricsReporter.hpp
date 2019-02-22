@@ -45,42 +45,6 @@ public:
     constexpr explicit ReporterT(const v1::RegistryT<MetricsClockSource>& registry)
         : _registry{std::addressof(registry)} {}
 
-    /** @return how many distinct gauges were registered */
-    auto getGaugeCount() const {
-        auto& x = _registry->getGauges(v1::Permission{});
-        return std::distance(x.begin(), x.end());
-    }
-
-    /** @return how many gauge data-points were recorded */
-    long getGaugePointsCount() const {
-        v1::Permission perm;
-        return dataPointsCount(_registry->getGauges(perm), perm);
-    }
-
-    /** @return how many distinct timers were registered */
-    auto getTimerCount() const {
-        auto& x = _registry->getTimers(v1::Permission{});
-        return std::distance(x.begin(), x.end());
-    }
-
-    /** @return how many timer data-points were recorded */
-    long getTimerPointsCount() const {
-        v1::Permission perm;
-        return dataPointsCount(_registry->getTimers(perm), perm);
-    }
-
-    /** @return how many counters were registered */
-    auto getCounterCount() const {
-        auto& x = _registry->getCounters(v1::Permission{});
-        return std::distance(x.begin(), x.end());
-    }
-
-    /** @return how many counter data-points were recorded */
-    long getCounterPointsCount() const {
-        v1::Permission perm;
-        return dataPointsCount(_registry->getCounters(perm), perm);
-    }
-
 private:
     struct SystemClockSource {
         using clock = std::chrono::system_clock;
@@ -124,15 +88,12 @@ private:
         out << std::endl;
 
         out << "Counters" << std::endl;
-        doReport(out, _registry->getCounters(perm), perm);
         out << std::endl;
 
         out << "Gauges" << std::endl;
-        doReport(out, _registry->getGauges(perm), perm);
         out << std::endl;
 
         out << "Timers" << std::endl;
-        doReport(out, _registry->getTimers(perm), perm);
         out << std::endl;
     }
 
@@ -157,19 +118,6 @@ private:
                     << v.second << std::endl;
             }
         }
-    }
-
-
-    /**
-     * @return the number of data-points held by a map with values CounterImpl, GaugeImpl, etc.
-     */
-    template <class X>
-    static long dataPointsCount(const X& x, genny::metrics::v1::Permission perm) {
-        auto out = 0L;
-        for (const auto& v : x) {
-            out += v.second.getTimeSeries(perm).getDataPointCount(perm);
-        }
-        return out;
     }
 
     /**

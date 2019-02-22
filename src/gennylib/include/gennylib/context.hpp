@@ -354,48 +354,11 @@ public:
     // <Forwarding to delegates>
 
     /**
-     * Convenience method for creating a metrics::Timer.
+     * Convenience method for creating a metrics::Operation that's unique for this actor and thread.
      *
-     * @param operationName
-     *   the name of the thing being timed.
-     *   Will automatically add prefixes to make the full name unique
-     *   across Actors and threads.
+     * @param operationName the name of the operation being run.
      * @param id the id of this Actor, if any.
      */
-    auto timer(const std::string& operationName, ActorId id = 0u) const {
-        auto name = this->metricsName(operationName, id);
-        return this->_workload->_registry->timer(name);
-    }
-
-    /**
-     * Convenience method for creating a metrics::Gauge.
-     *
-     * @param operationName
-     *   the name of the thing being gauged.
-     *   Will automatically add prefixes to make the full name unique
-     *   across Actors and threads.
-     * @param id the id of this Actor, if any.
-     */
-    auto gauge(const std::string& operationName, ActorId id = 0u) const {
-        auto name = this->metricsName(operationName, id);
-        return this->_workload->_registry->gauge(name);
-    }
-
-    /**
-     * Convenience method for creating a metrics::Counter.
-     *
-     *
-     * @param operationName
-     *   the name of the thing being counted.
-     *   Will automatically add prefixes to make the full name unique
-     *   across Actors and threads.
-     * @param id the id of this Actor, if any.
-     */
-    auto counter(const std::string& operationName, ActorId id = 0u) const {
-        auto name = this->metricsName(operationName, id);
-        return this->_workload->_registry->counter(name);
-    }
-
     auto operation(const std::string& operationName, ActorId id = 0u) const {
         return this->_workload->_registry->operation(
             id, this->get<std::string>("Name"), operationName);
@@ -404,19 +367,10 @@ public:
     // </Forwarding to delegates>
 
 private:
-    /**
-     * Apply metrics names conventions based on configuration.
-     *
-     * @param operation base name of a metrics object e.g. "inserts"
-     * @param id the id of the Actor owning the object.
-     * @return the fully-qualified metrics name e.g. "MyActor.0.inserts".
-     */
-    std::string metricsName(const std::string& operation, ActorId id) const {
-        return this->get<std::string>("Name") + ".id-" + std::to_string(id) + "." + operation;
-    }
-
     static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
+
     constructPhaseContexts(const YAML::Node&, ActorContext*);
+
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
