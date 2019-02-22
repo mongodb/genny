@@ -1,10 +1,10 @@
 Clocks
-SystemTime,1000128
-MetricsTime,10014
+SystemTime,1000128000000
+MetricsTime,10014000000
 
 OperationThreadCounts
 MyActor,MyOperation,2
 
 Operations
 timestamp, actor  , thread, operation, duration, outcome, n, ops, errors, size
-10007    , MyActor, 0     , MyOperation   , 100     , 0      , 1, 6  , 2     , 40
+10007000000    , MyActor, 0     , MyOperation   , 100     , 0      , 1, 6  , 2     , 40

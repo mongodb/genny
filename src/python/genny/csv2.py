@@ -35,8 +35,9 @@ class _DataReader:
     Python integers.
     """
 
-    def __init__(self, csv_reader):
+    def __init__(self, csv_reader, thread_count_map):
         self.raw_reader = csv_reader
+        self.tc_map = thread_count_map
 
     def __iter__(self):
         for line in self.raw_reader:
@@ -67,8 +68,12 @@ class _DataReader:
         line[_Columns.TIMESTAMP] /= 1000 * 1000
 
         # Remove the actor and operation columns to save space.
-        actor = line.pop(_Columns.OPERATION)
-        op = line.pop(_Columns.ACTOR)
+        assert _Columns.ACTOR < _Columns.OPERATION
+        op = line.pop(_Columns.OPERATION)
+        actor = line.pop(_Columns.ACTOR)
+
+        # Append the thread count to the last column
+        line.append(self.tc_map[(actor, op)])
 
         return line, actor, op
 
@@ -84,9 +89,6 @@ class _Columns:
     OPS = 7
     ERRORS = 8
     SIZE = 9
-
-    assert ACTOR < OPERATION, 'We remove these two columns later on. ACTOR is removed ' \
-                              'after OPERATION so it needs to come first'
 
 
 class CSV2:
@@ -129,7 +131,7 @@ class CSV2:
             for parser in header_parsers:
                 parser(reader)
 
-            self._data_reader = _DataReader(reader)
+            self._data_reader = _DataReader(reader, self._operation_thread_count_map)
             self._can_get_data_reader = True
 
         except (IndexError, ValueError) as e:
@@ -167,7 +169,7 @@ class CSV2:
                 break
             actor = line[0]
             op = line[1]
-            thread_count = line[2]
+            thread_count = int(line[2])
 
             self._operation_thread_count_map[(actor, op)] = thread_count
 

@@ -64,6 +64,11 @@ Sample output:
 """
 
 
+def compute_cumulative_and_write_to_bson(files, out_dir):
+    #
+    pass
+
+
 def split_into_actor_operation_csv_files(data_reader, out_dir):
     """
     Split up the monolithic genny metrics csv2 file into smaller [actor]-[operation].csv files
@@ -116,14 +121,17 @@ def parse_args(argv):
 
 def main__cedar(argv=sys.argv[1:]):
     args = parse_args(argv)
+    out_dir = args.output_dir
 
     # Read CSV2 file
     my_csv2 = CSV2(args.input_file)
 
     # Separate into actor-operation
-    files = split_into_actor_operation_csv_files(my_csv2.data_reader(), args.output_dir)
+    files = split_into_actor_operation_csv_files(my_csv2.data_reader(), out_dir)
 
     # csvsort by timestamp, thread
-    sort_csv_files(files, args.output_dir)
+    sort_csv_files(files, out_dir)
 
-    # stream output to bson file
+    # compute cumulative and stream output to bson file
+    compute_cumulative_and_write_to_bson(files, out_dir)
+

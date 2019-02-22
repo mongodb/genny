@@ -95,7 +95,13 @@ class CedarTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as output_dir:
             shutil.copy(self.get_fixture('cedar', file_name), output_dir)
             cedar.sort_csv_files([file_name], output_dir)
-            with open(pjoin(output_dir, file_name)) as f:
-                ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
-                self.assertEqual(ll[0][0], 10000)
-                self.assertEqual(ll[-1][0], 10573)
+            with open(pjoin(output_dir, file_name)) as exp, open(
+                    self.get_fixture('cedar', 'intermediate_sorted.csv')) as ctl:
+                experiment = list(csv.reader(exp, quoting=csv.QUOTE_NONNUMERIC))
+                control = list(csv.reader(ctl, quoting=csv.QUOTE_NONNUMERIC))
+
+                self.assertEqual(len(experiment), len(control))
+
+                # Explicitly compare each line for better debuggability.
+                for i in range(len(experiment)):
+                    self.assertEqual(experiment[i], control[i])
