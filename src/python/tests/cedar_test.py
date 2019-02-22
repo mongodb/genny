@@ -11,22 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from collections import OrderedDict as od
+import csv
 import os
 import tempfile
 import unittest
+from collections import OrderedDict as od
+from os.path import join as pjoin
 
 from bson import CodecOptions, decode_file_iter
 
 from genny import cedar
+from genny.csv2 import CSV2
 
 
 class CedarTest(unittest.TestCase):
 
     @staticmethod
     def get_fixture(csv_file):
-        return os.path.join('fixtures', 'csv2', csv_file + '.csv')
+        return pjoin('tests', 'fixtures', 'csv2', csv_file + '.csv')
 
     def verify_output(self, bson_metrics_file_name, expected_results):
         with open(bson_metrics_file_name, 'rb') as f:
@@ -53,4 +55,32 @@ class CedarTest(unittest.TestCase):
 
             cedar.main__cedar(args)
 
-            self.verify_output(os.path.join(output_dir, 'MyActor-MyOperation.csv'), expected_result)
+            # TODO uncomment when everything's done.
+            # self.verify_output(pjoin(output_dir, 'MyActor-MyOperation.bson'), expected_result)
+
+    def test_split_csv2(self):
+        large_precise_float = 10 ** 15
+        mock_data_reader = [
+            CSV2._set_actor_op_pair(['first' for _ in range(10)], 'a1', 'o1'),
+            CSV2._set_actor_op_pair([1 for _ in range(10)], 'a1', 'o1'),
+            # Store a large number to make sure precision is not lost. Python csv converts
+            # numbers to floats by default, which has 2^53 or 10^15 precision. Unix time in
+            # milliseconds is currently 10^13.
+            CSV2._set_actor_op_pair([large_precise_float for _ in range(10)], 'a2', 'o2')
+
+        ]
+        with tempfile.TemporaryDirectory() as output_dir:
+            output_files = cedar.split_into_actor_operation_csv_files(mock_data_reader, output_dir)
+            self.assertEqual(output_files, ['a1-o1.csv', 'a2-o2.csv'])
+
+            a1o1 = pjoin(output_dir, output_files[0])
+            self.assertTrue(os.path.isfile(a1o1))
+            with open(a1o1) as f:
+                self.assertEqual(len(list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))), 2)
+
+            a2o2 = pjoin(output_dir, output_files[1])
+            self.assertTrue(os.path.isfile(a2o2))
+            with open(a2o2) as f:
+                ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
+                self.assertEqual(len(ll), 1)
+                self.assertEqual(ll[0][0], large_precise_float)

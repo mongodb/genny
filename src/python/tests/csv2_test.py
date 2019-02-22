@@ -6,8 +6,9 @@ from genny import csv2
 
 class CSV2Test(unittest.TestCase):
 
-    def get_fixture(self, *file_names):
-        return os.path.join('tests', 'fixtures', 'csv2', *file_names)
+    @staticmethod
+    def get_fixture(*file_path):
+        return os.path.join('tests', 'fixtures', 'csv2', *file_path)
 
     def test_basic_parsing(self):
         test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))

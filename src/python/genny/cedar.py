@@ -15,7 +15,11 @@
 # limitations under the License.
 
 import argparse
+import csv
 import sys
+from os.path import join as pjoin
+
+from genny import csv2
 
 """
 Convert raw genny csv output to a format expected by Cedar
@@ -58,12 +62,47 @@ Sample output:
 """
 
 
+def split_into_actor_operation_csv_files(data_reader, out_dir):
+    """
+    Split up the monolithic genny metrics csv2 file into smaller [actor]-[operation].csv files
+    """
+    cur_out_csv = None
+    cur_out_fh = None
+    cur_actor_op_pair = (None, None)
+    output_files = []
+
+    for line in data_reader:
+        actor_op_pair = csv2.CSV2.get_actor_op_pair(line)
+
+        if actor_op_pair != cur_actor_op_pair:
+            cur_actor_op_pair = actor_op_pair
+
+            # Close out old file.
+            if cur_out_fh:
+                cur_out_fh.close()
+
+            # Open new csv file.
+            file_name = actor_op_pair[0] + '-' + actor_op_pair[1] + '.csv'
+            output_files.append(file_name)
+            cur_out_fh = open(pjoin(out_dir, file_name), 'w', newline='')
+
+            # Quote non-numeric values so they get converted to float automatically
+            cur_out_csv = csv.writer(cur_out_fh, quoting=csv.QUOTE_NONNUMERIC)
+
+        cur_out_csv.writerow(line)
+
+    cur_out_fh.close()
+
+    return output_files
+
+
 def parse_args(argv):
     parser = argparse.ArgumentParser(
         description='Convert Genny csv2 perf data to Cedar BSON format',
     )
-    parser.add_argument('input-file', help='path to genny csv2 perf data')
-    parser.add_argument('output-dir', help='directory to store output BSON files')
+    parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 perf data')
+    parser.add_argument('output_dir', metavar='output_dir',
+                        help='directory to store output BSON files')
 
     return parser.parse_args(argv)
 
@@ -72,6 +111,10 @@ def main__cedar(argv=sys.argv[1:]):
     args = parse_args(argv)
 
     # Read CSV2 file
+    my_csv2 = csv2.CSV2(args.input_file)
+
     # Separate into actor-operation
+    split_into_actor_operation_csv_files(my_csv2.data_reader(), args.output_dir)
+
     # csvsort by timestamp, thread
     # stream output to bson file
