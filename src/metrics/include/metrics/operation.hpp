@@ -127,11 +127,11 @@ public:
     explicit OperationContextT(v1::OperationImpl<ClockSource>& op)
         : _op{std::addressof(op)}, _started{ClockSource::now()} {}
 
-    OperationContextT(OperationContextT<ClockSource>&& rhs) noexcept
-        : _op{std::move(rhs._op)},
-          _started{std::move(rhs._started)},
-          _event{std::move(rhs._event)},
-          _isClosed{std::exchange(rhs._isClosed, true)} {}
+    OperationContextT(OperationContextT<ClockSource>&& other) noexcept
+        : _op{std::move(other._op)},
+          _started{std::move(other._started)},
+          _event{std::move(other._event)},
+          _isClosed{std::exchange(other._isClosed, true)} {}
 
     ~OperationContextT() {
         if (!_isClosed) {
