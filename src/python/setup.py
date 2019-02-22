@@ -20,6 +20,8 @@ setup(name='genny',
       install_requires=[
           'nose==1.3.7',
           'yapf==0.24.0',
+          'pymongo==3.7.2',
+          'csvsort==1.5'
       ],
       setup_requires=[
           'nose==1.3.7'
@@ -28,6 +30,7 @@ setup(name='genny',
           'console_scripts': [
               'genny-metrics-summarize = genny.metrics_output_parser:main__sumarize',
               'genny-metrics-to-perf-json = genny.perf_json:main__summarize_translate',
+              'genny-metrics-to-cedar = genny.metrics.main__cedar'
           ]
       },
       )
