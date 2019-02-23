@@ -40,6 +40,12 @@ namespace v1 {
 
 using count_type = long long;
 
+/**
+ * The data captured at a particular time-point.
+ *
+ * @tparam ClockSource a wrapper type around a std::chrono::steady_clock, should always be
+ * MetricsClockSource other than during testing.
+ */
 template <typename ClockSource>
 struct OperationEvent {
     enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
@@ -49,29 +55,42 @@ struct OperationEvent {
             errors == other.errors && duration == other.duration && outcome == other.outcome;
     }
 
-    count_type iters = 0;  // # iterations, usually 1
-    count_type ops = 0;    // # docs
-    count_type size = 0;   // # bytes
-    count_type errors = 0;
-    Period<ClockSource> duration = {};
-    OutcomeType outcome = OutcomeType::kUnknown;
+    friend std::ostream& operator<<(std::ostream& out, const OperationEvent<ClockSource>& event) {
+        out << "OperationEvent{";
+        out << "iters:" << event.iters;
+        out << ",ops:" << event.ops;
+        out << ",size:" << event.size;
+        out << ",errors:" << event.errors;
+        out << ",duration:" << event.duration;
+        // Casting to uint8_t causes ostream to use its unsigned char overload and treat the value
+        // as invisible text.
+        out << ",outcome:" << static_cast<uint16_t>(event.outcome);
+        out << "}";
+        return out;
+    }
+
+    // The number of iterations that occurred before the operation was reported. This member will
+    // almost always be 1 unless an actor decides to periodically report an operation in its for
+    // loop.
+    count_type iters = 0;  // corresponds to the 'n' field in Cedar
+
+    // The number of documents inserted, modified, deleted, etc.
+    count_type ops = 0;  // corresponds to the 'ops' field in Cedar
+
+    // The size in bytes of the number of documents inserted, etc.
+    count_type size = 0;  // corresponds to the 'size' field in Cedar
+
+    // The number of write errors, transient transaction errors, etc. that occurred when performing
+    // the operation. The operation can still be considered OutcomeType::kSuccess even if errors are
+    // reported.
+    count_type errors = 0;  // corresponds to the 'errors' field in Cedar
+
+    // The amount of time it took to perform the operation.
+    Period<ClockSource> duration = {};  // corresponds to the 'duration' field in Cedar
+
+    // Whether the operation succeeded or not.
+    OutcomeType outcome = OutcomeType::kUnknown;  // corresponds to the 'outcome' field in Cedar
 };
-
-
-template <typename ClockSource>
-std::ostream& operator<<(std::ostream& out, const OperationEvent<ClockSource>& event) {
-    out << "OperationEvent{ ";
-    out << "iters: " << event.iters;
-    out << ", ops: " << event.ops;
-    out << ", size: " << event.size;
-    out << ", errors: " << event.errors;
-    out << ", duration: " << event.duration;
-    // Casting to uint8_t causes ostream to use its unsigned char overload and treat the value as
-    // invisible text.
-    out << ", outcome: " << static_cast<uint16_t>(event.outcome);
-    out << " }";
-    return out;
-}
 
 
 template <typename ClockSource>
@@ -109,7 +128,11 @@ private:
     EventSeries* const _events;
 };
 
-
+/**
+ * RAII type for managing data captured about a running operation. Constructing an instance starts a
+ * timer for how long the operation takes. The timer ends when success() or failure() is called on
+ * the instance.
+ */
 template <typename ClockSource>
 class OperationContextT : private boost::noncopyable {
 private:
@@ -136,30 +159,60 @@ public:
         }
     }
 
+    /**
+     * Increments the counter for the number of iterations. This method only needs to be called if
+     * an actor is periodically reporting its operations. By default an `iters = 1` value is
+     * automatically reported.
+     */
     void addIterations(count_type iters) {
         _event.iters += iters;
     }
 
+    /**
+     * Increments the counter for the number of documents inserted, modified, deleted, etc.
+     */
     void addDocuments(count_type ops) {
         _event.ops += ops;
     }
 
+    /**
+     * Increments the size in bytes of the number of documents inserted, etc.
+     */
     void addBytes(count_type size) {
         _event.size += size;
     }
 
+    /**
+     * Increments the counter for the number of write errors, transient transaction errors, etc.
+     */
     void addErrors(count_type errors) {
         _event.errors += errors;
     }
 
+    /**
+     * Report the operation as having succeeded.
+     *
+     * @warning After calling success() it is illegal to call any methods on this instance.
+     */
     void success() {
         reportOutcome(OutcomeType::kSuccess);
     }
 
+    /**
+     * Report the operation as having failed. An `errors > 0` value won't be reported unless
+     * addErrors() has already been called.
+     *
+     * @warning After calling failure() it is illegal to call any methods on this instance.
+     */
     void failure() {
         reportOutcome(OutcomeType::kFailure);
     }
 
+    /**
+     * Don't report the operation.
+     *
+     * @warning After calling discard() it is illegal to call any methods on this instance.
+     */
     void discard() {
         _isClosed = true;
     }
