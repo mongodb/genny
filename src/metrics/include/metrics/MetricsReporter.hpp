@@ -251,10 +251,12 @@ private:
         writeClocks(out, systemTime, metricsTime);
         out << std::endl;
 
+        // We use an ordered map here to avoid defining a custom hash function for
+        // std::pair<std::string, std::string>. There aren't likely to be many (Actor, Operation)
+        // combinations for this to matter too much in terms of efficiency.
+        auto opThreadCounts = std::map<std::pair<std::string, std::string>, size_t>{};
         out << "OperationThreadCounts" << std::endl;
         out << "actor,operation,workers" << std::endl;
-
-        auto opThreadCounts = std::map<std::pair<std::string, std::string>, size_t>{};
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
             for (const auto& [opName, opsByThread] : opsByType) {
                 for (const auto& [actorId, timeSeries] : opsByThread) {
@@ -262,19 +264,16 @@ private:
                 }
             }
         }
-
         for (const auto& [key, count] : opThreadCounts) {
             const auto& [actorName, opName] = key;
             out << actorName << ",";
             out << opName << ",";
             out << count << std::endl;
         }
-
         out << std::endl;
 
         out << "Operations" << std::endl;
         out << "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size" << std::endl;
-
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
             if (actorName == "Genny") {
                 // Metrics created by the DefaultDriver are handled separately.
@@ -299,7 +298,6 @@ private:
                 }
             }
         }
-
         out << std::endl;
     }
 
