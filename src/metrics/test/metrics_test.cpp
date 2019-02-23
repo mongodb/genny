@@ -149,7 +149,8 @@ TEST_CASE("metrics::OperationContext interface") {
 
 TEST_CASE("metrics output format") {
     RegistryClockSourceStub::reset();
-    v1::RegistryT<RegistryClockSourceStub> metrics;
+    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::v1::ReporterT{metrics};
 
     // TODO: Consider changing this test so the operations between actor threads are reported
     // "concurrently" with respect to how op.start() and RegistryClockSourceStub::advance() are
@@ -214,8 +215,6 @@ TEST_CASE("metrics output format") {
     }
     RegistryClockSourceStub::advance(5ns);
 
-    auto reporter = genny::metrics::v1::ReporterT(metrics);
-
     SECTION("csv reporting") {
         auto expected =
             "Clocks\n"
@@ -253,6 +252,96 @@ TEST_CASE("metrics output format") {
         reporter.report<ReporterClockSourceStub>(out, "csv");
         REQUIRE(out.str() == expected);
     }
+}
+
+TEST_CASE("Genny.Setup metric should only be reported as a timer") {
+    RegistryClockSourceStub::reset();
+    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::v1::ReporterT{metrics};
+
+    // Mimic what the DefaultDriver would be doing.
+    auto setup = metrics.operation(0u, "Genny", "Setup");
+
+    RegistryClockSourceStub::advance(5ns);
+    auto ctx = setup.start();
+
+    RegistryClockSourceStub::advance(10ns);
+    ctx.success();
+
+    auto expected =
+        "Clocks\n"
+        "SystemTime,42000000\n"
+        "MetricsTime,15\n"
+        "\n"
+        "Counters\n"
+        "\n"
+        "Gauges\n"
+        "\n"
+        "Timers\n"
+        "15,Genny.Setup,10\n"
+        "\n";
+
+    std::ostringstream out;
+    reporter.report<ReporterClockSourceStub>(out, "csv");
+    REQUIRE(out.str() == expected);
+}
+
+TEST_CASE("Genny.ActiveActors metric should be reported as a counter") {
+    RegistryClockSourceStub::reset();
+    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::v1::ReporterT{metrics};
+
+    // Mimic what the DefaultDriver would be doing.
+    auto startedActors = metrics.operation(0u, "Genny", "ActorStarted");
+    auto finishedActors = metrics.operation(0u, "Genny", "ActorFinished");
+
+    auto startActor = [&]() {
+        auto ctx = startedActors.start();
+        ctx.addDocuments(1);
+        ctx.success();
+    };
+
+    auto finishActor = [&]() {
+        auto ctx = finishedActors.start();
+        ctx.addDocuments(1);
+        ctx.success();
+    };
+
+    // Start 2 actors, have 1 finish, start 1 more, and have the remaining 2 finish.
+    RegistryClockSourceStub::advance(5ns);
+    startActor();
+    RegistryClockSourceStub::advance(10ns);
+    startActor();
+    RegistryClockSourceStub::advance(20ns);
+    finishActor();
+    RegistryClockSourceStub::advance(50ns);
+    startActor();
+    RegistryClockSourceStub::advance(100ns);
+    finishActor();
+    RegistryClockSourceStub::advance(200ns);
+    finishActor();
+
+    auto expected =
+        "Clocks\n"
+        "SystemTime,42000000\n"
+        "MetricsTime,15\n"
+        "\n"
+        "Counters\n"
+        "5,Genny.ActiveActors,1\n"
+        "15,Genny.ActiveActors,2\n"
+        "30,Genny.ActiveActors,1\n"
+        "85,Genny.ActiveActors,2\n"
+        "185,Genny.ActiveActors,1\n"
+        "385,Genny.ActiveActors,0\n"
+        "\n"
+        "Gauges\n"
+        "\n"
+        "Timers\n"
+        "\n";
+
+    std::ostringstream out;
+    reporter.report<ReporterClockSourceStub>(out, "csv");
+    REQUIRE(out.str() == expected);
 }
 
 }  // namespace
