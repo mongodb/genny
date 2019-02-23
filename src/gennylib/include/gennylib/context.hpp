@@ -133,9 +133,7 @@ public:
      * @return The next sequential id
      */
     ActorId nextActorId() {
-        // We treat an ActorId of 0 in metrics reporting as though an ActorId wasn't specified. We
-        // therefore have nextActorId() start at 1 to distinguish between these two cases.
-        return ++_nextActorId;
+        return _nextActorId++;
     }
 
     /**
