@@ -20,7 +20,6 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
-#include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
 namespace genny::metrics {
