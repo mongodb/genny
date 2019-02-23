@@ -28,8 +28,13 @@ namespace genny::metrics {
  */
 namespace v1 {
 
-// Convenience (wouldn't want to be configurable in the future)
-
+/**
+ * A wrapper class around std::chrono::duration. It implements operator<<(std::ostream& os) for
+ * convenience during testing.
+ *
+ * @tparam ClockSource a wrapper type around a std::chrono::steady_clock, should always be
+ * MetricsClockSource other than during testing.
+ */
 template <typename ClockSource>
 class Period {
 public:
