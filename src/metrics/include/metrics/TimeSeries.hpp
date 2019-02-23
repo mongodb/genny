@@ -15,8 +15,11 @@
 #ifndef HEADER_9ECECB02_6528_456C_B390_AFBAA5229D3D_INCLUDED
 #define HEADER_9ECECB02_6528_456C_B390_AFBAA5229D3D_INCLUDED
 
+#include <cstdint>
 #include <utility>
 #include <vector>
+
+#include <boost/core/noncopyable.hpp>
 
 #include <metrics/passkey.hpp>
 
@@ -41,15 +44,6 @@ public:
     }
 
     /**
-     * Add a TSD data point occurring `now()`.
-     * Args are forwarded to the `T` constructor.
-     */
-    template <class... Args>
-    void add(Args&&... args) {
-        addAt(ClockSource::now(), std::forward<Args>(args)...);
-    }
-
-    /**
      * Add a TSD data point occurring at `when`.
      * Args are forwarded to the `T` constructor.
      */
@@ -58,7 +52,7 @@ public:
         _vals.emplace_back(when, std::forward<Args>(args)...);
     }
 
-    const std::pair<time_point, T>& operator[](size_t pos) {
+    const std::pair<time_point, T>& operator[](size_t pos) const {
         return _vals[pos];
     }
 
@@ -72,13 +66,6 @@ public:
      */
     const std::vector<std::pair<time_point, T>>& getVals(Permission) const {
         return _vals;
-    }
-
-    /**
-     * @return number of data points
-     */
-    long getDataPointCount(Permission) const {
-        return std::distance(_vals.begin(), _vals.end());
     }
 
 private:

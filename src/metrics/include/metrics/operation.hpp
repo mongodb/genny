@@ -15,8 +15,14 @@
 #ifndef HEADER_3D319F23_C539_4B6B_B4E7_23D23E2DCD52_INCLUDED
 #define HEADER_3D319F23_C539_4B6B_B4E7_23D23E2DCD52_INCLUDED
 
+#include <cstdint>
+#include <memory>
 #include <ostream>
 #include <string>
+#include <utility>
+
+#include <boost/core/noncopyable.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <gennylib/Actor.hpp>
 
@@ -136,8 +142,8 @@ public:
     ~OperationContextT() {
         if (!_isClosed) {
             BOOST_LOG_TRIVIAL(warning)
-                << "Metrics not reported because operation '" << this->_op->getOpName()
-                << "' did not close with success() or fail().";
+                << "Metrics not reported because operation '" << _op->getOpName()
+                << "' did not close with success() or failure().";
         }
     }
 

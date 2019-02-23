@@ -15,18 +15,10 @@
 #ifndef HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
-#include <cassert>
 #include <chrono>
-#include <iostream>
+#include <type_traits>
 #include <unordered_map>
-#include <vector>
 
-#include <boost/core/noncopyable.hpp>
-#include <boost/log/trivial.hpp>
-
-#include <gennylib/Actor.hpp>
-
-#include <metrics/TimeSeries.hpp>
 #include <metrics/operation.hpp>
 #include <metrics/passkey.hpp>
 
@@ -94,11 +86,11 @@ public:
         return OperationT{std::move(op)};
     }
 
-    const OperationsMap& getOps(v1::Permission) const {
+    const OperationsMap& getOps(Permission) const {
         return this->_ops;
     };
 
-    const typename ClockSource::time_point now(v1::Permission) const {
+    const typename ClockSource::time_point now(Permission) const {
         return ClockSource::now();
     }
 

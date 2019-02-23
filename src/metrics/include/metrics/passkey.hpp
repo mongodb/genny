@@ -15,8 +15,6 @@
 #ifndef HEADER_60839F59_EE36_4926_A72D_3D4B68DEA4F9_INCLUDED
 #define HEADER_60839F59_EE36_4926_A72D_3D4B68DEA4F9_INCLUDED
 
-#include <cassert>
-
 namespace genny::metrics {
 namespace v1 {
 
