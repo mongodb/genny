@@ -36,8 +36,8 @@ public:
     using duration = clock_type::duration;
     using time_point = std::chrono::time_point<clock_type>;
 
-    static void advance(v1::Period<clock_type> duration = 1ns) {
-        _now += duration;
+    static void advance(v1::Period<clock_type> inc = 1ns) {
+        _now += inc;
     }
 
     static void reset() {
