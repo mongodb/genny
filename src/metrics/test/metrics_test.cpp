@@ -152,7 +152,7 @@ TEST_CASE("metrics operation test") {
     RegistryClockSourceStub::reset();
     v1::RegistryT<RegistryClockSourceStub> metrics;
 
-    auto op = metrics.operation(0u, "InsertRemove", "Insert");
+    auto op = metrics.operation(1u, "InsertRemove", "Insert");
 
     RegistryClockSourceStub::advance();
     {
@@ -176,14 +176,14 @@ TEST_CASE("metrics operation test") {
             "MetricsTime,3\n"
             "\n"
             "Counters\n"
-            "2,Insert_bytes,40\n"
-            "2,Insert_docs,6\n"
-            "2,Insert_iters,1\n"
+            "2,InsertRemove.id-1.Insert_bytes,40\n"
+            "2,InsertRemove.id-1.Insert_docs,6\n"
+            "2,InsertRemove.id-1.Insert_iters,1\n"
             "\n"
             "Gauges\n"
             "\n"
             "Timers\n"
-            "2,Insert_timer,1\n"
+            "2,InsertRemove.id-1.Insert_timer,1\n"
             "\n";
 
         std::ostringstream out;

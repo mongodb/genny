@@ -119,6 +119,18 @@ private:
         out << std::endl;
 
         out << "Timers" << std::endl;
+        for (const auto& op : _registry->getOps(perm)) {
+            writeMetricValues(
+                out,
+                op.first,
+                "_timer",
+                op.second,
+                perm,
+                [](const OperationEvent<MetricsClockSource>& event) {
+                    return nanosecondsCount(
+                        static_cast<typename MetricsClockSource::duration>(event.duration));
+                });
+        }
         out << std::endl;
     }
 
@@ -157,7 +169,7 @@ private:
      * @tparam DurationIn the duration's type
      */
     template <typename DurationIn>
-    static long long nanosecondsCount(const DurationIn& dur) {
+    static count_type nanosecondsCount(const DurationIn& dur) {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
     }
 
