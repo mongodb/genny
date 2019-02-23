@@ -25,8 +25,9 @@
 namespace genny::metrics {
 
 /**
- * @namespace genny::metrics::v1 this namespace is private and only intended to be used by Genny's
- * internals. Actors should never have to type `genny::*::v1` into any types.
+ * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
+ * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
+ * the implementation of an actor.
  */
 namespace v1 {
 

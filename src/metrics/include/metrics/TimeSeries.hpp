@@ -24,6 +24,12 @@
 #include <metrics/passkey.hpp>
 
 namespace genny::metrics {
+
+/**
+ * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
+ * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
+ * the implementation of an actor.
+ */
 namespace v1 {
 
 /**
@@ -34,7 +40,6 @@ namespace v1 {
  */
 template <class ClockSource, class T>
 class TimeSeries : private boost::noncopyable {
-
 public:
     using time_point = typename ClockSource::time_point;
 
