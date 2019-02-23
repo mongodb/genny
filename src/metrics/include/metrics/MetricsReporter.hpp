@@ -104,6 +104,7 @@ private:
         out << std::endl;
 
         out << "Timers" << std::endl;
+        writeGennySetupMetric(out, perm);
         writeMetricValues(out, "_timer", perm, [](const OperationEvent<MetricsClockSource>& event) {
             return nanosecondsCount(
                 static_cast<typename MetricsClockSource::duration>(event.duration));
@@ -136,22 +137,18 @@ private:
         return out;
     }
 
-    /**
-     * @return the number of nanoseconds represented by the duration.
-     * @param dur the duration
-     * @tparam DurationIn the duration's type
-     */
-    template <typename DurationIn>
-    static count_type nanosecondsCount(const DurationIn& dur) {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
-    }
-
     void writeMetricValues(
         std::ostream& out,
         const std::string& suffix,
         Permission perm,
         std::function<count_type(const OperationEvent<MetricsClockSource>&)> getter) const {
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
+            if (actorName == "Genny") {
+                // Metrics created by the DefaultDriver are handled separately in order to preserve
+                // the legacy "csv" format.
+                continue;
+            }
+
             for (const auto& [opName, opsByThread] : opsByType) {
                 for (const auto& [actorId, timeSeries] : opsByThread) {
                     for (const auto& event : timeSeries) {
@@ -165,6 +162,40 @@ private:
                 }
             }
         }
+    }
+
+    void writeGennySetupMetric(std::ostream& out, Permission perm) const {
+        const auto& ops = _registry->getOps(perm);
+
+        auto gennyOpsIt = ops.find("Genny");
+        if (gennyOpsIt == ops.end()) {
+            return;
+        }
+
+        auto setupIt = gennyOpsIt->second.find("Setup");
+        if (setupIt == gennyOpsIt->second.end()) {
+            return;
+        }
+
+        for (const auto& event : setupIt->second.at(0u)) {
+            out << nanosecondsCount(event.first.time_since_epoch());
+            out << ",";
+            out << "Genny.Setup";
+            out << ",";
+            out << nanosecondsCount(
+                static_cast<typename MetricsClockSource::duration>(event.second.duration));
+            out << std::endl;
+        }
+    }
+
+    /**
+     * @return the number of nanoseconds represented by the duration.
+     * @param dur the duration
+     * @tparam DurationIn the duration's type
+     */
+    template <typename DurationIn>
+    static count_type nanosecondsCount(const DurationIn& dur) {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
     }
 
     const RegistryT<MetricsClockSource>* const _registry;
