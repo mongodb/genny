@@ -89,6 +89,7 @@ private:
         out << std::endl;
 
         out << "Counters" << std::endl;
+        writeGennyActiveActorsMetric(out, perm);
         writeMetricValues(out, "_bytes", perm, [](const OperationEvent<MetricsClockSource>& event) {
             return event.size;
         });
@@ -119,16 +120,6 @@ private:
             << "," << metricsTime << std::endl;
     }
 
-    // TODO: Implement special rules for Genny.Setup and Genny.ActiveActors in order to keep the
-    // "csv" metrics format the same as before.
-    //
-    // 1. We need to not include ".id-0" in the metric name.
-    // 2. We need to ignore "Genny.Setup" in the Counters section.
-    // 3. We need to ignore "Genny.ActorStarted" in the Timers section.
-    // 4. We need to ignore "Genny.ActorFinished" in the Timers section.
-    // 5. We need to report a "Genny.ActiveActors" metric by walking the "Genny.ActorStarted" and
-    //    "Genny.ActorFinished" time series and translating the increments and decrements into a
-    //    total count.
     static std::ostream& writeMetricName(std::ostream& out,
                                          ActorId actorId,
                                          const std::string& actorName,
@@ -169,11 +160,13 @@ private:
 
         auto gennyOpsIt = ops.find("Genny");
         if (gennyOpsIt == ops.end()) {
+            // We permit the Genny.Setup metric to be omitted to make unit testing easier.
             return;
         }
 
         auto setupIt = gennyOpsIt->second.find("Setup");
         if (setupIt == gennyOpsIt->second.end()) {
+            // We permit the Genny.Setup metric to be omitted to make unit testing easier.
             return;
         }
 
@@ -185,6 +178,60 @@ private:
             out << nanosecondsCount(
                 static_cast<typename MetricsClockSource::duration>(event.second.duration));
             out << std::endl;
+        }
+    }
+
+    void writeGennyActiveActorsMetric(std::ostream& out, Permission perm) const {
+        const auto& ops = _registry->getOps(perm);
+
+        auto gennyOpsIt = ops.find("Genny");
+        if (gennyOpsIt == ops.end()) {
+            // We permit the Genny.ActiveActors metric to be omitted to make unit testing easier.
+            return;
+        }
+
+        auto startedActorsIt = gennyOpsIt->second.find("ActorStarted");
+        if (startedActorsIt == gennyOpsIt->second.end()) {
+            // We permit the Genny.ActiveActors metric to be omitted to make unit testing easier.
+            return;
+        }
+
+        const auto& startedActors = startedActorsIt->second.at(0u);
+        const auto& finishedActors = gennyOpsIt->second.find("ActorFinished")->second.at(0u);
+
+        auto startedEventIt = startedActors.begin();
+        auto finishedEventIt = finishedActors.begin();
+
+        auto numActors = 0;
+        auto writeMetric = [&](const typename MetricsClockSource::time_point& when) {
+            out << nanosecondsCount(when.time_since_epoch());
+            out << ",";
+            out << "Genny.ActiveActors";
+            out << ",";
+            out << numActors;
+            out << std::endl;
+        };
+
+        // The termination condition of the while-loop is based only on `finishedActors` because
+        // there should always be as many ActorFinished events as there are ActorStarted events and
+        // an actor can only be finished after it has been started.
+        while (finishedEventIt != finishedActors.end()) {
+            if (startedEventIt == startedActors.end() ||
+                startedEventIt->first > finishedEventIt->first) {
+                numActors -= finishedEventIt->second.ops;
+                writeMetric(finishedEventIt->first);
+                ++finishedEventIt;
+            } else if (startedEventIt->first < finishedEventIt->first) {
+                numActors += startedEventIt->second.ops;
+                writeMetric(startedEventIt->first);
+                ++startedEventIt;
+            } else {
+                // startedEventIt->first == finishedEventIt->first is a violation of the monotonic
+                // clock property. This would only happen as a result of a bug in a unit test.
+                throw std::logic_error{
+                    "Expected time to advance between one actor starting and another actor"
+                    " finishing"};
+            }
         }
     }
 
