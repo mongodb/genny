@@ -101,11 +101,13 @@ def split_into_actor_operation_csv_files(data_reader, out_dir):
     return output_files
 
 
-def sort_csv_files(files, out_dir):
-    for f in files:
-        # Sort on Timestamp and Thread.
-        csvsort(pjoin(out_dir, f), [0, 1], quoting=csv.QUOTE_NONNUMERIC, has_header=False,
-                show_progress=True)
+def sort_csv_file(file, out_dir):
+    # Sort on Timestamp and Thread.
+    csvsort(pjoin(out_dir, file),
+            [0, 1],
+            quoting=csv.QUOTE_NONNUMERIC,
+            has_header=False,
+            show_progress=True)
 
 
 def parse_args(argv):
@@ -129,9 +131,9 @@ def main__cedar(argv=sys.argv[1:]):
     # Separate into actor-operation
     files = split_into_actor_operation_csv_files(my_csv2.data_reader(), out_dir)
 
-    # csvsort by timestamp, thread
-    sort_csv_files(files, out_dir)
+    for f in files:
+        # csvsort by timestamp, thread
+        sort_csv_file(f, out_dir)
 
-    # compute cumulative and stream output to bson file
-    compute_cumulative_and_write_to_bson(files, out_dir)
-
+        # compute cumulative and stream output to bson file
+        compute_cumulative_and_write_to_bson(f, out_dir)

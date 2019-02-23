@@ -24,39 +24,11 @@ from bson import CodecOptions, decode_file_iter
 from genny import cedar
 
 
+def _get_fixture(*csv_file_path):
+    return pjoin('tests', 'fixtures', *csv_file_path)
+
+
 class CedarTest(unittest.TestCase):
-
-    @staticmethod
-    def get_fixture(*csv_file_path):
-        return pjoin('tests', 'fixtures', *csv_file_path)
-
-    def verify_output(self, bson_metrics_file_name, expected_results):
-        with open(bson_metrics_file_name, 'rb') as f:
-            options = CodecOptions(document_class=od)
-            index = 0
-            for doc in decode_file_iter(f, options):
-                self.assertEqual(doc, expected_results[index])
-                index += 1
-
-    def test_cedar_main(self):
-        expected_result = od([
-            ('ts', 10007),
-            ('id', 0),
-            ('counters', od([('n', 1), ('ops', 6), ('size', 40), ('errors', 2)])),
-            ('timers', od([('duration', 100), ('total', 100)])),
-            ('gauges', od([('workers', 5)]))
-        ])
-
-        with tempfile.TemporaryDirectory() as output_dir:
-            args = [
-                self.get_fixture('csv2', 'barebones.csv'),
-                output_dir
-            ]
-
-            # cedar.main__cedar(args)
-
-            # TODO uncomment when everything's done.
-            # self.verify_output(pjoin(output_dir, 'MyActor-MyOperation.bson'), expected_result)
 
     def test_split_csv2(self):
         large_precise_float = 10 ** 15
@@ -93,10 +65,10 @@ class CedarTest(unittest.TestCase):
 
         # Copy the file into a temp dir so we can do in-place sorting.
         with tempfile.TemporaryDirectory() as output_dir:
-            shutil.copy(self.get_fixture('cedar', file_name), output_dir)
-            cedar.sort_csv_files([file_name], output_dir)
+            shutil.copy(_get_fixture('cedar', file_name), output_dir)
+            cedar.sort_csv_file(file_name, output_dir)
             with open(pjoin(output_dir, file_name)) as exp, open(
-                    self.get_fixture('cedar', 'intermediate_sorted.csv')) as ctl:
+                    _get_fixture('cedar', 'intermediate_sorted.csv')) as ctl:
                 experiment = list(csv.reader(exp, quoting=csv.QUOTE_NONNUMERIC))
                 control = list(csv.reader(ctl, quoting=csv.QUOTE_NONNUMERIC))
 
@@ -105,3 +77,36 @@ class CedarTest(unittest.TestCase):
                 # Explicitly compare each line for better debuggability.
                 for i in range(len(experiment)):
                     self.assertEqual(experiment[i], control[i])
+
+
+class CedarIntegrationTest(unittest.TestCase):
+    def verify_output(self, bson_metrics_file_name, expected_results):
+        with open(bson_metrics_file_name, 'rb') as f:
+            options = CodecOptions(document_class=od)
+            index = 0
+            for doc in decode_file_iter(f, options):
+                self.assertEqual(doc, expected_results[index])
+                index += 1
+
+    def test_cedar_main(self):
+        expected_result = od([
+            ('ts', 10007),
+            ('id', 0),
+            ('counters', od([('n', 1), ('ops', 6), ('size', 40), ('errors', 2)])),
+            ('timers', od([('duration', 100), ('total', 100)])),
+            ('gauges', od([('workers', 5)]))
+        ])
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            args = [
+                _get_fixture('csv2', 'two_op.csv'),
+                output_dir
+            ]
+
+            cedar.main__cedar(args)
+
+            with open(pjoin(output_dir, 'InsertRemove-Insert.csv')) as f:
+                print(f.read())
+
+            # TODO uncomment when everything's done.
+            # self.verify_output(pjoin(output_dir, 'MyActor-MyOperation.bson'), expected_result)

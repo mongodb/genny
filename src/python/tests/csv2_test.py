@@ -12,7 +12,7 @@ class CSV2Test(unittest.TestCase):
 
     def test_basic_parsing(self):
         test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))
-        self.assertEqual(test_csv._unix_epoch_offset_ns, 990114000000)
+        self.assertEqual(test_csv._unix_epoch_offset_ms, 90000)
         op_map = test_csv._operation_thread_count_map
         self.assertDictEqual(op_map, {('MyActor', 'MyOperation'): 2})
         col_hdrs = test_csv._column_headers
@@ -26,17 +26,8 @@ class CSV2Test(unittest.TestCase):
     def test_data_reader(self):
         test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))
         dr = test_csv.data_reader()
-        self.assertEqual(next(dr), ([
-            10007,
-            0,
-            100,
-            0,
-            1,
-            6,
-            2,
-            40,
-            2
-        ], 'MyActor', 'MyOperation'))
+        self.assertEqual(next(dr),
+                         ([102345, 0, 100, 0, 1, 6, 2, 40, 2], 'MyActor', 'MyOperation'))
 
     def test_invalid_field_value(self):
         self.assertRaisesRegex(csv2.CSV2ParsingError, 'Error parsing CSV file',

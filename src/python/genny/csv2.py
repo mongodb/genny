@@ -35,9 +35,10 @@ class _DataReader:
     Python integers.
     """
 
-    def __init__(self, csv_reader, thread_count_map):
+    def __init__(self, csv_reader, thread_count_map, ts_offset):
         self.raw_reader = csv_reader
         self.tc_map = thread_count_map
+        self.ts_offset = ts_offset
 
     def __iter__(self):
         for line in self.raw_reader:
@@ -64,8 +65,9 @@ class _DataReader:
             raise CSV2ParsingError('Unexpected outcome on line %d: %s', self.raw_reader.line_num,
                                    line)
 
-        # Convert nanoseconds to milliseconds
+        # Convert nanoseconds to milliseconds and add offset
         line[_Columns.TIMESTAMP] /= 1000 * 1000
+        line[_Columns.TIMESTAMP] += self.ts_offset
 
         # Remove the actor and operation columns to save space.
         assert _Columns.ACTOR < _Columns.OPERATION
@@ -108,7 +110,7 @@ class CSV2:
 
         # The number to add to the metrics timestamp (a.k.a. c++ system_time) to get
         # the UNIX time.
-        self._unix_epoch_offset_ns = None
+        self._unix_epoch_offset_ms = None
 
         # Map of (actor, operation) to thread count.
         self._operation_thread_count_map = {}
@@ -131,7 +133,8 @@ class CSV2:
             for parser in header_parsers:
                 parser(reader)
 
-            self._data_reader = _DataReader(reader, self._operation_thread_count_map)
+            self._data_reader = _DataReader(reader, self._operation_thread_count_map,
+                                            self._unix_epoch_offset_ms)
             self._can_get_data_reader = True
 
         except (IndexError, ValueError) as e:
@@ -154,7 +157,7 @@ class CSV2:
         unix_time = int(next(reader)[1])
         metrics_time = int(next(reader)[1])
 
-        self._unix_epoch_offset_ns = unix_time - metrics_time
+        self._unix_epoch_offset_ms = (unix_time - metrics_time) / (1000 * 1000)
 
         next(reader)  # Read the next empty line.
 
