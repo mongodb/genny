@@ -16,6 +16,7 @@
 #define HEADER_E8439AA0_1871_4F5A_B672_BE8E29AA5ED7_INCLUDED
 
 #include <ostream>
+#include <type_traits>
 #include <utility>
 
 namespace genny::metrics {
