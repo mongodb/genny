@@ -16,6 +16,7 @@
 #define HEADER_1EB08DF5_3853_4277_8B3D_4542552B8154_INCLUDED
 
 #include <iostream>
+#include <map>
 
 #include <metrics/metrics.hpp>
 
@@ -252,6 +253,23 @@ private:
 
         out << "OperationThreadCounts" << std::endl;
         out << "actor,operation,workers" << std::endl;
+
+        auto opThreadCounts = std::map<std::pair<std::string, std::string>, size_t>{};
+        for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
+            for (const auto& [opName, opsByThread] : opsByType) {
+                for (const auto& [actorId, timeSeries] : opsByThread) {
+                    opThreadCounts[std::make_pair(actorName, opName)] += 1;
+                }
+            }
+        }
+
+        for (const auto& [key, count] : opThreadCounts) {
+            const auto& [actorName, opName] = key;
+            out << actorName << ",";
+            out << opName << ",";
+            out << count << std::endl;
+        }
+
         out << std::endl;
 
         out << "Operations" << std::endl;
