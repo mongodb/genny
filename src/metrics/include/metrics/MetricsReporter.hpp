@@ -73,32 +73,39 @@ public:
         // if this lives more than a hot-second, put the formats into an enum and do this
         // check & throw in the driver/main program
         if (metricsFormat == "csv") {
-            return reportCsv(out, systemTime, metricsTime, perm);
+            reportLegacyCsv(out, systemTime, metricsTime, perm);
+        } else if (metricsFormat == "cedar-csv") {
+            reportCedarCsv(out, systemTime, metricsTime, perm);
         } else {
             throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
         }
     }
 
 private:
-    void reportCsv(std::ostream& out,
-                   long long systemTime,
-                   long long metricsTime,
-                   v1::Permission perm) const {
+    using duration = typename MetricsClockSource::duration;
+
+    void reportLegacyCsv(std::ostream& out,
+                         long long systemTime,
+                         long long metricsTime,
+                         v1::Permission perm) const {
         out << "Clocks" << std::endl;
         writeClocks(out, systemTime, metricsTime);
         out << std::endl;
 
         out << "Counters" << std::endl;
         writeGennyActiveActorsMetric(out, perm);
-        writeMetricValues(out, "_bytes", perm, [](const OperationEvent<MetricsClockSource>& event) {
-            return event.size;
-        });
-        writeMetricValues(out, "_docs", perm, [](const OperationEvent<MetricsClockSource>& event) {
-            return event.ops;
-        });
-        writeMetricValues(out, "_iters", perm, [](const OperationEvent<MetricsClockSource>& event) {
-            return event.iters;
-        });
+        writeMetricValuesLegacy(
+            out, "_bytes", perm, [](const OperationEvent<MetricsClockSource>& event) {
+                return event.size;
+            });
+        writeMetricValuesLegacy(
+            out, "_docs", perm, [](const OperationEvent<MetricsClockSource>& event) {
+                return event.ops;
+            });
+        writeMetricValuesLegacy(
+            out, "_iters", perm, [](const OperationEvent<MetricsClockSource>& event) {
+                return event.iters;
+            });
         out << std::endl;
 
         out << "Gauges" << std::endl;
@@ -106,10 +113,10 @@ private:
 
         out << "Timers" << std::endl;
         writeGennySetupMetric(out, perm);
-        writeMetricValues(out, "_timer", perm, [](const OperationEvent<MetricsClockSource>& event) {
-            return nanosecondsCount(
-                static_cast<typename MetricsClockSource::duration>(event.duration));
-        });
+        writeMetricValuesLegacy(
+            out, "_timer", perm, [](const OperationEvent<MetricsClockSource>& event) {
+                return nanosecondsCount(static_cast<duration>(event.duration));
+            });
         out << std::endl;
     }
 
@@ -120,15 +127,15 @@ private:
             << "," << metricsTime << std::endl;
     }
 
-    static std::ostream& writeMetricName(std::ostream& out,
-                                         ActorId actorId,
-                                         const std::string& actorName,
-                                         const std::string& opName) {
+    static std::ostream& writeMetricNameLegacy(std::ostream& out,
+                                               ActorId actorId,
+                                               const std::string& actorName,
+                                               const std::string& opName) {
         out << actorName << ".id-" << std::to_string(actorId) << "." << opName;
         return out;
     }
 
-    void writeMetricValues(
+    void writeMetricValuesLegacy(
         std::ostream& out,
         const std::string& suffix,
         Permission perm,
@@ -145,7 +152,7 @@ private:
                     for (const auto& event : timeSeries) {
                         out << nanosecondsCount(event.first.time_since_epoch());
                         out << ",";
-                        writeMetricName(out, actorId, actorName, opName) << suffix;
+                        writeMetricNameLegacy(out, actorId, actorName, opName) << suffix;
                         out << ",";
                         out << getter(event.second);
                         out << std::endl;
@@ -175,8 +182,7 @@ private:
             out << ",";
             out << "Genny.Setup";
             out << ",";
-            out << nanosecondsCount(
-                static_cast<typename MetricsClockSource::duration>(event.second.duration));
+            out << nanosecondsCount(static_cast<duration>(event.second.duration));
             out << std::endl;
         }
     }
@@ -233,6 +239,50 @@ private:
                     " finishing"};
             }
         }
+    }
+
+    void reportCedarCsv(std::ostream& out,
+                        long long systemTime,
+                        long long metricsTime,
+                        v1::Permission perm) const {
+        out << "Clocks" << std::endl;
+        out << "clock,nanoseconds" << std::endl;
+        writeClocks(out, systemTime, metricsTime);
+        out << std::endl;
+
+        out << "OperationThreadCounts" << std::endl;
+        out << "actor,operation,workers" << std::endl;
+        out << std::endl;
+
+        out << "Operations" << std::endl;
+        out << "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size" << std::endl;
+
+        for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
+            if (actorName == "Genny") {
+                // Metrics created by the DefaultDriver are handled separately.
+                continue;
+            }
+
+            for (const auto& [opName, opsByThread] : opsByType) {
+                for (const auto& [actorId, timeSeries] : opsByThread) {
+                    for (const auto& event : timeSeries) {
+                        out << nanosecondsCount(event.first.time_since_epoch()) << ",";
+                        out << actorName << ",";
+                        out << actorId << ",";
+                        out << opName << ",";
+                        out << nanosecondsCount(static_cast<duration>(event.second.duration))
+                            << ",";
+                        out << static_cast<unsigned>(event.second.outcome) << ",";
+                        out << event.second.iters << ",";
+                        out << event.second.ops << ",";
+                        out << event.second.errors << ",";
+                        out << event.second.size << std::endl;
+                    }
+                }
+            }
+        }
+
+        out << std::endl;
     }
 
     /**
