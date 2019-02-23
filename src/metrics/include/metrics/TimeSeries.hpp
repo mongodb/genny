@@ -21,8 +21,6 @@
 
 #include <boost/core/noncopyable.hpp>
 
-#include <metrics/passkey.hpp>
-
 namespace genny::metrics {
 
 /**
@@ -33,15 +31,19 @@ namespace genny::metrics {
 namespace v1 {
 
 /**
- * Not intended to be used directly.
- * This is used by the *Impl classes as storage for TSD values.
+ * A class for storing time series data (TSD) values.
  *
- * @tparam T The value to record at a particular time-point.
+ * @tparam ClockSource a wrapper type around a std::chrono::steady_clock, should always be
+ * MetricsClockSource other than during testing.
+ *
+ * @tparam T the type of value to record at a particular time-point.
  */
 template <class ClockSource, class T>
 class TimeSeries : private boost::noncopyable {
 public:
     using time_point = typename ClockSource::time_point;
+    using ElementType = std::pair<time_point, T>;
+    using VectorType = std::vector<ElementType>;
 
     explicit constexpr TimeSeries() {
         // could make 1000*1000 a param passed down from Registry if needed
@@ -57,7 +59,7 @@ public:
         _vals.emplace_back(when, std::forward<Args>(args)...);
     }
 
-    const std::pair<time_point, T>& operator[](size_t pos) const {
+    const ElementType& operator[](size_t pos) const {
         return _vals[pos];
     }
 
@@ -65,16 +67,16 @@ public:
         return _vals.size();
     }
 
-    /**
-     * Internal method to expose data-points for reporting, etc.
-     * @return raw data
-     */
-    const std::vector<std::pair<time_point, T>>& getVals(Permission) const {
-        return _vals;
+    typename VectorType::const_iterator begin() const {
+        return _vals.cbegin();
+    }
+
+    typename VectorType::const_iterator end() const {
+        return _vals.cend();
     }
 
 private:
-    std::vector<std::pair<time_point, T>> _vals;
+    VectorType _vals;
 };
 
 }  // namespace v1

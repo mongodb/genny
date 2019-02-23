@@ -95,7 +95,6 @@ private:
                 op.first,
                 "_bytes",
                 op.second,
-                perm,
                 [](const OperationEvent<MetricsClockSource>& event) { return event.size; });
 
             writeMetricValues(
@@ -103,7 +102,6 @@ private:
                 op.first,
                 "_docs",
                 op.second,
-                perm,
                 [](const OperationEvent<MetricsClockSource>& event) { return event.ops; });
 
             writeMetricValues(
@@ -111,7 +109,6 @@ private:
                 op.first,
                 "_iters",
                 op.second,
-                perm,
                 [](const OperationEvent<MetricsClockSource>& event) { return event.iters; });
         }
         out << std::endl;
@@ -126,7 +123,6 @@ private:
                 op.first,
                 "_timer",
                 op.second,
-                perm,
                 [](const OperationEvent<MetricsClockSource>& event) {
                     return nanosecondsCount(
                         static_cast<typename MetricsClockSource::duration>(event.duration));
@@ -162,9 +158,8 @@ private:
         const OperationDescriptor& desc,
         const std::string& suffix,
         const TimeSeries<MetricsClockSource, OperationEvent<MetricsClockSource>>& timeSeries,
-        Permission perm,
         std::function<count_type(const OperationEvent<MetricsClockSource>&)> getter) {
-        for (const auto& event : timeSeries.getVals(perm)) {
+        for (const auto& event : timeSeries) {
             out << nanosecondsCount(event.first.time_since_epoch());
             out << ",";
             writeMetricName(out, desc) << suffix;
