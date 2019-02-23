@@ -19,29 +19,25 @@ namespace genny::metrics {
 namespace v1 {
 
 /**
- * The ReporterT is given read-access to metrics data for the purposes
- * of reporting data. The ReporterT class is the only separately-compiled
- * component of the metrics library. It is not ABI safe.
+ * The ReporterT class is given read-only access to the metrics data for the purposes of recording
+ * it to a file.
  */
 template <typename MetricsClockSource>
 class ReporterT;
 
 
 /**
- * Ignore this. Used for passkey for some methods.
- */
-class Evil {
-protected:
-    Evil() = default;
-};
-
-
-/**
- * TODO: Add a description of the passkey idiom.
+ * The passkey idiom is way for a class to govern how its private members can be accessed by another
+ * class. It can be thought of as a finer-grained way to express friendship in C++. The passkey
+ * idiom works by defining a class with a private constructor and having that class be friends with
+ * the class seeking access. Since the constructor is private, only the class seeking access is able
+ * to construct instances of it (though could possibly share them). This means that the governing
+ * class can then define a public function that requires it as an argument and still be ensured that
+ * only the class seeking access is able to call that function.
  *
- * See also https://arne-mertz.de/2016/10/passkey-idiom/.
+ * \sa https://arne-mertz.de/2016/10/passkey-idiom/
  */
-class Permission : private Evil {
+class Permission {
 private:
     constexpr Permission() = default;
 
