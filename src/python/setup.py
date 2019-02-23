@@ -20,8 +20,7 @@ setup(name='genny',
       install_requires=[
           'nose==1.3.7',
           'yapf==0.24.0',
-          'pymongo==3.7.2',
-          'csvsort==1.5'
+          'pymongo==3.7.2'
       ],
       setup_requires=[
           'nose==1.3.7'

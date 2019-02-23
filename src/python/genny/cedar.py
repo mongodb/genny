@@ -17,8 +17,11 @@
 import argparse
 import csv
 import sys
+
+from collections import OrderedDict
 from os.path import join as pjoin
 
+from bson import BSON
 from third_party.csvsort import csvsort
 
 from genny.csv2 import CSV2
@@ -62,19 +65,73 @@ Sample output:
 {ts:TS(573),id:0,counters:{n:9,ops:58,size:350,errors:23},timers:{duration:1320,total:1518},gauges:{workers:5}}
 ```
 """
+
+
 class IntermediateCSV:
     """
-    Class representing the intermediate csv format.
+    Column definitions for the intermediate CSV format.
     """
-    pass
+    # IntermediateCSV Columns
+    TS_MS = 0
+    THREAD = 1
+    DURATION = 2
+    OUTCOME = 3
+    N = 4
+    OPS = 5
+    ERRORS = 6
+    SIZE = 7
+    WORKERS = 8
+
+
+class IntermediateCSVReader:
+    """
+    Class that reads IntermediateCSV and outputs Cedar BSON
+    """
+
+    def __init__(self, reader):
+        self.raw_reader = reader
+        self.cum_vals = [0 for _ in range(9)]
+        self.prev_ts = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self._parse_into_cedar_format(next(self.raw_reader))
+
+    def _parse_into_cedar_format(self, line):
+        # Compute all cumulative values for simplicity; Not all values are used.
+        self.cum_vals = [sum(v) for v in zip(line, self.cum_vals)]
+
+        res = OrderedDict([
+            ('ts', line[IntermediateCSV.TS_MS]),
+            ('id', line[IntermediateCSV.THREAD]),
+            ('counters', OrderedDict([
+                ('n', self.cum_vals[IntermediateCSV.N]),
+                ('ops', self.cum_vals[IntermediateCSV.OPS]),
+                ('size', self.cum_vals[IntermediateCSV.SIZE]),
+                ('errors', self.cum_vals[IntermediateCSV.ERRORS])
+            ])),
+            ('timers', OrderedDict([
+                ('duration', self.cum_vals[IntermediateCSV.DURATION]),
+                ('total', 1)  # FIXME: compute total
+            ])),
+            ('gauges', OrderedDict([
+                ('workers', line[IntermediateCSV.WORKERS])
+            ]))
+        ])
+
+        self.prev_ts = line[IntermediateCSV.TS_MS]
+
+        return res
+
 
 def compute_cumulative_and_write_to_bson(file_name, out_dir):
     # Remove ".csv" and add ".bson"
     out_file_name = file_name[:-4] + '.bson'
-    with open(pjoin(out_dir, out_file_name), 'w') as out_f, open(pjoin(out_dir, file_name)) as in_f:
-
-        for line in csv.reader(in_f, quoting=csv.QUOTE_NONNUMERIC):
-            pass
+    with open(pjoin(out_dir, out_file_name), 'wb') as out_f, open(pjoin(out_dir, file_name)) as in_f:
+        for ordered_dict in IntermediateCSVReader(csv.reader(in_f, quoting=csv.QUOTE_NONNUMERIC)):
+            out_f.write(BSON.encode(ordered_dict))
 
 
 def split_into_actor_operation_csv_files(data_reader, out_dir):

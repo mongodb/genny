@@ -105,11 +105,4 @@ class CedarIntegrationTest(unittest.TestCase):
 
             cedar.main__cedar(args)
 
-            with open(pjoin(output_dir, 'InsertRemove-Insert.csv')) as f:
-                print(f.read())
-
-            with open(pjoin(output_dir, 'InsertRemove-Remove.csv')) as f:
-                print(f.read())
-
-        # TODO uncomment when everything's done.
-        # self.verify_output(pjoin(output_dir, 'MyActor-MyOperation.bson'), expected_result)
+            self.verify_output(pjoin(output_dir, 'InsertRemove-Insert.bson'), expected_result)

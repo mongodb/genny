@@ -32,7 +32,7 @@ class CSV2ParsingError(BaseException):
 class _DataReader:
     """
     Thin wrapper around csv.DictReader() that eagerly converts any digits to native
-    Python integers and massages output into an intermediate csv format.
+    Python integers and massages output into IntermediateCSV.
     """
 
     def __init__(self, csv_reader, thread_count_map, ts_offset):
@@ -41,16 +41,12 @@ class _DataReader:
         self.ts_offset = ts_offset
 
     def __iter__(self):
-        for line in self.raw_reader:
-            yield self._process(line)
+        return self
 
     def __next__(self):
-        return self._process(next(self.raw_reader))
+        return self._parse_into_intermediate_csv(next(self.raw_reader))
 
-    def line_num(self):
-        return self.raw_reader.line_num
-
-    def _process(self, line):
+    def _parse_into_intermediate_csv(self, line):
         for i in range(len(line)):
 
             # Strip spaces from lines
@@ -60,14 +56,13 @@ class _DataReader:
             if line[i].isdigit():
                 line[i] = int(line[i])
 
-        # Eagerly error if OUTCOME is > 1 (i.e. not 0 or 1)
+        # Eagerly error if OUTCOME is > 1
         if line[_Columns.OUTCOME] > 1:
             raise CSV2ParsingError('Unexpected outcome on line %d: %s', self.raw_reader.line_num,
                                    line)
 
         # Convert nanoseconds to milliseconds and add offset
         line[_Columns.TIMESTAMP] /= 1000 * 1000
-        # TODO: We don't seem to need the system time at all if cedar expects TS to be relative.
         line[_Columns.TIMESTAMP] += self.ts_offset
 
         # Remove the actor and operation columns to save space.
