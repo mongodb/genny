@@ -81,11 +81,11 @@ public:
 
 private:
     void reportCsv(std::ostream& out,
-                   long long int systemTime,
-                   long long int metricsTime,
+                   long long systemTime,
+                   long long metricsTime,
                    v1::Permission perm) const {
         out << "Clocks" << std::endl;
-        doClocks(out, systemTime, metricsTime);
+        writeClocks(out, systemTime, metricsTime);
         out << std::endl;
 
         out << "Counters" << std::endl;
@@ -111,7 +111,7 @@ private:
         out << std::endl;
     }
 
-    void doClocks(std::ostream& out, long long int systemTime, long long int metricsTime) const {
+    void writeClocks(std::ostream& out, long long systemTime, long long metricsTime) const {
         out << "SystemTime"
             << "," << systemTime << std::endl;
         out << "MetricsTime"
