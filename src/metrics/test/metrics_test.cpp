@@ -154,6 +154,15 @@ TEST_CASE("metrics output format") {
     // TODO: Consider changing this test so the operations between actor threads are reported
     // "concurrently" with respect to how op.start() and RegistryClockSourceStub::advance() are
     // called.
+    //
+    //           +---------------------+--------------+
+    // Thread 1: |        Insert       |    Remove    |
+    //           +----+                +-+        +---+
+    // Thread 2:      |      Insert      | Remove |
+    //                +--+           +---+--------+
+    // Thread 3:         | Greetings |
+    //                   +-----------+
+
     RegistryClockSourceStub::advance(5ns);
     {
         auto op = metrics.operation(1u, "InsertRemove", "Remove");
