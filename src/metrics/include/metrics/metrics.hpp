@@ -72,18 +72,20 @@ template <typename ClockSource>
 class RegistryT {
 private:
     using EventSeries = typename v1::OperationImpl<ClockSource>::EventSeries;
-    using OperationsMap =
-        std::unordered_map<OperationDescriptor, EventSeries, OperationDescriptor::Hasher>;
+    using OperationsMap = std::unordered_map<
+        std::string,
+        std::unordered_map<std::string, std::unordered_map<ActorId, EventSeries>>>;
 
 public:
     using clock = ClockSource;
 
     explicit RegistryT() = default;
 
-    OperationT<ClockSource> operation(ActorId id, std::string actorName, std::string opName) {
-        auto desc = OperationDescriptor{id, std::move(actorName), std::move(opName)};
-        auto it = this->_ops.try_emplace(desc).first;
-        auto op = v1::OperationImpl<ClockSource>{std::move(desc), it->second};
+    OperationT<ClockSource> operation(ActorId actorId, std::string actorName, std::string opName) {
+        auto& opsByType = this->_ops[actorName];
+        auto& opsByThread = opsByType[opName];
+        auto& events = opsByThread[actorId];
+        auto op = v1::OperationImpl<ClockSource>{std::move(actorName), std::move(opName), events};
         return OperationT{std::move(op)};
     }
 

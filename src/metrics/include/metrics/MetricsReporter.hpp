@@ -89,45 +89,25 @@ private:
         out << std::endl;
 
         out << "Counters" << std::endl;
-        for (const auto& op : _registry->getOps(perm)) {
-            writeMetricValues(
-                out,
-                op.first,
-                "_bytes",
-                op.second,
-                [](const OperationEvent<MetricsClockSource>& event) { return event.size; });
-
-            writeMetricValues(
-                out,
-                op.first,
-                "_docs",
-                op.second,
-                [](const OperationEvent<MetricsClockSource>& event) { return event.ops; });
-
-            writeMetricValues(
-                out,
-                op.first,
-                "_iters",
-                op.second,
-                [](const OperationEvent<MetricsClockSource>& event) { return event.iters; });
-        }
+        writeMetricValues(out, "_bytes", perm, [](const OperationEvent<MetricsClockSource>& event) {
+            return event.size;
+        });
+        writeMetricValues(out, "_docs", perm, [](const OperationEvent<MetricsClockSource>& event) {
+            return event.ops;
+        });
+        writeMetricValues(out, "_iters", perm, [](const OperationEvent<MetricsClockSource>& event) {
+            return event.iters;
+        });
         out << std::endl;
 
         out << "Gauges" << std::endl;
         out << std::endl;
 
         out << "Timers" << std::endl;
-        for (const auto& op : _registry->getOps(perm)) {
-            writeMetricValues(
-                out,
-                op.first,
-                "_timer",
-                op.second,
-                [](const OperationEvent<MetricsClockSource>& event) {
-                    return nanosecondsCount(
-                        static_cast<typename MetricsClockSource::duration>(event.duration));
-                });
-        }
+        writeMetricValues(out, "_timer", perm, [](const OperationEvent<MetricsClockSource>& event) {
+            return nanosecondsCount(
+                static_cast<typename MetricsClockSource::duration>(event.duration));
+        });
         out << std::endl;
     }
 
@@ -148,25 +128,12 @@ private:
     // 5. We need to report a "Genny.ActiveActors" metric by walking the "Genny.ActorStarted" and
     //    "Genny.ActorFinished" time series and translating the increments and decrements into a
     //    total count.
-    static std::ostream& writeMetricName(std::ostream& out, const OperationDescriptor& desc) {
-        out << desc.actorName << ".id-" << std::to_string(desc.actorId) << "." << desc.opName;
+    static std::ostream& writeMetricName(std::ostream& out,
+                                         ActorId actorId,
+                                         const std::string& actorName,
+                                         const std::string& opName) {
+        out << actorName << ".id-" << std::to_string(actorId) << "." << opName;
         return out;
-    }
-
-    static void writeMetricValues(
-        std::ostream& out,
-        const OperationDescriptor& desc,
-        const std::string& suffix,
-        const TimeSeries<MetricsClockSource, OperationEvent<MetricsClockSource>>& timeSeries,
-        std::function<count_type(const OperationEvent<MetricsClockSource>&)> getter) {
-        for (const auto& event : timeSeries) {
-            out << nanosecondsCount(event.first.time_since_epoch());
-            out << ",";
-            writeMetricName(out, desc) << suffix;
-            out << ",";
-            out << getter(event.second);
-            out << std::endl;
-        }
     }
 
     /**
@@ -179,7 +146,28 @@ private:
         return std::chrono::duration_cast<std::chrono::nanoseconds>(dur).count();
     }
 
-    const v1::RegistryT<MetricsClockSource>* _registry;
+    void writeMetricValues(
+        std::ostream& out,
+        const std::string& suffix,
+        Permission perm,
+        std::function<count_type(const OperationEvent<MetricsClockSource>&)> getter) const {
+        for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
+            for (const auto& [opName, opsByThread] : opsByType) {
+                for (const auto& [actorId, timeSeries] : opsByThread) {
+                    for (const auto& event : timeSeries) {
+                        out << nanosecondsCount(event.first.time_since_epoch());
+                        out << ",";
+                        writeMetricName(out, actorId, actorName, opName) << suffix;
+                        out << ",";
+                        out << getter(event.second);
+                        out << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
+    const RegistryT<MetricsClockSource>* const _registry;
 };
 
 }  // namespace v1

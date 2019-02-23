@@ -40,34 +40,6 @@ namespace v1 {
 
 using count_type = long long;
 
-struct OperationDescriptor {
-    // TODO: The ActorId is enough to rely on for uniqueness so we probably don't need to include
-    // `actorName` or `opName` in the Hasher or operator== implementations actually.
-    struct Hasher {
-        size_t operator()(const OperationDescriptor& desc) const {
-            size_t seed = 0;
-
-            boost::hash_combine(seed, desc.actorId);
-            boost::hash_combine(seed, desc.actorName);
-            boost::hash_combine(seed, desc.opName);
-
-            return seed;
-        }
-    };
-
-    OperationDescriptor(ActorId actorId, std::string actorName, std::string opName)
-        : actorId(actorId), actorName(std::move(actorName)), opName(std::move(opName)) {}
-
-    bool operator==(const OperationDescriptor& other) const {
-        return actorId == other.actorId && actorName == other.actorName && opName == other.opName;
-    }
-
-    const ActorId actorId;
-    const std::string actorName;
-    const std::string opName;
-};
-
-
 template <typename ClockSource>
 struct OperationEvent {
     enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
@@ -108,14 +80,23 @@ public:
     using time_point = typename ClockSource::time_point;
     using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
 
-    OperationImpl(OperationDescriptor desc, EventSeries& events)
-        : _desc(std::move(desc)), _events(std::addressof(events)) {}
+    OperationImpl(std::string actorName, std::string opName, EventSeries& events)
+        : _actorName(std::move(actorName)),
+          _opName(std::move(opName)),
+          _events(std::addressof(events)) {}
 
     /**
-     * Operation name getter to help with exception reporting.
+     * @return the name of the actor running the operation.
+     */
+    const std::string& getActorName() const {
+        return _actorName;
+    }
+
+    /**
+     * @return the name of the operation being run.
      */
     const std::string& getOpName() const {
-        return _desc.opName;
+        return _opName;
     }
 
     void reportAt(time_point finished, OperationEvent<ClockSource>&& event) {
@@ -123,8 +104,9 @@ public:
     }
 
 private:
-    const OperationDescriptor _desc;
-    EventSeries* _events;
+    const std::string _actorName;
+    const std::string _opName;
+    EventSeries* const _events;
 };
 
 
@@ -149,6 +131,7 @@ public:
         if (!_isClosed) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Metrics not reported because operation '" << _op->getOpName()
+                << "' being run by actor '" << _op->getActorName()
                 << "' did not close with success() or failure().";
         }
     }

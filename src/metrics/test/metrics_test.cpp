@@ -72,9 +72,8 @@ void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
 TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
-    auto desc = v1::OperationDescriptor{0, "Actor", "Op"};
     auto events = v1::OperationImpl<RegistryClockSourceStub>::EventSeries{};
-    auto op = v1::OperationImpl<RegistryClockSourceStub>{std::move(desc), events};
+    auto op = v1::OperationImpl<RegistryClockSourceStub>{"Actor", "Op", events};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(op);
