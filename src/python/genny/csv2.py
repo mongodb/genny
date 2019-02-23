@@ -19,7 +19,7 @@ import csv
 class _Dialect(csv.unix_dialect):
     strict = True
     skipinitialspace = True
-    quoting = csv.QUOTE_MINIMAL  # Expect no quotes
+    quoting = csv.QUOTE_MINIMAL  # Expect no quotes in csv2.
     # We don't allow commas in actor names at the moment, so no need
     # to escape the delimiter.
     # escapechar = '\\'
@@ -150,8 +150,14 @@ class CSV2:
         if title != 'Clocks':
             raise CSV2ParsingError('Expected title to be "Clocks", got %s', title)
 
-        unix_time = int(next(reader)[1])
-        metrics_time = int(next(reader)[1])
+        unix_time_line = next(reader)
+        metrics_time_line = next(reader)
+
+        if unix_time_line[0] != 'SystemTime' or metrics_time_line[0] != 'MetricsTime':
+            raise CSV2ParsingError('Invalid keys for lines: %s %s',
+                                   unix_time_line, metrics_time_line)
+        unix_time = int(unix_time_line[1])
+        metrics_time = int(metrics_time_line[1])
 
         self._unix_epoch_offset_ms = (unix_time - metrics_time) / (1000 * 1000)
 

@@ -97,7 +97,7 @@ class CedarIntegrationTest(unittest.TestCase):
                     index += 1
 
     def test_cedar_main(self):
-        expected_result = OrderedDict([
+        expected_result_insert = OrderedDict([
             ('ts', 10000573.0),
             ('id', 0.0),
             ('counters', OrderedDict([
@@ -108,7 +108,23 @@ class CedarIntegrationTest(unittest.TestCase):
             ])),
             ('timers', OrderedDict([
                 ('duration', 1320.0),
-                ('total', 100)  # TODO: fixme
+                ('total', 1)
+            ])),
+            ('gauges', OrderedDict([('workers', 5.0)]))
+        ])
+
+        expected_result_remove = OrderedDict([
+            ('ts', 10000573.0),
+            ('id', 0.0),
+            ('counters', OrderedDict([
+                ('n', 9.0),
+                ('ops', 58.0),
+                ('size', 257.0),
+                ('errors', 25.0)
+            ])),
+            ('timers', OrderedDict([
+                ('duration', 1392.0),
+                ('total', 1)
             ])),
             ('gauges', OrderedDict([('workers', 5.0)]))
         ])
@@ -123,6 +139,12 @@ class CedarIntegrationTest(unittest.TestCase):
 
             self.verify_output(
                 pjoin(output_dir, 'InsertRemove-Insert.bson'),
-                expected_result,
+                expected_result_insert,
+                check_last_row_only=True
+            )
+
+            self.verify_output(
+                pjoin(output_dir, 'InsertRemove-Remove.bson'),
+                expected_result_remove,
                 check_last_row_only=True
             )
