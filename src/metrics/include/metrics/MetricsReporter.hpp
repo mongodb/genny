@@ -88,6 +88,31 @@ private:
         out << std::endl;
 
         out << "Counters" << std::endl;
+        for (const auto& op : _registry->getOps(perm)) {
+            writeMetricValues(
+                out,
+                op.first,
+                "_bytes",
+                op.second,
+                perm,
+                [](const OperationEvent<MetricsClockSource>& event) { return event.size; });
+
+            writeMetricValues(
+                out,
+                op.first,
+                "_docs",
+                op.second,
+                perm,
+                [](const OperationEvent<MetricsClockSource>& event) { return event.ops; });
+
+            writeMetricValues(
+                out,
+                op.first,
+                "_iters",
+                op.second,
+                perm,
+                [](const OperationEvent<MetricsClockSource>& event) { return event.iters; });
+        }
         out << std::endl;
 
         out << "Gauges" << std::endl;
@@ -104,19 +129,25 @@ private:
             << "," << metricsTime << std::endl;
     }
 
-    /**
-     * Prints a map<string,X> where X is a CounterImpl, GaugeImpl, etc.
-     * @tparam X is a map<string,V> where V has getTimeSeries() that exposes a metrics::TimeSeries
-     */
-    template <typename X>
-    static void doReport(std::ostream& out,
-                         const X& haveTimeSeries,
-                         genny::metrics::v1::Permission perm) {
-        for (const auto& c : haveTimeSeries) {
-            for (const auto& v : c.second.getTimeSeries(perm).getVals(perm)) {
-                out << nanosecondsCount(v.first.time_since_epoch()) << "," << c.first << ","
-                    << v.second << std::endl;
-            }
+    static std::ostream& writeMetricsName(std::ostream& out, const OperationDescriptor& desc) {
+        out << desc.actorName << ".id-" << std::to_string(desc.actorId) << "." << desc.opName;
+        return out;
+    }
+
+    static void writeMetricValues(
+        std::ostream& out,
+        const OperationDescriptor& desc,
+        const std::string& suffix,
+        const TimeSeries<MetricsClockSource, OperationEvent<MetricsClockSource>>& timeSeries,
+        Permission perm,
+        std::function<count_type(const OperationEvent<MetricsClockSource>&)> getter) {
+        for (const auto& event : timeSeries.getVals(perm)) {
+            out << nanosecondsCount(event.first.time_since_epoch());
+            out << ",";
+            writeMetricsName(out, desc) << suffix;
+            out << ",";
+            out << getter(event.second);
+            out << std::endl;
         }
     }
 

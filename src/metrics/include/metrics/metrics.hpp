@@ -77,6 +77,10 @@ public:
  */
 template <typename ClockSource>
 class RegistryT {
+private:
+    using EventSeries = typename v1::OperationImpl<ClockSource>::EventSeries;
+    using OperationsMap =
+        std::unordered_map<OperationDescriptor, EventSeries, OperationDescriptor::Hasher>;
 
 public:
     using clock = ClockSource;
@@ -90,14 +94,16 @@ public:
         return OperationT{std::move(op)};
     }
 
+    const OperationsMap& getOps(v1::Permission) const {
+        return this->_ops;
+    };
+
     const typename ClockSource::time_point now(v1::Permission) const {
         return ClockSource::now();
     }
 
 private:
-    using EventSeries = typename v1::OperationImpl<ClockSource>::EventSeries;
-
-    std::unordered_map<OperationDescriptor, EventSeries, OperationDescriptor::Hasher> _ops;
+    OperationsMap _ops;
 };
 
 }  // namespace v1
