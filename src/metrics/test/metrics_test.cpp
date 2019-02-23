@@ -147,65 +147,101 @@ TEST_CASE("metrics::OperationContext interface") {
     }
 }
 
-TEST_CASE("metrics operation test") {
+TEST_CASE("metrics output format") {
     RegistryClockSourceStub::reset();
     v1::RegistryT<RegistryClockSourceStub> metrics;
 
-    auto op = metrics.operation(1u, "InsertRemove", "Insert");
-
-    RegistryClockSourceStub::advance();
+    // TODO: Consider changing this test so the operations between actor threads are reported
+    // "concurrently" with respect to how op.start() and RegistryClockSourceStub::advance() are
+    // called.
+    RegistryClockSourceStub::advance(5ns);
     {
+        auto op = metrics.operation(1u, "InsertRemove", "Remove");
         auto ctx = op.start();
         ctx.addDocuments(6);
         ctx.addBytes(40);
 
-        RegistryClockSourceStub::advance();
+        RegistryClockSourceStub::advance(5ns);
         ctx.success();
     }
-    RegistryClockSourceStub::advance();
+    RegistryClockSourceStub::advance(5ns);
+    {
+        auto op = metrics.operation(2u, "InsertRemove", "Remove");
+        auto ctx = op.start();
+        ctx.addDocuments(7);
+        ctx.addBytes(30);
 
-    // would be done by framework / outside code:
+        RegistryClockSourceStub::advance(10ns);
+        ctx.success();
+    }
+    RegistryClockSourceStub::advance(5ns);
+    {
+        auto op = metrics.operation(3u, "HelloWorld", "Greetings");
+        auto ctx = op.start();
+        ctx.addIterations(2);
+
+        RegistryClockSourceStub::advance(15ns);
+        ctx.success();
+    }
+    RegistryClockSourceStub::advance(5ns);
+    {
+        auto op = metrics.operation(2u, "InsertRemove", "Insert");
+        auto ctx = op.start();
+        ctx.addDocuments(8);
+        ctx.addBytes(200);
+
+        RegistryClockSourceStub::advance(15ns);
+        ctx.success();
+    }
+    RegistryClockSourceStub::advance(5ns);
+    {
+        auto op = metrics.operation(1u, "InsertRemove", "Insert");
+        auto ctx = op.start();
+        ctx.addDocuments(9);
+        ctx.addBytes(300);
+
+        RegistryClockSourceStub::advance(20ns);
+        ctx.success();
+    }
+    RegistryClockSourceStub::advance(5ns);
+
     auto reporter = genny::metrics::v1::ReporterT(metrics);
 
     SECTION("csv reporting") {
-        // TODO: The thread number should be included in the name of the metrics.
         auto expected =
             "Clocks\n"
             "SystemTime,42000000\n"
-            "MetricsTime,3\n"
+            "MetricsTime,95\n"
             "\n"
             "Counters\n"
-            "2,InsertRemove.id-1.Insert_bytes,40\n"
-            "2,InsertRemove.id-1.Insert_docs,6\n"
-            "2,InsertRemove.id-1.Insert_iters,1\n"
+            "45,HelloWorld.id-3.Greetings_bytes,0\n"
+            "90,InsertRemove.id-1.Insert_bytes,300\n"
+            "65,InsertRemove.id-2.Insert_bytes,200\n"
+            "25,InsertRemove.id-2.Remove_bytes,30\n"
+            "10,InsertRemove.id-1.Remove_bytes,40\n"
+            "45,HelloWorld.id-3.Greetings_docs,0\n"
+            "90,InsertRemove.id-1.Insert_docs,9\n"
+            "65,InsertRemove.id-2.Insert_docs,8\n"
+            "25,InsertRemove.id-2.Remove_docs,7\n"
+            "10,InsertRemove.id-1.Remove_docs,6\n"
+            "45,HelloWorld.id-3.Greetings_iters,2\n"
+            "90,InsertRemove.id-1.Insert_iters,1\n"
+            "65,InsertRemove.id-2.Insert_iters,1\n"
+            "25,InsertRemove.id-2.Remove_iters,1\n"
+            "10,InsertRemove.id-1.Remove_iters,1\n"
             "\n"
             "Gauges\n"
             "\n"
             "Timers\n"
-            "2,InsertRemove.id-1.Insert_timer,1\n"
+            "45,HelloWorld.id-3.Greetings_timer,15\n"
+            "90,InsertRemove.id-1.Insert_timer,20\n"
+            "65,InsertRemove.id-2.Insert_timer,15\n"
+            "25,InsertRemove.id-2.Remove_timer,10\n"
+            "10,InsertRemove.id-1.Remove_timer,5\n"
             "\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, "csv");
-        REQUIRE(out.str() == expected);
-    }
-
-    SECTION("cedar-csv reporting") {
-        auto expected =
-            "Clocks\n"
-            "MetricsTime,3\n"
-            "SystemTime,42000000\n"
-            "\n"
-            "OperationThreadCounts\n"
-            "InsertRemove,Insert,1"
-            "\n"
-            "Operations\n"
-            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size"
-            "2,InsertRemove,0,Insert,1,0,1,6,2,40\n"
-            "\n";
-
-        std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
         REQUIRE(out.str() == expected);
     }
 }
