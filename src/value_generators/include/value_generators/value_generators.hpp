@@ -101,7 +101,7 @@ public:
      *
      * @warning
      *  After calling appendToBuilder() it is illegal to call any methods on this instance, unless
-     *  it is subsequenly moved into.
+     *  it is subsequently moved into.
      */
     void appendToBuilder(bsoncxx::builder::basic::document& doc, std::string key);
 
@@ -110,7 +110,7 @@ public:
      *
      * @warning
      *  After calling appendToBuilder() it is illegal to call any methods on this instance, unless
-     *  it is subsequenly moved into.
+     *  it is subsequently moved into.
      */
     void appendToBuilder(bsoncxx::builder::basic::array& arr);
 
