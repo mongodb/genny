@@ -31,7 +31,6 @@ namespace v1 {
 template <typename MetricsClockSource>
 class ReporterT;
 
-
 /**
  * The passkey idiom is way for a class to govern how its private members can be accessed by another
  * class. It can be thought of as a finer-grained way to express friendship in C++. The passkey
