@@ -259,6 +259,15 @@ private:
         out << "actor,operation,workers" << std::endl;
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
             for (const auto& [opName, opsByThread] : opsByType) {
+                if (actorName == "Genny" &&
+                    (opName == "ActorStarted" || opName == "ActorFinished")) {
+                    // The cedar-csv metrics format ignores the Genny.ActorStarted and
+                    // Genny.ActorFinished operations reported by the DefaultDriver because the
+                    // OperationThreadCounts section effectively tracks the number of concurrent
+                    // actors and that number isn't meaningfully changing over time.
+                    continue;
+                }
+
                 for (const auto& [actorId, timeSeries] : opsByThread) {
                     opThreadCounts[std::make_pair(actorName, opName)] += 1;
                 }
@@ -275,12 +284,16 @@ private:
         out << "Operations" << std::endl;
         out << "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size" << std::endl;
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
-            if (actorName == "Genny") {
-                // Metrics created by the DefaultDriver are handled separately.
-                continue;
-            }
-
             for (const auto& [opName, opsByThread] : opsByType) {
+                if (actorName == "Genny" &&
+                    (opName == "ActorStarted" || opName == "ActorFinished")) {
+                    // The cedar-csv metrics format ignores the Genny.ActorStarted and
+                    // Genny.ActorFinished operations reported by the DefaultDriver because the
+                    // OperationThreadCounts section effectively tracks the number of concurrent
+                    // actors and that number isn't meaningfully changing over time.
+                    continue;
+                }
+
                 for (const auto& [actorId, timeSeries] : opsByThread) {
                     for (const auto& event : timeSeries) {
                         out << nanosecondsCount(event.first.time_since_epoch()) << ",";
