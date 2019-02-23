@@ -242,6 +242,33 @@ TEST_CASE("metrics output format") {
         reporter.report<ReporterClockSourceStub>(out, "csv");
         REQUIRE(out.str() == expected);
     }
+
+    SECTION("cedar-csv reporting") {
+        auto expected =
+            "Clocks\n"
+            "clock,nanoseconds\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,45\n"
+            "\n"
+            "OperationThreadCounts\n"
+            "actor,operation,workers\n"
+            "HelloWorld,Greetings,1\n"
+            "InsertRemove,Remove,2\n"
+            "InsertRemove,Insert,2\n"
+            "\n"
+            "Operations\n"
+            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
+            "26,HelloWorld,3,Greetings,13,0,2,0,0,0\n"
+            "42,InsertRemove,2,Remove,10,0,1,7,0,30\n"
+            "45,InsertRemove,1,Remove,17,0,1,6,0,40\n"
+            "30,InsertRemove,2,Insert,20,0,1,8,0,200\n"
+            "28,InsertRemove,1,Insert,23,0,1,9,0,300\n"
+            "\n";
+
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        REQUIRE(out.str() == expected);
+    }
 }
 
 TEST_CASE("Genny.Setup metric should only be reported as a timer") {
