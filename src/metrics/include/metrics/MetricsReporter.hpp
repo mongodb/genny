@@ -141,7 +141,17 @@ private:
             << "," << metricsTime << std::endl;
     }
 
-    static std::ostream& writeMetricsName(std::ostream& out, const OperationDescriptor& desc) {
+    // TODO: Implement special rules for Genny.Setup and Genny.ActiveActors in order to keep the
+    // "csv" metrics format the same as before.
+    //
+    // 1. We need to not include ".id-0" in the metric name.
+    // 2. We need to ignore "Genny.Setup" in the Counters section.
+    // 3. We need to ignore "Genny.ActorStarted" in the Timers section.
+    // 4. We need to ignore "Genny.ActorFinished" in the Timers section.
+    // 5. We need to report a "Genny.ActiveActors" metric by walking the "Genny.ActorStarted" and
+    //    "Genny.ActorFinished" time series and translating the increments and decrements into a
+    //    total count.
+    static std::ostream& writeMetricName(std::ostream& out, const OperationDescriptor& desc) {
         out << desc.actorName << ".id-" << std::to_string(desc.actorId) << "." << desc.opName;
         return out;
     }
@@ -156,7 +166,7 @@ private:
         for (const auto& event : timeSeries.getVals(perm)) {
             out << nanosecondsCount(event.first.time_since_epoch());
             out << ",";
-            writeMetricsName(out, desc) << suffix;
+            writeMetricName(out, desc) << suffix;
             out << ",";
             out << getter(event.second);
             out << std::endl;
