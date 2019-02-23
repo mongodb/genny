@@ -767,7 +767,7 @@ struct FindOperation : public BaseOperation {
         auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
                                    : _collection.find(std::move(filter), _options);
         for (auto&& doc : cursor) {
-            ctx.addOps(1);
+            ctx.addDocuments(1);
             ctx.addBytes(doc.length());
         }
         ctx.success();

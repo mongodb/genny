@@ -78,7 +78,7 @@ void MultiCollectionQuery::run() {
                     doc.length();
                     count++;
                 }
-                opCtx.addOps(count);
+                opCtx.addDocuments(count);
                 opCtx.success();
             }
         }

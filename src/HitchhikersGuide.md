@@ -17,7 +17,7 @@ are `Orchestrator.hpp`, `PhaseLoop.hpp`, and `context.hpp`. The
 respective .cpp files for `Orchestrator` and `context` are in
 `src/gennylib/src`, while `PhaseLoop` has no corresponding PhaseLoop.cpp
 file. To understand what kinds of 📈 metrics Genny outputs, read through
-`metrics.hpp`.
+`metrics.hpp` and `operation.hpp`.
 
 Another main component are the Actors. The Actors all live in
 `src/cast_core/include/cast_core` for the `.hpp` files and in
@@ -132,37 +132,90 @@ above.
 
 The `Orchestrator` class is used to walk all of the Actors to the next
 Phase together, and to make sure that blocking threads finish before
-other threads start their processes. It also outputs the `phaseNumber`
-to the output file using a `metrics::Gauge` object. The `Orchestrator`
-adds a token for every thread that starts, and removes the token once
-the thread is finished. When the token count is 0, it signals the end of
-the Phase.
+other threads start their processes. The `Orchestrator` adds a token for
+every thread that starts, and removes the token once the thread is
+finished. When the token count is 0, it signals the end of the Phase.
 
 ### ⏱`Metrics` ⏱
 
-Genny records metrics using the `metrics::operation` type found in `metrics.hpp`. An instance of `metrics::operation` can capture several different data points about the operation it references. 
+Genny records metrics using the `metrics::Operation` type found in
+`metrics.hpp` though the underlying implementation can be found in
+`operation.hpp`. An instance of `metrics::Operation` can capture several
+different data points about the operation it references.
 
-#### Usage: 
-In your actor class, declare a metrics::operation: 
-` metrics::Operation _operation;` and
-`_operation{context.operation("insert", Insert::id())}`
+#### Usage
 
-Begin timing the operation:
-`auto ctx = this->_operation.start();`
-(then write the code to perform the operation)
+In your actor class, declare a `metrics::Operation` member and
+initialize it using the `ActorContext::operation()` method in the
+actor's constructor.
 
-You can increment a counter (for example, increment all documents inserted in a bulkinsert):
-`ctx.addOps(1);`
+```cpp
+class MyActor {
+    MyActor(ActorContext& context)
+        : _insertOp{context.operation("Insert", MyActor::id())} {}
 
-You can also count bytes:
-`ctx.addBytes(document.view().length());`
+    // Note that while here the MyActor class here stores the
+    // metrics::Operation type, most other actors wrap it in an
+    // ExecutionStrategy in order to be able to handle retry logic.
+    metrics::Operation _insertOp;
+};
+```
 
-Ending the metrics::operation (this will stop the timer):
-`ctx.success();`
+You then use the `metrics::Operation` member in your actor's `run()`
+method as follows.
 
-If you can expect an exception, wrap the operation code in a try/catch block, and use `ctx.fail()` in the catch statement. If neither `success()` nor `fail()` are called, a warning will be printed. This indicates a programming error or an unexpected uncaught exception. 
+```cpp
+void InsertRemove::run() {
+    for (auto&& config : _loop) {
+        for (auto&& _ : config) {
+            // Calling metrics::Operation::start() starts the timer for
+            // how long the operation takes.
+            auto ctx = this->_insertOp.start();
 
+            // ... Do insert ...
 
+            // You can increment a counter for how many documents were
+            // inserted.
+            ctx.addDocuments(1);
 
+            // You can also increment a counter for how many bytes were
+            // inserted.
+            ctx.addBytes(document.view().length());
+
+            // Calling metrics::OperationContext::success() marks that
+            // the operation succeeded and stops the timer.
+            ctx.success();
+        }
+    }
+}
+```
+
+If you expect that your database operation may result in an exception,
+then you can wrap everything in a try/catch block.
+
+```cpp
+auto ctx = this->_insertOp.start();
+try {
+    // ... Do insert ...
+
+    ctx.success();
+} catch (mongocxx::operation_exception& ex) {
+    // You can increment a counter for how many write errors there were.
+    ctx.addError(1);
+
+    // Calling metrics::OperationContext::failure() marks that the
+    // operation failed and stops the timer.
+    ctx.failure();
+}
+```
+
+You can also use `metrics::OperationContext::discard()` to abandon the
+data points that were being collected for the operation.
+
+One of `success()`, `failure()`, or `discard()` must be called before
+the `metrics::OperationContext` instance goes out of scope. A warning
+message will be logged if they aren't as not explicitly handling any
+expected exceptions represents either a programmer error or unexpected
+server behavior.
 
 🔚 End 🔚

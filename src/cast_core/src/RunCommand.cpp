@@ -174,7 +174,7 @@ private:
             }
         } catch (mongocxx::operation_exception& e) {
             if (maybeWatch) {
-                maybeWatch->fail();
+                maybeWatch->discard();
             }
             BOOST_THROW_EXCEPTION(MongoException(e, view));
         }

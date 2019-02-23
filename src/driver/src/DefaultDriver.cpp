@@ -86,8 +86,8 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
 
     genny::metrics::Registry metrics;
 
-    auto actorSetup = metrics.timer("Genny.Setup");
-    auto setupTimer = actorSetup.start();
+    auto actorSetup = metrics.operation(0u, "Genny", "Setup");
+    auto setupCtx = actorSetup.start();
 
     auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
     auto orchestrator = Orchestrator{};
@@ -103,29 +103,38 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
-    setupTimer.report();
+    setupCtx.success();
 
-    auto activeActors = metrics.counter("Genny.ActiveActors");
+    auto startedActors = metrics.operation(0u, "Genny", "ActorStarted");
+    auto finishedActors = metrics.operation(0u, "Genny", "ActorFinished");
 
     std::atomic<driver::DefaultDriver::OutcomeCode> outcomeCode =
         driver::DefaultDriver::OutcomeCode::kSuccess;
 
-    std::mutex lock;
+    std::mutex reporting;
     std::vector<std::thread> threads;
     std::transform(cbegin(workloadContext.actors()),
                    cend(workloadContext.actors()),
                    std::back_inserter(threads),
                    [&](const auto& actor) {
                        return std::thread{[&]() {
-                           lock.lock();
-                           activeActors.incr();
-                           lock.unlock();
+                           {
+                               auto ctx = startedActors.start();
+                               ctx.addDocuments(1);
+
+                               std::lock_guard<std::mutex> lk{reporting};
+                               ctx.success();
+                           }
 
                            runActor(actor, outcomeCode, orchestrator);
 
-                           lock.lock();
-                           activeActors.decr();
-                           lock.unlock();
+                           {
+                               auto ctx = finishedActors.start();
+                               ctx.addDocuments(1);
+
+                               std::lock_guard<std::mutex> lk{reporting};
+                               ctx.success();
+                           }
                        }};
                    });
 
