@@ -62,9 +62,9 @@ struct OperationEvent {
         out << ",size:" << event.size;
         out << ",errors:" << event.errors;
         out << ",duration:" << event.duration;
-        // Casting to uint8_t causes ostream to use its unsigned char overload and treat the value
-        // as invisible text.
-        out << ",outcome:" << static_cast<uint16_t>(event.outcome);
+        // Casting to uint8_t directly causes ostream to use its unsigned char overload and treat
+        // the value as invisible text.
+        out << ",outcome:" << static_cast<unsigned>(event.outcome);
         out << "}";
         return out;
     }
