@@ -32,7 +32,7 @@ class CSV2ParsingError(BaseException):
 class _DataReader:
     """
     Thin wrapper around csv.DictReader() that eagerly converts any digits to native
-    Python integers.
+    Python integers and massages output into an intermediate csv format.
     """
 
     def __init__(self, csv_reader, thread_count_map, ts_offset):
@@ -67,6 +67,7 @@ class _DataReader:
 
         # Convert nanoseconds to milliseconds and add offset
         line[_Columns.TIMESTAMP] /= 1000 * 1000
+        # TODO: We don't seem to need the system time at all if cedar expects TS to be relative.
         line[_Columns.TIMESTAMP] += self.ts_offset
 
         # Remove the actor and operation columns to save space.

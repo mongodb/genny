@@ -62,11 +62,19 @@ Sample output:
 {ts:TS(573),id:0,counters:{n:9,ops:58,size:350,errors:23},timers:{duration:1320,total:1518},gauges:{workers:5}}
 ```
 """
-
-
-def compute_cumulative_and_write_to_bson(files, out_dir):
-    #
+class IntermediateCSV:
+    """
+    Class representing the intermediate csv format.
+    """
     pass
+
+def compute_cumulative_and_write_to_bson(file_name, out_dir):
+    # Remove ".csv" and add ".bson"
+    out_file_name = file_name[:-4] + '.bson'
+    with open(pjoin(out_dir, out_file_name), 'w') as out_f, open(pjoin(out_dir, file_name)) as in_f:
+
+        for line in csv.reader(in_f, quoting=csv.QUOTE_NONNUMERIC):
+            pass
 
 
 def split_into_actor_operation_csv_files(data_reader, out_dir):
@@ -101,9 +109,9 @@ def split_into_actor_operation_csv_files(data_reader, out_dir):
     return output_files
 
 
-def sort_csv_file(file, out_dir):
+def sort_csv_file(file_name, out_dir):
     # Sort on Timestamp and Thread.
-    csvsort(pjoin(out_dir, file),
+    csvsort(pjoin(out_dir, file_name),
             [0, 1],
             quoting=csv.QUOTE_NONNUMERIC,
             has_header=False,
