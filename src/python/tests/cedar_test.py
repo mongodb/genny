@@ -16,7 +16,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from collections import OrderedDict as od
+from collections import OrderedDict
 from os.path import join as pjoin
 
 from bson import CodecOptions, decode_file_iter
@@ -80,21 +80,37 @@ class CedarTest(unittest.TestCase):
 
 
 class CedarIntegrationTest(unittest.TestCase):
-    def verify_output(self, bson_metrics_file_name, expected_results):
+    def verify_output(self, bson_metrics_file_name, expected_results, check_last_row_only=False):
+        """
+        :param check_last_row_only: Check that the last row is correct. Since the results are
+        cumulative, this likely means previous rows are all correct as well.
+        """
         with open(bson_metrics_file_name, 'rb') as f:
-            options = CodecOptions(document_class=od)
+            options = CodecOptions(document_class=OrderedDict)
             index = 0
-            for doc in decode_file_iter(f, options):
-                self.assertEqual(doc, expected_results[index])
-                index += 1
+            if check_last_row_only:
+                decoded_bson = list(decode_file_iter(f, options))
+                self.assertEqual(expected_results, decoded_bson[-1])
+            else:
+                for doc in decode_file_iter(f, options):
+                    self.assertEqual(doc, expected_results[index])
+                    index += 1
 
     def test_cedar_main(self):
-        expected_result = od([
-            ('ts', 10007),
-            ('id', 0),
-            ('counters', od([('n', 1), ('ops', 6), ('size', 40), ('errors', 2)])),
-            ('timers', od([('duration', 100), ('total', 100)])),
-            ('gauges', od([('workers', 5)]))
+        expected_result = OrderedDict([
+            ('ts', 10000573.0),
+            ('id', 0.0),
+            ('counters', OrderedDict([
+                ('n', 9.0),
+                ('ops', 58.0),
+                ('size', 350.0),
+                ('errors', 23.0)
+            ])),
+            ('timers', OrderedDict([
+                ('duration', 1320.0),
+                ('total', 100)  # TODO: fixme
+            ])),
+            ('gauges', OrderedDict([('workers', 5.0)]))
         ])
 
         with tempfile.TemporaryDirectory() as output_dir:
@@ -105,4 +121,8 @@ class CedarIntegrationTest(unittest.TestCase):
 
             cedar.main__cedar(args)
 
-            self.verify_output(pjoin(output_dir, 'InsertRemove-Insert.bson'), expected_result)
+            self.verify_output(
+                pjoin(output_dir, 'InsertRemove-Insert.bson'),
+                expected_result,
+                check_last_row_only=True
+            )
