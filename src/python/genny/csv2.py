@@ -96,15 +96,22 @@ class _DataReader:
         line[_OpColumns.TIMESTAMP] /= 1000 * 1000
         line[_OpColumns.TIMESTAMP] += self.ts_offset
 
-        # Remove the actor and operation columns to save space.
-        assert _OpColumns.ACTOR < _OpColumns.OPERATION
-        op = line.pop(_OpColumns.OPERATION)
-        actor = line.pop(_OpColumns.ACTOR)
+        op = line[_OpColumns.OPERATION]
+        actor = line[_OpColumns.ACTOR]
 
-        # Append the thread count to the last column
-        line.append(self.tc_map[(actor, op)])
+        # Transform output into IntermediateCSV format.
+        out = [None for _ in range(len(IntermediateCSVColumns.default_columns()))]
+        out[IntermediateCSVColumns.TS_MS] = line[_OpColumns.TIMESTAMP]
+        out[IntermediateCSVColumns.THREAD] = line[_OpColumns.THREAD]
+        out[IntermediateCSVColumns.DURATION] = line[_OpColumns.DURATION]
+        out[IntermediateCSVColumns.OUTCOME] = line[_OpColumns.OUTCOME]
+        out[IntermediateCSVColumns.N] = line[_OpColumns.N]
+        out[IntermediateCSVColumns.OPS] = line[_OpColumns.OPS]
+        out[IntermediateCSVColumns.ERRORS] = line[_OpColumns.ERRORS]
+        out[IntermediateCSVColumns.SIZE] = line[_OpColumns.SIZE]
+        out[IntermediateCSVColumns.WORKERS] = self.tc_map[(actor, op)]
 
-        return line, actor, op
+        return out, actor, op
 
 
 class _OpColumns(CSVColumns):
@@ -237,3 +244,26 @@ class CSV2:
                             'OPS', 'ERRORS', 'SIZE'}
         if title != 'Operations' or not _OpColumns.validate(expected_headers):
             raise CSV2ParsingError('Unexpected values in lines %s, %s', title, raw_headers)
+
+
+class IntermediateCSVColumns(CSVColumns):
+    _COLUMNS = set()
+
+    # Declare an explicit default ordering here since this script is writing the intermediate CSV.
+    TS_MS = 0
+    THREAD = 1
+    DURATION = 2
+    OUTCOME = 3
+    N = 4
+    OPS = 5
+    ERRORS = 6
+    SIZE = 7
+    WORKERS = 8
+
+    @classmethod
+    def default_columns(cls):
+        """
+        Ordered list of default columns to write to the CSV, must match the column names in
+        the class attributes.
+        """
+        return ['ts_ms', 'thread', 'duration', 'outcome', 'n', 'ops', 'errors', 'size', 'workers']

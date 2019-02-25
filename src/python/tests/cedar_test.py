@@ -21,6 +21,7 @@ from os.path import join as pjoin
 
 from bson import CodecOptions, decode_file_iter
 
+import genny.csv2
 from genny import cedar
 
 
@@ -32,7 +33,7 @@ class CedarTest(unittest.TestCase):
 
     def test_split_csv2(self):
         large_precise_float = 10 ** 15
-        num_cols = len(cedar.IntermediateCSVColumns.default_columns())
+        num_cols = len(genny.csv2.IntermediateCSVColumns.default_columns())
         mock_data_reader = [
             (['first' for _ in range(num_cols)], 'a1', 'o1'),
             ([1 for _ in range(num_cols)], 'a1', 'o1'),

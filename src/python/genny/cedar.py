@@ -22,7 +22,7 @@ from os.path import join as pjoin
 
 from bson import BSON
 
-from genny.csv2 import CSV2, CSVColumns
+from genny.csv2 import CSV2, IntermediateCSVColumns
 from third_party.csvsort import csvsort
 
 """
@@ -64,29 +64,6 @@ Sample output:
 {ts:TS(573),id:0,counters:{n:9,ops:58,size:350,errors:23},timers:{duration:1320,total:1518},gauges:{workers:5}}
 ```
 """
-
-
-class IntermediateCSVColumns(CSVColumns):
-    _COLUMNS = set()
-
-    # Declare an explicit default ordering here since this script is writing the intermediate CSV.
-    TS_MS = 0
-    THREAD = 1
-    DURATION = 2
-    OUTCOME = 3
-    N = 4
-    OPS = 5
-    ERRORS = 6
-    SIZE = 7
-    WORKERS = 8
-
-    @classmethod
-    def default_columns(cls):
-        """
-        Ordered list of default columns to write to the CSV, must match the column names in
-        the class attributes.
-        """
-        return ['ts_ms', 'thread', 'duration', 'outcome', 'n', 'ops', 'errors', 'size', 'workers']
 
 
 class IntermediateCSVReader:
