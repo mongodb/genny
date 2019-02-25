@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
+This file is originally from the csvsort project:
+https://bitbucket.org/richardpenman/csvsort
+
 MongoDB Modifications:
 1. add the quoting=quoting argument to csv.reader()
 """

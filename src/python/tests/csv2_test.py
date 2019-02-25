@@ -30,22 +30,6 @@ class CSV2Test(unittest.TestCase):
             next(dr)
         next(dr)
 
-    def test_invalid_field_value(self):
-        with self.assertRaisesRegex(csv2.CSV2ParsingError, 'Error parsing CSV file'):
-            csv2.CSV2(self.get_fixture('invalid_clocks.csv'))
-
     def test_missing_clock_header(self):
         with self.assertRaisesRegex(csv2.CSV2ParsingError, 'BAD_CLOCK'):
-            csv2.CSV2(self.get_fixture('invalid_title_clock.csv'))
-
-    def test_missing_tc_header(self):
-        with self.assertRaisesRegex(csv2.CSV2ParsingError, 'BAD_OPERATION_THREAD_COUNT'):
-            csv2.CSV2(self.get_fixture('invalid_title_thread_count.csv'))
-
-    def test_missing_op_header(self):
-        with self.assertRaisesRegex(csv2.CSV2ParsingError, 'BAD_OPERATIONS'):
-            csv2.CSV2(self.get_fixture('invalid_title_operations.csv'))
-
-    def test_invalid_time_header(self):
-        with self.assertRaisesRegex(csv2.CSV2ParsingError, 'Invalid keys for lines'):
-            csv2.CSV2(self.get_fixture('wrong_order_time.csv'))
+            csv2.CSV2(self.get_fixture('invalid_title.csv'))

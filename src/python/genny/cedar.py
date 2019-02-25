@@ -73,7 +73,7 @@ class IntermediateCSVReader:
 
     def __init__(self, reader):
         self.raw_reader = reader
-        self.cum_vals = [0 for _ in range(9)]
+        self.cumulatives = [0 for _ in range(9)]
         self.prev_ts = 0
 
     def __iter__(self):
@@ -84,19 +84,19 @@ class IntermediateCSVReader:
 
     def _parse_into_cedar_format(self, line):
         # Compute all cumulative values for simplicity; Not all values are used.
-        self.cum_vals = [sum(v) for v in zip(line, self.cum_vals)]
+        self.cumulatives = [sum(v) for v in zip(line, self.cumulatives)]
 
         res = OrderedDict([
             ('ts', line[IntermediateCSVColumns.TS_MS]),
             ('id', line[IntermediateCSVColumns.THREAD]),
             ('counters', OrderedDict([
-                ('n', self.cum_vals[IntermediateCSVColumns.N]),
-                ('ops', self.cum_vals[IntermediateCSVColumns.OPS]),
-                ('size', self.cum_vals[IntermediateCSVColumns.SIZE]),
-                ('errors', self.cum_vals[IntermediateCSVColumns.ERRORS])
+                ('n', self.cumulatives[IntermediateCSVColumns.N]),
+                ('ops', self.cumulatives[IntermediateCSVColumns.OPS]),
+                ('size', self.cumulatives[IntermediateCSVColumns.SIZE]),
+                ('errors', self.cumulatives[IntermediateCSVColumns.ERRORS])
             ])),
             ('timers', OrderedDict([
-                ('duration', self.cum_vals[IntermediateCSVColumns.DURATION]),
+                ('duration', self.cumulatives[IntermediateCSVColumns.DURATION]),
                 ('total', 1)  # FIXME: compute total
             ])),
             ('gauges', OrderedDict([
@@ -167,7 +167,7 @@ def parse_args(argv):
         description='Convert Genny csv2 perf data to Cedar BSON format',
     )
     parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 perf data')
-    parser.add_argument('output_dir', metavar='output_dir',
+    parser.add_argument('output_dir', metavar='output-dir',
                         help='directory to store output BSON files')
 
     return parser.parse_args(argv)

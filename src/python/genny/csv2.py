@@ -44,9 +44,8 @@ class CSVColumns(object):
     def add_column(cls, col_name, col_index):
         upper_col_name = col_name.upper()  # Python class constants should be uppercase.
 
-        # Don't fail on non-existent columns to allow forward-compatibility.
-        # if not hasattr(cls, upper_col_name):
-        #     raise CSV2ParsingError('%s doesn\'t have column %s', cls.__name__, col_name)
+        if not hasattr(cls, upper_col_name):
+            raise CSV2ParsingError('%s doesn\'t have column %s', cls.__name__, col_name)
 
         if not isinstance(cls._COLUMNS, set):
             raise ValueError('Subclass must have the class property `_COLUMN = set()`')
@@ -60,14 +59,20 @@ class CSVColumns(object):
         return val
 
 
-class _DataReader:
+class _OpListReader:
     """
-    Thin wrapper around csv.DictReader() that eagerly converts any digits to native
-    Python integers and massages output into IntermediateCSV format.
+    Thin wrapper around csv.DictReader() that eagerly reads the list of operations
+    from csv2 and converts any digits to native Python integers and massages
+    output into IntermediateCSV format.
     """
 
-    def __init__(self, csv_reader, thread_count_map, ts_offset):
-        self.raw_reader = csv_reader
+    def __init__(self, csv_reader_at_op, thread_count_map, ts_offset):
+        """
+        :param csv_reader_at_op: A CSV reader with its cursor on the first operation line.
+        :param thread_count_map:
+        :param ts_offset:
+        """
+        self.raw_reader = csv_reader_at_op
         self.tc_map = thread_count_map
         self.ts_offset = ts_offset
 
@@ -152,13 +157,12 @@ class CSV2:
     """
 
     def __init__(self, csv2_file_name):
-        # parsers for newline-delimited header sections at the top of each
-        # csv2 file.
-        header_parsers = [
-            self._parse_clocks,
-            self._parse_thread_count,
-            self._parse_operations
-        ]
+        # parsers for newline-delimited sections in genny's csv2 file.
+        header_parsers = {
+            'Clocks': self._parse_clocks,
+            'OperationThreadCounts': self._parse_thread_count,
+            'Operations': self._parse_operations
+        }
 
         # The number to add to the metrics timestamp (a.k.a. c++ system_time) to get
         # the UNIX time.
@@ -179,12 +183,11 @@ class CSV2:
             self._csv_file = open(csv2_file_name, 'r')
             reader = csv.reader(self._csv_file, dialect=_Dialect)
 
-            for parser in header_parsers:
-                parser(reader)
-
-            self._data_reader = _DataReader(reader, self._operation_thread_count_map,
-                                            self._unix_epoch_offset_ms)
-            self._can_get_data_reader = True
+            while True:
+                title = next(reader)[0]
+                should_stop = header_parsers[title](reader)
+                if should_stop:
+                    break
 
         except (IndexError, ValueError) as e:
             raise CSV2ParsingError('Error parsing CSV file: ', csv2_file_name) from e
@@ -194,16 +197,10 @@ class CSV2:
             self._csv_file.close()
 
     def data_reader(self):
-        if not self._data_reader:
-            raise ValueError('CSV2 data_reader has not been initialized yet')
         return self._data_reader
 
     def _parse_clocks(self, reader):
-        title = next(reader)[0]
-        raw_headers = next(reader)
-        _ClockColumns.add_columns([header.strip() for header in raw_headers])
-        if title != 'Clocks' or not _ClockColumns.validate({'CLOCK', 'NANOSECONDS'}):
-            raise CSV2ParsingError('Unexpected values in lines %s, %s', title, raw_headers)
+        _ClockColumns.add_columns([header.strip() for header in next(reader)])
 
         unix_time_line = next(reader)
         metrics_time_line = next(reader)
@@ -216,34 +213,29 @@ class CSV2:
 
         self._unix_epoch_offset_ms = (unix_time - metrics_time) / (1000 * 1000)
 
-        next(reader)  # Read the next empty line.
+        next(reader)  # Read the blank line.
+
+        return False
 
     def _parse_thread_count(self, reader):
-        title = next(reader)[0]
-        raw_headers = next(reader)
-        _TCColumns.add_columns([h.strip() for h in raw_headers])
-        if title != 'OperationThreadCounts' or not _TCColumns.validate(
-                {'ACTOR', 'OPERATION', 'WORKERS'}):
-            raise CSV2ParsingError('Unexpected values in lines %s, %s', title, raw_headers)
+        _TCColumns.add_columns([h.strip() for h in next(reader)])
 
-        for line in reader:
-            if not line:
-                # Reached a blank line, finish parsing.
-                break
+        line = next(reader)
+        while line:
             actor = line[0]
             op = line[1]
             thread_count = int(line[2])
-
             self._operation_thread_count_map[(actor, op)] = thread_count
+            line = next(reader)
+
+        return False
 
     def _parse_operations(self, reader):
-        title = next(reader)[0]
-        raw_headers = next(reader)
-        _OpColumns.add_columns([h.strip() for h in raw_headers])
-        expected_headers = {'TIMESTAMP', 'ACTOR', 'THREAD', 'OPERATION', 'DURATION', 'OUTCOME', 'N',
-                            'OPS', 'ERRORS', 'SIZE'}
-        if title != 'Operations' or not _OpColumns.validate(expected_headers):
-            raise CSV2ParsingError('Unexpected values in lines %s, %s', title, raw_headers)
+        _OpColumns.add_columns([h.strip() for h in next(reader)])
+        self._data_reader = _OpListReader(reader, self._operation_thread_count_map,
+                                          self._unix_epoch_offset_ms)
+
+        return True
 
 
 class IntermediateCSVColumns(CSVColumns):
