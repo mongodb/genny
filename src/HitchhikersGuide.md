@@ -155,7 +155,7 @@ class MyActor {
         : _insertOp{context.operation("Insert", MyActor::id())} {}
 
     // Note that while here the MyActor class here stores the
-    // metrics::Operation type, most other actors wrap it in an
+    // metrics::Operation type, some actors wrap it in an
     // ExecutionStrategy in order to be able to handle retry logic.
     metrics::Operation _insertOp;
 };
