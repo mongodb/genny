@@ -17,14 +17,13 @@
 import argparse
 import csv
 import sys
-
 from collections import OrderedDict
 from os.path import join as pjoin
 
 from bson import BSON
-from third_party.csvsort import csvsort
 
-from genny.csv2 import CSV2
+from genny.csv2 import CSV2, CSVColumns
+from third_party.csvsort import csvsort
 
 """
 Convert raw genny csv output to a format expected by Cedar
@@ -67,11 +66,10 @@ Sample output:
 """
 
 
-class IntermediateCSV:
-    """
-    Column definitions for the intermediate CSV format.
-    """
-    # IntermediateCSV Columns
+class IntermediateCSVColumns(CSVColumns):
+    _COLUMNS = set()
+
+    # Declare an explicit default ordering here since this script is writing the intermediate CSV.
     TS_MS = 0
     THREAD = 1
     DURATION = 2
@@ -82,10 +80,18 @@ class IntermediateCSV:
     SIZE = 7
     WORKERS = 8
 
+    @classmethod
+    def default_columns(cls):
+        """
+        Ordered list of default columns to write to the CSV, must match the column names in
+        the class attributes.
+        """
+        return ['ts_ms', 'thread', 'duration', 'outcome', 'n', 'ops', 'errors', 'size', 'workers']
+
 
 class IntermediateCSVReader:
     """
-    Class that reads IntermediateCSV and outputs Cedar BSON
+    Class that reads IntermediateCSVColumns and outputs Cedar BSON
     """
 
     def __init__(self, reader):
@@ -104,24 +110,24 @@ class IntermediateCSVReader:
         self.cum_vals = [sum(v) for v in zip(line, self.cum_vals)]
 
         res = OrderedDict([
-            ('ts', line[IntermediateCSV.TS_MS]),
-            ('id', line[IntermediateCSV.THREAD]),
+            ('ts', line[IntermediateCSVColumns.TS_MS]),
+            ('id', line[IntermediateCSVColumns.THREAD]),
             ('counters', OrderedDict([
-                ('n', self.cum_vals[IntermediateCSV.N]),
-                ('ops', self.cum_vals[IntermediateCSV.OPS]),
-                ('size', self.cum_vals[IntermediateCSV.SIZE]),
-                ('errors', self.cum_vals[IntermediateCSV.ERRORS])
+                ('n', self.cum_vals[IntermediateCSVColumns.N]),
+                ('ops', self.cum_vals[IntermediateCSVColumns.OPS]),
+                ('size', self.cum_vals[IntermediateCSVColumns.SIZE]),
+                ('errors', self.cum_vals[IntermediateCSVColumns.ERRORS])
             ])),
             ('timers', OrderedDict([
-                ('duration', self.cum_vals[IntermediateCSV.DURATION]),
+                ('duration', self.cum_vals[IntermediateCSVColumns.DURATION]),
                 ('total', 1)  # FIXME: compute total
             ])),
             ('gauges', OrderedDict([
-                ('workers', line[IntermediateCSV.WORKERS])
+                ('workers', line[IntermediateCSVColumns.WORKERS])
             ]))
         ])
 
-        self.prev_ts = line[IntermediateCSV.TS_MS]
+        self.prev_ts = line[IntermediateCSVColumns.TS_MS]
 
         return res
 
@@ -129,8 +135,11 @@ class IntermediateCSVReader:
 def compute_cumulative_and_write_to_bson(file_name, out_dir):
     # Remove ".csv" and add ".bson"
     out_file_name = file_name[:-4] + '.bson'
-    with open(pjoin(out_dir, out_file_name), 'wb') as out_f, open(pjoin(out_dir, file_name)) as in_f:
-        for ordered_dict in IntermediateCSVReader(csv.reader(in_f, quoting=csv.QUOTE_NONNUMERIC)):
+    with open(pjoin(out_dir, out_file_name), 'wb') as out_f, open(
+            pjoin(out_dir, file_name)) as in_f:
+        reader = csv.reader(in_f, quoting=csv.QUOTE_NONNUMERIC)
+        next(reader)  # Ignore the header row.
+        for ordered_dict in IntermediateCSVReader(reader):
             out_f.write(BSON.encode(ordered_dict))
 
 
@@ -158,6 +167,7 @@ def split_into_actor_operation_csv_files(data_reader, out_dir):
 
             # Quote non-numeric values so they get converted to float automatically
             cur_out_csv = csv.writer(cur_out_fh, quoting=csv.QUOTE_NONNUMERIC)
+            cur_out_csv.writerow(IntermediateCSVColumns.default_columns())
 
         cur_out_csv.writerow(line)
 
@@ -169,9 +179,9 @@ def split_into_actor_operation_csv_files(data_reader, out_dir):
 def sort_csv_file(file_name, out_dir):
     # Sort on Timestamp and Thread.
     csvsort(pjoin(out_dir, file_name),
-            [0, 1],
+            [IntermediateCSVColumns.TS_MS, IntermediateCSVColumns.THREAD],
             quoting=csv.QUOTE_NONNUMERIC,
-            has_header=False,
+            has_header=True,
             show_progress=True)
 
 

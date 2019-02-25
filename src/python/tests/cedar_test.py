@@ -32,13 +32,14 @@ class CedarTest(unittest.TestCase):
 
     def test_split_csv2(self):
         large_precise_float = 10 ** 15
+        num_cols = len(cedar.IntermediateCSVColumns.default_columns())
         mock_data_reader = [
-            (['first' for _ in range(10)], 'a1', 'o1'),
-            ([1 for _ in range(10)], 'a1', 'o1'),
+            (['first' for _ in range(num_cols)], 'a1', 'o1'),
+            ([1 for _ in range(num_cols)], 'a1', 'o1'),
             # Store a large number to make sure precision is not lost. Python csv converts
             # numbers to floats by default, which has 2^53 or 10^15 precision. Unix time in
             # milliseconds is currently 10^13.
-            ([large_precise_float for _ in range(10)], 'a2', 'o2')
+            ([large_precise_float for _ in range(num_cols)], 'a2', 'o2')
 
         ]
         with tempfile.TemporaryDirectory() as output_dir:
@@ -49,16 +50,16 @@ class CedarTest(unittest.TestCase):
             self.assertTrue(os.path.isfile(a1o1))
             with open(a1o1) as f:
                 ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
-                self.assertEqual(len(ll), 2)
-                self.assertEqual(len(ll[0]), 10)
+                self.assertEqual(len(ll), 3)
+                self.assertEqual(len(ll[0]), 9)
 
             a2o2 = pjoin(output_dir, output_files[1])
             self.assertTrue(os.path.isfile(a2o2))
             with open(a2o2) as f:
                 ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
-                self.assertEqual(len(ll), 1)
-                self.assertEqual(ll[0][0], large_precise_float)
-                self.assertEqual(len(ll[0]), 10)
+                self.assertEqual(len(ll), 2)
+                self.assertEqual(ll[1][0], large_precise_float)
+                self.assertEqual(len(ll[0]), 9)
 
     def test_sort_csv(self):
         file_name = 'intermediate_unsorted.csv'

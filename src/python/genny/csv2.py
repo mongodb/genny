@@ -33,7 +33,7 @@ class CSVColumns(object):
     """
     Object oriented access to csv header/column mapping.
     """
-    _COLUMNS = set()
+    _COLUMNS = None
 
     @classmethod
     def add_columns(cls, columns):
@@ -43,8 +43,14 @@ class CSVColumns(object):
     @classmethod
     def add_column(cls, col_name, col_index):
         upper_col_name = col_name.upper()  # Python class constants should be uppercase.
-        if not hasattr(cls, upper_col_name):
-            raise CSV2ParsingError('%s doesn\'t have column %s', cls.__name__, col_name)
+
+        # Don't fail on non-existent columns to allow forward-compatibility.
+        # if not hasattr(cls, upper_col_name):
+        #     raise CSV2ParsingError('%s doesn\'t have column %s', cls.__name__, col_name)
+
+        if not isinstance(cls._COLUMNS, set):
+            raise ValueError('Subclass must have the class property `_COLUMN = set()`')
+
         setattr(cls, upper_col_name, col_index)
         cls._COLUMNS.add(upper_col_name)
 
@@ -57,7 +63,7 @@ class CSVColumns(object):
 class _DataReader:
     """
     Thin wrapper around csv.DictReader() that eagerly converts any digits to native
-    Python integers and massages output into IntermediateCSV.
+    Python integers and massages output into IntermediateCSV format.
     """
 
     def __init__(self, csv_reader, thread_count_map, ts_offset):
