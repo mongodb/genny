@@ -185,6 +185,8 @@ class CSV2:
 
             while True:
                 title = next(reader)[0]
+                if title not in header_parsers:
+                    raise CSV2ParsingError('Unknown csv2 section title %s', title)
                 should_stop = header_parsers[title](reader)
                 if should_stop:
                     break
@@ -202,18 +204,18 @@ class CSV2:
     def _parse_clocks(self, reader):
         _ClockColumns.add_columns([header.strip() for header in next(reader)])
 
-        unix_time_line = next(reader)
-        metrics_time_line = next(reader)
+        line = next(reader)
 
-        if unix_time_line[0] != 'SystemTime' or metrics_time_line[0] != 'MetricsTime':
-            raise CSV2ParsingError('Invalid keys for lines: %s %s',
-                                   unix_time_line, metrics_time_line)
-        unix_time = int(unix_time_line[1])
-        metrics_time = int(metrics_time_line[1])
+        times = {
+            'SystemTime': None,
+            'MetricsTime': None
+        }
 
-        self._unix_epoch_offset_ms = (unix_time - metrics_time) / (1000 * 1000)
+        while line:
+            times[line[_ClockColumns.CLOCK]] = int(line[_ClockColumns.NANOSECONDS])
+            line = next(reader)
 
-        next(reader)  # Read the blank line.
+        self._unix_epoch_offset_ms = (times['SystemTime'] - times['MetricsTime']) / (1000 * 1000)
 
         return False
 

@@ -31,5 +31,5 @@ class CSV2Test(unittest.TestCase):
         next(dr)
 
     def test_missing_clock_header(self):
-        with self.assertRaisesRegex(csv2.CSV2ParsingError, 'BAD_CLOCK'):
+        with self.assertRaisesRegex(csv2.CSV2ParsingError, 'Unknown csv2 section title'):
             csv2.CSV2(self.get_fixture('invalid_title.csv'))
