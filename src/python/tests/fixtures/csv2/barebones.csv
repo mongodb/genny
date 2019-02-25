@@ -1,8 +1,10 @@
 Clocks
+clock,nanoseconds
 SystemTime,100014000000
 MetricsTime,10014000000
 
 OperationThreadCounts
+actor,operation,workers
 MyActor,MyOperation,2
 
 Operations

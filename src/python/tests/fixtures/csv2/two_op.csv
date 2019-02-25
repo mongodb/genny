@@ -1,13 +1,15 @@
 Clocks
+clock,nanoseconds
 SystemTime,10000000000000,
 MetricsTime,66632088000000,
 
 OperationThreadCounts
+actor,operation,workers
 InsertRemove,Insert,5
 InsertRemove,Remove,5
 
 Operations
-timestamp           , actor       , thread, operation, duration, outcome, n, ops, errors, size
+timestamp     , actor       , thread, operation, duration, outcome, n, ops, errors, size
 66632088000000, InsertRemove, 0     , Insert   , 100     , 0      , 1, 6  , 2     , 40
 66632403000000, InsertRemove, 0     , Insert   , 310     , 0      , 1, 9  , 3     , 60
 66632661000000, InsertRemove, 0     , Insert   , 180     , 0      , 1, 8  , 6     , 20

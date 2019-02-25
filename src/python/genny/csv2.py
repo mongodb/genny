@@ -111,9 +111,6 @@ class CSV2:
         # Map of (actor, operation) to thread count.
         self._operation_thread_count_map = {}
 
-        # Column headers in the csv2 file.
-        self._column_headers = None
-
         # Store a reader that starts at the first line of actual csv data after the headers
         # have been parsed.
         self._data_reader = None
@@ -147,8 +144,9 @@ class CSV2:
 
     def _parse_clocks(self, reader):
         title = next(reader)[0]
-        if title != 'Clocks':
-            raise CSV2ParsingError('Expected title to be "Clocks", got %s', title)
+        headers = [h.strip() for h in next(reader)]
+        if title != 'Clocks' or headers != ['clock', 'nanoseconds']:
+            raise CSV2ParsingError('Unexpected values in lines %s, %s', title, headers)
 
         unix_time_line = next(reader)
         metrics_time_line = next(reader)
@@ -165,8 +163,9 @@ class CSV2:
 
     def _parse_thread_count(self, reader):
         title = next(reader)[0]
-        if title != 'OperationThreadCounts':
-            raise CSV2ParsingError('Expected title to be "OperationThreadCounts", got %s', title)
+        headers = [h.strip() for h in next(reader)]
+        if title != 'OperationThreadCounts' or headers != ['actor', 'operation', 'workers']:
+            raise CSV2ParsingError('Unexpected values in lines %s, %s', title, headers)
 
         for line in reader:
             if not line:
@@ -180,7 +179,8 @@ class CSV2:
 
     def _parse_operations(self, reader):
         title = next(reader)[0]
-        if title != 'Operations':
-            raise CSV2ParsingError('Expected title to be "Operations", got %s', title)
-
-        self._column_headers = [h.strip() for h in next(reader)]
+        headers = [h.strip() for h in next(reader)]
+        expected_headers = ['timestamp', 'actor', 'thread', 'operation', 'duration', 'outcome', 'n',
+                            'ops', 'errors', 'size']
+        if title != 'Operations' or headers != expected_headers:
+            raise CSV2ParsingError('Unexpected values in lines %s, %s', title, headers)
