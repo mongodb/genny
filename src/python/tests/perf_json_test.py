@@ -63,30 +63,30 @@ class PerfJsonTests(unittest.TestCase):
                         }
                     }
                 },
-                            {
-                                'name': 'InsertRemoveTest.insert',
-                                'workload': 'InsertRemoveTest.insert',
-                                'start': 15402330730.74953,
-                                'end': 15402333807.63649,
-                                'results': {
-                                    100: {
-                                        'ops_per_sec': 8656706.69744836,
-                                        'ops_per_sec_values': [8656706.69744836]
-                                    }
-                                }
-                            },
-                            {
-                                'name': 'Genny.Setup',
-                                'workload': 'Genny.Setup',
-                                'start': 15402330355.93684,
-                                'end': 15402330442.88445,
-                                'results': {
-                                    1: {
-                                        'ops_per_sec': 8694761.0,
-                                        'ops_per_sec_values': [8694761.0]
-                                    }
-                                }
-                            }]
+                    {
+                        'name': 'InsertRemoveTest.insert',
+                        'workload': 'InsertRemoveTest.insert',
+                        'start': 15402330730.74953,
+                        'end': 15402333807.63649,
+                        'results': {
+                            100: {
+                                'ops_per_sec': 8656706.69744836,
+                                'ops_per_sec_values': [8656706.69744836]
+                            }
+                        }
+                    },
+                    {
+                        'name': 'Genny.Setup',
+                        'workload': 'Genny.Setup',
+                        'start': 15402330355.93684,
+                        'end': 15402330442.88445,
+                        'results': {
+                            1: {
+                                'ops_per_sec': 8694761.0,
+                                'ops_per_sec_values': [8694761.0]
+                            }
+                        }
+                    }]
             })
 
     def test_fixture1(self):
@@ -106,16 +106,16 @@ class PerfJsonTests(unittest.TestCase):
                         }
                     }
                 },
-                            {
-                                'name': 'HelloTest.output',
-                                'workload': 'HelloTest.output',
-                                'start': 15378141410.61476,
-                                'end': 15378141434.57943,
-                                'results': {
-                                    2: {
-                                        'ops_per_sec': 55527.25,
-                                        'ops_per_sec_values': [55527.25]
-                                    }
-                                }
-                            }]
+                    {
+                        'name': 'HelloTest.output',
+                        'workload': 'HelloTest.output',
+                        'start': 15378141410.61476,
+                        'end': 15378141434.57943,
+                        'results': {
+                            2: {
+                                'ops_per_sec': 55527.25,
+                                'ops_per_sec_values': [55527.25]
+                            }
+                        }
+                    }]
             })

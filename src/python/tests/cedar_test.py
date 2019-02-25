@@ -17,6 +17,7 @@ import shutil
 import tempfile
 import unittest
 from collections import OrderedDict
+from datetime import datetime
 from os.path import join as pjoin
 
 from bson import CodecOptions, decode_file_iter
@@ -103,35 +104,35 @@ class CedarIntegrationTest(unittest.TestCase):
 
     def test_cedar_main(self):
         expected_result_insert = OrderedDict([
-            ('ts', 10000000.000573),
-            ('id', 0.0),
+            ('ts', datetime(1970, 1, 1, 2, 46, 40)),
+            ('id', 0),
             ('counters', OrderedDict([
-                ('n', 9.0),
-                ('ops', 58.0),
-                ('size', 350.0),
-                ('errors', 23.0)
+                ('n', 9),
+                ('ops', 58),
+                ('size', 350),
+                ('errors', 23)
             ])),
             ('timers', OrderedDict([
-                ('duration', 1320.0),
-                ('total', 958)
+                ('duration', 1320),
+                ('total', 1518)
             ])),
-            ('gauges', OrderedDict([('workers', 5.0)]))
+            ('gauges', OrderedDict([('workers', 5)]))
         ])
 
         expected_result_remove = OrderedDict([
-            ('ts', 10000000.000573),
-            ('id', 0.0),
+            ('ts', datetime(1970, 1, 1, 2, 46, 40)),
+            ('id', 0),
             ('counters', OrderedDict([
-                ('n', 9.0),
-                ('ops', 58.0),
-                ('size', 257.0),
-                ('errors', 25.0)
+                ('n', 9),
+                ('ops', 58),
+                ('size', 257),
+                ('errors', 25)
             ])),
             ('timers', OrderedDict([
-                ('duration', 1392.0),
-                ('total', 958)
+                ('duration', 1392),
+                ('total', -385)
             ])),
-            ('gauges', OrderedDict([('workers', 5.0)]))
+            ('gauges', OrderedDict([('workers', 5)]))
         ])
 
         with tempfile.TemporaryDirectory() as output_dir:
@@ -156,7 +157,8 @@ class CedarIntegrationTest(unittest.TestCase):
 
     def test_cedar_main_2(self):
         expected_result_greetings = OrderedDict([
-            ('ts', 41.999981),
+            # The operation duration can be ignored because they're a few ns.
+            ('ts', datetime.utcfromtimestamp(42 / 1000)),
             ('id', 3),
             ('counters', OrderedDict([
                 ('n', 2),
@@ -166,25 +168,25 @@ class CedarIntegrationTest(unittest.TestCase):
             ])),
             ('timers', OrderedDict([
                 ('duration', 13),
-                ('total', 958)
+                ('total', 13)
             ])),
-            ('gauges', OrderedDict([('workers', 5.0)]))
+            ('gauges', OrderedDict([('workers', 1)]))
         ])
 
-        expected_result_remove = OrderedDict([
-            ('ts', 10000573.0),
-            ('id', 0.0),
+        expected_result_insert = OrderedDict([
+            ('ts', datetime.utcfromtimestamp(42 / 1000)),
+            ('id', 2),
             ('counters', OrderedDict([
-                ('n', 9.0),
-                ('ops', 58.0),
-                ('size', 257.0),
-                ('errors', 25.0)
+                ('n', 2),
+                ('ops', 17),
+                ('size', 500),
+                ('errors', 0)
             ])),
             ('timers', OrderedDict([
-                ('duration', 1392.0),
-                ('total', 958)
+                ('duration', 43),
+                ('total', 43)
             ])),
-            ('gauges', OrderedDict([('workers', 5.0)]))
+            ('gauges', OrderedDict([('workers', 2)]))
         ])
 
         with tempfile.TemporaryDirectory() as output_dir:
@@ -195,17 +197,13 @@ class CedarIntegrationTest(unittest.TestCase):
 
             cedar.main__cedar(args)
 
-            with open(pjoin(output_dir, 'HelloWorld-Greetings.csv')) as f:
-                print(f.read())
+            self.verify_output(
+                pjoin(output_dir, 'HelloWorld-Greetings.bson'),
+                [expected_result_greetings],
+            )
 
-            # self.verify_output(
-            #     pjoin(output_dir, 'InsertRemove-Insert.bson'),
-            #     expected_result_insert,
-            #     check_last_row_only=True
-            # )
-            #
-            # self.verify_output(
-            #     pjoin(output_dir, 'InsertRemove-Remove.bson'),
-            #     expected_result_remove,
-            #     check_last_row_only=True
-            # )
+            self.verify_output(
+                pjoin(output_dir, 'InsertRemove-Insert.bson'),
+                expected_result_insert,
+                check_last_row_only=True
+            )

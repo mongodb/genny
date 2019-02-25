@@ -13,6 +13,7 @@
 # limitations under the License.
 import contextlib
 import csv
+from collections import defaultdict
 
 
 class _Dialect(csv.unix_dialect):
@@ -73,6 +74,9 @@ class _OpListReader:
         """
         self.raw_reader = csv_reader_at_op
         self.tc_map = thread_count_map
+        # Map of (actor, thread) pairs to the timestamp that the last operation
+        # on that thread finished.
+        self.prev_op_ts_map = defaultdict(int)
         self.unix_time_offset = ts_offset
 
     def __iter__(self):
@@ -96,18 +100,29 @@ class _OpListReader:
             raise CSV2ParsingError('Unexpected outcome on line %d: %s', self.raw_reader.line_num,
                                    line)
 
-        # Convert timestamp from ns to ms and add offset.
-        unix_time = (line[_OpColumns.TIMESTAMP] + self.unix_time_offset) / (1000 * 1000)
-
         op = line[_OpColumns.OPERATION]
         actor = line[_OpColumns.ACTOR]
+        thread = line[_OpColumns.THREAD]
+        ts = line[_OpColumns.TIMESTAMP]
+        duration = line[_OpColumns.DURATION]
+        # Convert timestamp from ns to ms and add offset.
+        unix_time = (ts + self.unix_time_offset) / (1000 * 1000)
+
+        # The wait_and_duration of the first thread is just its duration since we don't
+        # record when each thread starts.
+        if (actor, thread) not in self.prev_op_ts_map:
+            self.prev_op_ts_map[(actor, thread)] = ts
+            wait_and_duration = duration
+        else:
+            wait_and_duration = ts - self.prev_op_ts_map[(actor, thread)]
+            self.prev_op_ts_map[(actor, thread)] = ts
 
         # Transform output into IntermediateCSV format.
         out = [None for _ in range(len(IntermediateCSVColumns.default_columns()))]
         out[IntermediateCSVColumns.UNIX_TIME] = unix_time
-        out[IntermediateCSVColumns.THREAD] = line[_OpColumns.THREAD]
-        out[IntermediateCSVColumns.SYSTEM_TS] = line[_OpColumns.TIMESTAMP]
-        out[IntermediateCSVColumns.DURATION] = line[_OpColumns.DURATION]
+        out[IntermediateCSVColumns.THREAD] = thread
+        out[IntermediateCSVColumns.WAIT_AND_DURATION] = wait_and_duration
+        out[IntermediateCSVColumns.DURATION] = duration
         out[IntermediateCSVColumns.OUTCOME] = line[_OpColumns.OUTCOME]
         out[IntermediateCSVColumns.N] = line[_OpColumns.N]
         out[IntermediateCSVColumns.OPS] = line[_OpColumns.OPS]
@@ -239,7 +254,7 @@ class IntermediateCSVColumns(CSVColumns):
     # Declare an explicit default ordering here since this script is writing the intermediate CSV.
     UNIX_TIME = 0
     THREAD = 1
-    SYSTEM_TS = 2
+    WAIT_AND_DURATION = 2
     DURATION = 3
     OUTCOME = 4
     N = 5
@@ -254,5 +269,5 @@ class IntermediateCSVColumns(CSVColumns):
         Ordered list of default columns to write to the CSV, must match the column names in
         the class attributes.
         """
-        return ['unix_time', 'thread', 'system_ts', 'duration', 'outcome', 'n', 'ops', 'errors',
-                'size', 'workers']
+        return ['unix_time', 'thread', 'wait_and_duration', 'duration', 'outcome', 'n', 'ops',
+                'errors', 'size', 'workers']

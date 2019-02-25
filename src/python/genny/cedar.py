@@ -17,7 +17,8 @@
 import argparse
 import csv
 import sys
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
+from datetime import datetime
 from os.path import join as pjoin
 
 from bson import BSON
@@ -75,11 +76,6 @@ class IntermediateCSVReader:
         self.raw_reader = reader
         self.cumulatives = [0 for _ in range(len(IntermediateCSVColumns.default_columns()))]
 
-        # Create some variables to help compute the cumulative CPU time; as it isn't
-        # explicitly listed in the intermediate CSV.
-        self.cumulative_cpu_time = 0
-        self.prev_ts_by_thread = {}
-
     def __iter__(self):
         return self
 
@@ -90,32 +86,24 @@ class IntermediateCSVReader:
         # Compute all cumulative values for simplicity; Not all values are used.
         self.cumulatives = [sum(v) for v in zip(line, self.cumulatives)]
 
-        thread = line[IntermediateCSVColumns.THREAD]
-        ts = line[IntermediateCSVColumns.SYSTEM_TS]
-
-        # Compute the CPU time for the current operation on the current thread
-        # and add it to the cumulative CPU time.
-        if thread not in self.prev_ts_by_thread:
-            self.prev_ts_by_thread[thread] = ts
-        cur_op_cpu_time = ts - self.prev_ts_by_thread[thread]
-        self.cumulative_cpu_time += cur_op_cpu_time
-        self.prev_ts_by_thread[thread] = ts
+        # milliseconds to seconds to datetime.datetime()
+        ts = datetime.utcfromtimestamp(line[IntermediateCSVColumns.UNIX_TIME] / 1000)
 
         res = OrderedDict([
-            ('ts', line[IntermediateCSVColumns.UNIX_TIME]),
-            ('id', thread),
+            ('ts', ts),
+            ('id', int(line[IntermediateCSVColumns.THREAD])),
             ('counters', OrderedDict([
-                ('n', self.cumulatives[IntermediateCSVColumns.N]),
-                ('ops', self.cumulatives[IntermediateCSVColumns.OPS]),
-                ('size', self.cumulatives[IntermediateCSVColumns.SIZE]),
-                ('errors', self.cumulatives[IntermediateCSVColumns.ERRORS])
+                ('n', int(self.cumulatives[IntermediateCSVColumns.N])),
+                ('ops', int(self.cumulatives[IntermediateCSVColumns.OPS])),
+                ('size', int(self.cumulatives[IntermediateCSVColumns.SIZE])),
+                ('errors', int(self.cumulatives[IntermediateCSVColumns.ERRORS]))
             ])),
             ('timers', OrderedDict([
-                ('duration', self.cumulatives[IntermediateCSVColumns.DURATION]),
-                ('total', self.cumulative_cpu_time)
+                ('duration', int(self.cumulatives[IntermediateCSVColumns.DURATION])),
+                ('total', int(self.cumulatives[IntermediateCSVColumns.WAIT_AND_DURATION]))
             ])),
             ('gauges', OrderedDict([
-                ('workers', line[IntermediateCSVColumns.WORKERS])
+                ('workers', int(line[IntermediateCSVColumns.WORKERS]))
             ]))
         ])
 
