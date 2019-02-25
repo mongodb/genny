@@ -40,7 +40,7 @@ class ReporterT;
  * class can then define a public function that requires it as an argument and still be ensured that
  * only the class seeking access is able to call that function.
  *
- * \sa https://arne-mertz.de/2016/10/passkey-idiom/
+ * @see https://arne-mertz.de/2016/10/passkey-idiom/
  */
 class Permission {
 private:
