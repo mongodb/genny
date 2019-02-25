@@ -52,7 +52,7 @@ class CedarTest(unittest.TestCase):
             with open(a1o1) as f:
                 ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
                 self.assertEqual(len(ll), 3)
-                self.assertEqual(len(ll[0]), 9)
+                self.assertEqual(len(ll[0]), 10)
 
             a2o2 = pjoin(output_dir, output_files[1])
             self.assertTrue(os.path.isfile(a2o2))
@@ -60,7 +60,7 @@ class CedarTest(unittest.TestCase):
                 ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
                 self.assertEqual(len(ll), 2)
                 self.assertEqual(ll[1][0], large_precise_float)
-                self.assertEqual(len(ll[0]), 9)
+                self.assertEqual(len(ll[0]), 10)
 
     def test_sort_csv(self):
         file_name = 'intermediate_unsorted.csv'
@@ -84,8 +84,11 @@ class CedarTest(unittest.TestCase):
 class CedarIntegrationTest(unittest.TestCase):
     def verify_output(self, bson_metrics_file_name, expected_results, check_last_row_only=False):
         """
+        :param bson_metrics_file_name:
+        :param expected_results:
         :param check_last_row_only: Check that the last row is correct. Since the results are
         cumulative, this likely means previous rows are all correct as well.
+        :return:
         """
         with open(bson_metrics_file_name, 'rb') as f:
             options = CodecOptions(document_class=OrderedDict)
@@ -100,7 +103,7 @@ class CedarIntegrationTest(unittest.TestCase):
 
     def test_cedar_main(self):
         expected_result_insert = OrderedDict([
-            ('ts', 10000573.0),
+            ('ts', 10000000.000573),
             ('id', 0.0),
             ('counters', OrderedDict([
                 ('n', 9.0),
@@ -116,7 +119,7 @@ class CedarIntegrationTest(unittest.TestCase):
         ])
 
         expected_result_remove = OrderedDict([
-            ('ts', 10000573.0),
+            ('ts', 10000000.000573),
             ('id', 0.0),
             ('counters', OrderedDict([
                 ('n', 9.0),
@@ -150,3 +153,59 @@ class CedarIntegrationTest(unittest.TestCase):
                 expected_result_remove,
                 check_last_row_only=True
             )
+
+    def test_cedar_main_2(self):
+        expected_result_greetings = OrderedDict([
+            ('ts', 41.999981),
+            ('id', 3),
+            ('counters', OrderedDict([
+                ('n', 2),
+                ('ops', 0),
+                ('size', 0),
+                ('errors', 0)
+            ])),
+            ('timers', OrderedDict([
+                ('duration', 13),
+                ('total', 958)
+            ])),
+            ('gauges', OrderedDict([('workers', 5.0)]))
+        ])
+
+        expected_result_remove = OrderedDict([
+            ('ts', 10000573.0),
+            ('id', 0.0),
+            ('counters', OrderedDict([
+                ('n', 9.0),
+                ('ops', 58.0),
+                ('size', 257.0),
+                ('errors', 25.0)
+            ])),
+            ('timers', OrderedDict([
+                ('duration', 1392.0),
+                ('total', 958)
+            ])),
+            ('gauges', OrderedDict([('workers', 5.0)]))
+        ])
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            args = [
+                _get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'),
+                output_dir
+            ]
+
+            cedar.main__cedar(args)
+
+            with open(pjoin(output_dir, 'HelloWorld-Greetings.csv')) as f:
+                print(f.read())
+
+            # self.verify_output(
+            #     pjoin(output_dir, 'InsertRemove-Insert.bson'),
+            #     expected_result_insert,
+            #     check_last_row_only=True
+            # )
+            #
+            # self.verify_output(
+            #     pjoin(output_dir, 'InsertRemove-Remove.bson'),
+            #     expected_result_remove,
+            #     check_last_row_only=True
+            # )

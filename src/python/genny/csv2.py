@@ -73,7 +73,7 @@ class _OpListReader:
         """
         self.raw_reader = csv_reader_at_op
         self.tc_map = thread_count_map
-        self.ts_offset = ts_offset
+        self.unix_time_offset = ts_offset
 
     def __iter__(self):
         return self
@@ -96,17 +96,17 @@ class _OpListReader:
             raise CSV2ParsingError('Unexpected outcome on line %d: %s', self.raw_reader.line_num,
                                    line)
 
-        # Convert nanoseconds to milliseconds and add offset
-        line[_OpColumns.TIMESTAMP] /= 1000 * 1000
-        line[_OpColumns.TIMESTAMP] += self.ts_offset
+        # Convert timestamp from ns to ms and add offset.
+        unix_time = (line[_OpColumns.TIMESTAMP] + self.unix_time_offset) / (1000 * 1000)
 
         op = line[_OpColumns.OPERATION]
         actor = line[_OpColumns.ACTOR]
 
         # Transform output into IntermediateCSV format.
         out = [None for _ in range(len(IntermediateCSVColumns.default_columns()))]
-        out[IntermediateCSVColumns.TS_MS] = line[_OpColumns.TIMESTAMP]
+        out[IntermediateCSVColumns.UNIX_TIME] = unix_time
         out[IntermediateCSVColumns.THREAD] = line[_OpColumns.THREAD]
+        out[IntermediateCSVColumns.SYSTEM_TS] = line[_OpColumns.TIMESTAMP]
         out[IntermediateCSVColumns.DURATION] = line[_OpColumns.DURATION]
         out[IntermediateCSVColumns.OUTCOME] = line[_OpColumns.OUTCOME]
         out[IntermediateCSVColumns.N] = line[_OpColumns.N]
@@ -158,7 +158,7 @@ class CSV2:
     def __init__(self, csv2_file_name):
         # The number to add to the metrics timestamp (a.k.a. c++ system_time) to get
         # the UNIX time.
-        self._unix_epoch_offset_ms = None
+        self._unix_epoch_offset_ns = None
 
         # Map of (actor, operation) to thread count.
         self._operation_thread_count_map = {}
@@ -208,7 +208,7 @@ class CSV2:
             times[line[_ClockColumns.CLOCK]] = int(line[_ClockColumns.NANOSECONDS])
             line = next(reader)
 
-        self._unix_epoch_offset_ms = (times['SystemTime'] - times['MetricsTime']) / (1000 * 1000)
+        self._unix_epoch_offset_ns = times['SystemTime'] - times['MetricsTime']
 
         return False
 
@@ -228,7 +228,7 @@ class CSV2:
     def _parse_operations(self, reader):
         _OpColumns.add_columns([h.strip() for h in next(reader)])
         self._data_reader = _OpListReader(reader, self._operation_thread_count_map,
-                                          self._unix_epoch_offset_ms)
+                                          self._unix_epoch_offset_ns)
 
         return True
 
@@ -237,15 +237,16 @@ class IntermediateCSVColumns(CSVColumns):
     _COLUMNS = set()
 
     # Declare an explicit default ordering here since this script is writing the intermediate CSV.
-    TS_MS = 0
+    UNIX_TIME = 0
     THREAD = 1
-    DURATION = 2
-    OUTCOME = 3
-    N = 4
-    OPS = 5
-    ERRORS = 6
-    SIZE = 7
-    WORKERS = 8
+    SYSTEM_TS = 2
+    DURATION = 3
+    OUTCOME = 4
+    N = 5
+    OPS = 6
+    ERRORS = 7
+    SIZE = 8
+    WORKERS = 9
 
     @classmethod
     def default_columns(cls):
@@ -253,4 +254,5 @@ class IntermediateCSVColumns(CSVColumns):
         Ordered list of default columns to write to the CSV, must match the column names in
         the class attributes.
         """
-        return ['ts_ms', 'thread', 'duration', 'outcome', 'n', 'ops', 'errors', 'size', 'workers']
+        return ['unix_time', 'thread', 'system_ts', 'duration', 'outcome', 'n', 'ops', 'errors',
+                'size', 'workers']

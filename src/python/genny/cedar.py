@@ -91,7 +91,7 @@ class IntermediateCSVReader:
         self.cumulatives = [sum(v) for v in zip(line, self.cumulatives)]
 
         thread = line[IntermediateCSVColumns.THREAD]
-        ts = line[IntermediateCSVColumns.TS_MS]
+        ts = line[IntermediateCSVColumns.SYSTEM_TS]
 
         # Compute the CPU time for the current operation on the current thread
         # and add it to the cumulative CPU time.
@@ -102,7 +102,7 @@ class IntermediateCSVReader:
         self.prev_ts_by_thread[thread] = ts
 
         res = OrderedDict([
-            ('ts', ts),
+            ('ts', line[IntermediateCSVColumns.UNIX_TIME]),
             ('id', thread),
             ('counters', OrderedDict([
                 ('n', self.cumulatives[IntermediateCSVColumns.N]),
@@ -169,7 +169,7 @@ def split_into_actor_operation_csv_files(data_reader, out_dir):
 def sort_csv_file(file_name, out_dir):
     # Sort on Timestamp and Thread.
     csvsort(pjoin(out_dir, file_name),
-            [IntermediateCSVColumns.TS_MS, IntermediateCSVColumns.THREAD],
+            [IntermediateCSVColumns.UNIX_TIME, IntermediateCSVColumns.THREAD],
             quoting=csv.QUOTE_NONNUMERIC,
             has_header=True,
             show_progress=True)

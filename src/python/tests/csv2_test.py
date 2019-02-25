@@ -13,7 +13,7 @@ class CSV2Test(unittest.TestCase):
     def test_basic_parsing(self):
         test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))
         with test_csv.data_reader() as _:
-            self.assertEqual(test_csv._unix_epoch_offset_ms, 90000)
+            self.assertEqual(test_csv._unix_epoch_offset_ns, 90 * (10 ** 9))
             op_map = test_csv._operation_thread_count_map
             self.assertDictEqual(op_map, {('MyActor', 'MyOperation'): 2})
 
@@ -21,7 +21,8 @@ class CSV2Test(unittest.TestCase):
         test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))
         with test_csv.data_reader() as dr:
             self.assertEqual(next(dr),
-                             ([102345, 0, 100, 0, 1, 6, 2, 40, 2], 'MyActor', 'MyOperation'))
+                             ([102345.0, 0, 12345000000, 100, 0, 1, 6, 2, 40, 2], 'MyActor',
+                              'MyOperation'))
 
     def test_error_outcome(self):
         test_csv = csv2.CSV2(self.get_fixture('error_outcome.csv'))
