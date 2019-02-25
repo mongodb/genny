@@ -11,8 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
+import contextlib
 import csv
 
 
@@ -157,13 +156,6 @@ class CSV2:
     """
 
     def __init__(self, csv2_file_name):
-        # parsers for newline-delimited sections in genny's csv2 file.
-        header_parsers = {
-            'Clocks': self._parse_clocks,
-            'OperationThreadCounts': self._parse_thread_count,
-            'Operations': self._parse_operations
-        }
-
         # The number to add to the metrics timestamp (a.k.a. c++ system_time) to get
         # the UNIX time.
         self._unix_epoch_offset_ms = None
@@ -176,30 +168,31 @@ class CSV2:
         self._data_reader = None
 
         # file handle to raw CSV file; lifecycle is shared with this CSV2 object.
-        self._csv_file = None
+        self._csv2_file_name = csv2_file_name
 
-        try:
-            # Keep this file open for the duration of this object's lifecycle.
-            self._csv_file = open(csv2_file_name, 'r')
-            reader = csv.reader(self._csv_file, dialect=_Dialect)
-
-            while True:
-                title = next(reader)[0]
-                if title not in header_parsers:
-                    raise CSV2ParsingError('Unknown csv2 section title %s', title)
-                should_stop = header_parsers[title](reader)
-                if should_stop:
-                    break
-
-        except (IndexError, ValueError) as e:
-            raise CSV2ParsingError('Error parsing CSV file: ', csv2_file_name) from e
-
-    def __del__(self):
-        if self._csv_file:
-            self._csv_file.close()
-
+    @contextlib.contextmanager
     def data_reader(self):
-        return self._data_reader
+        # parsers for newline-delimited sections in genny's csv2 file.
+        header_parsers = {
+            'Clocks': self._parse_clocks,
+            'OperationThreadCounts': self._parse_thread_count,
+            'Operations': self._parse_operations
+        }
+
+        with open(self._csv2_file_name, 'r') as csv2_file:
+            try:
+                reader = csv.reader(csv2_file, dialect=_Dialect)
+                while True:
+                    title = next(reader)[0]
+                    if title not in header_parsers:
+                        raise CSV2ParsingError('Unknown csv2 section title %s', title)
+                    should_stop = header_parsers[title](reader)
+                    if should_stop:
+                        break
+            except (IndexError, ValueError) as e:
+                raise CSV2ParsingError('Error parsing CSV file: ', self._csv2_file_name) from e
+
+            yield self._data_reader
 
     def _parse_clocks(self, reader):
         _ClockColumns.add_columns([header.strip() for header in next(reader)])

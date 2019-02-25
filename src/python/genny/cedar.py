@@ -180,12 +180,13 @@ def main__cedar(argv=sys.argv[1:]):
     # Read CSV2 file
     my_csv2 = CSV2(args.input_file)
 
-    # Separate into actor-operation
-    files = split_into_actor_operation_csv_files(my_csv2.data_reader(), out_dir)
+    with my_csv2.data_reader() as data_reader:
+        # Separate into actor-operation
+        files = split_into_actor_operation_csv_files(data_reader, out_dir)
 
-    for f in files:
-        # csvsort by timestamp, thread
-        sort_csv_file(f, out_dir)
+        for f in files:
+            # csvsort by timestamp, thread
+            sort_csv_file(f, out_dir)
 
-        # compute cumulative and stream output to bson file
-        compute_cumulative_and_write_to_bson(f, out_dir)
+            # compute cumulative and stream output to bson file
+            compute_cumulative_and_write_to_bson(f, out_dir)
