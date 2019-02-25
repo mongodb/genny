@@ -73,8 +73,12 @@ class IntermediateCSVReader:
 
     def __init__(self, reader):
         self.raw_reader = reader
-        self.cumulatives = [0 for _ in range(9)]
-        self.prev_ts = 0
+        self.cumulatives = [0 for _ in range(len(IntermediateCSVColumns.default_columns()))]
+
+        # Create some variables to help compute the cumulative CPU time; as it isn't
+        # explicitly listed in the intermediate CSV.
+        self.cumulative_cpu_time = 0
+        self.prev_ts_by_thread = {}
 
     def __iter__(self):
         return self
@@ -86,9 +90,20 @@ class IntermediateCSVReader:
         # Compute all cumulative values for simplicity; Not all values are used.
         self.cumulatives = [sum(v) for v in zip(line, self.cumulatives)]
 
+        thread = line[IntermediateCSVColumns.THREAD]
+        ts = line[IntermediateCSVColumns.TS_MS]
+
+        # Compute the CPU time for the current operation on the current thread
+        # and add it to the cumulative CPU time.
+        if thread not in self.prev_ts_by_thread:
+            self.prev_ts_by_thread[thread] = ts
+        cur_op_cpu_time = ts - self.prev_ts_by_thread[thread]
+        self.cumulative_cpu_time += cur_op_cpu_time
+        self.prev_ts_by_thread[thread] = ts
+
         res = OrderedDict([
-            ('ts', line[IntermediateCSVColumns.TS_MS]),
-            ('id', line[IntermediateCSVColumns.THREAD]),
+            ('ts', ts),
+            ('id', thread),
             ('counters', OrderedDict([
                 ('n', self.cumulatives[IntermediateCSVColumns.N]),
                 ('ops', self.cumulatives[IntermediateCSVColumns.OPS]),
@@ -97,14 +112,12 @@ class IntermediateCSVReader:
             ])),
             ('timers', OrderedDict([
                 ('duration', self.cumulatives[IntermediateCSVColumns.DURATION]),
-                ('total', 1)  # FIXME: compute total
+                ('total', self.cumulative_cpu_time)
             ])),
             ('gauges', OrderedDict([
                 ('workers', line[IntermediateCSVColumns.WORKERS])
             ]))
         ])
-
-        self.prev_ts = line[IntermediateCSVColumns.TS_MS]
 
         return res
 
