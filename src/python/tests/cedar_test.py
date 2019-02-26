@@ -13,7 +13,6 @@
 # limitations under the License.
 import csv
 import os
-import shutil
 import tempfile
 import unittest
 from collections import OrderedDict
