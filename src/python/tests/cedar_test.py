@@ -63,24 +63,6 @@ class CedarTest(unittest.TestCase):
                 self.assertEqual(ll[1][0], large_precise_float)
                 self.assertEqual(len(ll[0]), 10)
 
-    def test_sort_csv(self):
-        file_name = 'intermediate_unsorted.csv'
-
-        # Copy the file into a temp dir so we can do in-place sorting.
-        with tempfile.TemporaryDirectory() as output_dir:
-            shutil.copy(_get_fixture('cedar', file_name), output_dir)
-            cedar.sort_csv_file(file_name, output_dir)
-            with open(pjoin(output_dir, file_name)) as exp, open(
-                    _get_fixture('cedar', 'intermediate_sorted.csv')) as ctl:
-                experiment = list(csv.reader(exp, quoting=csv.QUOTE_NONNUMERIC))
-                control = list(csv.reader(ctl, quoting=csv.QUOTE_NONNUMERIC))
-
-                self.assertEqual(len(experiment), len(control))
-
-                # Explicitly compare each line for better debuggability.
-                for i in range(len(experiment)):
-                    self.assertEqual(experiment[i], control[i])
-
 
 class CedarIntegrationTest(unittest.TestCase):
     def verify_output(self, bson_metrics_file_name, expected_results, check_last_row_only=False):
