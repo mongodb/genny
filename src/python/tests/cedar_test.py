@@ -188,6 +188,39 @@ class CedarIntegrationTest(unittest.TestCase):
             ]),
         ]
 
+        expected_result_remove = [
+            OrderedDict([
+                ('ts', datetime.utcfromtimestamp(42 / 1000)),
+                ('id', 2),
+                ('counters', OrderedDict([
+                    ('n', 1),
+                    ('ops', 7),
+                    ('size', 30),
+                    ('errors', 0)
+                ])),
+                ('timers', OrderedDict([
+                    ('duration', 10),
+                    ('total', 12)
+                ])),
+                ('gauges', OrderedDict([('workers', 2)]))
+            ]),
+            OrderedDict([
+                ('ts', datetime.utcfromtimestamp(42 / 1000)),
+                ('id', 1),
+                ('counters', OrderedDict([
+                    ('n', 2),
+                    ('ops', 13),
+                    ('size', 70),
+                    ('errors', 0)
+                ])),
+                ('timers', OrderedDict([
+                    ('duration', 27),
+                    ('total', 29)
+                ])),
+                ('gauges', OrderedDict([('workers', 2)]))
+            ]),
+        ]
+
         with tempfile.TemporaryDirectory() as output_dir:
             args = [
                 _get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'),
@@ -204,4 +237,9 @@ class CedarIntegrationTest(unittest.TestCase):
             self.verify_output(
                 pjoin(output_dir, 'InsertRemove-Insert.bson'),
                 expected_result_insert,
+            )
+
+            self.verify_output(
+                pjoin(output_dir, 'InsertRemove-Remove.bson'),
+                expected_result_remove,
             )
