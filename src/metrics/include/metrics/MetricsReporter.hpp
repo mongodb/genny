@@ -40,7 +40,7 @@ namespace v1 {
  * @private
  */
 template <typename MetricsClockSource>
-class ReporterT {
+class ReporterT final {
 
 public:
     constexpr explicit ReporterT(const v1::RegistryT<MetricsClockSource>& registry)

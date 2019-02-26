@@ -69,7 +69,7 @@ public:
  * in their workload lifecycle.
  */
 template <typename ClockSource>
-class RegistryT {
+class RegistryT final {
 private:
     using EventSeries = typename v1::OperationImpl<ClockSource>::EventSeries;
     using OperationsMap = std::unordered_map<

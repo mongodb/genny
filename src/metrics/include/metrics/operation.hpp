@@ -47,7 +47,7 @@ using count_type = long long;
  * MetricsClockSource other than during testing.
  */
 template <typename ClockSource>
-struct OperationEvent {
+struct OperationEvent final {
     enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
     bool operator==(const OperationEvent<ClockSource>& other) const {
@@ -94,7 +94,7 @@ struct OperationEvent {
 
 
 template <typename ClockSource>
-class OperationImpl {
+class OperationImpl final {
 public:
     using time_point = typename ClockSource::time_point;
     using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
@@ -134,7 +134,7 @@ private:
  * the instance.
  */
 template <typename ClockSource>
-class OperationContextT : private boost::noncopyable {
+class OperationContextT final : private boost::noncopyable {
 private:
     using OutcomeType = typename OperationEvent<ClockSource>::OutcomeType;
 
@@ -242,7 +242,7 @@ private:
 
 
 template <typename ClockSource>
-class OperationT {
+class OperationT final {
 public:
     explicit OperationT(v1::OperationImpl<ClockSource> op) : _op{std::move(op)} {}
 
