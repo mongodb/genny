@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#
 # Copyright 2019-present MongoDB Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#!/usr/bin/env python
 
 import json
+
 """
 Genny's CSV-ish metrics output looks like the following:
 
@@ -169,7 +171,7 @@ class ParserResults(object):
             return metrics_time + self.clock_delta
 
         if 'Clocks' not in self.sections:
-            msg = "Can only call _system_time after we've seen the Clocks section. " +\
+            msg = "Can only call _system_time after we've seen the Clocks section. " + \
                   "We've seen sections {}".format(set(self.sections.keys()))
             raise ParseError(msg, file_name, line_number)
 
