@@ -53,7 +53,7 @@ void Insert::run() {
                     auto document = config->documentExpr->evaluate(_rng).getDocument();
                     BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(document.view());
                     config->collection.insert_one(document.view());
-                    ctx.addOps(1);
+                    ctx.addDocuments(1);
                     ctx.addBytes(document.view().length());
                 },
                 config->options);

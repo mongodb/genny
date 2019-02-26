@@ -82,7 +82,7 @@ public:
                 shouldContinue = false;
             } catch (const boost::exception& e) {
                 BOOST_LOG_TRIVIAL(debug) << "Caught error: " << boost::diagnostic_information(e);
-                ctx.fail();
+                ctx.discard();
 
                 // We should continue if we've attempted less than the amount of retries plus one
                 // for the original attempt

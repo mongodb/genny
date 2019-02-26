@@ -14,6 +14,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <sstream>
 
 #include <metrics/MetricsReporter.hpp>
@@ -35,8 +36,8 @@ public:
     using duration = clock_type::duration;
     using time_point = std::chrono::time_point<clock_type>;
 
-    static void advance(period<clock_type> duration = 1ns) {
-        _now += duration;
+    static void advance(v1::Period<clock_type> inc = 1ns) {
+        _now += inc;
     }
 
     static void reset() {
@@ -61,102 +62,212 @@ struct ReporterClockSourceStub {
     }
 };
 
-TEST_CASE("example metrics usage") {
+void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
+                          RegistryClockSourceStub::duration dur2) {
+    // We compare std:chrono::time_points by converting through Period in order to take advantage of
+    // its operator<<(std::ostream&) in case the check fails.
+    REQUIRE(v1::Period<RegistryClockSourceStub>{dur1} == v1::Period<RegistryClockSourceStub>{dur2});
+}
+
+TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
-    v1::RegistryT<RegistryClockSourceStub> metrics;
 
-    // pretend this is an actor's implementation
+    auto op = v1::OperationImpl<RegistryClockSourceStub>{"Actor", "Op"};
 
-    // actor constructor
-    auto queryTime = metrics.timer("client.query");
-    auto phaseTime = metrics.timer("actor.phase");
-    auto operations = metrics.counter("actor.operations");
-    auto failures = metrics.counter("actor.failures");
-    auto sessions = metrics.gauge("actor.sessions");
+    RegistryClockSourceStub::advance(5ns);
+    auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(&op);
 
-    // in each phase, do something things
-    for (int phase = 0; phase < 10; ++phase) {
-        RegistryClockSourceStub::advance();
-        auto thisIter = phaseTime.raii();
+    ctx->addDocuments(200);
+    ctx->addBytes(3000);
+    ctx->addErrors(4);
+    RegistryClockSourceStub::advance(67ns);
 
-        try {
-            RegistryClockSourceStub::advance();
-            auto q = queryTime.raii();
-            sessions.set(1);
+    REQUIRE(op.getEvents().size() == 0);
 
-            // do something with the driver
-            if (phase % 3 == 0) {
-                RegistryClockSourceStub::advance();
-                throw std::exception{};
-            }
+    auto expected = v1::OperationEvent<RegistryClockSourceStub>{};
+    expected.iters = 1;
+    expected.ops = 200;
+    expected.size = 3000;
+    expected.errors = 4;
 
-            operations.incr();
-        } catch (...) {
-            failures.incr();
-        }
+    SECTION("success() reports the operation") {
+        expected.duration = 67ns;
+        ctx->success();
+        REQUIRE(op.getEvents().size() == 1);
+
+        ctx.reset();
+
+        expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
+        assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 72ns);
+        REQUIRE(op.getEvents()[0].second == expected);
     }
 
-    // would be done by framework / outside code:
-    auto reporter = genny::metrics::v1::ReporterT(metrics);
+    SECTION("failure() reports the operation") {
+        expected.duration = 67ns;
+        ctx->failure();
+        REQUIRE(op.getEvents().size() == 1);
 
-    REQUIRE(reporter.getGaugeCount() == 1);
-    REQUIRE(reporter.getTimerCount() == 2);
-    REQUIRE(reporter.getCounterCount() == 2);
+        ctx.reset();
 
-    REQUIRE(reporter.getGaugePointsCount() == 10);
-    REQUIRE(reporter.getTimerPointsCount() == 20);
-    REQUIRE(reporter.getCounterPointsCount() == 10);
+        expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kFailure;
+        assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 72ns);
+        REQUIRE(op.getEvents()[0].second == expected);
+    }
+
+    SECTION("discard() doesn't report the operation") {
+        ctx.reset();
+        REQUIRE(op.getEvents().size() == 0);
+    }
+
+    SECTION("add*() methods can be called multiple times") {
+        ctx->addIterations(8);
+        ctx->addIterations(9);
+        ctx->addDocuments(200);
+        ctx->addBytes(3000);
+        ctx->addErrors(4);
+        RegistryClockSourceStub::advance(67ns);
+
+        REQUIRE(op.getEvents().size() == 0);
+
+        expected.iters = 17;
+        expected.ops += 200;
+        expected.size += 3000;
+        expected.errors += 4;
+
+        expected.duration = 134ns;
+        ctx->success();
+        REQUIRE(op.getEvents().size() == 1);
+
+        ctx.reset();
+
+        expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
+        assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 139ns);
+        REQUIRE(op.getEvents()[0].second == expected);
+    }
+}
+
+TEST_CASE("metrics output format") {
+    RegistryClockSourceStub::reset();
+    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::v1::ReporterT{metrics};
+
+    //           +---------------------+----------------+
+    // Thread 1: |        Insert       |     Remove     |
+    //           +---------------------+----------------+
+    //                +------------------+  +--------+
+    // Thread 2:      |      Insert      |  | Remove |
+    //                +------------------+  +--------+
+    //                   +-----------+
+    // Thread 3:         | Greetings |
+    //                   +-----------+
+
+    auto insert1 = metrics.operation("InsertRemove", "Insert", 1u);
+    auto insert2 = metrics.operation("InsertRemove", "Insert", 2u);
+    auto remove1 = metrics.operation("InsertRemove", "Remove", 1u);
+    auto remove2 = metrics.operation("InsertRemove", "Remove", 2u);
+    auto greetings3 = metrics.operation("HelloWorld", "Greetings", 3u);
+
+    RegistryClockSourceStub::advance(5ns);
+    auto insert1Ctx = insert1.start();
+
+    RegistryClockSourceStub::advance(5ns);
+    auto insert2Ctx = insert2.start();
+
+    RegistryClockSourceStub::advance(3ns);
+    auto greetings3Ctx = greetings3.start();
+
+    RegistryClockSourceStub::advance(13ns);
+    greetings3Ctx.addIterations(2);
+    greetings3Ctx.success();
+
+    RegistryClockSourceStub::advance(2ns);
+    insert1Ctx.addDocuments(9);
+    insert1Ctx.addBytes(300);
+    insert1Ctx.success();
+    auto remove1Ctx = remove1.start();
+
+    RegistryClockSourceStub::advance(2ns);
+    insert2Ctx.addDocuments(8);
+    insert2Ctx.addBytes(200);
+    insert2Ctx.success();
+
+    RegistryClockSourceStub::advance(2ns);
+    auto remove2Ctx = remove2.start();
+
+    RegistryClockSourceStub::advance(10ns);
+    remove2Ctx.addDocuments(7);
+    remove2Ctx.addBytes(30);
+    remove2Ctx.success();
+
+    RegistryClockSourceStub::advance(3ns);
+    remove1Ctx.addDocuments(6);
+    remove1Ctx.addBytes(40);
+    remove1Ctx.success();
+
+    SECTION("csv reporting") {
+        auto expected =
+            "Clocks\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,45\n"
+            "\n"
+            "Counters\n"
+            "26,HelloWorld.id-3.Greetings_bytes,0\n"
+            "42,InsertRemove.id-2.Remove_bytes,30\n"
+            "45,InsertRemove.id-1.Remove_bytes,40\n"
+            "30,InsertRemove.id-2.Insert_bytes,200\n"
+            "28,InsertRemove.id-1.Insert_bytes,300\n"
+            "26,HelloWorld.id-3.Greetings_docs,0\n"
+            "42,InsertRemove.id-2.Remove_docs,7\n"
+            "45,InsertRemove.id-1.Remove_docs,6\n"
+            "30,InsertRemove.id-2.Insert_docs,8\n"
+            "28,InsertRemove.id-1.Insert_docs,9\n"
+            "26,HelloWorld.id-3.Greetings_iters,2\n"
+            "42,InsertRemove.id-2.Remove_iters,1\n"
+            "45,InsertRemove.id-1.Remove_iters,1\n"
+            "30,InsertRemove.id-2.Insert_iters,1\n"
+            "28,InsertRemove.id-1.Insert_iters,1\n"
+            "\n"
+            "Gauges\n"
+            "\n"
+            "Timers\n"
+            "26,HelloWorld.id-3.Greetings_timer,13\n"
+            "42,InsertRemove.id-2.Remove_timer,10\n"
+            "45,InsertRemove.id-1.Remove_timer,17\n"
+            "30,InsertRemove.id-2.Insert_timer,20\n"
+            "28,InsertRemove.id-1.Insert_timer,23\n"
+            "\n";
+
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "csv");
+        REQUIRE(out.str() == expected);
+    }
+}
+
+TEST_CASE("Genny.Setup metric should only be reported as a timer") {
+    RegistryClockSourceStub::reset();
+    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::v1::ReporterT{metrics};
+
+    // Mimic what the DefaultDriver would be doing.
+    auto setup = metrics.operation("Genny", "Setup", 0u);
+
+    RegistryClockSourceStub::advance(5ns);
+    auto ctx = setup.start();
+
+    RegistryClockSourceStub::advance(10ns);
+    ctx.success();
 
     auto expected =
         "Clocks\n"
         "SystemTime,42000000\n"
-        "MetricsTime,24\n"
+        "MetricsTime,15\n"
         "\n"
         "Counters\n"
-        "3,actor.failures,1\n"
-        "10,actor.failures,2\n"
-        "17,actor.failures,3\n"
-        "24,actor.failures,4\n"
-        "5,actor.operations,1\n"
-        "7,actor.operations,2\n"
-        "12,actor.operations,3\n"
-        "14,actor.operations,4\n"
-        "19,actor.operations,5\n"
-        "21,actor.operations,6\n"
         "\n"
         "Gauges\n"
-        "2,actor.sessions,1\n"
-        "5,actor.sessions,1\n"
-        "7,actor.sessions,1\n"
-        "9,actor.sessions,1\n"
-        "12,actor.sessions,1\n"
-        "14,actor.sessions,1\n"
-        "16,actor.sessions,1\n"
-        "19,actor.sessions,1\n"
-        "21,actor.sessions,1\n"
-        "23,actor.sessions,1\n"
         "\n"
         "Timers\n"
-        "3,actor.phase,2\n"
-        "5,actor.phase,1\n"
-        "7,actor.phase,1\n"
-        "10,actor.phase,2\n"
-        "12,actor.phase,1\n"
-        "14,actor.phase,1\n"
-        "17,actor.phase,2\n"
-        "19,actor.phase,1\n"
-        "21,actor.phase,1\n"
-        "24,actor.phase,2\n"
-        "3,client.query,1\n"
-        "5,client.query,0\n"
-        "7,client.query,0\n"
-        "10,client.query,1\n"
-        "12,client.query,0\n"
-        "14,client.query,0\n"
-        "17,client.query,1\n"
-        "19,client.query,0\n"
-        "21,client.query,0\n"
-        "24,client.query,1\n"
+        "15,Genny.Setup,10\n"
         "\n";
 
     std::ostringstream out;
@@ -164,178 +275,62 @@ TEST_CASE("example metrics usage") {
     REQUIRE(out.str() == expected);
 }
 
-TEST_CASE("metrics reporter") {
-    genny::metrics::Registry reg;
-    auto reporter = genny::metrics::Reporter(reg);
+TEST_CASE("Genny.ActiveActors metric should be reported as a counter") {
+    RegistryClockSourceStub::reset();
+    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::v1::ReporterT{metrics};
 
-    SECTION("no interactions") {
-        REQUIRE(reporter.getGaugeCount() == 0);
-        REQUIRE(reporter.getTimerCount() == 0);
-        REQUIRE(reporter.getCounterCount() == 0);
+    // Mimic what the DefaultDriver would be doing.
+    auto startedActors = metrics.operation("Genny", "ActorStarted", 0u);
+    auto finishedActors = metrics.operation("Genny", "ActorFinished", 0u);
 
-        REQUIRE(reporter.getGaugePointsCount() == 0);
-        REQUIRE(reporter.getTimerPointsCount() == 0);
-        REQUIRE(reporter.getCounterPointsCount() == 0);
-        reporter.report(std::cout, "csv");
-    }
+    auto startActor = [&]() {
+        auto ctx = startedActors.start();
+        ctx.addDocuments(1);
+        ctx.success();
+    };
 
+    auto finishActor = [&]() {
+        auto ctx = finishedActors.start();
+        ctx.addDocuments(1);
+        ctx.success();
+    };
 
-    SECTION("registered some tokens") {
-        auto g = reg.gauge("gauge");
+    // Start 2 actors, have 1 finish, start 1 more, and have the remaining 2 finish.
+    RegistryClockSourceStub::advance(5ns);
+    startActor();
+    RegistryClockSourceStub::advance(10ns);
+    startActor();
+    RegistryClockSourceStub::advance(20ns);
+    finishActor();
+    RegistryClockSourceStub::advance(50ns);
+    startActor();
+    RegistryClockSourceStub::advance(100ns);
+    finishActor();
+    RegistryClockSourceStub::advance(200ns);
+    finishActor();
 
-        REQUIRE(reporter.getGaugeCount() == 1);
-        REQUIRE(reporter.getTimerCount() == 0);
-        REQUIRE(reporter.getCounterCount() == 0);
+    auto expected =
+        "Clocks\n"
+        "SystemTime,42000000\n"
+        "MetricsTime,385\n"
+        "\n"
+        "Counters\n"
+        "5,Genny.ActiveActors,1\n"
+        "15,Genny.ActiveActors,2\n"
+        "35,Genny.ActiveActors,1\n"
+        "85,Genny.ActiveActors,2\n"
+        "185,Genny.ActiveActors,1\n"
+        "385,Genny.ActiveActors,0\n"
+        "\n"
+        "Gauges\n"
+        "\n"
+        "Timers\n"
+        "\n";
 
-        REQUIRE(reporter.getGaugePointsCount() == 0);
-        REQUIRE(reporter.getTimerPointsCount() == 0);
-        REQUIRE(reporter.getCounterPointsCount() == 0);
-
-        auto t = reg.timer("timer");
-        auto c = reg.counter("counter");
-
-        REQUIRE(reporter.getGaugeCount() == 1);
-        REQUIRE(reporter.getTimerCount() == 1);
-        REQUIRE(reporter.getCounterCount() == 1);
-
-        REQUIRE(reporter.getGaugePointsCount() == 0);
-        REQUIRE(reporter.getTimerPointsCount() == 0);
-        REQUIRE(reporter.getCounterPointsCount() == 0);
-
-
-        SECTION("Registering again doesn't affect count") {
-            auto t2 = reg.timer("timer");
-            REQUIRE(reporter.getTimerCount() == 1);
-
-
-            auto anotherT = reg.timer("some.other.timer");
-            REQUIRE(reporter.getTimerCount() == 2);
-        }
-
-        SECTION("Record some gauge values") {
-            g.set(10);
-            REQUIRE(reporter.getGaugePointsCount() == 1);
-            g.set(10);
-            REQUIRE(reporter.getGaugePointsCount() == 2);
-
-            REQUIRE(reporter.getTimerPointsCount() == 0);
-            REQUIRE(reporter.getCounterPointsCount() == 0);
-        }
-
-        SECTION("Record some counter values") {
-            c.incr();
-            REQUIRE(reporter.getCounterPointsCount() == 1);
-            c.incr();
-            REQUIRE(reporter.getCounterPointsCount() == 2);
-
-            REQUIRE(reporter.getGaugePointsCount() == 0);
-            REQUIRE(reporter.getTimerPointsCount() == 0);
-        }
-
-        SECTION("Record some manual-reporting timer values") {
-            // no data points until .report();
-            auto started = t.start();
-            REQUIRE(reporter.getTimerPointsCount() == 0);
-            auto started2 = t.start();
-            REQUIRE(reporter.getTimerPointsCount() == 0);
-
-            started.report();
-            REQUIRE(reporter.getTimerPointsCount() == 1);
-
-            started2.report();
-            REQUIRE(reporter.getTimerPointsCount() == 2);
-
-            // can report multiple times
-            started2.report();
-            started2.report();
-            REQUIRE(reporter.getTimerPointsCount() == 4);
-
-            REQUIRE(reporter.getCounterPointsCount() == 0);
-            REQUIRE(reporter.getGaugePointsCount() == 0);
-        }
-
-        SECTION("Record some RAII self-reporting timer values") {
-            // nothing until we hit report or close in dtor
-            {
-                auto r = t.raii();
-                REQUIRE(reporter.getTimerPointsCount() == 0);
-                auto r2 = t.raii();
-                REQUIRE(reporter.getTimerPointsCount() == 0);
-
-                // don't explicitly close this one
-                auto r3 = t.raii();
-
-                r.report();
-                REQUIRE(reporter.getTimerPointsCount() == 1);
-
-                r2.report();
-                REQUIRE(reporter.getTimerPointsCount() == 2);
-            }
-            // 2 from when we .report()ed and 3 more from dtoring r, r2, and r3
-            REQUIRE(reporter.getTimerPointsCount() == 5);
-
-            {
-                auto a1 = t.raii();
-                auto a2 = t.raii();
-            }
-            REQUIRE(reporter.getTimerPointsCount() == 7);
-
-            {
-                auto a1 = t.raii();
-                auto a2 = t.raii();
-                // moving doesn't count toward closing
-                auto a3 = std::move(a2);
-                auto a4{std::move(a1)};
-            }
-            REQUIRE(reporter.getTimerPointsCount() == 9);
-
-            REQUIRE(reporter.getCounterPointsCount() == 0);
-            REQUIRE(reporter.getGaugePointsCount() == 0);
-        }
-    }
-}
-
-TEST_CASE("metrics tests") {
-    genny::metrics::Registry reg;
-    auto w = reg.timer("this_test");
-    auto r = reg.timer("allocations");
-
-    auto startReg = r.start();
-    auto c = reg.counter("foo");
-    auto t = reg.timer("some_operation");
-    auto g = reg.gauge("sessions");
-    startReg.report();
-
-    for (int i = 0; i < 10; ++i) {
-        auto wholetest{w.raii()};
-        auto f = t.start();
-
-        c.incr();
-        c.incr(100);
-        c.incr(-1);
-        c.incr(-1);
-
-        f.report();
-
-        {
-            auto x{t.raii()};  // automatically closed
-            x.report();
-            g.set(30);
-        }
-        { auto x{t.raii()}; }
-        g.set(100);
-    }
-
-    auto reporter = genny::metrics::Reporter(reg);
-    REQUIRE(reporter.getGaugeCount() == 1);
-    REQUIRE(reporter.getTimerCount() == 3);
-    REQUIRE(reporter.getCounterCount() == 1);
-
-    REQUIRE(reporter.getGaugePointsCount() == 20);
-    REQUIRE(reporter.getTimerPointsCount() == 51);
-    REQUIRE(reporter.getCounterPointsCount() == 40);
-
-    reporter.report(std::cout, "csv");
+    std::ostringstream out;
+    reporter.report<ReporterClockSourceStub>(out, "csv");
+    REQUIRE(out.str() == expected);
 }
 
 }  // namespace

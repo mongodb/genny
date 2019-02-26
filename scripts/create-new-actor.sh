@@ -155,7 +155,7 @@ create_impl_text() {
     echo "                    BOOST_LOG_TRIVIAL(info) << \" ${actor_name} Inserting \""
     echo "                                            << bsoncxx::to_json(document.view());"
     echo "                    config->collection.insert_one(document.view());"
-    echo "                    ctx.addOps(1);"
+    echo "                    ctx.addDocuments(1);"
     echo "                    ctx.addBytes(document.view().length());"
     echo "                },"
     echo "                config->options);"
