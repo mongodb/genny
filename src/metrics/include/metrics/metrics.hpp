@@ -81,7 +81,7 @@ public:
 
     explicit RegistryT() = default;
 
-    OperationT<ClockSource> operation(ActorId actorId, std::string actorName, std::string opName) {
+    OperationT<ClockSource> operation(std::string actorName, std::string opName, ActorId actorId) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto& events = opsByThread[actorId];

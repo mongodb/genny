@@ -162,11 +162,11 @@ TEST_CASE("metrics output format") {
     // Thread 3:         | Greetings |
     //                   +-----------+
 
-    auto insert1 = metrics.operation(1u, "InsertRemove", "Insert");
-    auto insert2 = metrics.operation(2u, "InsertRemove", "Insert");
-    auto remove1 = metrics.operation(1u, "InsertRemove", "Remove");
-    auto remove2 = metrics.operation(2u, "InsertRemove", "Remove");
-    auto greetings3 = metrics.operation(3u, "HelloWorld", "Greetings");
+    auto insert1 = metrics.operation("InsertRemove", "Insert", 1u);
+    auto insert2 = metrics.operation("InsertRemove", "Insert", 2u);
+    auto remove1 = metrics.operation("InsertRemove", "Remove", 1u);
+    auto remove2 = metrics.operation("InsertRemove", "Remove", 2u);
+    auto greetings3 = metrics.operation("HelloWorld", "Greetings", 3u);
 
     RegistryClockSourceStub::advance(5ns);
     auto insert1Ctx = insert1.start();
@@ -250,7 +250,7 @@ TEST_CASE("Genny.Setup metric should only be reported as a timer") {
     auto reporter = genny::metrics::v1::ReporterT{metrics};
 
     // Mimic what the DefaultDriver would be doing.
-    auto setup = metrics.operation(0u, "Genny", "Setup");
+    auto setup = metrics.operation("Genny", "Setup", 0u);
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = setup.start();
@@ -282,8 +282,8 @@ TEST_CASE("Genny.ActiveActors metric should be reported as a counter") {
     auto reporter = genny::metrics::v1::ReporterT{metrics};
 
     // Mimic what the DefaultDriver would be doing.
-    auto startedActors = metrics.operation(0u, "Genny", "ActorStarted");
-    auto finishedActors = metrics.operation(0u, "Genny", "ActorFinished");
+    auto startedActors = metrics.operation("Genny", "ActorStarted", 0u);
+    auto finishedActors = metrics.operation("Genny", "ActorFinished", 0u);
 
     auto startActor = [&]() {
         auto ctx = startedActors.start();

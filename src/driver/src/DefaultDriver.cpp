@@ -86,7 +86,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
 
     genny::metrics::Registry metrics;
 
-    auto actorSetup = metrics.operation(0u, "Genny", "Setup");
+    auto actorSetup = metrics.operation("Genny", "Setup", 0u);
     auto setupCtx = actorSetup.start();
 
     auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
@@ -105,8 +105,8 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
 
     setupCtx.success();
 
-    auto startedActors = metrics.operation(0u, "Genny", "ActorStarted");
-    auto finishedActors = metrics.operation(0u, "Genny", "ActorFinished");
+    auto startedActors = metrics.operation("Genny", "ActorStarted", 0u);
+    auto finishedActors = metrics.operation("Genny", "ActorFinished", 0u);
 
     std::atomic<driver::DefaultDriver::OutcomeCode> outcomeCode =
         driver::DefaultDriver::OutcomeCode::kSuccess;
