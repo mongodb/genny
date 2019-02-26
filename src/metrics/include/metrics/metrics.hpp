@@ -71,10 +71,11 @@ public:
 template <typename ClockSource>
 class RegistryT final {
 private:
-    using EventSeries = typename v1::OperationImpl<ClockSource>::EventSeries;
-    using OperationsMap = std::unordered_map<
-        std::string,
-        std::unordered_map<std::string, std::unordered_map<ActorId, EventSeries>>>;
+    using OperationsByThread = std::unordered_map<ActorId, OperationImpl<ClockSource>>;
+    using OperationsByType = std::unordered_map<std::string, OperationsByThread>;
+    // OperationsMap is a map of
+    // actor name -> operation name -> actor id -> OperationImpl (time series).
+    using OperationsMap = std::unordered_map<std::string, OperationsByType>;
 
 public:
     using clock = ClockSource;
@@ -84,9 +85,8 @@ public:
     OperationT<ClockSource> operation(std::string actorName, std::string opName, ActorId actorId) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        auto& events = opsByThread[actorId];
-        auto op = v1::OperationImpl<ClockSource>{std::move(actorName), std::move(opName), events};
-        return OperationT{std::move(op)};
+        auto opIt = opsByThread.try_emplace(actorId, std::move(actorName), std::move(opName)).first;
+        return OperationT{opIt->second};
     }
 
     const OperationsMap& getOps(Permission) const {

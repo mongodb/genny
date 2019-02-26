@@ -141,8 +141,8 @@ private:
             }
 
             for (const auto& [opName, opsByThread] : opsByType) {
-                for (const auto& [actorId, timeSeries] : opsByThread) {
-                    for (const auto& event : timeSeries) {
+                for (const auto& [actorId, op] : opsByThread) {
+                    for (const auto& event : op.getEvents()) {
                         out << nanosecondsCount(event.first.time_since_epoch());
                         out << ",";
                         writeMetricName(out, actorId, actorName, opName) << suffix;
@@ -170,7 +170,7 @@ private:
             return;
         }
 
-        for (const auto& event : setupIt->second.at(0u)) {
+        for (const auto& event : setupIt->second.at(0u).getEvents()) {
             out << nanosecondsCount(event.first.time_since_epoch());
             out << ",";
             out << "Genny.Setup";
@@ -199,8 +199,8 @@ private:
         const auto& startedActors = startedActorsIt->second.at(0u);
         const auto& finishedActors = gennyOpsIt->second.find("ActorFinished")->second.at(0u);
 
-        auto startedEventIt = startedActors.begin();
-        auto finishedEventIt = finishedActors.begin();
+        auto startedEventIt = startedActors.getEvents().begin();
+        auto finishedEventIt = finishedActors.getEvents().begin();
 
         auto numActors = 0;
         auto writeMetric = [&](const typename MetricsClockSource::time_point& when) {
@@ -215,8 +215,8 @@ private:
         // The termination condition of the while-loop is based only on `finishedActors` because
         // there should always be as many ActorFinished events as there are ActorStarted events and
         // an actor can only be finished after it has been started.
-        while (finishedEventIt != finishedActors.end()) {
-            if (startedEventIt == startedActors.end() ||
+        while (finishedEventIt != finishedActors.getEvents().end()) {
+            if (startedEventIt == startedActors.getEvents().end() ||
                 startedEventIt->first > finishedEventIt->first) {
                 numActors -= finishedEventIt->second.ops;
                 writeMetric(finishedEventIt->first);
