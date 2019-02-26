@@ -260,8 +260,7 @@ TEST_CASE("metrics output format") {
             "42,InsertRemove,2,Remove,10,0,1,7,0,30\n"
             "45,InsertRemove,1,Remove,17,0,1,6,0,40\n"
             "30,InsertRemove,2,Insert,20,0,1,8,0,200\n"
-            "28,InsertRemove,1,Insert,23,0,1,9,0,300\n"
-            "\n";
+            "28,InsertRemove,1,Insert,23,0,1,9,0,300\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
@@ -315,8 +314,7 @@ TEST_CASE("Genny.Setup metric") {
             "\n"
             "Operations\n"
             "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
-            "15,Genny,0,Setup,10,0,1,0,0,0\n"
-            "\n";
+            "15,Genny,0,Setup,10,0,1,0,0,0\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
@@ -394,8 +392,7 @@ TEST_CASE("Genny.ActiveActors metric") {
             "actor,operation,workers\n"
             "\n"
             "Operations\n"
-            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
-            "\n";
+            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, "cedar-csv");

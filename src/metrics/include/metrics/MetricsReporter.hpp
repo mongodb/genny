@@ -309,7 +309,6 @@ private:
                 }
             }
         }
-        out << std::endl;
     }
 
     /**
