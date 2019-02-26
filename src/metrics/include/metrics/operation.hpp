@@ -152,7 +152,7 @@ public:
 
     ~OperationContextT() {
         if (!_isClosed) {
-            BOOST_LOG_TRIVIAL(warning)
+            BOOST_LOG_TRIVIAL(error)
                 << "Metrics not reported because operation '" << _op->getOpName()
                 << "' being run by actor '" << _op->getActorName()
                 << "' did not close with success() or failure().";
