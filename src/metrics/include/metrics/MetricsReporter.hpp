@@ -268,9 +268,7 @@ private:
                     continue;
                 }
 
-                for (const auto& [actorId, timeSeries] : opsByThread) {
-                    opThreadCounts[std::make_pair(actorName, opName)] += 1;
-                }
+                opThreadCounts[std::make_pair(actorName, opName)] += opsByThread.size();
             }
         }
         for (const auto& [key, count] : opThreadCounts) {
@@ -294,8 +292,8 @@ private:
                     continue;
                 }
 
-                for (const auto& [actorId, timeSeries] : opsByThread) {
-                    for (const auto& event : timeSeries) {
+                for (const auto& [actorId, op] : opsByThread) {
+                    for (const auto& event : op.getEvents()) {
                         out << nanosecondsCount(event.first.time_since_epoch()) << ",";
                         out << actorName << ",";
                         out << actorId << ",";

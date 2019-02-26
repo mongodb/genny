@@ -141,7 +141,6 @@ class GennyOutputParserTest(unittest.TestCase):
 
     def test_fixture3(self):
         actual = test_lib.parse_fixture('csvoutput3').timers()
-        print(actual)
         self.assertEqual(
             actual, {
                 'InsertRemoveTest.remove.op-time': {
