@@ -214,8 +214,8 @@ data points that were being collected for the operation.
 
 One of `success()`, `failure()`, or `discard()` must be called before
 the `metrics::OperationContext` instance goes out of scope. A warning
-message will be logged if they aren't as not explicitly handling any
-expected exceptions represents either a programmer error or unexpected
-server behavior.
+message will be logged if they aren't because not explicitly handling
+any expected exceptions represents either a programmer error or
+unexpected server behavior.
 
 🔚 End 🔚
