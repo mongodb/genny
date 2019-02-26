@@ -71,18 +71,17 @@ void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
 TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
-    auto events = v1::OperationImpl<RegistryClockSourceStub>::EventSeries{};
-    auto op = v1::OperationImpl<RegistryClockSourceStub>{"Actor", "Op", events};
+    auto op = v1::OperationImpl<RegistryClockSourceStub>{"Actor", "Op"};
 
     RegistryClockSourceStub::advance(5ns);
-    auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(op);
+    auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(&op);
 
     ctx->addDocuments(200);
     ctx->addBytes(3000);
     ctx->addErrors(4);
     RegistryClockSourceStub::advance(67ns);
 
-    REQUIRE(events.size() == 0);
+    REQUIRE(op.getEvents().size() == 0);
 
     auto expected = v1::OperationEvent<RegistryClockSourceStub>{};
     expected.iters = 1;
@@ -93,30 +92,30 @@ TEST_CASE("metrics::OperationContext interface") {
     SECTION("success() reports the operation") {
         expected.duration = 67ns;
         ctx->success();
-        REQUIRE(events.size() == 1);
+        REQUIRE(op.getEvents().size() == 1);
 
         ctx.reset();
 
         expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
-        assertDurationsEqual(events[0].first.time_since_epoch(), 72ns);
-        REQUIRE(events[0].second == expected);
+        assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 72ns);
+        REQUIRE(op.getEvents()[0].second == expected);
     }
 
     SECTION("failure() reports the operation") {
         expected.duration = 67ns;
         ctx->failure();
-        REQUIRE(events.size() == 1);
+        REQUIRE(op.getEvents().size() == 1);
 
         ctx.reset();
 
         expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kFailure;
-        assertDurationsEqual(events[0].first.time_since_epoch(), 72ns);
-        REQUIRE(events[0].second == expected);
+        assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 72ns);
+        REQUIRE(op.getEvents()[0].second == expected);
     }
 
     SECTION("discard() doesn't report the operation") {
         ctx.reset();
-        REQUIRE(events.size() == 0);
+        REQUIRE(op.getEvents().size() == 0);
     }
 
     SECTION("add*() methods can be called multiple times") {
@@ -127,7 +126,7 @@ TEST_CASE("metrics::OperationContext interface") {
         ctx->addErrors(4);
         RegistryClockSourceStub::advance(67ns);
 
-        REQUIRE(events.size() == 0);
+        REQUIRE(op.getEvents().size() == 0);
 
         expected.iters = 17;
         expected.ops += 200;
@@ -136,13 +135,13 @@ TEST_CASE("metrics::OperationContext interface") {
 
         expected.duration = 134ns;
         ctx->success();
-        REQUIRE(events.size() == 1);
+        REQUIRE(op.getEvents().size() == 1);
 
         ctx.reset();
 
         expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
-        assertDurationsEqual(events[0].first.time_since_epoch(), 139ns);
-        REQUIRE(events[0].second == expected);
+        assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 139ns);
+        REQUIRE(op.getEvents()[0].second == expected);
     }
 }
 
@@ -161,11 +160,11 @@ TEST_CASE("metrics output format") {
     // Thread 3:         | Greetings |
     //                   +-----------+
 
-    auto insert1 = metrics.operation(1u, "InsertRemove", "Insert");
-    auto insert2 = metrics.operation(2u, "InsertRemove", "Insert");
-    auto remove1 = metrics.operation(1u, "InsertRemove", "Remove");
-    auto remove2 = metrics.operation(2u, "InsertRemove", "Remove");
-    auto greetings3 = metrics.operation(3u, "HelloWorld", "Greetings");
+    auto insert1 = metrics.operation("InsertRemove", "Insert", 1u);
+    auto insert2 = metrics.operation("InsertRemove", "Insert", 2u);
+    auto remove1 = metrics.operation("InsertRemove", "Remove", 1u);
+    auto remove2 = metrics.operation("InsertRemove", "Remove", 2u);
+    auto greetings3 = metrics.operation("HelloWorld", "Greetings", 3u);
 
     RegistryClockSourceStub::advance(5ns);
     auto insert1Ctx = insert1.start();
@@ -276,7 +275,7 @@ TEST_CASE("Genny.Setup metric") {
     auto reporter = genny::metrics::v1::ReporterT{metrics};
 
     // Mimic what the DefaultDriver would be doing.
-    auto setup = metrics.operation(0u, "Genny", "Setup");
+    auto setup = metrics.operation("Genny", "Setup", 0u);
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = setup.start();
@@ -331,8 +330,8 @@ TEST_CASE("Genny.ActiveActors metric") {
     auto reporter = genny::metrics::v1::ReporterT{metrics};
 
     // Mimic what the DefaultDriver would be doing.
-    auto startedActors = metrics.operation(0u, "Genny", "ActorStarted");
-    auto finishedActors = metrics.operation(0u, "Genny", "ActorFinished");
+    auto startedActors = metrics.operation("Genny", "ActorStarted", 0u);
+    auto finishedActors = metrics.operation("Genny", "ActorFinished", 0u);
 
     auto startActor = [&]() {
         auto ctx = startedActors.start();

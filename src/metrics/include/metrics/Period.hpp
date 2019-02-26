@@ -36,7 +36,7 @@ namespace v1 {
  * MetricsClockSource other than during testing.
  */
 template <typename ClockSource>
-class Period {
+class Period final {
 public:
     using duration = typename ClockSource::duration;
 

@@ -39,7 +39,7 @@ namespace v1 {
  * @tparam T the type of value to record at a particular time-point.
  */
 template <class ClockSource, class T>
-class TimeSeries : private boost::noncopyable {
+class TimeSeries final : private boost::noncopyable {
 public:
     using time_point = typename ClockSource::time_point;
     using ElementType = std::pair<time_point, T>;

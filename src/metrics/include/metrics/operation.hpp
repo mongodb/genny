@@ -47,7 +47,7 @@ using count_type = long long;
  * MetricsClockSource other than during testing.
  */
 template <typename ClockSource>
-struct OperationEvent {
+struct OperationEvent final {
     enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
     bool operator==(const OperationEvent<ClockSource>& other) const {
@@ -94,15 +94,13 @@ struct OperationEvent {
 
 
 template <typename ClockSource>
-class OperationImpl {
+class OperationImpl final : private boost::noncopyable {
 public:
     using time_point = typename ClockSource::time_point;
     using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
 
-    OperationImpl(std::string actorName, std::string opName, EventSeries& events)
-        : _actorName(std::move(actorName)),
-          _opName(std::move(opName)),
-          _events(std::addressof(events)) {}
+    OperationImpl(std::string actorName, std::string opName)
+        : _actorName(std::move(actorName)), _opName(std::move(opName)) {}
 
     /**
      * @return the name of the actor running the operation.
@@ -118,14 +116,21 @@ public:
         return _opName;
     }
 
+    /**
+     * @return the time series for the operation being run.
+     */
+    const EventSeries& getEvents() const {
+        return _events;
+    }
+
     void reportAt(time_point finished, OperationEvent<ClockSource>&& event) {
-        _events->addAt(finished, event);
+        _events.addAt(finished, event);
     }
 
 private:
     const std::string _actorName;
     const std::string _opName;
-    EventSeries* const _events;
+    EventSeries _events;
 };
 
 /**
@@ -134,15 +139,15 @@ private:
  * the instance.
  */
 template <typename ClockSource>
-class OperationContextT : private boost::noncopyable {
+class OperationContextT final : private boost::noncopyable {
 private:
     using OutcomeType = typename OperationEvent<ClockSource>::OutcomeType;
 
 public:
     using time_point = typename ClockSource::time_point;
 
-    explicit OperationContextT(v1::OperationImpl<ClockSource>& op)
-        : _op{std::addressof(op)}, _started{ClockSource::now()} {}
+    explicit OperationContextT(v1::OperationImpl<ClockSource>* op)
+        : _op{op}, _started{ClockSource::now()} {}
 
     OperationContextT(OperationContextT<ClockSource>&& other) noexcept
         : _op{std::move(other._op)},
@@ -152,7 +157,7 @@ public:
 
     ~OperationContextT() {
         if (!_isClosed) {
-            BOOST_LOG_TRIVIAL(warning)
+            BOOST_LOG_TRIVIAL(error)
                 << "Metrics not reported because operation '" << _op->getOpName()
                 << "' being run by actor '" << _op->getActorName()
                 << "' did not close with success() or failure().";
@@ -242,16 +247,16 @@ private:
 
 
 template <typename ClockSource>
-class OperationT {
+class OperationT final {
 public:
-    explicit OperationT(v1::OperationImpl<ClockSource> op) : _op{std::move(op)} {}
+    explicit OperationT(v1::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
 
     OperationContextT<ClockSource> start() {
-        return OperationContextT<ClockSource>(this->_op);
+        return OperationContextT<ClockSource>{this->_op};
     }
 
 private:
-    v1::OperationImpl<ClockSource> _op;
+    v1::OperationImpl<ClockSource>* _op;
 };
 
 }  // namespace v1

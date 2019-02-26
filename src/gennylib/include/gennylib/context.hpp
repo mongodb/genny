@@ -359,9 +359,9 @@ public:
      * @param operationName the name of the operation being run.
      * @param id the id of this Actor, if any.
      */
-    auto operation(const std::string& operationName, ActorId id = 0u) const {
+    auto operation(const std::string& operationName, ActorId id) const {
         return this->_workload->_registry->operation(
-            id, this->get<std::string>("Name"), operationName);
+            this->get<std::string>("Name"), operationName, id);
     }
 
     // </Forwarding to delegates>
