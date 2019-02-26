@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <optional>
@@ -243,13 +242,26 @@ TEST_CASE("metrics output format") {
     }
 
     SECTION("cedar-csv reporting") {
-        auto infile =
-            std::ifstream{"src/python/tests/fixtures/cedar/shared_with_cxx_metrics_test.csv"};
-
-        REQUIRE(infile.is_open());
-
         auto expected =
-            std::string{std::istreambuf_iterator<char>{infile}, std::istreambuf_iterator<char>{}};
+            "Clocks\n"
+            "clock,nanoseconds\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,45\n"
+            "\n"
+            "OperationThreadCounts\n"
+            "actor,operation,workers\n"
+            "HelloWorld,Greetings,1\n"
+            "InsertRemove,Insert,2\n"
+            "InsertRemove,Remove,2\n"
+            "\n"
+            "Operations\n"
+            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
+            "26,HelloWorld,3,Greetings,13,0,2,0,0,0\n"
+            "42,InsertRemove,2,Remove,10,0,1,7,0,30\n"
+            "45,InsertRemove,1,Remove,17,0,1,6,0,40\n"
+            "30,InsertRemove,2,Insert,20,0,1,8,0,200\n"
+            "28,InsertRemove,1,Insert,23,0,1,9,0,300\n"
+            "\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
@@ -303,7 +315,8 @@ TEST_CASE("Genny.Setup metric") {
             "\n"
             "Operations\n"
             "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
-            "15,Genny,0,Setup,10,0,1,0,0,0\n";
+            "15,Genny,0,Setup,10,0,1,0,0,0\n"
+            "\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
@@ -381,7 +394,8 @@ TEST_CASE("Genny.ActiveActors metric") {
             "actor,operation,workers\n"
             "\n"
             "Operations\n"
-            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n";
+            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
+            "\n";
 
         std::ostringstream out;
         reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
