@@ -36,17 +36,17 @@ class CedarTest(unittest.TestCase):
         large_precise_float = 10 ** 15
         num_cols = len(genny.csv2.IntermediateCSVColumns.default_columns())
         mock_data_reader = [
-            (['first' for _ in range(num_cols)], 'a1', 'o1'),
-            ([1 for _ in range(num_cols)], 'a1', 'o1'),
+            (['first' for _ in range(num_cols)], 'a1'),
+            ([1 for _ in range(num_cols)], 'a1'),
             # Store a large number to make sure precision is not lost. Python csv converts
             # numbers to floats by default, which has 2^53 or 10^15 precision. Unix time in
             # milliseconds is currently 10^13.
-            ([large_precise_float for _ in range(num_cols)], 'a2', 'o2')
+            ([large_precise_float for _ in range(num_cols)], 'a2')
 
         ]
         with tempfile.TemporaryDirectory() as output_dir:
-            output_files = cedar.split_into_actor_operation_csv_files(mock_data_reader, output_dir)
-            self.assertEqual(output_files, ['a1-o1.csv', 'a2-o2.csv'])
+            output_files = cedar.split_into_actor_csv_files(mock_data_reader, output_dir)
+            self.assertEqual(output_files, ['a1.csv', 'a2.csv'])
 
             a1o1 = pjoin(output_dir, output_files[0])
             self.assertTrue(os.path.isfile(a1o1))
@@ -96,7 +96,7 @@ class CedarIntegrationTest(unittest.TestCase):
             ])),
             ('timers', OrderedDict([
                 ('duration', 1320),
-                ('total', 1518)
+                ('total', 560)
             ])),
             ('gauges', OrderedDict([('workers', 5)]))
         ])
@@ -112,14 +112,14 @@ class CedarIntegrationTest(unittest.TestCase):
             ])),
             ('timers', OrderedDict([
                 ('duration', 1392),
-                ('total', -385)
+                ('total', 0)
             ])),
             ('gauges', OrderedDict([('workers', 5)]))
         ])
 
         with tempfile.TemporaryDirectory() as output_dir:
             args = [
-                _get_fixture('csv2', 'two_op.csv'),
+                _get_fixture('cedar', 'two_op.csv'),
                 output_dir
             ]
 

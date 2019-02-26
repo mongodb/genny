@@ -61,12 +61,12 @@ def csvsort(input_filename,
 
         columns = parse_columns(columns, header)
 
-        filenames = csvsplit(reader, max_size)
+        filenames = csvsplit(reader, max_size, quoting)
         if show_progress:
             logging.info('Merging %d splits' % len(filenames))
         for filename in filenames:
-            memorysort(filename, columns)
-        sorted_filename = mergesort(filenames, columns)
+            memorysort(filename, columns, quoting)
+        sorted_filename = mergesort(filenames, columns, quoting)
 
     # XXX make more efficient by passing quoting, delimiter, and moving result
     # generate the final output file
@@ -105,7 +105,7 @@ def parse_columns(columns, header):
     return columns
 
 
-def csvsplit(reader, max_size):
+def csvsplit(reader, max_size, quoting):
     """Split into smaller CSV files of maximum size and return the filenames.
     """
     max_size = max_size * 1024 * 1024  # convert to bytes
@@ -117,7 +117,7 @@ def csvsplit(reader, max_size):
     for row in reader:
         if writer is None:
             ntf = tempfile.NamedTemporaryFile(delete=False, mode='w')
-            writer = csv.writer(ntf)
+            writer = csv.writer(ntf, quoting=quoting)
             split_filenames.append(ntf.name)
 
         writer.writerow(row)
@@ -128,14 +128,14 @@ def csvsplit(reader, max_size):
     return split_filenames
 
 
-def memorysort(filename, columns):
+def memorysort(filename, columns, quoting):
     """Sort this CSV file in memory on the given columns
     """
     with open(filename) as input_fp:
-        rows = [row for row in csv.reader(input_fp)]
+        rows = [row for row in csv.reader(input_fp, quoting=quoting)]
     rows.sort(key=lambda row: get_key(row, columns))
     with open(filename, 'w') as output_fp:
-        writer = csv.writer(output_fp)
+        writer = csv.writer(output_fp, quoting=quoting)
         for row in rows:
             writer.writerow(row)
 
@@ -146,15 +146,15 @@ def get_key(row, columns):
     return [row[column] for column in columns]
 
 
-def decorated_csv(filename, columns):
+def decorated_csv(filename, columns, quoting):
     """Iterator to sort CSV rows
     """
     with open(filename) as fp:
-        for row in csv.reader(fp):
+        for row in csv.reader(fp, quoting=quoting):
             yield get_key(row, columns), row
 
 
-def mergesort(sorted_filenames, columns, nway=2):
+def mergesort(sorted_filenames, columns, quoting, nway=2):
     """Merge these 2 sorted csv files into a single output file
     """
     merge_n = 0
@@ -163,9 +163,9 @@ def mergesort(sorted_filenames, columns, nway=2):
             sorted_filenames[:nway], sorted_filenames[nway:]
 
         with tempfile.NamedTemporaryFile(delete=False, mode='w') as output_fp:
-            writer = csv.writer(output_fp)
+            writer = csv.writer(output_fp, quoting=quoting)
             merge_n += 1
-            for _, row in heapq.merge(*[decorated_csv(filename, columns)
+            for _, row in heapq.merge(*[decorated_csv(filename, columns, quoting)
                                         for filename in merge_filenames]):
                 writer.writerow(row)
 

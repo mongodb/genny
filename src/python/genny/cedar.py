@@ -74,7 +74,14 @@ class IntermediateCSVReader:
 
     def __init__(self, reader):
         self.raw_reader = reader
-        self.cumulatives = [0 for _ in range(len(IntermediateCSVColumns.default_columns()))]
+        # dict(operation -> dict(metric_column -> cumulative_value))
+        self.cumulatives_for_op = defaultdict(lambda: defaultdict(int))
+
+        # dict(operation -> total_duration)
+        self.total_for_op = defaultdict(int)
+
+        # dict(thread -> prev_op_unix_time))
+        self.prev_ts_for_thread = {}
 
     def __iter__(self):
         return self
@@ -82,64 +89,102 @@ class IntermediateCSVReader:
     def __next__(self):
         return self._parse_into_cedar_format(next(self.raw_reader))
 
+    def _compute_cumulatives(self, line):
+        op = line[IntermediateCSVColumns.OPERATION]
+
+        n = IntermediateCSVColumns.N
+        ops = IntermediateCSVColumns.OPS
+        size = IntermediateCSVColumns.SIZE
+        err = IntermediateCSVColumns.ERRORS
+        dur = IntermediateCSVColumns.DURATION
+        for col in [n, ops, size, err, dur]:
+            self.cumulatives_for_op[op][col] += line[col]
+
+        ts_col = IntermediateCSVColumns.UNIX_TIME
+        thread = line[IntermediateCSVColumns.THREAD]
+
+        # total_duration is duration for the first operation on each thread
+        # because we don't track when each thread starts.
+        if thread in self.prev_ts_for_thread:
+            cur_total = line[ts_col] - self.prev_ts_for_thread[thread]
+        else:
+            cur_total = line[dur]
+
+        self.total_for_op[op] += cur_total
+        self.prev_ts_for_thread[thread] = line[ts_col]
+
     def _parse_into_cedar_format(self, line):
         # Compute all cumulative values for simplicity; Not all values are used.
-        self.cumulatives = [sum(v) for v in zip(line, self.cumulatives)]
+        self._compute_cumulatives(line)
 
         # milliseconds to seconds to datetime.datetime()
         ts = datetime.utcfromtimestamp(line[IntermediateCSVColumns.UNIX_TIME] / 1000)
+        op = line[IntermediateCSVColumns.OPERATION]
 
         res = OrderedDict([
             ('ts', ts),
             ('id', int(line[IntermediateCSVColumns.THREAD])),
             ('counters', OrderedDict([
-                ('n', int(self.cumulatives[IntermediateCSVColumns.N])),
-                ('ops', int(self.cumulatives[IntermediateCSVColumns.OPS])),
-                ('size', int(self.cumulatives[IntermediateCSVColumns.SIZE])),
-                ('errors', int(self.cumulatives[IntermediateCSVColumns.ERRORS]))
+                ('n', int(self.cumulatives_for_op[op][IntermediateCSVColumns.N])),
+                ('ops', int(self.cumulatives_for_op[op][IntermediateCSVColumns.OPS])),
+                ('size', int(self.cumulatives_for_op[op][IntermediateCSVColumns.SIZE])),
+                ('errors', int(self.cumulatives_for_op[op][IntermediateCSVColumns.ERRORS]))
             ])),
             ('timers', OrderedDict([
-                ('duration', int(self.cumulatives[IntermediateCSVColumns.DURATION])),
-                ('total', int(self.cumulatives[IntermediateCSVColumns.WAIT_AND_DURATION]))
+                ('duration', int(self.cumulatives_for_op[op][IntermediateCSVColumns.DURATION])),
+                ('total', int(self.total_for_op[op]))
             ])),
             ('gauges', OrderedDict([
                 ('workers', int(line[IntermediateCSVColumns.WORKERS]))
             ]))
         ])
 
-        return res
+        return res, op
 
 
-def compute_cumulative_and_write_to_bson(file_name, out_dir):
-    # Remove ".csv" and add ".bson"
-    out_file_name = file_name[:-4] + '.bson'
-    with open(pjoin(out_dir, out_file_name), 'wb') as out_f, open(
-            pjoin(out_dir, file_name)) as in_f:
+def split_into_actor_operation_and_transform_to_cedar_format(file_name, out_dir):
+    """
+    Split up the IntermediateCSV format input into one or more BSON files in Cedar
+    format; one file for each (actor, operation) pair.
+    """
+
+    # remove the ".csv" suffix to get the actor name.
+    actor_name = file_name[:-4]
+
+    out_files = {}
+    with open(pjoin(out_dir, file_name)) as in_f:
         reader = csv.reader(in_f, quoting=csv.QUOTE_NONNUMERIC)
         next(reader)  # Ignore the header row.
-        for ordered_dict in IntermediateCSVReader(reader):
-            out_f.write(BSON.encode(ordered_dict))
+        try:
+            for ordered_dict, op in IntermediateCSVReader(reader):
+                out_file_name = pjoin(out_dir, "{}-{}.bson".format(actor_name, op))
+                if out_file_name not in out_files:
+                    out_files[out_file_name] = open(out_file_name, 'wb')
+                out_files[out_file_name].write(BSON.encode(ordered_dict))
+        finally:
+            for fh in out_files.values():
+                fh.close()
 
 
-def split_into_actor_operation_csv_files(data_reader, out_dir):
+def split_into_actor_csv_files(data_reader, out_dir):
     """
-    Split up the monolithic genny metrics csv2 file into smaller [actor]-[operation].csv files
+    Split up the monolithic genny metrics csv2 file into smaller [actor].csv files
     """
     cur_out_csv = None
     cur_out_fh = None
-    cur_actor_op_pair = (None, None)
+    cur_actor = (None, None)
     output_files = []
 
-    for line, actor, op in data_reader:
-        if (actor, op) != cur_actor_op_pair:
-            cur_actor_op_pair = (actor, op)
+    for line, actor in data_reader:
+        if actor != cur_actor:
+            cur_actor = actor
 
             # Close out old file.
             if cur_out_fh:
                 cur_out_fh.close()
 
             # Open new csv file.
-            file_name = actor + '-' + op + '.csv'
+            file_name = actor + '.csv'
             output_files.append(file_name)
             cur_out_fh = open(pjoin(out_dir, file_name), 'w', newline='')
 
@@ -183,11 +228,11 @@ def main__cedar(argv=sys.argv[1:]):
 
     with my_csv2.data_reader() as data_reader:
         # Separate into actor-operation
-        files = split_into_actor_operation_csv_files(data_reader, out_dir)
+        files = split_into_actor_csv_files(data_reader, out_dir)
 
         for f in files:
             # csvsort by timestamp, thread
             sort_csv_file(f, out_dir)
 
             # compute cumulative and stream output to bson file
-            compute_cumulative_and_write_to_bson(f, out_dir)
+            split_into_actor_operation_and_transform_to_cedar_format(f, out_dir)

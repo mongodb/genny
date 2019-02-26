@@ -13,7 +13,6 @@
 # limitations under the License.
 import contextlib
 import csv
-from collections import defaultdict
 
 
 class _Dialect(csv.unix_dialect):
@@ -59,7 +58,7 @@ class CSVColumns(object):
         return val
 
 
-class _OpListReader:
+class _DataReader:
     """
     Thin wrapper around csv.DictReader() that eagerly reads the list of operations
     from csv2 and converts any digits to native Python integers and massages
@@ -74,9 +73,6 @@ class _OpListReader:
         """
         self.raw_reader = csv_reader_at_op
         self.tc_map = thread_count_map
-        # Map of (actor, thread) pairs to the timestamp that the last operation
-        # on that thread finished.
-        self.prev_op_ts_map = defaultdict(int)
         self.unix_time_offset = ts_offset
 
     def __iter__(self):
@@ -108,20 +104,11 @@ class _OpListReader:
         # Convert timestamp from ns to ms and add offset.
         unix_time = (ts + self.unix_time_offset) / (1000 * 1000)
 
-        # The wait_and_duration of the first thread is just its duration since we don't
-        # record when each thread starts.
-        if (actor, thread) not in self.prev_op_ts_map:
-            self.prev_op_ts_map[(actor, thread)] = ts
-            wait_and_duration = duration
-        else:
-            wait_and_duration = ts - self.prev_op_ts_map[(actor, thread)]
-            self.prev_op_ts_map[(actor, thread)] = ts
-
         # Transform output into IntermediateCSV format.
         out = [None for _ in range(len(IntermediateCSVColumns.default_columns()))]
         out[IntermediateCSVColumns.UNIX_TIME] = unix_time
         out[IntermediateCSVColumns.THREAD] = thread
-        out[IntermediateCSVColumns.WAIT_AND_DURATION] = wait_and_duration
+        out[IntermediateCSVColumns.OPERATION] = op
         out[IntermediateCSVColumns.DURATION] = duration
         out[IntermediateCSVColumns.OUTCOME] = line[_OpColumns.OUTCOME]
         out[IntermediateCSVColumns.N] = line[_OpColumns.N]
@@ -130,7 +117,7 @@ class _OpListReader:
         out[IntermediateCSVColumns.SIZE] = line[_OpColumns.SIZE]
         out[IntermediateCSVColumns.WORKERS] = self.tc_map[(actor, op)]
 
-        return out, actor, op
+        return out, actor
 
 
 class _OpColumns(CSVColumns):
@@ -242,8 +229,8 @@ class CSV2:
 
     def _parse_operations(self, reader):
         _OpColumns.add_columns([h.strip() for h in next(reader)])
-        self._data_reader = _OpListReader(reader, self._operation_thread_count_map,
-                                          self._unix_epoch_offset_ns)
+        self._data_reader = _DataReader(reader, self._operation_thread_count_map,
+                                        self._unix_epoch_offset_ns)
 
         return True
 
@@ -254,7 +241,7 @@ class IntermediateCSVColumns(CSVColumns):
     # Declare an explicit default ordering here since this script is writing the intermediate CSV.
     UNIX_TIME = 0
     THREAD = 1
-    WAIT_AND_DURATION = 2
+    OPERATION = 2
     DURATION = 3
     OUTCOME = 4
     N = 5
@@ -269,5 +256,5 @@ class IntermediateCSVColumns(CSVColumns):
         Ordered list of default columns to write to the CSV, must match the column names in
         the class attributes.
         """
-        return ['unix_time', 'thread', 'wait_and_duration', 'duration', 'outcome', 'n', 'ops',
-                'errors', 'size', 'workers']
+        return ['unix_time', 'thread', 'operation', 'duration', 'outcome', 'n', 'ops', 'errors',
+                'size', 'workers']
