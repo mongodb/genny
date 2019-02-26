@@ -20,7 +20,6 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
-#include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
 namespace genny::metrics {
@@ -241,9 +240,35 @@ TEST_CASE("metrics output format") {
         reporter.report<ReporterClockSourceStub>(out, "csv");
         REQUIRE(out.str() == expected);
     }
+
+    SECTION("cedar-csv reporting") {
+        auto expected =
+            "Clocks\n"
+            "clock,nanoseconds\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,45\n"
+            "\n"
+            "OperationThreadCounts\n"
+            "actor,operation,workers\n"
+            "HelloWorld,Greetings,1\n"
+            "InsertRemove,Insert,2\n"
+            "InsertRemove,Remove,2\n"
+            "\n"
+            "Operations\n"
+            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
+            "26,HelloWorld,3,Greetings,13,0,2,0,0,0\n"
+            "42,InsertRemove,2,Remove,10,0,1,7,0,30\n"
+            "45,InsertRemove,1,Remove,17,0,1,6,0,40\n"
+            "30,InsertRemove,2,Insert,20,0,1,8,0,200\n"
+            "28,InsertRemove,1,Insert,23,0,1,9,0,300\n";
+
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        REQUIRE(out.str() == expected);
+    }
 }
 
-TEST_CASE("Genny.Setup metric should only be reported as a timer") {
+TEST_CASE("Genny.Setup metric") {
     RegistryClockSourceStub::reset();
     auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
     auto reporter = genny::metrics::v1::ReporterT{metrics};
@@ -257,25 +282,47 @@ TEST_CASE("Genny.Setup metric should only be reported as a timer") {
     RegistryClockSourceStub::advance(10ns);
     ctx.success();
 
-    auto expected =
-        "Clocks\n"
-        "SystemTime,42000000\n"
-        "MetricsTime,15\n"
-        "\n"
-        "Counters\n"
-        "\n"
-        "Gauges\n"
-        "\n"
-        "Timers\n"
-        "15,Genny.Setup,10\n"
-        "\n";
+    SECTION("csv reporting should report it as a timer") {
+        auto expected =
+            "Clocks\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,15\n"
+            "\n"
+            "Counters\n"
+            "\n"
+            "Gauges\n"
+            "\n"
+            "Timers\n"
+            "15,Genny.Setup,10\n"
+            "\n";
 
-    std::ostringstream out;
-    reporter.report<ReporterClockSourceStub>(out, "csv");
-    REQUIRE(out.str() == expected);
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "csv");
+        REQUIRE(out.str() == expected);
+    }
+
+    SECTION("cedar-csv reporting should report it") {
+        auto expected =
+            "Clocks\n"
+            "clock,nanoseconds\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,15\n"
+            "\n"
+            "OperationThreadCounts\n"
+            "actor,operation,workers\n"
+            "Genny,Setup,1\n"
+            "\n"
+            "Operations\n"
+            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
+            "15,Genny,0,Setup,10,0,1,0,0,0\n";
+
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        REQUIRE(out.str() == expected);
+    }
 }
 
-TEST_CASE("Genny.ActiveActors metric should be reported as a counter") {
+TEST_CASE("Genny.ActiveActors metric") {
     RegistryClockSourceStub::reset();
     auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
     auto reporter = genny::metrics::v1::ReporterT{metrics};
@@ -310,27 +357,47 @@ TEST_CASE("Genny.ActiveActors metric should be reported as a counter") {
     RegistryClockSourceStub::advance(200ns);
     finishActor();
 
-    auto expected =
-        "Clocks\n"
-        "SystemTime,42000000\n"
-        "MetricsTime,385\n"
-        "\n"
-        "Counters\n"
-        "5,Genny.ActiveActors,1\n"
-        "15,Genny.ActiveActors,2\n"
-        "35,Genny.ActiveActors,1\n"
-        "85,Genny.ActiveActors,2\n"
-        "185,Genny.ActiveActors,1\n"
-        "385,Genny.ActiveActors,0\n"
-        "\n"
-        "Gauges\n"
-        "\n"
-        "Timers\n"
-        "\n";
+    SECTION("csv reporting should report it as a counter") {
+        auto expected =
+            "Clocks\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,385\n"
+            "\n"
+            "Counters\n"
+            "5,Genny.ActiveActors,1\n"
+            "15,Genny.ActiveActors,2\n"
+            "35,Genny.ActiveActors,1\n"
+            "85,Genny.ActiveActors,2\n"
+            "185,Genny.ActiveActors,1\n"
+            "385,Genny.ActiveActors,0\n"
+            "\n"
+            "Gauges\n"
+            "\n"
+            "Timers\n"
+            "\n";
 
-    std::ostringstream out;
-    reporter.report<ReporterClockSourceStub>(out, "csv");
-    REQUIRE(out.str() == expected);
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "csv");
+        REQUIRE(out.str() == expected);
+    }
+
+    SECTION("cedar-csv reporting shouldn't report it") {
+        auto expected =
+            "Clocks\n"
+            "clock,nanoseconds\n"
+            "SystemTime,42000000\n"
+            "MetricsTime,385\n"
+            "\n"
+            "OperationThreadCounts\n"
+            "actor,operation,workers\n"
+            "\n"
+            "Operations\n"
+            "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n";
+
+        std::ostringstream out;
+        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        REQUIRE(out.str() == expected);
+    }
 }
 
 }  // namespace
