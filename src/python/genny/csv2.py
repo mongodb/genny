@@ -107,6 +107,7 @@ class _DataReader:
         # Transform output into IntermediateCSV format.
         out = [None for _ in range(len(IntermediateCSVColumns.default_columns()))]
         out[IntermediateCSVColumns.UNIX_TIME] = unix_time
+        out[IntermediateCSVColumns.TS] = ts
         out[IntermediateCSVColumns.THREAD] = thread
         out[IntermediateCSVColumns.OPERATION] = op
         out[IntermediateCSVColumns.DURATION] = duration
@@ -240,15 +241,16 @@ class IntermediateCSVColumns(CSVColumns):
 
     # Declare an explicit default ordering here since this script is writing the intermediate CSV.
     UNIX_TIME = 0
-    THREAD = 1
-    OPERATION = 2
-    DURATION = 3
-    OUTCOME = 4
-    N = 5
-    OPS = 6
-    ERRORS = 7
-    SIZE = 8
-    WORKERS = 9
+    TS = 1
+    THREAD = 2
+    OPERATION = 3
+    DURATION = 4
+    OUTCOME = 5
+    N = 6
+    OPS = 7
+    ERRORS = 8
+    SIZE = 9
+    WORKERS = 10
 
     @classmethod
     def default_columns(cls):
@@ -256,5 +258,5 @@ class IntermediateCSVColumns(CSVColumns):
         Ordered list of default columns to write to the CSV, must match the column names in
         the class attributes.
         """
-        return ['unix_time', 'thread', 'operation', 'duration', 'outcome', 'n', 'ops', 'errors',
-                'size', 'workers']
+        return ['unix_time', 'ts', 'thread', 'operation', 'duration', 'outcome', 'n',
+                'ops', 'errors', 'size', 'workers']

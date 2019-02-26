@@ -53,7 +53,7 @@ class CedarTest(unittest.TestCase):
             with open(a1o1) as f:
                 ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
                 self.assertEqual(len(ll), 3)
-                self.assertEqual(len(ll[0]), 10)
+                self.assertEqual(len(ll[0]), 11)
 
             a2o2 = pjoin(output_dir, output_files[1])
             self.assertTrue(os.path.isfile(a2o2))
@@ -61,7 +61,7 @@ class CedarTest(unittest.TestCase):
                 ll = list(csv.reader(f, quoting=csv.QUOTE_NONNUMERIC))
                 self.assertEqual(len(ll), 2)
                 self.assertEqual(ll[1][0], large_precise_float)
-                self.assertEqual(len(ll[0]), 10)
+                self.assertEqual(len(ll[0]), 11)
 
 
 class CedarIntegrationTest(unittest.TestCase):
@@ -96,7 +96,7 @@ class CedarIntegrationTest(unittest.TestCase):
             ])),
             ('timers', OrderedDict([
                 ('duration', 1320),
-                ('total', 560)
+                ('total', 1518)
             ])),
             ('gauges', OrderedDict([('workers', 5)]))
         ])
@@ -155,21 +155,38 @@ class CedarIntegrationTest(unittest.TestCase):
             ('gauges', OrderedDict([('workers', 1)]))
         ])
 
-        expected_result_insert = OrderedDict([
-            ('ts', datetime.utcfromtimestamp(42 / 1000)),
-            ('id', 2),
-            ('counters', OrderedDict([
-                ('n', 2),
-                ('ops', 17),
-                ('size', 500),
-                ('errors', 0)
-            ])),
-            ('timers', OrderedDict([
-                ('duration', 43),
-                ('total', 43)
-            ])),
-            ('gauges', OrderedDict([('workers', 2)]))
-        ])
+        expected_result_insert = [
+            OrderedDict([
+                ('ts', datetime.utcfromtimestamp(42 / 1000)),
+                ('id', 1),
+                ('counters', OrderedDict([
+                    ('n', 1),
+                    ('ops', 9),
+                    ('size', 300),
+                    ('errors', 0)
+                ])),
+                ('timers', OrderedDict([
+                    ('duration', 23),
+                    ('total', 23)
+                ])),
+                ('gauges', OrderedDict([('workers', 2)]))
+            ]),
+            OrderedDict([
+                ('ts', datetime.utcfromtimestamp(42 / 1000)),
+                ('id', 2),
+                ('counters', OrderedDict([
+                    ('n', 2),
+                    ('ops', 17),
+                    ('size', 500),
+                    ('errors', 0)
+                ])),
+                ('timers', OrderedDict([
+                    ('duration', 43),
+                    ('total', 43)
+                ])),
+                ('gauges', OrderedDict([('workers', 2)]))
+            ]),
+        ]
 
         with tempfile.TemporaryDirectory() as output_dir:
             args = [
@@ -187,5 +204,4 @@ class CedarIntegrationTest(unittest.TestCase):
             self.verify_output(
                 pjoin(output_dir, 'InsertRemove-Insert.bson'),
                 expected_result_insert,
-                check_last_row_only=True
             )

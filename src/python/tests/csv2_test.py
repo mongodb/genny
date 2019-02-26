@@ -21,7 +21,7 @@ class CSV2Test(unittest.TestCase):
         test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))
         with test_csv.data_reader() as dr:
             self.assertEqual(next(dr),
-                             ([102345.0, 0, 'MyOperation', 100, 0, 1, 6, 2, 40, 2], 'MyActor'))
+                             ([102345.0, 12345000000, 0, 'MyOperation', 100, 0, 1, 6, 2, 40, 2], 'MyActor'))
 
     def test_error_outcome(self):
         test_csv = csv2.CSV2(self.get_fixture('error_outcome.csv'))

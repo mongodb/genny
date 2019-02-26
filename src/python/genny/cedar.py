@@ -80,7 +80,7 @@ class IntermediateCSVReader:
         # dict(operation -> total_duration)
         self.total_for_op = defaultdict(int)
 
-        # dict(thread -> prev_op_unix_time))
+        # dict(thread -> prev_op_ts))
         self.prev_ts_for_thread = {}
 
     def __iter__(self):
@@ -100,7 +100,7 @@ class IntermediateCSVReader:
         for col in [n, ops, size, err, dur]:
             self.cumulatives_for_op[op][col] += line[col]
 
-        ts_col = IntermediateCSVColumns.UNIX_TIME
+        ts_col = IntermediateCSVColumns.TS
         thread = line[IntermediateCSVColumns.THREAD]
 
         # total_duration is duration for the first operation on each thread
@@ -202,7 +202,7 @@ def split_into_actor_csv_files(data_reader, out_dir):
 def sort_csv_file(file_name, out_dir):
     # Sort on Timestamp and Thread.
     csvsort(pjoin(out_dir, file_name),
-            [IntermediateCSVColumns.UNIX_TIME, IntermediateCSVColumns.THREAD],
+            [IntermediateCSVColumns.TS, IntermediateCSVColumns.THREAD],
             quoting=csv.QUOTE_NONNUMERIC,
             has_header=True,
             show_progress=True)
