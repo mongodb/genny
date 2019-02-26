@@ -259,12 +259,7 @@ private:
         out << "actor,operation,workers" << std::endl;
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
             for (const auto& [opName, opsByThread] : opsByType) {
-                if (actorName == "Genny" &&
-                    (opName == "ActorStarted" || opName == "ActorFinished")) {
-                    // The cedar-csv metrics format ignores the Genny.ActorStarted and
-                    // Genny.ActorFinished operations reported by the DefaultDriver because the
-                    // OperationThreadCounts section effectively tracks the number of concurrent
-                    // actors and that number isn't meaningfully changing over time.
+                if (shouldSkipReporting(actorName, opName)) {
                     continue;
                 }
 
@@ -283,12 +278,7 @@ private:
         out << "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size" << std::endl;
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
             for (const auto& [opName, opsByThread] : opsByType) {
-                if (actorName == "Genny" &&
-                    (opName == "ActorStarted" || opName == "ActorFinished")) {
-                    // The cedar-csv metrics format ignores the Genny.ActorStarted and
-                    // Genny.ActorFinished operations reported by the DefaultDriver because the
-                    // OperationThreadCounts section effectively tracks the number of concurrent
-                    // actors and that number isn't meaningfully changing over time.
+                if (shouldSkipReporting(actorName, opName)) {
                     continue;
                 }
 
@@ -309,6 +299,14 @@ private:
                 }
             }
         }
+    }
+
+    static bool shouldSkipReporting(const std::string& actorName, const std::string& opName) {
+        // The cedar-csv metrics format ignores the Genny.ActorStarted and Genny.ActorFinished
+        // operations reported by the DefaultDriver because the OperationThreadCounts section
+        // effectively tracks the number of concurrent actors and that number isn't meaningfully
+        // changing over time.
+        return actorName == "Genny" && (opName == "ActorStarted" || opName == "ActorFinished");
     }
 
     /**
