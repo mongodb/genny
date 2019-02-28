@@ -28,13 +28,13 @@ class Sleeper {
 public:
     Sleeper(Duration before, Duration after) : _before(before), _after(after) {}
 
-    void before(const Orchestrator& o, const PhaseNumber pn) {
+    constexpr void before(const Orchestrator& o, const PhaseNumber pn) {
         if (_before.count() && o.currentPhase() == pn) {
             std::this_thread::sleep_for(_before);
         }
     }
 
-    void after(const Orchestrator& o, const PhaseNumber pn) {
+    constexpr void after(const Orchestrator& o, const PhaseNumber pn) {
         if (_after.count() && o.currentPhase() == pn) {
             std::this_thread::sleep_for(_after);
         }
