@@ -20,46 +20,15 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
+#include <testlib/clocks.hpp>
 #include <testlib/helpers.hpp>
 
 namespace genny::metrics {
 namespace {
 
 using namespace std::literals::chrono_literals;
+using namespace genny::testing;
 
-class RegistryClockSourceStub {
-private:
-    using clock_type = std::chrono::steady_clock;
-
-public:
-    using duration = clock_type::duration;
-    using time_point = std::chrono::time_point<clock_type>;
-
-    static void advance(v1::Period<clock_type> inc = 1ns) {
-        _now += inc;
-    }
-
-    static void reset() {
-        _now = {};
-    }
-
-    static time_point now() {
-        return _now;
-    }
-
-private:
-    static time_point _now;
-};
-
-RegistryClockSourceStub::time_point RegistryClockSourceStub::_now;
-
-struct ReporterClockSourceStub {
-    using time_point = std::chrono::time_point<std::chrono::system_clock>;
-
-    static time_point now() {
-        return time_point{42ms};
-    }
-};
 
 void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
                           RegistryClockSourceStub::duration dur2) {

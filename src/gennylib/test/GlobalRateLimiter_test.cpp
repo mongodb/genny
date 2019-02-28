@@ -21,31 +21,10 @@
 #include <gennylib/v1/GlobalRateLimiter.hpp>
 
 #include <testlib/ActorHelper.hpp>
+#include <testlib/clocks.hpp>
 #include <testlib/helpers.hpp>
 
 namespace genny::testing {
-
-// Hack to allow different DummyClocks classes to be created so calling static methods won't
-// conflict.
-template <typename DummyT>
-struct DummyClock {
-    static int64_t nowRaw;
-
-    // <clock-concept>
-    using rep = int64_t;
-    using period = std::nano;
-    using duration = std::chrono::duration<DummyClock::rep, DummyClock::period>;
-    using time_point = std::chrono::time_point<DummyClock>;
-    const static bool is_steady = true;
-    // </clock-concept>
-
-    static auto now() {
-        return DummyClock::time_point(DummyClock::duration(nowRaw));
-    }
-};
-
-template <typename DummyT>
-int64_t DummyClock<DummyT>::nowRaw = 0;
 
 namespace {
 using Catch::Matchers::Matches;

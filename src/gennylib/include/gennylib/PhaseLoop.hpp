@@ -32,6 +32,7 @@
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
+#include <gennylib/v1/Sleeper.hpp>
 
 /**
  * @file
@@ -100,6 +101,18 @@ public:
             _rateLimiter =
                 phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
         }
+
+        auto sleepBefore = phaseContext.get<TimeSpec, false>("SleepBefore").value_or(TimeSpec());
+        auto sleepAfter = phaseContext.get<TimeSpec, false>("SleepAfter").value_or(TimeSpec());
+
+        if ((sleepBefore || sleepAfter) && rateSpec) {
+            throw InvalidConfigurationException(
+                "Rate must *not* be specified alongside wither sleepBefore or sleepAfter"
+                "genny cannot enforce the global rate when there are mandatory sleeps in"
+                "each thread");
+        }
+        if (sleepBefore || sleepAfter)
+            _sleeper = std::make_unique<v1::Sleeper>(sleepBefore, sleepAfter);
     }
 
     constexpr bool shouldLimitRate(int64_t currentIteration) const {
@@ -149,6 +162,16 @@ public:
         return _doesBlock;
     }
 
+    constexpr void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
+        if (_sleeper)
+            _sleeper->before(o, pn);
+    }
+
+    constexpr void sleepAfter(const Orchestrator& o, const PhaseNumber pn) const {
+        if (_sleeper)
+            _sleeper->after(o, pn);
+    }
+
 private:
     // Debatable about whether this should also track the current iteration and
     // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
@@ -160,6 +183,7 @@ private:
     // The rate limiter is owned by the workload context.
     v1::GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
+    std::unique_ptr<v1::Sleeper> _sleeper;
 };
 
 
@@ -202,14 +226,19 @@ public:
     }
 
     ActorPhaseIterator& operator++() {
-        if (_iterationCheck)
+        if (_iterationCheck) {
             _iterationCheck->limitRate(_currentIteration, std::cref(*_orchestrator), _inPhase);
+            _iterationCheck->sleepAfter(std::cref(*_orchestrator), _inPhase);
+        }
+
         ++_currentIteration;
         return *this;
     }
 
     // clang-format off
-    constexpr bool operator==(const ActorPhaseIterator& rhs) const {
+    const bool operator==(const ActorPhaseIterator& rhs) const {
+        if (_iterationCheck)
+            _iterationCheck->sleepBefore(std::cref(*_orchestrator), _inPhase);
         return
                 // we're comparing against the .end() iterator (the common case)
                 (rhs._isEndIterator && !this->_isEndIterator &&

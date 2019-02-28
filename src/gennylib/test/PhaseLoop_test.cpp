@@ -21,6 +21,7 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <testlib/ActorHelper.hpp>
 
+#include <testlib/clocks.hpp>
 #include <testlib/helpers.hpp>
 
 using namespace genny;
@@ -377,4 +378,30 @@ TEST_CASE("Actual Actor Example") {
             Catch::Matches("'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
                            "configuration."));
     }
+
+    SECTION("SleepBefore and SleepAfter") {
+        using namespace std::literals::chrono_literals;
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: 50 milliseconds
+                SleepAfter: 100 milliseconds
+                Key: 71
+        )");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+
+        auto start = std::chrono::high_resolution_clock::now();
+        ah.run();
+
+        auto duration = std::chrono::high_resolution_clock::now() - start;
+
+        REQUIRE(duration > 450ms);
+        REQUIRE(duration < 550ms);
+
+}
 }
