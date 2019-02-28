@@ -21,7 +21,10 @@
 
 namespace genny::v1 {
 
-
+/**
+ * Class for sleeping before and after an operation. Checks that the current phase has
+ * not ended before sleeping.
+ */
 class Sleeper {
     using Duration = genny::Duration;
 

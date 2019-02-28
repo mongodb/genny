@@ -402,6 +402,5 @@ TEST_CASE("Actual Actor Example") {
 
         REQUIRE(duration > 450ms);
         REQUIRE(duration < 550ms);
-
-}
+    }
 }
