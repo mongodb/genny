@@ -15,13 +15,15 @@
 #ifndef HEADER_1112A012_F4B7_4C67_9141_7B1179B788CC_INCLUDED
 #define HEADER_1112A012_F4B7_4C67_9141_7B1179B788CC_INCLUDED
 
+#include <chrono>
+
 #include <metrics/Period.hpp>
 
 namespace genny::testing {
-// The template is to allow different DummyClocks classes to be created so calling static methods
-// won't conflict.
 using namespace std::literals::chrono_literals;
 
+// The template is to allow different DummyClocks classes to be created so calling static methods
+// won't conflict.
 template <typename DummyT>
 struct DummyClock {
     static int64_t nowRaw;

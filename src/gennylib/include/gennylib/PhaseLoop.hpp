@@ -162,12 +162,12 @@ public:
         return _doesBlock;
     }
 
-    constexpr void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
+    void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
         if (_sleeper)
             _sleeper->before(o, pn);
     }
 
-    constexpr void sleepAfter(const Orchestrator& o, const PhaseNumber pn) const {
+    void sleepAfter(const Orchestrator& o, const PhaseNumber pn) const {
         if (_sleeper)
             _sleeper->after(o, pn);
     }
@@ -275,7 +275,7 @@ public:
 
     // Iterator concepts only require !=, but the logic is much easier to reason about
     // for ==, so just negate that logic 😎 (compiler should inline it)
-    constexpr bool operator!=(const ActorPhaseIterator& rhs) const {
+    const bool operator!=(const ActorPhaseIterator& rhs) const {
         return !(*this == rhs);
     }
 
