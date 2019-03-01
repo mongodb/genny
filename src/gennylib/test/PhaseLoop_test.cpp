@@ -418,14 +418,36 @@ TEST_CASE("Actual Actor Example") {
         )");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
 
         REQUIRE_THROWS_WITH(
             ([&]() {
-                ActorHelper ah(config, 1, {{"Nop", genny::actor::NopActor::producer()}});
+                ActorHelper ah(config, 1, {{"Inc", imvProducer}});
                 ah.run();
             }()),
-            Catch::Matches("Duration cannot be negative"));
+            Catch::Matches("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
+    }
+
+    SECTION("SleepAfter and Rate") {
+        using namespace std::literals::chrono_literals;
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: 10 milliseconds
+                SleepAfter: 100 milliseconds
+                Rate: 20 per 30 milliseconds
+                Key: 71
+        )");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+
+        REQUIRE_THROWS_WITH(([&]() {
+                                ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+                                ah.run();
+                            }()),
+                            Catch::Matches(R"(Rate must \*not\* be specified alongside .*)"));
     }
 
     SECTION("SleepBefore = 0") {

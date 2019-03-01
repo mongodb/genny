@@ -33,19 +33,14 @@ public:
     /**
      * Default constructs a no-op sleeper.
      */
-    Sleeper() : _before(0), _after(0){};
+    Sleeper() : _before(Duration::zero()), _after(Duration::zero()){};
 
     /**
      * Construct a sleeper object.
      * @param before time to sleep before an operation.
      * @param after time to sleep after an operation.
      */
-    Sleeper(Duration before, Duration after) : _before(before), _after(after) {
-        const Duration zero(0);
-        if (before < zero || after < zero) {
-            throw InvalidConfigurationException("Duration cannot be negative");
-        }
-    }
+    Sleeper(Duration before, Duration after) : _before(before), _after(after){};
 
     // No copies or moves.
     Sleeper(const Sleeper& other) = delete;

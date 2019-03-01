@@ -107,12 +107,12 @@ public:
 
         if ((sleepBefore || sleepAfter) && rateSpec) {
             throw InvalidConfigurationException(
-                "Rate must *not* be specified alongside wither sleepBefore or sleepAfter"
+                "Rate must *not* be specified alongside either sleepBefore or sleepAfter. "
                 "genny cannot enforce the global rate when there are mandatory sleeps in"
                 "each thread");
         }
-        if (sleepBefore || sleepAfter)
-            _sleeper.emplace(sleepBefore, sleepAfter);
+
+        _sleeper.emplace(sleepBefore, sleepAfter);
     }
 
     constexpr bool shouldLimitRate(int64_t currentIteration) const {
