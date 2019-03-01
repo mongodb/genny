@@ -67,7 +67,10 @@ class IterationChecker final {
 public:
     IterationChecker(std::optional<TimeSpec> minDuration,
                      std::optional<IntegerSpec> minIterations,
-                     bool isNop)
+                     bool isNop,
+                     TimeSpec sleepBefore,
+                     TimeSpec sleepAfter,
+                     std::optional<RateSpec> rateSpec)
         : _minDuration{minDuration},
           // If it is a nop then should iterate 0 times.
           _minIterations{isNop ? IntegerSpec(0l) : minIterations},
@@ -82,13 +85,26 @@ public:
             str << "Need non-negative number of iterations. Gave " << *minIterations;
             throw InvalidConfigurationException(str.str());
         }
+
+        if ((sleepBefore || sleepAfter) && rateSpec) {
+            throw InvalidConfigurationException(
+                "Rate must *not* be specified alongside either sleepBefore or sleepAfter. "
+                "genny cannot enforce the global rate when there are mandatory sleeps in"
+                "each thread");
+        }
+
+        _sleeper.emplace(sleepBefore, sleepAfter);
     }
 
     explicit IterationChecker(PhaseContext& phaseContext)
         : IterationChecker(phaseContext.get<TimeSpec, false>("Duration"),
                            phaseContext.get<IntegerSpec, false>("Repeat"),
-                           phaseContext.isNop()) {
-        auto rateSpec = phaseContext.get<RateSpec, false>("Rate");
+                           phaseContext.isNop(),
+                           phaseContext.get<TimeSpec, false>("SleepBefore").value_or(TimeSpec()),
+                           phaseContext.get<TimeSpec, false>("SleepAfter").value_or(TimeSpec()),
+                           phaseContext.get<RateSpec, false>("Rate")) {
+        const auto rateSpec = phaseContext.get<RateSpec, false>("Rate");
+
         const auto rateLimiterName =
             phaseContext.get<std::string, false>("RateLimiterName").value_or("defaultRateLimiter");
 
@@ -101,18 +117,6 @@ public:
             _rateLimiter =
                 phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
         }
-
-        auto sleepBefore = phaseContext.get<TimeSpec, false>("SleepBefore").value_or(TimeSpec());
-        auto sleepAfter = phaseContext.get<TimeSpec, false>("SleepAfter").value_or(TimeSpec());
-
-        if ((sleepBefore || sleepAfter) && rateSpec) {
-            throw InvalidConfigurationException(
-                "Rate must *not* be specified alongside either sleepBefore or sleepAfter. "
-                "genny cannot enforce the global rate when there are mandatory sleeps in"
-                "each thread");
-        }
-
-        _sleeper.emplace(sleepBefore, sleepAfter);
     }
 
     constexpr bool shouldLimitRate(int64_t currentIteration) const {
