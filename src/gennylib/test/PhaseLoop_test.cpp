@@ -403,4 +403,53 @@ TEST_CASE("Actual Actor Example") {
         REQUIRE(duration > 450ms);
         REQUIRE(duration < 550ms);
     }
+
+    SECTION("SleepBefore < 0") {
+        using namespace std::literals::chrono_literals;
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: -10 milliseconds
+                SleepAfter: 100 milliseconds
+                Key: 71
+        )");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+
+        REQUIRE_THROWS_WITH(
+            ([&]() {
+                ActorHelper ah(config, 1, {{"Nop", genny::actor::NopActor::producer()}});
+                ah.run();
+            }()),
+            Catch::Matches("Duration cannot be negative"));
+    }
+
+    SECTION("SleepBefore = 0") {
+        using namespace std::literals::chrono_literals;
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: 0 milliseconds
+                SleepAfter: 100 milliseconds
+                Key: 71
+        )");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+
+        auto start = std::chrono::high_resolution_clock::now();
+        ah.run();
+
+        auto duration = std::chrono::high_resolution_clock::now() - start;
+
+        REQUIRE(duration > 0ms);
+        REQUIRE(duration < 350ms);
+    }
 }

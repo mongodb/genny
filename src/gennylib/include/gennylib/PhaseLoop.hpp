@@ -112,7 +112,7 @@ public:
                 "each thread");
         }
         if (sleepBefore || sleepAfter)
-            _sleeper = std::make_unique<v1::Sleeper>(sleepBefore, sleepAfter);
+            _sleeper.emplace(sleepBefore, sleepAfter);
     }
 
     constexpr bool shouldLimitRate(int64_t currentIteration) const {
@@ -162,14 +162,12 @@ public:
         return _doesBlock;
     }
 
-    void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
-        if (_sleeper)
-            _sleeper->before(o, pn);
+    constexpr void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
+        _sleeper->before(o, pn);
     }
 
-    void sleepAfter(const Orchestrator& o, const PhaseNumber pn) const {
-        if (_sleeper)
-            _sleeper->after(o, pn);
+    constexpr void sleepAfter(const Orchestrator& o, const PhaseNumber pn) const {
+        _sleeper->after(o, pn);
     }
 
 private:
@@ -183,7 +181,7 @@ private:
     // The rate limiter is owned by the workload context.
     v1::GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
-    std::unique_ptr<v1::Sleeper> _sleeper;
+    std::optional<v1::Sleeper> _sleeper;
 };
 
 
@@ -225,10 +223,10 @@ public:
         return Value();
     }
 
-    ActorPhaseIterator& operator++() {
+    constexpr ActorPhaseIterator& operator++() {
         if (_iterationCheck) {
-            _iterationCheck->limitRate(_currentIteration, std::cref(*_orchestrator), _inPhase);
-            _iterationCheck->sleepAfter(std::cref(*_orchestrator), _inPhase);
+            _iterationCheck->limitRate(_currentIteration, *_orchestrator, _inPhase);
+            _iterationCheck->sleepAfter(*_orchestrator, _inPhase);
         }
 
         ++_currentIteration;
@@ -236,9 +234,9 @@ public:
     }
 
     // clang-format off
-    const bool operator==(const ActorPhaseIterator& rhs) const {
+    constexpr bool operator==(const ActorPhaseIterator& rhs) const {
         if (_iterationCheck)
-            _iterationCheck->sleepBefore(std::cref(*_orchestrator), _inPhase);
+            _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
         return
                 // we're comparing against the .end() iterator (the common case)
                 (rhs._isEndIterator && !this->_isEndIterator &&

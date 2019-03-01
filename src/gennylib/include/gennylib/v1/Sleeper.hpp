@@ -16,6 +16,7 @@
 #define HEADER_A2EF8CA3_1185_4B6C_979B_BD40D6893EF8_INCLUDED
 
 #include <chrono>
+
 #include <gennylib/conventions.hpp>
 
 
@@ -29,14 +30,43 @@ class Sleeper {
     using Duration = genny::Duration;
 
 public:
-    Sleeper(Duration before, Duration after) : _before(before), _after(after) {}
+    /**
+     * Default constructs a no-op sleeper.
+     */
+    Sleeper() : _before(0), _after(0){};
 
+    /**
+     * Construct a sleeper object.
+     * @param before time to sleep before an operation.
+     * @param after time to sleep after an operation.
+     */
+    Sleeper(Duration before, Duration after) : _before(before), _after(after) {
+        const Duration zero(0);
+        if (before < zero || after < zero) {
+            throw InvalidConfigurationException("Duration cannot be negative");
+        }
+    }
+
+    // No copies or moves.
+    Sleeper(const Sleeper& other) = delete;
+    Sleeper& operator=(const Sleeper& other) = delete;
+
+    Sleeper(Sleeper&& other) = delete;
+    Sleeper& operator=(Sleeper&& other) = delete;
+
+    /**
+     * Sleep for duration before an operation. Checks that the current phase has
+     * not ended before sleeping.
+     */
     constexpr void before(const Orchestrator& o, const PhaseNumber pn) const {
         if (_before.count() && o.currentPhase() == pn) {
             std::this_thread::sleep_for(_before);
         }
     }
 
+    /**
+     * @see Sleeper::before
+     */
     constexpr void after(const Orchestrator& o, const PhaseNumber pn) const {
         if (_after.count() && o.currentPhase() == pn) {
             std::this_thread::sleep_for(_after);
