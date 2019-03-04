@@ -70,6 +70,18 @@ Genny has self-tests using Catch2. You can run them with the following command:
 ./scripts/lamp cmake-test
 ```
 
+For more fine-tuned testing (eg. running a single test or excluding some) you
+can manually invoke the test binaries:
+
+```sh
+# Build genny first: `./scripts/lamp [...]`
+./build/src/gennylib/gennylib_test "My testcase"
+```
+
+Read more about what parameters you can pass [here][s].
+
+[s]: https://github.com/catchorg/Catch2/blob/master/docs/command-line.md#specifying-which-tests-to-run
+
 ### Benchmark Tests
 
 The above `cmake-test` line also runs so-called "benchmark" tests. They
@@ -84,10 +96,6 @@ invoke the test binaries and exclude perf tests:
 # Build genny first: `./scripts/lamp [...]`
 ./build/src/gennylib/gennylib_test '~[benchmark]'
 ```
-
-Read more about specifying what tests to run [here][s].
-
-[s]: https://github.com/catchorg/Catch2/blob/master/docs/command-line.md#specifying-which-tests-to-run
 
 #### Actor Integration Tests
 
