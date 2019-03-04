@@ -96,6 +96,10 @@ public:  // Operators
     explicit constexpr operator std::chrono::milliseconds() const {
         return std::chrono::duration_cast<std::chrono::milliseconds>(value);
     }
+
+    explicit constexpr operator bool() const {
+        return count() != 0;
+    }
 };
 
 inline bool operator==(const TimeSpec& lhs, const TimeSpec& rhs) {

@@ -47,8 +47,11 @@ std::mutex asserting;
 optional<IntegerSpec> operator""_uis(unsigned long long v) {
     return make_optional(IntegerSpec(v));
 }
-optional<TimeSpec> operator""_ts(unsigned long long v) {
+optional<TimeSpec> operator""_ots(unsigned long long v) {
     return make_optional(TimeSpec(chrono::milliseconds{v}));
+}
+TimeSpec operator""_ts(unsigned long long v) {
+    return TimeSpec(chrono::milliseconds{v});
 }
 
 std::thread start(Orchestrator& o,
@@ -244,12 +247,12 @@ std::unordered_map<PhaseNumber, v1::ActorPhase<int>> makePhaseConfig(
 
     std::unordered_map<PhaseNumber, v1::ActorPhase<int>> out;
     for (auto&& [phaseNum, phaseVal, iters, dur] : phaseConfigs) {
-        auto [it, success] =
-            out.try_emplace(phaseNum,
-                            orchestrator,
-                            std::make_unique<v1::IterationChecker>(dur, iters, false),
-                            phaseNum,
-                            phaseVal);
+        auto [it, success] = out.try_emplace(
+            phaseNum,
+            orchestrator,
+            std::make_unique<v1::IterationChecker>(dur, iters, false, 0_ts, 0_ts, nullopt),
+            phaseNum,
+            phaseVal);
         // prevent misconfiguration within test (dupe phaseNum vals)
         {
             std::unique_lock<mutex> lk(asserting);
@@ -441,7 +444,7 @@ TEST_CASE("Range-based for stops when Orchestrator says Phase is done") {
 
     // t1 blocks for 75ms in Phase 0
     auto t1 = std::thread([&]() {
-        for (auto&& h : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ts}})})
+        for (auto&& h : PhaseLoop<int>{o, makePhaseConfig(o, {{0, 0, nullopt, 75_ots}})})
             for (auto _ : h) {
             }  // nop
         blockingDone = true;

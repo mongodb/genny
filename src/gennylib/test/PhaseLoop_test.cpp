@@ -21,6 +21,7 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <testlib/ActorHelper.hpp>
 
+#include <testlib/clocks.hpp>
 #include <testlib/helpers.hpp>
 
 using namespace genny;
@@ -39,8 +40,12 @@ optional<IntegerSpec> operator""_uis(unsigned long long v) {
     return make_optional(IntegerSpec(v));
 }
 
-optional<TimeSpec> operator""_ts(unsigned long long v) {
+optional<TimeSpec> operator""_ots(unsigned long long v) {
     return make_optional(TimeSpec(chrono::milliseconds{v}));
+}
+
+TimeSpec operator""_ts(unsigned long long v) {
+    return TimeSpec(chrono::milliseconds{v});
 }
 
 }  // namespace
@@ -51,7 +56,9 @@ TEST_CASE("Correctness for N iterations") {
 
     SECTION("Loops 0 Times") {
         v1::ActorPhase<int> loop{
-            o, std::make_unique<v1::IterationChecker>(nullopt, 0_uis, false), 1};
+            o,
+            std::make_unique<v1::IterationChecker>(nullopt, 0_uis, false, 0_ts, 0_ts, nullopt),
+            1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -59,7 +66,9 @@ TEST_CASE("Correctness for N iterations") {
     }
     SECTION("Loops 1 TimeSpec") {
         v1::ActorPhase<int> loop{
-            o, std::make_unique<v1::IterationChecker>(nullopt, 1_uis, false), 1};
+            o,
+            std::make_unique<v1::IterationChecker>(nullopt, 1_uis, false, 0_ts, 0_ts, nullopt),
+            1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -67,7 +76,9 @@ TEST_CASE("Correctness for N iterations") {
     }
     SECTION("Loops 113 Times") {
         v1::ActorPhase<int> loop{
-            o, std::make_unique<v1::IterationChecker>(nullopt, 113_uis, false), 1};
+            o,
+            std::make_unique<v1::IterationChecker>(nullopt, 113_uis, false, 0_ts, 0_ts, nullopt),
+            1};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -80,7 +91,9 @@ TEST_CASE("Correctness for N milliseconds") {
     genny::Orchestrator o{};
     SECTION("Loops 0 milliseconds so zero times") {
         v1::ActorPhase<int> loop{
-            o, std::make_unique<v1::IterationChecker>(0_ts, nullopt, false), 0};
+            o,
+            std::make_unique<v1::IterationChecker>(0_ots, nullopt, false, 0_ts, 0_ts, nullopt),
+            0};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -90,7 +103,9 @@ TEST_CASE("Correctness for N milliseconds") {
         // we nop in the loop so ideally it should take exactly 10ms, but don't want spurious
         // failures
         v1::ActorPhase<int> loop{
-            o, std::make_unique<v1::IterationChecker>(10_ts, nullopt, false), 0};
+            o,
+            std::make_unique<v1::IterationChecker>(10_ots, nullopt, false, 0_ts, 0_ts, nullopt),
+            0};
 
         auto start = chrono::system_clock::now();
         for (auto _ : loop) {
@@ -109,7 +124,9 @@ TEST_CASE("Combinations of duration and iterations") {
     genny::Orchestrator o{};
     SECTION("Loops 0 milliseconds but 100 times") {
         v1::ActorPhase<int> loop{
-            o, std::make_unique<v1::IterationChecker>(0_ts, 100_uis, false), 0};
+            o,
+            std::make_unique<v1::IterationChecker>(0_ots, 100_uis, false, 0_ts, 0_ts, nullopt),
+            0};
         int i = 0;
         for (auto _ : loop)
             ++i;
@@ -117,7 +134,9 @@ TEST_CASE("Combinations of duration and iterations") {
     }
     SECTION("Loops 5 milliseconds, 100 times: 10 millis dominates") {
         v1::ActorPhase<int> loop{
-            o, std::make_unique<v1::IterationChecker>(5_ts, 100_uis, false), 0};
+            o,
+            std::make_unique<v1::IterationChecker>(5_ots, 100_uis, false, 0_ts, 0_ts, nullopt),
+            0};
 
         auto start = chrono::system_clock::now();
         int i = 0;
@@ -137,11 +156,13 @@ TEST_CASE("Combinations of duration and iterations") {
     // combinations of the other tests 🙈
 
     SECTION("Configured for -1 milliseconds barfs") {
-        REQUIRE_THROWS_WITH((v1::ActorPhase<int>{o,
-                                                 std::make_unique<v1::IterationChecker>(
-                                                     make_optional(TimeSpec{-1}), nullopt, false),
-                                                 0}),
-                            Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
+        REQUIRE_THROWS_WITH(
+            (v1::ActorPhase<int>{
+                o,
+                std::make_unique<v1::IterationChecker>(
+                    make_optional(TimeSpec{-1}), nullopt, false, 0_ts, 0_ts, nullopt),
+                0}),
+            Catch::Contains("Need non-negative duration. Gave -1 milliseconds"));
     }
 }
 
@@ -149,7 +170,7 @@ TEST_CASE("Can do without either iterations or duration") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
     v1::ActorPhase<int> actorPhase{
-        o, std::make_unique<v1::IterationChecker>(nullopt, nullopt, false), 0};
+        o, std::make_unique<v1::IterationChecker>(nullopt, nullopt, false, 0_ts, 0_ts, nullopt), 0};
     auto iters = 0;
     for (auto&& _ : actorPhase) {
         ++iters;
@@ -165,7 +186,8 @@ TEST_CASE("Can do without either iterations or duration") {
 TEST_CASE("Iterator concept correctness") {
     genny::metrics::Registry metrics;
     genny::Orchestrator o{};
-    v1::ActorPhase<int> loop{o, std::make_unique<v1::IterationChecker>(nullopt, 1_uis, false), 0};
+    v1::ActorPhase<int> loop{
+        o, std::make_unique<v1::IterationChecker>(nullopt, 1_uis, false, 0_ts, 0_ts, nullopt), 0};
 
     // can deref
     SECTION("Deref and advance works") {
@@ -376,5 +398,101 @@ TEST_CASE("Actual Actor Example") {
             }()),
             Catch::Matches("'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
                            "configuration."));
+    }
+
+    SECTION("SleepBefore and SleepAfter") {
+        using namespace std::literals::chrono_literals;
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: 50 milliseconds
+                SleepAfter: 100 milliseconds
+                Key: 71
+        )");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+
+        auto start = std::chrono::high_resolution_clock::now();
+        ah.run();
+
+        auto duration = std::chrono::high_resolution_clock::now() - start;
+
+        REQUIRE(duration > 450ms);
+        REQUIRE(duration < 550ms);
+    }
+
+    SECTION("SleepBefore < 0") {
+        using namespace std::literals::chrono_literals;
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: -10 milliseconds
+                SleepAfter: 100 milliseconds
+                Key: 71
+        )");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+
+        REQUIRE_THROWS_WITH(
+            ([&]() {
+                ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+                ah.run();
+            }()),
+            Catch::Matches("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
+    }
+
+    SECTION("SleepAfter and Rate") {
+        using namespace std::literals::chrono_literals;
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: 10 milliseconds
+                SleepAfter: 100 milliseconds
+                Rate: 20 per 30 milliseconds
+                Key: 71
+        )");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+
+        REQUIRE_THROWS_WITH(([&]() {
+                                ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+                                ah.run();
+                            }()),
+                            Catch::Matches(R"(Rate must \*not\* be specified alongside .*)"));
+    }
+
+    SECTION("SleepBefore = 0") {
+        using namespace std::literals::chrono_literals;
+        YAML::Node config = YAML::Load(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Phases:
+              - Repeat: 3
+                SleepBefore: 0 milliseconds
+                SleepAfter: 100 milliseconds
+                Key: 71
+        )");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+
+        auto start = std::chrono::high_resolution_clock::now();
+        ah.run();
+
+        auto duration = std::chrono::high_resolution_clock::now() - start;
+
+        REQUIRE(duration > 0ms);
+        REQUIRE(duration < 350ms);
     }
 }

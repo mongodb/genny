@@ -32,6 +32,7 @@
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
+#include <gennylib/v1/Sleeper.hpp>
 
 /**
  * @file
@@ -66,7 +67,10 @@ class IterationChecker final {
 public:
     IterationChecker(std::optional<TimeSpec> minDuration,
                      std::optional<IntegerSpec> minIterations,
-                     bool isNop)
+                     bool isNop,
+                     TimeSpec sleepBefore,
+                     TimeSpec sleepAfter,
+                     std::optional<RateSpec> rateSpec)
         : _minDuration{minDuration},
           // If it is a nop then should iterate 0 times.
           _minIterations{isNop ? IntegerSpec(0l) : minIterations},
@@ -81,13 +85,26 @@ public:
             str << "Need non-negative number of iterations. Gave " << *minIterations;
             throw InvalidConfigurationException(str.str());
         }
+
+        if ((sleepBefore || sleepAfter) && rateSpec) {
+            throw InvalidConfigurationException(
+                "Rate must *not* be specified alongside either sleepBefore or sleepAfter. "
+                "genny cannot enforce the global rate when there are mandatory sleeps in"
+                "each thread");
+        }
+
+        _sleeper.emplace(sleepBefore, sleepAfter);
     }
 
     explicit IterationChecker(PhaseContext& phaseContext)
         : IterationChecker(phaseContext.get<TimeSpec, false>("Duration"),
                            phaseContext.get<IntegerSpec, false>("Repeat"),
-                           phaseContext.isNop()) {
-        auto rateSpec = phaseContext.get<RateSpec, false>("Rate");
+                           phaseContext.isNop(),
+                           phaseContext.get<TimeSpec, false>("SleepBefore").value_or(TimeSpec()),
+                           phaseContext.get<TimeSpec, false>("SleepAfter").value_or(TimeSpec()),
+                           phaseContext.get<RateSpec, false>("Rate")) {
+        const auto rateSpec = phaseContext.get<RateSpec, false>("Rate");
+
         const auto rateLimiterName =
             phaseContext.get<std::string, false>("RateLimiterName").value_or("defaultRateLimiter");
 
@@ -149,6 +166,14 @@ public:
         return _doesBlock;
     }
 
+    constexpr void sleepBefore(const Orchestrator& o, const PhaseNumber pn) const {
+        _sleeper->before(o, pn);
+    }
+
+    constexpr void sleepAfter(const Orchestrator& o, const PhaseNumber pn) const {
+        _sleeper->after(o, pn);
+    }
+
 private:
     // Debatable about whether this should also track the current iteration and
     // referenceStartingPoint time (versus having those in the ActorPhaseIterator). BUT: even the
@@ -160,6 +185,7 @@ private:
     // The rate limiter is owned by the workload context.
     v1::GlobalRateLimiter* _rateLimiter = nullptr;
     const bool _doesBlock;  // Computed/cached value. Computed at ctor time.
+    std::optional<v1::Sleeper> _sleeper;
 };
 
 
@@ -201,15 +227,20 @@ public:
         return Value();
     }
 
-    ActorPhaseIterator& operator++() {
-        if (_iterationCheck)
-            _iterationCheck->limitRate(_currentIteration, std::cref(*_orchestrator), _inPhase);
+    constexpr ActorPhaseIterator& operator++() {
+        if (_iterationCheck) {
+            _iterationCheck->limitRate(_currentIteration, *_orchestrator, _inPhase);
+            _iterationCheck->sleepAfter(*_orchestrator, _inPhase);
+        }
+
         ++_currentIteration;
         return *this;
     }
 
     // clang-format off
     constexpr bool operator==(const ActorPhaseIterator& rhs) const {
+        if (_iterationCheck)
+            _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
         return
                 // we're comparing against the .end() iterator (the common case)
                 (rhs._isEndIterator && !this->_isEndIterator &&
@@ -246,7 +277,7 @@ public:
 
     // Iterator concepts only require !=, but the logic is much easier to reason about
     // for ==, so just negate that logic 😎 (compiler should inline it)
-    constexpr bool operator!=(const ActorPhaseIterator& rhs) const {
+    const bool operator!=(const ActorPhaseIterator& rhs) const {
         return !(*this == rhs);
     }
 
