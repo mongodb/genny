@@ -9,7 +9,7 @@ from genny import cedar
 CedarBucketConfig = namedtuple('CedarBucketConfig', [
     'api_key',
     'api_secret',
-    'api_token',  # TODO: what is this.
+    'api_token',
     'region',
     'name',
     'prefix'
