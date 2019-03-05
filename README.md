@@ -78,9 +78,9 @@ can manually invoke the test binaries:
 ./build/src/gennylib/gennylib_test "My testcase"
 ```
 
-Read more about what parameters you can pass [here][s].
+Read more about what parameters you can pass [here][catch2].
 
-[s]: https://github.com/catchorg/Catch2/blob/master/docs/command-line.md#specifying-which-tests-to-run
+[catch2]: https://github.com/catchorg/Catch2/blob/v2.5.0/docs/command-line.md#specifying-which-tests-to-run
 
 ### Benchmark Tests
 
