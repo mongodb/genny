@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cmath>
 #include <sstream>
+#include <climits>
 
 #include <yaml-cpp/yaml.h>
 
