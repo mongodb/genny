@@ -15,13 +15,16 @@
 #ifndef HEADER_CC9B7EF0_9FB9_4AD4_B64C_DC7AE48F72A6_INCLUDED
 #define HEADER_CC9B7EF0_9FB9_4AD4_B64C_DC7AE48F72A6_INCLUDED
 
+#include <cassert>
 #include <chrono>
+#include <climits>
 #include <cmath>
 #include <sstream>
 
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/Orchestrator.hpp>
 
 namespace genny {
 
@@ -44,7 +47,7 @@ struct IntegerSpec {
     IntegerSpec() = default;
     ~IntegerSpec() = default;
 
-    explicit IntegerSpec(int64_t v) : value{v} {}
+    IntegerSpec(int64_t v) : value{v} {}
     // int64_t is used by default, you can explicitly cast to another type if needed.
     int64_t value;
 
@@ -128,11 +131,104 @@ inline bool operator==(const RateSpec& lhs, const RateSpec& rhs) {
     return (lhs.per == rhs.per) && (lhs.operations == rhs.operations);
 }
 
+struct PhaseRangeSpec {
+    PhaseRangeSpec() = default;
+    ~PhaseRangeSpec() = default;
+
+    PhaseRangeSpec(genny::IntegerSpec s, genny::IntegerSpec e)
+        : start{static_cast<genny::PhaseNumber>(s.value)},
+          end{static_cast<genny::PhaseNumber>(e.value)} {
+        if (!(s.value >= 0 && s.value <= UINT_MAX)) {
+            std::stringstream msg;
+            msg << "Invalid start value for genny::PhaseRangeSpec: '" << s.value << "'."
+                << " The value must be of type 'u_int32_t";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+        if (!(e.value >= 0 && e.value <= UINT_MAX)) {
+            std::stringstream msg;
+            msg << "Invalid end value for genny::PhaseRangeSpec: '" << e.value << "'."
+                << " The value must be of type 'u_int32_t";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+    }
+    PhaseRangeSpec(genny::IntegerSpec s) : PhaseRangeSpec(s, s) {}
+
+    genny::PhaseNumber start;
+    genny::PhaseNumber end;
+};
+
 }  // namespace genny
 
 namespace YAML {
 
 using genny::decodeNodeInto;
+
+/**
+ * Convert between YAML and genny::PhaseRange
+ *
+ * The YAML syntax accepts "[genny::Integer]..[genny::Integer]".
+ * This is used to stipulate repeating a phase N number of times
+ */
+template <>
+struct convert<genny::PhaseRangeSpec> {
+    static Node encode(const genny::PhaseRangeSpec rhs) {
+        std::stringstream msg;
+        msg << rhs.start << ".." << rhs.end;
+        return Node{msg.str()};
+    }
+
+    static bool decode(const Node& node, genny::PhaseRangeSpec& rhs) {
+        if (node.IsSequence() || node.IsMap()) {
+            return false;
+        }
+        auto strRepr = node.as<std::string>();
+
+        // use '..' as delimiter.
+        constexpr std::string_view delimiter = "..";
+        auto delimPos = strRepr.find(delimiter);
+
+        if (delimPos == std::string::npos) {
+            // check if user inputted an integer
+            try {
+                auto phaseNumberYaml = node.as<genny::IntegerSpec>();
+                rhs = genny::PhaseRangeSpec(phaseNumberYaml);
+                return true;
+            } catch (const genny::InvalidConfigurationException& e) {
+                std::stringstream msg;
+                msg << "Invalid value for genny::PhaseRangeSpec: '" << strRepr << "'."
+                    << " The correct syntax is either a single integer or two integers delimited "
+                       "by '..'";
+                throw genny::InvalidConfigurationException(msg.str());
+            }
+        }
+
+        genny::IntegerSpec start;
+        genny::IntegerSpec end;
+
+        auto startYaml = Load(strRepr.substr(0, delimPos));
+        auto endYaml = Load(strRepr.substr(delimPos + delimiter.size()));
+
+        try {
+            start = startYaml.as<genny::IntegerSpec>();
+            end = endYaml.as<genny::IntegerSpec>();
+        } catch (const genny::InvalidConfigurationException& e) {
+            std::stringstream msg;
+            msg << "Invalid value for genny::PhaseRangeSpec: '" << strRepr << "'."
+                << " The correct syntax is two integers delimited by '..'";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+
+        if (start > end) {
+            std::stringstream msg;
+            msg << "Invalid value for genny::PhaseRangeSpec: '" << strRepr << "'."
+                << " The start value cannot be greater than the end value.";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+        rhs = genny::PhaseRangeSpec(start, end);
+
+        return true;
+    }
+};
 
 /**
  * Convert between YAML and genny::Rate

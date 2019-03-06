@@ -268,6 +268,11 @@ TEST_CASE("PhaseContexts constructed as expected") {
       - Operation: Three
         Phase: 1 # intentionally out of order for testing
         Extra: [1,2]
+      - Operation: Four
+        Phase: 3..5
+      - Operation: Five
+        Phase: 6..7
+        Foo2: Bar3
     )");
 
     SECTION("Loads Phases") {
@@ -281,7 +286,7 @@ TEST_CASE("PhaseContexts constructed as expected") {
     SECTION("One Phase per block") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             const auto& ph = ctx.phases();
-            REQUIRE(ph.size() == 3);
+            REQUIRE(ph.size() == 8);
         };
         onContext(yaml, op);
     }
@@ -290,6 +295,11 @@ TEST_CASE("PhaseContexts constructed as expected") {
             REQUIRE(ctx.phases().at(0)->get<std::string>("Operation") == "One");
             REQUIRE(ctx.phases().at(1)->get<std::string>("Operation") == "Three");
             REQUIRE(ctx.phases().at(2)->get<std::string>("Operation") == "Two");
+            REQUIRE(ctx.phases().at(3)->get<std::string>("Operation") == "Four");
+            REQUIRE(ctx.phases().at(4)->get<std::string>("Operation") == "Four");
+            REQUIRE(ctx.phases().at(5)->get<std::string>("Operation") == "Four");
+            REQUIRE(ctx.phases().at(6)->get<std::string>("Operation") == "Five");
+            REQUIRE(ctx.phases().at(7)->get<std::string>("Operation") == "Five");
         };
         onContext(yaml, op);
     }
@@ -298,6 +308,11 @@ TEST_CASE("PhaseContexts constructed as expected") {
             REQUIRE(ctx.phases().at(0)->get<std::string>("Foo") == "Baz");
             REQUIRE(ctx.phases().at(1)->get<std::string>("Foo") == "Bar");
             REQUIRE(ctx.phases().at(2)->get<std::string>("Foo") == "Bar");
+            REQUIRE(ctx.phases().at(3)->get<std::string>("Foo") == "Bar");
+            REQUIRE(ctx.phases().at(4)->get<std::string>("Foo") == "Bar");
+            REQUIRE(ctx.phases().at(5)->get<std::string>("Foo") == "Bar");
+            REQUIRE(ctx.phases().at(6)->get<std::string>("Foo") == "Bar");
+            REQUIRE(ctx.phases().at(7)->get<std::string>("Foo") == "Bar");
         };
         onContext(yaml, op);
     }
@@ -306,8 +321,13 @@ TEST_CASE("PhaseContexts constructed as expected") {
             REQUIRE(*(ctx.phases().at(0)->get<std::string, false>("Foo")) == "Baz");
             REQUIRE(*(ctx.phases().at(1)->get<std::string, false>("Foo")) == "Bar");
             REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*(ctx.phases().at(3)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*(ctx.phases().at(4)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*(ctx.phases().at(5)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*(ctx.phases().at(6)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*(ctx.phases().at(7)->get<std::string, false>("Foo")) == "Bar");
             // call twice just for funsies
-            REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*(ctx.phases().at(7)->get<std::string, false>("Foo")) == "Bar");
         };
         onContext(yaml, op);
     }
@@ -316,6 +336,11 @@ TEST_CASE("PhaseContexts constructed as expected") {
             REQUIRE(*(ctx.phases().at(0)->get<std::string, false>("Foo2")) == "Bar2");
             REQUIRE(*(ctx.phases().at(1)->get<std::string, false>("Foo2")) == "Bar2");
             REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo2")) == "Bar2");
+            REQUIRE(*(ctx.phases().at(3)->get<std::string, false>("Foo2")) == "Bar2");
+            REQUIRE(*(ctx.phases().at(4)->get<std::string, false>("Foo2")) == "Bar2");
+            REQUIRE(*(ctx.phases().at(5)->get<std::string, false>("Foo2")) == "Bar2");
+            REQUIRE(*(ctx.phases().at(6)->get<std::string, false>("Foo2")) == "Bar3");
+            REQUIRE(*(ctx.phases().at(7)->get<std::string, false>("Foo2")) == "Bar3");
         };
         onContext(yaml, op);
     }
@@ -334,16 +359,6 @@ TEST_CASE("PhaseContexts constructed as expected") {
 }
 
 TEST_CASE("Duplicate Phase Numbers") {
-    auto yaml = YAML::Load(R"(
-    SchemaVersion: 2018-07-01
-    MongoUri: mongodb://localhost:27017
-    Actors:
-    - Type: NoOp
-      Phases:
-      - Phase: 0
-      - Phase: 0
-    )");
-
     metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
 
@@ -351,8 +366,35 @@ TEST_CASE("Duplicate Phase Numbers") {
         {"NoOp", std::make_shared<NoOpProducer>()},
     };
 
-    REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
-                        Catch::Matches("Duplicate phase 0"));
+    SECTION("Phase Number syntax") {
+        auto yaml = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+        MongoUri: mongodb://localhost:27017
+        Actors:
+        - Type: NoOp
+        Phases:
+        - Phase: 0
+        - Phase: 0
+        )");
+
+        REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
+                            Catch::Matches("Duplicate phase 0"));
+    }
+
+    SECTION("PhaseRange syntax") {
+        auto yaml = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+        MongoUri: mongodb://localhost:27017
+        Actors:
+        - Type: NoOp
+        Phases:
+        - Phase: 0
+        - Phase: 0..11
+        )");
+
+        REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
+                            Catch::Matches("Duplicate phase 0"));
+    }
 }
 
 TEST_CASE("No PhaseContexts") {
@@ -367,6 +409,31 @@ TEST_CASE("No PhaseContexts") {
     SECTION("Empty PhaseContexts") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE(ctx.phases().size() == 0);
+        };
+        onContext(yaml, op);
+    }
+}
+
+TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
+    SECTION("One Phase per block") {
+        auto yaml = YAML::Load(R"(
+        SchemaVersion: 2018-07-01
+        MongoUri: mongodb://localhost:27017
+        Actors:
+        - Name: HelloWorld
+          Type: NoOp
+        Phases:
+        - Phase: 0
+        - Phase: 1..4
+        - Phase: 5..5
+        - Phase: 6
+        - Phase: 7..1e1
+        - Phase: 11..11
+        - Phase: 12
+        )");
+
+        std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
+            REQUIRE(ctx.phases().size() == 13);
         };
         onContext(yaml, op);
     }

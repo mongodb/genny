@@ -124,5 +124,51 @@ TEST_CASE("genny::RateSpec conversions") {
     }
 }
 
+TEST_CASE("genny::PhaseRangeSpec conversions") {
+    SECTION("Can convert to genny::PhaseRangeSpec") {
+        auto yaml = YAML::Load("Phase: 0..20");
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().start == 0);
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().end == 20);
+
+        yaml = YAML::Load("Phase: 2..2");
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().start == 2);
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().end == 2);
+
+        yaml = YAML::Load("Phase: 0..1e2");
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().start == 0);
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().end == 100);
+
+        yaml = YAML::Load("Phase: 10 .. 1e2");
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().start == 10);
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().end == 100);
+
+        yaml = YAML::Load("Phase: 12");
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().start == 12);
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().end == 12);
+    }
+
+    SECTION("Barfs on invalid values") {
+        REQUIRE_THROWS(YAML::Load("0....20").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("0.1").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("-1..1").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("0abc..20").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("0abc .. 20").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("10..4294967296").as<PhaseRangeSpec>());  // uint_max + 1
+        REQUIRE_THROWS(YAML::Load("4294967296..4294967296").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("20..25abc").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("-10").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("12abc").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("{foo}").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<PhaseRangeSpec>());
+    }
+
+    SECTION("Can encode") {
+        YAML::Node n;
+        n["Phase"] = PhaseRangeSpec{0, 10};
+        REQUIRE(n["Phase"].as<PhaseRangeSpec>().start == 0);
+        REQUIRE(n["Phase"].as<PhaseRangeSpec>().end == 10);
+    }
+}
+
 }  // namespace
 }  // namespace genny
