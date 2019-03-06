@@ -236,7 +236,7 @@ def run(args):
             sort_csv_file(f, out_dir)
 
             # compute cumulative and stream output to bson file
-            metrics_file_names.append(
+            metrics_file_names.extend(
                 split_into_actor_operation_and_transform_to_cedar_format(f, out_dir))
 
     return metrics_file_names, my_csv2.approximate_test_run_time
