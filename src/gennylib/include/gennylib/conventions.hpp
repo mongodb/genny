@@ -15,7 +15,6 @@
 #ifndef HEADER_CC9B7EF0_9FB9_4AD4_B64C_DC7AE48F72A6_INCLUDED
 #define HEADER_CC9B7EF0_9FB9_4AD4_B64C_DC7AE48F72A6_INCLUDED
 
-#include <cassert>
 #include <chrono>
 #include <climits>
 #include <cmath>
