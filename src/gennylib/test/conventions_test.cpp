@@ -138,6 +138,10 @@ TEST_CASE("genny::PhaseRangeSpec conversions") {
         REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().start == 0);
         REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().end == 100);
 
+        yaml = YAML::Load("Phase: 10 .. 1e2");
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().start == 10);
+        REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().end == 100);
+
         yaml = YAML::Load("Phase: 12");
         REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().start == 12);
         REQUIRE(yaml["Phase"].as<PhaseRangeSpec>().end == 12);
@@ -146,8 +150,13 @@ TEST_CASE("genny::PhaseRangeSpec conversions") {
     SECTION("Barfs on invalid values") {
         REQUIRE_THROWS(YAML::Load("0....20").as<PhaseRangeSpec>());
         REQUIRE_THROWS(YAML::Load("0.1").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("-1..1").as<PhaseRangeSpec>());
         REQUIRE_THROWS(YAML::Load("0abc..20").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("0abc .. 20").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("10..4294967296").as<PhaseRangeSpec>());  // uint_max + 1
+        REQUIRE_THROWS(YAML::Load("4294967296..4294967296").as<PhaseRangeSpec>());
         REQUIRE_THROWS(YAML::Load("20..25abc").as<PhaseRangeSpec>());
+        REQUIRE_THROWS(YAML::Load("-10").as<PhaseRangeSpec>());
         REQUIRE_THROWS(YAML::Load("12abc").as<PhaseRangeSpec>());
         REQUIRE_THROWS(YAML::Load("{foo}").as<PhaseRangeSpec>());
         REQUIRE_THROWS(YAML::Load("").as<PhaseRangeSpec>());

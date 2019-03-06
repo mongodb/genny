@@ -17,9 +17,9 @@
 
 #include <cassert>
 #include <chrono>
+#include <climits>
 #include <cmath>
 #include <sstream>
-#include <climits>
 
 #include <yaml-cpp/yaml.h>
 
@@ -47,7 +47,7 @@ struct IntegerSpec {
     IntegerSpec() = default;
     ~IntegerSpec() = default;
 
-    explicit IntegerSpec(int64_t v) : value{v} {}
+    IntegerSpec(int64_t v) : value{v} {}
     // int64_t is used by default, you can explicitly cast to another type if needed.
     int64_t value;
 
@@ -131,16 +131,23 @@ struct PhaseRangeSpec {
     PhaseRangeSpec() = default;
     ~PhaseRangeSpec() = default;
 
-    PhaseRangeSpec(genny::IntegerSpec s, genny::IntegerSpec e) {
-        assert(s.value >= 0 && e.value >= 0 && s.value <= UINT_MAX && e.value <= UINT_MAX && s.value <= e.value);
-        start = static_cast<genny::PhaseNumber>(s.value);
-        end = static_cast<genny::PhaseNumber>(e.value);
+    PhaseRangeSpec(genny::IntegerSpec s, genny::IntegerSpec e)
+        : start{static_cast<genny::PhaseNumber>(s.value)},
+          end{static_cast<genny::PhaseNumber>(e.value)} {
+        if (!(s.value >= 0 && s.value <= UINT_MAX)) {
+            std::stringstream msg;
+            msg << "Invalid start value for genny::PhaseRangeSpec: '" << s.value << "'."
+                << " The value must be of type 'u_int32_t";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+        if (!(e.value >= 0 && e.value <= UINT_MAX)) {
+            std::stringstream msg;
+            msg << "Invalid end value for genny::PhaseRangeSpec: '" << e.value << "'."
+                << " The value must be of type 'u_int32_t";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
     }
     PhaseRangeSpec(genny::IntegerSpec s) : PhaseRangeSpec(s, s) {}
-
-    // Allow construction with unsigned ints for testing
-    PhaseRangeSpec(u_int32_t s, u_int32_t e) : start{s}, end{e} {}
-    PhaseRangeSpec(u_int32_t s) : PhaseRangeSpec(s, s) {}
 
     genny::PhaseNumber start;
     genny::PhaseNumber end;
@@ -173,7 +180,7 @@ struct convert<genny::PhaseRangeSpec> {
         auto strRepr = node.as<std::string>();
 
         // use '..' as delimiter.
-        const std::string delimiter = "..";
+        constexpr std::string_view delimiter = "..";
         auto delimPos = strRepr.find(delimiter);
 
         if (delimPos == std::string::npos) {
@@ -182,7 +189,7 @@ struct convert<genny::PhaseRangeSpec> {
                 auto phaseNumberYaml = node.as<genny::IntegerSpec>();
                 rhs = genny::PhaseRangeSpec(phaseNumberYaml);
                 return true;
-            } catch (const genny::InvalidConfigurationException) {
+            } catch (const genny::InvalidConfigurationException& e) {
                 std::stringstream msg;
                 msg << "Invalid value for genny::PhaseRangeSpec: '" << strRepr << "'."
                     << " The correct syntax is either a single integer or two integers delimited "
@@ -200,10 +207,17 @@ struct convert<genny::PhaseRangeSpec> {
         try {
             start = startYaml.as<genny::IntegerSpec>();
             end = endYaml.as<genny::IntegerSpec>();
-        } catch (genny::InvalidConfigurationException) {
+        } catch (const genny::InvalidConfigurationException& e) {
             std::stringstream msg;
             msg << "Invalid value for genny::PhaseRangeSpec: '" << strRepr << "'."
                 << " The correct syntax is two integers delimited by '..'";
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+
+        if (start > end) {
+            std::stringstream msg;
+            msg << "Invalid value for genny::PhaseRangeSpec: '" << strRepr << "'."
+                << " The start value cannot be greater than the end value.";
             throw genny::InvalidConfigurationException(msg.str());
         }
         rhs = genny::PhaseRangeSpec(start, end);

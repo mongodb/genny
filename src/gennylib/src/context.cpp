@@ -114,7 +114,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     if (!phases) {
         return out;
     }
-    int totalIndex = 0;
+    int lastPhaseNumber = 0;
     for (const auto& phase : *phases) {
         // If we don't have a node or we are a null type, then we are a NoOp
         if (!phase || phase.IsNull()) {
@@ -124,8 +124,9 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
             throw InvalidConfigurationException(ss.str());
         }
         PhaseRangeSpec configuredRange =
-            phase["Phase"].as<PhaseRangeSpec>(PhaseRangeSpec{IntegerSpec{totalIndex}});
-        for (int rangeIndex = configuredRange.start; rangeIndex <= configuredRange.end; rangeIndex++) {
+            phase["Phase"].as<PhaseRangeSpec>(PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
+        for (int rangeIndex = configuredRange.start; rangeIndex <= configuredRange.end;
+             rangeIndex++) {
             auto [it, success] =
                 out.try_emplace(rangeIndex, std::make_unique<PhaseContext>(phase, *actorContext));
             if (!success) {
@@ -133,7 +134,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
                 msg << "Duplicate phase " << rangeIndex;
                 throw InvalidConfigurationException(msg.str());
             }
-            totalIndex++;
+            lastPhaseNumber++;
         }
     }
     actorContext->orchestrator().phasesAtLeastTo(out.size() - 1);
