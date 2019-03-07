@@ -25,7 +25,7 @@ import genny.csv2
 from genny import cedar
 
 
-def _get_fixture(*csv_file_path):
+def get_fixture(*csv_file_path):
     return pjoin('tests', 'fixtures', *csv_file_path)
 
 
@@ -118,7 +118,7 @@ class CedarIntegrationTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as output_dir:
             args = [
-                _get_fixture('cedar', 'two_op.csv'),
+                get_fixture('cedar', 'two_op.csv'),
                 output_dir
             ]
 
@@ -222,7 +222,7 @@ class CedarIntegrationTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as output_dir:
             args = [
-                _get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'),
+                get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'),
                 output_dir
             ]
 

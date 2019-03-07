@@ -146,6 +146,8 @@ def split_into_actor_operation_and_transform_to_cedar_format(file_name, out_dir)
     """
     Split up the IntermediateCSV format input into one or more BSON files in Cedar
     format; one file for each (actor, operation) pair.
+
+    :return: a list of cedar metrics file names
     """
 
     # remove the ".csv" suffix to get the actor name.
@@ -164,6 +166,8 @@ def split_into_actor_operation_and_transform_to_cedar_format(file_name, out_dir)
         finally:
             for fh in out_files.values():
                 fh.close()
+
+    return out_files.keys()
 
 
 def split_into_actor_csv_files(data_reader, out_dir):
@@ -208,23 +212,30 @@ def sort_csv_file(file_name, out_dir):
             show_progress=True)
 
 
-def parse_args(argv):
+def build_parser():
     parser = argparse.ArgumentParser(
         description='Convert Genny csv2 perf data to Cedar BSON format',
     )
     parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 perf data')
     parser.add_argument('output_dir', metavar='output-dir',
                         help='directory to store output BSON files')
+    return parser
 
-    return parser.parse_args(argv)
 
+def run(args):
+    """
+    Runs the conversion from genny metrics to cedar format.
 
-def main__cedar(argv=sys.argv[1:]):
-    args = parse_args(argv)
+    :param args: parsed command line args.
+    :return: list of cedar metrics file names and the approximate run time of the test
+             computed using the machine's system_time.
+
+    """
     out_dir = args.output_dir
 
     # Read CSV2 file
     my_csv2 = CSV2(args.input_file)
+    metrics_file_names = []
 
     with my_csv2.data_reader() as data_reader:
         # Separate into actor-operation
@@ -235,4 +246,13 @@ def main__cedar(argv=sys.argv[1:]):
             sort_csv_file(f, out_dir)
 
             # compute cumulative and stream output to bson file
-            split_into_actor_operation_and_transform_to_cedar_format(f, out_dir)
+            metrics_file_names.extend(
+                split_into_actor_operation_and_transform_to_cedar_format(f, out_dir))
+
+    return metrics_file_names, my_csv2.approximate_test_run_time
+
+
+def main__cedar(argv=sys.argv[1:]):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    run(args)

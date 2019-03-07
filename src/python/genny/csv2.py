@@ -13,6 +13,7 @@
 # limitations under the License.
 import contextlib
 import csv
+import datetime
 
 
 class _Dialect(csv.unix_dialect):
@@ -172,6 +173,17 @@ class CSV2:
 
         # file handle to raw CSV file; lifecycle is shared with this CSV2 object.
         self._csv2_file_name = csv2_file_name
+
+    @property
+    def approximate_test_run_time(self):
+        """
+        Get the approximate test run time using _unix_epoch_offset_ns.
+
+        :raises: AssertionError if the offset has not been set yet.
+        :return: datetime.timedelta instance representing the run time.
+        """
+        assert self._unix_epoch_offset_ns, 'test run time not available yet'
+        return datetime.timedelta(microseconds=(self._unix_epoch_offset_ns / 1000))
 
     @contextlib.contextmanager
     def data_reader(self):
