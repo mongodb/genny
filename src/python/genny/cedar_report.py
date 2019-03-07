@@ -249,7 +249,7 @@ class ISODateTimeEncoder(json.JSONEncoder):
         if isinstance(o, datetime.datetime):
             return o.isoformat()
 
-        return json.JSONEncoder.default(self, o)
+        return super().default(self, o)
 
 
 def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetriever):

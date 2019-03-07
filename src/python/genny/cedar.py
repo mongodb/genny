@@ -146,6 +146,8 @@ def split_into_actor_operation_and_transform_to_cedar_format(file_name, out_dir)
     """
     Split up the IntermediateCSV format input into one or more BSON files in Cedar
     format; one file for each (actor, operation) pair.
+
+    :return: a list of cedar metrics file names
     """
 
     # remove the ".csv" suffix to get the actor name.
@@ -221,6 +223,14 @@ def build_parser():
 
 
 def run(args):
+    """
+    Runs the conversion from genny metrics to cedar format.
+
+    :param args: parsed command line args.
+    :return: list of cedar metrics file names and the approximate run time of the test
+             computed using the machine's system_time.
+
+    """
     out_dir = args.output_dir
 
     # Read CSV2 file
