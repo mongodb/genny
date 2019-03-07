@@ -34,7 +34,7 @@ class CedarReportTest(unittest.TestCase):
             'EVG_variant': 'my_variant',
             'EVG_task_id': 'my_task_id',
             'EVG_execution_number': 'my_execution_number',
-            'EVG_is_patch': 'nope',  # This should get converted to mainline = True in the report.
+            'EVG_is_patch': 'true',  # This should get converted to mainline = False in the report.
 
             'test_name': 'my_test_name',
 
