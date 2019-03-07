@@ -72,7 +72,8 @@ class _Config(object):
         self.task_name = env['EVG_task_name']
         self.task_id = env['EVG_task_id']
         self.execution_number = env['EVG_execution_number']
-        self.mainline = (env['EVG_is_patch'] == 'false')
+        # This env var is either the string "true" or unset.
+        self.mainline = not (env['EVG_is_patch'] == 'true')
 
         # We set these for convenience.
         self.test_name = env['test_name']
