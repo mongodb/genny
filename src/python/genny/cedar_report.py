@@ -56,7 +56,7 @@ CedarReport = namedtuple('CedarReport', [
     'bucket'  # BucketConfig
 ])
 
-REPORT_FILE = 'cedar_report.json'
+DEFAULT_REPORT_FILE = 'cedar_report.json'
 
 
 class _Config(object):
@@ -196,11 +196,12 @@ class CertRetriever(object):
 class ShellCuratorRunner(object):
     """Runs curator"""
 
-    def __init__(self, retriever=None):
+    def __init__(self, retriever=None, report_file=DEFAULT_REPORT_FILE):
         """
         :param retriever: CertRetriever to use. Will construct one from given config if None
         """
         self.retriever = retriever
+        self.report_file = report_file
 
     def get_command(self):
         """
@@ -221,7 +222,7 @@ class ShellCuratorRunner(object):
             '--ca',
             self.retriever.root_ca(),
             '--path',
-            REPORT_FILE,
+            self.report_file,
         ]
         return command
 
@@ -239,7 +240,7 @@ class ShellCuratorRunner(object):
 def build_parser():
     parser = cedar.build_parser()
     parser.description += " and create a cedar report"
-    parser.add_argument('--report-file', default=REPORT_FILE, help='path to generated report file')
+    parser.add_argument('--report-file', default=DEFAULT_REPORT_FILE, help='path to generated report file')
     parser.add_argument('--test-name', help='human friendly name for this test, defaults to the '
                                             'EVG_task_name environment variable')
     return parser
@@ -278,12 +279,12 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
 
     report_dict = build_report(config)
 
-    with open(os.path.join(args.output_dir, args.report_file), 'w') as f:
+    with open(args.report_file, 'w') as f:
         json.dump(report_dict, f, cls=ISODateTimeEncoder)
 
     jira_user = env['perf_jira_user']
     jira_pwd = env['perf_jira_pw']
 
     cr = cert_retriever_cls(jira_user, jira_pwd)
-    runner = ShellCuratorRunner(cr)
+    runner = ShellCuratorRunner(cr, args.report_file)
     runner.run(runner.get_command())

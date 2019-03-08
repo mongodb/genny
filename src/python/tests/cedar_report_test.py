@@ -1,6 +1,5 @@
 import datetime
 import json
-import os
 import tempfile
 import unittest
 
@@ -91,7 +90,7 @@ class CedarReportTest(unittest.TestCase):
             argv = [get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'), output_dir]
             main__cedar_report(argv, mock_env, _NoopCertRetriever)
 
-            with open(os.path.join(output_dir, 'cedar_report.json')) as f:
+            with open('cedar_report.json') as f:
                 report_json = json.load(f)
 
                 # Just do a basic type check. The test time isn't used.
