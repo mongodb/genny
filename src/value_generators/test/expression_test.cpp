@@ -238,6 +238,13 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
     genny::DefaultRandom rng{};
     rng.seed(269849313357703264LL);
 
+    SECTION("recursive application caught at setup time") {
+        auto yaml = YAML::Load(R"(
+{^RandomInt: {min: [7], max: 100}}
+        )");
+        REQUIRE_THROWS(Expression::parseExpression(yaml));
+    }
+
     SECTION("valid syntax") {
         auto yaml = YAML::Load(R"(
 1

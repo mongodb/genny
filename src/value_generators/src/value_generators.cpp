@@ -420,7 +420,14 @@ UniqueExpression RandomIntExpression::parse(YAML::Node node) {
 }
 
 UniformIntExpression::UniformIntExpression(UniqueExpression min, UniqueExpression max)
-    : _min(std::move(min)), _max(std::move(max)) {}
+    : _min(std::move(min)), _max(std::move(max)) {
+    if (_min->valueType() != ValueType::Integer || _max->valueType() != ValueType::Integer) {
+        std::stringstream error;
+        // TODO: print expression as json or something?
+        error << "Invalid min/max value";
+        throw InvalidValueGeneratorSyntax(error.str());
+    }
+}
 
 Value UniformIntExpression::evaluate(genny::DefaultRandom& rng) const {
     auto min = getInt64Parameter(_min->evaluate(rng), "min");
@@ -431,7 +438,14 @@ Value UniformIntExpression::evaluate(genny::DefaultRandom& rng) const {
 }
 
 BinomialIntExpression::BinomialIntExpression(UniqueExpression t, double p)
-    : _t(std::move(t)), _p(p) {}
+    : _t(std::move(t)), _p(p) {
+    if (_t->valueType() != ValueType::Integer) {
+        std::stringstream error;
+        // TODO: print expression as json or something?
+        error << "Invalid min/max value";
+        throw InvalidValueGeneratorSyntax(error.str());
+    }
+}
 
 Value BinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
     auto t = getInt64Parameter(_t->evaluate(rng), "t");
@@ -441,7 +455,15 @@ Value BinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
 }
 
 NegativeBinomialIntExpression::NegativeBinomialIntExpression(UniqueExpression k, double p)
-    : _k(std::move(k)), _p(p) {}
+    : _k(std::move(k)), _p(p) {
+
+    if (_k->valueType() != ValueType::Integer) {
+        std::stringstream error;
+        // TODO: print expression as json or something?
+        error << "Invalid k value";
+        throw InvalidValueGeneratorSyntax(error.str());
+    }
+}
 
 Value NegativeBinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
     auto k = getInt64Parameter(_k->evaluate(rng), "k");
@@ -466,7 +488,14 @@ Value PoissonIntExpression::evaluate(genny::DefaultRandom& rng) const {
 
 RandomStringExpression::RandomStringExpression(UniqueExpression length,
                                                std::optional<std::string> alphabet)
-    : _length(std::move(length)), _alphabet(std::move(alphabet)) {}
+    : _length(std::move(length)), _alphabet(std::move(alphabet)) {
+    if (_length->valueType() != ValueType::Integer) {
+        std::stringstream error;
+        // TODO: print expression as json or something?
+        error << "Invalid length value";
+        throw InvalidValueGeneratorSyntax(error.str());
+    }
+}
 
 UniqueExpression RandomStringExpression::parse(YAML::Node node) {
     UniqueExpression length;
@@ -508,7 +537,14 @@ Value RandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
 }
 
 FastRandomStringExpression::FastRandomStringExpression(UniqueExpression length)
-    : _length(std::move(length)) {}
+    : _length(std::move(length)) {
+    if (_length->valueType() != ValueType::Integer) {
+        std::stringstream error;
+        // TODO: print expression as json or something?
+        error << "Invalid length value";
+        throw InvalidValueGeneratorSyntax(error.str());
+    }
+}
 
 UniqueExpression FastRandomStringExpression::parse(YAML::Node node) {
     UniqueExpression length;

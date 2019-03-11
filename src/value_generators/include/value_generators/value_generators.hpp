@@ -173,6 +173,15 @@ public:
 
     virtual ~Expression() = default;
 
+    enum class ValueType {
+        Integer,
+        String,
+        Array,
+        Document,
+    };
+
+    virtual ValueType valueType() const = 0;
+
     /**
      * Generate a possibly randomized value.
      *
@@ -192,6 +201,8 @@ public:
 
     explicit ConstantExpression(Value value);
     Value evaluate(genny::DefaultRandom& rng) const override;
+    // TODO: I don't think this is right - may need a ConstantExpression for each ValueType
+    ValueType valueType() const override { return ValueType::Document; }
 
 private:
     const Value _value;
@@ -211,6 +222,8 @@ public:
     explicit DocumentExpression(std::vector<ElementType> elements);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
+    ValueType valueType() const override { return ValueType::Document; }
+
 private:
     const std::vector<ElementType> _elements;
 };
@@ -228,6 +241,9 @@ public:
 
     explicit ArrayExpression(std::vector<ElementType> elements);
     Value evaluate(genny::DefaultRandom& rng) const override;
+    ValueType valueType() const override { return ValueType::Array; }
+
+
 
 private:
     const std::vector<ElementType> _elements;
@@ -240,6 +256,7 @@ private:
 class RandomIntExpression : public Expression {
 public:
     static UniqueExpression parse(YAML::Node node);
+    virtual ValueType valueType() const override { return ValueType::Integer; }
 };
 
 
@@ -252,7 +269,6 @@ class UniformIntExpression : public RandomIntExpression {
 public:
     UniformIntExpression(UniqueExpression min, UniqueExpression max);
     Value evaluate(genny::DefaultRandom& rng) const override;
-
 private:
     const UniqueExpression _min;
     const UniqueExpression _max;
@@ -268,7 +284,6 @@ class BinomialIntExpression : public RandomIntExpression {
 public:
     BinomialIntExpression(UniqueExpression t, double p);
     Value evaluate(genny::DefaultRandom& rng) const override;
-
 private:
     const UniqueExpression _t;
     const double _p;
@@ -284,7 +299,6 @@ class NegativeBinomialIntExpression : public RandomIntExpression {
 public:
     NegativeBinomialIntExpression(UniqueExpression k, double p);
     Value evaluate(genny::DefaultRandom& rng) const override;
-
 private:
     const UniqueExpression _k;
     const double _p;
@@ -335,6 +349,8 @@ public:
 
     RandomStringExpression(UniqueExpression length, std::optional<std::string> alphabet);
     Value evaluate(genny::DefaultRandom& rng) const override;
+    ValueType valueType() const override { return ValueType::String; }
+
 
 private:
     const UniqueExpression _length;
@@ -353,6 +369,7 @@ public:
 
     explicit FastRandomStringExpression(UniqueExpression length);
     Value evaluate(genny::DefaultRandom& rng) const override;
+    ValueType valueType() const override { return ValueType::String; }
 
 private:
     const UniqueExpression _length;
