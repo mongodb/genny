@@ -526,15 +526,8 @@ Value RandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
     return Value{str};
 }
 
-FastRandomStringExpression::FastRandomStringExpression(UniqueExpression length)
-    : _length(std::move(length)) {
-    if (_length->valueType() != ValueType::Integer) {
-        std::stringstream error;
-        // TODO: print expression as json or something?
-        error << "Invalid length value";
-        throw InvalidValueGeneratorSyntax(error.str());
-    }
-}
+FastRandomStringExpression::FastRandomStringExpression(UniqueTypedExpression<ValueType::Integer> length)
+    : _length(std::move(length)) {}
 
 UniqueExpression FastRandomStringExpression::parse(YAML::Node node) {
     UniqueExpression length;
@@ -545,7 +538,9 @@ UniqueExpression FastRandomStringExpression::parse(YAML::Node node) {
         throw InvalidValueGeneratorSyntax("Expected 'length' parameter for fast random string");
     }
 
-    return std::make_unique<FastRandomStringExpression>(std::move(length));
+    UniqueTypedExpression<ValueType::Integer> lengthT =
+        std::make_unique<TypedExpression<ValueType::Integer>>(std::move(length));
+    return std::make_unique<FastRandomStringExpression>(std::move(lengthT));
 }
 
 Value FastRandomStringExpression::evaluate(genny::DefaultRandom& rng) const {

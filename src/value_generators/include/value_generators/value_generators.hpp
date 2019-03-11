@@ -400,14 +400,14 @@ public:
 
     static UniqueExpression parse(YAML::Node node);
 
-    explicit FastRandomStringExpression(UniqueExpression length);
+    explicit FastRandomStringExpression(UniqueTypedExpression<ValueType::Integer> length);
     Value evaluate(genny::DefaultRandom& rng) const override;
     ValueType valueType() const override {
         return ValueType::String;
     }
 
 private:
-    const UniqueExpression _length;
+    const UniqueTypedExpression<ValueType::Integer> _length;
 };
 
 }  // namespace genny::value_generators
