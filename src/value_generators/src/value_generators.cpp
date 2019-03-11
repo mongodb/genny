@@ -476,16 +476,9 @@ Value PoissonIntExpression::evaluate(genny::DefaultRandom& rng) const {
     return Value{distribution(rng)};
 }
 
-RandomStringExpression::RandomStringExpression(UniqueExpression length,
+RandomStringExpression::RandomStringExpression(UniqueTypedExpression<ValueType::Integer> length,
                                                std::optional<std::string> alphabet)
-    : _length(std::move(length)), _alphabet(std::move(alphabet)) {
-    if (_length->valueType() != ValueType::Integer) {
-        std::stringstream error;
-        // TODO: print expression as json or something?
-        error << "Invalid length value";
-        throw InvalidValueGeneratorSyntax(error.str());
-    }
-}
+    : _length(std::move(length)), _alphabet(std::move(alphabet)) {}
 
 UniqueExpression RandomStringExpression::parse(YAML::Node node) {
     UniqueExpression length;
@@ -507,7 +500,11 @@ UniqueExpression RandomStringExpression::parse(YAML::Node node) {
         }
     }
 
-    return std::make_unique<RandomStringExpression>(std::move(length), std::move(alphabet));
+    UniqueTypedExpression<ValueType::Integer> lengthT =
+        std::make_unique<TypedExpression<ValueType::Integer>>(std::move(length));
+
+    // TODO: does this want to be `optional`?
+    return std::make_unique<RandomStringExpression>(std::move(lengthT), std::move(alphabet));
 }
 
 Value RandomStringExpression::evaluate(genny::DefaultRandom& rng) const {

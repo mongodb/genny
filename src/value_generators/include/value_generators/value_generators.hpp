@@ -378,7 +378,7 @@ public:
 
     static UniqueExpression parse(YAML::Node node);
 
-    RandomStringExpression(UniqueExpression length, std::optional<std::string> alphabet);
+    RandomStringExpression(UniqueTypedExpression<ValueType::Integer> length, std::optional<std::string> alphabet);
     Value evaluate(genny::DefaultRandom& rng) const override;
     ValueType valueType() const override {
         return ValueType::String;
@@ -386,7 +386,7 @@ public:
 
 
 private:
-    const UniqueExpression _length;
+    const UniqueTypedExpression<ValueType::Integer> _length;
     const std::optional<std::string> _alphabet;
 };
 
