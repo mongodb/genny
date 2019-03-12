@@ -34,8 +34,8 @@
 namespace genny::actor {
 
 /** @private */
-using index_type = std::pair<value_generators::UniqueExpression,
-                             std::optional<value_generators::UniqueExpression>>;
+using index_type = std::pair<value_generators::DocumentGenerator ,
+                             std::optional<value_generators::DocumentGenerator >>;
 
 /** @private */
 struct Loader::PhaseConfig {
@@ -51,10 +51,10 @@ struct Loader::PhaseConfig {
         auto indexNodes = context.get("Indexes");
         for (auto indexNode : indexNodes) {
             indexes.emplace_back(
-                value_generators::Expression::parseOperand(indexNode["keys"]),
+                value_generators::Generators::document(indexNode["keys"]),
                 indexNode["options"]
                     ? std::make_optional(
-                          value_generators::Expression::parseOperand(indexNode["options"]))
+                          value_generators::Generators::document(indexNode["options"]))
                     : std::nullopt);
         }
         if (thread == context.get<int>("Threads") - 1) {
@@ -107,11 +107,11 @@ void genny::actor::Loader::run() {
                 // For each index
                 for (auto&& [keys, options] : config->indexes) {
                     // Make the index
-                    auto indexKey = keys->evaluate(_rng).getDocument();
+                    auto indexKey = keys->evaluate(_rng);
                     BOOST_LOG_TRIVIAL(debug)
                         << "Building index " << bsoncxx::to_json(indexKey.view());
                     if (options) {
-                        auto indexOptions = (*options)->evaluate(_rng).getDocument();
+                        auto indexOptions = (*options)->evaluate(_rng);
                         BOOST_LOG_TRIVIAL(debug)
                             << "With options " << bsoncxx::to_json(indexOptions.view());
                         auto indexOpCtx = _indexBuild.start();
