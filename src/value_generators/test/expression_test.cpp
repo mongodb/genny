@@ -37,12 +37,15 @@ void assert_arrays_equal(bsoncxx::array::view expected, bsoncxx::array::view act
 }
 
 TEST_CASE("Expression::parseExpression error cases") {
+    genny::DefaultRandom rng{};
+    rng.seed(269849313357703264LL);
+
     SECTION("valid syntax") {
         auto yaml = YAML::Load(R"(
 {^RandomInt: {min: 50, max: 60}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
     }
 
@@ -51,25 +54,25 @@ TEST_CASE("Expression::parseExpression error cases") {
 scalarValue
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 null
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 [sequence, value]
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 []
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("must have exactly one key") {
@@ -77,19 +80,19 @@ null
 {extraKeyBefore: 1, ^RandomInt: {min: 50, max: 60}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {min: 50, max: 60}, extraKeyAfter: 1}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("must be a known expression type") {
@@ -97,37 +100,40 @@ null
 {RandomInt: {min: 50, max: 60}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^NonExistent: {min: 50, max: 60}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 }
 
 TEST_CASE("Expression::parseObject error cases") {
+    genny::DefaultRandom rng{};
+    rng.seed(269849313357703264LL);
+
     SECTION("valid syntax") {
         auto yaml = YAML::Load(R"(
 {^RandomInt: {min: 50, max: 60}}
         )");
 
-        auto expr = Expression::parseObject(yaml);
+        auto expr = Expression::parseObject(yaml, rng);
         REQUIRE(expr != nullptr);
 
         yaml = YAML::Load(R"(
 {}
         )");
 
-        expr = Expression::parseObject(yaml);
+        expr = Expression::parseObject(yaml, rng);
         REQUIRE(expr != nullptr);
 
         yaml = YAML::Load(R"(
 {RandomInt: {min: 50, max: 60}}
         )");
 
-        expr = Expression::parseObject(yaml);
+        expr = Expression::parseObject(yaml, rng);
         REQUIRE(expr != nullptr);
     }
 
@@ -136,26 +142,26 @@ TEST_CASE("Expression::parseObject error cases") {
 scalarValue
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseObject(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseObject(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 null
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseObject(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseObject(yaml, rng), InvalidValueGeneratorSyntax);
 
 
         yaml = YAML::Load(R"(
 [sequence, value]
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseObject(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseObject(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 []
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseObject(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseObject(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("must not mix '^' and non-'^' prefixed keys") {
@@ -163,21 +169,23 @@ null
 {otherKey: 1, ^RandomInt: {min: 50, max: 60}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseObject(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseObject(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {min: 50, max: 60}, otherKey: 1}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseObject(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseObject(yaml, rng), InvalidValueGeneratorSyntax);
     }
 }
 
 TEST_CASE("Expression::parseOperand error cases") {
+    genny::DefaultRandom rng{};
+    rng.seed(269849313357703264LL);
+
     SECTION("Document with no templates") {
-        genny::DefaultRandom rng;
         auto yaml = YAML::Load(R"({a: 1})");
-        auto expr = Expression::parseOperand(yaml);
+        auto expr = Expression::parseOperand(yaml, rng);
         assert_documents_equal(
                 expr->evaluate(rng).getDocument(),
                 BasicBson::make_document(BasicBson::kvp("a", BsonTypes::b_int32{1})));
@@ -189,49 +197,49 @@ TEST_CASE("Expression::parseOperand error cases") {
 {min: 50, max: 60}
         )");
 
-        auto expr = Expression::parseOperand(yaml);
+        auto expr = Expression::parseOperand(yaml, rng);
         REQUIRE(expr != nullptr);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {min: 50, max: 60}}
         )");
 
-        expr = Expression::parseOperand(yaml);
+        expr = Expression::parseOperand(yaml, rng);
         REQUIRE(expr != nullptr);
 
         yaml = YAML::Load(R"(
 {}
         )");
 
-        expr = Expression::parseOperand(yaml);
+        expr = Expression::parseOperand(yaml, rng);
         REQUIRE(expr != nullptr);
 
         yaml = YAML::Load(R"(
 scalarValue
         )");
 
-        expr = Expression::parseOperand(yaml);
+        expr = Expression::parseOperand(yaml, rng);
         REQUIRE(expr != nullptr);
 
         yaml = YAML::Load(R"(
 null
         )");
 
-        expr = Expression::parseOperand(yaml);
+        expr = Expression::parseOperand(yaml, rng);
         REQUIRE(expr != nullptr);
 
         yaml = YAML::Load(R"(
 [sequence, value]
         )");
 
-        expr = Expression::parseOperand(yaml);
+        expr = Expression::parseOperand(yaml, rng);
         REQUIRE(expr != nullptr);
 
         yaml = YAML::Load(R"(
 []
         )");
 
-        expr = Expression::parseOperand(yaml);
+        expr = Expression::parseOperand(yaml, rng);
         REQUIRE(expr != nullptr);
     }
 
@@ -240,7 +248,7 @@ null
 {}
         )")["nonExistent"];
 
-        REQUIRE_THROWS_AS(Expression::parseOperand(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseOperand(yaml, rng), InvalidValueGeneratorSyntax);
     }
 }
 
@@ -252,7 +260,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
         auto yaml = YAML::Load(R"(
 {^RandomInt: {min: [7], max: 100}}
         )");
-        REQUIRE_THROWS(Expression::parseExpression(yaml));
+        REQUIRE_THROWS(Expression::parseExpression(yaml, rng));
     }
 
     SECTION("valid syntax") {
@@ -260,7 +268,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 1
         )");
 
-        auto expr = ConstantExpression::parse(yaml);
+        auto expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getInt32() == 1);
 
@@ -268,7 +276,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 269849313357703264
         )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getInt64() == 269849313357703264LL);
 
@@ -276,7 +284,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 3.14
         )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getDouble() == 3.14);
 
@@ -284,7 +292,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 string
         )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getString() == "string");
 
@@ -292,7 +300,7 @@ string
 '5'
         )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getString() == "5");
 
@@ -300,7 +308,7 @@ string
 null
         )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getNull() == BsonTypes::b_null{});
     }
@@ -310,7 +318,7 @@ null
 true
             )");
 
-        auto expr = ConstantExpression::parse(yaml);
+        auto expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getBool() == true);
 
@@ -318,7 +326,7 @@ true
 false
             )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getBool() == false);
 
@@ -326,7 +334,7 @@ false
 on
             )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getBool() == true);
 
@@ -334,7 +342,7 @@ on
 off
             )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getBool() == false);
 
@@ -342,7 +350,7 @@ off
 yes
             )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getBool() == true);
 
@@ -350,7 +358,7 @@ yes
 no
             )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE(expr->evaluate(rng).getBool() == false);
     }
@@ -360,7 +368,7 @@ no
 {min: 50, max: 60}
         )");
 
-        auto expr = ConstantExpression::parse(yaml);
+        auto expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
 
         assert_documents_equal(
@@ -372,7 +380,7 @@ no
 {}
         )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
 
         assert_documents_equal(expr->evaluate(rng).getDocument(), BasicBson::make_document());
@@ -383,7 +391,7 @@ no
 [sequence, value]
         )");
 
-        auto expr = ConstantExpression::parse(yaml);
+        auto expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
 
         assert_arrays_equal(expr->evaluate(rng).getArray(),
@@ -393,7 +401,7 @@ no
 []
         )");
 
-        expr = ConstantExpression::parse(yaml);
+        expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
 
         assert_arrays_equal(expr->evaluate(rng).getArray(), BasicBson::make_array());
@@ -409,7 +417,7 @@ TEST_CASE("Expression parsing with DocumentExpression::parse") {
 {min: 50, max: 60}
         )");
 
-        auto expr = DocumentExpression::parse(yaml);
+        auto expr = DocumentExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         assert_documents_equal(
             expr->evaluate(rng).getDocument(),
@@ -420,7 +428,7 @@ TEST_CASE("Expression parsing with DocumentExpression::parse") {
 {}
         )");
 
-        expr = DocumentExpression::parse(yaml);
+        expr = DocumentExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         assert_documents_equal(expr->evaluate(rng).getDocument(), BasicBson::make_document());
     }
@@ -430,19 +438,19 @@ TEST_CASE("Expression parsing with DocumentExpression::parse") {
 scalarValue
         )");
 
-        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 [sequence, value]
         )");
 
-        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 []
         )");
 
-        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("must not be an expression") {
@@ -450,19 +458,19 @@ scalarValue
 {^RandomInt: {min: 50, max: 60}}
         )");
 
-        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {otherKey: 1, ^RandomInt: {min: 50, max: 60}}
         )");
 
-        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {min: 50, max: 60}, otherKey: 1}
         )");
 
-        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(DocumentExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
     }
 }
 
@@ -475,7 +483,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 [sequence, type]
         )");
 
-        auto expr = ArrayExpression::parse(yaml);
+        auto expr = ArrayExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array("sequence", "type"));
@@ -484,7 +492,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 []
         )");
 
-        expr = ArrayExpression::parse(yaml);
+        expr = ArrayExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         assert_arrays_equal(expr->evaluate(rng).getArray(), BasicBson::make_array());
     }
@@ -494,7 +502,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 [1, 269849313357703264, 3.14, string, true, null]
         )");
 
-        auto expr = ArrayExpression::parse(yaml);
+        auto expr = ArrayExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array(BsonTypes::b_int32{1},
@@ -512,7 +520,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 - 10
         )");
 
-        auto expr = ArrayExpression::parse(yaml);
+        auto expr = ArrayExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array(BsonTypes::b_int64{10},
@@ -525,7 +533,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 - 20
         )");
 
-        expr = ArrayExpression::parse(yaml);
+        expr = ArrayExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array(BsonTypes::b_int64{20},
@@ -538,19 +546,19 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
 scalarValue
         )");
 
-        REQUIRE_THROWS_AS(ArrayExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(ArrayExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {min: 50, max: 60}
         )");
 
-        REQUIRE_THROWS_AS(ArrayExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(ArrayExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {}
         )");
 
-        REQUIRE_THROWS_AS(ArrayExpression::parse(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(ArrayExpression::parse(yaml, rng), InvalidValueGeneratorSyntax);
     }
 }
 
@@ -568,7 +576,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: uniform, min: 50, max: 60}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -583,19 +591,19 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: uniform, min: 50}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {distribution: uniform, max: 60}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {distribution: uniform}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("uniform distribution requires integer 'min' and 'max' parameters") {
@@ -603,7 +611,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: uniform, min: 50.0, max: 60}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE_THROWS_AS(expr->evaluate(rng), InvalidValueGeneratorSyntax);
 
@@ -611,7 +619,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: uniform, min: 50, max: 60.0}}
         )");
 
-        expr = Expression::parseExpression(yaml);
+        expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE_THROWS_AS(expr->evaluate(rng), InvalidValueGeneratorSyntax);
     }
@@ -621,7 +629,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -636,19 +644,19 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: binomial, t: 100}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {distribution: binomial, p: 0.05}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {distribution: binomial}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("binomial distribution requires integer 't' parameter") {
@@ -656,7 +664,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: binomial, t: 100.0, p: 0.05}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE_THROWS_AS(expr->evaluate(rng), InvalidValueGeneratorSyntax);
     }
@@ -666,7 +674,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: negative_binomial, k: 100, p: 0.95}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -680,19 +688,19 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: negative_binomial, k: 100}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {distribution: negative_binomial, p: 0.95}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {distribution: negative_binomial}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("negative_binomial distribution requires integer 'k' parameter") {
@@ -700,7 +708,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: negative_binomial, k: 100.0, p: 0.95}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
         REQUIRE_THROWS_AS(expr->evaluate(rng), InvalidValueGeneratorSyntax);
     }
@@ -710,7 +718,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: geometric, p: 0.05}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -724,7 +732,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: geometric}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("poisson distribution") {
@@ -732,7 +740,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: poisson, mean: 5.6}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -746,7 +754,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: poisson}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("requires known distribution") {
@@ -754,7 +762,7 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: non_existent}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 }
 
@@ -772,7 +780,7 @@ TEST_CASE("Expression parsing with RandomStringExpression") {
 {^RandomString: {length: 15}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -785,7 +793,7 @@ TEST_CASE("Expression parsing with RandomStringExpression") {
 {^RandomString: {length: 15, alphabet: xyz}}
         )");
 
-        expr = Expression::parseExpression(yaml);
+        expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -801,7 +809,7 @@ TEST_CASE("Expression parsing with RandomStringExpression") {
 {^RandomString: {length: 15, alphabet: x}}
         )");
 
-        expr = Expression::parseExpression(yaml);
+        expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -815,13 +823,13 @@ TEST_CASE("Expression parsing with RandomStringExpression") {
 {^RandomString: {}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomString: {alphabet: abc}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("requires non-empty 'alphabet' parameter if specified") {
@@ -829,7 +837,7 @@ TEST_CASE("Expression parsing with RandomStringExpression") {
 {^RandomString: {length: 15, alphabet: ''}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 }
 
@@ -847,7 +855,7 @@ TEST_CASE("Expression parsing with FastRandomStringExpression") {
 {^FastRandomString: {length: 15}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -862,7 +870,7 @@ TEST_CASE("Expression parsing with FastRandomStringExpression") {
 {^FastRandomString: {}}
         )");
 
-        REQUIRE_THROWS_AS(Expression::parseExpression(yaml), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 }
 
@@ -880,7 +888,7 @@ TEST_CASE("Expression parsing with ConstantExpression") {
 {^Verbatim: {^RandomInt: {min: 50, max: 60}}}
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -896,7 +904,7 @@ TEST_CASE("Expression parsing with ConstantExpression") {
 {^Verbatim: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}}
         )");
 
-        expr = Expression::parseExpression(yaml);
+        expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -914,7 +922,7 @@ TEST_CASE("Expression parsing with ConstantExpression") {
 {^Verbatim: {^RandomInt: {min: 50, max: 60}, otherKey: 1}}
         )");
 
-        expr = Expression::parseExpression(yaml);
+        expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -932,7 +940,7 @@ TEST_CASE("Expression parsing with ConstantExpression") {
 {^Verbatim: {^RandomString: {length: 15}}}
         )");
 
-        expr = Expression::parseExpression(yaml);
+        expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {
@@ -952,7 +960,7 @@ TEST_CASE("Expression parsing with ConstantExpression") {
 - scalarValue
         )");
 
-        auto expr = Expression::parseExpression(yaml);
+        auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
 
         for (int i = 0; i < kNumSamples; ++i) {

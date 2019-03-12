@@ -189,14 +189,14 @@ struct DocumentValueType {
  */
 class Expression {
 public:
-    using Parser = std::function<UniqueExpression(YAML::Node)>;
+    using Parser = std::function<UniqueExpression(YAML::Node, DefaultRandom& rng)>;
 
     /**
      * Parse `node` into one of the Expression types registered in the `parserMap`.
      *
      * @throws InvalidConfigurationException if `node` isn't a mapping type with a '^'-prefixed key.
      */
-    static UniqueExpression parseExpression(YAML::Node node);
+    static UniqueExpression parseExpression(YAML::Node node, DefaultRandom& rng);
 
     /**
      * Parse `node` into either:
@@ -205,7 +205,7 @@ public:
      *
      * @throws InvalidConfigurationException if `node` isn't a mapping type.
      */
-    static UniqueExpression parseObject(YAML::Node node);
+    static UniqueExpression parseObject(YAML::Node node, DefaultRandom& rng);
 
     /**
      * Parse `node` into one of the following:
@@ -216,7 +216,7 @@ public:
      *
      * @throws InvalidConfigurationException if `node` is malformed.
      */
-    static UniqueExpression parseOperand(YAML::Node node);
+    static UniqueExpression parseOperand(YAML::Node node, DefaultRandom& rng);
 
     virtual ~Expression() = default;
 
@@ -260,11 +260,8 @@ using DocumentGenerator = v1::UniqueTypedExpression<v1::DocumentValueType>;
 
 class Generators {
 public:
-    static DocumentGenerator document(YAML::Node node) {
-        YAML::Emitter out;
-        out << node;
-        BOOST_LOG_TRIVIAL(info) << "Doc generator from yaml=" << out.c_str();
-        return std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(v1::Expression::parseOperand(node));
+    static DocumentGenerator document(YAML::Node node, DefaultRandom& rng) {
+        return std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(v1::Expression::parseOperand(node, rng));
     }
 };
 
@@ -276,7 +273,7 @@ namespace v1 {
  */
 class ConstantExpression : public Expression {
 public:
-    static UniqueExpression parse(YAML::Node node);
+    static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
 
     explicit ConstantExpression(Value value, ValueType type);
     Value evaluate(genny::DefaultRandom& rng) const override;
@@ -298,7 +295,7 @@ class DocumentExpression : public Expression {
 public:
     using ElementType = std::pair<std::string, UniqueExpression>;
 
-    static UniqueExpression parse(YAML::Node node);
+    static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
 
     explicit DocumentExpression(std::vector<ElementType> elements);
     Value evaluate(genny::DefaultRandom& rng) const override;
@@ -320,7 +317,7 @@ class ArrayExpression : public Expression {
 public:
     using ElementType = UniqueExpression;
 
-    static UniqueExpression parse(YAML::Node node);
+    static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
 
     explicit ArrayExpression(std::vector<ElementType> elements);
     Value evaluate(genny::DefaultRandom& rng) const override;
@@ -339,7 +336,7 @@ private:
  */
 class RandomIntExpression : public Expression {
 public:
-    static UniqueExpression parse(YAML::Node node);
+    static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
     virtual ValueType valueType() const override {
         return ValueType::Integer;
     }
@@ -435,7 +432,7 @@ public:
         "abcdefghijklmnopqrstuvwxyz"
         "0123456789+/"};
 
-    static UniqueExpression parse(YAML::Node node);
+    static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
 
     RandomStringExpression(UniqueTypedExpression<IntegerValueType> length, std::optional<std::string> alphabet);
     Value evaluate(genny::DefaultRandom& rng) const override;
@@ -457,7 +454,7 @@ public:
     static constexpr auto kAlphabet = RandomStringExpression::kDefaultAlphabet;
     static constexpr auto kAlphabetLength = kAlphabet.size();
 
-    static UniqueExpression parse(YAML::Node node);
+    static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
 
     explicit FastRandomStringExpression(UniqueTypedExpression<IntegerValueType> length);
     Value evaluate(genny::DefaultRandom& rng) const override;
