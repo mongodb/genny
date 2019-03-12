@@ -16,6 +16,7 @@
 #define HEADER_E6E05F14_BE21_4A9B_822D_FFD669CFB1B4_INCLUDED
 
 #include <exception>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <ostream>
@@ -23,6 +24,8 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+#include <boost/log/trivial.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -143,6 +146,30 @@ enum class ValueType {
     Null,
 };
 
+inline std::ostream& operator <<(std::ostream& out, ValueType t) {
+    switch(t) {
+        case ValueType::Integer: out << "Integer"; break;
+        case ValueType::String: out << "String"; break;
+        case ValueType::Array: out << "Array"; break;
+        case ValueType::Boolean: out << "Boolean"; break;
+        case ValueType::Document: out << "Document"; break;
+        case ValueType::Null: out << "Null"; break;
+    }
+    return out;
+}
+
+struct IntegerValueType {
+    using OutputType = int64_t;
+    constexpr static ValueType valueType() { return ValueType::Integer; }
+    constexpr static OutputType convert(const Value& value) {
+        auto out = value.tryAsInt64();
+        if (!out) {
+            throw InvalidValueGeneratorSyntax("Unknown");
+        }
+        return *out;
+    }
+};
+
 /**
  * Base class for generating values.
  *
@@ -193,22 +220,27 @@ public:
     virtual Value evaluate(genny::DefaultRandom& rng) const = 0;
 };
 
-template <ValueType T>
+template <class T>
 class TypedExpression {
     UniqueExpression _expression;
+    using OutputType = typename T::OutputType;
+    static constexpr ValueType t = T::valueType();
 
+    static OutputType convert(const Value& value) {
+        return T::convert(value);
+    }
 public:
     explicit TypedExpression(UniqueExpression expression) : _expression{std::move(expression)} {
-        if (_expression->valueType() != T) {
+        if (_expression->valueType() != t) {
             throw InvalidValueGeneratorSyntax("Invalid configuration");
         }
     }
-    auto evaluate(genny::DefaultRandom& rng) {
-        return _expression->evaluate(rng);
+    OutputType evaluate(genny::DefaultRandom& rng) {
+        return convert(_expression->evaluate(rng));
     }
 };
 
-template <ValueType T>
+template <typename T>
 using UniqueTypedExpression = std::unique_ptr<TypedExpression<T>>;
 
 
@@ -294,13 +326,13 @@ public:
  */
 class UniformIntExpression : public RandomIntExpression {
 public:
-    UniformIntExpression(UniqueTypedExpression<ValueType::Integer> min,
-                         UniqueTypedExpression<ValueType::Integer> max);
+    UniformIntExpression(UniqueTypedExpression<IntegerValueType> min,
+                         UniqueTypedExpression<IntegerValueType> max);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const UniqueTypedExpression<ValueType::Integer> _min;
-    const UniqueTypedExpression<ValueType::Integer> _max;
+    const UniqueTypedExpression<IntegerValueType> _min;
+    const UniqueTypedExpression<IntegerValueType> _max;
 };
 
 
@@ -311,11 +343,11 @@ private:
  */
 class BinomialIntExpression : public RandomIntExpression {
 public:
-    BinomialIntExpression(UniqueTypedExpression<ValueType::Integer> t, double p);
+    BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, double p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const UniqueTypedExpression<ValueType::Integer> _t;
+    const UniqueTypedExpression<IntegerValueType> _t;
     const double _p;
 };
 
@@ -327,11 +359,11 @@ private:
  */
 class NegativeBinomialIntExpression : public RandomIntExpression {
 public:
-    NegativeBinomialIntExpression(UniqueTypedExpression<ValueType::Integer> k, double p);
+    NegativeBinomialIntExpression(UniqueTypedExpression<IntegerValueType> k, double p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const UniqueTypedExpression<ValueType::Integer> _k;
+    const UniqueTypedExpression<IntegerValueType> _k;
     const double _p;
 };
 
@@ -378,7 +410,7 @@ public:
 
     static UniqueExpression parse(YAML::Node node);
 
-    RandomStringExpression(UniqueTypedExpression<ValueType::Integer> length, std::optional<std::string> alphabet);
+    RandomStringExpression(UniqueTypedExpression<IntegerValueType> length, std::optional<std::string> alphabet);
     Value evaluate(genny::DefaultRandom& rng) const override;
     ValueType valueType() const override {
         return ValueType::String;
@@ -386,7 +418,7 @@ public:
 
 
 private:
-    const UniqueTypedExpression<ValueType::Integer> _length;
+    const UniqueTypedExpression<IntegerValueType> _length;
     const std::optional<std::string> _alphabet;
 };
 
@@ -400,14 +432,14 @@ public:
 
     static UniqueExpression parse(YAML::Node node);
 
-    explicit FastRandomStringExpression(UniqueTypedExpression<ValueType::Integer> length);
+    explicit FastRandomStringExpression(UniqueTypedExpression<IntegerValueType> length);
     Value evaluate(genny::DefaultRandom& rng) const override;
     ValueType valueType() const override {
         return ValueType::String;
     }
 
 private:
-    const UniqueTypedExpression<ValueType::Integer> _length;
+    const UniqueTypedExpression<IntegerValueType> _length;
 };
 
 }  // namespace genny::value_generators
