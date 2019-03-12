@@ -40,12 +40,12 @@ struct MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          filterExpr{value_generators::Expression::parseOperand(context.get("Filter"))},
+          filterExpr{value_generators::Generators::document(context.get("Filter"))},
           uniformDistribution{0, numCollections} {}
 
     mongocxx::database database;
     int64_t numCollections;
-    value_generators::UniqueExpression filterExpr;
+    value_generators::DocumentGenerator filterExpr;
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;
@@ -65,7 +65,7 @@ void MultiCollectionQuery::run() {
             auto collection = config->database[collectionName];
 
             // Perform a query
-            auto filter = config->filterExpr->evaluate(_rng).getDocument();
+            auto filter = config->filterExpr->evaluate(_rng);
             // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {

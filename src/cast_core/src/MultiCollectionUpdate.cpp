@@ -40,14 +40,14 @@ struct MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          queryExpr{value_generators::Expression::parseOperand(context.get("UpdateFilter"))},
-          updateExpr{value_generators::Expression::parseOperand(context.get("Update"))},
+          queryExpr{value_generators::Generators::document(context.get("UpdateFilter"))},
+          updateExpr{value_generators::Generators::document(context.get("Update"))},
           uniformDistribution{0, numCollections} {}
 
     mongocxx::database database;
     int64_t numCollections;
-    value_generators::UniqueExpression queryExpr;
-    value_generators::UniqueExpression updateExpr;
+    value_generators::DocumentGenerator queryExpr;
+    value_generators::DocumentGenerator updateExpr;
     // TODO: Enable passing in update options.
     //    value_generators::UniqueExpression  updateOptionsExpr;
 
@@ -64,8 +64,8 @@ void MultiCollectionUpdate::run() {
             auto collection = config->database[collectionName];
 
             // Perform update
-            auto filter = config->queryExpr->evaluate(_rng).getDocument();
-            auto update = config->updateExpr->evaluate(_rng).getDocument();
+            auto filter = config->queryExpr->evaluate(_rng);
+            auto update = config->updateExpr->evaluate(_rng);
             // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
             // BOOST_LOG_TRIVIAL(info) << "Update is " << bsoncxx::to_json(update.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;

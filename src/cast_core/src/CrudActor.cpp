@@ -375,18 +375,18 @@ struct InsertOneOperation : public WriteOperation {
         if (!insertDoc) {
             throw InvalidConfigurationException("'insertOne' expects a 'Document' field.");
         }
-        _docExpr = value_generators::Expression::parseOperand(insertDoc);
+        _docExpr = value_generators::Generators::document(insertDoc);
 
         // TODO: parse insert options.
     }
 
     mongocxx::model::write getModel() override {
-        auto document = _docExpr->evaluate(_rng).getDocument();
+        auto document = _docExpr->evaluate(_rng);
         return mongocxx::model::insert_one{std::move(document)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto document = _docExpr->evaluate(_rng).getDocument();
+        auto document = _docExpr->evaluate(_rng);
         auto ctx = _operation.start();
         (_onSession) ? _collection.insert_one(session, std::move(document), _options)
                      : _collection.insert_one(std::move(document), _options);
@@ -397,7 +397,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     genny::DefaultRandom& _rng;
-    value_generators::UniqueExpression _docExpr;
+    value_generators::DocumentGenerator _docExpr;
     metrics::Operation _operation;
     mongocxx::options::insert _options;
 };

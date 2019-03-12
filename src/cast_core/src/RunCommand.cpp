@@ -106,7 +106,7 @@ public:
                       const std::string& databaseName,
                       mongocxx::database database,
                       genny::DefaultRandom& rng,
-                      value_generators::UniqueExpression commandExpr,
+                      value_generators::DocumentGenerator commandExpr,
                       OpConfig opts)
         : _databaseName{databaseName},
           _database{std::move(database)},
@@ -129,7 +129,7 @@ public:
                                                      mongocxx::pool::entry& client,
                                                      const std::string& database) {
         auto yamlCommand = node["OperationCommand"];
-        auto commandExpr = value_generators::Expression::parseOperand(yamlCommand);
+        auto commandExpr = value_generators::Generators::document(yamlCommand);
 
         auto options = node.as<DatabaseOperation::OpConfig>(DatabaseOperation::OpConfig{});
         return std::make_unique<DatabaseOperation>(context,
@@ -148,7 +148,7 @@ public:
 
 private:
     void _run() {
-        auto command = _commandExpr->evaluate(_rng).getDocument();
+        auto command = _commandExpr->evaluate(_rng);
         auto view = command.view();
 
         if (!_options.isQuiet) {
@@ -183,7 +183,7 @@ private:
     std::string _databaseName;
     mongocxx::database _database;
     genny::DefaultRandom& _rng;
-    value_generators::UniqueExpression _commandExpr;
+    value_generators::DocumentGenerator _commandExpr;
     OpConfig _options;
 
     std::unique_ptr<v1::RateLimiter> _rateLimiter;

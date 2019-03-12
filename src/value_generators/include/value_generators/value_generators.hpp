@@ -170,6 +170,15 @@ struct IntegerValueType {
     }
 };
 
+struct DocumentValueType {
+    using OutputType = bsoncxx::document::view_or_value ;
+    constexpr static ValueType valueType() { return ValueType::Document; }
+    static OutputType convert(const Value& value) {
+        return value.getDocument();
+    }
+};
+
+
 /**
  * Base class for generating values.
  *
@@ -242,6 +251,19 @@ public:
 
 template <typename T>
 using UniqueTypedExpression = std::unique_ptr<TypedExpression<T>>;
+
+
+using DocumentGenerator = UniqueTypedExpression<DocumentValueType>;
+
+class Generators {
+public:
+    static DocumentGenerator document(YAML::Node node) {
+        YAML::Emitter out;
+        out << node;
+        BOOST_LOG_TRIVIAL(info) << "Doc generator from yaml=" << out.c_str();
+        return std::make_unique<TypedExpression<DocumentValueType>>(Expression::parseOperand(node));
+    }
+};
 
 
 /**

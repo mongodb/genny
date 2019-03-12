@@ -46,7 +46,7 @@ struct Loader::PhaseConfig {
                          context.get<IntegerSpec, true>("Threads")},
           numDocuments{context.get<IntegerSpec, true>("DocumentCount")},
           batchSize{context.get<IntegerSpec, true>("BatchSize")},
-          documentExpr{value_generators::Expression::parseOperand(context.get("Document"))},
+          documentExpr{value_generators::Generators::document(context.get("Document"))},
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");
         for (auto indexNode : indexNodes) {
@@ -68,7 +68,7 @@ struct Loader::PhaseConfig {
     int64_t numCollections;
     int64_t numDocuments;
     int64_t batchSize;
-    value_generators::UniqueExpression documentExpr;
+    value_generators::DocumentGenerator documentExpr;
     std::vector<index_type> indexes;
     int64_t collectionOffset;
 };
@@ -92,7 +92,7 @@ void genny::actor::Loader::run() {
                         auto docs = std::vector<bsoncxx::document::view_or_value>{};
                         docs.reserve(remainingInserts);
                         for (uint j = 0; j < numberToInsert; j++) {
-                            auto newDoc = config->documentExpr->evaluate(_rng).getDocument();
+                            auto newDoc = config->documentExpr->evaluate(_rng);
                             docs.push_back(std::move(newDoc));
                         }
                         {

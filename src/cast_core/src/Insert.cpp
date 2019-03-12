@@ -36,12 +36,12 @@ namespace genny::actor {
 /** @private */
 struct Insert::PhaseConfig {
     mongocxx::collection collection;
-    value_generators::UniqueExpression documentExpr;
+    value_generators::DocumentGenerator documentExpr;
     ExecutionStrategy::RunOptions options;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          documentExpr{value_generators::Expression::parseOperand(phaseContext.get("Document"))},
+          documentExpr{value_generators::Generators::document(phaseContext.get("Document"))},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
 };
 
@@ -50,7 +50,7 @@ void Insert::run() {
         for (const auto&& _ : config) {
             _strategy.run(
                 [&](metrics::OperationContext& ctx) {
-                    auto document = config->documentExpr->evaluate(_rng).getDocument();
+                    auto document = config->documentExpr->evaluate(_rng);
                     BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(document.view());
                     config->collection.insert_one(document.view());
                     ctx.addDocuments(1);

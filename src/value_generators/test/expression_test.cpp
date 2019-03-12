@@ -174,6 +174,16 @@ null
 }
 
 TEST_CASE("Expression::parseOperand error cases") {
+    SECTION("Document with no templates") {
+        genny::DefaultRandom rng;
+        auto yaml = YAML::Load(R"({a: 1})");
+        auto expr = Expression::parseOperand(yaml);
+        assert_documents_equal(
+                expr->evaluate(rng).getDocument(),
+                BasicBson::make_document(BasicBson::kvp("a", BsonTypes::b_int32{1})));
+    }
+
+
     SECTION("valid syntax") {
         auto yaml = YAML::Load(R"(
 {min: 50, max: 60}
