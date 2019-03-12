@@ -20,7 +20,7 @@
 #include <testlib/helpers.hpp>
 #include <value_generators/value_generators.hpp>
 
-namespace genny::value_generators {
+namespace genny::value_generators::v1 {
 namespace {
 
 namespace BasicBson = bsoncxx::builder::basic;

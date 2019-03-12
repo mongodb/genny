@@ -24,7 +24,7 @@
 
 #include <value_generators/value_generators.hpp>
 
-namespace genny::value_generators {
+namespace genny::value_generators::v1 {
 namespace {
 
 const auto parserMap = std::unordered_map<std::string, Expression::Parser>{
