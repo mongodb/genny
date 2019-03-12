@@ -365,9 +365,9 @@ UniqueExpression RandomIntExpression::parse(YAML::Node node, DefaultRandom& rng)
         }
 
         UniqueTypedExpression<IntegerValueType> minT =
-            std::make_unique<TypedExpression<IntegerValueType>>(std::move(min), rng);
+            std::make_unique<TypedExpression<IntegerValueType>>(std::move(min));
         UniqueTypedExpression<IntegerValueType> maxT =
-            std::make_unique<TypedExpression<IntegerValueType>>(std::move(max), rng);
+            std::make_unique<TypedExpression<IntegerValueType>>(std::move(max));
 
         return std::make_unique<UniformIntExpression>(std::move(minT), std::move(maxT));
     } else if (distribution == "binomial") {
@@ -387,7 +387,7 @@ UniqueExpression RandomIntExpression::parse(YAML::Node node, DefaultRandom& rng)
         }
 
         UniqueTypedExpression<IntegerValueType> tTyped =
-            std::make_unique<TypedExpression<IntegerValueType>>(std::move(t), rng);
+            std::make_unique<TypedExpression<IntegerValueType>>(std::move(t));
 
         return std::make_unique<BinomialIntExpression>(std::move(tTyped), p);
     } else if (distribution == "negative_binomial") {
@@ -409,7 +409,7 @@ UniqueExpression RandomIntExpression::parse(YAML::Node node, DefaultRandom& rng)
         }
 
         UniqueTypedExpression<IntegerValueType> kTyped =
-            std::make_unique<TypedExpression<IntegerValueType>>(std::move(k), rng);
+            std::make_unique<TypedExpression<IntegerValueType>>(std::move(k));
 
         return std::make_unique<NegativeBinomialIntExpression>(std::move(kTyped), p);
     } else if (distribution == "geometric") {
@@ -444,8 +444,8 @@ UniformIntExpression::UniformIntExpression(UniqueTypedExpression<IntegerValueTyp
     : _min(std::move(min)), _max(std::move(max)) {}
 
 Value UniformIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto min = getInt64Parameter(_min->evaluate(), "min");
-    auto max = getInt64Parameter(_max->evaluate(), "max");
+    auto min = getInt64Parameter(_min->evaluate(rng), "min");
+    auto max = getInt64Parameter(_max->evaluate(rng), "max");
 
     auto distribution = std::uniform_int_distribution<int64_t>{min, max};
     return Value{distribution(rng)};
@@ -455,7 +455,7 @@ BinomialIntExpression::BinomialIntExpression(UniqueTypedExpression<IntegerValueT
     : _t(std::move(t)), _p(p) {}
 
 Value BinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto t = getInt64Parameter(_t->evaluate(), "t");
+    auto t = getInt64Parameter(_t->evaluate(rng), "t");
 
     auto distribution = std::binomial_distribution<int64_t>{t, _p};
     return Value{distribution(rng)};
@@ -466,7 +466,7 @@ NegativeBinomialIntExpression::NegativeBinomialIntExpression(
     : _k(std::move(k)), _p(p) {}
 
 Value NegativeBinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto k = getInt64Parameter(_k->evaluate(), "k");
+    auto k = getInt64Parameter(_k->evaluate(rng), "k");
 
     auto distribution = std::negative_binomial_distribution<int64_t>{k, _p};
     return Value{distribution(rng)};
@@ -511,7 +511,7 @@ UniqueExpression RandomStringExpression::parse(YAML::Node node, DefaultRandom& r
     }
 
     UniqueTypedExpression<IntegerValueType> lengthT =
-        std::make_unique<TypedExpression<IntegerValueType>>(std::move(length), rng);
+        std::make_unique<TypedExpression<IntegerValueType>>(std::move(length));
 
     // TODO: does this want to be `optional`?
     return std::make_unique<RandomStringExpression>(std::move(lengthT), std::move(alphabet));
@@ -523,7 +523,7 @@ Value RandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
 
     auto distribution = std::uniform_int_distribution<size_t>{0, alphabetLength - 1};
 
-    auto length = getInt64Parameter(_length->evaluate(), "length");
+    auto length = getInt64Parameter(_length->evaluate(rng), "length");
     std::string str(length, '\0');
 
     for (int i = 0; i < length; ++i) {
@@ -547,12 +547,12 @@ UniqueExpression FastRandomStringExpression::parse(YAML::Node node, DefaultRando
     }
 
     UniqueTypedExpression<IntegerValueType> lengthT =
-        std::make_unique<TypedExpression<IntegerValueType>>(std::move(length), rng);
+        std::make_unique<TypedExpression<IntegerValueType>>(std::move(length));
     return std::make_unique<FastRandomStringExpression>(std::move(lengthT));
 }
 
 Value FastRandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto length = getInt64Parameter(_length->evaluate(), "length");
+    auto length = getInt64Parameter(_length->evaluate(rng), "length");
     std::string str(length, '\0');
 
     auto randomValue = rng();

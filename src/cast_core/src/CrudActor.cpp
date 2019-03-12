@@ -364,18 +364,35 @@ struct WriteOperation : public BaseOperation {
 using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(
     YAML::Node, bool, mongocxx::collection, genny::DefaultRandom&, metrics::Operation)>;
 
+namespace {
+
+
+auto createGenerator(YAML::Node source,
+                     const std::string& opType,
+                     const std::string& key,
+                     DefaultRandom& rng) {
+    auto doc = source[key];
+    if (!doc) {
+        std::stringstream msg;
+        msg << "'" << opType << "' expects a '" << key << "' field.";
+        throw InvalidConfigurationException(msg.str());
+    }
+    return value_generators::Generators::document(doc, rng);
+}
+
+}  // namespace
+
 struct InsertOneOperation : public WriteOperation {
     InsertOneOperation(YAML::Node opNode,
                        bool onSession,
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng,
                        metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
-        auto insertDoc = opNode["Document"];
-        if (!insertDoc) {
-            throw InvalidConfigurationException("'insertOne' expects a 'Document' field.");
-        }
-        _docExpr = value_generators::Generators::document(insertDoc, _rng);
+        : _onSession{onSession},
+          _collection{collection},
+          _rng{rng},
+          _operation{operation},
+          _docExpr{createGenerator(opNode, "insertOne", "Document", rng)} {
 
         // TODO: parse insert options.
     }
@@ -402,24 +419,20 @@ private:
     mongocxx::options::insert _options;
 };
 
+
 struct UpdateOneOperation : public WriteOperation {
     UpdateOneOperation(YAML::Node opNode,
                        bool onSession,
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng,
                        metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
-        auto filter = opNode["Filter"];
-        auto update = opNode["Update"];
-        if (!filter || !update) {
-            throw InvalidConfigurationException(
-                "'updateOne' expects 'Filter' and 'Update' fields.");
-        }
-        _filterExpr = value_generators::Generators::document(filter, _rng);
-        _updateExpr = value_generators::Generators::document(update, _rng);
-
-        // TODO: parse update options.
-    }
+        : _onSession{onSession},
+          _collection{collection},
+          _rng{rng},
+          _operation{operation},
+          _filterExpr{createGenerator(opNode, "updateOne", "Filter", rng)},
+          _updateExpr{createGenerator(opNode, "updateOne", "Update", rng)} {}
+    // TODO: parse update options.
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -453,18 +466,12 @@ struct UpdateManyOperation : public WriteOperation {
                         mongocxx::collection collection,
                         genny::DefaultRandom& rng,
                         metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
-        auto filter = opNode["Filter"];
-        auto update = opNode["Update"];
-        if (!filter || !update) {
-            throw InvalidConfigurationException(
-                "'updateMany' expects 'Filter' and 'Update' fields.");
-        }
-        _filterExpr = value_generators::Generators::document(filter, _rng);
-        _updateExpr = value_generators::Generators::document(update, _rng);
-
-        // TODO: parse update options.
-    }
+        : _onSession{onSession},
+          _collection{collection},
+          _rng{rng},
+          _operation{operation},
+          _filterExpr{createGenerator(opNode, "updateMany", "Filter", rng)},
+          _updateExpr{createGenerator(opNode, "updateMany", "Update", rng)} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -498,15 +505,12 @@ struct DeleteOneOperation : public WriteOperation {
                        mongocxx::collection collection,
                        genny::DefaultRandom& rng,
                        metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
-        auto filter = opNode["Filter"];
-        if (!filter) {
-            throw InvalidConfigurationException("'deleteOne' expects a 'Filter' field.");
-        }
-        _filterExpr = value_generators::Generators::document(filter, _rng);
-
-        // TODO: parse delete options.
-    }
+        : _onSession{onSession},
+          _collection{collection},
+          _rng{rng},
+          _operation{operation},
+          _filterExpr(createGenerator(opNode, "deleteOne", "Filter", rng)) {}
+    // TODO: parse delete options.
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -536,15 +540,12 @@ struct DeleteManyOperation : public WriteOperation {
                         mongocxx::collection collection,
                         genny::DefaultRandom& rng,
                         metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
-        auto filter = opNode["Filter"];
-        if (!filter) {
-            throw InvalidConfigurationException("'deleteMany' expects a 'Filter' field.");
-        }
-        _filterExpr = value_generators::Generators::document(filter, _rng);
-
-        // TODO: parse delete options.
-    }
+        : _onSession{onSession},
+          _collection{collection},
+          _rng{rng},
+          _operation{operation},
+          _filterExpr{createGenerator(opNode, "deleteMany", "Filter", rng)} {}
+    // TODO: parse delete options.
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -574,18 +575,14 @@ struct ReplaceOneOperation : public WriteOperation {
                         mongocxx::collection collection,
                         genny::DefaultRandom& rng,
                         metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
-        auto filter = opNode["Filter"];
-        auto replacement = opNode["Replacement"];
-        if (!filter || !replacement) {
-            throw InvalidConfigurationException(
-                "'replaceOne' expects 'Filter' and 'Replacement' fields.");
-        }
-        _filterExpr = value_generators::Generators::document(filter, _rng);
-        _replacementExpr = value_generators::Generators::document(replacement, _rng);
+        : _onSession{onSession},
+          _collection{collection},
+          _rng{rng},
+          _operation{operation},
+          _filterExpr{createGenerator(opNode, "replaceOne", "Filter", rng)},
+          _replacementExpr{createGenerator(opNode, "replaceOne", "Replacement", rng)} {}
 
-        // TODO: parse replace options.
-    }
+    // TODO: parse replace options.
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -717,12 +714,11 @@ struct CountDocumentsOperation : public BaseOperation {
                             mongocxx::collection collection,
                             genny::DefaultRandom& rng,
                             metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
-        auto filterYaml = opNode["Filter"];
-        if (!filterYaml) {
-            throw InvalidConfigurationException("'Count' expects a 'Filter' field.");
-        }
-        _filterExpr = value_generators::Generators::document(filterYaml, _rng);
+        : _onSession{onSession},
+          _collection{collection},
+          _rng{rng},
+          _operation{operation},
+          _filterExpr{createGenerator(opNode, "Count", "Filter", rng)} {
         if (opNode["Options"]) {
             _options = opNode["Options"].as<mongocxx::options::count>();
         }
@@ -752,14 +748,12 @@ struct FindOperation : public BaseOperation {
                   mongocxx::collection collection,
                   genny::DefaultRandom& rng,
                   metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _rng{rng}, _operation{operation} {
-        auto filterYaml = opNode["Filter"];
-        if (!filterYaml) {
-            throw InvalidConfigurationException("'Find' expects a 'Filter' field.");
-        }
-        _filterExpr = value_generators::Generators::document(filterYaml, _rng);
-        // TODO: parse Find Options
-    }
+        : _onSession{onSession},
+          _collection{collection},
+          _rng{rng},
+          _operation{operation},
+          _filterExpr{createGenerator(opNode, "Find", "Filter", rng)} {}
+    // TODO: parse Find Options
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();

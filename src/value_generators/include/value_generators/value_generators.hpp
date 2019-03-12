@@ -250,7 +250,6 @@ public:
 template <class T>
 class TypedExpression {
     UniqueExpression _expression;
-    DefaultRandom& _rng;
     using OutputType = typename T::OutputType;
     static constexpr ValueType t = T::valueType();
 
@@ -259,14 +258,14 @@ class TypedExpression {
     }
 
 public:
-    TypedExpression(UniqueExpression expression, DefaultRandom& rng)
-        : _expression{std::move(expression)}, _rng{rng} {
+    TypedExpression(UniqueExpression expression)
+        : _expression{std::move(expression)}{
         if (_expression->valueType() != t) {
             throw InvalidValueGeneratorSyntax("Invalid configuration");
         }
     }
-    OutputType evaluate() {
-        return convert(_expression->evaluate(_rng));
+    OutputType evaluate(DefaultRandom& rng) {
+        return convert(_expression->evaluate(rng));
     }
 };
 
@@ -278,13 +277,13 @@ using UniqueTypedExpression = std::unique_ptr<TypedExpression<T>>;
 class DocumentGenerator {
     using UPtr = v1::UniqueTypedExpression<v1::DocumentValueType>;
     UPtr _ptr;
+    DefaultRandom& _rng;
 
 public:
-    DocumentGenerator() = default;
-    explicit DocumentGenerator(UPtr ptr) : _ptr{std::move(ptr)} {}
+    DocumentGenerator(UPtr ptr, DefaultRandom& rng) : _ptr{std::move(ptr)}, _rng{rng} {}
 
     auto operator()() {
-        return _ptr->evaluate();
+        return _ptr->evaluate(_rng);
     }
 };
 
@@ -292,7 +291,7 @@ class Generators {
 public:
     static DocumentGenerator document(YAML::Node node, DefaultRandom& rng) {
         return DocumentGenerator{std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(
-            v1::Expression::parseOperand(node, rng), rng)};
+            v1::Expression::parseOperand(node, rng)), rng};
     }
 };
 
