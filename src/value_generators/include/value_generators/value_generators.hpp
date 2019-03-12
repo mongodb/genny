@@ -148,21 +148,35 @@ enum class ValueType {
     Null,
 };
 
-inline std::ostream& operator <<(std::ostream& out, ValueType t) {
-    switch(t) {
-        case ValueType::Integer: out << "Integer"; break;
-        case ValueType::String: out << "String"; break;
-        case ValueType::Array: out << "Array"; break;
-        case ValueType::Boolean: out << "Boolean"; break;
-        case ValueType::Document: out << "Document"; break;
-        case ValueType::Null: out << "Null"; break;
+inline std::ostream& operator<<(std::ostream& out, ValueType t) {
+    switch (t) {
+        case ValueType::Integer:
+            out << "Integer";
+            break;
+        case ValueType::String:
+            out << "String";
+            break;
+        case ValueType::Array:
+            out << "Array";
+            break;
+        case ValueType::Boolean:
+            out << "Boolean";
+            break;
+        case ValueType::Document:
+            out << "Document";
+            break;
+        case ValueType::Null:
+            out << "Null";
+            break;
     }
     return out;
 }
 
 struct IntegerValueType {
     using OutputType = int64_t;
-    constexpr static ValueType valueType() { return ValueType::Integer; }
+    constexpr static ValueType valueType() {
+        return ValueType::Integer;
+    }
     constexpr static OutputType convert(const Value& value) {
         auto out = value.tryAsInt64();
         if (!out) {
@@ -173,8 +187,10 @@ struct IntegerValueType {
 };
 
 struct DocumentValueType {
-    using OutputType = bsoncxx::document::view_or_value ;
-    constexpr static ValueType valueType() { return ValueType::Document; }
+    using OutputType = bsoncxx::document::view_or_value;
+    constexpr static ValueType valueType() {
+        return ValueType::Document;
+    }
     static OutputType convert(const Value& value) {
         return value.getDocument();
     }
@@ -241,8 +257,10 @@ class TypedExpression {
     static OutputType convert(const Value& value) {
         return T::convert(value);
     }
+
 public:
-    TypedExpression(UniqueExpression expression, DefaultRandom& rng) : _expression{std::move(expression)}, _rng{rng} {
+    TypedExpression(UniqueExpression expression, DefaultRandom& rng)
+        : _expression{std::move(expression)}, _rng{rng} {
         if (_expression->valueType() != t) {
             throw InvalidValueGeneratorSyntax("Invalid configuration");
         }
@@ -260,10 +278,10 @@ using UniqueTypedExpression = std::unique_ptr<TypedExpression<T>>;
 class DocumentGenerator {
     using UPtr = v1::UniqueTypedExpression<v1::DocumentValueType>;
     UPtr _ptr;
+
 public:
     DocumentGenerator() = default;
-    explicit DocumentGenerator(UPtr ptr)
-    : _ptr{std::move(ptr)} {}
+    explicit DocumentGenerator(UPtr ptr) : _ptr{std::move(ptr)} {}
 
     auto operator()() {
         return _ptr->evaluate();
@@ -273,7 +291,8 @@ public:
 class Generators {
 public:
     static DocumentGenerator document(YAML::Node node, DefaultRandom& rng) {
-        return DocumentGenerator{std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(v1::Expression::parseOperand(node, rng), rng)};
+        return DocumentGenerator{std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(
+            v1::Expression::parseOperand(node, rng), rng)};
     }
 };
 
@@ -446,7 +465,8 @@ public:
 
     static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
 
-    RandomStringExpression(UniqueTypedExpression<IntegerValueType> length, std::optional<std::string> alphabet);
+    RandomStringExpression(UniqueTypedExpression<IntegerValueType> length,
+                           std::optional<std::string> alphabet);
     Value evaluate(genny::DefaultRandom& rng) const override;
     ValueType valueType() const override {
         return ValueType::String;

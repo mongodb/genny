@@ -34,12 +34,15 @@
 namespace genny::actor {
 
 /** @private */
-using index_type = std::pair<value_generators::DocumentGenerator ,
-                             std::optional<value_generators::DocumentGenerator >>;
+using index_type = std::pair<value_generators::DocumentGenerator,
+                             std::optional<value_generators::DocumentGenerator>>;
 
 /** @private */
 struct Loader::PhaseConfig {
-    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, uint thread, DefaultRandom& rng)
+    PhaseConfig(PhaseContext& context,
+                mongocxx::pool::entry& client,
+                uint thread,
+                DefaultRandom& rng)
         : _rng{rng},
           database{(*client)[context.get<std::string>("Database")]},
           // The next line uses integer division. The Remainder is accounted for below.
@@ -51,12 +54,11 @@ struct Loader::PhaseConfig {
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");
         for (auto indexNode : indexNodes) {
-            indexes.emplace_back(
-                value_generators::Generators::document(indexNode["keys"], _rng),
-                indexNode["options"]
-                    ? std::make_optional(
-                          value_generators::Generators::document(indexNode["options"], _rng))
-                    : std::nullopt);
+            indexes.emplace_back(value_generators::Generators::document(indexNode["keys"], _rng),
+                                 indexNode["options"]
+                                     ? std::make_optional(value_generators::Generators::document(
+                                           indexNode["options"], _rng))
+                                     : std::nullopt);
         }
         if (thread == context.get<int>("Threads") - 1) {
             // Pick up any extra collections left over by the division

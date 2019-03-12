@@ -187,8 +187,8 @@ TEST_CASE("Expression::parseOperand error cases") {
         auto yaml = YAML::Load(R"({a: 1})");
         auto expr = Expression::parseOperand(yaml, rng);
         assert_documents_equal(
-                expr->evaluate(rng).getDocument(),
-                BasicBson::make_document(BasicBson::kvp("a", BsonTypes::b_int32{1})));
+            expr->evaluate(rng).getDocument(),
+            BasicBson::make_document(BasicBson::kvp("a", BsonTypes::b_int32{1})));
     }
 
 
@@ -981,4 +981,4 @@ TEST_CASE("Expression parsing with ConstantExpression") {
 }
 
 }  // namespace
-}  // namespace genny::value_generators
+}  // namespace genny::value_generators::v1
