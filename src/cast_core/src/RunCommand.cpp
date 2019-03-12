@@ -129,7 +129,7 @@ public:
                                                      mongocxx::pool::entry& client,
                                                      const std::string& database) {
         auto yamlCommand = node["OperationCommand"];
-        auto commandExpr = value_generators::Generators::document(yamlCommand);
+        auto commandExpr = value_generators::Generators::document(yamlCommand, rng);
 
         auto options = node.as<DatabaseOperation::OpConfig>(DatabaseOperation::OpConfig{});
         return std::make_unique<DatabaseOperation>(context,
@@ -148,7 +148,7 @@ public:
 
 private:
     void _run() {
-        auto command = _commandExpr->evaluate(_rng);
+        auto command = _commandExpr->evaluate();
         auto view = command.view();
 
         if (!_options.isQuiet) {

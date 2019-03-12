@@ -375,18 +375,18 @@ struct InsertOneOperation : public WriteOperation {
         if (!insertDoc) {
             throw InvalidConfigurationException("'insertOne' expects a 'Document' field.");
         }
-        _docExpr = value_generators::Generators::document(insertDoc);
+        _docExpr = value_generators::Generators::document(insertDoc, _rng);
 
         // TODO: parse insert options.
     }
 
     mongocxx::model::write getModel() override {
-        auto document = _docExpr->evaluate(_rng);
+        auto document = _docExpr->evaluate();
         return mongocxx::model::insert_one{std::move(document)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto document = _docExpr->evaluate(_rng);
+        auto document = _docExpr->evaluate();
         auto ctx = _operation.start();
         (_onSession) ? _collection.insert_one(session, std::move(document), _options)
                      : _collection.insert_one(std::move(document), _options);
@@ -415,21 +415,21 @@ struct UpdateOneOperation : public WriteOperation {
             throw InvalidConfigurationException(
                 "'updateOne' expects 'Filter' and 'Update' fields.");
         }
-        _filterExpr = value_generators::Generators::document(filter);
-        _updateExpr = value_generators::Generators::document(update);
+        _filterExpr = value_generators::Generators::document(filter, _rng);
+        _updateExpr = value_generators::Generators::document(update, _rng);
 
         // TODO: parse update options.
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate(_rng);
-        auto update = _updateExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
+        auto update = _updateExpr->evaluate();
         return mongocxx::model::update_one{std::move(filter), std::move(update)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate(_rng);
-        auto update = _updateExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
+        auto update = _updateExpr->evaluate();
         auto ctx = _operation.start();
         (_onSession)
             ? _collection.update_one(session, std::move(filter), std::move(update), _options)
@@ -460,21 +460,21 @@ struct UpdateManyOperation : public WriteOperation {
             throw InvalidConfigurationException(
                 "'updateMany' expects 'Filter' and 'Update' fields.");
         }
-        _filterExpr = value_generators::Generators::document(filter);
-        _updateExpr = value_generators::Generators::document(update);
+        _filterExpr = value_generators::Generators::document(filter, _rng);
+        _updateExpr = value_generators::Generators::document(update, _rng);
 
         // TODO: parse update options.
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate(_rng);
-        auto update = _updateExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
+        auto update = _updateExpr->evaluate();
         return mongocxx::model::update_many{std::move(filter), std::move(update)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate(_rng);
-        auto update = _updateExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
+        auto update = _updateExpr->evaluate();
         auto ctx = _operation.start();
         (_onSession)
             ? _collection.update_many(session, std::move(filter), std::move(update), _options)
@@ -503,18 +503,18 @@ struct DeleteOneOperation : public WriteOperation {
         if (!filter) {
             throw InvalidConfigurationException("'deleteOne' expects a 'Filter' field.");
         }
-        _filterExpr = value_generators::Generators::document(filter);
+        _filterExpr = value_generators::Generators::document(filter, _rng);
 
         // TODO: parse delete options.
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
         return mongocxx::model::delete_one{std::move(filter)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
         auto ctx = _operation.start();
         (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
                      : _collection.delete_one(std::move(filter), _options);
@@ -541,18 +541,18 @@ struct DeleteManyOperation : public WriteOperation {
         if (!filter) {
             throw InvalidConfigurationException("'deleteMany' expects a 'Filter' field.");
         }
-        _filterExpr = value_generators::Generators::document(filter);
+        _filterExpr = value_generators::Generators::document(filter, _rng);
 
         // TODO: parse delete options.
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
         return mongocxx::model::delete_many{std::move(filter)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
         auto ctx = _operation.start();
         (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
                      : _collection.delete_many(std::move(filter), _options);
@@ -581,21 +581,21 @@ struct ReplaceOneOperation : public WriteOperation {
             throw InvalidConfigurationException(
                 "'replaceOne' expects 'Filter' and 'Replacement' fields.");
         }
-        _filterExpr = value_generators::Generators::document(filter);
-        _replacementExpr = value_generators::Generators::document(replacement);
+        _filterExpr = value_generators::Generators::document(filter, _rng);
+        _replacementExpr = value_generators::Generators::document(replacement, _rng);
 
         // TODO: parse replace options.
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate(_rng);
-        auto replacement = _replacementExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
+        auto replacement = _replacementExpr->evaluate();
         return mongocxx::model::replace_one{std::move(filter), std::move(replacement)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate(_rng);
-        auto replacement = _replacementExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
+        auto replacement = _replacementExpr->evaluate();
         auto ctx = _operation.start();
         (_onSession)
             ? _collection.replace_one(session, std::move(filter), std::move(replacement), _options)
@@ -722,14 +722,14 @@ struct CountDocumentsOperation : public BaseOperation {
         if (!filterYaml) {
             throw InvalidConfigurationException("'Count' expects a 'Filter' field.");
         }
-        _filterExpr = value_generators::Generators::document(filterYaml);
+        _filterExpr = value_generators::Generators::document(filterYaml, _rng);
         if (opNode["Options"]) {
             _options = opNode["Options"].as<mongocxx::options::count>();
         }
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
         auto ctx = _operation.start();
         (_onSession) ? _collection.count_documents(session, std::move(filter), _options)
                      : _collection.count_documents(std::move(filter), _options);
@@ -757,12 +757,12 @@ struct FindOperation : public BaseOperation {
         if (!filterYaml) {
             throw InvalidConfigurationException("'Find' expects a 'Filter' field.");
         }
-        _filterExpr = value_generators::Generators::document(filterYaml);
+        _filterExpr = value_generators::Generators::document(filterYaml, _rng);
         // TODO: parse Find Options
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate(_rng);
+        auto filter = _filterExpr->evaluate();
         auto ctx = _operation.start();
         auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
                                    : _collection.find(std::move(filter), _options);
@@ -806,14 +806,14 @@ struct InsertManyOperation : public BaseOperation {
                 "'insertMany' expects a 'Documents' field of sequence type.");
         }
         for (auto&& document : documents) {
-            _docExprs.push_back(value_generators::Generators::document(document));
+            _docExprs.push_back(value_generators::Generators::document(document, _rng));
         }
         // TODO: parse insert options.
     }
 
     void run(mongocxx::client_session& session) override {
         for (auto&& docExpr : _docExprs) {
-            auto doc = docExpr->evaluate(_rng);
+            auto doc = docExpr->evaluate();
             _writeOps.push_back(std::move(doc));
         }
         auto ctx = _operation.start();

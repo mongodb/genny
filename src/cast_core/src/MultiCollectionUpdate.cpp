@@ -37,13 +37,15 @@ namespace genny::actor {
 
 /** @private */
 struct MultiCollectionUpdate::PhaseConfig {
-    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client)
-        : database{(*client)[context.get<std::string>("Database")]},
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, DefaultRandom& rng)
+        : rng{rng},
+          database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          queryExpr{value_generators::Generators::document(context.get("UpdateFilter"))},
-          updateExpr{value_generators::Generators::document(context.get("Update"))},
+          queryExpr{value_generators::Generators::document(context.get("UpdateFilter"), rng)},
+          updateExpr{value_generators::Generators::document(context.get("Update"), rng)},
           uniformDistribution{0, numCollections} {}
 
+    DefaultRandom& rng;
     mongocxx::database database;
     int64_t numCollections;
     value_generators::DocumentGenerator queryExpr;
@@ -64,8 +66,8 @@ void MultiCollectionUpdate::run() {
             auto collection = config->database[collectionName];
 
             // Perform update
-            auto filter = config->queryExpr->evaluate(_rng);
-            auto update = config->updateExpr->evaluate(_rng);
+            auto filter = config->queryExpr->evaluate();
+            auto update = config->updateExpr->evaluate();
             // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
             // BOOST_LOG_TRIVIAL(info) << "Update is " << bsoncxx::to_json(update.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
@@ -85,7 +87,7 @@ MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
       _rng{context.workload().createRNG()},
       _updateOp{context.operation("Update", MultiCollectionUpdate::id())},
       _client{std::move(context.client())},
-      _loop{context, _client} {}
+      _loop{context, _client, _rng} {}
 
 namespace {
 auto registerMultiCollectionUpdate =
