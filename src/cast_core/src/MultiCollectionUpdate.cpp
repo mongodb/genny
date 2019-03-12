@@ -66,8 +66,8 @@ void MultiCollectionUpdate::run() {
             auto collection = config->database[collectionName];
 
             // Perform update
-            auto filter = config->queryExpr->evaluate();
-            auto update = config->updateExpr->evaluate();
+            auto filter = config->queryExpr();
+            auto update = config->updateExpr();
             // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
             // BOOST_LOG_TRIVIAL(info) << "Update is " << bsoncxx::to_json(update.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;

@@ -148,7 +148,7 @@ public:
 
 private:
     void _run() {
-        auto command = _commandExpr->evaluate();
+        auto command = _commandExpr();
         auto view = command.view();
 
         if (!_options.isQuiet) {

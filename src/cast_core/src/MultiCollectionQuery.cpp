@@ -67,7 +67,7 @@ void MultiCollectionQuery::run() {
             auto collection = config->database[collectionName];
 
             // Perform a query
-            auto filter = config->filterExpr->evaluate();
+            auto filter = config->filterExpr();
             // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {

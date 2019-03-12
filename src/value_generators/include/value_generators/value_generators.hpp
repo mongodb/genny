@@ -257,12 +257,23 @@ using UniqueTypedExpression = std::unique_ptr<TypedExpression<T>>;
 
 }  // namespace v1
 
-using DocumentGenerator = v1::UniqueTypedExpression<v1::DocumentValueType>;
+class DocumentGenerator {
+    using UPtr = v1::UniqueTypedExpression<v1::DocumentValueType>;
+    UPtr _ptr;
+public:
+    DocumentGenerator() = default;
+    explicit DocumentGenerator(UPtr ptr)
+    : _ptr{std::move(ptr)} {}
+
+    auto operator()() {
+        return _ptr->evaluate();
+    }
+};
 
 class Generators {
 public:
     static DocumentGenerator document(YAML::Node node, DefaultRandom& rng) {
-        return std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(v1::Expression::parseOperand(node, rng), rng);
+        return DocumentGenerator{std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(v1::Expression::parseOperand(node, rng), rng)};
     }
 };
 

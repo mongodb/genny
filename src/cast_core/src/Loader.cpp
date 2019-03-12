@@ -93,7 +93,7 @@ void genny::actor::Loader::run() {
                         auto docs = std::vector<bsoncxx::document::view_or_value>{};
                         docs.reserve(remainingInserts);
                         for (uint j = 0; j < numberToInsert; j++) {
-                            auto newDoc = config->documentExpr->evaluate();
+                            auto newDoc = config->documentExpr();
                             docs.push_back(std::move(newDoc));
                         }
                         {
@@ -108,11 +108,11 @@ void genny::actor::Loader::run() {
                 // For each index
                 for (auto&& [keys, options] : config->indexes) {
                     // Make the index
-                    auto indexKey = keys->evaluate();
+                    auto indexKey = keys();
                     BOOST_LOG_TRIVIAL(debug)
                         << "Building index " << bsoncxx::to_json(indexKey.view());
                     if (options) {
-                        auto indexOptions = (*options)->evaluate();
+                        auto indexOptions = (*options)();
                         BOOST_LOG_TRIVIAL(debug)
                             << "With options " << bsoncxx::to_json(indexOptions.view());
                         auto indexOpCtx = _indexBuild.start();

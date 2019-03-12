@@ -381,12 +381,12 @@ struct InsertOneOperation : public WriteOperation {
     }
 
     mongocxx::model::write getModel() override {
-        auto document = _docExpr->evaluate();
+        auto document = _docExpr();
         return mongocxx::model::insert_one{std::move(document)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto document = _docExpr->evaluate();
+        auto document = _docExpr();
         auto ctx = _operation.start();
         (_onSession) ? _collection.insert_one(session, std::move(document), _options)
                      : _collection.insert_one(std::move(document), _options);
@@ -422,14 +422,14 @@ struct UpdateOneOperation : public WriteOperation {
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate();
-        auto update = _updateExpr->evaluate();
+        auto filter = _filterExpr();
+        auto update = _updateExpr();
         return mongocxx::model::update_one{std::move(filter), std::move(update)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate();
-        auto update = _updateExpr->evaluate();
+        auto filter = _filterExpr();
+        auto update = _updateExpr();
         auto ctx = _operation.start();
         (_onSession)
             ? _collection.update_one(session, std::move(filter), std::move(update), _options)
@@ -467,14 +467,14 @@ struct UpdateManyOperation : public WriteOperation {
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate();
-        auto update = _updateExpr->evaluate();
+        auto filter = _filterExpr();
+        auto update = _updateExpr();
         return mongocxx::model::update_many{std::move(filter), std::move(update)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate();
-        auto update = _updateExpr->evaluate();
+        auto filter = _filterExpr();
+        auto update = _updateExpr();
         auto ctx = _operation.start();
         (_onSession)
             ? _collection.update_many(session, std::move(filter), std::move(update), _options)
@@ -509,12 +509,12 @@ struct DeleteOneOperation : public WriteOperation {
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate();
+        auto filter = _filterExpr();
         return mongocxx::model::delete_one{std::move(filter)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate();
+        auto filter = _filterExpr();
         auto ctx = _operation.start();
         (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
                      : _collection.delete_one(std::move(filter), _options);
@@ -547,12 +547,12 @@ struct DeleteManyOperation : public WriteOperation {
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate();
+        auto filter = _filterExpr();
         return mongocxx::model::delete_many{std::move(filter)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate();
+        auto filter = _filterExpr();
         auto ctx = _operation.start();
         (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
                      : _collection.delete_many(std::move(filter), _options);
@@ -588,14 +588,14 @@ struct ReplaceOneOperation : public WriteOperation {
     }
 
     mongocxx::model::write getModel() override {
-        auto filter = _filterExpr->evaluate();
-        auto replacement = _replacementExpr->evaluate();
+        auto filter = _filterExpr();
+        auto replacement = _replacementExpr();
         return mongocxx::model::replace_one{std::move(filter), std::move(replacement)};
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate();
-        auto replacement = _replacementExpr->evaluate();
+        auto filter = _filterExpr();
+        auto replacement = _replacementExpr();
         auto ctx = _operation.start();
         (_onSession)
             ? _collection.replace_one(session, std::move(filter), std::move(replacement), _options)
@@ -729,7 +729,7 @@ struct CountDocumentsOperation : public BaseOperation {
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate();
+        auto filter = _filterExpr();
         auto ctx = _operation.start();
         (_onSession) ? _collection.count_documents(session, std::move(filter), _options)
                      : _collection.count_documents(std::move(filter), _options);
@@ -762,7 +762,7 @@ struct FindOperation : public BaseOperation {
     }
 
     void run(mongocxx::client_session& session) override {
-        auto filter = _filterExpr->evaluate();
+        auto filter = _filterExpr();
         auto ctx = _operation.start();
         auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
                                    : _collection.find(std::move(filter), _options);
@@ -813,7 +813,7 @@ struct InsertManyOperation : public BaseOperation {
 
     void run(mongocxx::client_session& session) override {
         for (auto&& docExpr : _docExprs) {
-            auto doc = docExpr->evaluate();
+            auto doc = docExpr();
             _writeOps.push_back(std::move(doc));
         }
         auto ctx = _operation.start();

@@ -52,7 +52,7 @@ void Insert::run() {
         for (const auto&& _ : config) {
             _strategy.run(
                 [&](metrics::OperationContext& ctx) {
-                    auto document = config->documentExpr->evaluate();
+                    auto document = config->documentExpr();
                     BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(document.view());
                     config->collection.insert_one(document.view());
                     ctx.addDocuments(1);
