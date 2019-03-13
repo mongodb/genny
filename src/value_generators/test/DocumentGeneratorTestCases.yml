@@ -1,0 +1,35 @@
+Cases:
+
+  - Name: String scalar
+    GivenTemplate: a
+    ThenReturns: [a]
+
+  - Name: Null scalar
+    GivenTemplate: null
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Array without templates
+    GivenTemplate: [sequence, value]
+    ThenReturns:
+      - [sequence, value]
+
+  - Name: Empty array
+    GivenTemplate: []
+    ThenReturns:
+      - []
+
+  - Name: Map without templates
+    GivenTemplate: {a:1, b:2}
+    ThenReturns:
+      - {a:1, b:2}
+
+  - Name: Mixing ^ keys with other keys
+    GivenTemplate: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Mixing ^ other keys before
+    GivenTemplate: {extraKeyBefore: 1, ^RandomInt: {min: 50, max: 60}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Template: {^RandomInt: {min: 50, max: 60}}
+    ThenReturns: []
