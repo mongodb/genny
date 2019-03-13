@@ -377,7 +377,7 @@ auto createGenerator(YAML::Node source,
         msg << "'" << opType << "' expects a '" << key << "' field.";
         throw InvalidConfigurationException(msg.str());
     }
-    return Generators::document(doc, rng);
+    return DocumentGenerator::create(doc, rng);
 }
 
 }  // namespace
@@ -800,7 +800,7 @@ struct InsertManyOperation : public BaseOperation {
                 "'insertMany' expects a 'Documents' field of sequence type.");
         }
         for (auto&& document : documents) {
-            _docExprs.push_back(Generators::document(document, _rng));
+            _docExprs.push_back(DocumentGenerator::create(document, _rng));
         }
         // TODO: parse insert options.
     }

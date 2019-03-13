@@ -129,7 +129,7 @@ public:
                                                      mongocxx::pool::entry& client,
                                                      const std::string& database) {
         auto yamlCommand = node["OperationCommand"];
-        auto commandExpr = Generators::document(yamlCommand, rng);
+        auto commandExpr = DocumentGenerator::create(yamlCommand, rng);
 
         auto options = node.as<DatabaseOperation::OpConfig>(DatabaseOperation::OpConfig{});
         return std::make_unique<DatabaseOperation>(context,

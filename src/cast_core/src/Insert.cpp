@@ -43,7 +43,7 @@ struct Insert::PhaseConfig {
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, DefaultRandom& rng)
         : rng{rng},
           collection{db[phaseContext.get<std::string>("Collection")]},
-          documentExpr{Generators::document(phaseContext.get("Document"), rng)},
+          documentExpr{DocumentGenerator::create(phaseContext.get("Document"), rng)},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
 };
 

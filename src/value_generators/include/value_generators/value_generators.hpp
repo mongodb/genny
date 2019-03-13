@@ -476,20 +476,17 @@ class DocumentGenerator {
     UPtr _ptr;
     DefaultRandom& _rng;
 
-public:
     DocumentGenerator(UPtr ptr, DefaultRandom& rng) : _ptr{std::move(ptr)}, _rng{rng} {}
 
-    auto operator()() {
-        return _ptr->evaluate(_rng);
-    }
-};
-
-class Generators {
 public:
-    static DocumentGenerator document(YAML::Node node, DefaultRandom& rng) {
+    static DocumentGenerator create(YAML::Node node, DefaultRandom& rng) {
         return DocumentGenerator{std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(
                                      v1::Expression::parseOperand(node, rng)),
                                  rng};
+    }
+
+    auto operator()() {
+        return _ptr->evaluate(_rng);
     }
 };
 

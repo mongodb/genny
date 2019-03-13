@@ -41,8 +41,8 @@ struct MultiCollectionUpdate::PhaseConfig {
         : rng{rng},
           database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          queryExpr{Generators::document(context.get("UpdateFilter"), rng)},
-          updateExpr{Generators::document(context.get("Update"), rng)},
+          queryExpr{DocumentGenerator::create(context.get("UpdateFilter"), rng)},
+          updateExpr{DocumentGenerator::create(context.get("Update"), rng)},
           uniformDistribution{0, numCollections} {}
 
     DefaultRandom& rng;
