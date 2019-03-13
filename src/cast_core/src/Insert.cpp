@@ -37,13 +37,13 @@ namespace genny::actor {
 struct Insert::PhaseConfig {
     DefaultRandom& rng;
     mongocxx::collection collection;
-    value_generators::DocumentGenerator documentExpr;
+    DocumentGenerator documentExpr;
     ExecutionStrategy::RunOptions options;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, DefaultRandom& rng)
         : rng{rng},
           collection{db[phaseContext.get<std::string>("Collection")]},
-          documentExpr{value_generators::Generators::document(phaseContext.get("Document"), rng)},
+          documentExpr{Generators::document(phaseContext.get("Document"), rng)},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
 };
 

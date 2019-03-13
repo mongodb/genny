@@ -20,7 +20,7 @@
 #include <testlib/helpers.hpp>
 #include <value_generators/value_generators.hpp>
 
-namespace genny::value_generators::v1 {
+namespace genny::v1 {
 namespace {
 
 namespace BasicBson = bsoncxx::builder::basic;
@@ -981,4 +981,4 @@ TEST_CASE("Expression parsing with ConstantExpression") {
 }
 
 }  // namespace
-}  // namespace genny::value_generators::v1
+}  // namespace genny::v1

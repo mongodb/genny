@@ -377,7 +377,7 @@ auto createGenerator(YAML::Node source,
         msg << "'" << opType << "' expects a '" << key << "' field.";
         throw InvalidConfigurationException(msg.str());
     }
-    return value_generators::Generators::document(doc, rng);
+    return Generators::document(doc, rng);
 }
 
 }  // namespace
@@ -414,7 +414,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     genny::DefaultRandom& _rng;
-    value_generators::DocumentGenerator _docExpr;
+    DocumentGenerator _docExpr;
     metrics::Operation _operation;
     mongocxx::options::insert _options;
 };
@@ -454,8 +454,8 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     genny::DefaultRandom& _rng;
-    value_generators::DocumentGenerator _filterExpr;
-    value_generators::DocumentGenerator _updateExpr;
+    DocumentGenerator _filterExpr;
+    DocumentGenerator _updateExpr;
     metrics::Operation _operation;
     mongocxx::options::update _options;
 };
@@ -493,8 +493,8 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     genny::DefaultRandom& _rng;
-    value_generators::DocumentGenerator _filterExpr;
-    value_generators::DocumentGenerator _updateExpr;
+    DocumentGenerator _filterExpr;
+    DocumentGenerator _updateExpr;
     metrics::Operation _operation;
     mongocxx::options::update _options;
 };
@@ -529,7 +529,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     genny::DefaultRandom& _rng;
-    value_generators::DocumentGenerator _filterExpr;
+    DocumentGenerator _filterExpr;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
 };
@@ -564,7 +564,7 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     genny::DefaultRandom& _rng;
-    value_generators::DocumentGenerator _filterExpr;
+    DocumentGenerator _filterExpr;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
 };
@@ -604,8 +604,8 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     genny::DefaultRandom& _rng;
-    value_generators::DocumentGenerator _filterExpr;
-    value_generators::DocumentGenerator _replacementExpr;
+    DocumentGenerator _filterExpr;
+    DocumentGenerator _replacementExpr;
     metrics::Operation _operation;
     mongocxx::options::replace _options;
 };
@@ -738,7 +738,7 @@ private:
     mongocxx::collection _collection;
     mongocxx::options::count _options;
     genny::DefaultRandom& _rng;
-    value_generators::DocumentGenerator _filterExpr;
+    DocumentGenerator _filterExpr;
     metrics::Operation _operation;
 };
 
@@ -773,7 +773,7 @@ private:
     mongocxx::collection _collection;
     mongocxx::options::find _options;
     genny::DefaultRandom& _rng;
-    value_generators::DocumentGenerator _filterExpr;
+    DocumentGenerator _filterExpr;
     metrics::Operation _operation;
 };
 
@@ -800,7 +800,7 @@ struct InsertManyOperation : public BaseOperation {
                 "'insertMany' expects a 'Documents' field of sequence type.");
         }
         for (auto&& document : documents) {
-            _docExprs.push_back(value_generators::Generators::document(document, _rng));
+            _docExprs.push_back(Generators::document(document, _rng));
         }
         // TODO: parse insert options.
     }
@@ -823,7 +823,7 @@ private:
     mongocxx::options::insert _options;
     metrics::Operation _operation;
     genny::DefaultRandom& _rng;
-    std::vector<value_generators::DocumentGenerator> _docExprs;
+    std::vector<DocumentGenerator> _docExprs;
 };
 
 /**

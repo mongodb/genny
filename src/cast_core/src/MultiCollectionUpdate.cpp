@@ -41,15 +41,15 @@ struct MultiCollectionUpdate::PhaseConfig {
         : rng{rng},
           database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          queryExpr{value_generators::Generators::document(context.get("UpdateFilter"), rng)},
-          updateExpr{value_generators::Generators::document(context.get("Update"), rng)},
+          queryExpr{Generators::document(context.get("UpdateFilter"), rng)},
+          updateExpr{Generators::document(context.get("Update"), rng)},
           uniformDistribution{0, numCollections} {}
 
     DefaultRandom& rng;
     mongocxx::database database;
     int64_t numCollections;
-    value_generators::DocumentGenerator queryExpr;
-    value_generators::DocumentGenerator updateExpr;
+    DocumentGenerator queryExpr;
+    DocumentGenerator updateExpr;
     // TODO: Enable passing in update options.
     //    value_generators::UniqueExpression  updateOptionsExpr;
 

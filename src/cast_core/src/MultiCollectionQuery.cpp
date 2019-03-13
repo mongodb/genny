@@ -41,13 +41,13 @@ struct MultiCollectionQuery::PhaseConfig {
         : rng{rng},
           database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          filterExpr{value_generators::Generators::document(context.get("Filter"), rng)},
+          filterExpr{Generators::document(context.get("Filter"), rng)},
           uniformDistribution{0, numCollections} {}
 
     DefaultRandom& rng;
     mongocxx::database database;
     int64_t numCollections;
-    value_generators::DocumentGenerator filterExpr;
+    DocumentGenerator filterExpr;
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;

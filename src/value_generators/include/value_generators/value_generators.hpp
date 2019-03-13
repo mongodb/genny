@@ -38,7 +38,7 @@
 
 #include <value_generators/DefaultRandom.hpp>
 
-namespace genny::value_generators {
+namespace genny {
 
 /**
  * Throw this to indicate bad configuration.
@@ -493,6 +493,6 @@ public:
     }
 };
 
-}  // namespace genny::value_generators
+}  // namespace genny
 
 #endif  // HEADER_E6E05F14_BE21_4A9B_822D_FFD669CFB1B4_INCLUDED

@@ -34,8 +34,7 @@
 namespace genny::actor {
 
 /** @private */
-using index_type = std::pair<value_generators::DocumentGenerator,
-                             std::optional<value_generators::DocumentGenerator>>;
+using index_type = std::pair<DocumentGenerator, std::optional<DocumentGenerator>>;
 
 /** @private */
 struct Loader::PhaseConfig {
@@ -50,15 +49,14 @@ struct Loader::PhaseConfig {
                          context.get<IntegerSpec, true>("Threads")},
           numDocuments{context.get<IntegerSpec, true>("DocumentCount")},
           batchSize{context.get<IntegerSpec, true>("BatchSize")},
-          documentExpr{value_generators::Generators::document(context.get("Document"), _rng)},
+          documentExpr{Generators::document(context.get("Document"), _rng)},
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");
         for (auto indexNode : indexNodes) {
-            indexes.emplace_back(value_generators::Generators::document(indexNode["keys"], _rng),
-                                 indexNode["options"]
-                                     ? std::make_optional(value_generators::Generators::document(
-                                           indexNode["options"], _rng))
-                                     : std::nullopt);
+            indexes.emplace_back(Generators::document(indexNode["keys"], _rng),
+                                 indexNode["options"] ? std::make_optional(Generators::document(
+                                                            indexNode["options"], _rng))
+                                                      : std::nullopt);
         }
         if (thread == context.get<int>("Threads") - 1) {
             // Pick up any extra collections left over by the division
@@ -71,7 +69,7 @@ struct Loader::PhaseConfig {
     int64_t numCollections;
     int64_t numDocuments;
     int64_t batchSize;
-    value_generators::DocumentGenerator documentExpr;
+    DocumentGenerator documentExpr;
     std::vector<index_type> indexes;
     int64_t collectionOffset;
 };
