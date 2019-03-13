@@ -33,7 +33,7 @@
 #include <gennylib/MongoException.hpp>
 #include <gennylib/v1/RateLimiter.hpp>
 
-#include <value_generators/value_generators.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 namespace {
 

@@ -18,7 +18,7 @@
 #include <bsoncxx/json.hpp>
 
 #include <testlib/helpers.hpp>
-#include <value_generators/value_generators.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::v1 {
 namespace {
