@@ -487,6 +487,7 @@ public:
     auto operator()() {
         return _ptr->evaluate(_rng);
     }
+
 private:
     using UPtr = v1::UniqueTypedExpression<v1::DocumentValueType>;
 
