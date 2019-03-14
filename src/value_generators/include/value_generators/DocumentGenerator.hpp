@@ -252,6 +252,8 @@ public:
 
 template <class T>
 class TypedExpression {
+    using OutputType = typename T::OutputType;
+
 public:
     TypedExpression(UniqueExpression expression) : _expression{std::move(expression)} {
         if (_expression->valueType() != t) {
@@ -264,7 +266,6 @@ public:
 
 private:
     UniqueExpression _expression;
-    using OutputType = typename T::OutputType;
     static constexpr ValueType t = T::valueType();
 
     static OutputType convert(const Value& value) {
