@@ -257,7 +257,9 @@ class TypedExpression {
 public:
     TypedExpression(UniqueExpression expression) : _expression{std::move(expression)} {
         if (_expression->valueType() != t) {
-            throw InvalidValueGeneratorSyntax("Invalid configuration");
+            std::stringstream msg;
+            msg << "Expected " << t << " but got " << _expression->valueType();
+            throw InvalidValueGeneratorSyntax(msg.str());
         }
     }
     OutputType evaluate(DefaultRandom& rng) {

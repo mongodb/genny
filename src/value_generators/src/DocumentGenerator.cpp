@@ -513,7 +513,6 @@ UniqueExpression RandomStringExpression::parse(YAML::Node node, DefaultRandom& r
     UniqueTypedExpression<IntegerValueType> lengthT =
         std::make_unique<TypedExpression<IntegerValueType>>(std::move(length));
 
-    // TODO: does this want to be `optional`?
     return std::make_unique<RandomStringExpression>(std::move(lengthT), std::move(alphabet));
 }
 
