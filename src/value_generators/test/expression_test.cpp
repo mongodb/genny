@@ -611,17 +611,13 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: uniform, min: 50.0, max: 60}}
         )");
 
-        auto expr = Expression::parseExpression(yaml, rng);
-        REQUIRE(expr != nullptr);
-        REQUIRE_THROWS_AS(expr->evaluate(rng), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
 
         yaml = YAML::Load(R"(
 {^RandomInt: {distribution: uniform, min: 50, max: 60.0}}
         )");
 
-        expr = Expression::parseExpression(yaml, rng);
-        REQUIRE(expr != nullptr);
-        REQUIRE_THROWS_AS(expr->evaluate(rng), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("binomial distribution") {
@@ -664,9 +660,15 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: binomial, t: 100.0, p: 0.05}}
         )");
 
-        auto expr = Expression::parseExpression(yaml, rng);
-        REQUIRE(expr != nullptr);
-        REQUIRE_THROWS_AS(expr->evaluate(rng), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
+    }
+
+    SECTION("binomial distribution requires double 'p' parameter") {
+        auto yaml = YAML::Load(R"(
+{^RandomInt: {distribution: binomial, t: 100, p: 5}}
+        )");
+
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("negative_binomial distribution") {
@@ -708,9 +710,15 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
 {^RandomInt: {distribution: negative_binomial, k: 100.0, p: 0.95}}
         )");
 
-        auto expr = Expression::parseExpression(yaml, rng);
-        REQUIRE(expr != nullptr);
-        REQUIRE_THROWS_AS(expr->evaluate(rng), InvalidValueGeneratorSyntax);
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
+    }
+
+    SECTION("negative_binomial distribution requires double 'p' parameter") {
+        auto yaml = YAML::Load(R"(
+{^RandomInt: {distribution: negative_binomial, k: 100.0, p: 9}}
+        )");
+
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("geometric distribution") {
@@ -735,6 +743,14 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
         REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
+    SECTION("geometric distribution requires a double 'p' parameter") {
+        auto yaml = YAML::Load(R"(
+{^RandomInt: {distribution: geometric, p: 1}}
+        )");
+
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
+    }
+
     SECTION("poisson distribution") {
         auto yaml = YAML::Load(R"(
 {^RandomInt: {distribution: poisson, mean: 5.6}}
@@ -752,6 +768,14 @@ TEST_CASE("Expression parsing with RandomIntExpression") {
     SECTION("poisson distribution requires a 'mean' parameter") {
         auto yaml = YAML::Load(R"(
 {^RandomInt: {distribution: poisson}}
+        )");
+
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
+    }
+
+    SECTION("poisson distribution requires a double 'mean' parameter") {
+        auto yaml = YAML::Load(R"(
+{^RandomInt: {distribution: poisson, mean: 10}}
         )");
 
         REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);

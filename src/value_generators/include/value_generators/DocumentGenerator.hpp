@@ -189,6 +189,20 @@ struct IntegerValueType {
     }
 };
 
+struct DoubleValueType {
+    using OutputType = double;
+    constexpr static ValueType valueType() {
+        return ValueType::Double;
+    }
+    static OutputType convert(const Value& value) {
+        auto maybeInt = value.tryAsInt64();
+        if (maybeInt) {
+            return double(*maybeInt);
+        }
+        return value.getDouble();
+    }
+};
+
 struct DocumentValueType {
     using OutputType = bsoncxx::document::view_or_value;
     constexpr static ValueType valueType() {
@@ -256,9 +270,10 @@ class TypedExpression {
 
 public:
     TypedExpression(UniqueExpression expression) : _expression{std::move(expression)} {
-        if (_expression->valueType() != t) {
+        auto actual = _expression->valueType();
+        if (actual != t) {
             std::stringstream msg;
-            msg << "Expected " << t << " but got " << _expression->valueType();
+            msg << "Expected " << t << " but got " << actual;
             throw InvalidValueGeneratorSyntax(msg.str());
         }
     }
@@ -377,12 +392,12 @@ private:
  */
 class BinomialIntExpression : public RandomIntExpression {
 public:
-    BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, double p);
+    BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, UniqueTypedExpression<DoubleValueType> p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
     const UniqueTypedExpression<IntegerValueType> _t;
-    const double _p;
+    const UniqueTypedExpression<DoubleValueType> _p;
 };
 
 
@@ -409,11 +424,11 @@ private:
  */
 class GeometricIntExpression : public RandomIntExpression {
 public:
-    explicit GeometricIntExpression(double p);
+    explicit GeometricIntExpression(UniqueTypedExpression<DoubleValueType> p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const double _p;
+    const UniqueTypedExpression<DoubleValueType> _p;
 };
 
 
@@ -424,11 +439,11 @@ private:
  */
 class PoissonIntExpression : public RandomIntExpression {
 public:
-    explicit PoissonIntExpression(double mean);
+    explicit PoissonIntExpression(UniqueTypedExpression<DoubleValueType> mean);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const double _mean;
+    const UniqueTypedExpression<DoubleValueType> _mean;
 };
 
 /**
