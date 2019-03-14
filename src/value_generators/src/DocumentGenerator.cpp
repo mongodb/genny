@@ -97,7 +97,7 @@ std::optional<int64_t> Value::tryAsInt64() const {
 
 namespace {
 
-int64_t getInt64Parameter(long long value, std::string_view name) {
+int64_t getInt64Parameter(int64_t value, std::string_view name) {
     return value;
 }
 
@@ -217,7 +217,7 @@ UniqueExpression Expression::parseOperand(YAML::Node node, DefaultRandom& rng) {
 }
 
 ConstantExpression::ConstantExpression(Value value, ValueType type)
-    : _value(Value{std::move(value)}), _type{type} {}
+    : _type{type}, _value{std::move(value)} {}
 
 UniqueExpression ConstantExpression::parse(YAML::Node node, DefaultRandom& rng) {
     switch (node.Type()) {
@@ -269,7 +269,7 @@ UniqueExpression ConstantExpression::parse(YAML::Node node, DefaultRandom& rng) 
 
         try {
             return std::make_unique<ConstantExpression>(Value{node.as<double>()},
-                                                        ValueType::Integer);
+                                                        ValueType::Double);
         } catch (const YAML::BadConversion& e) {
         }
 

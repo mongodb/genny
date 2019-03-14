@@ -366,7 +366,6 @@ using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(
 
 namespace {
 
-
 auto createGenerator(YAML::Node source,
                      const std::string& opType,
                      const std::string& key,
