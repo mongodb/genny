@@ -52,7 +52,6 @@ void test(const std::string& yaml, const std::string& json) {
 }
 
 
-
 TEST_CASE("YAML To BSON Simple") {
     test("foo: bar", R"({"foo":"bar"})");
     test("foo: '0'", R"({"foo":"0"})");
