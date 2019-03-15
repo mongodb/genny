@@ -45,7 +45,7 @@ void test(const std::string& yaml, const std::string& json) {
     try {
         auto actual = fromYaml(yaml);
         auto expect = bson(json);
-        INFO(bsoncxx::to_json(expect) << bsoncxx::to_json(actual));
+        INFO(bsoncxx::to_json(expect) << " == " << bsoncxx::to_json(actual));
         REQUIRE(expect == actual);
     } catch (const std::exception& x) {
         WARN(yaml << " => " << json << " ==> " << x.what());
@@ -57,9 +57,15 @@ void test(const std::string& yaml, const std::string& json) {
 
 TEST_CASE("YAML To BSON Simple") {
     test("foo: bar", R"({"foo":"bar"})");
+    test("foo: '0'", R"({"foo":"0"})");
     test("foo: 1", R"({"foo":1})");
+    test("foo: 1.0", R"({"foo":1.0})");
     test("foo: null", R"({"foo":null})");
     test("foo: true", R"({"foo":true})");
+    test("foo: false", R"({"foo":false})");
+    test("foo: yes", R"({"foo":true})");
+    test("foo: off", R"({"foo":false})");
+
 
     test("foo: {}", R"({"foo":{}})");
     test("foo: []", R"({"foo":[]})");
@@ -81,6 +87,19 @@ foo:
 )",
          R"(
 { "foo" : { "bar" : [ "some", { "mixed" : [ "list" ] } ] } }
+)");
+}
+
+TEST_CASE("YAML with Anchors") {
+    test(R"(
+included: &inc
+  Frodo: Baggins
+  Gimli: Son of Glóin
+foo: *inc
+)",
+         R"(
+{ "included" : { "Frodo" : "Baggins", "Gimli" : "Son of Glóin" },
+  "foo" : { "Frodo" : "Baggins", "Gimli" : "Son of Glóin" } }
 )");
 }
 

@@ -32,65 +32,27 @@ public:
     // Constructors
     //
 
-    explicit Value(bool value);
+    explicit Value(bool value) : _value{value} {}
 
-    explicit Value(int32_t value);
+    explicit Value(int32_t value) : _value{value} {}
 
-    explicit Value(int64_t value);
+    explicit Value(int64_t value) : _value{value} {}
 
-    explicit Value(double value);
+    explicit Value(double value) : _value{value} {}
 
-    explicit Value(std::string value);
+    explicit Value(std::string value) : _value{value} {}
 
-    explicit Value(bsoncxx::types::b_null value);
+    explicit Value(bsoncxx::types::b_null value) : _value{value} {}
 
-    explicit Value(bsoncxx::document::view_or_value value);
+    void appendToBuilder(bsoncxx::builder::basic::document& doc, std::string key) {
+        std::visit(
+            [&](auto&& arg) { doc.append(bsoncxx::builder::basic::kvp(std::move(key), arg)); },
+            std::move(_value));
+    }
 
-    explicit Value(bsoncxx::array::view_or_value value);
-
-    //
-    // Getters
-    //
-
-    bool getBool() const;
-
-    int32_t getInt32() const;
-
-    int64_t getInt64() const;
-
-    double getDouble() const;
-
-    std::string getString() const;
-
-    bsoncxx::types::b_null getNull() const;
-
-    bsoncxx::document::view_or_value getDocument() const;
-
-    bsoncxx::array::view_or_value getArray() const;
-
-    /**
-     * Return `_value` as an int64_t if it is of type int32_t or int64_t, or std::nullopt if it is
-     * some other type.
-     */
-    std::optional<int64_t> tryAsInt64() const;
-
-    /**
-     * Append the underlying `_value` to the document `doc` using the field name `key`.
-     *
-     * @warning
-     *  After calling appendToBuilder() it is illegal to call any methods on this instance, unless
-     *  it is subsequently moved into.
-     */
-    void appendToBuilder(bsoncxx::builder::basic::document& doc, std::string key);
-
-    /**
-     * Append the underlying `_value` to the array `arr`.
-     *
-     * @warning
-     *  After calling appendToBuilder() it is illegal to call any methods on this instance, unless
-     *  it is subsequently moved into.
-     */
-    void appendToBuilder(bsoncxx::builder::basic::array& arr);
+    void appendToBuilder(bsoncxx::builder::basic::array& arr) {
+        std::visit([&](auto&& arg) { arr.append(arg); }, std::move(_value));
+    }
 
 private:
     using VariantType = std::variant<bool,
@@ -102,112 +64,9 @@ private:
                                      bsoncxx::document::view_or_value,
                                      bsoncxx::array::view_or_value>;
 
-    friend std::ostream& operator<<(std::ostream& out, const Value& value);
-
     VariantType _value;
 };
 
-Value::Value(bool value) : _value(value) {}
-
-Value::Value(int32_t value) : _value(value) {}
-
-Value::Value(int64_t value) : _value(value) {}
-
-Value::Value(double value) : _value(value) {}
-
-Value::Value(std::string value) : _value(std::move(value)) {}
-
-Value::Value(bsoncxx::types::b_null value) : _value(std::move(value)) {}
-
-Value::Value(bsoncxx::document::view_or_value value) : _value(std::move(value)) {}
-
-Value::Value(bsoncxx::array::view_or_value value) : _value(std::move(value)) {}
-
-bool Value::getBool() const {
-    return std::get<bool>(_value);
-}
-
-int32_t Value::getInt32() const {
-    return std::get<int32_t>(_value);
-}
-
-int64_t Value::getInt64() const {
-    return std::get<int64_t>(_value);
-}
-
-double Value::getDouble() const {
-    return std::get<double>(_value);
-}
-
-std::string Value::getString() const {
-    return std::get<std::string>(_value);
-}
-
-bsoncxx::types::b_null Value::getNull() const {
-    return std::get<bsoncxx::types::b_null>(_value);
-}
-
-bsoncxx::document::view_or_value Value::getDocument() const {
-    return std::get<bsoncxx::document::view_or_value>(_value);
-}
-
-bsoncxx::array::view_or_value Value::getArray() const {
-    return std::get<bsoncxx::array::view_or_value>(_value);
-}
-
-template <class... Ts>
-struct overloaded : Ts... {
-    using Ts::operator()...;
-};
-
-template <class... Ts>
-overloaded(Ts...)->overloaded<Ts...>;
-
-std::optional<int64_t> Value::tryAsInt64() const {
-    std::optional<int64_t> ret;
-
-    std::visit(overloaded{[&](int32_t arg) { ret = arg; },
-                          [&](int64_t arg) { ret = arg; },
-                          [&](auto&& arg) {}},
-               _value);
-
-    return ret;
-}
-
-void Value::appendToBuilder(bsoncxx::builder::basic::document& doc, std::string key) {
-    std::visit([&](auto&& arg) { doc.append(bsoncxx::builder::basic::kvp(std::move(key), arg)); },
-               std::move(_value));
-}
-
-void Value::appendToBuilder(bsoncxx::builder::basic::array& arr) {
-    std::visit([&](auto&& arg) { arr.append(arg); }, std::move(_value));
-}
-
-std::ostream& operator<<(std::ostream& out, const Value& value) {
-    std::visit(overloaded{
-                   [&](bool arg) { out << arg; },
-                   [&](int32_t arg) { out << arg; },
-                   [&](int64_t arg) { out << arg; },
-                   [&](double arg) { out << arg; },
-                   [&](const std::string& arg) { out << arg; },
-                   [&](bsoncxx::types::b_null arg) { out << "null"; },
-                   [&](const bsoncxx::document::value& arg) {
-                       out << bsoncxx::to_json(arg.view(), bsoncxx::ExtendedJsonMode::k_canonical);
-                   },
-                   [&](bsoncxx::document::view arg) {
-                       out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
-                   },
-                   [&](const bsoncxx::array::value& arg) {
-                       out << bsoncxx::to_json(arg.view(), bsoncxx::ExtendedJsonMode::k_canonical);
-                   },
-                   [&](bsoncxx::array::view arg) {
-                       out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
-                   },
-               },
-               value._value);
-
-    return out;
-}
 
 std::string to_string(const YAML::Node& node) {
     YAML::Emitter e;
@@ -255,6 +114,7 @@ Value parseScalar(const YAML::Node& node) {
     return Value{node.as<std::string>()};
 }
 
+
 void appendToBuilder(const YAML::Node& node,
                      const std::string& key,
                      bsoncxx::builder::basic::document& doc) {
@@ -276,6 +136,7 @@ void appendToBuilder(const YAML::Node& node,
 
     std::abort();
 }
+
 
 void appendToBuilder(const YAML::Node& node, bsoncxx::builder::basic::array& arr) {
     switch (node.Type()) {
