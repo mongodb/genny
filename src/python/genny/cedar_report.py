@@ -71,7 +71,7 @@ class _Config(object):
         self.variant = env['EVG_variant']
         self.task_name = env['EVG_task_name']
         self.task_id = env['EVG_task_id']
-        self.execution_number = env['EVG_execution_number']
+        self.execution_number = int(env['EVG_execution_number'])
         # This env var is either the string "true" or unset.
         self.mainline = not (env['EVG_is_patch'] == 'true')
 
@@ -85,7 +85,7 @@ class _Config(object):
         self.api_key = env['aws_key']
         self.api_secret = env['aws_secret']
         self.cloud_region = 'us-east-1'  # N. Virginia.
-        self.cloud_bucket = 'dsi-genny-metrics'
+        self.cloud_bucket = 'genny'
 
     @property
     def created_at(self):
@@ -94,7 +94,6 @@ class _Config(object):
 
 def build_report(config):
     artifacts = []
-
     for path in config.metrics_file_names:
         base_name = os.path.basename(path)
         a = CedarTestArtifact(
@@ -129,7 +128,7 @@ def build_report(config):
         info=test_info._asdict(),
         created_at=config.created_at,
         completed_at=config.now,
-        artifacts=bucket_config._asdict(),
+        artifacts=artifacts,
         metrics=None,
         sub_tests=None
     )
@@ -143,7 +142,7 @@ def build_report(config):
         execution_number=config.execution_number,
         mainline=config.mainline,
         tests=[test._asdict()],
-        bucket=bucket_config
+        bucket=bucket_config._asdict()
     )
 
     return report._asdict()
@@ -249,7 +248,7 @@ def build_parser():
 class ISODateTimeEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
-            return o.isoformat()
+            return o.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         return super().default(self, o)
 
