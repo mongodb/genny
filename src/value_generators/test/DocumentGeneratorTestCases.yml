@@ -48,6 +48,10 @@ Cases:
     GivenTemplate: {vals: [1, "foo", 0, 3.0, -1, {some: map}]}
     ThenReturns: [{vals: [1, "foo", 0, 3.0, -1, {some: map}]}]
 
+  - Name: Array of mixed-types without templates
+    GivenTemplate: {vals: [1, 269849313357703264, 3.14, string, true, null]}
+    ThenReturns: [{vals: [1, 269849313357703264, 3.14, string, true, null]}]
+
   - Name: Empty array
     GivenTemplate: {a: []}
     ThenReturns: [{a: []}]
@@ -61,6 +65,22 @@ Cases:
         a: {^RandomInt: {min: 50, max: 60}}
         b: {^RandomInt: {min: 30, max: 40}}
     ThenReturns: [{a: 59, b: 38}]
+
+  - Name: RandomInt and literal
+    GivenTemplate:
+      a:
+        - {^RandomInt: {min: 10, max: 10}}
+        - {^RandomInt: {min: 10, max: 10}}
+        - 10
+    ThenReturns: [{a: [10,10,10]}]
+
+  - Name: RandomInt recursively applied
+    GivenTemplate:
+      a:
+        - {^RandomInt: {min: 20, max: {^RandomInt: {min: 20, max: 20}}}}
+        - {^RandomInt: {min: {^RandomInt: {min: 20, max: 20}}, max: 20}}
+        - 20
+    ThenReturns: [{a: [20, 20, 20]}]
 
   - Name: two RandomInts in list
     GivenTemplate:
@@ -102,6 +122,21 @@ Cases:
         a: {^RandomInt: {min: fifty, max: 10}}
     ThenThrows: InvalidValueGeneratorSyntax
 
+  - Name: Invalid RandomInt type
+    GivenTemplate:
+        a: {^RandomInt: "7"}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Invalid RandomInt type
+    GivenTemplate:
+        a: {^RandomInt: 7}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Invalid RandomInt type
+    GivenTemplate:
+        a: {^RandomInt: []}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: Invalid types in min/max
     GivenTemplate:
         a: {^RandomInt: {min: 50.0, max: 10}}
@@ -117,4 +152,148 @@ Cases:
         a: {^RandomInt: {min: 10}}
     ThenThrows: InvalidValueGeneratorSyntax
 
+  - Name: Explicit uniform distribution
+    GivenTemplate:
+        a: {^RandomInt: {distribution: uniform, min: 50, max: 60}}
+    ThenReturns: [{a: 54}, {a: 51}, {a: 59}, {a: 51}]
 
+  - Name: Explicit uniform distribution no min/max
+    GivenTemplate:
+        a: {^RandomInt: {distribution: uniform}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Binomial Distribution
+    GivenTemplate:
+      a: {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
+    ThenReturns:
+      - {a: 7}
+      - {a: 3}
+      - {a: 5}
+      - {a: 7}
+      - {a: 3}
+      - {a: 7}
+      - {a: 6}
+      - {a: 4}
+      - {a: 6}
+      - {a: 2}
+
+  - Name: Binomial requires t and p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: binomial}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Binomial requires p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: binomial, t: 100}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Binomial requires t
+    GivenTemplate:
+        a: {^RandomInt: {distribution: binomial, p: 0.5}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Binomial requires int t
+    GivenTemplate:
+        a: {^RandomInt: {distribution: binomial, t: 100.5, p: 0.5}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Binomial requires double p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: binomial, t: 100, p: 1}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Negative Binomial Distribution
+    GivenTemplate:
+      a: {^RandomInt: {distribution: negative_binomial, k: 100, p: 0.05}}
+    ThenReturns:
+      - {a: 1869}
+      - {a: 1904}
+      - {a: 1954}
+      - {a: 1995}
+      - {a: 1697}
+      - {a: 1742}
+      - {a: 1876}
+      - {a: 1737}
+      - {a: 1704}
+      - {a: 2008}
+
+  - Name: Negative Binomial requires k and p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: negative_binomial}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Negative Binomial requires p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: negative_binomial, k: 100}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Negative Binomial requires k
+    GivenTemplate:
+        a: {^RandomInt: {distribution: negative_binomial, p: 0.5}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Negative Binomial requires int k
+    GivenTemplate:
+        a: {^RandomInt: {distribution: negative_binomial, k: 100.5, p: 0.5}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  # TODO: NegativeBinomialIntExpression doesn't use a UniqueTypedExpression<DoubleValueType>
+  # - Name: Negative Binomial requires double p
+  #   GivenTemplate:
+  #       a: {^RandomInt: {distribution: negative_binomial, k: 100, p: 2}}
+  #   ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Geometric distribution
+    GivenTemplate:
+        a: {^RandomInt: {distribution: geometric, p: 0.05}}
+    ThenReturns:
+      - {a: 3}
+      - {a: 16}
+      - {a: 56}
+      - {a: 11}
+      - {a: 33}
+      - {a: 10}
+      - {a: 5}
+      - {a: 10}
+      - {a: 11}
+      - {a: 70}
+
+  - Name: Geometric distribution requires p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: geometric}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Geometric distribution requires double p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: geometric, p: 1}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Poisson distribution
+    GivenTemplate:
+        a: {^RandomInt: {distribution: poisson, mean: 5.6}}
+    ThenReturns:
+      - {a: 7}
+      - {a: 6}
+      - {a: 3}
+      - {a: 7}
+      - {a: 6}
+      - {a: 7}
+      - {a: 7}
+      - {a: 2}
+      - {a: 5}
+      - {a: 5}
+
+  - Name: Poisson distribution requires mean
+    GivenTemplate:
+        a: {^RandomInt: {distribution: poisson}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Poisson distribution requires double mean
+    GivenTemplate:
+        a: {^RandomInt: {distribution: poisson, mean: 7}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Invalid distribution
+    GivenTemplate:
+        a: {^RandomInt: {distribution: non_existent}}
+    ThenThrows: InvalidValueGeneratorSyntax
