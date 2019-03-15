@@ -17,8 +17,8 @@
 
 #include <exception>
 
-#include <bsoncxx/document/view_or_value.hpp>
 #include <bsoncxx/array/view_or_value.hpp>
+#include <bsoncxx/document/view_or_value.hpp>
 #include <bsoncxx/types.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -29,12 +29,21 @@ class InvalidYAMLToBsonException : public std::invalid_argument {
     using std::invalid_argument::invalid_argument;
 };
 
+/**
+ * @param node yaml map node
+ * @return bson representation of it.
+ * @throws InvalidYAMLToBsonException if node isn't a map
+ */
 bsoncxx::document::view_or_value toDocumentBson(const YAML::Node& node);
 
+
+/**
+ * @param node yaml list node
+ * @return bson representation of it.
+ * @throws InvalidYAMLToBsonException if node isn't a list (sequence)
+ */
 bsoncxx::array::view_or_value toArrayBson(const YAML::Node& node);
 
-}
-
-
+}  // namespace genny::testing
 
 #endif  // HEADER_765C17F3_36B6_4EDC_BA8C_61DD618CCA80_INCLUDED

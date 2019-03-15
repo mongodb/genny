@@ -75,7 +75,6 @@ TEST_CASE("YAML To BSON Simple") {
 
     test("foo: [10.1]", R"({"foo":[10.1]})");
     test("foo: [10.1,]", R"({"foo":[10.1]})");
-
 }
 
 TEST_CASE("YAML To BSON Nested") {
