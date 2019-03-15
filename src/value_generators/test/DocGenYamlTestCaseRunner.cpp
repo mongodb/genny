@@ -16,6 +16,7 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 #include <yaml-cpp/yaml.h>
+#include <bsoncxx/types/value.hpp>
 
 namespace genny {
 
@@ -112,8 +113,10 @@ struct YamlTestCase {
         if (runMode == RunMode::kExpectException) {
             try {
                 genny::DocumentGenerator::create(this->givenTemplate, genny::rng);
+                FAIL("Expected exception");
             } catch (const std::exception& x) {
                 out.expectEqual(this->expectedExceptionMessage.as<std::string>(), x.what());
+                return out;
             }
         }
         if (runMode != RunMode::kExpectReturn) {
@@ -125,12 +128,25 @@ struct YamlTestCase {
         auto docGen = genny::DocumentGenerator::create(this->givenTemplate, genny::rng);
 
         for (const auto&& nextValue : this->thenReturns) {
-            auto expected = testing::toDocumentBson(nextValue);
-            auto actual = docGen();
-            if (expected != actual) {
+            bsoncxx::document::value expected = bsoncxx::document::value{testing::toDocumentBson(nextValue)};
+            bsoncxx::document::value actual = bsoncxx::document::value{docGen()};
+
+            {
+//                auto exA = std::distance(expected.view().begin(), expected.view().end());
+                for(auto&& exV : expected.view()) {
+                    WARN("Found expected " << exV.key() << " => " << static_cast<long>(exV.type()));
+                                                            //<< exV.get_int32());
+                }
+                for(auto&& exV : actual.view()) {
+                    WARN("Found actual " << exV.key() << " => " << static_cast<long>(exV.type()));
+                }
+                auto acA = std::distance(actual.view().begin(), actual.view().end());
+            }
+
+            if (expected.view() != actual.view()) {
                 WARN(bsoncxx::to_json(expected) << " != " <<  bsoncxx::to_json(actual));
             }
-            REQUIRE(expected == actual);
+            REQUIRE(expected.view() == actual.view());
         }
         return out;
     }

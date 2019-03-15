@@ -1,24 +1,28 @@
 Cases:
 
-  - Name: Simple scalar map
-    GivenTemplate: {a: a}
-    ThenReturns: [{a: a}, {a: a}]
-
-  - Name: Twp-key scalar map
-    GivenTemplate: {a:1, b:2}
-    ThenReturns: [{a:1, b:2}]
-
-  - Name: Null scalar
-    GivenTemplate: {a: null}
-    ThenReturns: [{a: null}, {a: null}]
-
-  - Name: Array without templates
-    GivenTemplate: {vals: [sequence, value]}
-    ThenReturns: [{vals: [sequence, value]}]
-
-  - Name: Empty array
-    GivenTemplate: {a: []}
-    ThenReturns: [{a: []}]
+  # - Name: Simple scalar map
+  #   GivenTemplate: {a: a}
+  #   ThenReturns: [{a: a}, {a: a}]
+  #
+  # - Name: Twp-key scalar map
+  #   GivenTemplate: {a:1, b:2}
+  #   ThenReturns: [{a:1, b:2}]
+  #
+  # - Name: Null scalar
+  #   GivenTemplate: {a: null}
+  #   ThenReturns: [{a: null}, {a: null}]
+  #
+  # - Name: Array without templates
+  #   GivenTemplate: {vals: [sequence, value]}
+  #   ThenReturns: [{vals: [sequence, value]}]
+  #
+  # - Name: Empty array
+  #   GivenTemplate: {a: []}
+  #   ThenReturns: [{a: []}]
+  #
+  - Name: RandomInt
+    GivenTemplate: {a: {^RandomInt: {min: 50, max: 60}}}
+    ThenReturns: [{a: 56}]
 
   # - Name: Mixing ^ keys with other keys
   #   GivenTemplate: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}

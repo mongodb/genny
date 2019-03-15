@@ -150,7 +150,7 @@ void appendToBuilder(const YAML::Node& node, bsoncxx::builder::basic::array& arr
 }  // namespace
 }  // namespace genny::testing
 
-bsoncxx::document::view_or_value genny::testing::toDocumentBson(const YAML::Node& node) {
+bsoncxx::document::value genny::testing::toDocumentBson(const YAML::Node& node) {
     if (!node.IsMap()) {
         std::stringstream msg;
         msg << "Wanted map got " << node.Type() << ": " << to_string(node);
@@ -164,7 +164,7 @@ bsoncxx::document::view_or_value genny::testing::toDocumentBson(const YAML::Node
     return doc.extract();
 }
 
-bsoncxx::array::view_or_value genny::testing::toArrayBson(const YAML::Node& node) {
+bsoncxx::array::value genny::testing::toArrayBson(const YAML::Node& node) {
     if (!node.IsSequence()) {
         std::stringstream msg;
         msg << "Wanted sequence got " << node.Type() << ": " << to_string(node);
