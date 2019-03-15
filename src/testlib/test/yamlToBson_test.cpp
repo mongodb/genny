@@ -50,7 +50,7 @@ void test(const std::string& yaml, const std::string& json) {
         throw;
     }
 }
-}  // namespace
+
 
 
 TEST_CASE("YAML To BSON Simple") {
@@ -100,4 +100,5 @@ foo: *inc
 )");
 }
 
+}  // namespace
 }  // namespace genny::testing
