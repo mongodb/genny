@@ -297,3 +297,74 @@ Cases:
     GivenTemplate:
         a: {^RandomInt: {distribution: non_existent}}
     ThenThrows: InvalidValueGeneratorSyntax
+
+
+  - Name: Random string
+    GivenTemplate:
+        a: {^RandomString: {length: 15}}
+    ThenReturns:
+      - {a: GtGQb/DzMWVGLtX }
+      - {a: mwKoK+SaOjlUvPJ }
+      - {a: hJYK1TH/XDFyfj4 }
+      - {a: yBgN2gIGjVWtp9M }
+      - {a: iTehPWbT6Cz7ohi }
+
+  - Name: Random string custom alphabet
+    GivenTemplate:
+        a: {^RandomString: {length: 15, alphabet: xyz}}
+    ThenReturns:
+      - {a: xyyzzxyzxyzzzxz }
+      - {a: xzyxxzzzyxzzxxz }
+      - {a: xzyxyyxzxyzyzxz }
+      - {a: xxxyzyyyxzyzxxx }
+      - {a: xxzzzyzzzzyzzzz }
+
+  - Name: Random string custom alphabet can repeat chars
+    GivenTemplate:
+        a: {^RandomString: {length: 15, alphabet: xxx}}
+    ThenReturns:
+      - {a: xxxxxxxxxxxxxxx }
+      - {a: xxxxxxxxxxxxxxx }
+
+  - Name: Random string requires length
+    GivenTemplate:
+        a: {^RandomString: {}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Random string requires non-empty alphabet if specified
+    GivenTemplate:
+        a: {^RandomString: {length: 15, alphabet: ''}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Random string random length
+    GivenTemplate:
+        a: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}, alphabet: xyz}}
+    ThenReturns:
+      - {a: zyx }
+      - {a: yzy }
+      - {a: zxyzy }
+
+  - Name: FastRandom string
+    GivenTemplate:
+        a: {^FastRandomString: {length: 15}}
+    ThenReturns:
+      - {a:  OrNlqgktPjHCqhr }
+      - {a:  hphpkIstkuMjNkN }
+      - {a:  ElOmNJOjqJAPuCn }
+      - {a:  kMJHqOPKsohHBnm }
+      - {a:  MiPmmFFAmpstpGp }
+
+  - Name: FastRandomString string requires length
+    GivenTemplate:
+        a: {^FastRandomString: {}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: FastRandomString random length
+    GivenTemplate:
+        a: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}
+    ThenReturns:
+      - {a: ADL }
+      - {a: uLjmv }
+      - {a: jN }
+
+
