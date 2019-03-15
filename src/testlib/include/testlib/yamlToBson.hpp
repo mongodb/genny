@@ -34,7 +34,7 @@ class InvalidYAMLToBsonException : public std::invalid_argument {
  * @return bson representation of it.
  * @throws InvalidYAMLToBsonException if node isn't a map
  */
-bsoncxx::document::view_or_value toDocumentBson(const YAML::Node& node);
+bsoncxx::document::value toDocumentBson(const YAML::Node& node);
 
 
 /**
@@ -42,7 +42,7 @@ bsoncxx::document::view_or_value toDocumentBson(const YAML::Node& node);
  * @return bson representation of it.
  * @throws InvalidYAMLToBsonException if node isn't a list (sequence)
  */
-bsoncxx::array::view_or_value toArrayBson(const YAML::Node& node);
+bsoncxx::array::value toArrayBson(const YAML::Node& node);
 
 }  // namespace genny::testing
 

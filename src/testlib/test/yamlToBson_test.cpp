@@ -28,7 +28,7 @@ namespace genny::testing {
 using Catch::Matchers::Matches;
 
 namespace {
-bsoncxx::document::view_or_value bson(const std::string& json) {
+bsoncxx::document::value bson(const std::string& json) {
     return bsoncxx::from_json(json);
 }
 std::string json(const bsoncxx::document::view_or_value& doc) {
@@ -37,7 +37,7 @@ std::string json(const bsoncxx::document::view_or_value& doc) {
 YAML::Node yaml(const std::string& str) {
     return YAML::Load(str);
 }
-bsoncxx::document::view_or_value fromYaml(const std::string& yamlStr) {
+bsoncxx::document::value fromYaml(const std::string& yamlStr) {
     return toDocumentBson(yaml(yamlStr));
 }
 
@@ -46,7 +46,7 @@ void test(const std::string& yaml, const std::string& json) {
         auto actual = fromYaml(yaml);
         auto expect = bson(json);
         INFO(bsoncxx::to_json(expect) << " == " << bsoncxx::to_json(actual));
-        REQUIRE(expect == actual);
+        REQUIRE(expect.view() == actual.view());
     } catch (const std::exception& x) {
         WARN(yaml << " => " << json << " ==> " << x.what());
         throw;
