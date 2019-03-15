@@ -6,9 +6,11 @@
 #include <vector>
 
 #include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/json.hpp>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
+#include <testlib/yamlToBson.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
@@ -23,6 +25,19 @@ static DefaultRandom rng;
 
 struct YamlTestCase;
 
+template<typename T>
+std::string toString(const T& t) {
+    std::stringstream out;
+    out << t;
+    return std::string{out.str()};
+}
+
+std::string toString(const YAML::Node& node) {
+    YAML::Emitter out;
+    out << node;
+    return std::string{out.c_str()};
+}
+
 class Result {
     std::vector<std::pair<std::string, std::string>> expectedVsActual = {};
 
@@ -33,7 +48,7 @@ public:
     template <typename E, typename A>
     void expectEqual(E expect, A actual) {
         if (expect != actual) {
-            expectedVsActual.emplace(std::to_string(expect), std::to_string(actual));
+            expectedVsActual.emplace_back(toString(expect), toString(actual));
         }
     }
 };
@@ -46,30 +61,47 @@ struct YamlTestCase {
     };
 
     std::string name;
+    YAML::Node wholeTest;
     YAML::Node givenTemplate;
     YAML::Node thenReturns;
     YAML::Node expectedExceptionMessage;
     RunMode runMode;
 
+    explicit YamlTestCase() = default;
+
     explicit YamlTestCase(YAML::Node node)
-        : name{node["Name"].as<std::string>("No Name")},
+        : wholeTest{node},
+          name{node["Name"].as<std::string>("No Name")},
           givenTemplate{node["GivenTemplate"]},
           thenReturns{node["ThenReturns"]},
           expectedExceptionMessage{node["ThenThrows"]} {
         if (!givenTemplate) {
-            throw std::invalid_argument("Need GivenTemplate");
+            std::stringstream msg;
+            msg << "Need GivenTemplate in " << toString(node);
+            throw std::invalid_argument(msg.str());
+        }
+        if (!givenTemplate.IsMap()) {
+            std::stringstream msg;
+            msg << "Need GivenTemplate as a map, in '" << toString(node) << "'";
+            throw std::invalid_argument(msg.str());
         }
         if (thenReturns && expectedExceptionMessage) {
-            throw std::invalid_argument("Can't have ThenReturns and ThenThrows");
+            std::stringstream msg;
+            msg << "Can't have ThenReturns and ThenThrows in '" << toString(node) << "'";
+            throw std::invalid_argument(msg.str());
         }
         if (thenReturns) {
             if (!thenReturns.IsSequence()) {
-                throw std::invalid_argument("ThenReturns must be list");
+                std::stringstream msg;
+                msg << "ThenReturns must be list in '" << toString(node) << "'";
+                throw std::invalid_argument(msg.str());
             }
             runMode = RunMode::kExpectReturn;
         } else {
             if (!expectedExceptionMessage) {
-                throw std::invalid_argument("Need ThenThrows if no ThenReturns");
+                std::stringstream msg;
+                msg << "Need ThenThrows if no ThenReturns in '" << toString(node) << "'";
+                throw std::invalid_argument(msg.str());
             }
             runMode = RunMode::kExpectException;
         }
@@ -84,19 +116,39 @@ struct YamlTestCase {
                 out.expectEqual(this->expectedExceptionMessage.as<std::string>(), x.what());
             }
         }
-        assert(runMode == RunMode::kExpectReturn);
+        if (runMode != RunMode::kExpectReturn) {
+            std::stringstream msg;
+            msg << "Invalid runMode " << static_cast<int>(runMode);
+            throw std::logic_error(msg.str());
+        }
 
         auto docGen = genny::DocumentGenerator::create(this->givenTemplate, genny::rng);
 
         for (const auto&& nextValue : this->thenReturns) {
+            auto expected = testing::toDocumentBson(nextValue);
+            auto actual = docGen();
+            if (expected != actual) {
+                WARN(bsoncxx::to_json(expected) << " != " <<  bsoncxx::to_json(actual));
+            }
+            REQUIRE(expected == actual);
         }
         return out;
     }
 };
 
 struct YamlTests {
-    genny::DefaultRandom rng;
-    std::vector<std::unique_ptr<YamlTestCase>> cases;
+    explicit YamlTests() { }
+
+    genny::DefaultRandom* rng;
+    std::vector<YamlTestCase> cases = {};
+
+    YamlTests(const YamlTests&) = default;
+
+    void run() {
+        for(auto& tcase : cases) {
+            tcase.run();
+        }
+    }
 };
 
 }  // namespace genny
@@ -105,13 +157,28 @@ struct YamlTests {
 namespace YAML {
 
 template <>
+struct convert<genny::YamlTests> {
+    static Node encode(const genny::YamlTests& rhs) {
+        return {};
+    }
+
+    static bool decode(const Node& node, genny::YamlTests& rhs) {
+        rhs.rng = &genny::rng;
+        for(auto&& n : node["Cases"]) {
+            rhs.cases.push_back(std::move(n.as<genny::YamlTestCase>()));
+        }
+        return true;
+    }
+};
+
+template <>
 struct convert<genny::YamlTestCase> {
     static Node encode(const genny::YamlTestCase& rhs) {
         return {};
     }
 
     static bool decode(const Node& node, genny::YamlTestCase& rhs) {
-        // TODO
+        rhs = genny::YamlTestCase(node);
         return true;
     }
 };
@@ -120,5 +187,13 @@ struct convert<genny::YamlTestCase> {
 
 
 TEST_CASE("YAML Tests") {
-    genny::rng.seed(1234);
+    // TODO: findup for path
+    try {
+        auto yaml = YAML::LoadFile("/Users/rtimmons/Projects/genny/src/value_generators/test/DocumentGeneratorTestCases.yml");
+        auto tests = yaml.as<genny::YamlTests>();
+        tests.run();
+    } catch(const std::exception& ex) {
+        WARN(ex.what());
+        throw;
+    }
 }

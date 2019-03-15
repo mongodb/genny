@@ -273,7 +273,7 @@ public:
         auto actual = _expression->valueType();
         if (actual != t) {
             std::stringstream msg;
-            msg << "Expected " << t << " but got " << actual;
+            msg << "Expected " << t << " but got " << actual << " for expression";
             throw InvalidValueGeneratorSyntax(msg.str());
         }
     }

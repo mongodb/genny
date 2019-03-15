@@ -1,35 +1,32 @@
 Cases:
 
-  - Name: String scalar
-    GivenTemplate: a
-    ThenReturns: [a]
+  - Name: Simple scalar map
+    GivenTemplate: {a: a}
+    ThenReturns: [{a: a}, {a: a}]
+
+  - Name: Twp-key scalar map
+    GivenTemplate: {a:1, b:2}
+    ThenReturns: [{a:1, b:2}]
 
   - Name: Null scalar
-    GivenTemplate: null
-    ThenThrows: InvalidValueGeneratorSyntax
+    GivenTemplate: {a: null}
+    ThenReturns: [{a: null}, {a: null}]
 
   - Name: Array without templates
-    GivenTemplate: [sequence, value]
-    ThenReturns:
-      - [sequence, value]
+    GivenTemplate: {vals: [sequence, value]}
+    ThenReturns: [{vals: [sequence, value]}]
 
   - Name: Empty array
-    GivenTemplate: []
-    ThenReturns:
-      - []
+    GivenTemplate: {a: []}
+    ThenReturns: [{a: []}]
 
-  - Name: Map without templates
-    GivenTemplate: {a:1, b:2}
-    ThenReturns:
-      - {a:1, b:2}
-
-  - Name: Mixing ^ keys with other keys
-    GivenTemplate: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}
-    ThenThrows: InvalidValueGeneratorSyntax
-
-  - Name: Mixing ^ other keys before
-    GivenTemplate: {extraKeyBefore: 1, ^RandomInt: {min: 50, max: 60}}
-    ThenThrows: InvalidValueGeneratorSyntax
-
-  - Template: {^RandomInt: {min: 50, max: 60}}
-    ThenReturns: []
+  # - Name: Mixing ^ keys with other keys
+  #   GivenTemplate: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}
+  #   ThenThrows: InvalidValueGeneratorSyntax
+  #
+  # - Name: Mixing ^ other keys before
+  #   GivenTemplate: {extraKeyBefore: 1, ^RandomInt: {min: 50, max: 60}}
+  #   ThenThrows: InvalidValueGeneratorSyntax
+  #
+  # - Template: {^RandomInt: {min: 50, max: 60}}
+  #   ThenReturns: []
