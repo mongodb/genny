@@ -33,7 +33,6 @@ namespace {
 class Value {
 public:
     explicit Value(bool value) : _value{value} {}
-    explicit Value(int32_t value) : _value{value} {}
     explicit Value(int64_t value) : _value{value} {}
     explicit Value(double value) : _value{value} {}
     explicit Value(std::string value) : _value{value} {}
@@ -63,11 +62,6 @@ public:
         // https://github.com/jbeder/yaml-cpp/issues/261 for more details.
         if (node.Tag() != "!") {
             try {
-                return Value{node.as<int32_t>()};
-            } catch (const YAML::BadConversion& e) {
-            }
-
-            try {
                 return Value{node.as<int64_t>()};
             } catch (const YAML::BadConversion& e) {
             }
@@ -88,7 +82,6 @@ public:
 
 private:
     using VariantType = std::variant<bool,
-                                     int32_t,
                                      int64_t,
                                      double,
                                      std::string,

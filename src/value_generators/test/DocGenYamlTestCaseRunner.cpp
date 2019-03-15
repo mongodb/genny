@@ -81,11 +81,6 @@ struct YamlTestCase {
             msg << "Need GivenTemplate in " << toString(node);
             throw std::invalid_argument(msg.str());
         }
-        if (!givenTemplate.IsMap()) {
-            std::stringstream msg;
-            msg << "Need GivenTemplate as a map, in '" << toString(node) << "'";
-            throw std::invalid_argument(msg.str());
-        }
         if (thenReturns && expectedExceptionMessage) {
             std::stringstream msg;
             msg << "Can't have ThenReturns and ThenThrows in '" << toString(node) << "'";
@@ -128,19 +123,17 @@ struct YamlTestCase {
         auto docGen = genny::DocumentGenerator::create(this->givenTemplate, genny::rng);
 
         for (const auto&& nextValue : this->thenReturns) {
-            bsoncxx::document::value expected = bsoncxx::document::value{testing::toDocumentBson(nextValue)};
-            bsoncxx::document::value actual = bsoncxx::document::value{docGen()};
+            auto expected = testing::toDocumentBson(nextValue);
+            auto actual = docGen();
 
-            {
-//                auto exA = std::distance(expected.view().begin(), expected.view().end());
-                for(auto&& exV : expected.view()) {
-                    WARN("Found expected " << exV.key() << " => " << static_cast<long>(exV.type()));
-                                                            //<< exV.get_int32());
-                }
-                for(auto&& exV : actual.view()) {
-                    WARN("Found actual " << exV.key() << " => " << static_cast<long>(exV.type()));
-                }
-                auto acA = std::distance(actual.view().begin(), actual.view().end());
+            for(auto&& e : expected.view()) {
+                auto ty = static_cast<int>(e.type());
+                auto ec = e;
+            }
+
+            for(auto&& e : actual.view()) {
+                auto ty = static_cast<int>(e.type());
+                auto ec = e;
             }
 
             if (expected.view() != actual.view()) {

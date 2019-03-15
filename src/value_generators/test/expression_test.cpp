@@ -270,7 +270,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 
         auto expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
-        REQUIRE(expr->evaluate(rng).getInt32() == 1);
+        REQUIRE(expr->evaluate(rng).getInt64() == 1);
 
         yaml = YAML::Load(R"(
 269849313357703264

@@ -1,36 +1,120 @@
 Cases:
 
-  # - Name: Simple scalar map
-  #   GivenTemplate: {a: a}
-  #   ThenReturns: [{a: a}, {a: a}]
-  #
-  # - Name: Twp-key scalar map
-  #   GivenTemplate: {a:1, b:2}
-  #   ThenReturns: [{a:1, b:2}]
-  #
-  # - Name: Null scalar
-  #   GivenTemplate: {a: null}
-  #   ThenReturns: [{a: null}, {a: null}]
-  #
-  # - Name: Array without templates
-  #   GivenTemplate: {vals: [sequence, value]}
-  #   ThenReturns: [{vals: [sequence, value]}]
-  #
-  # - Name: Empty array
-  #   GivenTemplate: {a: []}
-  #   ThenReturns: [{a: []}]
-  #
-  - Name: RandomInt
-    GivenTemplate: {a: {^RandomInt: {min: 50, max: 60}}}
-    ThenReturns: [{a: 56}]
+  - Name: Must be mapping type
+    GivenTemplate: a
+    ThenThrows: InvalidValueGeneratorSyntax
 
-  # - Name: Mixing ^ keys with other keys
-  #   GivenTemplate: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}
-  #   ThenThrows: InvalidValueGeneratorSyntax
-  #
-  # - Name: Mixing ^ other keys before
-  #   GivenTemplate: {extraKeyBefore: 1, ^RandomInt: {min: 50, max: 60}}
-  #   ThenThrows: InvalidValueGeneratorSyntax
-  #
-  # - Template: {^RandomInt: {min: 50, max: 60}}
-  #   ThenReturns: []
+  - Name: Must be mapping type
+    GivenTemplate: null
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Must be mapping type
+    GivenTemplate: [sequence, value]
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Must be mapping type
+    GivenTemplate: []
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Simple scalar map
+    GivenTemplate: {a: a}
+    ThenReturns: [{a: a}, {a: a}]
+
+  - Name: Two-key scalar map
+    GivenTemplate: {a:1, b:2}
+    ThenReturns: [{a:1, b:2}]
+
+  - Name: Null scalar
+    GivenTemplate: {a: null}
+    ThenReturns: [{a: null}, {a: null}]
+
+  - Name: Array without templates
+    GivenTemplate: {vals: [sequence, value]}
+    ThenReturns: [{vals: [sequence, value]}]
+
+  - Name: Doubles
+    GivenTemplate: {a: 3.0}
+    ThenReturns: [{a: 3.0}]
+
+  - Name: Zeroes
+    GivenTemplate: {a: 0}
+    ThenReturns: [{a: 0}]
+
+  - Name: Empty arrays
+    GivenTemplate: {a: []}
+    ThenReturns: [{a: []}]
+
+  - Name: Array of mixed-types without templates
+    GivenTemplate: {vals: [1, "foo", 0, 3.0, -1, {some: map}]}
+    ThenReturns: [{vals: [1, "foo", 0, 3.0, -1, {some: map}]}]
+
+  - Name: Empty array
+    GivenTemplate: {a: []}
+    ThenReturns: [{a: []}]
+
+  - Name: one RandomInt
+    GivenTemplate: {a: {^RandomInt: {min: 50, max: 60}}}
+    ThenReturns: [{a: 56}, {a: 60}, {a: 54}]
+
+  - Name: two RandomInts in map
+    GivenTemplate:
+        a: {^RandomInt: {min: 50, max: 60}}
+        b: {^RandomInt: {min: 30, max: 40}}
+    ThenReturns: [{a: 59, b: 38}]
+
+  - Name: two RandomInts in list
+    GivenTemplate:
+        a: [{^RandomInt: {min: 50, max: 60}}, {^RandomInt: {min: 30, max: 40}}]
+    ThenReturns: [{a: [59, 36]}]
+
+  - Name: Mixing ^ keys with other keys
+    GivenTemplate: {a: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Mixing ^ other keys before
+    GivenTemplate: {a: {extraKeyBefore: 1, ^RandomInt: {min: 50, max: 60}}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Bare ^ at top-level
+    GivenTemplate: {^RandomInt: {min: 50, max: 60}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Unknown expression-type
+    GivenTemplate: {a: {^NonExistent: {min: 50, max: 60}}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: some kind of sub-args work fine
+    GivenTemplate: {a: {min: 50, max: 60}}
+    ThenReturns: [{a: {min: 50, max: 60}}, {a: {min: 50, max: 60}}]
+
+  - Name: Invalid types in min/max
+    GivenTemplate:
+        a: {^RandomInt: {min: [], max: 60}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Invalid types in min/max
+    GivenTemplate:
+        a: {^RandomInt: {min: 50, max: []}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Invalid types in min/max
+    GivenTemplate:
+        a: {^RandomInt: {min: fifty, max: 10}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Invalid types in min/max
+    GivenTemplate:
+        a: {^RandomInt: {min: 50.0, max: 10}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Invalid missing min
+    GivenTemplate:
+        a: {^RandomInt: {max: 10}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Invalid missing max
+    GivenTemplate:
+        a: {^RandomInt: {min: 10}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+
