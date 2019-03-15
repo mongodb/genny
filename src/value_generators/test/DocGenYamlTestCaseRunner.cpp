@@ -23,10 +23,6 @@ static DefaultRandom rng;
 
 struct YamlTestCase;
 
-template<class T,
-         typename = std::enable_if_v<!std::is_same_v<T,std::string>
-std::string to_string()
-
 class Result {
     std::vector<std::pair<std::string, std::string>> expectedVsActual = {};
 
