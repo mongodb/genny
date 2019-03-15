@@ -367,4 +367,24 @@ Cases:
       - {a: uLjmv }
       - {a: jN }
 
+  - Name: Verbatim
+    GivenTemplate:
+      a: {^Verbatim: {^RandomInt: {min: 50, max: 60}}}
+    ThenReturns:
+      - a: {^RandomInt: {min: 50, max: 60}}
 
+  - Name: Verbatim can break all the rules 😎
+    GivenTemplate:
+      a: {^Verbatim: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}}
+    ThenReturns:
+      - a: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}
+
+  - Name: Verbatim as a list
+    GivenTemplate:
+        a:
+            ^Verbatim:
+            - ^RandomInt: {min: 50, max: 60}
+            - ^RandomString: {length: 15}
+            - scalarValue
+    ThenReturns:
+      - a: [{^RandomInt: {min: 50, max: 60}}, {^RandomString: {length: 15}}, scalarValue]
