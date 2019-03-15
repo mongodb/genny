@@ -22,6 +22,7 @@
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
+#include <bsoncxx/types.hpp>
 
 namespace genny::testing {
 
@@ -87,14 +88,8 @@ public:
     }
 
 private:
-    using VariantType = std::variant<bool,
-                                     int32_t,
-                                     int64_t,
-                                     double,
-                                     std::string,
-                                     bsoncxx::types::b_null,
-                                     bsoncxx::document::view_or_value,
-                                     bsoncxx::array::view_or_value>;
+    using VariantType =
+        std::variant<bool, int32_t, int64_t, double, std::string, bsoncxx::types::b_null>;
     VariantType _value;
 };
 
