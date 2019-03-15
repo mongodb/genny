@@ -97,7 +97,7 @@ std::optional<int64_t> Value::tryAsInt64() const {
 
 namespace {
 
-int64_t getInt64Parameter(long long value, std::string_view name) {
+int64_t getInt64Parameter(int64_t value, std::string_view name) {
     return value;
 }
 
@@ -217,7 +217,7 @@ UniqueExpression Expression::parseOperand(YAML::Node node, DefaultRandom& rng) {
 }
 
 ConstantExpression::ConstantExpression(Value value, ValueType type)
-    : _value(Value{std::move(value)}), _type{type} {}
+    : _type{type}, _value{std::move(value)} {}
 
 UniqueExpression ConstantExpression::parse(YAML::Node node, DefaultRandom& rng) {
     switch (node.Type()) {
@@ -269,7 +269,7 @@ UniqueExpression ConstantExpression::parse(YAML::Node node, DefaultRandom& rng) 
 
         try {
             return std::make_unique<ConstantExpression>(Value{node.as<double>()},
-                                                        ValueType::Integer);
+                                                        ValueType::Double);
         } catch (const YAML::BadConversion& e) {
         }
 
@@ -372,7 +372,7 @@ UniqueExpression RandomIntExpression::parse(YAML::Node node, DefaultRandom& rng)
         return std::make_unique<UniformIntExpression>(std::move(minT), std::move(maxT));
     } else if (distribution == "binomial") {
         UniqueExpression t;
-        double p;
+        UniqueExpression p;
 
         if (auto entry = node["t"]) {
             t = Expression::parseOperand(entry, rng);
@@ -381,15 +381,18 @@ UniqueExpression RandomIntExpression::parse(YAML::Node node, DefaultRandom& rng)
         }
 
         if (auto entry = node["p"]) {
-            p = entry.as<double>();
+            p = Expression::parseOperand(entry, rng);
         } else {
             throw InvalidValueGeneratorSyntax("Expected 'p' parameter for binomial distribution");
         }
 
         UniqueTypedExpression<IntegerValueType> tTyped =
             std::make_unique<TypedExpression<IntegerValueType>>(std::move(t));
+        UniqueTypedExpression<DoubleValueType> pTyped =
+                std::make_unique<TypedExpression<DoubleValueType>>(std::move(p));
 
-        return std::make_unique<BinomialIntExpression>(std::move(tTyped), p);
+
+        return std::make_unique<BinomialIntExpression>(std::move(tTyped), std::move(pTyped));
     } else if (distribution == "negative_binomial") {
         UniqueExpression k;
         double p;
@@ -413,25 +416,30 @@ UniqueExpression RandomIntExpression::parse(YAML::Node node, DefaultRandom& rng)
 
         return std::make_unique<NegativeBinomialIntExpression>(std::move(kTyped), p);
     } else if (distribution == "geometric") {
-        double p;
+        UniqueExpression p;
 
         if (auto entry = node["p"]) {
-            p = entry.as<double>();
+            p = Expression::parseOperand(entry, rng);
         } else {
             throw InvalidValueGeneratorSyntax("Expected 'p' parameter for geometric distribution");
         }
 
-        return std::make_unique<GeometricIntExpression>(p);
+        UniqueTypedExpression<DoubleValueType> pTyped =
+                std::make_unique<TypedExpression<DoubleValueType>>(std::move(p));
+
+        return std::make_unique<GeometricIntExpression>(std::move(pTyped));
     } else if (distribution == "poisson") {
-        double mean;
+        UniqueExpression mean;
 
         if (auto entry = node["mean"]) {
-            mean = entry.as<double>();
+            mean = Expression::parseOperand(entry, rng);
         } else {
             throw InvalidValueGeneratorSyntax("Expected 'mean' parameter for poisson distribution");
         }
 
-        return std::make_unique<PoissonIntExpression>(mean);
+        UniqueTypedExpression<DoubleValueType> meanTyped =
+                std::make_unique<TypedExpression<DoubleValueType>>(std::move(mean));
+        return std::make_unique<PoissonIntExpression>(std::move(meanTyped));
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
@@ -451,13 +459,13 @@ Value UniformIntExpression::evaluate(genny::DefaultRandom& rng) const {
     return Value{distribution(rng)};
 }
 
-BinomialIntExpression::BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, double p)
-    : _t(std::move(t)), _p(p) {}
+BinomialIntExpression::BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, UniqueTypedExpression<DoubleValueType> p)
+    : _t(std::move(t)), _p(std::move(p)) {}
 
 Value BinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
     auto t = getInt64Parameter(_t->evaluate(rng), "t");
-
-    auto distribution = std::binomial_distribution<int64_t>{t, _p};
+    auto p = _p->evaluate(rng);
+    auto distribution = std::binomial_distribution<int64_t>{t, p};
     return Value{distribution(rng)};
 }
 
@@ -472,17 +480,18 @@ Value NegativeBinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
     return Value{distribution(rng)};
 }
 
-GeometricIntExpression::GeometricIntExpression(double p) : _p(p) {}
+GeometricIntExpression::GeometricIntExpression(UniqueTypedExpression<DoubleValueType> p) : _p(std::move(p)) {}
 
 Value GeometricIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto distribution = std::geometric_distribution<int64_t>{_p};
+    auto p = _p->evaluate(rng);
+    auto distribution = std::geometric_distribution<int64_t>{p};
     return Value{distribution(rng)};
 }
 
-PoissonIntExpression::PoissonIntExpression(double mean) : _mean(mean) {}
+PoissonIntExpression::PoissonIntExpression(UniqueTypedExpression<DoubleValueType> mean) : _mean(std::move(mean)) {}
 
 Value PoissonIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto distribution = std::poisson_distribution<int64_t>{_mean};
+    auto distribution = std::poisson_distribution<int64_t>{_mean->evaluate(rng)};
     return Value{distribution(rng)};
 }
 
@@ -513,7 +522,6 @@ UniqueExpression RandomStringExpression::parse(YAML::Node node, DefaultRandom& r
     UniqueTypedExpression<IntegerValueType> lengthT =
         std::make_unique<TypedExpression<IntegerValueType>>(std::move(length));
 
-    // TODO: does this want to be `optional`?
     return std::make_unique<RandomStringExpression>(std::move(lengthT), std::move(alphabet));
 }
 

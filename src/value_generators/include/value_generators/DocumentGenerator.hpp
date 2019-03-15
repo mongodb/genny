@@ -25,8 +25,6 @@
 #include <variant>
 #include <vector>
 
-#include <boost/log/trivial.hpp>
-
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/types.hpp>
@@ -140,6 +138,7 @@ using UniqueExpression = std::unique_ptr<Expression>;
 
 enum class ValueType {
     Integer,
+    Double,
     String,
     Array,
     Boolean,
@@ -151,6 +150,9 @@ inline std::ostream& operator<<(std::ostream& out, ValueType t) {
     switch (t) {
         case ValueType::Integer:
             out << "Integer";
+            break;
+        case ValueType::Double:
+            out << "Double";
             break;
         case ValueType::String:
             out << "String";
@@ -176,12 +178,28 @@ struct IntegerValueType {
     constexpr static ValueType valueType() {
         return ValueType::Integer;
     }
-    constexpr static OutputType convert(const Value& value) {
+    static OutputType convert(const Value& value) {
         auto out = value.tryAsInt64();
         if (!out) {
-            throw InvalidValueGeneratorSyntax("Unknown");
+            std::stringstream error;
+            error << "Expected integer, but got " << value;
+            throw InvalidValueGeneratorSyntax(error.str());
         }
         return *out;
+    }
+};
+
+struct DoubleValueType {
+    using OutputType = double;
+    constexpr static ValueType valueType() {
+        return ValueType::Double;
+    }
+    static OutputType convert(const Value& value) {
+        auto maybeInt = value.tryAsInt64();
+        if (maybeInt) {
+            return double(*maybeInt);
+        }
+        return value.getDouble();
     }
 };
 
@@ -248,22 +266,27 @@ public:
 
 template <class T>
 class TypedExpression {
-    UniqueExpression _expression;
     using OutputType = typename T::OutputType;
-    static constexpr ValueType t = T::valueType();
-
-    static OutputType convert(const Value& value) {
-        return T::convert(value);
-    }
 
 public:
     TypedExpression(UniqueExpression expression) : _expression{std::move(expression)} {
-        if (_expression->valueType() != t) {
-            throw InvalidValueGeneratorSyntax("Invalid configuration");
+        auto actual = _expression->valueType();
+        if (actual != t) {
+            std::stringstream msg;
+            msg << "Expected " << t << " but got " << actual;
+            throw InvalidValueGeneratorSyntax(msg.str());
         }
     }
     OutputType evaluate(DefaultRandom& rng) {
         return convert(_expression->evaluate(rng));
+    }
+
+private:
+    UniqueExpression _expression;
+    static constexpr ValueType t = T::valueType();
+
+    static OutputType convert(const Value& value) {
+        return T::convert(value);
     }
 };
 
@@ -369,12 +392,12 @@ private:
  */
 class BinomialIntExpression : public RandomIntExpression {
 public:
-    BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, double p);
+    BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, UniqueTypedExpression<DoubleValueType> p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
     const UniqueTypedExpression<IntegerValueType> _t;
-    const double _p;
+    const UniqueTypedExpression<DoubleValueType> _p;
 };
 
 
@@ -401,11 +424,11 @@ private:
  */
 class GeometricIntExpression : public RandomIntExpression {
 public:
-    explicit GeometricIntExpression(double p);
+    explicit GeometricIntExpression(UniqueTypedExpression<DoubleValueType> p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const double _p;
+    const UniqueTypedExpression<DoubleValueType> _p;
 };
 
 
@@ -416,11 +439,11 @@ private:
  */
 class PoissonIntExpression : public RandomIntExpression {
 public:
-    explicit PoissonIntExpression(double mean);
+    explicit PoissonIntExpression(UniqueTypedExpression<DoubleValueType> mean);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const double _mean;
+    const UniqueTypedExpression<DoubleValueType> _mean;
 };
 
 /**
@@ -472,12 +495,6 @@ private:
 }  // namespace v1
 
 class DocumentGenerator {
-    using UPtr = v1::UniqueTypedExpression<v1::DocumentValueType>;
-    UPtr _ptr;
-    DefaultRandom& _rng;
-
-    DocumentGenerator(UPtr ptr, DefaultRandom& rng) : _ptr{std::move(ptr)}, _rng{rng} {}
-
 public:
     static DocumentGenerator create(YAML::Node node, DefaultRandom& rng) {
         return DocumentGenerator{std::make_unique<v1::TypedExpression<v1::DocumentValueType>>(
@@ -488,6 +505,14 @@ public:
     auto operator()() {
         return _ptr->evaluate(_rng);
     }
+
+private:
+    using UPtr = v1::UniqueTypedExpression<v1::DocumentValueType>;
+
+    UPtr _ptr;
+    DefaultRandom& _rng;
+
+    DocumentGenerator(UPtr ptr, DefaultRandom& rng) : _ptr{std::move(ptr)}, _rng{rng} {}
 };
 
 }  // namespace genny
