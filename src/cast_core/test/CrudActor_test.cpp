@@ -914,7 +914,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             REQUIRE(std::string(collection) == "test");
 
             REQUIRE(countEvent["pipeline"][0]["$match"].get_document().view() ==
-                    BasicBson::make_document(BasicBson::kvp("a", int64_t(1))));
+                    BasicBson::make_document(BasicBson::kvp("a", 1)));
         } catch (const std::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
             INFO("CAUGHT " << diagInfo);
