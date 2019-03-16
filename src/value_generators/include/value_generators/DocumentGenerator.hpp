@@ -195,10 +195,6 @@ struct DoubleValueType {
         return ValueType::Double;
     }
     static OutputType convert(const Value& value) {
-        auto maybeInt = value.tryAsInt64();
-        if (maybeInt) {
-            return double(*maybeInt);
-        }
         return value.getDouble();
     }
 };
