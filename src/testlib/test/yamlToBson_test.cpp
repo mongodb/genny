@@ -41,16 +41,18 @@ bsoncxx::document::value fromYaml(const std::string& yamlStr) {
 
 void test(const std::string& yaml, const std::string& json) {
     try {
-        auto actual = fromYaml(yaml);
-        auto expect = bson(json);
-        INFO(bsoncxx::to_json(expect) << " == " << bsoncxx::to_json(actual));
-        REQUIRE(expect.view() == actual.view());
+        auto actual = bsoncxx::to_json(fromYaml(yaml));
+        auto expect = bsoncxx::to_json(bson(json));
+        REQUIRE(expect == actual);
     } catch (const std::exception& x) {
         WARN(yaml << " => " << json << " ==> " << x.what());
         throw;
     }
 }
 
+TEST_CASE("Number types") {
+    test("foo: 1", R"({"foo":1})");
+}
 
 TEST_CASE("YAML To BSON Simple") {
     test("foo: bar", R"({"foo":"bar"})");
