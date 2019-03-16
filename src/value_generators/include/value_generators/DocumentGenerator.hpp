@@ -71,6 +71,7 @@ public:
     //
 
     explicit Value(bool value);
+    explicit Value(int32_t value);
     explicit Value(int64_t value);
     explicit Value(double value);
     explicit Value(std::string value);
@@ -83,6 +84,7 @@ public:
     //
 
     bool getBool() const;
+    int32_t getInt32() const;
     int64_t getInt64() const;
     double getDouble() const;
     std::string getString() const;
@@ -91,7 +93,7 @@ public:
     bsoncxx::array::view_or_value getArray() const;
 
     /**
-     * Return `_value` as an int64_t if it is of type int64_t, or std::nullopt if it is
+     * Return `_value` as an int64_t if it is of type int32_t or int64_t, or std::nullopt if it is
      * some other type.
      */
     std::optional<int64_t> tryAsInt64() const;
@@ -116,6 +118,7 @@ public:
 
 private:
     using VariantType = std::variant<bool,
+                                     int32_t,
                                      int64_t,
                                      double,
                                      std::string,

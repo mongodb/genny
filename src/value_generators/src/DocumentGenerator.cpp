@@ -36,6 +36,7 @@ const auto parserMap = std::unordered_map<std::string, Expression::Parser>{
 }  // namespace
 
 Value::Value(bool value) : _value(value) {}
+Value::Value(int32_t value) : _value(value) {}
 Value::Value(int64_t value) : _value(value) {}
 Value::Value(double value) : _value(value) {}
 Value::Value(std::string value) : _value(std::move(value)) {}
@@ -45,6 +46,10 @@ Value::Value(bsoncxx::array::view_or_value value) : _value(std::move(value)) {}
 
 bool Value::getBool() const {
     return std::get<bool>(_value);
+}
+
+int32_t Value::getInt32() const {
+    return std::get<int32_t>(_value);
 }
 
 int64_t Value::getInt64() const {
@@ -82,7 +87,8 @@ overloaded(Ts...)->overloaded<Ts...>;
 std::optional<int64_t> Value::tryAsInt64() const {
     std::optional<int64_t> ret;
 
-    std::visit(overloaded{[&](int64_t arg) { ret = arg; },
+    std::visit(overloaded{[&](int32_t arg) { ret = arg; },
+                          [&](int64_t arg) { ret = arg; },
                           [&](auto&& arg) {}},
                _value);
 
@@ -121,6 +127,7 @@ void Value::appendToBuilder(bsoncxx::builder::basic::array& arr) {
 std::ostream& operator<<(std::ostream& out, const Value& value) {
     std::visit(overloaded{
                    [&](bool arg) { out << arg; },
+                   [&](int32_t arg) { out << arg; },
                    [&](int64_t arg) { out << arg; },
                    [&](double arg) { out << arg; },
                    [&](const std::string& arg) { out << arg; },
@@ -248,6 +255,12 @@ UniqueExpression ConstantExpression::parse(YAML::Node node, DefaultRandom& rng) 
     // avoid converting any numeric string values to numbers. See
     // https://github.com/jbeder/yaml-cpp/issues/261 for more details.
     if (node.Tag() != "!") {
+        try {
+            return std::make_unique<ConstantExpression>(Value{node.as<int32_t>()},
+                                                        ValueType::Integer);
+        } catch (const YAML::BadConversion& e) {
+        }
+
         try {
             return std::make_unique<ConstantExpression>(Value{node.as<int64_t>()},
                                                         ValueType::Integer);

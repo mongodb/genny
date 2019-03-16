@@ -188,7 +188,7 @@ TEST_CASE("Expression::parseOperand error cases") {
         auto expr = Expression::parseOperand(yaml, rng);
         assert_documents_equal(
             expr->evaluate(rng).getDocument(),
-            BasicBson::make_document(BasicBson::kvp("a", BsonTypes::b_int64{1})));
+            BasicBson::make_document(BasicBson::kvp("a", BsonTypes::b_int32{1})));
     }
 
 
@@ -270,7 +270,7 @@ TEST_CASE("Expression parsing with ConstantExpression::parse") {
 
         auto expr = ConstantExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
-        REQUIRE(expr->evaluate(rng).getInt64() == 1);
+        REQUIRE(expr->evaluate(rng).getInt32() == 1);
 
         yaml = YAML::Load(R"(
 269849313357703264
@@ -373,8 +373,8 @@ no
 
         assert_documents_equal(
             expr->evaluate(rng).getDocument(),
-            BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int64{50}),
-                                     BasicBson::kvp("max", BsonTypes::b_int64{60})));
+            BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                     BasicBson::kvp("max", BsonTypes::b_int32{60})));
 
         yaml = YAML::Load(R"(
 {}
@@ -421,8 +421,8 @@ TEST_CASE("Expression parsing with DocumentExpression::parse") {
         REQUIRE(expr != nullptr);
         assert_documents_equal(
             expr->evaluate(rng).getDocument(),
-            BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int64{50}),
-                                     BasicBson::kvp("max", BsonTypes::b_int64{60})));
+            BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                     BasicBson::kvp("max", BsonTypes::b_int32{60})));
 
         yaml = YAML::Load(R"(
 {}
@@ -505,7 +505,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
         auto expr = ArrayExpression::parse(yaml, rng);
         REQUIRE(expr != nullptr);
         assert_arrays_equal(expr->evaluate(rng).getArray(),
-                            BasicBson::make_array(BsonTypes::b_int64{1},
+                            BasicBson::make_array(BsonTypes::b_int32{1},
                                                   BsonTypes::b_int64{269849313357703264LL},
                                                   BsonTypes::b_double{3.14},
                                                   "string",
@@ -525,7 +525,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
         assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array(BsonTypes::b_int64{10},
                                                   BsonTypes::b_int64{10},
-                                                  BsonTypes::b_int64{10}));
+                                                  BsonTypes::b_int32{10}));
 
         yaml = YAML::Load(R"(
 - {^RandomInt: {min: 20, max: {^RandomInt: {min: 20, max: 20}}}}
@@ -538,7 +538,7 @@ TEST_CASE("Expression parsing with ArrayExpression::parse") {
         assert_arrays_equal(expr->evaluate(rng).getArray(),
                             BasicBson::make_array(BsonTypes::b_int64{20},
                                                   BsonTypes::b_int64{20},
-                                                  BsonTypes::b_int64{20}));
+                                                  BsonTypes::b_int32{20}));
     }
 
     SECTION("must be a sequence type") {
@@ -920,8 +920,8 @@ TEST_CASE("Expression parsing with ConstantExpression") {
                 expr->evaluate(rng).getDocument(),
                 BasicBson::make_document(BasicBson::kvp(
                     "^RandomInt",
-                    BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int64{50}),
-                                             BasicBson::kvp("max", BsonTypes::b_int64{60})))));
+                    BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                             BasicBson::kvp("max", BsonTypes::b_int32{60})))));
         }
 
         yaml = YAML::Load(R"(
@@ -935,11 +935,11 @@ TEST_CASE("Expression parsing with ConstantExpression") {
             assert_documents_equal(
                 expr->evaluate(rng).getDocument(),
                 BasicBson::make_document(
-                    BasicBson::kvp("otherKey", BsonTypes::b_int64{1}),
+                    BasicBson::kvp("otherKey", BsonTypes::b_int32{1}),
                     BasicBson::kvp(
                         "^RandomInt",
-                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int64{50}),
-                                                 BasicBson::kvp("max", BsonTypes::b_int64{60})))));
+                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                                 BasicBson::kvp("max", BsonTypes::b_int32{60})))));
         }
 
         yaml = YAML::Load(R"(
@@ -955,9 +955,9 @@ TEST_CASE("Expression parsing with ConstantExpression") {
                 BasicBson::make_document(
                     BasicBson::kvp(
                         "^RandomInt",
-                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int64{50}),
-                                                 BasicBson::kvp("max", BsonTypes::b_int64{60}))),
-                    BasicBson::kvp("otherKey", BsonTypes::b_int64{1})));
+                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                                 BasicBson::kvp("max", BsonTypes::b_int32{60}))),
+                    BasicBson::kvp("otherKey", BsonTypes::b_int32{1})));
         }
 
         yaml = YAML::Load(R"(
@@ -972,7 +972,7 @@ TEST_CASE("Expression parsing with ConstantExpression") {
                 expr->evaluate(rng).getDocument(),
                 BasicBson::make_document(BasicBson::kvp(
                     "^RandomString",
-                    BasicBson::make_document(BasicBson::kvp("length", BsonTypes::b_int64{15})))));
+                    BasicBson::make_document(BasicBson::kvp("length", BsonTypes::b_int32{15})))));
         }
     }
 
@@ -993,12 +993,12 @@ TEST_CASE("Expression parsing with ConstantExpression") {
                 BasicBson::make_array(
                     BasicBson::make_document(BasicBson::kvp(
                         "^RandomInt",
-                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int64{50}),
-                                                 BasicBson::kvp("max", BsonTypes::b_int64{60})))),
+                        BasicBson::make_document(BasicBson::kvp("min", BsonTypes::b_int32{50}),
+                                                 BasicBson::kvp("max", BsonTypes::b_int32{60})))),
                     BasicBson::make_document(
                         BasicBson::kvp("^RandomString",
                                        BasicBson::make_document(
-                                           BasicBson::kvp("length", BsonTypes::b_int64{15})))),
+                                           BasicBson::kvp("length", BsonTypes::b_int32{15})))),
                     "scalarValue"));
         }
     }
