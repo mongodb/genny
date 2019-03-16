@@ -26,11 +26,12 @@ static DefaultRandom rng;
 
 struct YamlTestCase;
 
-template<typename T>
-std::string toString(const T& t) {
-    std::stringstream out;
-    out << t;
-    return std::string{out.str()};
+std::string toString(const std::string& str) {
+    return str;
+}
+
+std::string toString(const bsoncxx::document::view_or_value & t) {
+    return bsoncxx::to_json(t, bsoncxx::ExtendedJsonMode::k_canonical);
 }
 
 std::string toString(const YAML::Node& node) {
@@ -39,10 +40,10 @@ std::string toString(const YAML::Node& node) {
     return std::string{out.c_str()};
 }
 
-class Result {
+struct Result {
+    explicit Result(YamlTestCase &testCase) : testCase(testCase) {}
+    YamlTestCase& testCase;
     std::vector<std::pair<std::string, std::string>> expectedVsActual = {};
-
-public:
     bool pass() {
         return expectedVsActual.empty();
     }
@@ -55,8 +56,11 @@ public:
 };
 
 
+
+
 struct YamlTestCase {
     enum class RunMode {
+        kUnset,
         kExpectException,
         kExpectReturn,
     };
@@ -66,7 +70,7 @@ struct YamlTestCase {
     YAML::Node givenTemplate;
     YAML::Node thenReturns;
     YAML::Node expectedExceptionMessage;
-    RunMode runMode;
+    RunMode runMode = RunMode::kUnset;
 
     explicit YamlTestCase() = default;
 
@@ -104,13 +108,15 @@ struct YamlTestCase {
     }
 
     genny::Result run() {
-        genny::Result out;
+        genny::Result out{*this};
         if (runMode == RunMode::kExpectException) {
             try {
                 genny::DocumentGenerator::create(this->givenTemplate, genny::rng);
                 FAIL("Expected exception");
             } catch (const std::exception& x) {
-                out.expectEqual(this->expectedExceptionMessage.as<std::string>(), x.what());
+                out.expectEqual("InvalidValueGeneratorSyntax", this->expectedExceptionMessage.as<std::string>());
+                // TODO: assert actual exception
+//                out.expectEqual(this->expectedExceptionMessage.as<std::string>(), x.what());
                 return out;
             }
         }
@@ -136,10 +142,7 @@ struct YamlTestCase {
                 auto ec = e;
             }
 
-            if (expected.view() != actual.view()) {
-                WARN(bsoncxx::to_json(expected) << " != " <<  bsoncxx::to_json(actual));
-            }
-            REQUIRE(expected.view() == actual.view());
+            out.expectEqual(expected.view(), actual.view());
         }
         return out;
     }
@@ -153,12 +156,31 @@ struct YamlTests {
 
     YamlTests(const YamlTests&) = default;
 
-    void run() {
+    std::vector<Result> run() {
+        std::vector<Result> out{};
         for(auto& tcase : cases) {
-            tcase.run();
+            auto result = tcase.run();
+            if (!result.pass()) {
+                out.push_back(std::move(result));
+            }
         }
+        return out;
     }
 };
+
+std::ostream& operator<<(std::ostream& out, std::vector<Result>& results) {
+    for(auto&& result : results) {
+        out << "- Test:" << std::endl;
+        out << "    Name: " << result.testCase.name << std::endl;
+        out << "    GivenTemplate: " << toString(result.testCase.givenTemplate) << std::endl;
+        out << "    Failures:" << std::endl;
+        for(auto&& [expect,actual] : result.expectedVsActual) {
+            out << "    - Expect: " << expect << std::endl;
+            out << "      Actual: " << actual << std::endl;
+        }
+    }
+    return out;
+}
 
 }  // namespace genny
 
@@ -200,7 +222,13 @@ TEST_CASE("YAML Tests") {
     try {
         auto yaml = YAML::LoadFile("/Users/rtimmons/Projects/genny/src/value_generators/test/DocumentGeneratorTestCases.yml");
         auto tests = yaml.as<genny::YamlTests>();
-        tests.run();
+        std::vector<genny::Result> results = tests.run();
+        if (!results.empty()) {
+            std::stringstream msg;
+            msg << results;
+            WARN( msg.str() );
+        }
+        REQUIRE(results.empty());
     } catch(const std::exception& ex) {
         WARN(ex.what());
         throw;
