@@ -18,11 +18,13 @@
 #include <yaml-cpp/yaml.h>
 #include <bsoncxx/types/value.hpp>
 
+namespace {
+genny::DefaultRandom rng;
+}
+
 namespace genny {
 
 class YamlTests;
-
-static DefaultRandom rng;
 
 struct YamlTestCase;
 
@@ -116,7 +118,7 @@ struct YamlTestCase {
         genny::Result out{*this};
         if (runMode == RunMode::kExpectException) {
             try {
-                genny::DocumentGenerator::create(this->givenTemplate, genny::rng);
+                genny::DocumentGenerator::create(this->givenTemplate, rng);
                 out.expectedExceptionButNotThrown();
                 return out;
             } catch (const std::exception& x) {
@@ -133,7 +135,7 @@ struct YamlTestCase {
             throw std::logic_error(msg.str());
         }
 
-        auto docGen = genny::DocumentGenerator::create(this->givenTemplate, genny::rng);
+        auto docGen = genny::DocumentGenerator::create(this->givenTemplate, rng);
 
         for (const auto&& nextValue : this->thenReturns) {
             auto expected = testing::toDocumentBson(nextValue);
@@ -158,7 +160,6 @@ struct YamlTestCase {
 struct YamlTests {
     explicit YamlTests() { }
 
-    genny::DefaultRandom* rng;
     std::vector<YamlTestCase> cases = {};
 
     YamlTests(const YamlTests&) = default;
@@ -200,7 +201,6 @@ struct convert<genny::YamlTests> {
     }
 
     static bool decode(const Node& node, genny::YamlTests& rhs) {
-        rhs.rng = &genny::rng;
         for(auto&& n : node["Cases"]) {
             rhs.cases.push_back(std::move(n.as<genny::YamlTestCase>()));
         }
