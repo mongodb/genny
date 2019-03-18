@@ -28,45 +28,59 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 
+namespace genny {
 
-
-
-namespace genny::v1 {
-
-class BuilderAppendable {
+class IntEvalator {
 public:
-    virtual ~BuilderAppendable() = 0;
-    virtual void appendToBuilder(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
-    virtual void appendToBuilder(bsoncxx::builder::basic::array& builder) = 0;
-};
-
-using UniqueIntGen = std::unique_ptr<IntGenerator>;
-using UniqueStrGen = std::unique_ptr<StringGenerator>;
-using UniqueDocGen = std::unique_ptr<DocumentGenerator>;
-using UniqueArrayGen = std::unique_ptr<ArrayGenerator>;
-using UniqueAppender = std::unique_ptr<BuilderAppendable>;
-
-class IntGenDelegate {
-public:
-    virtual ~IntGenDelegate() = 0;
+    virtual ~IntEvalator() = default;
     virtual int64_t evaluate(DefaultRandom& rng) = 0;
 };
 
+using UniqueIntEvaluator = std::unique_ptr<IntEvalator>;
 
-int64_t genUniformInt(IntGenDelegate& minGen, IntGenDelegate& maxGen, DefaultRandom& rng) {
-    auto min = minGen();
-    auto max = maxGen();
-    auto distribution = std::uniform_int_distribution<int64_t>{min, max};
-    return distribution(rng);
-}
+UniqueIntEvaluator pickIntEvaluator(YAML::Node node);
 
-std::string genString(std::optional<std::string>& alphabetOpt, const std::string& defaultAlphabet, IntGenerator& lengthGen, genny::DefaultRandom& rng) {
+
+
+class DocEvalator {
+public:
+    virtual ~DocEvalator() = 0;
+    virtual bsoncxx::document::value evaluate(DefaultRandom& rng) = 0;
+};
+
+using UniqueDocEvaluator = std::unique_ptr<DocEvalator>;
+
+UniqueDocEvaluator pickDocEvaluator(YAML::Node node);
+
+
+class UniformIntEvaluator : public IntEvalator {
+public:
+    UniformIntEvaluator(YAML::Node node)
+    : _minGen{pickIntEvaluator(node["min"])}, _maxGen{pickIntEvaluator(node["max"])} {}
+
+    ~UniformIntEvaluator() override = default;
+
+    int64_t evaluate(DefaultRandom &rng) override {
+        auto min = _minGen->evaluate(rng);
+        auto max = _maxGen->evaluate(rng);
+        auto distribution = std::uniform_int_distribution<int64_t>{min, max};
+        return distribution(rng);
+    }
+
+private:
+    UniqueIntEvaluator _minGen;
+    UniqueIntEvaluator _maxGen;
+};
+
+
+
+std::string genString(std::optional<std::string>& alphabetOpt, const std::string& defaultAlphabet, UniqueIntEvaluator& lengthGen, genny::DefaultRandom& rng) {
     auto alphabet = alphabetOpt ? std::string_view{*alphabetOpt} : defaultAlphabet;
     auto alphabetLength = alphabet.size();
 
     auto distribution = std::uniform_int_distribution<size_t>{0, alphabetLength - 1};
 
-    auto length = lengthGen();
+    auto length = lengthGen->evaluate(rng);
     std::string str(length, '\0');
 
     for (int i = 0; i < length; ++i) {
@@ -76,8 +90,8 @@ std::string genString(std::optional<std::string>& alphabetOpt, const std::string
     return str;
 }
 
-std::string genFastRandomString(IntGenerator& lengthGen, const std::string& alphabet, const size_t alphabetLength, genny::DefaultRandom& rng) {
-    auto length = lengthGen();
+std::string genFastRandomString(UniqueIntEvaluator& lengthGen, const std::string& alphabet, const size_t alphabetLength, genny::DefaultRandom& rng) {
+    auto length = lengthGen->evaluate(rng);
     std::string str(length, '\0');
 
     auto randomValue = rng();
@@ -96,13 +110,13 @@ std::string genFastRandomString(IntGenerator& lengthGen, const std::string& alph
     return str;
 }
 
-int64_t genBinomial(genny::DefaultRandom& rng, IntGenerator& tGen, double p) {
-    auto distribution = std::binomial_distribution<int64_t>{tGen(), p};
+int64_t genBinomial(genny::DefaultRandom& rng, UniqueIntEvaluator& tGen, double p) {
+    auto distribution = std::binomial_distribution<int64_t>{tGen->evaluate(rng), p};
     return distribution(rng);
 }
 
-int64_t genNegativeBinomial(genny::DefaultRandom& rng, IntGenerator& kGen, double p) {
-    auto distribution = std::negative_binomial_distribution<int64_t>{kGen(), p};
+int64_t genNegativeBinomial(genny::DefaultRandom& rng, UniqueIntEvaluator& kGen, double p) {
+    auto distribution = std::negative_binomial_distribution<int64_t>{kGen->evaluate(rng), p};
     return distribution(rng);
 }
 
@@ -117,6 +131,17 @@ int64_t genPoisson(DefaultRandom& rng, double mean) {
 }
 
 
+
+DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
+    return DocumentGenerator{node, rng};
+}
+
+//
+//using UniqueIntGen = std::unique_ptr<IntGenerator>;
+//using UniqueStrGen = std::unique_ptr<StringGenerator>;
+//using UniqueDocGen = std::unique_ptr<DocumentGenerator>;
+//using UniqueArrayGen = std::unique_ptr<ArrayGenerator>;
+
 //using Parser = typename std::function<UniqueAppender(YAML::Node, genny::DefaultRandom&)>;
 
 //Parser fastRandomString;
@@ -129,66 +154,8 @@ int64_t genPoisson(DefaultRandom& rng, double mean) {
 //UniqueDocGen createDocumentGenerator(YAML::Node node, DefaultRandom& rng);
 //UniqueArrayGen createArrayGenerator(YAML::Node node, DefaultRandom& rng);
 
-std::unique_ptr<IntGenDelegate> pickIntGenerator(YAML::Node node);
-
-
-class ConstantIntGeneratorImpl : public IntGenDelegate {
-public:
-    ~ConstantIntGeneratorImpl() = default;
-    ConstantIntGeneratorImpl(int64_t value) : _value{value} {}
-    int64_t evaluate(DefaultRandom &rng) override {
-        return _value;
-    }
-private:
-    int64_t _value;
-};
-
-class BinomialIntGeneratorImpl : public IntGenDelegate {
-public:
-    ~BinomialIntGeneratorImpl() = default;
-    int64_t evaluate(DefaultRandom &rng) override {
-        return genBinomial(rng, _tGen, _p);
-    }
-private:
-    IntGenerator _tGen;
-    double _p;
-};
-
-class UniformIntGeneratorImpl : public IntGenDelegate {
-public:
-    ~UniformIntGeneratorImpl() = default;
-    UniformIntGeneratorImpl(YAML::Node node) {
-        if (auto entry = node["min"]) {
-            _minGen = pickIntGenerator(entry);
-        } else {
-            throw InvalidValueGeneratorSyntax("Expected 'min' parameter for uniform distribution");
-        }
-
-        if (auto entry = node["max"]) {
-            _maxGen = pickIntGenerator(entry);
-        } else {
-            throw InvalidValueGeneratorSyntax("Expected 'max' parameter for uniform distribution");
-        }
-    }
-    int64_t evaluate(DefaultRandom &rng) override {
-        return genUniformInt(_minGen, _maxGen, rng);
-    }
-private:
-    std::unique_ptr<IntGenDelegate> _minGen;
-    std::unique_ptr<IntGenDelegate> _maxGen;
-};
-
-
 /*
 
-Uniform:
-
-    UniqueIntGen min;
-    UniqueIntGen max;
-
-
-
-    return std::make_unique<UniformIntGenerator>(std::move(minT), std::move(maxT));
 Negative Binomial:
 
          UniqueExpression k;
@@ -236,11 +203,11 @@ Poisson:
         }
 
  */
-std::unique_ptr<IntGenDelegate> pickIntGenerator(YAML::Node node) {
+UniqueIntEvaluator pickIntEvaluator(YAML::Node node) {
     auto distribution = node["distribution"].as<std::string>("uniform");
 
     if (distribution == "uniform") {
-        return std::make_unique<UniformIntGeneratorImpl>(node);
+        return std::make_unique<UniformIntEvaluator>(node);
 //    } else if (distribution == "binomial") {
 //        return std::make_unique<BinomialIntGeneratorImpl>(node);
 //    } else if (distribution == "negative_binomial") {
@@ -255,20 +222,43 @@ std::unique_ptr<IntGenDelegate> pickIntGenerator(YAML::Node node) {
         throw InvalidValueGeneratorSyntax(error.str());
     }
 }
-}
 
 
-class genny::IntGenerator::Impl {
+class IntGenerator::Impl {
 private:
-    std::unique_ptr<IntGenDelegate> _impl;
+    UniqueIntEvaluator _impl;
 public:
     Impl(YAML::Node node)
-    : _impl{pickIntGenerator(node)} {}
+    : _impl{pickIntEvaluator(node)} {}
 
     int64_t evaluate(DefaultRandom &rng) {
         return _impl->evaluate(rng);
     }
 };
+
+
+class DocumentGenerator::Impl {
+private:
+    UniqueDocEvaluator _impl;
+    Impl(YAML::Node node)
+            : _impl{pickDocEvaluator(node)} {}
+
+    bsoncxx::document::value evaluate(DefaultRandom &rng) {
+        return _impl->evaluate(rng);
+    }
+};
+
+// TODO:
+DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom &rng) {
+
+}
+
+// TODO
+bsoncxx::document::value DocumentGenerator::operator()() {
+    return bsoncxx::document::value(nullptr, 0, nullptr);
+}
+
+DocumentGenerator::~DocumentGenerator() = default;
 
 
 //const auto parserMap = std::unordered_map<std::string, Parser>{
@@ -671,4 +661,4 @@ public:
 //}
 //
 
-//}  // namespace genny::v1
+}  // namespace genny

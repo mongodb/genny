@@ -40,6 +40,7 @@ class IntGenerator {
 public:
     explicit IntGenerator(YAML::Node node, DefaultRandom& rng);
     int64_t operator()();
+    ~IntGenerator();
 private:
     class Impl;
     std::unique_ptr<Impl> _impl;
@@ -49,6 +50,7 @@ class StringGenerator {
 public:
     explicit StringGenerator(YAML::Node node, DefaultRandom& rng);
     std::string operator()();
+    ~StringGenerator();
 private:
     class Impl;
     std::unique_ptr<Impl> _impl;
@@ -56,8 +58,11 @@ private:
 
 class DocumentGenerator {
 public:
+    // TODO: deprecate in favor of ctor
+    static DocumentGenerator create(YAML::Node node, DefaultRandom& rng);
     explicit DocumentGenerator(YAML::Node node, DefaultRandom& rng);
     bsoncxx::document::value operator()();
+    ~DocumentGenerator();
 private:
     class Impl;
     std::unique_ptr<Impl> _impl;
@@ -67,6 +72,7 @@ class ArrayGenerator {
 public:
     explicit ArrayGenerator(YAML::Node node, DefaultRandom& rng);
     bsoncxx::array::value operator()();
+    ~ArrayGenerator();
 private:
     class Impl;
     std::unique_ptr<Impl> _impl;
