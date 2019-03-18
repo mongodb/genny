@@ -176,17 +176,13 @@ struct YamlTests {
 };
 
 std::ostream& operator<<(std::ostream& out, std::vector<Result>& results) {
+    out << std::endl;
     for(auto&& result : results) {
-        out << "- Test:" << std::endl;
-        out << "    Name: " << result.testCase.name << std::endl;
-        out << "    GivenTemplate: " << toString(result.testCase.givenTemplate) << std::endl;
-        out << "    Failures:" << std::endl;
-        if ( result._expectedExceptionButNotThrown) {
-            out << "    - Expected exception but not thrown";
-        }
+        out << "- Name: " << result.testCase.name << std::endl;
+        out << "  GivenTemplate: " << toString(result.testCase.givenTemplate) << std::endl;
+        out << "  ThenReturns: " << std::endl;
         for(auto&& [expect,actual] : result.expectedVsActual) {
-            out << "    - Expect: " << expect << std::endl;
-            out << "      Actual: " << actual << std::endl;
+            out << "    - " << actual << std::endl;
         }
     }
     return out;
