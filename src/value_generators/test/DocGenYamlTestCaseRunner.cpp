@@ -80,78 +80,66 @@ private:
 };
 
 
-struct YamlTestCase {
-    enum class RunMode {
-        kUnset,
-        kExpectException,
-        kExpectReturn,
-    };
-
-    std::string name;
-    YAML::Node wholeTest;
-    YAML::Node givenTemplate;
-    YAML::Node thenReturns;
-    YAML::Node expectedExceptionMessage;
-    RunMode runMode = RunMode::kUnset;
-
+class YamlTestCase {
+public:
     explicit YamlTestCase() = default;
 
     explicit YamlTestCase(YAML::Node node)
-        : wholeTest{node},
-          name{node["Name"].as<std::string>("No Name")},
-          givenTemplate{node["GivenTemplate"]},
-          thenReturns{node["ThenReturns"]},
-          expectedExceptionMessage{node["ThenThrows"]} {
-        if (!givenTemplate) {
+        : _wholeTest{node},
+          _name{node["Name"].as<std::string>("No Name")},
+          _givenTemplate{node["GivenTemplate"]},
+          _thenReturns{node["ThenReturns"]},
+          _expectedExceptionMessage{node["ThenThrows"]} {
+        if (!_givenTemplate) {
             std::stringstream msg;
             msg << "Need GivenTemplate in " << toString(node);
             throw std::invalid_argument(msg.str());
         }
-        if (thenReturns && expectedExceptionMessage) {
+        if (_thenReturns && _expectedExceptionMessage) {
             std::stringstream msg;
             msg << "Can't have ThenReturns and ThenThrows in '" << toString(node) << "'";
             throw std::invalid_argument(msg.str());
         }
-        if (thenReturns) {
-            if (!thenReturns.IsSequence()) {
+        if (_thenReturns) {
+            if (!_thenReturns.IsSequence()) {
                 std::stringstream msg;
                 msg << "ThenReturns must be list in '" << toString(node) << "'";
                 throw std::invalid_argument(msg.str());
             }
-            runMode = RunMode::kExpectReturn;
+            _runMode = RunMode::kExpectReturn;
         } else {
-            if (!expectedExceptionMessage) {
+            if (!_expectedExceptionMessage) {
                 std::stringstream msg;
                 msg << "Need ThenThrows if no ThenReturns in '" << toString(node) << "'";
                 throw std::invalid_argument(msg.str());
             }
-            runMode = RunMode::kExpectException;
+            _runMode = RunMode::kExpectException;
         }
     }
 
     genny::Result run() {
         genny::Result out{*this};
-        if (runMode == RunMode::kExpectException) {
+        if (_runMode == RunMode::kExpectException) {
             try {
-                genny::DocumentGenerator::create(this->givenTemplate, rng);
+                genny::DocumentGenerator::create(this->_givenTemplate, rng);
                 out.expectedExceptionButNotThrown();
                 return out;
             } catch (const std::exception& x) {
                 out.expectEqual("InvalidValueGeneratorSyntax",
-                                this->expectedExceptionMessage.as<std::string>());
+                                this->_expectedExceptionMessage.as<std::string>());
                 return out;
             }
         }
-        if (runMode != RunMode::kExpectReturn) {
+        if (_runMode != RunMode::kExpectReturn) {
             std::stringstream msg;
-            msg << "Invalid runMode " << static_cast<int>(runMode) << " in: " << std::endl;
-            msg << toString(this->wholeTest);
+            msg << "Invalid runMode " << static_cast<int>(_runMode) << " in: " << std::endl;
+            msg << toString(this->_wholeTest);
             throw std::logic_error(msg.str());
         }
 
-        auto docGen = genny::DocumentGenerator::create(this->givenTemplate, rng);
+        auto docGen = genny::DocumentGenerator::create(this->_givenTemplate, rng);
 
-        for (const auto&& nextValue : this->thenReturns) {
+        for (const auto&& nextValue : this->_thenReturns) {
             auto expected = testing::toDocumentBson(nextValue);
             auto actual = docGen();
 
@@ -169,6 +157,28 @@ struct YamlTestCase {
         }
         return out;
     }
+
+    const std::string name() const {
+        return _name;
+    }
+
+    const YAML::Node givenTemplate() const {
+        return _givenTemplate;
+    }
+
+private:
+    enum class RunMode {
+        kUnset,
+        kExpectException,
+        kExpectReturn,
+    };
+
+    std::string _name;
+    YAML::Node _wholeTest;
+    YAML::Node _givenTemplate;
+    YAML::Node _thenReturns;
+    YAML::Node _expectedExceptionMessage;
+    RunMode _runMode = RunMode::kUnset;
 };
 
 
@@ -194,8 +204,8 @@ struct YamlTests {
 std::ostream& operator<<(std::ostream& out, std::vector<Result>& results) {
     out << std::endl;
     for (auto&& result : results) {
-        out << "- Name: " << result.testCase().name << std::endl;
-        out << "  GivenTemplate: " << toString(result.testCase().givenTemplate) << std::endl;
+        out << "- Name: " << result.testCase().name() << std::endl;
+        out << "  GivenTemplate: " << toString(result.testCase().givenTemplate()) << std::endl;
         out << "  ThenReturns: " << std::endl;
         for (auto&& [expect, actual] : result.expectedVsActual()) {
             out << "    - " << actual << std::endl;
