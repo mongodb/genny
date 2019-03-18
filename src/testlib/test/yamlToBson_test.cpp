@@ -65,9 +65,11 @@ TEST_CASE("YAML To BSON Simple") {
     test("foo: 0", BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int32{0})));
 
     // max valeu for int32 ↓
-    test("foo: 2147483647", BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int32{2147483647})));
+    test("foo: 2147483647",
+         BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int32{2147483647})));
     //            ↑ + 1
-    test("foo: 2147483648", BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int64{2147483648})));
+    test("foo: 2147483648",
+         BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int64{2147483648})));
 
     // max value for int64 ↓
     test("foo: 9223372036854775807",

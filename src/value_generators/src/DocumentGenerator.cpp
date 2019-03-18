@@ -83,9 +83,7 @@ overloaded(Ts...)->overloaded<Ts...>;
 std::optional<int64_t> Value::tryAsInt64() const {
     std::optional<int64_t> ret;
 
-    std::visit(overloaded{[&](int64_t arg) { ret = arg; },
-                          [&](auto&& arg) {}},
-               _value);
+    std::visit(overloaded{[&](int64_t arg) { ret = arg; }, [&](auto&& arg) {}}, _value);
 
     return ret;
 }

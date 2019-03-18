@@ -48,9 +48,9 @@ struct YamlTestCase;
 
 class Result {
 public:
-    explicit Result(YamlTestCase& testCase) : _testCase{testCase} {}
+    explicit Result(const YamlTestCase& testCase) : _testCase{testCase} {}
 
-    bool pass() {
+    bool pass() const {
         return _expectedVsActual.empty() && !_expectedExceptionButNotThrown;
     }
 
@@ -74,8 +74,8 @@ public:
     }
 
 private:
-    YamlTestCase& _testCase;
-    std::vector<std::pair<std::string, std::string>> _expectedVsActual = {};
+    const YamlTestCase& _testCase;
+    std::vector<std::pair<std::string, std::string>> _expectedVsActual;
     bool _expectedExceptionButNotThrown = false;
 };
 
@@ -92,7 +92,7 @@ public:
           _expectedExceptionMessage{node["ThenThrows"]} {
         if (!_givenTemplate) {
             std::stringstream msg;
-            msg << "Need GivenTemplate in " << toString(node);
+            msg << "Need GivenTemplate in '" << toString(node) << "'";
             throw std::invalid_argument(msg.str());
         }
         if (_thenReturns && _expectedExceptionMessage) {
@@ -117,42 +117,23 @@ public:
         }
     }
 
-    genny::Result run() {
+    genny::Result run() const {
         genny::Result out{*this};
         if (_runMode == RunMode::kExpectException) {
             try {
                 genny::DocumentGenerator::create(this->_givenTemplate, rng);
                 out.expectedExceptionButNotThrown();
-                return out;
             } catch (const std::exception& x) {
                 out.expectEqual("InvalidValueGeneratorSyntax",
                                 this->_expectedExceptionMessage.as<std::string>());
-                return out;
             }
-        }
-        if (_runMode != RunMode::kExpectReturn) {
-            std::stringstream msg;
-            msg << "Invalid runMode " << static_cast<int>(_runMode) << " in: " << std::endl;
-            msg << toString(this->_wholeTest);
-            throw std::logic_error(msg.str());
+            return out;
         }
 
         auto docGen = genny::DocumentGenerator::create(this->_givenTemplate, rng);
-
         for (const auto&& nextValue : this->_thenReturns) {
             auto expected = testing::toDocumentBson(nextValue);
             auto actual = docGen();
-
-            for (auto&& e : expected.view()) {
-                auto ty = static_cast<int>(e.type());
-                auto ec = e;
-            }
-
-            for (auto&& e : actual.view()) {
-                auto ty = static_cast<int>(e.type());
-                auto ec = e;
-            }
-
             out.expectEqual(expected.view(), actual.view());
         }
         return out;
@@ -194,7 +175,7 @@ public:
         }
     }
 
-    std::vector<Result> run() {
+    std::vector<Result> run() const {
         std::vector<Result> out{};
         for (auto& tcase : _cases) {
             auto result = tcase.run();
@@ -206,10 +187,10 @@ public:
     }
 
 private:
-    std::vector<YamlTestCase> _cases = {};
+    std::vector<YamlTestCase> _cases;
 };
 
-std::ostream& operator<<(std::ostream& out, std::vector<Result>& results) {
+std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) {
     out << std::endl;
     for (auto&& result : results) {
         out << "- Name: " << result.testCase().name() << std::endl;
