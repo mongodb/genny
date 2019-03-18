@@ -7,32 +7,29 @@
 
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
+#include <bsoncxx/types/value.hpp>
+
+#include <yaml-cpp/yaml.h>
 
 #include <testlib/ActorHelper.hpp>
+#include <testlib/findRepoRoot.hpp>
 #include <testlib/helpers.hpp>
 #include <testlib/yamlToBson.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
 
-#include <yaml-cpp/yaml.h>
-#include <bsoncxx/types/value.hpp>
-
-namespace {
-genny::DefaultRandom rng;
-}
-
 namespace genny {
 
-class YamlTests;
+namespace {
 
-struct YamlTestCase;
+genny::DefaultRandom rng;
 
 std::string toString(const std::string& str) {
     return str;
 }
 
-std::string toString(const bsoncxx::document::view_or_value & t) {
+std::string toString(const bsoncxx::document::view_or_value& t) {
     return bsoncxx::to_json(t, bsoncxx::ExtendedJsonMode::k_canonical);
 }
 
@@ -42,8 +39,15 @@ std::string toString(const YAML::Node& node) {
     return std::string{out.c_str()};
 }
 
+}  // namespace
+
+
+class YamlTests;
+struct YamlTestCase;
+
+
 struct Result {
-    explicit Result(YamlTestCase &testCase) : testCase(testCase) {}
+    explicit Result(YamlTestCase& testCase) : testCase(testCase) {}
     YamlTestCase& testCase;
     std::vector<std::pair<std::string, std::string>> expectedVsActual = {};
     bool _expectedExceptionButNotThrown = false;
@@ -61,8 +65,6 @@ struct Result {
         _expectedExceptionButNotThrown = true;
     }
 };
-
-
 
 
 struct YamlTestCase {
@@ -122,9 +124,8 @@ struct YamlTestCase {
                 out.expectedExceptionButNotThrown();
                 return out;
             } catch (const std::exception& x) {
-                out.expectEqual("InvalidValueGeneratorSyntax", this->expectedExceptionMessage.as<std::string>());
-                // TODO: assert actual exception
-//                out.expectEqual(this->expectedExceptionMessage.as<std::string>(), x.what());
+                out.expectEqual("InvalidValueGeneratorSyntax",
+                                this->expectedExceptionMessage.as<std::string>());
                 return out;
             }
         }
@@ -141,12 +142,12 @@ struct YamlTestCase {
             auto expected = testing::toDocumentBson(nextValue);
             auto actual = docGen();
 
-            for(auto&& e : expected.view()) {
+            for (auto&& e : expected.view()) {
                 auto ty = static_cast<int>(e.type());
                 auto ec = e;
             }
 
-            for(auto&& e : actual.view()) {
+            for (auto&& e : actual.view()) {
                 auto ty = static_cast<int>(e.type());
                 auto ec = e;
             }
@@ -157,8 +158,9 @@ struct YamlTestCase {
     }
 };
 
+
 struct YamlTests {
-    explicit YamlTests() { }
+    explicit YamlTests() = default;
 
     std::vector<YamlTestCase> cases = {};
 
@@ -166,7 +168,7 @@ struct YamlTests {
 
     std::vector<Result> run() {
         std::vector<Result> out{};
-        for(auto& tcase : cases) {
+        for (auto& tcase : cases) {
             auto result = tcase.run();
             if (!result.pass()) {
                 out.push_back(std::move(result));
@@ -178,11 +180,11 @@ struct YamlTests {
 
 std::ostream& operator<<(std::ostream& out, std::vector<Result>& results) {
     out << std::endl;
-    for(auto&& result : results) {
+    for (auto&& result : results) {
         out << "- Name: " << result.testCase.name << std::endl;
         out << "  GivenTemplate: " << toString(result.testCase.givenTemplate) << std::endl;
         out << "  ThenReturns: " << std::endl;
-        for(auto&& [expect,actual] : result.expectedVsActual) {
+        for (auto&& [expect, actual] : result.expectedVsActual) {
             out << "    - " << actual << std::endl;
         }
     }
@@ -201,7 +203,7 @@ struct convert<genny::YamlTests> {
     }
 
     static bool decode(const Node& node, genny::YamlTests& rhs) {
-        for(auto&& n : node["Cases"]) {
+        for (auto&& n : node["Cases"]) {
             rhs.cases.push_back(std::move(n.as<genny::YamlTestCase>()));
         }
         return true;
@@ -223,20 +225,25 @@ struct convert<genny::YamlTestCase> {
 }  // namespace YAML
 
 
+namespace {
+
 TEST_CASE("YAML Tests") {
-    // TODO: findup for path
     try {
-        auto yaml = YAML::LoadFile("/Users/rtimmons/Projects/genny/src/value_generators/test/DocumentGeneratorTestCases.yml");
+        const auto file =
+            genny::findRepoRoot() + "/src/value_generators/test/DocumentGeneratorTestCases.yml";
+        const auto yaml = YAML::LoadFile(file);
         auto tests = yaml.as<genny::YamlTests>();
         std::vector<genny::Result> results = tests.run();
         if (!results.empty()) {
             std::stringstream msg;
             msg << results;
-            WARN( msg.str() );
+            WARN(msg.str());
         }
         REQUIRE(results.empty());
-    } catch(const std::exception& ex) {
+    } catch (const std::exception& ex) {
         WARN(ex.what());
         throw;
     }
 }
+
+}  // namespace
