@@ -168,17 +168,18 @@ public:
 
 private:
     enum class RunMode {
-        kUnset,
         kExpectException,
         kExpectReturn,
     };
 
+    RunMode _runMode = RunMode::kExpectException;
     std::string _name;
+
+    // really only "need" _wholeTest but others are here for convenience
     YAML::Node _wholeTest;
     YAML::Node _givenTemplate;
     YAML::Node _thenReturns;
     YAML::Node _expectedExceptionMessage;
-    RunMode _runMode = RunMode::kUnset;
 };
 
 
