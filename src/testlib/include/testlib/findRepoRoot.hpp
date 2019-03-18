@@ -19,12 +19,12 @@
 
 namespace genny {
 
-    /**
-     * @return the path to the Genny repository's root directory by looking 'up' the directory tree.
-     * @throws invalid_argument if not inside the genny repository
-     */
-    std::string findRepoRoot();
+/**
+ * @return the path to the Genny repository's root directory by looking 'up' the directory tree.
+ * @throws invalid_argument if not inside the genny repository
+ */
+std::string findRepoRoot();
 
-}
+}  // namespace genny
 
 #endif  // HEADER_00E808D9_C909_4A88_99A5_C0B5E8596E84_INCLUDED
