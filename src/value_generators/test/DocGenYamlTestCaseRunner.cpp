@@ -46,24 +46,37 @@ class YamlTests;
 struct YamlTestCase;
 
 
-struct Result {
-    explicit Result(YamlTestCase& testCase) : testCase(testCase) {}
-    YamlTestCase& testCase;
-    std::vector<std::pair<std::string, std::string>> expectedVsActual = {};
-    bool _expectedExceptionButNotThrown = false;
+class Result {
+public:
+    explicit Result(YamlTestCase& testCase) : _testCase{testCase} {}
+
     bool pass() {
-        return expectedVsActual.empty() && !_expectedExceptionButNotThrown;
+        return _expectedVsActual.empty() && !_expectedExceptionButNotThrown;
     }
+
     template <typename E, typename A>
     void expectEqual(E expect, A actual) {
         if (expect != actual) {
-            expectedVsActual.emplace_back(toString(expect), toString(actual));
+            _expectedVsActual.emplace_back(toString(expect), toString(actual));
         }
     }
 
     void expectedExceptionButNotThrown() {
         _expectedExceptionButNotThrown = true;
     }
+
+    const std::vector<std::pair<std::string, std::string>>& expectedVsActual() const {
+        return _expectedVsActual;
+    }
+
+    const YamlTestCase& testCase() const {
+        return _testCase;
+    }
+
+private:
+    YamlTestCase& _testCase;
+    std::vector<std::pair<std::string, std::string>> _expectedVsActual = {};
+    bool _expectedExceptionButNotThrown = false;
 };
 
 
@@ -181,10 +194,10 @@ struct YamlTests {
 std::ostream& operator<<(std::ostream& out, std::vector<Result>& results) {
     out << std::endl;
     for (auto&& result : results) {
-        out << "- Name: " << result.testCase.name << std::endl;
-        out << "  GivenTemplate: " << toString(result.testCase.givenTemplate) << std::endl;
+        out << "- Name: " << result.testCase().name << std::endl;
+        out << "  GivenTemplate: " << toString(result.testCase().givenTemplate) << std::endl;
         out << "  ThenReturns: " << std::endl;
-        for (auto&& [expect, actual] : result.expectedVsActual) {
+        for (auto&& [expect, actual] : result.expectedVsActual()) {
             out << "    - " << actual << std::endl;
         }
     }
