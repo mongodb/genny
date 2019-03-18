@@ -248,6 +248,7 @@ def build_parser():
 class ISODateTimeEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
+            # RFC3339 format.
             return o.strftime('%Y-%m-%dT%H:%M:%SZ')
 
         return super().default(self, o)
