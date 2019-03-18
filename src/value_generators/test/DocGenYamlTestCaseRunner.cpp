@@ -44,14 +44,19 @@ struct Result {
     explicit Result(YamlTestCase &testCase) : testCase(testCase) {}
     YamlTestCase& testCase;
     std::vector<std::pair<std::string, std::string>> expectedVsActual = {};
+    bool _expectedExceptionButNotThrown = false;
     bool pass() {
-        return expectedVsActual.empty();
+        return expectedVsActual.empty() && !_expectedExceptionButNotThrown;
     }
     template <typename E, typename A>
     void expectEqual(E expect, A actual) {
         if (expect != actual) {
             expectedVsActual.emplace_back(toString(expect), toString(actual));
         }
+    }
+
+    void expectedExceptionButNotThrown() {
+        _expectedExceptionButNotThrown = true;
     }
 };
 
@@ -112,7 +117,8 @@ struct YamlTestCase {
         if (runMode == RunMode::kExpectException) {
             try {
                 genny::DocumentGenerator::create(this->givenTemplate, genny::rng);
-                FAIL("Expected exception");
+                out.expectedExceptionButNotThrown();
+                return out;
             } catch (const std::exception& x) {
                 out.expectEqual("InvalidValueGeneratorSyntax", this->expectedExceptionMessage.as<std::string>());
                 // TODO: assert actual exception
@@ -122,7 +128,8 @@ struct YamlTestCase {
         }
         if (runMode != RunMode::kExpectReturn) {
             std::stringstream msg;
-            msg << "Invalid runMode " << static_cast<int>(runMode);
+            msg << "Invalid runMode " << static_cast<int>(runMode) << " in: " << std::endl;
+            msg << toString(this->wholeTest);
             throw std::logic_error(msg.str());
         }
 
@@ -174,6 +181,9 @@ std::ostream& operator<<(std::ostream& out, std::vector<Result>& results) {
         out << "    Name: " << result.testCase.name << std::endl;
         out << "    GivenTemplate: " << toString(result.testCase.givenTemplate) << std::endl;
         out << "    Failures:" << std::endl;
+        if ( result._expectedExceptionButNotThrown) {
+            out << "    - Expected exception but not thrown";
+        }
         for(auto&& [expect,actual] : result.expectedVsActual) {
             out << "    - Expect: " << expect << std::endl;
             out << "      Actual: " << actual << std::endl;
