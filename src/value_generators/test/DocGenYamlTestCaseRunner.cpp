@@ -182,16 +182,20 @@ private:
 };
 
 
-struct YamlTests {
+class YamlTests {
+public:
     explicit YamlTests() = default;
-
-    std::vector<YamlTestCase> cases = {};
-
     YamlTests(const YamlTests&) = default;
+
+    explicit YamlTests(const YAML::Node& node) {
+        for (auto&& n : node["Cases"]) {
+            _cases.push_back(std::move(n.as<genny::YamlTestCase>()));
+        }
+    }
 
     std::vector<Result> run() {
         std::vector<Result> out{};
-        for (auto& tcase : cases) {
+        for (auto& tcase : _cases) {
             auto result = tcase.run();
             if (!result.pass()) {
                 out.push_back(std::move(result));
@@ -199,6 +203,9 @@ struct YamlTests {
         }
         return out;
     }
+
+private:
+    std::vector<YamlTestCase> _cases = {};
 };
 
 std::ostream& operator<<(std::ostream& out, std::vector<Result>& results) {
@@ -226,9 +233,7 @@ struct convert<genny::YamlTests> {
     }
 
     static bool decode(const Node& node, genny::YamlTests& rhs) {
-        for (auto&& n : node["Cases"]) {
-            rhs.cases.push_back(std::move(n.as<genny::YamlTestCase>()));
-        }
+        rhs = genny::YamlTests(node);
         return true;
     }
 };
