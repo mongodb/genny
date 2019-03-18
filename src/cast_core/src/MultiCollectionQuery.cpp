@@ -31,21 +31,23 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 
-#include <value_generators/value_generators.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
 
 /** @private */
 struct MultiCollectionQuery::PhaseConfig {
-    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client)
-        : database{(*client)[context.get<std::string>("Database")]},
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, DefaultRandom& rng)
+        : rng{rng},
+          database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          filterExpr{value_generators::Expression::parseOperand(context.get("Filter"))},
+          filterExpr{DocumentGenerator::create(context.get("Filter"), rng)},
           uniformDistribution{0, numCollections} {}
 
+    DefaultRandom& rng;
     mongocxx::database database;
     int64_t numCollections;
-    value_generators::UniqueExpression filterExpr;
+    DocumentGenerator filterExpr;
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;
@@ -65,7 +67,7 @@ void MultiCollectionQuery::run() {
             auto collection = config->database[collectionName];
 
             // Perform a query
-            auto filter = config->filterExpr->evaluate(_rng).getDocument();
+            auto filter = config->filterExpr();
             // BOOST_LOG_TRIVIAL(info) << "Filter is " <<  bsoncxx::to_json(filter.view());
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
@@ -90,7 +92,7 @@ MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
       _rng{context.workload().createRNG()},
       _queryOp{context.operation("Query", MultiCollectionQuery::id())},
       _client{std::move(context.client())},
-      _loop{context, _client} {}
+      _loop{context, _client, _rng} {}
 
 namespace {
 auto registerMultiCollectionQuery =
