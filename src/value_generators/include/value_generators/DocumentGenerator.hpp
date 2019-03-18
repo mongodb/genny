@@ -189,16 +189,6 @@ struct IntegerValueType {
     }
 };
 
-struct DoubleValueType {
-    using OutputType = double;
-    constexpr static ValueType valueType() {
-        return ValueType::Double;
-    }
-    static OutputType convert(const Value& value) {
-        return value.getDouble();
-    }
-};
-
 struct DocumentValueType {
     using OutputType = bsoncxx::document::view_or_value;
     constexpr static ValueType valueType() {
@@ -388,12 +378,12 @@ private:
  */
 class BinomialIntExpression : public RandomIntExpression {
 public:
-    BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, UniqueTypedExpression<DoubleValueType> p);
+    BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, double p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
     const UniqueTypedExpression<IntegerValueType> _t;
-    const UniqueTypedExpression<DoubleValueType> _p;
+    const double _p;
 };
 
 
@@ -420,11 +410,11 @@ private:
  */
 class GeometricIntExpression : public RandomIntExpression {
 public:
-    explicit GeometricIntExpression(UniqueTypedExpression<DoubleValueType> p);
+    explicit GeometricIntExpression(double p);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const UniqueTypedExpression<DoubleValueType> _p;
+    const double _p;
 };
 
 
@@ -435,11 +425,11 @@ private:
  */
 class PoissonIntExpression : public RandomIntExpression {
 public:
-    explicit PoissonIntExpression(UniqueTypedExpression<DoubleValueType> mean);
+    explicit PoissonIntExpression(double mean);
     Value evaluate(genny::DefaultRandom& rng) const override;
 
 private:
-    const UniqueTypedExpression<DoubleValueType> _mean;
+    const double _mean;
 };
 
 /**
