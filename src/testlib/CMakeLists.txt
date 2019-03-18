@@ -22,6 +22,7 @@ CreateGennyTargets(
         MongoCxx::mongocxx
         MongoCxx::bsoncxx
         Boost::boost
+        Boost::filesystem
         Boost::log
         catch2
         yaml-cpp
