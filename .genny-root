@@ -1,0 +1,2 @@
+This is a "dummy" file used by `findRepoRoot` to find the "root" of the Genny
+repository by successively looking up the directory tree from cwd.

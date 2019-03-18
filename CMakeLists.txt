@@ -64,6 +64,7 @@ find_package(
         1.68
         REQUIRED
         COMPONENTS
+        filesystem
         log_setup
         log
         program_options
