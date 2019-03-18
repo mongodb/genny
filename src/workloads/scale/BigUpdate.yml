@@ -97,7 +97,7 @@ Actors:
     Threads: 100
     Database: *DB
     CollectionCount: 10  # This is specifically 1% of collections
-    UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100.0}}}
+    UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
     Update: {$inc: {x: 1}}
     Phases:
       - Operation:
@@ -109,7 +109,7 @@ Actors:
     Threads: 100
     Database: *DB
     CollectionCount: 100  # This is specifically 10% of collections.
-    Filter: {y: {^RandomInt: {distribution: poisson, mean: 100.0}}}
+    Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
     Limit: 20
     Phases:
       - Operation:
