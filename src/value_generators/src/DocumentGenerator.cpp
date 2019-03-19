@@ -189,6 +189,44 @@ private:
     std::string _value;
 };
 
+/////////////////////////////////////////////////////
+// Array Generator
+/////////////////////////////////////////////////////
+
+class ArrayGenerator::Impl : public Appendable {
+    friend class NormalArrayGenerator;
+public:
+    virtual bsoncxx::array::value evaluate() = 0;
+    virtual ~Impl() = default;
+    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array &builder) override {
+        builder.append(this->evaluate());
+    }
+};
+
+using UniqueArrayGenerator= std::unique_ptr<ArrayGenerator::Impl>;
+
+UniqueArrayGenerator pickArrayGenerator(YAML::Node node, DefaultRandom &rng);
+
+class NormalArrayGenerator : public ArrayGenerator::Impl {
+public:
+    NormalArrayGenerator(YAML::Node node, DefaultRandom&) {}
+    ~NormalArrayGenerator() = default;
+
+    bsoncxx::array::value evaluate() override {
+        bsoncxx::builder::basic::array builder {};
+        for(auto&& value : _values) {
+            value->append(builder);
+        }
+        return builder.extract();
+    }
+
+private:
+    std::vector<UniqueAppendable> _values;
+};
+
 
 /////////////////////////////////////////////////////
 // Document Generator
@@ -303,6 +341,10 @@ UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng) {
 
     if (node.IsNull()) {
         return std::make_unique<NullGenerator>(node, rng);
+    }
+
+    if (node.IsSequence()) {
+        return std::make_unique<NormalArrayGenerator>(node, rng);
     }
 
     // TODO: array generator
