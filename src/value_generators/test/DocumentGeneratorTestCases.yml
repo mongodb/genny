@@ -7,6 +7,15 @@ Cases:
   # int32s whereas number value-generators always produce
   # int64s.
 
+  - Name: Invalid missing min
+    GivenTemplate:
+      a: {^RandomInt: {max: 10}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: one RandomInt
+    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
+    ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
+
   - Name: Must be mapping type
     GivenTemplate: a
     ThenThrows: InvalidValueGeneratorSyntax

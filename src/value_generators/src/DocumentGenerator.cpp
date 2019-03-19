@@ -92,14 +92,24 @@ public:
 
 using UniqueIntGenerator = std::unique_ptr<IntGenerator::Impl>;
 
-UniqueIntGenerator pickIntGenerator(YAML::Node node, DefaultRandom &rng);
+UniqueIntGenerator randomInt(YAML::Node node, DefaultRandom &rng);
+
+YAML::Node extract(YAML::Node node, std::string key, std::string msg) {
+    auto out = node[key];
+    if (!out) {
+        std::stringstream ex;
+        ex << "Missing '" << key << "' for " << msg << " in input " << toString(node);
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg));
+    }
+    return out;
+}
 
 class UniformIntGenerator : public IntGenerator::Impl {
 public:
     UniformIntGenerator(YAML::Node node, DefaultRandom& rng)
-        : _minGen{pickIntGenerator(node["min"], rng)},
-          _maxGen{pickIntGenerator(node["max"], rng)},
-          _rng{rng} {}
+        : _rng{rng},
+          _minGen{randomInt(extract(node, "min", "uniform"), _rng)},
+          _maxGen{randomInt(extract(node, "max", "uniform"), _rng)} {}
     ~UniformIntGenerator() override = default;
 
     int64_t evaluate() override {
@@ -110,9 +120,9 @@ public:
     }
 
 private:
+    DefaultRandom& _rng;
     UniqueIntGenerator _minGen;
     UniqueIntGenerator _maxGen;
-    DefaultRandom& _rng;
 };
 
 
@@ -129,28 +139,7 @@ private:
     int64_t _value;
 };
 
-// TODO: move to appendables section
-UniqueIntGenerator pickIntGenerator(YAML::Node node, DefaultRandom &rng) {
-    // gets the value from a kvp. Gets value from either {a:7} (gets 7)
-    // or {a:{^RandomInt:{distribution...}} gets {distribution...}
-    if (node.IsScalar()) {
-        return std::make_unique<ConstantIntGenerator>(node, rng);
-    }
 
-    if (node.IsSequence()) {
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Got sequence"));
-    }
-
-    auto distribution = node["distribution"].as<std::string>("uniform");
-
-    if (distribution == "uniform") {
-        return std::make_unique<UniformIntGenerator>(node, rng);
-    } else {
-        std::stringstream error;
-        error << "Unknown distribution '" << distribution << "'";
-        throw InvalidValueGeneratorSyntax(error.str());
-    }
-}
 
 /////////////////////////////////////////////////////
 // String Generators
@@ -250,12 +239,10 @@ public:
 
 using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
 
-UniqueDocumentGenerator pickDocGenerator(YAML::Node node, DefaultRandom &rng);
-
 class NormalDocumentGenerator : public DocumentGenerator::Impl {
-    using ElementType = std::pair<std::string, UniqueAppendable>;
 
 public:
+    using ElementType = std::pair<std::string, UniqueAppendable>;
     ~NormalDocumentGenerator() = default;
     NormalDocumentGenerator(YAML::Node node, DefaultRandom& rng) {
         // will always be a map but may be e.g. {^RandomInt:} or {a:7}
@@ -264,11 +251,14 @@ public:
         }
 
         auto elements = std::vector<ElementType>{};
+        bool hasMetaKey = false;
         for (auto&& entry : node) {
             if (entry.first.as<std::string>()[0] == '^') {
-                throw InvalidValueGeneratorSyntax(
-                        "'^'-prefix keys are reserved for expressions, but attempted to parse as an"
-                        " object");
+                if (hasMetaKey) {
+                    // TODO: bad message
+                    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Invalid use of meta-key"));
+                }
+                hasMetaKey = true;
             }
             elements.emplace_back(entry.first.as<std::string>(), pickAppendable(entry.second, rng));
         }
@@ -292,7 +282,7 @@ DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng)
 }
 
 DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
-        : _impl{pickDocGenerator(node, rng)} {}
+        : _impl{std::make_unique<NormalDocumentGenerator>(node, rng)} {}
 
 bsoncxx::document::value DocumentGenerator::operator()() {
     return _impl->evaluate();
@@ -317,62 +307,100 @@ DocumentGenerator::~DocumentGenerator() = default;
 //
 //*/
 
-UniqueDocumentGenerator pickDocGenerator(YAML::Node node, DefaultRandom &rng) {
-    return std::make_unique<NormalDocumentGenerator>(node, rng);
-}
+using Parser = std::function<UniqueAppendable(YAML::Node, DefaultRandom &)>;
 
-
-UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng) {
-    BOOST_LOG_TRIVIAL(info) << toString(node);
+UniqueIntGenerator randomInt(YAML::Node node, DefaultRandom &rng) {
+    // gets the value from a kvp. Gets value from either {a:7} (gets 7)
+    // or {a:{^RandomInt:{distribution...}} gets {distribution...}
     if (node.IsScalar()) {
-        if (node.Tag() != "!") {
-            try {
-                return std::make_unique<ConstantIntGenerator>(node, rng);
-            } catch (const YAML::BadConversion& e) {
-            }
-            // TODO: constant double generator
-            // TODO: constant boolean generator
-            try {
-                return std::make_unique<ConstantStringGenerator>(node, rng);
-            } catch (const YAML::BadConversion& e) {
-            }
-        }
-    }
-
-    if (node.IsNull()) {
-        return std::make_unique<NullGenerator>(node, rng);
+        return std::make_unique<ConstantIntGenerator>(node, rng);
     }
 
     if (node.IsSequence()) {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Got sequence"));
+    }
+
+    auto distribution = node["distribution"].as<std::string>("uniform");
+
+    if (distribution == "uniform") {
+        return std::make_unique<UniformIntGenerator>(node, rng);
+    } else {
+        std::stringstream error;
+        error << "Unknown distribution '" << distribution << "'";
+        throw InvalidValueGeneratorSyntax(error.str());
+    }
+}
+
+UniqueStringGenerator fastRandomString(YAML::Node node, DefaultRandom &rng) {
+    // TODO
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("fastRandomString"));
+}
+
+UniqueStringGenerator randomString(YAML::Node node, DefaultRandom &rng) {
+    // TODO
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("randomString"));
+}
+
+UniqueAppendable verbatim(YAML::Node node, DefaultRandom &rng) {
+    // TODO
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("verbatim"));
+}
+
+UniqueAppendable pickMapAppendable(YAML::Node node, DefaultRandom& rng) {
+    static std::map<std::string, Parser> parsers {
+        {"^FastRandomString", fastRandomString},
+        {"^RandomInt", randomInt},
+        {"^RandomString", randomString},
+        {"^Verbatim", verbatim}
+    };
+
+    auto nodeIt = node.begin();
+    if (nodeIt != node.end()) {
+        auto key = nodeIt->first.as<std::string>();
+        if (auto&& parser = parsers.find(key); parser != parsers.end()) {
+            if (node.size() != 1) {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Multiple values for recursive map"));
+            }
+            BOOST_LOG_TRIVIAL(info) << "Found parser for " << key;
+            return parser->second(nodeIt->second, rng);
+        }
+    }
+
+    return std::make_unique<NormalDocumentGenerator>(node, rng);
+}
+
+UniqueAppendable pickScalarAppendable(YAML::Node node, DefaultRandom& rng) {
+    if (node.Tag() != "!") {
+        try {
+            return std::make_unique<ConstantIntGenerator>(node, rng);
+        } catch (const YAML::BadConversion& e) {
+        }
+        // TODO: constant double generator
+        // TODO: constant boolean generator
+        try {
+            return std::make_unique<ConstantStringGenerator>(node, rng);
+        } catch (const YAML::BadConversion& e) {
+        }
+    }
+    // TODO
+    throw InvalidValueGeneratorSyntax("Unknown inside UniqueAppendable pickScalarAppendable(YAML::Node node, DefaultRandom& rng)");
+}
+
+UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng) {
+    BOOST_LOG_TRIVIAL(info) << toString(node) << " size = " << node.size();
+    if (node.IsScalar()) {
+        return pickScalarAppendable(node, rng);
+    }
+    if (node.IsNull()) {
+        return std::make_unique<NullGenerator>(node, rng);
+    }
+    if (node.IsSequence()) {
         return std::make_unique<NormalArrayGenerator>(node, rng);
     }
-
-    // TODO: array generator
     if (node.IsMap()) {
-        auto nodeIt = node.begin();
-        if (nodeIt == node.end()) {
-            return std::make_unique<NormalDocumentGenerator>(node, rng);
-        }
-
-        auto key = nodeIt->first;
-        auto value = nodeIt->second;
-
-        ++nodeIt;
-        if (nodeIt != node.end()) {
-            return std::make_unique<NormalDocumentGenerator>(node, rng);
-        }
-
-        auto name = key.as<std::string>();
-
-//        auto parserIt = parserMap.find(name);
-//        if (parserIt == parserMap.end()) {
-//            std::stringstream error;
-//            error << "Unknown expression type '" << name << "'";
-//            throw InvalidValueGeneratorSyntax(error.str());
-//        }
-//        return parserIt->second(value, rng);
+        return pickMapAppendable(node, rng);
     }
-    throw InvalidValueGeneratorSyntax("Unknown");
+    throw InvalidValueGeneratorSyntax("Unknown insid UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng)");
 }
 
 }  // namespace genny
