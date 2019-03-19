@@ -97,7 +97,7 @@ YAML::Node extract(YAML::Node node, std::string key, std::string msg) {
     if (!out) {
         std::stringstream ex;
         ex << "Missing '" << key << "' for " << msg << " in input " << toString(node);
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg));
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(ex.str()));
     }
     return out;
 }
@@ -231,6 +231,45 @@ public:
 
 private:
     std::string _value;
+};
+
+
+class NormalRandomStringGenerator : public StringGenerator::Impl {
+private:
+    const static std::string kDefaultAlphabet;
+
+public:
+    NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
+    : _rng{rng},
+      _lengthGen{randomInt(extract(node, "length", "^RandomString"), rng)},
+      _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
+      _alphabetLength{_alphabet.size()} {}
+
+    ~NormalRandomStringGenerator() override = default;
+
+    std::string evaluate() override {
+        auto distribution = std::uniform_int_distribution<size_t>{0, _alphabetLength - 1};
+
+        auto length = _lengthGen->evaluate();
+        std::string str(length, '\0');
+
+        for (int i = 0; i < length; ++i) {
+            str[i] = _alphabet[distribution(_rng)];
+        }
+
+        return str;
+    }
+private:
+    DefaultRandom& _rng;
+    UniqueIntGenerator _lengthGen;
+    std::string _alphabet;
+    size_t _alphabetLength;
+};
+
+const std::string NormalRandomStringGenerator::kDefaultAlphabet  = std::string{
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/"
 };
 
 /////////////////////////////////////////////////////
@@ -399,8 +438,7 @@ UniqueStringGenerator fastRandomString(YAML::Node node, DefaultRandom &rng) {
 }
 
 UniqueStringGenerator randomString(YAML::Node node, DefaultRandom &rng) {
-    // TODO
-    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("randomString"));
+    return std::make_unique<NormalRandomStringGenerator>(node, rng);
 }
 
 UniqueAppendable verbatim(YAML::Node node, DefaultRandom &rng) {
