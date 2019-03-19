@@ -99,7 +99,7 @@ def build_report(config):
         test_name = os.path.splitext(base_name)[0]
         a = CedarTestArtifact(
             bucket=config.cloud_bucket,
-            path='{}/{}'.format(config.task_id, base_name),
+            path=test_name,
             tags=[],
             local_path=path,
             created_at=config.created_at,
