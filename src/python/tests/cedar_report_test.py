@@ -26,7 +26,7 @@ class CedarReportTest(unittest.TestCase):
         This test documents the environment variables needed to run cedar_report.py and checks that
         the environment variables are correctly used.
         """
-        self.maxDiff = None
+
         class MatchAnyString(object):
             def __eq__(self, other):
                 return type(other) == str
