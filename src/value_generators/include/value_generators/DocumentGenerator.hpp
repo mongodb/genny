@@ -41,8 +41,8 @@ public:
     explicit IntGenerator(YAML::Node node, DefaultRandom& rng);
     int64_t operator()();
     ~IntGenerator();
-private:
     class Impl;
+private:
     std::unique_ptr<Impl> _impl;
 };
 
@@ -51,8 +51,8 @@ public:
     explicit StringGenerator(YAML::Node node, DefaultRandom& rng);
     std::string operator()();
     ~StringGenerator();
-private:
     class Impl;
+private:
     std::unique_ptr<Impl> _impl;
 };
 
@@ -63,8 +63,8 @@ public:
     explicit DocumentGenerator(YAML::Node node, DefaultRandom& rng);
     bsoncxx::document::value operator()();
     ~DocumentGenerator();
-private:
     class Impl;
+private:
     std::unique_ptr<Impl> _impl;
 };
 
@@ -73,8 +73,8 @@ public:
     explicit ArrayGenerator(YAML::Node node, DefaultRandom& rng);
     bsoncxx::array::value operator()();
     ~ArrayGenerator();
-private:
     class Impl;
+private:
     std::unique_ptr<Impl> _impl;
 };
 
