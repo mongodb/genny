@@ -57,7 +57,7 @@ CedarReport = namedtuple('CedarReport', [
 ])
 
 DEFAULT_REPORT_FILE = 'cedar_report.json'
-
+DEFAULT_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 class _Config(object):
     """
@@ -93,18 +93,35 @@ class _Config(object):
 
 
 def build_report(config):
-    artifacts = []
+    sub_tests = []
     for path in config.metrics_file_names:
         base_name = os.path.basename(path)
+        test_name = os.path.splitext(base_name)[0]
         a = CedarTestArtifact(
             bucket=config.cloud_bucket,
-            path=base_name,
+            path='{}/{}'.format(config.task_id, base_name),
             tags=[],
             local_path=path,
             created_at=config.created_at,
             is_uncompressed=True
         )
-        artifacts.append(a._asdict())
+
+        ti = CedarTestInfo(
+            test_name=test_name,
+            trial=0,
+            tags=[],
+            args={}
+        )
+
+        t = CedarTest(
+            info=ti._asdict(),
+            created_at=config.created_at,
+            completed_at=config.now,
+            artifacts=[a._asdict()],
+            metrics=None,
+            sub_tests=None
+        )
+        sub_tests.append(t._asdict())
 
     bucket_prefix = '{}_{}'.format(config.task_id, config.execution_number)
 
@@ -128,9 +145,9 @@ def build_report(config):
         info=test_info._asdict(),
         created_at=config.created_at,
         completed_at=config.now,
-        artifacts=artifacts,
+        artifacts=[],
         metrics=None,
-        sub_tests=None
+        sub_tests=sub_tests
     )
 
     report = CedarReport(
@@ -245,11 +262,11 @@ def build_parser():
     return parser
 
 
-class ISODateTimeEncoder(json.JSONEncoder):
+class RFCDateTimeEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
             # RFC3339 format.
-            return o.strftime('%Y-%m-%dT%H:%M:%SZ')
+            return o.strftime(DEFAULT_DATE_FORMAT)
 
         return super().default(self, o)
 
@@ -280,7 +297,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     report_dict = build_report(config)
 
     with open(args.report_file, 'w') as f:
-        json.dump(report_dict, f, cls=ISODateTimeEncoder)
+        json.dump(report_dict, f, cls=RFCDateTimeEncoder)
 
     jira_user = env['perf_jira_user']
     jira_pwd = env['perf_jira_pw']

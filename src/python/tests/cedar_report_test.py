@@ -5,7 +5,7 @@ import unittest
 
 from unittest.mock import patch
 
-from genny.cedar_report import CertRetriever, main__cedar_report
+from genny.cedar_report import CertRetriever, main__cedar_report, DEFAULT_DATE_FORMAT
 from tests.cedar_test import get_fixture
 
 
@@ -26,13 +26,18 @@ class CedarReportTest(unittest.TestCase):
         This test documents the environment variables needed to run cedar_report.py and checks that
         the environment variables are correctly used.
         """
+        self.maxDiff = None
+        class MatchAnyString(object):
+            def __eq__(self, other):
+                return type(other) == str
+
         mock_env = {
             'EVG_task_name': 'my_task_name',
             'EVG_project': 'my_project',
             'EVG_version': 'my_version',
             'EVG_variant': 'my_variant',
             'EVG_task_id': 'my_task_id',
-            'EVG_execution_number': 'my_execution_number',
+            'EVG_execution_number': '1',
             'EVG_is_patch': 'true',  # This should get converted to mainline = False in the report.
 
             'test_name': 'my_test_name',
@@ -55,7 +60,7 @@ class CedarReportTest(unittest.TestCase):
             'variant': 'my_variant',
             'task_name': 'my_task_name',
             'task_id': 'my_task_id',
-            'execution_number': 'my_execution_number',
+            'execution_number': 1,
             'mainline': False,
             'tests': [{
                 'info': {
@@ -66,40 +71,88 @@ class CedarReportTest(unittest.TestCase):
                 },
                 'created_at': _FIXED_DATETIME,
                 'completed_at': _FIXED_DATETIME,
-                'artifacts': {
-                    'api_key': 'my_aws_key',
-                    'api_secret': 'my_aws_secret',
-                    'api_token': None,
-                    'region': 'us-east-1',
-                    'name': 'dsi-genny-metrics',
-                    'prefix': 'my_task_id_my_execution_number'
-                },
+                'artifacts': [],
                 'metrics': None,
-                'sub_tests': None
+                'sub_tests': [{
+                    'info': {
+                        'test_name': 'HelloWorld-Greetings',
+                        'trial': 0,
+                        'tags': [],
+                        'args': {}
+                    },
+                    'created_at': MatchAnyString(),
+                    'completed_at': MatchAnyString(),
+                    'artifacts': [{
+                        'bucket': 'genny',
+                        'path': 'my_task_id/HelloWorld-Greetings.bson',
+                        'tags': [],
+                        'local_path': MatchAnyString(),
+                        'created_at': MatchAnyString(),
+                        'is_uncompressed': True
+                    }],
+                    'metrics': None,
+                    'sub_tests': None
+                }, {
+                    'info': {
+                        'test_name': 'InsertRemove-Insert',
+                        'trial': 0,
+                        'tags': [],
+                        'args': {}
+                    },
+                    'created_at': MatchAnyString(),
+                    'completed_at': MatchAnyString(),
+                    'artifacts': [{
+                        'bucket': 'genny',
+                        'path': 'my_task_id/InsertRemove-Insert.bson',
+                        'tags': [],
+                        'local_path': MatchAnyString(),
+                        'created_at': MatchAnyString(),
+                        'is_uncompressed': True
+                    }],
+                    'metrics': None,
+                    'sub_tests': None
+                }, {
+                    'info': {
+                        'test_name': 'InsertRemove-Remove',
+                        'trial': 0,
+                        'tags': [],
+                        'args': {}
+                    },
+                    'created_at': MatchAnyString(),
+                    'completed_at': MatchAnyString(),
+                    'artifacts': [{
+                        'bucket': 'genny',
+                        'path': 'my_task_id/InsertRemove-Remove.bson',
+                        'tags': [],
+                        'local_path': MatchAnyString(),
+                        'created_at': MatchAnyString(),
+                        'is_uncompressed': True
+                    }],
+                    'metrics': None,
+                    'sub_tests': None
+                }]
             }],
-            'bucket': [
-                'my_aws_key',
-                'my_aws_secret',
-                None,
-                'us-east-1',
-                'dsi-genny-metrics',
-                'my_task_id_my_execution_number'
-            ]}
+            'bucket': {
+                'api_key': 'my_aws_key',
+                'api_secret': 'my_aws_secret',
+                'api_token': None,
+                'region': 'us-east-1',
+                'name': 'genny',
+                'prefix': 'my_task_id_1'
+            }
+        }
 
         with tempfile.TemporaryDirectory() as output_dir:
             argv = [get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'), output_dir]
             main__cedar_report(argv, mock_env, _NoopCertRetriever)
 
-            with open('cedar_report.json') as f:
-                report_json = json.load(f)
+        with open('cedar_report.json') as f:
+            report_json = json.load(f)
 
-                # Just do a basic type check. The test time isn't used.
-                datetime.datetime.fromisoformat(report_json['tests'][0]['created_at'])
-                datetime.datetime.fromisoformat(report_json['tests'][0]['completed_at'])
+            # Verify just the top-level date fields for correct formatting.
+            report_json['tests'][0]['created_at'] = _FIXED_DATETIME
+            report_json['tests'][0]['completed_at'] = _FIXED_DATETIME
 
-                report_json['tests'][0]['created_at'] = _FIXED_DATETIME
-                report_json['tests'][0]['completed_at'] = _FIXED_DATETIME
-
-                self.assertDictEqual(expected_json, report_json)
+            self.assertDictEqual(expected_json, report_json)
 
         mock_uploader_run.assert_called_with(expected_uploader_run_args)
