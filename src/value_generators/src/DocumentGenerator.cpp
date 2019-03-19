@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iostream>
 #include <cstdlib>
 #include <functional>
 #include <random>
@@ -28,18 +29,64 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 
+// TODO: remove
+std::string toString(const YAML::Node& node) {
+    YAML::Emitter e;
+    e << node;
+    return std::string{e.c_str()};
+}
+
 namespace genny {
+
+/////////////////////////////////////////////////////
+// Appendable
+/////////////////////////////////////////////////////
+
+
+class Appendable {
+public:
+    virtual ~Appendable() = default;
+    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
+    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
+};
+
+using UniqueAppendable = std::unique_ptr<Appendable>;
+
+UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng);
+
+////////////////////////////////////////////////
+// Null
+////////////////////////////////////////////////
+
+class NullGenerator : public Appendable {
+public:
+    NullGenerator(YAML::Node, DefaultRandom&) {}
+    ~NullGenerator() override = default;
+    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, bsoncxx::types::b_null{}));
+    }
+    void append(bsoncxx::builder::basic::array &builder) override {
+        builder.append(bsoncxx::types::b_null{});
+    }
+};
+
 
 ////////////////////////////////////////////////
 // Int Generators
 ////////////////////////////////////////////////
 
 
-class IntGenerator::Impl {
+class IntGenerator::Impl : public Appendable {
     friend class UniformIntGenerator;
 
 public:
     virtual int64_t evaluate() = 0;
+    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array &builder) override {
+        builder.append(this->evaluate());
+    }
     virtual ~Impl() = default;
 };
 
@@ -84,6 +131,8 @@ private:
 
 // TODO: move to appendables section
 UniqueIntGenerator pickIntGenerator(YAML::Node node, DefaultRandom &rng) {
+    // gets the value from a kvp. Gets value from either {a:7} (gets 7)
+    // or {a:{^RandomInt:{distribution...}} gets {distribution...}
     if (node.IsScalar()) {
         return std::make_unique<ConstantIntGenerator>(node, rng);
     }
@@ -107,12 +156,19 @@ UniqueIntGenerator pickIntGenerator(YAML::Node node, DefaultRandom &rng) {
 // String Generators
 /////////////////////////////////////////////////////
 
-class StringGenerator::Impl {
+class StringGenerator::Impl : public Appendable {
     friend class ConstantStringGenerator;
 
 public:
     virtual std::string evaluate() = 0;
     virtual ~Impl() = default;
+
+    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array &builder) override {
+        builder.append(this->evaluate());
+    }
 };
 
 using UniqueStringGenerator = std::unique_ptr<StringGenerator::Impl>;
@@ -135,32 +191,23 @@ private:
 
 
 /////////////////////////////////////////////////////
-// Appendable
-/////////////////////////////////////////////////////
-
-
-class Appendable {
-public:
-    virtual ~Appendable() = default;
-    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
-};
-
-using UniqueAppendable = std::unique_ptr<Appendable>;
-
-UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng);
-
-
-/////////////////////////////////////////////////////
 // Document Generator
 //////////////////////////////////////////////////////
 
-class DocumentGenerator::Impl {
+class DocumentGenerator::Impl : public Appendable {
     friend class NormalDocumentGenerator;
     friend class ConstantDocumentGenerator;
 
 public:
     virtual bsoncxx::document::value evaluate() = 0;
     virtual ~Impl() = default;
+
+    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array &builder) override {
+        builder.append(this->evaluate());
+    }
 };
 
 using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
@@ -173,6 +220,7 @@ class NormalDocumentGenerator : public DocumentGenerator::Impl {
 public:
     ~NormalDocumentGenerator() = default;
     NormalDocumentGenerator(YAML::Node node, DefaultRandom& rng) {
+        // will always be a map but may be e.g. {^RandomInt:} or {a:7}
         if (!node.IsMap()) {
             throw InvalidValueGeneratorSyntax("Expected mapping type to parse into an object");
         }
@@ -214,106 +262,75 @@ bsoncxx::document::value DocumentGenerator::operator()() {
 
 DocumentGenerator::~DocumentGenerator() = default;
 
-
-class IntAppendable : public Appendable {
-public:
-    IntAppendable(YAML::Node node, DefaultRandom& rng)
-    : _intGen{pickIntGenerator(node, rng)} {}
-
-    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, _intGen->evaluate()));
-    }
-    ~IntAppendable() override = default;
-private:
-    UniqueIntGenerator _intGen;
-};
-
-class DocAppendable : public Appendable {
-public:
-    DocAppendable(YAML::Node node, DefaultRandom& rng)
-    : _docGen{pickDocGenerator(node, rng)} {}
-
-    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, _docGen->evaluate()));
-    }
-    ~DocAppendable() override = default;
-private:
-    UniqueDocumentGenerator _docGen;
-};
-
-class StringAppenable : public Appendable {
-public:
-    StringAppenable(YAML::Node node, DefaultRandom& rng)
-    : _stringGen{pickStringGenerator(node, rng)} {}
-
-    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, _stringGen->evaluate()));
-    }
-    ~StringAppenable() override = default;
-private:
-    UniqueStringGenerator _stringGen;
-};
-
 //////////////////////////////////////
 // Pick impls
 //////////////////////////////////////
 
-UniqueDocumentGenerator pickDocGenerator(YAML::Node node, DefaultRandom &rng) {
+//const auto parserMap = std::unordered_map<std::string, Parser>{
+//    {"^FastRandomString", fastRandomString},
+//    {"^RandomInt", randomInt},
+//    {"^RandomString", randomString},
+//    {"^Verbatim", verbatim}};
 
+///*
+//std::map<std::string, decltype(pickIntAppendable)> parserMap {
+//        {"^RandomInt", pickIntAppendable},
+//};
+//
+//*/
+
+UniqueDocumentGenerator pickDocGenerator(YAML::Node node, DefaultRandom &rng) {
+    return std::make_unique<NormalDocumentGenerator>(node, rng);
 }
 
+
 UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng) {
+    BOOST_LOG_TRIVIAL(info) << toString(node);
     if (node.IsScalar()) {
         if (node.Tag() != "!") {
             try {
-                return std::make_unique<IntAppendable>(node);
+                return std::make_unique<ConstantIntGenerator>(node, rng);
             } catch (const YAML::BadConversion& e) {
             }
-
-            // TODO
-//            try {
-//                return std::make_unique<BoolAppendable>(Value{node.as<bool>()}, ValueType::Boolean);
-//            } catch (const YAML::BadConversion& e) {
-//            }
+            // TODO: constant double generator
+            // TODO: constant boolean generator
+            try {
+                return std::make_unique<ConstantStringGenerator>(node, rng);
+            } catch (const YAML::BadConversion& e) {
+            }
         }
     }
+
+    if (node.IsNull()) {
+        return std::make_unique<NullGenerator>(node, rng);
+    }
+
+    // TODO: array generator
     if (node.IsMap()) {
+        auto nodeIt = node.begin();
+        if (nodeIt == node.end()) {
+            return std::make_unique<NormalDocumentGenerator>(node, rng);
+        }
 
+        auto key = nodeIt->first;
+        auto value = nodeIt->second;
+
+        ++nodeIt;
+        if (nodeIt != node.end()) {
+            return std::make_unique<NormalDocumentGenerator>(node, rng);
+        }
+
+        auto name = key.as<std::string>();
+
+//        auto parserIt = parserMap.find(name);
+//        if (parserIt == parserMap.end()) {
+//            std::stringstream error;
+//            error << "Unknown expression type '" << name << "'";
+//            throw InvalidValueGeneratorSyntax(error.str());
+//        }
+//        return parserIt->second(value, rng);
     }
-}
-
-auto foo(YAML::Node node, DefaultRandom& rng) {
-    if (!node.IsMap()) {
-        throw InvalidValueGeneratorSyntax("Expected mapping type to parse into an expression");
-    }
-
-    auto nodeIt = node.begin();
-    if (nodeIt == node.end()) {
-        return std::make_unique<NormalDocumentGenerator>(node);
-    }
-
-    auto key = nodeIt->first;
-    auto value = nodeIt->second;
-
-    ++nodeIt;
-    if (nodeIt != node.end()) {
-        throw InvalidValueGeneratorSyntax(
-                "Expected mapping to have a single '^'-prefixed key, but had multiple keys");
-    }
-
-    auto name = key.as<std::string>();
-
-    auto parserIt = parserMap.find(name);
-    if (parserIt == parserMap.end()) {
-        std::stringstream error;
-        error << "Unknown expression type '" << name << "'";
-        throw InvalidValueGeneratorSyntax(error.str());
-    }
-    return parserIt->second(value, rng);
-
-    return std::make_unique<NormalDocumentGenerator>(node, rng);
-
-    return std::make_unique<IntAppendable>(node, rng);
+    throw InvalidValueGeneratorSyntax("Unknown");
 }
 
 }  // namespace genny
