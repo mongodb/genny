@@ -30,7 +30,6 @@ setup(name='genny',
           'console_scripts': [
               'genny-metrics-summarize = genny.metrics_output_parser:main__sumarize',
               'genny-metrics-to-perf-json = genny.perf_json:main__summarize_translate',
-              'genny-metrics-to-cedar = genny.cedar:main__cedar',
               'genny-metrics-report = genny.cedar_report:main__cedar_report',
               'genny-metrics-legacy-report = genny.legacy_report:main__legacy_report'
           ]
