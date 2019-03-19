@@ -197,7 +197,8 @@ std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) 
         out << "  GivenTemplate: " << toString(result.testCase().givenTemplate()) << std::endl;
         out << "  ThenReturns: " << std::endl;
         for (auto&& [expect, actual] : result.expectedVsActual()) {
-            out << "    - " << actual << std::endl;
+            out << "    - Expect: " << expect << std::endl;
+            out << "      Actual: " << actual << std::endl;
         }
     }
     return out;

@@ -52,6 +52,7 @@ public:
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
 
+template<bool Verbatim>
 UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng);
 
 ////////////////////////////////////////////////
@@ -316,9 +317,6 @@ private:
 //////////////////////////////////////////////////////
 
 class DocumentGenerator::Impl : public Appendable {
-    friend class NormalDocumentGenerator;
-    friend class ConstantDocumentGenerator;
-
 public:
     virtual bsoncxx::document::value evaluate() = 0;
     virtual ~Impl() = default;
@@ -333,6 +331,7 @@ public:
 
 using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
 
+template<bool Verbatim>
 class NormalDocumentGenerator : public DocumentGenerator::Impl {
 
 public:
@@ -341,6 +340,7 @@ public:
     NormalDocumentGenerator(YAML::Node node, DefaultRandom& rng) {
         // will always be a map but may be e.g. {^RandomInt:} or {a:7}
         if (!node.IsMap()) {
+//            BOOST_LOG_TRIVIAL(info) << "NormalDocumentGenerator(node=" << toString(node);
             throw InvalidValueGeneratorSyntax("Expected mapping type to parse into an object");
         }
 
@@ -348,13 +348,15 @@ public:
         bool hasMetaKey = false;
         for (auto&& entry : node) {
             if (entry.first.as<std::string>()[0] == '^') {
-                if (hasMetaKey) {
-                    // TODO: bad message
-                    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Invalid use of meta-key"));
+                if constexpr (!Verbatim) {
+                    if (hasMetaKey) {
+                        // TODO: bad message
+                        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Invalid use of meta-key"));
+                    }
                 }
                 hasMetaKey = true;
             }
-            elements.emplace_back(entry.first.as<std::string>(), pickAppendable(entry.second, rng));
+            elements.emplace_back(entry.first.as<std::string>(), pickAppendable<Verbatim>(entry.second, rng));
         }
         _elements = std::move(elements);
     }
@@ -376,7 +378,7 @@ DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng)
 }
 
 DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
-        : _impl{std::make_unique<NormalDocumentGenerator>(node, rng)} {}
+        : _impl{std::make_unique<NormalDocumentGenerator<false>>(node, rng)} {}
 
 bsoncxx::document::value DocumentGenerator::operator()() {
     return _impl->evaluate();
@@ -441,9 +443,8 @@ UniqueStringGenerator randomString(YAML::Node node, DefaultRandom &rng) {
     return std::make_unique<NormalRandomStringGenerator>(node, rng);
 }
 
-UniqueDocumentGenerator verbatim(YAML::Node node, DefaultRandom &rng) {
-    // TODO
-    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("verbatim"));
+UniqueAppendable verbatim(YAML::Node node, DefaultRandom &rng) {
+    return pickAppendable<true>(node, rng);
 }
 
 template<typename O>
@@ -458,14 +459,17 @@ static std::map<std::string, UParser<UniqueIntGenerator>> intParsers {
     {"^RandomInt", randomInt},
 };
 
-static std::map<std::string, UParser<UniqueDocumentGenerator>> docParsers {
+static std::map<std::string, UParser<UniqueAppendable>> docParsers {
         {"^Verbatim", verbatim}
 };
 
 
 
-template<class O, class DefaultIfNotFound>
+template<class O, class DefaultIfNotFound, bool Verbatim>
 O extractOrConstant(YAML::Node node, DefaultRandom& rng, const std::map<std::string,UParser<O>>& parsers) {
+    if constexpr(Verbatim) {
+        return std::make_unique<DefaultIfNotFound>(node, rng);
+    }
     auto nodeIt = node.begin();
     if (nodeIt != node.end()) {
         auto key = nodeIt->first.as<std::string>();
@@ -473,15 +477,16 @@ O extractOrConstant(YAML::Node node, DefaultRandom& rng, const std::map<std::str
             if (node.size() != 1) {
                 BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Multiple values for recursive map"));
             }
-            BOOST_LOG_TRIVIAL(info) << "Found parser for " << key;
+//            BOOST_LOG_TRIVIAL(info) << "Found parser for " << key;
             return parser->second(nodeIt->second, rng);
         }
     }
     return std::make_unique<DefaultIfNotFound>(node, rng);
 }
 
-UniqueDocumentGenerator pickMapAppendable(YAML::Node node, DefaultRandom& rng) {
-    return extractOrConstant<UniqueDocumentGenerator,NormalDocumentGenerator>(node, rng, docParsers);
+template<bool Verbatim>
+UniqueAppendable pickMapAppendable(YAML::Node node, DefaultRandom& rng) {
+    return extractOrConstant<UniqueAppendable,NormalDocumentGenerator<Verbatim>,Verbatim>(node, rng, docParsers);
 }
 
 UniqueAppendable pickScalarAppendable(YAML::Node node, DefaultRandom& rng) {
@@ -501,6 +506,7 @@ UniqueAppendable pickScalarAppendable(YAML::Node node, DefaultRandom& rng) {
     throw InvalidValueGeneratorSyntax("Unknown inside UniqueAppendable pickScalarAppendable(YAML::Node node, DefaultRandom& rng)");
 }
 
+template<bool Verbatim>
 UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng) {
     BOOST_LOG_TRIVIAL(info) << toString(node) << " size = " << node.size();
     if (node.IsScalar()) {
@@ -513,7 +519,7 @@ UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng) {
         return std::make_unique<NormalArrayGenerator>(node, rng);
     }
     if (node.IsMap()) {
-        return pickMapAppendable(node, rng);
+        return pickMapAppendable<Verbatim>(node, rng);
     }
     throw InvalidValueGeneratorSyntax("Unknown insid UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng)");
 }
