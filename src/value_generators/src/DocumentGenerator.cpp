@@ -441,19 +441,31 @@ UniqueStringGenerator randomString(YAML::Node node, DefaultRandom &rng) {
     return std::make_unique<NormalRandomStringGenerator>(node, rng);
 }
 
-UniqueAppendable verbatim(YAML::Node node, DefaultRandom &rng) {
+UniqueDocumentGenerator verbatim(YAML::Node node, DefaultRandom &rng) {
     // TODO
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("verbatim"));
 }
 
-UniqueAppendable pickMapAppendable(YAML::Node node, DefaultRandom& rng) {
-    static std::map<std::string, Parser> parsers {
-        {"^FastRandomString", fastRandomString},
-        {"^RandomInt", randomInt},
-        {"^RandomString", randomString},
-        {"^Verbatim", verbatim}
-    };
+template<typename O>
+using UParser = std::function<O(YAML::Node, DefaultRandom &)>;
 
+static std::map<std::string, UParser<UniqueStringGenerator>> stringParsers {
+        {"^FastRandomString", fastRandomString},
+        {"^RandomString", randomString},
+};
+
+static std::map<std::string, UParser<UniqueIntGenerator>> intParsers {
+    {"^RandomInt", randomInt},
+};
+
+static std::map<std::string, UParser<UniqueDocumentGenerator>> docParsers {
+        {"^Verbatim", verbatim}
+};
+
+
+
+template<class O, class DefaultIfNotFound>
+O extractOrConstant(YAML::Node node, DefaultRandom& rng, const std::map<std::string,UParser<O>>& parsers) {
     auto nodeIt = node.begin();
     if (nodeIt != node.end()) {
         auto key = nodeIt->first.as<std::string>();
@@ -465,8 +477,11 @@ UniqueAppendable pickMapAppendable(YAML::Node node, DefaultRandom& rng) {
             return parser->second(nodeIt->second, rng);
         }
     }
+    return std::make_unique<DefaultIfNotFound>(node, rng);
+}
 
-    return std::make_unique<NormalDocumentGenerator>(node, rng);
+UniqueDocumentGenerator pickMapAppendable(YAML::Node node, DefaultRandom& rng) {
+    return extractOrConstant<UniqueDocumentGenerator,NormalDocumentGenerator>(node, rng, docParsers);
 }
 
 UniqueAppendable pickScalarAppendable(YAML::Node node, DefaultRandom& rng) {
