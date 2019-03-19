@@ -77,8 +77,6 @@ public:
 
 
 class IntGenerator::Impl : public Appendable {
-    friend class UniformIntGenerator;
-
 public:
     virtual int64_t evaluate() = 0;
     void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
@@ -124,6 +122,63 @@ private:
     UniqueIntGenerator _minGen;
     UniqueIntGenerator _maxGen;
 };
+
+
+class BinomialIntGenerator : public IntGenerator::Impl {
+public:
+    BinomialIntGenerator(YAML::Node node, DefaultRandom& rng)
+            : _rng{rng},
+              _tGen{randomInt(extract(node, "t", "binomial"), _rng)},
+              _p{extract(node, "p", "binomial").as<double>()} {}
+    ~BinomialIntGenerator() override = default;
+
+    int64_t evaluate() override {
+        auto distribution = std::binomial_distribution<int64_t>{_tGen->evaluate(), _p};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    double _p;
+    UniqueIntGenerator _tGen;
+};
+
+class NegativeBinomialIntGenerator : public IntGenerator::Impl {
+public:
+    NegativeBinomialIntGenerator(YAML::Node node, DefaultRandom& rng)
+            : _rng{rng},
+              _kGen{randomInt(extract(node, "k", "negative_binomial"), _rng)},
+              _p{extract(node, "p", "negative_binomial").as<double>()} {}
+    ~NegativeBinomialIntGenerator() override = default;
+
+    int64_t evaluate() override {
+        auto distribution = std::negative_binomial_distribution<int64_t>{_kGen->evaluate(), _p};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    double _p;
+    UniqueIntGenerator _kGen;
+};
+
+class PoissonIntGenerator : public IntGenerator::Impl {
+public:
+    PoissonIntGenerator(YAML::Node node, DefaultRandom& rng)
+            : _rng{rng},
+              _mean{extract(node, "mean", "poisson").as<double>()} {}
+    ~PoissonIntGenerator() override = default;
+
+    int64_t evaluate() override {
+        auto distribution = std::poisson_distribution<int64_t>{_mean};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    double _mean;
+};
+
 
 
 class ConstantIntGenerator : public IntGenerator::Impl {
@@ -324,7 +379,14 @@ UniqueIntGenerator randomInt(YAML::Node node, DefaultRandom &rng) {
 
     if (distribution == "uniform") {
         return std::make_unique<UniformIntGenerator>(node, rng);
-    } else {
+    } else if ( distribution == "binomial") {
+        return std::make_unique<BinomialIntGenerator>(node, rng);
+    } else if (distribution == "negative_binomial") {
+        return std::make_unique<NegativeBinomialIntGenerator>(node, rng);
+    } else if (distribution == "poisson") {
+    return std::make_unique<PoissonIntGenerator>(node, rng);
+    }
+    else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
         throw InvalidValueGeneratorSyntax(error.str());
