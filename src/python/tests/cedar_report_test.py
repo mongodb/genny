@@ -26,27 +26,26 @@ class CedarReportTest(unittest.TestCase):
         This test documents the environment variables needed to run cedar_report.py and checks that
         the environment variables are correctly used.
         """
-
         class MatchAnyString(object):
             def __eq__(self, other):
                 return type(other) == str
 
         mock_env = {
-            'EVG_task_name': 'my_task_name',
-            'EVG_project': 'my_project',
-            'EVG_version': 'my_version',
-            'EVG_variant': 'my_variant',
-            'EVG_task_id': 'my_task_id',
-            'EVG_execution_number': '1',
-            'EVG_is_patch': 'true',  # This should get converted to mainline = False in the report.
+            'task_name': 'my_task_name',
+            'project': 'my_project',
+            'version': 'my_version',
+            'build_variant': 'my_variant',
+            'task_id': 'my_task_id',
+            'execution': '1',
+            'is_patch': 'true',  # This should get converted to mainline = False in the report.
 
             'test_name': 'my_test_name',
 
             'perf_jira_user': 'my_username',
             'perf_jira_pw': 'my_password',
 
-            'aws_key': 'my_aws_key',
-            'aws_secret': 'my_aws_secret'
+            'terraform_key': 'my_aws_key',
+            'terraform_secret': 'my_aws_secret'
         }
 
         expected_uploader_run_args = [
@@ -84,7 +83,7 @@ class CedarReportTest(unittest.TestCase):
                     'completed_at': MatchAnyString(),
                     'artifacts': [{
                         'bucket': 'genny',
-                        'path': 'my_task_id/HelloWorld-Greetings.bson',
+                        'path': 'HelloWorld-Greetings',
                         'tags': [],
                         'local_path': MatchAnyString(),
                         'created_at': MatchAnyString(),
@@ -103,7 +102,7 @@ class CedarReportTest(unittest.TestCase):
                     'completed_at': MatchAnyString(),
                     'artifacts': [{
                         'bucket': 'genny',
-                        'path': 'my_task_id/InsertRemove-Insert.bson',
+                        'path': 'InsertRemove-Insert',
                         'tags': [],
                         'local_path': MatchAnyString(),
                         'created_at': MatchAnyString(),
@@ -122,7 +121,7 @@ class CedarReportTest(unittest.TestCase):
                     'completed_at': MatchAnyString(),
                     'artifacts': [{
                         'bucket': 'genny',
-                        'path': 'my_task_id/InsertRemove-Remove.bson',
+                        'path': 'InsertRemove-Remove',
                         'tags': [],
                         'local_path': MatchAnyString(),
                         'created_at': MatchAnyString(),
