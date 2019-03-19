@@ -45,13 +45,13 @@ public:
 
 using UniqueIntGenerator = std::unique_ptr<IntGenerator::Impl>;
 
-UniqueIntGenerator pickIntEvaluator(YAML::Node node, DefaultRandom& rng);
+UniqueIntGenerator pickIntGenerator(YAML::Node node, DefaultRandom &rng);
 
 class UniformIntGenerator : public IntGenerator::Impl {
 public:
     UniformIntGenerator(YAML::Node node, DefaultRandom& rng)
-        : _minGen{pickIntEvaluator(node["min"], rng)},
-          _maxGen{pickIntEvaluator(node["max"], rng)},
+        : _minGen{pickIntGenerator(node["min"], rng)},
+          _maxGen{pickIntGenerator(node["max"], rng)},
           _rng{rng} {}
     ~UniformIntGenerator() override = default;
 
@@ -82,7 +82,7 @@ private:
     int64_t _value;
 };
 
-UniqueIntGenerator pickIntEvaluator(YAML::Node node, DefaultRandom& rng) {
+UniqueIntGenerator pickIntGenerator(YAML::Node node, DefaultRandom &rng) {
     if (node.IsScalar()) {
         return std::make_unique<ConstantIntGenerator>(node, rng);
     }
@@ -103,6 +103,35 @@ UniqueIntGenerator pickIntEvaluator(YAML::Node node, DefaultRandom& rng) {
 }
 
 /////////////////////////////////////////////////////
+// Appendable
+/////////////////////////////////////////////////////
+
+
+class Appendable {
+public:
+    virtual ~Appendable() = default;
+    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
+};
+
+using UniqueAppendable = std::unique_ptr<Appendable>;
+
+UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng);
+
+
+class IntAppendable : public Appendable {
+public:
+    IntAppendable(YAML::Node node, DefaultRandom& rng)
+    : _intGen{pickIntGenerator(node, rng)} {}
+
+    void append(const std::string &key, bsoncxx::builder::basic::document &builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, _intGen->evaluate()));
+    }
+    ~IntAppendable() override = default;
+private:
+    UniqueIntGenerator _intGen;
+};
+
+/////////////////////////////////////////////////////
 // Document Generator
 //////////////////////////////////////////////////////
 
@@ -120,15 +149,37 @@ using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
 UniqueDocumentGenerator pickDocEvaluator(YAML::Node node, DefaultRandom& rng);
 
 class NormalDocumentGenerator : public DocumentGenerator::Impl {
+    using ElementType = std::pair<std::string, UniqueAppendable>;
+
 public:
-    NormalDocumentGenerator(YAML::Node node, DefaultRandom& rng) {}
     ~NormalDocumentGenerator() = default;
+    NormalDocumentGenerator(YAML::Node node, DefaultRandom& rng) {
+        if (!node.IsMap()) {
+            throw InvalidValueGeneratorSyntax("Expected mapping type to parse into an object");
+        }
+
+        auto elements = std::vector<ElementType>{};
+        for (auto&& entry : node) {
+            if (entry.first.as<std::string>()[0] == '^') {
+                throw InvalidValueGeneratorSyntax(
+                    "'^'-prefix keys are reserved for expressions, but attempted to parse as an"
+                    " object");
+            }
+            elements.emplace_back(entry.first.as<std::string>(), pickAppendable(entry.second, rng));
+        }
+        _elements = std::move(elements);
+    }
 
     bsoncxx::document::value evaluate() override {
-        // TODO
         bsoncxx::builder::basic::document builder;
+        for(auto&& [k,app] : _elements) {
+            app->append(k, builder);
+        }
         return builder.extract();
     }
+
+private:
+    std::vector<ElementType> _elements;
 };
 
 DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
@@ -146,6 +197,15 @@ DocumentGenerator::~DocumentGenerator() = default;
 
 UniqueDocumentGenerator pickDocEvaluator(YAML::Node node, DefaultRandom& rng) {
     return std::make_unique<NormalDocumentGenerator>(node, rng);
+}
+
+
+//////////////////////////////////////
+// Pick impls
+//////////////////////////////////////
+
+UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng) {
+    return std::make_unique<IntAppendable>(node, rng);
 }
 
 }  // namespace genny
