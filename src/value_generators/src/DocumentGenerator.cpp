@@ -84,8 +84,6 @@ private:
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
 
-UniqueAppendable generateAppender(YAML::Node node, DefaultRandom& rng);
-
 class Int64Generator::Impl : public Appendable {
 public:
     virtual int64_t evaluate() = 0;
@@ -464,13 +462,8 @@ UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom &rng) {
     return std::make_unique<NormalRandomStringGenerator>(node, rng);
 }
 
-
-
 template<typename O>
 using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
-
-UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom &rng);
-UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom &rng);
 
 std::optional<std::string> getMetaKey(YAML::Node node) {
     size_t foundKeys = 0;
@@ -617,15 +610,5 @@ UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom &rng) {
     }
     return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
 }
-
-//static std::map<std::string, Parser<UniqueStringGenerator>> stringParsers {
-//        {"^FastRandomString", fastRandomString},
-//        {"^RandomString", randomString},
-//};
-//
-//
-//static std::map<std::string, Parser<UniqueIntGenerator>> docParsers {
-//        {"^RandomInt", randomInt},
-//};
 
 }  // namespace genny
