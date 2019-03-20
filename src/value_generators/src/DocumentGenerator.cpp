@@ -127,6 +127,21 @@ public:
 
 using UniqueInt64Generator = std::unique_ptr<Int64Generator::Impl>;
 
+class Int32Generator::Impl : public Appendable {
+public:
+    virtual int32_t evaluate() = 0;
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(this->evaluate());
+    }
+
+    ~Impl() override = default;
+};
+
+using UniqueInt32Generator = std::unique_ptr<Int64Generator::Impl>;
+
 UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom &rng);
 UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom &rng);
 
@@ -248,6 +263,20 @@ public:
 
 private:
     int64_t _value;
+};
+
+class ConstantInt32Generator : public Int32Generator::Impl {
+public:
+    ConstantInt32Generator(int32_t value)
+            : _value{value} {}
+    ~ConstantInt32Generator() override = default;
+
+    int32_t evaluate() override {
+        return _value;
+    }
+
+private:
+    int32_t _value;
 };
 
 class StringGenerator::Impl : public Appendable {
@@ -545,6 +574,10 @@ Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::stri
     }
     if (node.IsScalar()) {
         if (node.Tag() != "!") {
+            try {
+                return std::make_unique<ConstantInt32Generator>(node.as<int32_t>());
+            } catch (const YAML::BadConversion& e) {
+            }
             try {
                 return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
             } catch (const YAML::BadConversion& e) {

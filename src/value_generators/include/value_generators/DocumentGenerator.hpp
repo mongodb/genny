@@ -46,6 +46,16 @@ private:
     std::unique_ptr<Impl> _impl;
 };
 
+class Int32Generator {
+public:
+    explicit Int32Generator(YAML::Node node, DefaultRandom& rng);
+    int32_t operator()();
+    ~Int32Generator();
+    class Impl;
+private:
+    std::unique_ptr<Impl> _impl;
+};
+
 class StringGenerator {
 public:
     explicit StringGenerator(YAML::Node node, DefaultRandom& rng);
