@@ -77,6 +77,34 @@ public:
     }
 };
 
+class ConstantDoubleAppender : public Appendable {
+public:
+    ConstantDoubleAppender(YAML::Node, DefaultRandom&) {}
+    ~ConstantDoubleAppender() override = default;
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, _value));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(_value);
+    }
+private:
+    double _value;
+};
+
+class ConstantBoolAppender : public Appendable {
+public:
+    ConstantBoolAppender(YAML::Node, DefaultRandom&) {}
+    ~ConstantBoolAppender() override = default;
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, _value));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(_value);
+    }
+private:
+    bool _value;
+};
+
 using UniqueAppendable = std::unique_ptr<Appendable>;
 
 using Parser = std::function<UniqueAppendable(YAML::Node, DefaultRandom&)>;
@@ -445,10 +473,10 @@ O extractOrConstant(YAML::Node node,
                 BOOST_THROW_EXCEPTION(
                     InvalidValueGeneratorSyntax("Multiple values for recursive map"));
             }
-            //            BOOST_LOG_TRIVIAL(info) << "Found parser for " << key;
             return parser->second(nodeIt->second, rng);
         }
     }
+    BOOST_LOG_TRIVIAL(info) << "extractOrConstant " << toString(node);
     return std::make_unique<DefaultIfNotFound>(node, rng);
 }
 
@@ -462,17 +490,16 @@ UniqueAppendable pickScalarAppendable(YAML::Node node, DefaultRandom& rng) {
             return std::make_unique<ConstantIntGenerator>(node, rng);
         } catch (const YAML::BadConversion& e) {
         }
-        // TODO: constant double generator
-        // TODO: constant boolean generator
         try {
-            return std::make_unique<ConstantStringGenerator>(node, rng);
+            return std::make_unique<ConstantDoubleAppender>(node, rng);
+        } catch (const YAML::BadConversion& e) {
+        }
+        try {
+            return std::make_unique<ConstantBoolAppender>(node, rng);
         } catch (const YAML::BadConversion& e) {
         }
     }
-    // TODO
-    throw InvalidValueGeneratorSyntax(
-        "Unknown inside UniqueAppendable pickScalarAppendable(YAML::Node node, DefaultRandom& "
-        "rng)");
+    return std::make_unique<ConstantStringGenerator>(node, rng);
 }
 
 UniqueAppendable pickAppendable(YAML::Node node, DefaultRandom& rng) {
