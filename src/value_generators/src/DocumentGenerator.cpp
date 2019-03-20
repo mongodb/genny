@@ -318,7 +318,11 @@ public:
         : _rng{rng},
           _lengthGen{int64Generator(extract(node, "length", "^RandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
-          _alphabetLength{_alphabet.size()} {}
+          _alphabetLength{_alphabet.size()} {
+            if (_alphabetLength <= 0) {
+                BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Random string requires non-empty alphabet if specified"));
+            }
+          }
 
     ~NormalRandomStringGenerator() override = default;
 
@@ -351,7 +355,11 @@ public:
         : _rng{rng},
           _lengthGen{int64Generator(extract(node, "length", "^FastRandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
-          _alphabetLength{_alphabet.size()} {}
+          _alphabetLength{_alphabet.size()} {
+        if (_alphabetLength <= 0) {
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Random string requires non-empty alphabet if specified"));
+        }
+    }
 
     std::string evaluate() override {
         auto length = _lengthGen->evaluate();
@@ -466,14 +474,9 @@ bsoncxx::document::value DocumentGenerator::operator()() {
 DocumentGenerator::~DocumentGenerator() = default;
 
 UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom &rng) {
-    if (node.IsScalar()) {
-        return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
+    if (!node.IsMap()) {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
     }
-
-    if (node.IsSequence()) {
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Got sequence"));
-    }
-
     auto distribution = node["distribution"].as<std::string>("uniform");
 
     if (distribution == "uniform") {
