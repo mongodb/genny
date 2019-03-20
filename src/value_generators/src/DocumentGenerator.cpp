@@ -432,7 +432,7 @@ using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
 class NormalDocumentGenerator : public DocumentGenerator::Impl {
 public:
     // order matters for comparison in tests; std::map is ordered
-    using Entries = std::map<std::string,UniqueAppendable>;
+    using Entries = std::vector<std::pair<std::string,UniqueAppendable>>;
     ~NormalDocumentGenerator() override = default;
     explicit NormalDocumentGenerator(Entries entries)
     : _entries{std::move(entries)} {}
@@ -624,7 +624,7 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
     for(const auto&& ent : node) {
         auto key = ent.first.as<std::string>();
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent.second, rng, allParsers);
-        entries.try_emplace(key, std::move(valgen));
+        entries.emplace_back(key, std::move(valgen));
     }
     return std::make_unique<NormalDocumentGenerator>(std::move(entries));
 }
