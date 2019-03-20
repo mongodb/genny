@@ -506,10 +506,10 @@ static std::map<std::string, Parser<UniqueAppendable>> allParsers {
 template<bool Verbatim>
 UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
 
-template<bool Verbatim>
-UniqueAppendable valueGenerator(YAML::Node node, DefaultRandom &rng) {
+template<bool Verbatim, typename Out>
+Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::string,Parser<Out>>& parsers) {
     if constexpr (!Verbatim) {
-        if (auto parser = extractKnownParser(node, rng, allParsers)) {
+        if (auto parser = extractKnownParser(node, rng, parsers)) {
             // known parser type
             return (*parser)(node,rng);
         }
@@ -552,7 +552,7 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
     NormalDocumentGenerator::Entries entries;
     for(const auto&& ent : node) {
         auto key = ent.first.as<std::string>();
-        auto valgen = valueGenerator<Verbatim>(ent.second, rng);
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent.second, rng, allParsers);
         entries.try_emplace(key, std::move(valgen));
     }
     return std::make_unique<NormalDocumentGenerator>(std::move(entries));
@@ -562,13 +562,14 @@ template<bool Verbatim>
 UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
     NormalArrayGenerator::ValueType entries;
     for(const auto&& ent : node) {
-        entries.push_back(valueGenerator<Verbatim>(ent, rng));
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent, rng, allParsers);
+        entries.push_back(std::move(valgen));
     }
     return std::make_unique<NormalArrayGenerator>(std::move(entries));
 }
 
 UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng) {
-    return valueGenerator<true>(node, rng);
+    return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
 }
 
 static std::map<std::string, Parser<UniqueIntGenerator>> intParsers {
