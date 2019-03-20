@@ -127,7 +127,7 @@ public:
 
 using UniqueIntGenerator = std::unique_ptr<IntGenerator::Impl>;
 
-UniqueIntGenerator randomInt(YAML::Node node, DefaultRandom& rng);
+UniqueIntGenerator randomIntOperand(YAML::Node node, DefaultRandom &rng);
 
 class UniformIntGenerator : public IntGenerator::Impl {
 public:
@@ -136,8 +136,8 @@ public:
      */
     UniformIntGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _minGen{randomInt(extract(node, "min", "uniform"), _rng)},
-          _maxGen{randomInt(extract(node, "max", "uniform"), _rng)} {}
+          _minGen{randomIntOperand(extract(node, "min", "uniform"), _rng)},
+          _maxGen{randomIntOperand(extract(node, "max", "uniform"), _rng)} {}
     ~UniformIntGenerator() override = default;
 
     int64_t evaluate() override {
@@ -160,7 +160,7 @@ public:
      */
     BinomialIntGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _tGen{randomInt(extract(node, "t", "binomial"), _rng)},
+          _tGen{randomIntOperand(extract(node, "t", "binomial"), _rng)},
           _p{extract(node, "p", "binomial").as<double>()} {}
     ~BinomialIntGenerator() override = default;
 
@@ -182,7 +182,7 @@ public:
      */
     NegativeBinomialIntGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _kGen{randomInt(extract(node, "k", "negative_binomial"), _rng)},
+          _kGen{randomIntOperand(extract(node, "k", "negative_binomial"), _rng)},
           _p{extract(node, "p", "negative_binomial").as<double>()} {}
     ~NegativeBinomialIntGenerator() override = default;
 
@@ -267,7 +267,7 @@ public:
      */
     NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{randomInt(extract(node, "length", "^RandomString"), rng)},
+          _lengthGen{randomIntOperand(extract(node, "length", "^RandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {}
 
@@ -300,7 +300,7 @@ public:
      */
     FastRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{randomInt(extract(node, "length", "^FastRandomString"), rng)},
+          _lengthGen{randomIntOperand(extract(node, "length", "^FastRandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {}
 
@@ -415,7 +415,7 @@ bsoncxx::document::value DocumentGenerator::operator()() {
 
 DocumentGenerator::~DocumentGenerator() = default;
 
-UniqueIntGenerator randomInt(YAML::Node node, DefaultRandom& rng) {
+UniqueIntGenerator randomIntOperand(YAML::Node node, DefaultRandom &rng) {
     if (node.IsScalar()) {
         return std::make_unique<ConstantIntGenerator>(node.as<int64_t>());
     }
@@ -441,11 +441,11 @@ UniqueIntGenerator randomInt(YAML::Node node, DefaultRandom& rng) {
     }
 }
 
-UniqueStringGenerator fastRandomString(YAML::Node node, DefaultRandom& rng) {
+UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom &rng) {
     return std::make_unique<FastRandomStringGenerator>(node, rng);
 }
 
-UniqueStringGenerator randomString(YAML::Node node, DefaultRandom& rng) {
+UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom &rng) {
     return std::make_unique<NormalRandomStringGenerator>(node, rng);
 }
 
@@ -454,8 +454,8 @@ UniqueStringGenerator randomString(YAML::Node node, DefaultRandom& rng) {
 template<typename O>
 using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
 
-UniqueStringGenerator fastRandomString(YAML::Node, DefaultRandom&);
-UniqueStringGenerator randomString(YAML::Node, DefaultRandom&);
+UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom &rng);
+UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom &rng);
 
 std::optional<std::string> getMetaKey(YAML::Node node) {
     size_t foundMetaKeys = 0;
@@ -492,13 +492,13 @@ std::optional<Parser<O>> extractKnownParser(YAML::Node node, DefaultRandom& rng,
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Unknown parser"));
 }
 
-UniqueAppendable constantAppender(YAML::Node node, DefaultRandom &rng);
+UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng);
 
 static std::map<std::string, Parser<UniqueAppendable>> allParsers {
-        {"^FastRandomString", fastRandomString},
-        {"^RandomString", randomString},
-        {"^RandomInt", randomInt},
-        {"^Verbatim", constantAppender},
+        {"^FastRandomString", fastRandomStringOperand},
+        {"^RandomString", randomStringOperand},
+        {"^RandomInt", randomIntOperand},
+        {"^Verbatim", verbatimOperand},
 };
 
 
@@ -567,22 +567,22 @@ UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
     return std::make_unique<NormalArrayGenerator>(std::move(entries));
 }
 
-UniqueAppendable constantAppender(YAML::Node node, DefaultRandom &rng) {
+UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng) {
     return valueGenerator<true>(node, rng);
 }
 
 static std::map<std::string, Parser<UniqueIntGenerator>> intParsers {
-        {"^RandomInt", randomInt},
+        {"^RandomInt", randomIntOperand},
 };
 
-static std::map<std::string, Parser<UniqueStringGenerator>> stringParsers {
-        {"^FastRandomString", fastRandomString},
-        {"^RandomString", randomString},
-};
-
-
-static std::map<std::string, Parser<UniqueIntGenerator>> docParsers {
-        {"^RandomInt", randomInt},
-};
+//static std::map<std::string, Parser<UniqueStringGenerator>> stringParsers {
+//        {"^FastRandomString", fastRandomString},
+//        {"^RandomString", randomString},
+//};
+//
+//
+//static std::map<std::string, Parser<UniqueIntGenerator>> docParsers {
+//        {"^RandomInt", randomInt},
+//};
 
 }  // namespace genny
