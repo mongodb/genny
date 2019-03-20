@@ -65,9 +65,9 @@ public:
 
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
-using UniqueInt64Generator = std::unique_ptr<Int64Generator::Impl>;
-using UniqueInt32Generator = std::unique_ptr<Int64Generator::Impl>;
-using UniqueStringGenerator = std::unique_ptr<StringGenerator::Impl>;
+using UniqueInt64Generator = std::unique_ptr<class Int64GeneratorImpl>;
+using UniqueInt32Generator = std::unique_ptr<class Int64GeneratorImpl>;
+using UniqueStringGenerator = std::unique_ptr<class StringGeneratorImpl>;
 
 UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom &rng);
 UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom &rng);
@@ -75,7 +75,7 @@ UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom &rn
 UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom &rng);
 UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng);
 
-using UniqueArrayGenerator = std::unique_ptr<ArrayGenerator::Impl>;
+using UniqueArrayGenerator = std::unique_ptr<class ArrayGeneratorImpl>;
 using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
 
 template<bool Verbatim>
@@ -90,11 +90,6 @@ UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
 static std::map<std::string, Parser<UniqueInt64Generator>> intParsers {
         {"^RandomInt", randomInt64Operand},
 };
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 template<typename T>
 class ConstantAppender : public Appendable {
@@ -118,7 +113,7 @@ protected:
 };
 
 
-class Int64Generator::Impl : public Appendable {
+class Int64GeneratorImpl : public Appendable {
 public:
     virtual int64_t evaluate() = 0;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
@@ -128,11 +123,11 @@ public:
         builder.append(this->evaluate());
     }
 
-    ~Impl() override = default;
+    ~Int64GeneratorImpl() override = default;
 };
 
 
-class Int32Generator::Impl : public Appendable {
+class Int32GeneratorImpl : public Appendable {
 public:
     virtual int32_t evaluate() = 0;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
@@ -141,11 +136,9 @@ public:
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(this->evaluate());
     }
-
-    ~Impl() override = default;
 };
 
-class UniformInt64Generator : public Int64Generator::Impl {
+class UniformInt64Generator : public Int64GeneratorImpl {
 public:
     /**
      * @param node {min:<int>, max:<int>}
@@ -169,7 +162,7 @@ private:
     UniqueInt64Generator _maxGen;
 };
 
-class BinomialInt64Generator : public Int64Generator::Impl {
+class BinomialInt64Generator : public Int64GeneratorImpl {
 public:
     /**
      * @param node {t:<int>, p:double}
@@ -191,7 +184,7 @@ private:
     UniqueInt64Generator _tGen;
 };
 
-class NegativeBinomialInt64Generator : public Int64Generator::Impl {
+class NegativeBinomialInt64Generator : public Int64GeneratorImpl {
 public:
     /**
      * @param node {k:<int>, p:double}
@@ -213,7 +206,7 @@ private:
     UniqueInt64Generator _kGen;
 };
 
-class PoissonInt64Generator : public Int64Generator::Impl {
+class PoissonInt64Generator : public Int64GeneratorImpl {
 public:
     /**
      * @param node {mean:double}
@@ -232,7 +225,7 @@ private:
     double _mean;
 };
 
-class GeometricInt64Generator : public Int64Generator::Impl {
+class GeometricInt64Generator : public Int64GeneratorImpl {
 public:
     /**
      * @param node {mean:double}
@@ -251,7 +244,7 @@ private:
     double _p;
 };
 
-class ConstantInt64Generator : public Int64Generator::Impl {
+class ConstantInt64Generator : public Int64GeneratorImpl {
 public:
     ConstantInt64Generator(int64_t value)
     : _value{value} {}
@@ -264,11 +257,9 @@ private:
     int64_t _value;
 };
 
-class StringGenerator::Impl : public Appendable {
+class StringGeneratorImpl : public Appendable {
 public:
     virtual std::string evaluate() = 0;
-
-    ~Impl() override = default;
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
@@ -279,7 +270,7 @@ public:
 };
 
 
-class NormalRandomStringGenerator : public StringGenerator::Impl {
+class NormalRandomStringGenerator : public StringGeneratorImpl {
 public:
     /**
      * @param node {length:<int>, alphabet:opt string}
@@ -316,7 +307,7 @@ private:
     size_t _alphabetLength;
 };
 
-class FastRandomStringGenerator : public StringGenerator::Impl {
+class FastRandomStringGenerator : public StringGeneratorImpl {
 public:
     /**
      * @param node {length:<int>, alphabet:opt str}
@@ -358,10 +349,9 @@ private:
     size_t _alphabetLength;
 };
 
-class ArrayGenerator::Impl : public Appendable {
+class ArrayGeneratorImpl : public Appendable {
 public:
     virtual bsoncxx::array::value evaluate() = 0;
-    ~Impl() override = default;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
     }
@@ -371,7 +361,7 @@ public:
 };
 
 
-class NormalArrayGenerator : public ArrayGenerator::Impl {
+class NormalArrayGenerator : public ArrayGeneratorImpl {
 public:
     using ValueType = std::vector<UniqueAppendable>;
     explicit NormalArrayGenerator(ValueType values)
@@ -393,8 +383,6 @@ private:
 class DocumentGenerator::Impl : public Appendable {
 public:
     virtual bsoncxx::document::value evaluate() = 0;
-
-    ~Impl() override = default;
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
