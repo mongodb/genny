@@ -17,7 +17,7 @@
 #include <iostream>
 #include <random>
 #include <sstream>
-#include <unordered_map>
+#include <map>
 
 #include <boost/log/trivial.hpp>
 
@@ -431,7 +431,8 @@ using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
 
 class NormalDocumentGenerator : public DocumentGenerator::Impl {
 public:
-    using Entries = std::unordered_map<std::string,UniqueAppendable>;
+    // order matters for comparison in tests; std::map is ordered
+    using Entries = std::map<std::string,UniqueAppendable>;
     ~NormalDocumentGenerator() override = default;
     explicit NormalDocumentGenerator(Entries entries)
     : _entries{std::move(entries)} {}
