@@ -217,6 +217,25 @@ private:
     double _mean;
 };
 
+class GeometricIntGenerator : public IntGenerator::Impl {
+public:
+    /**
+     * @param node {mean:double}
+     */
+    GeometricIntGenerator(YAML::Node node, DefaultRandom& rng)
+            : _rng{rng}, _p{extract(node, "p", "geometric").as<double>()} {}
+    ~GeometricIntGenerator() override = default;
+
+    int64_t evaluate() override {
+        auto distribution = std::geometric_distribution<int64_t>{_p};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    double _p;
+};
+
 class ConstantIntGenerator : public IntGenerator::Impl {
 public:
     ConstantIntGenerator(int64_t value)
@@ -435,6 +454,8 @@ UniqueIntGenerator randomIntOperand(YAML::Node node, DefaultRandom &rng) {
         return std::make_unique<NegativeBinomialIntGenerator>(node, rng);
     } else if (distribution == "poisson") {
         return std::make_unique<PoissonIntGenerator>(node, rng);
+    } else if (distribution == "geometric") {
+        return std::make_unique<GeometricIntGenerator>(node, rng);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
