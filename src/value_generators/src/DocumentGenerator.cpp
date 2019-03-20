@@ -571,6 +571,9 @@ Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::stri
 
 template<bool Verbatim>
 UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
+    if (!node.IsMap()) {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Must be mapping type"));
+    }
     NormalDocumentGenerator::Entries entries;
     for(const auto&& ent : node) {
         auto key = ent.first.as<std::string>();
