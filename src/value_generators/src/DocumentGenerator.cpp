@@ -510,16 +510,16 @@ UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom &rn
 UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom &rng);
 
 std::optional<std::string> getMetaKey(YAML::Node node) {
-    size_t foundMetaKeys = 0;
+    size_t foundKeys = 0;
     std::optional<std::string> out = std::nullopt;
     for(const auto&& kvp : node) {
+        ++foundKeys;
         auto key = kvp.first.as<std::string>();
         if (!key.empty() && key[0] == '^') {
-            ++foundMetaKeys;
             out = key;
         }
     }
-    if (foundMetaKeys > 1) {
+    if (foundKeys > 1 && out) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Found multiple meta-keys"));
     }
     return out;
