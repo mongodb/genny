@@ -64,48 +64,22 @@ public:
     virtual void append(bsoncxx::builder::basic::array& builder) = 0;
 };
 
-class ConstantNullAppender : public Appendable {
+template<typename T>
+class ConstantAppender : public Appendable {
 public:
-    ConstantNullAppender(YAML::Node, DefaultRandom&) {}
-    ~ConstantNullAppender() override = default;
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, bsoncxx::types::b_null{}));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(bsoncxx::types::b_null{});
-    }
-};
-
-class ConstantDoubleAppender : public Appendable {
-public:
-    ConstantDoubleAppender(double value)
+    explicit ConstantAppender(T value)
     : _value{value} {}
-    ~ConstantDoubleAppender() override = default;
+    explicit ConstantAppender()
+    : _value{} {}
+    ~ConstantAppender() override = default;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, _value));
     }
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(_value);
     }
-
 private:
-    double _value;
-};
-
-class ConstantBoolAppender : public Appendable {
-public:
-    ConstantBoolAppender(bool value)
-    : _value{value} {}
-    ~ConstantBoolAppender() override = default;
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, _value));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(_value);
-    }
-
-private:
-    bool _value;
+    T _value;
 };
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
@@ -294,20 +268,6 @@ public:
 };
 
 using UniqueStringGenerator = std::unique_ptr<StringGenerator::Impl>;
-
-class ConstantStringGenerator : public StringGenerator::Impl {
-public:
-    ConstantStringGenerator(std::string value)
-    : _value{std::move(value)} {}
-    ~ConstantStringGenerator() override = default;
-
-    std::string evaluate() override {
-        return _value;
-    }
-
-private:
-    std::string _value;
-};
 
 class NormalRandomStringGenerator : public StringGenerator::Impl {
 public:
@@ -574,7 +534,7 @@ Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::stri
         BOOST_THROW_EXCEPTION(std::logic_error("Unknown node"));
     }
     if (node.IsNull()) {
-        return std::make_unique<ConstantNullAppender>(node, rng);
+        return std::make_unique<ConstantAppender<bsoncxx::types::b_null>>();
     }
     if (node.IsScalar()) {
         if (node.Tag() != "!") {
@@ -587,15 +547,15 @@ Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::stri
             } catch (const YAML::BadConversion& e) {
             }
             try {
-                return std::make_unique<ConstantDoubleAppender>(node.as<double>());
+                return std::make_unique<ConstantAppender<double>>(node.as<double>());
             } catch (const YAML::BadConversion& e) {
             }
             try {
-                return std::make_unique<ConstantBoolAppender>(node.as<bool>());
+                return std::make_unique<ConstantAppender<bool>>(node.as<bool>());
             } catch (const YAML::BadConversion& e) {
             }
         }
-        return std::make_unique<ConstantStringGenerator>(node.as<std::string>());
+        return std::make_unique<ConstantAppender<std::string>>(node.as<std::string>());
     }
     if (node.IsSequence()) {
         return arrayGenerator<Verbatim>(node, rng);
