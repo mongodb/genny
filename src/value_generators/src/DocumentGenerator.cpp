@@ -110,18 +110,6 @@ public:
     ~Int64Generator() override = default;
 };
 
-
-class Int32GeneratorImpl : public Appendable {
-public:
-    virtual int32_t evaluate() = 0;
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(this->evaluate());
-    }
-};
-
 class UniformInt64Generator : public Int64Generator {
 public:
     /**
