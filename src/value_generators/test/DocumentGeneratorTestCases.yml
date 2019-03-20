@@ -7,11 +7,15 @@ Cases:
   # int32s whereas number value-generators always produce
   # int64s.
 
-  - Name: one RandomInt
-    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
+  - Name: RandomInt randon max
+    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: {^RandomInt: {min: 10000000001, max: 10000000010}}}}}
     ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
 
 Others:
+
+  - Name: one RandomInt
+    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
+    ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
 
   - Name: Verbatim
     GivenTemplate:
