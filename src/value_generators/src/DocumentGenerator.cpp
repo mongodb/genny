@@ -128,6 +128,7 @@ public:
 using UniqueIntGenerator = std::unique_ptr<IntGenerator::Impl>;
 
 UniqueIntGenerator randomIntOperand(YAML::Node node, DefaultRandom &rng);
+UniqueIntGenerator intGenerator(YAML::Node node, DefaultRandom &rng);
 
 class UniformIntGenerator : public IntGenerator::Impl {
 public:
@@ -136,8 +137,8 @@ public:
      */
     UniformIntGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _minGen{randomIntOperand(extract(node, "min", "uniform"), _rng)},
-          _maxGen{randomIntOperand(extract(node, "max", "uniform"), _rng)} {}
+          _minGen{intGenerator(extract(node, "min", "uniform"), _rng)},
+          _maxGen{intGenerator(extract(node, "max", "uniform"), _rng)} {}
     ~UniformIntGenerator() override = default;
 
     int64_t evaluate() override {
@@ -474,7 +475,7 @@ std::optional<std::string> getMetaKey(YAML::Node node) {
 }
 
 template<typename O>
-std::optional<Parser<O>> extractKnownParser(YAML::Node node, DefaultRandom& rng,
+std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(YAML::Node node, DefaultRandom& rng,
                                             std::map<std::string, Parser<O>> parsers) {
     if (!node || !node.IsMap()) {
         return std::nullopt;
@@ -486,7 +487,7 @@ std::optional<Parser<O>> extractKnownParser(YAML::Node node, DefaultRandom& rng,
     }
 
     if (auto parser = parsers.find(*metaKey); parser != parsers.end()) {
-        return std::make_optional(parser->second);
+        return std::make_optional<std::pair<Parser<O>, std::string>>({parser->second, *metaKey});
     }
 
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Unknown parser"));
@@ -509,9 +510,9 @@ UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
 template<bool Verbatim, typename Out>
 Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::string,Parser<Out>>& parsers) {
     if constexpr (!Verbatim) {
-        if (auto parser = extractKnownParser(node, rng, parsers)) {
+        if (auto parserPair = extractKnownParser(node, rng, parsers)) {
             // known parser type
-            return (*parser)(node,rng);
+            return parserPair->first(node[parserPair->second], rng);
         }
     }
 
@@ -575,6 +576,14 @@ UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng) {
 static std::map<std::string, Parser<UniqueIntGenerator>> intParsers {
         {"^RandomInt", randomIntOperand},
 };
+
+UniqueIntGenerator intGenerator(YAML::Node node, DefaultRandom &rng) {
+    if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], rng);
+    }
+    return std::make_unique<ConstantIntGenerator>(node.as<int64_t>());
+}
 
 //static std::map<std::string, Parser<UniqueStringGenerator>> stringParsers {
 //        {"^FastRandomString", fastRandomString},
