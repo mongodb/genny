@@ -56,14 +56,24 @@ const std::string kDefaultAlphabet = std::string{
 
 }  // namespace
 
-using UniqueAppendable = std::unique_ptr<class Appendable>;
+class Appendable {
+public:
+    virtual ~Appendable() = default;
+    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
+    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
+};
+
+
+using UniqueAppendable = std::unique_ptr<Appendable>;
 using UniqueInt64Generator = std::unique_ptr<Int64Generator::Impl>;
 using UniqueInt32Generator = std::unique_ptr<Int64Generator::Impl>;
 using UniqueStringGenerator = std::unique_ptr<StringGenerator::Impl>;
 
 UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom &rng);
 UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom &rng);
-
+UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom &rng);
+UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom &rng);
+UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng);
 
 using UniqueArrayGenerator = std::unique_ptr<ArrayGenerator::Impl>;
 using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
@@ -74,20 +84,17 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng);
 template<typename O>
 using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
 
-UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng);
-
 template<bool Verbatim>
 UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
+
+static std::map<std::string, Parser<UniqueInt64Generator>> intParsers {
+        {"^RandomInt", randomInt64Operand},
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
-class Appendable {
-public:
-    virtual ~Appendable() = default;
-    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
-    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
-};
 
 template<typename T>
 class ConstantAppender : public Appendable {
@@ -96,6 +103,9 @@ public:
     : _value{value} {}
     explicit ConstantAppender()
     : _value{} {}
+    T evaluate() {
+        return _value;
+    }
     ~ConstantAppender() override = default;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, _value));
@@ -103,7 +113,7 @@ public:
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(_value);
     }
-private:
+protected:
     T _value;
 };
 
@@ -250,24 +260,8 @@ public:
     int64_t evaluate() override {
         return _value;
     }
-
 private:
     int64_t _value;
-};
-
-// TODO: not needed
-class ConstantInt32Generator : public Int32Generator::Impl {
-public:
-    ConstantInt32Generator(int32_t value)
-            : _value{value} {}
-    ~ConstantInt32Generator() override = default;
-
-    int32_t evaluate() override {
-        return _value;
-    }
-
-private:
-    int32_t _value;
 };
 
 class StringGenerator::Impl : public Appendable {
@@ -509,13 +503,6 @@ std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(YAML::Node n
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Unknown parser"));
 }
 
-static std::map<std::string, Parser<UniqueAppendable>> allParsers {
-        {"^FastRandomString", fastRandomStringOperand},
-        {"^RandomString", randomStringOperand},
-        {"^RandomInt", randomInt64Operand},
-        {"^Verbatim", verbatimOperand},
-};
-
 template<bool Verbatim, typename Out>
 Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::string,Parser<Out>>& parsers) {
     if constexpr (!Verbatim) {
@@ -534,11 +521,11 @@ Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::stri
     if (node.IsScalar()) {
         if (node.Tag() != "!") {
             try {
-                return std::make_unique<ConstantInt32Generator>(node.as<int32_t>());
+                return std::make_unique<ConstantAppender<int32_t>>(node.as<int32_t>());
             } catch (const YAML::BadConversion& e) {
             }
             try {
-                return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
+                return std::make_unique<ConstantAppender<int64_t>>(node.as<int64_t>());
             } catch (const YAML::BadConversion& e) {
             }
             try {
@@ -560,6 +547,13 @@ Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::stri
     }
     BOOST_THROW_EXCEPTION(std::logic_error("Unknown node type"));
 }
+
+static std::map<std::string, Parser<UniqueAppendable>> allParsers {
+        {"^FastRandomString", fastRandomStringOperand},
+        {"^RandomString", randomStringOperand},
+        {"^RandomInt", randomInt64Operand},
+        {"^Verbatim", verbatimOperand},
+};
 
 template<bool Verbatim>
 UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
@@ -601,9 +595,6 @@ UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng) {
     return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
 }
 
-static std::map<std::string, Parser<UniqueInt64Generator>> intParsers {
-        {"^RandomInt", randomInt64Operand},
-};
 
 UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom &rng) {
     if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
