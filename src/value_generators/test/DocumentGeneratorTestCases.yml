@@ -1,51 +1,10 @@
----
+#Cases:
+#  - Name: one RandomInt
+#    GivenTemplate: {a: {^RandomInt: {min: 50, max: 60}}}
+#    ThenReturns: [{a: 56}]
+
 
 Cases:
-
-  # These tests use large numbers for number parameters
-  # because short numbers get automatically narrowed to
-  # int32s whereas number value-generators always produce
-  # int64s.
-
-  - Name: RandomInt randon max
-    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: {^RandomInt: {min: 10000000001, max: 10000000010}}}}}
-    ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
-
-Others:
-
-  - Name: one RandomInt
-    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
-    ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
-
-  - Name: Verbatim
-    GivenTemplate:
-      a: {^Verbatim: {^RandomInt: {min: 10000000050, max: 10000000060}}}
-    ThenReturns:
-      - a: {^RandomInt: {min: 10000000050, max: 10000000060}}
-
-  - Name: RandomInt randon max
-    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: {^RandomInt: {min: 10000000001, max: 10000000010}}}}}
-    ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
-
-  - Name: Random string random length
-    GivenTemplate:
-      a:
-        ^RandomString:
-          length: {^RandomInt: {min: 2, max: 5}}
-          alphabet: xyz
-    ThenReturns:
-      - {a: yzyz}
-      - {a: yy}
-      - {a: xyx}
-
-  - Name: Invalid missing min
-    GivenTemplate:
-      a: {^RandomInt: {max: 10}}
-    ThenThrows: InvalidValueGeneratorSyntax
-
-  - Name: one RandomInt
-    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
-    ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
 
   - Name: Must be mapping type
     GivenTemplate: a
@@ -68,8 +27,8 @@ Others:
     ThenReturns: [{a: a}, {a: a}]
 
   - Name: Two-key scalar map
-    GivenTemplate: {a: 1, b: 2}
-    ThenReturns: [{a: 1, b: 2}]
+    GivenTemplate: {a:1, b:2}
+    ThenReturns: [{a:1, b:2}]
 
   - Name: Null scalar
     GivenTemplate: {a: null}
@@ -83,60 +42,56 @@ Others:
     GivenTemplate: {a: 3.0}
     ThenReturns: [{a: 3.0}]
 
+  - Name: Zeroes
+    GivenTemplate: {a: 0}
+    ThenReturns: [{a: 0}]
+
   - Name: Empty arrays
     GivenTemplate: {a: []}
     ThenReturns: [{a: []}]
 
   - Name: Array of mixed-types without templates
-    GivenTemplate: {a: ["foo", 2147483648]}
-    ThenReturns: [{a: ["foo", 2147483648]}]
+    GivenTemplate: {vals: [1, "foo", 0, 3.0, -1, {some: map}]}
+    ThenReturns: [{vals: [1, "foo", 0, 3.0, -1, {some: map}]}]
 
   - Name: Array of mixed-types without templates
-    GivenTemplate:
-      {a: [2147483648, 269849313357703264, 3.14, string, true, null]}
-    ThenReturns:
-      - {a: [2147483648, 269849313357703264, 3.14, string, true, null]}
+    GivenTemplate: {vals: [1, 269849313357703264, 3.14, string, true, null]}
+    ThenReturns: [{vals: [1, 269849313357703264, 3.14, string, true, null]}]
 
   - Name: Empty array
     GivenTemplate: {a: []}
     ThenReturns: [{a: []}]
 
   - Name: one RandomInt
-    GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
-    ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
+    GivenTemplate: {a: {^RandomInt: {min: 50, max: 60}}}
+    ThenReturns: [{a: 56}, {a: 60}, {a: 54}]
 
   - Name: two RandomInts in map
     GivenTemplate:
-      a: {^RandomInt: {min: 10000000050, max: 10000000060}}
-      b: {^RandomInt: {min: 10000000030, max: 10000000040}}
-    ThenReturns: [{a: 10000000059, b: 10000000038}]
+        a: {^RandomInt: {min: 50, max: 60}}
+        b: {^RandomInt: {min: 30, max: 40}}
+    ThenReturns: [{a: 59, b: 38}]
 
   - Name: RandomInt and literal
     GivenTemplate:
       a:
-        - {^RandomInt: {min: 10000000010, max: 10000000010}}
-        - {^RandomInt: {min: 10000000010, max: 10000000010}}
-        - 10000000010
-    ThenReturns: [{a: [10000000010, 10000000010, 10000000010]}]
+        - {^RandomInt: {min: 10, max: 10}}
+        - {^RandomInt: {min: 10, max: 10}}
+        - 10
+    ThenReturns: [{a: [10,10,10]}]
 
   - Name: RandomInt recursively applied
     GivenTemplate:
       a:
-        - ^RandomInt:
-            min: 10000000020
-            max: {^RandomInt: {min: 10000000020, max: 10000000020}}
-        - ^RandomInt:
-            min: {^RandomInt: {min: 10000000020, max: 10000000020}}
-            max: 10000000020
-        - 10000000020
-    ThenReturns: [{a: [10000000020, 10000000020, 10000000020]}]
+        - {^RandomInt: {min: 20, max: {^RandomInt: {min: 20, max: 20}}}}
+        - {^RandomInt: {min: {^RandomInt: {min: 20, max: 20}}, max: 20}}
+        - 20
+    ThenReturns: [{a: [20, 20, 20]}]
 
   - Name: two RandomInts in list
     GivenTemplate:
-      a:
-        - {^RandomInt: {min: 10000000050, max: 10000000060}}
-        - {^RandomInt: {min: 10000000030, max: 10000000040}}
-    ThenReturns: [{a: [10000000059, 10000000036]}]
+        a: [{^RandomInt: {min: 50, max: 60}}, {^RandomInt: {min: 30, max: 40}}]
+    ThenReturns: [{a: [59, 36]}]
 
   - Name: Mixing ^ keys with other keys
     GivenTemplate: {a: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}}
@@ -155,275 +110,287 @@ Others:
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: some kind of sub-args work fine
-    GivenTemplate: {a: {min: 10000000050, max: 10000000060}}
-    ThenReturns:
-      - {a: {min: 10000000050, max: 10000000060}}
-      - {a: {min: 10000000050, max: 10000000060}}
+    GivenTemplate: {a: {min: 50, max: 60}}
+    ThenReturns: [{a: {min: 50, max: 60}}, {a: {min: 50, max: 60}}]
 
   - Name: Invalid types in min/max
     GivenTemplate:
-      a: {^RandomInt: {min: [], max: 60}}
+        a: {^RandomInt: {min: [], max: 60}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid types in min/max
     GivenTemplate:
-      a: {^RandomInt: {min: 50, max: []}}
+        a: {^RandomInt: {min: 50, max: []}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid types in min/max
     GivenTemplate:
-      a: {^RandomInt: {min: fifty, max: 10}}
+        a: {^RandomInt: {min: fifty, max: 10}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid RandomInt type
     GivenTemplate:
-      a: {^RandomInt: "7"}
+        a: {^RandomInt: "7"}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid RandomInt type
     GivenTemplate:
-      a: {^RandomInt: 7}
+        a: {^RandomInt: 7}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid RandomInt type
     GivenTemplate:
-      a: {^RandomInt: []}
+        a: {^RandomInt: []}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid types in min/max
     GivenTemplate:
-      a: {^RandomInt: {min: 50.0, max: 10}}
+        a: {^RandomInt: {min: 50.0, max: 10}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid missing min
     GivenTemplate:
-      a: {^RandomInt: {max: 10}}
+        a: {^RandomInt: {max: 10}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid missing max
     GivenTemplate:
-      a: {^RandomInt: {min: 10}}
+        a: {^RandomInt: {min: 10}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Explicit uniform distribution
     GivenTemplate:
-      a:
-        ^RandomInt:
-          distribution: uniform
-          min: 10000000050
-          max: 10000000060
-    ThenReturns:
-      - {a: 10000000054}
-      - {a: 10000000051}
-      - {a: 10000000059}
-      - {a: 10000000051}
+        a: {^RandomInt: {distribution: uniform, min: 50, max: 60}}
+    ThenReturns: [{a: 54}, {a: 51}, {a: 59}, {a: 51}]
 
   - Name: Explicit uniform distribution no min/max
     GivenTemplate:
-      a: {^RandomInt: {distribution: uniform}}
+        a: {^RandomInt: {distribution: uniform}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Binomial Distribution
     GivenTemplate:
-      a: {^RandomInt: {distribution: binomial, t: 1000000000100, p: 0.05}}
+      a: {^RandomInt: {distribution: binomial, t: 100, p: 0.05}}
     ThenReturns:
-      - {a: 50000235004}
-      - {a: 50000156045}
-      - {a: 50000006376}
-      - {a: 49999767646}
-      - {a: 50000182526}
-      - {a: 49999783187}
-      - {a: 49999885751}
-      - {a: 50000062361}
-      - {a: 50000136231}
-      - {a: 49999715198}
+      - {a: 7}
+      - {a: 3}
+      - {a: 5}
+      - {a: 7}
+      - {a: 3}
+      - {a: 7}
+      - {a: 6}
+      - {a: 4}
+      - {a: 6}
+      - {a: 2}
 
   - Name: Binomial requires t and p
     GivenTemplate:
-      a: {^RandomInt: {distribution: binomial}}
+        a: {^RandomInt: {distribution: binomial}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Binomial requires p
     GivenTemplate:
-      a: {^RandomInt: {distribution: binomial, t: 100}}
+        a: {^RandomInt: {distribution: binomial, t: 100}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Binomial requires t
     GivenTemplate:
-      a: {^RandomInt: {distribution: binomial, p: 0.5}}
+        a: {^RandomInt: {distribution: binomial, p: 0.5}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Binomial requires int t
     GivenTemplate:
-      a: {^RandomInt: {distribution: binomial, t: 100.5, p: 0.5}}
+        a: {^RandomInt: {distribution: binomial, t: 100.5, p: 0.5}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Binomial requires double p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: binomial, t: 100, p: 1}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Negative Binomial Distribution
     GivenTemplate:
-      a:
-        ^RandomInt:
-          distribution: negative_binomial
-          k: 1000000000100
-          p: 0.05
+      a: {^RandomInt: {distribution: negative_binomial, k: 100, p: 0.05}}
     ThenReturns:
-      - {a: 18999998848060}
-      - {a: 19000002369207}
-      - {a: 19000007291354}
-      - {a: 19000011471073}
-      - {a: 18999981460521}
-      - {a: 18999986050781}
-      - {a: 18999999696273}
-      - {a: 18999985829620}
-      - {a: 18999982803791}
-      - {a: 19000012669952}
+      - {a: 1869}
+      - {a: 1904}
+      - {a: 1954}
+      - {a: 1995}
+      - {a: 1697}
+      - {a: 1742}
+      - {a: 1876}
+      - {a: 1737}
+      - {a: 1704}
+      - {a: 2008}
 
   - Name: Negative Binomial requires k and p
     GivenTemplate:
-      a: {^RandomInt: {distribution: negative_binomial}}
+        a: {^RandomInt: {distribution: negative_binomial}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Negative Binomial requires p
     GivenTemplate:
-      a: {^RandomInt: {distribution: negative_binomial, k: 100}}
+        a: {^RandomInt: {distribution: negative_binomial, k: 100}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Negative Binomial requires k
     GivenTemplate:
-      a: {^RandomInt: {distribution: negative_binomial, p: 0.5}}
+        a: {^RandomInt: {distribution: negative_binomial, p: 0.5}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Negative Binomial requires int k
     GivenTemplate:
-      a: {^RandomInt: {distribution: negative_binomial, k: 100.5, p: 0.5}}
+        a: {^RandomInt: {distribution: negative_binomial, k: 100.5, p: 0.5}}
     ThenThrows: InvalidValueGeneratorSyntax
+
+  # TODO: NegativeBinomialIntExpression doesn't use a UniqueTypedExpression<DoubleValueType>
+  # - Name: Negative Binomial requires double p
+  #   GivenTemplate:
+  #       a: {^RandomInt: {distribution: negative_binomial, k: 100, p: 2}}
+  #   ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Geometric distribution
+    GivenTemplate:
+        a: {^RandomInt: {distribution: geometric, p: 0.05}}
+    ThenReturns:
+      - {a: 3}
+      - {a: 16}
+      - {a: 56}
+      - {a: 11}
+      - {a: 33}
+      - {a: 10}
+      - {a: 5}
+      - {a: 10}
+      - {a: 11}
+      - {a: 70}
 
   - Name: Geometric distribution requires p
     GivenTemplate:
-      a: {^RandomInt: {distribution: geometric}}
+        a: {^RandomInt: {distribution: geometric}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Geometric distribution requires double p
+    GivenTemplate:
+        a: {^RandomInt: {distribution: geometric, p: 1}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Poisson distribution
     GivenTemplate:
-      a: {^RandomInt: {distribution: poisson, mean: 10000000000000}}
+        a: {^RandomInt: {distribution: poisson, mean: 5.6}}
     ThenReturns:
-      - {a: 9999995373744}
-      - {a: 9999998326662}
-      - {a: 9999993652227}
-      - {a: 9999996726403}
-      - {a: 9999996299875}
-      - {a: 9999999671415}
-      - {a: 9999997304481}
-      - {a: 9999999509838}
-      - {a: 9999995944132}
-      - {a: 10000000249332}
+      - {a: 7}
+      - {a: 6}
+      - {a: 3}
+      - {a: 7}
+      - {a: 6}
+      - {a: 7}
+      - {a: 7}
+      - {a: 2}
+      - {a: 5}
+      - {a: 5}
 
   - Name: Poisson distribution requires mean
     GivenTemplate:
-      a: {^RandomInt: {distribution: poisson}}
+        a: {^RandomInt: {distribution: poisson}}
+    ThenThrows: InvalidValueGeneratorSyntax
+
+  - Name: Poisson distribution requires double mean
+    GivenTemplate:
+        a: {^RandomInt: {distribution: poisson, mean: 7}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Invalid distribution
     GivenTemplate:
-      a: {^RandomInt: {distribution: non_existent}}
+        a: {^RandomInt: {distribution: non_existent}}
     ThenThrows: InvalidValueGeneratorSyntax
+
 
   - Name: Random string
     GivenTemplate:
-      a: {^RandomString: {length: 15}}
+        a: {^RandomString: {length: 15}}
     ThenReturns:
-      - {a: pFUOtUq6zuV56f1}
-      - {a: DJ4DJyPRwNd7aXj}
-      - {a: dE3QnKdS4RWy3eD}
-      - {a: 8+owFOpBgIHI/rl}
-      - {a: xtfd4zT1v8qcj6i}
+      - {a: GtGQb/DzMWVGLtX }
+      - {a: mwKoK+SaOjlUvPJ }
+      - {a: hJYK1TH/XDFyfj4 }
+      - {a: yBgN2gIGjVWtp9M }
+      - {a: iTehPWbT6Cz7ohi }
 
   - Name: Random string custom alphabet
     GivenTemplate:
-      a: {^RandomString: {length: 15, alphabet: xyz}}
+        a: {^RandomString: {length: 15, alphabet: xyz}}
     ThenReturns:
-      - {a: yxyyyyyyyzzzxxx}
-      - {a: zyxzyxyzxxzzyzx}
-      - {a: zzyyzzyzyyzzxxx}
-      - {a: yxzxyzxxxzzyyxz}
-      - {a: yyzyxyzyzxyyxxz}
+      - {a: xyyzzxyzxyzzzxz }
+      - {a: xzyxxzzzyxzzxxz }
+      - {a: xzyxyyxzxyzyzxz }
+      - {a: xxxyzyyyxzyzxxx }
+      - {a: xxzzzyzzzzyzzzz }
 
   - Name: Random string custom alphabet can repeat chars
     GivenTemplate:
-      a: {^RandomString: {length: 15, alphabet: xxx}}
+        a: {^RandomString: {length: 15, alphabet: xxx}}
     ThenReturns:
-      - {a: xxxxxxxxxxxxxxx}
-      - {a: xxxxxxxxxxxxxxx}
+      - {a: xxxxxxxxxxxxxxx }
+      - {a: xxxxxxxxxxxxxxx }
 
   - Name: Random string requires length
     GivenTemplate:
-      a: {^RandomString: {}}
+        a: {^RandomString: {}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Random string requires non-empty alphabet if specified
     GivenTemplate:
-      a: {^RandomString: {length: 15, alphabet: ''}}
+        a: {^RandomString: {length: 15, alphabet: ''}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: Random string random length
     GivenTemplate:
-      a:
-        ^RandomString:
-          length: {^RandomInt: {min: 2, max: 5}}
-          alphabet: xyz
+        a: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}, alphabet: xyz}}
     ThenReturns:
-      - {a: yzyz}
-      - {a: yy}
-      - {a: xyx}
+      - {a: zyx }
+      - {a: yzy }
+      - {a: zxyzy }
 
   - Name: FastRandom string
     GivenTemplate:
-      a: {^FastRandomString: {length: 15}}
+        a: {^FastRandomString: {length: 15}}
     ThenReturns:
-      - {a: CvLoAjmgNgLDAAn}
-      - {a: IiGloEGjNBgiCAG}
-      - {a: PIEukstOCshBELJ}
-      - {a: uHDiliMvIPlPDHt}
-      - {a: LNABMuNujmIiqiN}
+      - {a:  OrNlqgktPjHCqhr }
+      - {a:  hphpkIstkuMjNkN }
+      - {a:  ElOmNJOjqJAPuCn }
+      - {a:  kMJHqOPKsohHBnm }
+      - {a:  MiPmmFFAmpstpGp }
 
   - Name: FastRandomString string requires length
     GivenTemplate:
-      a: {^FastRandomString: {}}
+        a: {^FastRandomString: {}}
     ThenThrows: InvalidValueGeneratorSyntax
 
   - Name: FastRandomString random length
     GivenTemplate:
-      a: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}
+        a: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}
     ThenReturns:
-      - {a: tEk}
-      - {a: rkot}
-      - {a: PB}
+      - {a: ADL }
+      - {a: uLjmv }
+      - {a: jN }
 
   - Name: Verbatim
     GivenTemplate:
-      a: {^Verbatim: {^RandomInt: {min: 10000000050, max: 10000000060}}}
+      a: {^Verbatim: {^RandomInt: {min: 50, max: 60}}}
     ThenReturns:
-      - a: {^RandomInt: {min: 10000000050, max: 10000000060}}
+      - a: {^RandomInt: {min: 50, max: 60}}
 
-  - Name: Verbatim can break all the rules
+  - Name: Verbatim can break all the rules 😎
     GivenTemplate:
-      a:
-        ^Verbatim:
-          otherKey: 10000000000
-          ^RandomInt: {min: 10000000050, max: 10000000060}
+      a: {^Verbatim: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}}
     ThenReturns:
-      - a:
-          otherKey: 10000000000
-          ^RandomInt: {min: 10000000050, max: 10000000060}
+      - a: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}
 
   - Name: Verbatim as a list
     GivenTemplate:
-      a:
-        ^Verbatim:
-          - ^RandomInt: {min: 10000000050, max: 10000000060}
-          - ^RandomString: {length: 10000000015}
-          - scalarValue
+        a:
+            ^Verbatim:
+            - ^RandomInt: {min: 50, max: 60}
+            - ^RandomString: {length: 15}
+            - scalarValue
     ThenReturns:
-      - a:
-          - ^RandomInt: {min: 10000000050, max: 10000000060}
-          - ^RandomString: {length: 10000000015}
-          - scalarValue
+      - a: [{^RandomInt: {min: 50, max: 60}}, {^RandomString: {length: 15}}, scalarValue]
