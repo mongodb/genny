@@ -72,6 +72,7 @@ public:
     static DocumentGenerator create(YAML::Node node, DefaultRandom& rng);
     explicit DocumentGenerator(YAML::Node node, DefaultRandom& rng);
     bsoncxx::document::value operator()();
+    DocumentGenerator(DocumentGenerator&&) noexcept;
     ~DocumentGenerator();
     class Impl;
 private:

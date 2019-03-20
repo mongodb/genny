@@ -435,6 +435,8 @@ bsoncxx::document::value DocumentGenerator::operator()() {
     return _impl->evaluate();
 }
 
+DocumentGenerator::DocumentGenerator(DocumentGenerator &&) noexcept = default;
+
 DocumentGenerator::~DocumentGenerator() = default;
 
 UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom &rng) {
