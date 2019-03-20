@@ -49,6 +49,24 @@ YAML::Node extract(YAML::Node node, std::string key, std::string msg) {
     return out;
 }
 
+
+std::optional<std::string> getMetaKey(YAML::Node node) {
+    size_t foundKeys = 0;
+    std::optional<std::string> out = std::nullopt;
+    for(const auto&& kvp : node) {
+        ++foundKeys;
+        auto key = kvp.first.as<std::string>();
+        if (!key.empty() && key[0] == '^') {
+            out = key;
+        }
+    }
+    if (foundKeys > 1 && out) {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Found multiple meta-keys"));
+    }
+    return out;
+}
+
+
 const std::string kDefaultAlphabet = std::string{
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -456,22 +474,6 @@ UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom &rn
 
 UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom &rng) {
     return std::make_unique<NormalRandomStringGenerator>(node, rng);
-}
-
-std::optional<std::string> getMetaKey(YAML::Node node) {
-    size_t foundKeys = 0;
-    std::optional<std::string> out = std::nullopt;
-    for(const auto&& kvp : node) {
-        ++foundKeys;
-        auto key = kvp.first.as<std::string>();
-        if (!key.empty() && key[0] == '^') {
-            out = key;
-        }
-    }
-    if (foundKeys > 1 && out) {
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Found multiple meta-keys"));
-    }
-    return out;
 }
 
 template<typename O>
