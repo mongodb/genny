@@ -161,7 +161,7 @@ public:
      */
     BinomialIntGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _tGen{randomIntOperand(extract(node, "t", "binomial"), _rng)},
+          _tGen{intGenerator(extract(node, "t", "binomial"), _rng)},
           _p{extract(node, "p", "binomial").as<double>()} {}
     ~BinomialIntGenerator() override = default;
 
@@ -183,7 +183,7 @@ public:
      */
     NegativeBinomialIntGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _kGen{randomIntOperand(extract(node, "k", "negative_binomial"), _rng)},
+          _kGen{intGenerator(extract(node, "k", "negative_binomial"), _rng)},
           _p{extract(node, "p", "negative_binomial").as<double>()} {}
     ~NegativeBinomialIntGenerator() override = default;
 
@@ -287,7 +287,7 @@ public:
      */
     NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{randomIntOperand(extract(node, "length", "^RandomString"), rng)},
+          _lengthGen{intGenerator(extract(node, "length", "^RandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {}
 
@@ -320,7 +320,7 @@ public:
      */
     FastRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{randomIntOperand(extract(node, "length", "^FastRandomString"), rng)},
+          _lengthGen{intGenerator(extract(node, "length", "^FastRandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {}
 
