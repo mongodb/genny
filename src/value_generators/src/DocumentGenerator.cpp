@@ -112,7 +112,7 @@ using UniqueAppendable = std::unique_ptr<Appendable>;
 
 UniqueAppendable generateAppender(YAML::Node node, DefaultRandom& rng);
 
-class IntGenerator::Impl : public Appendable {
+class Int64Generator::Impl : public Appendable {
 public:
     virtual int64_t evaluate() = 0;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
@@ -125,21 +125,21 @@ public:
     ~Impl() override = default;
 };
 
-using UniqueIntGenerator = std::unique_ptr<IntGenerator::Impl>;
+using UniqueInt64Generator = std::unique_ptr<Int64Generator::Impl>;
 
-UniqueIntGenerator randomIntOperand(YAML::Node node, DefaultRandom &rng);
-UniqueIntGenerator intGenerator(YAML::Node node, DefaultRandom &rng);
+UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom &rng);
+UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom &rng);
 
-class UniformIntGenerator : public IntGenerator::Impl {
+class UniformInt64Generator : public Int64Generator::Impl {
 public:
     /**
      * @param node {min:<int>, max:<int>}
      */
-    UniformIntGenerator(YAML::Node node, DefaultRandom& rng)
+    UniformInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _minGen{intGenerator(extract(node, "min", "uniform"), _rng)},
-          _maxGen{intGenerator(extract(node, "max", "uniform"), _rng)} {}
-    ~UniformIntGenerator() override = default;
+          _minGen{int64Generator(extract(node, "min", "uniform"), _rng)},
+          _maxGen{int64Generator(extract(node, "max", "uniform"), _rng)} {}
+    ~UniformInt64Generator() override = default;
 
     int64_t evaluate() override {
         auto min = _minGen->evaluate();
@@ -150,20 +150,20 @@ public:
 
 private:
     DefaultRandom& _rng;
-    UniqueIntGenerator _minGen;
-    UniqueIntGenerator _maxGen;
+    UniqueInt64Generator _minGen;
+    UniqueInt64Generator _maxGen;
 };
 
-class BinomialIntGenerator : public IntGenerator::Impl {
+class BinomialInt64Generator : public Int64Generator::Impl {
 public:
     /**
      * @param node {t:<int>, p:double}
      */
-    BinomialIntGenerator(YAML::Node node, DefaultRandom& rng)
+    BinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _tGen{intGenerator(extract(node, "t", "binomial"), _rng)},
+          _tGen{int64Generator(extract(node, "t", "binomial"), _rng)},
           _p{extract(node, "p", "binomial").as<double>()} {}
-    ~BinomialIntGenerator() override = default;
+    ~BinomialInt64Generator() override = default;
 
     int64_t evaluate() override {
         auto distribution = std::binomial_distribution<int64_t>{_tGen->evaluate(), _p};
@@ -173,19 +173,19 @@ public:
 private:
     DefaultRandom& _rng;
     double _p;
-    UniqueIntGenerator _tGen;
+    UniqueInt64Generator _tGen;
 };
 
-class NegativeBinomialIntGenerator : public IntGenerator::Impl {
+class NegativeBinomialInt64Generator : public Int64Generator::Impl {
 public:
     /**
      * @param node {k:<int>, p:double}
      */
-    NegativeBinomialIntGenerator(YAML::Node node, DefaultRandom& rng)
+    NegativeBinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _kGen{intGenerator(extract(node, "k", "negative_binomial"), _rng)},
+          _kGen{int64Generator(extract(node, "k", "negative_binomial"), _rng)},
           _p{extract(node, "p", "negative_binomial").as<double>()} {}
-    ~NegativeBinomialIntGenerator() override = default;
+    ~NegativeBinomialInt64Generator() override = default;
 
     int64_t evaluate() override {
         auto distribution = std::negative_binomial_distribution<int64_t>{_kGen->evaluate(), _p};
@@ -195,17 +195,17 @@ public:
 private:
     DefaultRandom& _rng;
     double _p;
-    UniqueIntGenerator _kGen;
+    UniqueInt64Generator _kGen;
 };
 
-class PoissonIntGenerator : public IntGenerator::Impl {
+class PoissonInt64Generator : public Int64Generator::Impl {
 public:
     /**
      * @param node {mean:double}
      */
-    PoissonIntGenerator(YAML::Node node, DefaultRandom& rng)
+    PoissonInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng}, _mean{extract(node, "mean", "poisson").as<double>()} {}
-    ~PoissonIntGenerator() override = default;
+    ~PoissonInt64Generator() override = default;
 
     int64_t evaluate() override {
         auto distribution = std::poisson_distribution<int64_t>{_mean};
@@ -217,14 +217,14 @@ private:
     double _mean;
 };
 
-class GeometricIntGenerator : public IntGenerator::Impl {
+class GeometricInt64Generator : public Int64Generator::Impl {
 public:
     /**
      * @param node {mean:double}
      */
-    GeometricIntGenerator(YAML::Node node, DefaultRandom& rng)
+    GeometricInt64Generator(YAML::Node node, DefaultRandom& rng)
             : _rng{rng}, _p{extract(node, "p", "geometric").as<double>()} {}
-    ~GeometricIntGenerator() override = default;
+    ~GeometricInt64Generator() override = default;
 
     int64_t evaluate() override {
         auto distribution = std::geometric_distribution<int64_t>{_p};
@@ -236,11 +236,11 @@ private:
     double _p;
 };
 
-class ConstantIntGenerator : public IntGenerator::Impl {
+class ConstantInt64Generator : public Int64Generator::Impl {
 public:
-    ConstantIntGenerator(int64_t value)
+    ConstantInt64Generator(int64_t value)
     : _value{value} {}
-    ~ConstantIntGenerator() override = default;
+    ~ConstantInt64Generator() override = default;
 
     int64_t evaluate() override {
         return _value;
@@ -287,7 +287,7 @@ public:
      */
     NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{intGenerator(extract(node, "length", "^RandomString"), rng)},
+          _lengthGen{int64Generator(extract(node, "length", "^RandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {}
 
@@ -308,7 +308,7 @@ public:
 
 private:
     DefaultRandom& _rng;
-    UniqueIntGenerator _lengthGen;
+    UniqueInt64Generator _lengthGen;
     std::string _alphabet;
     size_t _alphabetLength;
 };
@@ -320,7 +320,7 @@ public:
      */
     FastRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{intGenerator(extract(node, "length", "^FastRandomString"), rng)},
+          _lengthGen{int64Generator(extract(node, "length", "^FastRandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {}
 
@@ -346,7 +346,7 @@ public:
 
 private:
     DefaultRandom& _rng;
-    UniqueIntGenerator _lengthGen;
+    UniqueInt64Generator _lengthGen;
     std::string _alphabet;
     size_t _alphabetLength;
 };
@@ -435,9 +435,9 @@ bsoncxx::document::value DocumentGenerator::operator()() {
 
 DocumentGenerator::~DocumentGenerator() = default;
 
-UniqueIntGenerator randomIntOperand(YAML::Node node, DefaultRandom &rng) {
+UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom &rng) {
     if (node.IsScalar()) {
-        return std::make_unique<ConstantIntGenerator>(node.as<int64_t>());
+        return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
     }
 
     if (node.IsSequence()) {
@@ -447,15 +447,15 @@ UniqueIntGenerator randomIntOperand(YAML::Node node, DefaultRandom &rng) {
     auto distribution = node["distribution"].as<std::string>("uniform");
 
     if (distribution == "uniform") {
-        return std::make_unique<UniformIntGenerator>(node, rng);
+        return std::make_unique<UniformInt64Generator>(node, rng);
     } else if (distribution == "binomial") {
-        return std::make_unique<BinomialIntGenerator>(node, rng);
+        return std::make_unique<BinomialInt64Generator>(node, rng);
     } else if (distribution == "negative_binomial") {
-        return std::make_unique<NegativeBinomialIntGenerator>(node, rng);
+        return std::make_unique<NegativeBinomialInt64Generator>(node, rng);
     } else if (distribution == "poisson") {
-        return std::make_unique<PoissonIntGenerator>(node, rng);
+        return std::make_unique<PoissonInt64Generator>(node, rng);
     } else if (distribution == "geometric") {
-        return std::make_unique<GeometricIntGenerator>(node, rng);
+        return std::make_unique<GeometricInt64Generator>(node, rng);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
@@ -519,7 +519,7 @@ UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng);
 static std::map<std::string, Parser<UniqueAppendable>> allParsers {
         {"^FastRandomString", fastRandomStringOperand},
         {"^RandomString", randomStringOperand},
-        {"^RandomInt", randomIntOperand},
+        {"^RandomInt", randomInt64Operand},
         {"^Verbatim", verbatimOperand},
 };
 
@@ -546,7 +546,7 @@ Out valueGenerator(YAML::Node node, DefaultRandom &rng, const std::map<std::stri
     if (node.IsScalar()) {
         if (node.Tag() != "!") {
             try {
-                return std::make_unique<ConstantIntGenerator>(node.as<int64_t>());
+                return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
             } catch (const YAML::BadConversion& e) {
             }
             try {
@@ -597,16 +597,16 @@ UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom &rng) {
     return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
 }
 
-static std::map<std::string, Parser<UniqueIntGenerator>> intParsers {
-        {"^RandomInt", randomIntOperand},
+static std::map<std::string, Parser<UniqueInt64Generator>> intParsers {
+        {"^RandomInt", randomInt64Operand},
 };
 
-UniqueIntGenerator intGenerator(YAML::Node node, DefaultRandom &rng) {
+UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom &rng) {
     if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
         // known parser type
         return parserPair->first(node[parserPair->second], rng);
     }
-    return std::make_unique<ConstantIntGenerator>(node.as<int64_t>());
+    return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
 }
 
 //static std::map<std::string, Parser<UniqueStringGenerator>> stringParsers {

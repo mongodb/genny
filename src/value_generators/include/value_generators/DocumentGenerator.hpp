@@ -36,11 +36,11 @@ public:
     using std::invalid_argument::invalid_argument;
 };
 
-class IntGenerator {
+class Int64Generator {
 public:
-    explicit IntGenerator(YAML::Node node, DefaultRandom& rng);
+    explicit Int64Generator(YAML::Node node, DefaultRandom& rng);
     int64_t operator()();
-    ~IntGenerator();
+    ~Int64Generator();
     class Impl;
 private:
     std::unique_ptr<Impl> _impl;
