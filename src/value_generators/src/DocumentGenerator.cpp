@@ -24,6 +24,7 @@
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 
+#include <value_generators/v1/Appendable.hpp>
 
 namespace genny {
 
@@ -70,15 +71,6 @@ const std::string kDefaultAlphabet = std::string{
 
 }  // namespace
 
-class Appendable {
-public:
-    virtual ~Appendable() = default;
-    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
-    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
-};
-
-
-using UniqueAppendable = std::unique_ptr<Appendable>;
 using UniqueInt64Generator = std::unique_ptr<class Int64Generator>;
 using UniqueInt32Generator = std::unique_ptr<class Int64Generator>;
 using UniqueStringGenerator = std::unique_ptr<class StringGenerator>;
@@ -104,27 +96,6 @@ UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
 static std::map<std::string, Parser<UniqueInt64Generator>> intParsers{
     {"^RandomInt", randomInt64Operand},
 };
-
-template <typename T>
-class ConstantAppender : public Appendable {
-public:
-    explicit ConstantAppender(T value) : _value{value} {}
-    explicit ConstantAppender() : _value{} {}
-    T evaluate() {
-        return _value;
-    }
-    ~ConstantAppender() override = default;
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, _value));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(_value);
-    }
-
-protected:
-    T _value;
-};
-
 
 class Int64Generator : public Appendable {
 public:
