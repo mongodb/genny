@@ -5,7 +5,7 @@ import unittest
 
 from unittest.mock import patch
 
-from genny.cedar_report import CertRetriever, main__cedar_report, DEFAULT_DATE_FORMAT
+from genny.cedar_report import CertRetriever, main__cedar_report
 from tests.cedar_test import get_fixture
 
 
