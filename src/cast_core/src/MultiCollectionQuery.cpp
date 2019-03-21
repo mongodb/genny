@@ -30,6 +30,7 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
+#include <gennylib/conventions.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -41,8 +42,19 @@ struct MultiCollectionQuery::PhaseConfig {
         : rng{rng},
           database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
+          readConcern{context.get<mongocxx::read_concern, false>("ReadConcern")},
           filterExpr{DocumentGenerator::create(context.get("Filter"), rng)},
-          uniformDistribution{0, numCollections} {}
+          uniformDistribution{0, numCollections} {
+        const auto limit = context.get<int64_t, false>("Limit");
+        if (limit) {
+            options.limit(limit.value());
+        }
+
+        const auto sort = context.get<YAML::Node, false>("Sort");
+        if (sort) {
+            options.sort(DocumentGenerator::create(sort.value(), rng)());
+        }
+    }
 
     DefaultRandom& rng;
     mongocxx::database database;
@@ -52,6 +64,7 @@ struct MultiCollectionQuery::PhaseConfig {
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;
     mongocxx::options::find options;
+    std::optional<mongocxx::read_concern> readConcern;
 };
 
 void MultiCollectionQuery::run() {
@@ -65,6 +78,10 @@ void MultiCollectionQuery::run() {
             auto collectionNumber = config->uniformDistribution(_rng);
             auto collectionName = "Collection" + std::to_string(collectionNumber);
             auto collection = config->database[collectionName];
+
+            if (config->readConcern) {
+                collection.read_concern(config->readConcern.value());
+            }
 
             // Perform a query
             auto filter = config->filterExpr();
