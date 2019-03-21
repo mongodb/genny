@@ -223,7 +223,7 @@ Cases:
       a:
         ^RandomInt:
           distribution: negative_binomial
-          k: 1000000000100,
+          k: 1000000000100
           p: 0.05
     ThenReturns:
       - {a: 18999998848060}
