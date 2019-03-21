@@ -69,7 +69,7 @@ class _Config(object):
     def __init__(self, env, metrics_file_names, test_run_time):
         # EVG related.
         self.project = env['project']
-        self.version = env['version']
+        self.version = env['version_id']
         self.variant = env['build_variant']
         self.task_name = env['task_name']
         self.task_id = env['task_id']
