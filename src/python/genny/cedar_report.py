@@ -87,7 +87,7 @@ class _Config(object):
         self.api_key = env['terraform_key']
         self.api_secret = env['terraform_secret']
         self.cloud_region = 'us-east-1'  # N. Virginia.
-        self.cloud_bucket = 'genny'
+        self.cloud_bucket = 'genny-metrics'
 
     @property
     def created_at(self):
