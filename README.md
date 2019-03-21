@@ -34,7 +34,7 @@ Here're the steps to get genny up and running locally:
     some IDEs happier.
 
 
-### IDEs and Whatnot
+## IDEs and Whatnot
 
 We follow CMake and C++17 best-practices so anything that doesn't work
 via "normal means" is probably a bug.
@@ -118,7 +118,14 @@ When creating a new actor, `create-new-actor.sh` will generate a new test case
 template to ensure the new actor can run against different MongoDB topologies,
 please update the template as needed so it uses the newly created actor.
 
-### Debugging
+## Patch-Testing and Evergreen
+
+When restarting any of Genny's Evergreen tasks, make sure you restart
+*all* the tasks not just failed tasks. This is because Genny's tasks
+rely on being run in dependency-order on the same machine. Rescheduled
+tasks don't re-run dependent tasks.
+
+## Debugging
 
 IDEs can debug Genny if it is built with the `Debug` build type:
 
@@ -241,6 +248,9 @@ open build/docs/html/index.html
 ```
 
 ### Sanitizers
+
+TODO(TIG-1518): The `lamp` script does not currently support
+the below style of passing in `CMAKE_CXX_FLAGS`.
 
 Genny is periodically manually tested to be free of unknown sanitizer
 errors. These are not currently run in a CI job. If you are adding
