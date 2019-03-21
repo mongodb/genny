@@ -39,17 +39,23 @@ struct CommitLatency::PhaseConfig {
     mongocxx::write_concern wc;
     mongocxx::read_concern rc;
     mongocxx::read_preference rp;
+    std::string rp_string;
     std::shared_ptr<mongocxx::client_session> session;
     mongocxx::options::find optionsFind;
     mongocxx::options::update optionsUpdate;
     mongocxx::options::aggregate optionsAggregate;
     bool useSession;
+    int64_t repeat;
+    int64_t threads;
     std::uniform_int_distribution<int64_t> amountDistribution;
     ExecutionStrategy::RunOptions options;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
+          rp_string{phaseContext.get<std::string>("ReadPreference")},
           useSession{phaseContext.get<bool, false>("Session")},
+          repeat{phaseContext.get<IntegerSpec>("Repeat")},
+          threads{phaseContext.get<IntegerSpec>("Threads")},
           amountDistribution{-100, 100},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
               // write_concern
@@ -78,7 +84,6 @@ struct CommitLatency::PhaseConfig {
               collection.read_concern(rc);
 
               // read_preference
-              auto rp_string = phaseContext.get<std::string>("ReadPreference");
               if ( rp_string == "PRIMARY" ) {
                   // TODO: This actually sends primaryPreferred to server. -> File bug in Jira.
                   // This is benign for this test, but potentially bad for real apps!
@@ -103,11 +108,20 @@ struct CommitLatency::PhaseConfig {
 
 void CommitLatency::run() {
     for (auto&& config : _loop) {
+        if (config.begin() != config.end()) {
+              BOOST_LOG_TRIVIAL(info) << "Starting " << config->threads << "x" << config->repeat 
+                                      << " CommitLatency transactions (2 finds, 2 updates, 1 aggregate).";
+              BOOST_LOG_TRIVIAL(info) << "CommitLatency options: wc=" 
+                                      << bsoncxx::to_json(config->wc.to_document())
+                                      << " rc="
+                                      << config->rc.acknowledge_string()
+                                      << " rp="
+                                      << config->rp_string
+                                      << " session=false transaction=false";
+        }
         for (const auto&& _ : config) {
             _strategy.run(
                 [&](metrics::OperationContext& ctx) {
-                    // TODO: Sessions
-
                     // Basically we withdraw `amount` from account 1 and deposit to account 2
                     // amount = random.randint(-100, 100)
                     auto amount = config->amountDistribution(_rng);
