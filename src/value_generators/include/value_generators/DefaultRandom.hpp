@@ -17,7 +17,8 @@
 
 #include <cstdint>
 #include <memory>
-#include <random>
+
+#include <boost/random.hpp>
 
 namespace genny {
 namespace v1 {
@@ -105,7 +106,12 @@ private:
 /**
  * DefaultRandom should be used if you need a random number generator.
  */
-using DefaultRandom = v1::Random<std::mt19937_64>;
+// Note he use boost::random because its distributions are
+// cross-platform. The downside to this is that some <algorithm>
+// functions e.g. std::shuffle() don't work with DefaultRandom
+// because Boost's RNGs don't have constexpr min() and max()
+// functions - https://svn.boost.org/trac10/ticket/12251
+using DefaultRandom = v1::Random<boost::random::mt19937_64>;
 
 }  // namespace genny
 #endif  // HEADER_EBA231D0_AA7A_4008_A9E8_BD1C98D9023E_INCLUDED
