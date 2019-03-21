@@ -30,23 +30,43 @@ namespace genny {
 
 namespace {
 
+// Used for creating useful exception messages
 std::string toString(const YAML::Node& node) {
     YAML::Emitter e;
     e << node;
     return std::string{e.c_str()};
 }
 
-YAML::Node extract(YAML::Node node, const std::string &key, std::string msg) {
+/**
+ * Extract a required key from a node or barf if not there
+ * @param node
+ *   haystack to look in
+ * @param key
+ *   needle key to look for
+ * @param src
+ *   useful source location included in the exception message
+ * @return
+ *   `node[key]` if exists else throw with a meaningful error message
+ */
+YAML::Node extract(YAML::Node node, const std::string& key, std::string src) {
     auto out = node[key];
     if (!out) {
         std::stringstream ex;
-        ex << "Missing '" << key << "' for " << msg << " in input " << toString(node);
+        ex << "Missing '" << key << "' for '" << src << "' in input " << toString(node);
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(ex.str()));
     }
     return out;
 }
 
 
+/**
+ * @param node
+ *   a "sub"-structure e.g. should get `{v}` in `{a:{v}`
+ * @return
+ *   the single ^-prefixed key if there is exactly one
+ *   ^-prefixed key. If there is a ^-prefixed keys
+ *   *and* any additional keys then barf.
+ */
 std::optional<std::string> getMetaKey(YAML::Node node) {
     size_t foundKeys = 0;
     std::optional<std::string> out = std::nullopt;
@@ -56,14 +76,14 @@ std::optional<std::string> getMetaKey(YAML::Node node) {
         if (!key.empty() && key[0] == '^') {
             out = key;
         }
-    }
-    if (foundKeys > 1 && out) {
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Found multiple meta-keys"));
+        if (foundKeys > 1 && out) {
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Found multiple meta-keys"));
+        }
     }
     return out;
 }
 
-
+// Default alphabet for string generators
 const std::string kDefaultAlphabet = std::string{
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "abcdefghijklmnopqrstuvwxyz"
@@ -71,34 +91,54 @@ const std::string kDefaultAlphabet = std::string{
 
 }  // namespace
 
+// Useful typedefs
 using UniqueInt64Generator = std::unique_ptr<class Int64Generator>;
 using UniqueInt32Generator = std::unique_ptr<class Int64Generator>;
 using UniqueStringGenerator = std::unique_ptr<class StringGenerator>;
-
-UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom& rng);
-UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom& rng);
-UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom& rng);
-UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom& rng);
-UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom& rng);
-
 using UniqueArrayGenerator = std::unique_ptr<class ArrayGenerator>;
 using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
-
-template <bool Verbatim>
-UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng);
-
 template <typename O>
 using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
 
+// Pre-declaring all at once
+// Documentation is at the implementations-site.
+
+UniqueInt64Generator int64OperandBasedOnDistribution(YAML::Node node, DefaultRandom& rng);
+UniqueInt64Generator int64Operand(YAML::Node node, DefaultRandom& rng);
+UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom& rng);
+UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom& rng);
+UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom& rng);
+template <bool Verbatim>
+UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng);
 template <bool Verbatim>
 UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
 
+// Set of parsers to look when we request an int parser
+// see int64Generator
 static std::map<std::string, Parser<UniqueInt64Generator>> intParsers{
-    {"^RandomInt", randomInt64Operand},
+    {"^RandomInt", int64OperandBasedOnDistribution},
 };
+
+// Pass-through for ctor. Can be removed in favor of just calling the ctor?
+DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
+    return DocumentGenerator{node, rng};
+}
+
+// Kick the recursion into motion
+DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
+    : _impl{documentGenerator<false>(node, rng)} {}
+
+// the operator()() is below because we haven't yet defined the Impl class
+
+DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
+
+DocumentGenerator::~DocumentGenerator() = default;
+
 
 class Int64Generator : public Appendable {
 public:
+    ~Int64Generator() override = default;
+
     virtual int64_t evaluate() = 0;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
@@ -106,19 +146,18 @@ public:
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(this->evaluate());
     }
-
-    ~Int64Generator() override = default;
 };
 
+/** `{^RandomInt:{distribution:uniform ...}}` */
 class UniformInt64Generator : public Int64Generator {
 public:
     /**
-     * @param node {min:<int>, max:<int>}
+     * @param node `{min:<int>, max:<int>}`
      */
     UniformInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _minGen{int64Generator(extract(node, "min", "uniform"), _rng)},
-          _maxGen{int64Generator(extract(node, "max", "uniform"), _rng)} {}
+          _minGen{int64Operand(extract(node, "min", "uniform"), _rng)},
+          _maxGen{int64Operand(extract(node, "max", "uniform"), _rng)} {}
     ~UniformInt64Generator() override = default;
 
     int64_t evaluate() override {
@@ -134,14 +173,15 @@ private:
     UniqueInt64Generator _maxGen;
 };
 
+/** `{^RandomInt:{distribution:binomial ...}}` */
 class BinomialInt64Generator : public Int64Generator {
 public:
     /**
-     * @param node {t:<int>, p:double}
+     * @param node `{t:<int>, p:double}`
      */
     BinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _tGen{int64Generator(extract(node, "t", "binomial"), _rng)},
+          _tGen{int64Operand(extract(node, "t", "binomial"), _rng)},
           _p{extract(node, "p", "binomial").as<double>()} {}
     ~BinomialInt64Generator() override = default;
 
@@ -156,14 +196,15 @@ private:
     UniqueInt64Generator _tGen;
 };
 
+/** `{^RandomInt:{distribution:negative_binomial ...}}` */
 class NegativeBinomialInt64Generator : public Int64Generator {
 public:
     /**
-     * @param node {k:<int>, p:double}
+     * @param node `{k:<int>, p:double}`
      */
     NegativeBinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _kGen{int64Generator(extract(node, "k", "negative_binomial"), _rng)},
+          _kGen{int64Operand(extract(node, "k", "negative_binomial"), _rng)},
           _p{extract(node, "p", "negative_binomial").as<double>()} {}
     ~NegativeBinomialInt64Generator() override = default;
 
@@ -178,10 +219,11 @@ private:
     UniqueInt64Generator _kGen;
 };
 
+/** `{^RandomInt:{distribution:poisson...}}` */
 class PoissonInt64Generator : public Int64Generator {
 public:
     /**
-     * @param node {mean:double}
+     * @param node `{mean:double}`
      */
     PoissonInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng}, _mean{extract(node, "mean", "poisson").as<double>()} {}
@@ -197,10 +239,11 @@ private:
     double _mean;
 };
 
+/** `{^RandomInt:{distribution:geometric...}}` */
 class GeometricInt64Generator : public Int64Generator {
 public:
     /**
-     * @param node {mean:double}
+     * @param node `{mean:double}`
      */
     GeometricInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng}, _p{extract(node, "p", "geometric").as<double>()} {}
@@ -241,15 +284,15 @@ public:
     }
 };
 
-
+/** `{^RandomString:{...}` */
 class NormalRandomStringGenerator : public StringGenerator {
 public:
     /**
-     * @param node {length:<int>, alphabet:opt string}
+     * @param node `{length:<int>, alphabet:opt string}`
      */
     NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{int64Generator(extract(node, "length", "^RandomString"), rng)},
+          _lengthGen{int64Operand(extract(node, "length", "^RandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {
         if (_alphabetLength <= 0) {
@@ -280,6 +323,7 @@ private:
     size_t _alphabetLength;
 };
 
+/** `{^FastRandomString:{...}` */
 class FastRandomStringGenerator : public StringGenerator {
 public:
     /**
@@ -287,7 +331,7 @@ public:
      */
     FastRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{int64Generator(extract(node, "length", "^FastRandomString"), rng)},
+          _lengthGen{int64Operand(extract(node, "length", "^FastRandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {
         if (_alphabetLength <= 0) {
@@ -323,6 +367,7 @@ private:
     size_t _alphabetLength;
 };
 
+/** `{a: [...]}` */
 class ArrayGenerator : public Appendable {
 public:
     virtual bsoncxx::array::value evaluate() = 0;
@@ -353,6 +398,7 @@ private:
     ValueType _values;
 };
 
+/** base-case */
 class DocumentGenerator::Impl : public Appendable {
 public:
     virtual bsoncxx::document::value evaluate() = 0;
@@ -364,6 +410,12 @@ public:
         builder.append(this->evaluate());
     }
 };
+
+// Can't define this before DocumentGenerator::Impl ↑
+bsoncxx::document::value DocumentGenerator::operator()() {
+    return _impl->evaluate();
+}
+
 
 class NormalDocumentGenerator : public DocumentGenerator::Impl {
 public:
@@ -384,22 +436,20 @@ private:
     Entries _entries;
 };
 
-DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
-    return DocumentGenerator{node, rng};
-}
-
-DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
-    : _impl{documentGenerator<false>(node, rng)} {}
-
-bsoncxx::document::value DocumentGenerator::operator()() {
-    return _impl->evaluate();
-}
-
-DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
-
-DocumentGenerator::~DocumentGenerator() = default;
-
-UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom& rng) {
+/**
+ * @param node
+ *   the *value* from a `^RandomInt` node.
+ *   E.g. if higher-up has `{^RandomInt:{v}}`, this will have `node={v}`
+ */
+//
+// We need this additional lookup function for int64s (but not for other types)
+// because we do "double-dispatch" for ^RandomInt. So int64Operand determines
+// if we're looking at ^RandomInt or a constant. If we're looking at ^RandomInt
+// it dispatches to here to determine which Int64Generator to use.
+//
+// An alternative would have been to have ^RandomIntUniform etc.
+//
+UniqueInt64Generator int64OperandBasedOnDistribution(YAML::Node node, DefaultRandom& rng) {
     if (!node.IsMap()) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
     }
@@ -422,14 +472,36 @@ UniqueInt64Generator randomInt64Operand(YAML::Node node, DefaultRandom& rng) {
     }
 }
 
+/**
+ * @param node
+ *   the `{v}` value from a `{^FastRandomString:{v}}` node.
+ */
 UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom& rng) {
     return std::make_unique<FastRandomStringGenerator>(node, rng);
 }
 
+/**
+ * @param node
+ *   the `{v}` value from a `{^RandomString:{v}}` node.
+ */
 UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom& rng) {
     return std::make_unique<NormalRandomStringGenerator>(node, rng);
 }
 
+/**
+ * @tparam O
+ *   parser output type
+ * @param node
+ *   a sub-field e.g. {^RandomInt:{...}} or a scalar.
+ * @param parsers
+ *   Which parsers (all of type Parser<O>) to use.
+ * @return Parser<O>
+ *   if the document reprents a evaluate-able structure.
+ *   E.g. returns the randomInt parser if node is {^RandomInt:{...}}
+ *   or nullopt if node is a scalar etc. Throws if node looks
+ *   evaluate-able but e.g. has two ^-prefixed keys or if the ^-prefixed
+ *   key isn't in the list of parsers.
+ */
 template <typename O>
 std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(
     YAML::Node node, DefaultRandom& rng, std::map<std::string, Parser<O>> parsers) {
@@ -446,9 +518,20 @@ std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(
         return std::make_optional<std::pair<Parser<O>, std::string>>({parser->second, *metaKey});
     }
 
-    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Unknown parser"));
+    std::stringstream msg;
+    msg << "Unknown parser '" << *metaKey << "' in node '" << toString(node) << "'";
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
+/**
+ * Main entry-point into depth-first construction.
+ *
+ * @tparam Verbatim if we're in a ^Verbatim node
+ * @tparam Out desired Parser output type
+ * @param node any type of node e.g. {a:1}, {^RandomInt:{...}}, [{a:1},{^RandomInt}]
+ * @param parsers must all be of type Parser<O>
+ * @return the indicated parser
+ */
 template <bool Verbatim, typename Out>
 Out valueGenerator(YAML::Node node,
                    DefaultRandom& rng,
@@ -459,10 +542,8 @@ Out valueGenerator(YAML::Node node,
             return parserPair->first(node[parserPair->second], rng);
         }
     }
+    // switch-statement on node.Type() may be clearer
 
-    if (!node) {
-        BOOST_THROW_EXCEPTION(std::logic_error("Unknown node"));
-    }
     if (node.IsNull()) {
         return std::make_unique<ConstantAppender<bsoncxx::types::b_null>>();
     }
@@ -493,16 +574,24 @@ Out valueGenerator(YAML::Node node,
     if (node.IsMap()) {
         return documentGenerator<Verbatim>(node, rng);
     }
-    BOOST_THROW_EXCEPTION(std::logic_error("Unknown node type"));
+
+    std::stringstream msg;
+    msg << "Malformed node " << toString(node);
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
-static std::map<std::string, Parser<UniqueAppendable>> allParsers{
+const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
     {"^FastRandomString", fastRandomStringOperand},
     {"^RandomString", randomStringOperand},
-    {"^RandomInt", randomInt64Operand},
+    {"^RandomInt", int64OperandBasedOnDistribution},
     {"^Verbatim", verbatimOperand},
 };
 
+/**
+ * Used for top-level values that are of type Map.
+ * @tparam Verbatim if we are in a `^Verbatim` block
+ * @param node a "top-level"-like node e.g. `{a:1, b:{^RandomInt:{...}}`
+ */
 template <bool Verbatim>
 UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
     if (!node.IsMap()) {
@@ -529,6 +618,11 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
     return std::make_unique<NormalDocumentGenerator>(std::move(entries));
 }
 
+/**
+ * @tparam Verbatim if we're in a `^Verbatim block`
+ * @param node sequence node
+ * @return array generator that has one valueGenerator (recursive type) for each element in the node
+ */
 template <bool Verbatim>
 UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
     NormalArrayGenerator::ValueType entries;
@@ -539,12 +633,22 @@ UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
     return std::make_unique<NormalArrayGenerator>(std::move(entries));
 }
 
+/**
+ * @param node
+ *   the `{v}` value from a `{^Verbatim:{v}}` node.
+ */
 UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom& rng) {
     return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
 }
 
-
-UniqueInt64Generator int64Generator(YAML::Node node, DefaultRandom& rng) {
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or a `^RandomInt` value
+ * @return
+ *   either a `^RantomInt` generator (etc--see `intParsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueInt64Generator int64Operand(YAML::Node node, DefaultRandom& rng) {
     if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
         // known parser type
         return parserPair->first(node[parserPair->second], rng);
