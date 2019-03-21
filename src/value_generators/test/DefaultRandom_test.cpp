@@ -17,6 +17,8 @@
 #include <iostream>
 #include <random>
 
+#include <boost/random/uniform_int_distribution.hpp>
+
 #include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 
@@ -44,21 +46,56 @@ TEST_CASE("genny DefaultRandom") {
     SECTION("Always get the same results") {
         DefaultRandom rng;
         rng.seed(12345);
-        std::vector<unsigned long long> first10 = {
-            rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng()};
-        REQUIRE(first10 ==
-                std::vector<unsigned long long>{
-                    6597103971274460346ull,
-                    7386862472818278521ull,
-                    12716877617435052285ull,
-                    10325298820568433954ull,
-                    10596756003076376996ull,
-                    3831213995552687045ull,
-                    528733477622103608ull,
-                    12708413529556200236ull,
-                    8657856827947486933ull,
-                    3821290918431110937ull,
-                });
+        {
+            std::vector<unsigned long long> first10 = {
+                rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng(), rng()};
+            REQUIRE(first10 ==
+                    std::vector<unsigned long long>{
+                        6597103971274460346ull,
+                        7386862472818278521ull,
+                        12716877617435052285ull,
+                        10325298820568433954ull,
+                        10596756003076376996ull,
+                        3831213995552687045ull,
+                        528733477622103608ull,
+                        12708413529556200236ull,
+                        8657856827947486933ull,
+                        3821290918431110937ull,
+                    });
+        }
+
+        {
+            // Also have the same output in uniform distribution
+            //
+            // This test needs to pass across platforms. The std::mt19937_64
+            // and std::uniform_int_distribution aren't consistent across
+            // platforms. As much as it pains me to link to reddit,
+            // this has a good rundown: https://www.reddit.com/r/cpp/comments/7i21sn/
+            boost::random::uniform_int_distribution<int64_t> dist{0, 1000};
+            std::vector<int64_t> first10 = {dist(rng),
+                                            dist(rng),
+                                            dist(rng),
+                                            dist(rng),
+                                            dist(rng),
+                                            dist(rng),
+                                            dist(rng),
+                                            dist(rng),
+                                            dist(rng),
+                                            dist(rng)};
+            REQUIRE(first10 ==
+                    std::vector<int64_t>{
+                        3,
+                        13,
+                        420,
+                        616,
+                        895,
+                        411,
+                        261,
+                        26,
+                        108,
+                        367,
+                    });
+        }
     }
 }
 }  // namespace
