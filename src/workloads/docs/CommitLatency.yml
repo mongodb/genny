@@ -1,0 +1,18 @@
+SchemaVersion: 2018-07-01
+Owner: TODO put your github team name here e.g. @mongodb/stm
+
+# TODO: delete this file or add a meaningful workload using or
+#       demonstrating your Actor
+
+Actors:
+- Name: CommitLatency
+  Type: CommitLatency
+  Threads: 100
+  Database: test
+  Phases:
+  - Phase: 0
+    Repeat: 10 # used by PhaesLoop
+    Retries: 7 # used by ExecutionStrategy
+    # below used by PhaseConfig in CommitLatency.cpp
+    Collection: test
+    Document: {foo: {^RandomInt: {min: 0, max: 100}}}

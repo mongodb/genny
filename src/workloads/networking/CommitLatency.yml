@@ -1,0 +1,188 @@
+---
+# Test latencies for a classic transaction of money from one account to another,
+# using different write concern, read concern, sessions and transactions.
+# Based on http://henrikingo.github.io/presentations/Highload%202018%20-%20The%20cost%20of%20MongoDB%20ACID%20transactions%20in%20theory%20and%20practice/index.html#/step-24
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+Collection: &Collection CommitLatency
+
+Actors:
+- Name: Load phase
+  Type: RunCommand
+  Threads: 1
+  Database: test
+  Phases:
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+
+
+- Name: CommitLatency
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - Operation:
+      OperationName: Nop # Load phase is different actor
+  - WriteConcern: 0
+    ReadConcern: local
+    ReadPreference: PRIMARY
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcern: 1
+    ReadConcern: local
+    ReadPreference: PRIMARY
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcern: 1
+    ReadConcern: local
+    ReadPreference: SECONDARY
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcern: 1
+    WriteConcernJournal: true
+    ReadConcern: local
+    ReadPreference: PRIMARY
+  - Operation:
+      OperationName: Nop # Drop and reload
+    # Genny doesn't seem to support well the case where same yaml key can be both integer and string,
+    # so using separate key for "majority".
+  - WriteConcernMajority: true
+    ReadConcern: majority
+    ReadPreference: PRIMARY
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcernMajority: true
+    ReadConcern: majority
+    ReadPreference: SECONDARY
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcernMajority: true
+    WriteConcernJournal: true
+    ReadConcern: majority
+    ReadPreference: PRIMARY
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcernMajority: true
+    ReadConcern: linearizable
+    ReadPreference: PRIMARY
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcernMajority: true
+    ReadConcern: majority
+    ReadPreference: PRIMARY
+    Session: True
+    # - Operation:
+    #   OperationName: Nop # Drop and reload
+    # TODO: Sessions not supported yet. See CommitLatency.cpp for more.
+    # - WriteConcernMajority: true
+    #  ReadConcern: majority
+    #  ReadPreference: SECONDARY
+    #  Session: True
+    # - Operation:
+    #   OperationName: Nop # Drop and reload
+    # TODO: Transactions not supported yet. See CommitLatency.cpp for more.
+    # - WriteConcernMajority: true
+    # ReadConcern: snapshot
+    # ReadPreference: PRIMARY
+    # Transaction: True         # Implies Session
+
