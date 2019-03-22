@@ -29,7 +29,7 @@ class PerfJsonTests(unittest.TestCase):
         12,A.0.o,50
         13,A.3.o,50
         """)
-        actual = perf_json.translate(parsed)
+        actual = perf_json.translate(parsed.timers())
         self.assertEqual(
             actual, {
                 'results': [{
@@ -48,7 +48,7 @@ class PerfJsonTests(unittest.TestCase):
 
     def test_fixture2(self):
         parsed = test_lib.parse_fixture('csvoutput2')
-        actual = perf_json.translate(parsed)
+        actual = perf_json.translate(parsed.timers())
         self.assertEqual(
             actual, {
                 'results': [{
@@ -91,7 +91,7 @@ class PerfJsonTests(unittest.TestCase):
 
     def test_fixture1(self):
         parsed = test_lib.parse_fixture('csvoutput1')
-        actual = perf_json.translate(parsed)
+        actual = perf_json.translate(parsed.timers())
         self.assertEqual(
             actual, {
                 'results': [{
