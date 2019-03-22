@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+import yaml
 
 from collections import namedtuple
 
@@ -57,6 +58,7 @@ CedarReport = namedtuple('CedarReport', [
 ])
 
 DEFAULT_REPORT_FILE = 'cedar_report.json'
+DEFAULT_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 
 class _Config(object):
@@ -66,14 +68,14 @@ class _Config(object):
 
     def __init__(self, env, metrics_file_names, test_run_time):
         # EVG related.
-        self.project = env['EVG_project']
-        self.version = env['EVG_version']
-        self.variant = env['EVG_variant']
-        self.task_name = env['EVG_task_name']
-        self.task_id = env['EVG_task_id']
-        self.execution_number = env['EVG_execution_number']
+        self.project = env['project']
+        self.version = env['version_id']
+        self.variant = env['build_variant']
+        self.task_name = env['task_name']
+        self.task_id = env['task_id']
+        self.execution_number = int(env['execution'])
         # This env var is either the string "true" or unset.
-        self.mainline = not (env['EVG_is_patch'] == 'true')
+        self.mainline = not (env['is_patch'] == 'true')
 
         # We set these for convenience.
         self.test_name = env['test_name']
@@ -82,10 +84,10 @@ class _Config(object):
         self.now = datetime.datetime.utcnow()
 
         # AWS related.
-        self.api_key = env['aws_key']
-        self.api_secret = env['aws_secret']
+        self.api_key = env['terraform_key']
+        self.api_secret = env['terraform_secret']
         self.cloud_region = 'us-east-1'  # N. Virginia.
-        self.cloud_bucket = 'dsi-genny-metrics'
+        self.cloud_bucket = 'genny-metrics'
 
     @property
     def created_at(self):
@@ -93,19 +95,35 @@ class _Config(object):
 
 
 def build_report(config):
-    artifacts = []
-
+    sub_tests = []
     for path in config.metrics_file_names:
         base_name = os.path.basename(path)
+        test_name = os.path.splitext(base_name)[0]
         a = CedarTestArtifact(
             bucket=config.cloud_bucket,
-            path=base_name,
+            path=test_name,
             tags=[],
             local_path=path,
             created_at=config.created_at,
             is_uncompressed=True
         )
-        artifacts.append(a._asdict())
+
+        ti = CedarTestInfo(
+            test_name=test_name,
+            trial=0,
+            tags=[],
+            args={}
+        )
+
+        t = CedarTest(
+            info=ti._asdict(),
+            created_at=config.created_at,
+            completed_at=config.now,
+            artifacts=[a._asdict()],
+            metrics=None,
+            sub_tests=None
+        )
+        sub_tests.append(t._asdict())
 
     bucket_prefix = '{}_{}'.format(config.task_id, config.execution_number)
 
@@ -129,9 +147,9 @@ def build_report(config):
         info=test_info._asdict(),
         created_at=config.created_at,
         completed_at=config.now,
-        artifacts=bucket_config._asdict(),
+        artifacts=[],
         metrics=None,
-        sub_tests=None
+        sub_tests=sub_tests
     )
 
     report = CedarReport(
@@ -143,7 +161,7 @@ def build_report(config):
         execution_number=config.execution_number,
         mainline=config.mainline,
         tests=[test._asdict()],
-        bucket=bucket_config
+        bucket=bucket_config._asdict()
     )
 
     return report._asdict()
@@ -243,14 +261,16 @@ def build_parser():
     parser.add_argument('--report-file', default=DEFAULT_REPORT_FILE, help='path to generated report file')
     parser.add_argument('--test-name', help='human friendly name for this test, defaults to the '
                                             'EVG_task_name environment variable')
+    parser.add_argument('--expansions-file', default='expansions.yml',
+                        help='expansions-file with configuration needed by cedar')
     return parser
 
 
-class ISODateTimeEncoder(json.JSONEncoder):
+class RFCDateTimeEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
-            return o.isoformat()
-
+            # RFC3339 format.
+            return o.strftime(DEFAULT_DATE_FORMAT)
         return super().default(self, o)
 
 
@@ -267,12 +287,13 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     args = parser.parse_args(argv)
 
     if not env:
-        env = os.environ.copy()
+        with open(args.expansions_file, 'r') as f:
+            env = yaml.load(f)
 
     if args.test_name:
         env['test_name'] = args.test_name
     else:
-        env['test_name'] = env['EVG_task_name']
+        env['test_name'] = env['task_name']
 
     metrics_file_names, test_run_time = cedar.run(args)
     config = _Config(env, metrics_file_names, test_run_time)
@@ -280,7 +301,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     report_dict = build_report(config)
 
     with open(args.report_file, 'w') as f:
-        json.dump(report_dict, f, cls=ISODateTimeEncoder)
+        json.dump(report_dict, f, cls=RFCDateTimeEncoder)
 
     jira_user = env['perf_jira_user']
     jira_pwd = env['perf_jira_pw']
