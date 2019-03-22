@@ -120,10 +120,10 @@ please update the template as needed so it uses the newly created actor.
 
 ## Patch-Testing and Evergreen
 
-When restarting any of Genny's Evergreen tasks, make sure you restart
-*all* the tasks not just failed tasks. This is because Genny's tasks
-rely on being run in dependency-order on the same machine. Rescheduled
-tasks don't re-run dependent tasks.
+When restarting any of Genny's Evergreen self-tests, make sure you
+restart *all* the tasks not just failed tasks. This is because Genny's
+tasks rely on being run in dependency-order on the same machine.
+Rescheduled tasks don't re-run dependent tasks.
 
 ## Debugging
 
