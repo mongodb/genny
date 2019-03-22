@@ -47,12 +47,12 @@ struct MultiCollectionQuery::PhaseConfig {
           uniformDistribution{0, numCollections} {
         const auto limit = context.get<int64_t, false>("Limit");
         if (limit) {
-            options.limit(limit.value());
+            options.limit(*limit);
         }
 
         const auto sort = context.get<YAML::Node, false>("Sort");
         if (sort) {
-            options.sort(DocumentGenerator::create(sort.value(), rng)());
+            options.sort(DocumentGenerator::create(*sort, rng)());
         }
     }
 
@@ -80,7 +80,7 @@ void MultiCollectionQuery::run() {
             auto collection = config->database[collectionName];
 
             if (config->readConcern) {
-                collection.read_concern(config->readConcern.value());
+                collection.read_concern(*config->readConcern);
             }
 
             // Perform a query
