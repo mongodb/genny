@@ -33,7 +33,7 @@ class CedarReportTest(unittest.TestCase):
         mock_env = {
             'task_name': 'my_task_name',
             'project': 'my_project',
-            'version': 'my_version',
+            'version_id': 'my_version',
             'build_variant': 'my_variant',
             'task_id': 'my_task_id',
             'execution': '1',
