@@ -113,6 +113,28 @@ Actors:
         documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
   - Operation:
       OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
+  - Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - Operation:
+      OperationName: Nop
 
 
 - Name: CommitLatency
@@ -171,18 +193,16 @@ Actors:
     ReadConcern: majority
     ReadPreference: PRIMARY
     Session: True
-    # - Operation:
-    #   OperationName: Nop # Drop and reload
-    # TODO: Sessions not supported yet. See CommitLatency.cpp for more.
-    # - WriteConcernMajority: true
-    #  ReadConcern: majority
-    #  ReadPreference: SECONDARY
-    #  Session: True
-    # - Operation:
-    #   OperationName: Nop # Drop and reload
-    # TODO: Transactions not supported yet. See CommitLatency.cpp for more.
-    # - WriteConcernMajority: true
-    # ReadConcern: snapshot
-    # ReadPreference: PRIMARY
-    # Transaction: True         # Implies Session
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcernMajority: true
+    ReadConcern: majority
+    ReadPreference: SECONDARY
+    Session: True
+  - Operation:
+      OperationName: Nop # Drop and reload
+  - WriteConcernMajority: true
+    ReadConcern: snapshot
+    ReadPreference: PRIMARY
+    Transaction: True         # Implies Session
 

@@ -44,7 +44,9 @@ struct CommitLatency::PhaseConfig {
     mongocxx::options::find optionsFind;
     mongocxx::options::update optionsUpdate;
     mongocxx::options::aggregate optionsAggregate;
+    mongocxx::options::transaction optionsTransaction;
     bool useSession;
+    bool useTransaction;
     int64_t repeat;
     int64_t threads;
     std::uniform_int_distribution<int64_t> amountDistribution;
@@ -53,35 +55,41 @@ struct CommitLatency::PhaseConfig {
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           rp_string{phaseContext.get<std::string>("ReadPreference")},
-          useSession{phaseContext.get<bool, false>("Session")},
+          useSession{phaseContext.get<bool, false>("Session").value_or(false)},
+          useTransaction{phaseContext.get<bool, false>("Transaction").value_or(false)},
           repeat{phaseContext.get<IntegerSpec>("Repeat")},
           threads{phaseContext.get<IntegerSpec>("Threads")},
           amountDistribution{-100, 100},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
               // write_concern
-              if( phaseContext.get<bool, false>("WriteConcernMajority") ) {
+              if( phaseContext.get<bool, false>("WriteConcernMajority").value_or(false) ) {
                   wc.majority(std::chrono::milliseconds{0});
               }
               else {
                   wc.nodes( (std::int32_t) phaseContext.get<IntegerSpec, false>("WriteConcern").value_or(1) );
               }
-              if( phaseContext.get<bool, false>("WriteConcernJournal") ) {
+              if( phaseContext.get<bool, false>("WriteConcernJournal").value_or(false) ) {
                   wc.journal(true);
               }
               if( ! phaseContext.get<bool, false>("WriteConcernJournal").value_or(true) ) {
                   // On some mongod versions it makes a difference whether journal is unset vs explicitly set to false
                   wc.journal(false);
               }
-              optionsUpdate.write_concern(wc);
+              if ( useTransaction ) {
+                  optionsTransaction.write_concern(wc);
+              }
+              else {
+                  optionsUpdate.write_concern(wc);
+              }
 
               // read_concern
               rc.acknowledge_string(phaseContext.get<std::string>("ReadConcern"));
               // Ugh... read_concern cannot be set for operations individually, only through client, database, or collection.
-              // And out of those, only client is valid inside transactions. (DRIVERS-619)
-              // It seems mongocxx::database doesn't provide a getter to get the client, nor is the client available in this context.
-              // Ergo, transactions cannot be supported...
-              // TODO: Should set _client. (And options::find etc should support read_concern!)
               collection.read_concern(rc);
+              // Despite what documentation said, it can be set for transactions. Which is nice, as transactions will ignore the
+              // options set on the collection.
+              // TODO: File DOCS ticket to fix the self-contradicting mongocxx documentation.
+              optionsTransaction.read_concern(rc);
 
               // read_preference
               if ( rp_string == "PRIMARY" ) {
@@ -96,18 +104,21 @@ struct CommitLatency::PhaseConfig {
               else {
                   throw InvalidConfigurationException("ReadPreference must be PRIMARY or SECONDARY.");
               }
-              optionsFind.read_preference(rp);
-              optionsAggregate.read_preference(rp);
-
-              // client_session
-              if( useSession ) {
-                  // TODO: Also this requires access to _client object
+              if ( useTransaction ) {
+                  optionsTransaction.read_preference(rp);
               }
+              else {
+                  optionsFind.read_preference(rp);
+                  optionsAggregate.read_preference(rp);
+              }
+
           }
 };
 
 void CommitLatency::run() {
     for (auto&& config : _loop) {
+
+        std::shared_ptr<mongocxx::client_session> _session;
         if (config.begin() != config.end()) {
               BOOST_LOG_TRIVIAL(info) << "Starting " << config->threads << "x" << config->repeat 
                                       << " CommitLatency transactions (2 finds, 2 updates, 1 aggregate).";
@@ -117,7 +128,18 @@ void CommitLatency::run() {
                                       << config->rc.acknowledge_string()
                                       << " rp="
                                       << config->rp_string
-                                      << " session=false transaction=false";
+                                      << " session="
+                                      << (config->useSession ? "true" : "false")
+                                      << " transaction="
+                                      << (config->useTransaction ? "true" : "false");
+
+
+              // start_session requires access to _client object, so we do this here.
+              if(config->useSession || config->useTransaction) {
+                  // Sessions have causal consistency by default.
+                  // It's also possible to unset that, but we don't provide a yaml option to actually do that.
+                  _session = std::make_shared<mongocxx::client_session>(_client->start_session());
+              }
         }
         for (const auto&& _ : config) {
             _strategy.run(
@@ -126,11 +148,15 @@ void CommitLatency::run() {
                     // amount = random.randint(-100, 100)
                     auto amount = config->amountDistribution(_rng);
 
+                    if (config->useTransaction) {
+                        _session->start_transaction(config->optionsTransaction);
+                    }
+
                     // result1 = db.hltest.find_one( { '_id': 1 }, session=session )
                     bsoncxx::document::value doc_filter1 = bsoncxx::builder::stream::document{}
                         << "_id" << 1
                         << bsoncxx::builder::stream::finalize;
-                    auto result1 = config->collection.find_one(doc_filter1.view(), config->optionsFind);
+                    auto result1 = config->collection.find_one(*_session, doc_filter1.view(), config->optionsFind);
 
                     // db.hltest.update_one( {'_id': 1}, {'$inc': {'n': -amount}}, session=session )
                     bsoncxx::document::value doc_update1 = bsoncxx::builder::stream::document{}
@@ -138,14 +164,14 @@ void CommitLatency::run() {
                             << "n" << -amount
                         << bsoncxx::builder::stream::close_document
                         << bsoncxx::builder::stream::finalize;
-                    config->collection.update_one(doc_filter1.view(), doc_update1.view(),
+                    config->collection.update_one(*_session, doc_filter1.view(), doc_update1.view(),
                                                   config->optionsUpdate);
 
                     // result2 = db.hltest.find_one( { '_id': 2 }, session=session )
                     bsoncxx::document::value doc_filter2 = bsoncxx::builder::stream::document{}
                         << "_id" << 2
                         << bsoncxx::builder::stream::finalize;
-                    auto result2 = config->collection.find_one(doc_filter2.view(), config->optionsFind);
+                    auto result2 = config->collection.find_one(*_session, doc_filter2.view(), config->optionsFind);
 
                     // db.hltest.update_one( {'_id': 2}, {'$inc': {'n': amount}}, session=session )
                     bsoncxx::document::value doc_update2 = bsoncxx::builder::stream::document{}
@@ -153,7 +179,7 @@ void CommitLatency::run() {
                             << "n" << amount
                         << bsoncxx::builder::stream::close_document
                         << bsoncxx::builder::stream::finalize;
-                    config->collection.update_one(doc_filter2.view(), doc_update2.view(),
+                    config->collection.update_one(*_session, doc_filter2.view(), doc_update2.view(),
                                                   config->optionsUpdate);
 
                     // result = db.hltest.aggregate( [ { '$group': { '_id': 'foo', 'total' : { '$sum': '$n' } } } ], session=session ).next()
@@ -165,7 +191,7 @@ void CommitLatency::run() {
                             << bsoncxx::builder::stream::close_document
                         << bsoncxx::builder::stream::finalize;
                     p.group(doc_group.view());
-                    auto cursor = config->collection.aggregate(p, config->optionsAggregate);
+                    auto cursor = config->collection.aggregate(*_session, p, config->optionsAggregate);
                     // Check for isolation or consistency errors
                     // Note: If there's skew in the sum total, we never fix it. So after the first
                     // error, this counter is likely to increment on every loop after that. The
@@ -175,6 +201,10 @@ void CommitLatency::run() {
                         if (doc["total"].get_int64() != 200) {
                             ctx.addErrors(1);
                         }
+                    }
+
+                    if (config->useTransaction) {
+                        _session->commit_transaction();
                     }
                 },
                 config->options);
