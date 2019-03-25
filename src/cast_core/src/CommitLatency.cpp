@@ -24,6 +24,7 @@
 #include <mongocxx/database.hpp>
 
 #include <boost/log/trivial.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/ExecutionStrategy.hpp>
@@ -102,7 +103,7 @@ struct CommitLatency::PhaseConfig {
                   rp.mode(mongocxx::read_preference::read_mode::k_secondary);
               }
               else {
-                  throw InvalidConfigurationException("ReadPreference must be PRIMARY or SECONDARY.");
+                  BOOST_THROW_EXCEPTION(InvalidConfigurationException("ReadPreference must be PRIMARY or SECONDARY."));
               }
               if ( useTransaction ) {
                   optionsTransaction.read_preference(rp);
