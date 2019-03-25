@@ -36,7 +36,6 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace {
-using namespace bsoncxx::builder;
 /**
  * @private
  * @param exception exception received from mongocxx::database::run_command()
