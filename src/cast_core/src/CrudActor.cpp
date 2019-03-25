@@ -92,42 +92,6 @@ struct convert<mongocxx::read_preference> {
 };
 
 template <>
-struct convert<mongocxx::read_concern> {
-    using ReadConcern = mongocxx::read_concern;
-    using ReadConcernLevel = mongocxx::read_concern::level;
-    static Node encode(const ReadConcern& rhs) {
-        Node node;
-        auto level = std::string(rhs.acknowledge_string());
-        if (!level.empty()) {
-            node["Level"] = level;
-        }
-        return node;
-    }
-
-    static bool isValidReadConcernString(std::string_view rcString) {
-        return (rcString == "local" || rcString == "majority" || rcString == "linearizable" ||
-                rcString == "snapshot" || rcString == "available");
-    }
-
-    static bool decode(const Node& node, ReadConcern& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-        if (!node["Level"]) {
-            // readConcern must have a read concern level specified.
-            return false;
-        }
-        auto level = node["Level"].as<std::string>();
-        if (isValidReadConcernString(level)) {
-            rhs.acknowledge_string(level);
-            return true;
-        } else {
-            return false;
-        }
-    }
-};
-
-template <>
 struct convert<mongocxx::write_concern> {
     using WriteConcern = mongocxx::write_concern;
     static Node encode(const WriteConcern& rhs) {
