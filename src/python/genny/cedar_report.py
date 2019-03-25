@@ -75,7 +75,7 @@ class _Config(object):
         self.task_id = env['task_id']
         self.execution_number = int(env['execution'])
         # This env var is either the string "true" or unset.
-        self.mainline = not (env['is_patch'] == 'true')
+        self.mainline = not (env.get('is_patch', '') == 'true')
 
         # We set these for convenience.
         self.test_name = env['test_name']
@@ -288,7 +288,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
 
     if not env:
         with open(args.expansions_file, 'r') as f:
-            env = yaml.load(f)
+            env = yaml.safe_load(f)
 
     if args.test_name:
         env['test_name'] = args.test_name
