@@ -134,7 +134,8 @@ void CommitLatency::run() {
                                       << (config->useTransaction ? "true" : "false");
 
 
-              // start_session requires access to _client object, so we do this here.
+              // start_session requires access to _client object, and session objects are of course
+              // per thread, so we initialize it here.
               if(config->useSession || config->useTransaction) {
                   // Sessions have causal consistency by default.
                   // It's also possible to unset that, but we don't provide a yaml option to actually do that.
