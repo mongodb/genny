@@ -69,8 +69,8 @@ TEST_CASE_METHOD(MongoTestFixture,
                 REQUIRE(event.command["limit"].get_int64() == 1);
                 REQUIRE(event.command["sort"].get_document().view() ==
                         BasicBson::make_document(BasicBson::kvp("a", 1)));
-                REQUIRE(event.command["$readPreference"]["mode"].get_utf8().value ==
-                        "primaryPreferred");
+                auto readMode = event.command["$readPreference"]["mode"].get_utf8().value;
+                REQUIRE(std::string(readMode) == "primaryPreferred");
             }
 
         } catch (const std::exception& e) {
