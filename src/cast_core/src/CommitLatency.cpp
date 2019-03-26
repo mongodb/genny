@@ -85,18 +85,14 @@ struct CommitLatency::PhaseConfig {
 
               // read_concern
               rc.acknowledge_string(phaseContext.get<std::string>("ReadConcern"));
-              // Ugh... read_concern cannot be set for operations individually, only through client, database, or collection.
+              // Ugh... read_concern cannot be set for operations individually, only through client,
+              // database, or collection. (CXX-1748)
               collection.read_concern(rc);
-              // Despite what documentation said, it can be set for transactions. Which is nice, as transactions will ignore the
-              // options set on the collection.
-              // TODO: File DOCS ticket to fix the self-contradicting mongocxx documentation.
+              // Transactions ignore the read_concern of a collection handle (DRIVERS-619)
               optionsTransaction.read_concern(rc);
 
               // read_preference
               if ( rp_string == "PRIMARY" ) {
-                  // TODO: This actually sends primaryPreferred to server. -> File bug in Jira.
-                  // This is benign for this test, but potentially bad for real apps!
-                  // Note that k_secondary works correctly.
                   rp.mode(mongocxx::read_preference::read_mode::k_primary);
               }
               else if ( rp_string == "SECONDARY" ) {
