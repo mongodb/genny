@@ -45,12 +45,18 @@ TEST_CASE_METHOD(MongoTestFixture, "CommitLatency",
           Repeat: 500
           Database: test
           Phases:
-           - WriteConcern: 0
-             ReadConcern: local
-             ReadPreference: PRIMARY
-           - WriteConcernMajority: true
-             ReadConcern: snapshot
-             ReadPreference: PRIMARY
+           - WriteConcern:
+               Level: 0
+             ReadConcern:
+               Level: local
+             ReadPreference:
+               ReadMode: primary
+           - WriteConcern:
+               Level: majority
+             ReadConcern:
+               Level: snapshot
+             ReadPreference:
+               ReadMode: primary
              Transaction: True         # Implies Session
 
     )");
