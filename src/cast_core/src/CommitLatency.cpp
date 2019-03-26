@@ -18,6 +18,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
@@ -30,7 +31,6 @@
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/context.hpp>
-#include <value_generators/value_generators.hpp>
 
 
 namespace genny::actor {
@@ -55,7 +55,9 @@ struct CommitLatency::PhaseConfig {
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          rp_string{phaseContext.get<std::string>("ReadPreference")},
+          wc{phaseContext.get<mongocxx::write_concern>("WriteConcern")},
+          rp{phaseContext.get<mongocxx::read_preference>("ReadPreference")},
+          rp_string{phaseContext.get("ReadPreference")["ReadMode"].as<std::string>()},
           useSession{phaseContext.get<bool, false>("Session").value_or(false)},
           useTransaction{phaseContext.get<bool, false>("Transaction").value_or(false)},
           repeat{phaseContext.get<IntegerSpec>("Repeat")},
@@ -63,19 +65,6 @@ struct CommitLatency::PhaseConfig {
           amountDistribution{-100, 100},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
               // write_concern
-              if( phaseContext.get<bool, false>("WriteConcernMajority").value_or(false) ) {
-                  wc.majority(std::chrono::milliseconds{0});
-              }
-              else {
-                  wc.nodes( (std::int32_t) phaseContext.get<IntegerSpec, false>("WriteConcern").value_or(1) );
-              }
-              if( phaseContext.get<bool, false>("WriteConcernJournal").value_or(false) ) {
-                  wc.journal(true);
-              }
-              if( ! phaseContext.get<bool, false>("WriteConcernJournal").value_or(true) ) {
-                  // On some mongod versions it makes a difference whether journal is unset vs explicitly set to false
-                  wc.journal(false);
-              }
               if ( useTransaction ) {
                   optionsTransaction.write_concern(wc);
               }
@@ -88,19 +77,10 @@ struct CommitLatency::PhaseConfig {
               // Ugh... read_concern cannot be set for operations individually, only through client,
               // database, or collection. (CXX-1748)
               collection.read_concern(rc);
-              // Transactions ignore the read_concern of a collection handle (DRIVERS-619)
+              // Transactions ignore the read_concern of a collection handle, must set transaction options (DRIVERS-619).
               optionsTransaction.read_concern(rc);
 
               // read_preference
-              if ( rp_string == "PRIMARY" ) {
-                  rp.mode(mongocxx::read_preference::read_mode::k_primary);
-              }
-              else if ( rp_string == "SECONDARY" ) {
-                  rp.mode(mongocxx::read_preference::read_mode::k_secondary);
-              }
-              else {
-                  BOOST_THROW_EXCEPTION(InvalidConfigurationException("ReadPreference must be PRIMARY or SECONDARY."));
-              }
               if ( useTransaction ) {
                   optionsTransaction.read_preference(rp);
               }

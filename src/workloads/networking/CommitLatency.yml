@@ -71,63 +71,83 @@ Actors:
   Phases:
   - *Nop # Load phase is different actor
   - *Nop
-  - WriteConcern: 0
+  - WriteConcern:
+      Level: 0
     ReadConcern: local
-    ReadPreference: PRIMARY
+    ReadPreference:
+      ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcern: 1
+  - WriteConcern:
+      Level: 1
     ReadConcern: local
-    ReadPreference: PRIMARY
+    ReadPreference:
+      ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcern: 1
+  - WriteConcern:
+      Level: 1
     ReadConcern: local
-    ReadPreference: SECONDARY
+    ReadPreference:
+      ReadMode: secondary
   - *Nop
   - *Nop
-  - WriteConcern: 1
+  - WriteConcern:
+      Level: 1
     WriteConcernJournal: true
     ReadConcern: local
-    ReadPreference: PRIMARY
+    ReadPreference:
+      ReadMode: primary
   - *Nop
   - *Nop
-    # Genny doesn't seem to support well the case where same yaml key can be both integer and string,
-    # so using separate key for "majority".
-  - WriteConcernMajority: true
+  - WriteConcern:
+      Level: majority
     ReadConcern: majority
-    ReadPreference: PRIMARY
+    ReadPreference:
+      ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcernMajority: true
+  - WriteConcern:
+      Level: majority
     ReadConcern: majority
-    ReadPreference: SECONDARY
+    ReadPreference:
+      ReadMode: secondary
   - *Nop
   - *Nop
-  - WriteConcernMajority: true
+  - WriteConcern:
+      Level: majority
     WriteConcernJournal: true
     ReadConcern: majority
-    ReadPreference: PRIMARY
+    ReadPreference:
+      ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcernMajority: true
+  - WriteConcern:
+      Level: majority
     ReadConcern: linearizable
-    ReadPreference: PRIMARY
+    ReadPreference:
+      ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcernMajority: true
+  - WriteConcern:
+      Level: majority
     ReadConcern: majority
-    ReadPreference: PRIMARY
+    ReadPreference:
+      ReadMode: primary
     Session: True
   - *Nop
   - *Nop
-  - WriteConcernMajority: true
+  - WriteConcern:
+      Level: majority
     ReadConcern: majority
-    ReadPreference: SECONDARY
+    ReadPreference:
+      ReadMode: secondary
     Session: True
   - *Nop
   - *Nop
-  - WriteConcernMajority: true
+  - WriteConcern:
+      Level: majority
     ReadConcern: snapshot
-    ReadPreference: PRIMARY
+    ReadPreference:
+      ReadMode: primary
     Transaction: True         # Implies Session
