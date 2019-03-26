@@ -18,6 +18,7 @@
 #include <fstream>
 #include <sstream>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/exception/diagnostic_information.hpp>
@@ -42,17 +43,59 @@ namespace {
 using namespace genny;
 using namespace genny::driver;
 
+using YamlParameters = std::unordered_map<std::string, YAML::Node>;
+YAML::Node parse(YAML::Node node);
+
 YAML::Node loadConfig(const std::string& source,
                       DefaultDriver::ProgramOptions::YamlSource sourceType) {
+
+    YAML::Node config;
+
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
-        return YAML::Load(source);
+        config = YAML::Load(source);
     }
     try {
-        return YAML::LoadFile(source);
+        config = YAML::LoadFile(source);
     } catch (const std::exception& ex) {
-        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
+        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what() << "a"
+                                 << "b";
         throw;
     }
+
+    return parse(config);
+}
+
+YAML::Node parseExternal(YAML::Node external, YamlParameters& params) {
+    return external;
+}
+
+YAML::Node recursiveParse(YAML::Node node, YamlParameters& params) {
+    YAML::Node out;
+    switch (node.Type()) {
+        case YAML::NodeType::Map: {
+            YAML::Node externalNode;
+            std::string fileName;
+
+            for (YAML::iterator it = node.begin(); it != node.end(); ++it) {
+                out[it->first] = it->second;
+            }
+            break;
+        }
+        case YAML::NodeType::Sequence: {
+            for (YAML::iterator it = node.begin(); it != node.end(); ++it) {
+                out.push_back(recursiveParse(*it, params));
+            }
+            break;
+        }
+        default:
+            return node;
+    }
+    return out;
+}
+
+YAML::Node parse(YAML::Node node) {
+    YamlParameters params;
+    return recursiveParse(node, params);
 }
 
 template <typename Actor>
@@ -90,6 +133,10 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     auto setupCtx = actorSetup.start();
 
     auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
+
+    std::cout << YAML::Dump(yaml) << std::endl;
+    return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
+
     auto orchestrator = Orchestrator{};
 
     auto workloadContext =
