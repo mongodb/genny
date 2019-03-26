@@ -73,65 +73,74 @@ Actors:
   - *Nop
   - WriteConcern:
       Level: 0
-    ReadConcern: local
+    ReadConcern:
+      Level: local
     ReadPreference:
       ReadMode: primary
   - *Nop
   - *Nop
   - WriteConcern:
       Level: 1
-    ReadConcern: local
+    ReadConcern:
+      Level: local
     ReadPreference:
       ReadMode: primary
   - *Nop
   - *Nop
   - WriteConcern:
       Level: 1
-    ReadConcern: local
+    ReadConcern:
+      Level: local
     ReadPreference:
       ReadMode: secondary
   - *Nop
   - *Nop
   - WriteConcern:
       Level: 1
-    WriteConcernJournal: true
-    ReadConcern: local
+      Journal: true
+    ReadConcern:
+      Level: local
     ReadPreference:
       ReadMode: primary
   - *Nop
   - *Nop
   - WriteConcern:
       Level: majority
-    ReadConcern: majority
+    ReadConcern:
+      Level: majority
     ReadPreference:
       ReadMode: primary
   - *Nop
   - *Nop
   - WriteConcern:
       Level: majority
-    ReadConcern: majority
+    ReadConcern:
+      Level: majority
     ReadPreference:
       ReadMode: secondary
   - *Nop
   - *Nop
   - WriteConcern:
       Level: majority
-    WriteConcernJournal: true
-    ReadConcern: majority
+      Journal: true
+    ReadConcern:
+      Level: majority
     ReadPreference:
       ReadMode: primary
   - *Nop
   - *Nop
   - WriteConcern:
       Level: majority
-    ReadConcern: linearizable
+    ReadConcern:
+      Level: linearizable
     ReadPreference:
       ReadMode: primary
   - *Nop
   - *Nop
   - WriteConcern:
       Level: majority
-    ReadConcern: majority
+    ReadConcern:
+      Level: majority
     ReadPreference:
       ReadMode: primary
     Session: True
@@ -139,7 +148,8 @@ Actors:
   - *Nop
   - WriteConcern:
       Level: majority
-    ReadConcern: majority
+    ReadConcern:
+      Level: majority
     ReadPreference:
       ReadMode: secondary
     Session: True
@@ -147,7 +157,8 @@ Actors:
   - *Nop
   - WriteConcern:
       Level: majority
-    ReadConcern: snapshot
+    ReadConcern:
+      Level: snapshot
     ReadPreference:
       ReadMode: primary
     Transaction: True         # Implies Session

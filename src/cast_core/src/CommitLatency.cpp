@@ -56,6 +56,7 @@ struct CommitLatency::PhaseConfig {
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           wc{phaseContext.get<mongocxx::write_concern>("WriteConcern")},
+          rc{phaseContext.get<mongocxx::read_concern>("ReadConcern")},
           rp{phaseContext.get<mongocxx::read_preference>("ReadPreference")},
           rp_string{phaseContext.get("ReadPreference")["ReadMode"].as<std::string>()},
           useSession{phaseContext.get<bool, false>("Session").value_or(false)},
@@ -64,31 +65,20 @@ struct CommitLatency::PhaseConfig {
           threads{phaseContext.get<IntegerSpec>("Threads")},
           amountDistribution{-100, 100},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
-              // write_concern
               if ( useTransaction ) {
                   optionsTransaction.write_concern(wc);
+                  optionsTransaction.read_preference(rp);
+                  // Transactions ignore the read_concern of a collection handle, must set transaction options (DRIVERS-619).
+                  optionsTransaction.read_concern(rc);
               }
               else {
                   optionsUpdate.write_concern(wc);
-              }
-
-              // read_concern
-              rc.acknowledge_string(phaseContext.get<std::string>("ReadConcern"));
-              // Ugh... read_concern cannot be set for operations individually, only through client,
-              // database, or collection. (CXX-1748)
-              collection.read_concern(rc);
-              // Transactions ignore the read_concern of a collection handle, must set transaction options (DRIVERS-619).
-              optionsTransaction.read_concern(rc);
-
-              // read_preference
-              if ( useTransaction ) {
-                  optionsTransaction.read_preference(rp);
-              }
-              else {
                   optionsFind.read_preference(rp);
                   optionsAggregate.read_preference(rp);
+                  // Ugh... read_concern cannot be set for operations individually, only through client,
+                  // database, or collection. (CXX-1748)
+                  collection.read_concern(rc);
               }
-
           }
 };
 
@@ -172,7 +162,11 @@ void CommitLatency::run() {
                         << finalize;
                     p.group(doc_group.view());
                     auto cursor = config->collection.aggregate(*_session, p, config->optionsAggregate);
-                    // Check for isolation or consistency errors
+                    // Check for isolation or consistency errors.
+                    //
+                    // These are expected when read_preference is secondary and not in a session.
+                    // Also could happen on a primary if using multiple threads.
+                    //
                     // Note: If there's skew in the sum total, we never fix it. So after the first
                     // error, this counter is likely to increment on every loop after that. The
                     // exact value of the metric is therefore uninteresting, it's only significant
