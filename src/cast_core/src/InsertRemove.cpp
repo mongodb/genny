@@ -27,7 +27,7 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 
-#include <value_generators/value_generators.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
 
@@ -69,7 +69,7 @@ struct InsertRemove::PhaseConfig {
 void InsertRemove::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            BOOST_LOG_TRIVIAL(info) << " Inserting and then removing";
+            BOOST_LOG_TRIVIAL(debug) << " Inserting and then removing";
             _insertStrategy.run(
                 [&](metrics::OperationContext& ctx) {
                     // First we insert

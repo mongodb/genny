@@ -29,19 +29,21 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
 
-#include <value_generators/value_generators.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
 
 /** @private */
 struct Insert::PhaseConfig {
+    DefaultRandom& rng;
     mongocxx::collection collection;
-    value_generators::UniqueExpression documentExpr;
+    DocumentGenerator documentExpr;
     ExecutionStrategy::RunOptions options;
 
-    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
-        : collection{db[phaseContext.get<std::string>("Collection")]},
-          documentExpr{value_generators::Expression::parseOperand(phaseContext.get("Document"))},
+    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, DefaultRandom& rng)
+        : rng{rng},
+          collection{db[phaseContext.get<std::string>("Collection")]},
+          documentExpr{DocumentGenerator::create(phaseContext.get("Document"), rng)},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
 };
 
@@ -50,7 +52,7 @@ void Insert::run() {
         for (const auto&& _ : config) {
             _strategy.run(
                 [&](metrics::OperationContext& ctx) {
-                    auto document = config->documentExpr->evaluate(_rng).getDocument();
+                    auto document = config->documentExpr();
                     BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(document.view());
                     config->collection.insert_one(document.view());
                     ctx.addDocuments(1);
@@ -66,7 +68,7 @@ Insert::Insert(genny::ActorContext& context)
       _rng{context.workload().createRNG()},
       _strategy{context.operation("Insert", Insert::id())},
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context.get<std::string>("Database")]} {}
+      _loop{context, (*_client)[context.get<std::string>("Database")], _rng} {}
 
 namespace {
 auto registerInsert = genny::Cast::registerDefault<genny::actor::Insert>();

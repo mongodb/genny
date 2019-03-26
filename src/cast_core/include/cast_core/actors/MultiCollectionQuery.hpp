@@ -19,7 +19,7 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 #include <metrics/metrics.hpp>
-#include <value_generators/value_generators.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
 
