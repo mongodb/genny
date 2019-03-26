@@ -10,51 +10,65 @@ Actors:
     Threads: 1
     Database: test
     Phases:
+        # Drop
+      - Repeat: 1
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+                drop: &Collection CommitLatencySingleUpdates
+        # Load data
+      - Repeat: 1
+        Operations:
+          - OperationName: RunCommand
+            OperationCommand:
+                insert: *Collection
+                documents: [{_id: 1, n: 0}]
+        # Tests
       - Repeat: 500
         Operations:
         - OperationCommand:
-            update: accounts
+            update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern: { w: 0 }
       - Repeat: 500
         Operations:
         - OperationCommand:
-            update: accounts
+            update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 1 }
       - Repeat: 500
         Operations:
         - OperationCommand:
-            update: accounts
+            update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 2 }
       - Repeat: 500
         Operations:
         - OperationCommand:
-            update: accounts
+            update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 3 }
       - Repeat: 500
         Operations:
         - OperationCommand:
-            update: accounts
+            update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { j: true }
       - Repeat: 500
         Operations:
         - OperationCommand:
-            update: accounts
+            update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 2, j: true }
       - Repeat: 500
         Operations:
         - OperationCommand:
-            update: accounts
+            update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: majority, j: false }
       - Repeat: 500
         Operations:
         - OperationCommand:
-            update: accounts
+            update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: majority, j: true }

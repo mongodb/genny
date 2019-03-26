@@ -117,6 +117,8 @@ struct CommitLatency::PhaseConfig {
 };
 
 void CommitLatency::run() {
+    using namespace bsoncxx::builder::stream;
+
     for (auto&& config : _loop) {
 
         std::shared_ptr<mongocxx::client_session> _session;
@@ -155,43 +157,43 @@ void CommitLatency::run() {
                     }
 
                     // result1 = db.hltest.find_one( { '_id': 1 }, session=session )
-                    bsoncxx::document::value doc_filter1 = bsoncxx::builder::stream::document{}
+                    bsoncxx::document::value doc_filter1 = document{}
                         << "_id" << 1
-                        << bsoncxx::builder::stream::finalize;
+                        << finalize;
                     auto result1 = config->collection.find_one(*_session, doc_filter1.view(), config->optionsFind);
 
                     // db.hltest.update_one( {'_id': 1}, {'$inc': {'n': -amount}}, session=session )
-                    bsoncxx::document::value doc_update1 = bsoncxx::builder::stream::document{}
-                        << "$inc" << bsoncxx::builder::stream::open_document
+                    bsoncxx::document::value doc_update1 = document{}
+                        << "$inc" << open_document
                             << "n" << -amount
-                        << bsoncxx::builder::stream::close_document
-                        << bsoncxx::builder::stream::finalize;
+                        << close_document
+                        << finalize;
                     config->collection.update_one(*_session, doc_filter1.view(), doc_update1.view(),
                                                   config->optionsUpdate);
 
                     // result2 = db.hltest.find_one( { '_id': 2 }, session=session )
-                    bsoncxx::document::value doc_filter2 = bsoncxx::builder::stream::document{}
+                    bsoncxx::document::value doc_filter2 = document{}
                         << "_id" << 2
-                        << bsoncxx::builder::stream::finalize;
+                        << finalize;
                     auto result2 = config->collection.find_one(*_session, doc_filter2.view(), config->optionsFind);
 
                     // db.hltest.update_one( {'_id': 2}, {'$inc': {'n': amount}}, session=session )
-                    bsoncxx::document::value doc_update2 = bsoncxx::builder::stream::document{}
-                        << "$inc" << bsoncxx::builder::stream::open_document
+                    bsoncxx::document::value doc_update2 = document{}
+                        << "$inc" << open_document
                             << "n" << amount
-                        << bsoncxx::builder::stream::close_document
-                        << bsoncxx::builder::stream::finalize;
+                        << close_document
+                        << finalize;
                     config->collection.update_one(*_session, doc_filter2.view(), doc_update2.view(),
                                                   config->optionsUpdate);
 
                     // result = db.hltest.aggregate( [ { '$group': { '_id': 'foo', 'total' : { '$sum': '$n' } } } ], session=session ).next()
                     mongocxx::pipeline p{};
-                    bsoncxx::document::value doc_group = bsoncxx::builder::stream::document{}
+                    bsoncxx::document::value doc_group = document{}
                             << "_id" << "foo"
-                            << "total" << bsoncxx::builder::stream::open_document
+                            << "total" << open_document
                                 << "$sum" << "$n"
-                            << bsoncxx::builder::stream::close_document
-                        << bsoncxx::builder::stream::finalize;
+                            << close_document
+                        << finalize;
                     p.group(doc_group.view());
                     auto cursor = config->collection.aggregate(*_session, p, config->optionsAggregate);
                     // Check for isolation or consistency errors
