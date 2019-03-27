@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <bsoncxx/json.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/json.hpp>
 
 #include <boost/exception/diagnostic_information.hpp>
 
 #include <yaml-cpp/yaml.h>
 
-#include <testlib/MongoTestFixture.hpp>
 #include <testlib/ActorHelper.hpp>
+#include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
 
 #include <gennylib/context.hpp>
@@ -28,8 +28,9 @@
 namespace {
 using namespace genny::testing;
 
-TEST_CASE_METHOD(MongoTestFixture, "CommitLatency",
-          "[single_node_replset][three_node_replset][sharded][CommitLatency]") {
+TEST_CASE_METHOD(MongoTestFixture,
+                 "CommitLatency",
+                 "[single_node_replset][three_node_replset][sharded][CommitLatency]") {
 
     dropAllDatabases();
     auto db = client.database("mydb");
@@ -67,14 +68,10 @@ TEST_CASE_METHOD(MongoTestFixture, "CommitLatency",
             // First insert 2 documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
             auto coll = db["CommitLatency"];
             auto builder = bsoncxx::builder::stream::document{};
-            builder << "_id" << 1
-                    << "n" << 100
-                    << bsoncxx::builder::stream::finalize;
+            builder << "_id" << 1 << "n" << 100 << bsoncxx::builder::stream::finalize;
             coll.insert_one(builder.view());
             auto builder2 = bsoncxx::builder::stream::document{};
-            builder2 << "_id" << 1
-                    << "n" << 100
-                    << bsoncxx::builder::stream::finalize;
+            builder2 << "_id" << 1 << "n" << 100 << bsoncxx::builder::stream::finalize;
             coll.insert_one(builder2.view());
 
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
@@ -89,4 +86,4 @@ TEST_CASE_METHOD(MongoTestFixture, "CommitLatency",
         }
     }
 }
-} // namespace
+}  // namespace

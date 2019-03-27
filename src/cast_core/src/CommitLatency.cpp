@@ -65,21 +65,21 @@ struct CommitLatency::PhaseConfig {
           threads{phaseContext.get<IntegerSpec>("Threads")},
           amountDistribution{-100, 100},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
-              if ( useTransaction ) {
-                  optionsTransaction.write_concern(wc);
-                  optionsTransaction.read_preference(rp);
-                  // Transactions ignore the read_concern of a collection handle, must set transaction options (DRIVERS-619).
-                  optionsTransaction.read_concern(rc);
-              }
-              else {
-                  optionsUpdate.write_concern(wc);
-                  optionsFind.read_preference(rp);
-                  optionsAggregate.read_preference(rp);
-                  // Ugh... read_concern cannot be set for operations individually, only through client,
-                  // database, or collection. (CXX-1748)
-                  collection.read_concern(rc);
-              }
-          }
+        if (useTransaction) {
+            optionsTransaction.write_concern(wc);
+            optionsTransaction.read_preference(rp);
+            // Transactions ignore the read_concern of a collection handle, must set transaction
+            // options (DRIVERS-619).
+            optionsTransaction.read_concern(rc);
+        } else {
+            optionsUpdate.write_concern(wc);
+            optionsFind.read_preference(rp);
+            optionsAggregate.read_preference(rp);
+            // Ugh... read_concern cannot be set for operations individually, only through client,
+            // database, or collection. (CXX-1748)
+            collection.read_concern(rc);
+        }
+    }
 };
 
 void CommitLatency::run() {
@@ -89,27 +89,24 @@ void CommitLatency::run() {
 
         std::shared_ptr<mongocxx::client_session> _session;
         if (config.begin() != config.end()) {
-              BOOST_LOG_TRIVIAL(info) << "Starting " << config->threads << "x" << config->repeat 
-                                      << " CommitLatency transactions (2 finds, 2 updates, 1 aggregate).";
-              BOOST_LOG_TRIVIAL(info) << "CommitLatency options: wc=" 
-                                      << bsoncxx::to_json(config->wc.to_document())
-                                      << " rc="
-                                      << config->rc.acknowledge_string()
-                                      << " rp="
-                                      << config->rp_string
-                                      << " session="
-                                      << (config->useSession ? "true" : "false")
-                                      << " transaction="
-                                      << (config->useTransaction ? "true" : "false");
+            BOOST_LOG_TRIVIAL(info)
+                << "Starting " << config->threads << "x" << config->repeat
+                << " CommitLatency transactions (2 finds, 2 updates, 1 aggregate).";
+            BOOST_LOG_TRIVIAL(info)
+                << "CommitLatency options: wc=" << bsoncxx::to_json(config->wc.to_document())
+                << " rc=" << config->rc.acknowledge_string() << " rp=" << config->rp_string
+                << " session=" << (config->useSession ? "true" : "false")
+                << " transaction=" << (config->useTransaction ? "true" : "false");
 
 
-              // start_session requires access to _client object, and session objects are of course
-              // per thread, so we initialize it here.
-              if(config->useSession || config->useTransaction) {
-                  // Sessions have causal consistency by default.
-                  // It's also possible to unset that, but we don't provide a yaml option to actually do that.
-                  _session = std::make_shared<mongocxx::client_session>(_client->start_session());
-              }
+            // start_session requires access to _client object, and session objects are of course
+            // per thread, so we initialize it here.
+            if (config->useSession || config->useTransaction) {
+                // Sessions have causal consistency by default.
+                // It's also possible to unset that, but we don't provide a yaml option to actually
+                // do that.
+                _session = std::make_shared<mongocxx::client_session>(_client->start_session());
+            }
         }
         for (const auto&& _ : config) {
             _strategy.run(
@@ -123,45 +120,38 @@ void CommitLatency::run() {
                     }
 
                     // result1 = db.hltest.find_one( { '_id': 1 }, session=session )
-                    bsoncxx::document::value doc_filter1 = document{}
-                        << "_id" << 1
-                        << finalize;
-                    auto result1 = config->collection.find_one(*_session, doc_filter1.view(), config->optionsFind);
+                    bsoncxx::document::value doc_filter1 = document{} << "_id" << 1 << finalize;
+                    auto result1 = config->collection.find_one(
+                        *_session, doc_filter1.view(), config->optionsFind);
 
                     // db.hltest.update_one( {'_id': 1}, {'$inc': {'n': -amount}}, session=session )
                     bsoncxx::document::value doc_update1 = document{}
-                        << "$inc" << open_document
-                            << "n" << -amount
-                        << close_document
-                        << finalize;
-                    config->collection.update_one(*_session, doc_filter1.view(), doc_update1.view(),
-                                                  config->optionsUpdate);
+                        << "$inc" << open_document << "n" << -amount << close_document << finalize;
+                    config->collection.update_one(
+                        *_session, doc_filter1.view(), doc_update1.view(), config->optionsUpdate);
 
                     // result2 = db.hltest.find_one( { '_id': 2 }, session=session )
-                    bsoncxx::document::value doc_filter2 = document{}
-                        << "_id" << 2
-                        << finalize;
-                    auto result2 = config->collection.find_one(*_session, doc_filter2.view(), config->optionsFind);
+                    bsoncxx::document::value doc_filter2 = document{} << "_id" << 2 << finalize;
+                    auto result2 = config->collection.find_one(
+                        *_session, doc_filter2.view(), config->optionsFind);
 
                     // db.hltest.update_one( {'_id': 2}, {'$inc': {'n': amount}}, session=session )
                     bsoncxx::document::value doc_update2 = document{}
-                        << "$inc" << open_document
-                            << "n" << amount
-                        << close_document
-                        << finalize;
-                    config->collection.update_one(*_session, doc_filter2.view(), doc_update2.view(),
-                                                  config->optionsUpdate);
+                        << "$inc" << open_document << "n" << amount << close_document << finalize;
+                    config->collection.update_one(
+                        *_session, doc_filter2.view(), doc_update2.view(), config->optionsUpdate);
 
-                    // result = db.hltest.aggregate( [ { '$group': { '_id': 'foo', 'total' : { '$sum': '$n' } } } ], session=session ).next()
+                    // result = db.hltest.aggregate( [ { '$group': { '_id': 'foo', 'total' : {
+                    // '$sum': '$n' } } } ], session=session ).next()
                     mongocxx::pipeline p{};
                     bsoncxx::document::value doc_group = document{}
-                            << "_id" << "foo"
-                            << "total" << open_document
-                                << "$sum" << "$n"
-                            << close_document
-                        << finalize;
+                        << "_id"
+                        << "foo"
+                        << "total" << open_document << "$sum"
+                        << "$n" << close_document << finalize;
                     p.group(doc_group.view());
-                    auto cursor = config->collection.aggregate(*_session, p, config->optionsAggregate);
+                    auto cursor =
+                        config->collection.aggregate(*_session, p, config->optionsAggregate);
                     // Check for isolation or consistency errors.
                     //
                     // These are expected when read_preference is secondary and not in a session.
