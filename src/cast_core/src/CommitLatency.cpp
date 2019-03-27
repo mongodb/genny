@@ -40,7 +40,7 @@ struct CommitLatency::PhaseConfig {
     mongocxx::write_concern wc;
     mongocxx::read_concern rc;
     mongocxx::read_preference rp;
-    std::string rp_string;
+    std::string readModeString;
     std::shared_ptr<mongocxx::client_session> session;
     mongocxx::options::find optionsFind;
     mongocxx::options::update optionsUpdate;
@@ -58,7 +58,7 @@ struct CommitLatency::PhaseConfig {
           wc{phaseContext.get<mongocxx::write_concern>("WriteConcern")},
           rc{phaseContext.get<mongocxx::read_concern>("ReadConcern")},
           rp{phaseContext.get<mongocxx::read_preference>("ReadPreference")},
-          rp_string{phaseContext.get("ReadPreference")["ReadMode"].as<std::string>()},
+          readModeString{phaseContext.get("ReadPreference")["ReadMode"].as<std::string>()},
           useSession{phaseContext.get<bool, false>("Session").value_or(false)},
           useTransaction{phaseContext.get<bool, false>("Transaction").value_or(false)},
           repeat{phaseContext.get<IntegerSpec>("Repeat")},
@@ -94,7 +94,7 @@ void CommitLatency::run() {
                 << " CommitLatency transactions (2 finds, 2 updates, 1 aggregate).";
             BOOST_LOG_TRIVIAL(info)
                 << "CommitLatency options: wc=" << bsoncxx::to_json(config->wc.to_document())
-                << " rc=" << config->rc.acknowledge_string() << " rp=" << config->rp_string
+                << " rc=" << config->rc.acknowledge_string() << " rp=" << config->readModeString
                 << " session=" << (config->useSession ? "true" : "false")
                 << " transaction=" << (config->useTransaction ? "true" : "false");
 
