@@ -191,18 +191,22 @@ std::string normalizeOutputFile(const std::string& str) {
 genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     namespace po = boost::program_options;
 
-    po::options_description description{u8"🧞‍ Allowed Options 🧞‍"};
+    po::options_description progDescription{u8"🧞‍ Allowed Options 🧞‍"};
     po::positional_options_description positional;
 
+    positional.add("subcommand", 1);
+
     // clang-format off
-    description.add_options()
+    progDescription.add_options()
         ("help,h",
             "Show help message")
         ("list-actors",
+            "DEPRECATED. Please use the \"list-actors\" subcommand instead. "
             "List all actors available for use")
         ("dry-run",
-            "Exit before the run step---"
-            "this may still make network connections during workload initialization")
+            "DEPRECATED. Please use the \"dry-run\" subcommand instead."
+            "Exit before the run step---this may still make network "
+            "connections during workload initialization")
         ("metrics-format,m",
              po::value<std::string>()->default_value("csv"),
              "Metrics format to use")
@@ -222,14 +226,14 @@ genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** ar
     positional.add("workload-file", -1);
 
     auto run = po::command_line_parser(argc, argv)
-        .options(description)
+        .options(progDescription)
         .positional(positional)
         .run();
     // clang-format on
 
     {
         auto stream = std::ostringstream();
-        stream << description;
+        stream << progDescription;
         this->description = stream.str();
     }
 

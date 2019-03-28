@@ -36,6 +36,8 @@ int main(int argc, char** argv) {
 
     auto opts = genny::driver::DefaultDriver::ProgramOptions(argc, argv);
     if (opts.isHelp) {
+
+        std::cout << u8"🧞 Genny Usage: " << argv[0] << " <subcommand> [options] <workload-file> \n";
         std::cout << opts.description << std::endl;
         return 0;
     }
