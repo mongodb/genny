@@ -1,0 +1,3 @@
+# Example to illustrate how PhaseConfig composition works.
+Message: Hello Phase 2
+Repeat: {^Parameter: {Name: "Repeat", Default: 1}}

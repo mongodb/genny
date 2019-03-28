@@ -13,3 +13,7 @@ Actors:
       # SleepAfter: 17 microseconds
     - Message: Hello Phase 1 👬
       Repeat: 100
+    - ExternalPhaseConfig:
+        Path: HelloWorld/ExamplePhase2.yml
+        Parameters:
+          Repeat: 2

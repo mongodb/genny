@@ -326,4 +326,89 @@ TEST_CASE("Various Actor Behaviors") {
                  Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0}));
         REQUIRE(hasMetrics(opts));
     }
+
+    SECTION("Load External Config Default Parameter") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/phase_configs/self_tests/Good.yml"
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
+        REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("Load External Config Override Parameter") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/phase_configs/self_tests/Good.yml"
+                Parameters:
+                  Repeat: 2
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0});
+        REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("Load Bad External State 1") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/phase_configs/self_tests/MissingAllFields.yml"
+                Parameters:
+                  Repeat: 2
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
+        REQUIRE(!hasMetrics(opts));
+    }
+
+    SECTION("Load Bad External State 2") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/phase_configs/self_tests/MissingDefault.yml"
+                Parameters:
+                  Repeat: 2
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
+        REQUIRE(!hasMetrics(opts));
+    }
+
+    SECTION("Load Bad External State 3") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/phase_configs/self_tests/MissingName.yml"
+                Parameters:
+                  Repeat: 2
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
+        REQUIRE(!hasMetrics(opts));
+    }
 }

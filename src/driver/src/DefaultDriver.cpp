@@ -16,13 +16,14 @@
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <thread>
-#include <unordered_map>
 #include <vector>
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/exception/exception.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
@@ -42,48 +43,105 @@ namespace {
 
 using namespace genny;
 using namespace genny::driver;
+namespace fs = boost::filesystem;
 
-using YamlParameters = std::unordered_map<std::string, YAML::Node>;
-YAML::Node parse(YAML::Node node);
+using YamlParameters = std::map<std::string, YAML::Node>;
+
+YAML::Node recursiveParse(const YAML::Node& node,
+                          YamlParameters& params,
+                          const fs::path& phaseConfigPath);
 
 YAML::Node loadConfig(const std::string& source,
-                      DefaultDriver::ProgramOptions::YamlSource sourceType) {
-
-    YAML::Node config;
+                      DefaultDriver::ProgramOptions::YamlSource sourceType =
+                          DefaultDriver::ProgramOptions::YamlSource::kFile) {
 
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
-        config = YAML::Load(source);
+        return YAML::Load(source);
     }
     try {
-        config = YAML::LoadFile(source);
+        return YAML::LoadFile(source);
     } catch (const std::exception& ex) {
-        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what() << "a"
-                                 << "b";
+        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
         throw;
     }
-
-    return parse(config);
 }
 
-YAML::Node parseExternal(YAML::Node external, YamlParameters& params) {
-    return external;
+YAML::Node parseExternal(const YAML::Node& external,
+                         YamlParameters& params,
+                         const fs::path& phaseConfig) {
+    int nodeSize = 1;
+
+    fs::path path(external["Path"].as<std::string>());
+    path = fs::absolute(phaseConfig / path);
+
+    if (!fs::is_regular_file(path)) {
+        auto os = std::ostringstream();
+        os << "Invalid Path to external PhaseConfig: " << path
+           << ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
+              "'Path' parameter is relative to the 'phase_configs/' directory";
+        throw InvalidConfigurationException(os.str());
+    }
+
+    auto replacement = loadConfig(path.string());
+
+    if (external["Parameters"]) {
+        nodeSize++;
+        auto newParams = external["Parameters"].as<YamlParameters>();
+        params.insert(newParams.begin(), newParams.end());
+    }
+
+    if (external.size() != nodeSize) {
+        throw InvalidConfigurationException(
+            "Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters");
+    }
+
+    return recursiveParse(replacement, params, phaseConfig);
 }
 
-YAML::Node recursiveParse(YAML::Node node, YamlParameters& params) {
+YAML::Node replaceParam(const YAML::Node& input, YamlParameters& params) {
+    if (!input["Name"] || !input["Default"]) {
+        throw InvalidConfigurationException(
+            "Invalid keys for '^Parameter', please set 'Name' and 'Default'");
+    }
+
+    auto name = input["Name"].as<std::string>();
+    // The default value is mandatory.
+    auto defaultVal = input["Default"];
+
+    auto paramVal = params.find(name);
+    YAML::Node out;
+
+    if (paramVal != params.end()) {
+        out = paramVal->second;
+    } else {
+        out = defaultVal;
+    }
+
+    // Nested params are ignored for simplicity.
+    return out;
+}
+
+YAML::Node recursiveParse(const YAML::Node& node,
+                          YamlParameters& params,
+                          const fs::path& phaseConfig) {
     YAML::Node out;
     switch (node.Type()) {
         case YAML::NodeType::Map: {
-            YAML::Node externalNode;
             std::string fileName;
-
-            for (YAML::iterator it = node.begin(); it != node.end(); ++it) {
-                out[it->first] = it->second;
+            for (YAML::const_iterator it = node.begin(); it != node.end(); ++it) {
+                if (it->first.as<std::string>() == "^Parameter") {
+                    out = replaceParam(it->second, params);
+                } else if (it->first.as<std::string>() == "ExternalPhaseConfig") {
+                    out = parseExternal(it->second, params, phaseConfig);
+                } else {
+                    out[it->first] = recursiveParse(it->second, params, phaseConfig);
+                }
             }
             break;
         }
         case YAML::NodeType::Sequence: {
-            for (YAML::iterator it = node.begin(); it != node.end(); ++it) {
-                out.push_back(recursiveParse(*it, params));
+            for (YAML::const_iterator it = node.begin(); it != node.end(); ++it) {
+                out.push_back(recursiveParse(*it, params, phaseConfig));
             }
             break;
         }
@@ -91,11 +149,6 @@ YAML::Node recursiveParse(YAML::Node node, YamlParameters& params) {
             return node;
     }
     return out;
-}
-
-YAML::Node parse(YAML::Node node) {
-    YamlParameters params;
-    return recursiveParse(node, params);
 }
 
 template <typename Actor>
@@ -132,10 +185,30 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     auto actorSetup = metrics.operation("Genny", "Setup", 0u);
     auto setupCtx = actorSetup.start();
 
-    auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
-
-    std::cout << YAML::Dump(yaml) << std::endl;
-    return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
+    auto config = loadConfig(options.workloadSource, options.workloadSourceType);
+    fs::path phaseConfigSource;
+    if (options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
+        phaseConfigSource = fs::current_path();
+    } else {
+        /*
+         * The directory structure for workloads and phase configs is as follows:
+         * /etc (or /src if building without installing)
+         *     /workloads
+         *         /[name-of-workload-theme]
+         *             /[my-workload.yml]
+         *     /phase_configs
+         *         /[name-of-actor]
+         *             /[name-of-phase-config-snippet.yml]
+         *
+         * The path to the phase config snippet is obtained as a relative path from the workload
+         * file.
+         */
+        phaseConfigSource =
+            fs::path(options.workloadSource).parent_path().parent_path().parent_path() /
+            "phase_configs";
+    }
+    YamlParameters params;
+    auto yaml = recursiveParse(config, params, phaseConfigSource);
 
     auto orchestrator = Orchestrator{};
 
