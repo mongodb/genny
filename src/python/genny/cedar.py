@@ -202,7 +202,7 @@ def split_into_actor_csv_files(data_reader, out_dir):
         cur_out_csv.writerow(line)
 
         counter += 1
-        if not (counter % 1e6):
+        if counter % 1e6 == 0:
             print('Parsed {} metrics'.format(counter))
 
     cur_out_fh.close()

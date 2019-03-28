@@ -82,43 +82,38 @@ class _DataReader:
     def __next__(self):
         return self._parse_into_intermediate_csv(next(self.raw_reader))
 
-    def _parse_into_intermediate_csv(self, csv_line):
-        op = csv_line[_OpColumns.OPERATION].rstrip()
-        actor = csv_line[_OpColumns.ACTOR].rstrip()
-        # Convert timestamp from ns to ms and add offset.
-        unix_time = (int(csv_line[_OpColumns.TIMESTAMP]) + self.unix_time_offset) / (1000 * 1000)
-
-        # Transform output into IntermediateCSV format.
-        # Python list assignment too slow so we construct the output array directly.
-        # out[IntermediateCSVColumns.UNIX_TIME] = unix_time
-        # out[IntermediateCSVColumns.TS] = ts
-        # out[IntermediateCSVColumns.THREAD] = thread
-        # out[IntermediateCSVColumns.OPERATION] = op
-        # out[IntermediateCSVColumns.DURATION] = duration
-        # out[IntermediateCSVColumns.OUTCOME] = int(csv_line[_OpColumns.OUTCOME])
-        # out[IntermediateCSVColumns.N] = int(csv_line[_OpColumns.N])
-        # out[IntermediateCSVColumns.OPS] = int(csv_line[_OpColumns.OPS])
-        # out[IntermediateCSVColumns.ERRORS] = int(csv_line[_OpColumns.ERRORS])
-        # out[IntermediateCSVColumns.SIZE] = int(csv_line[_OpColumns.SIZE])
-        # out[IntermediateCSVColumns.WORKERS] = self.tc_map[(actor, op)]
-
-        out = [
-            unix_time,
-            int(csv_line[_OpColumns.THREAD]),
-            op,
-            int(csv_line[_OpColumns.DURATION]),
-            int(csv_line[_OpColumns.OUTCOME]),
-            int(csv_line[_OpColumns.N]),
-            int(csv_line[_OpColumns.OPS]),
-            int(csv_line[_OpColumns.ERRORS]),
-            int(csv_line[_OpColumns.SIZE]),
-            self.tc_map[(actor, op)]
-        ]
+    def _parse_into_intermediate_csv(self, line):
+        for i in range(len(line)):
+            # Convert string digits to ints
+            if line[i].isdigit():
+                line[i] = int(line[i])
 
         # Eagerly error if OUTCOME is > 1
-        if out[IntermediateCSVColumns.OUTCOME] > 1:
+        if line[_OpColumns.OUTCOME] > 1:
             raise CSV2ParsingError('Unexpected outcome on line %d: %s', self.raw_reader.line_num,
-                                   csv_line)
+                                   line)
+
+        op = line[_OpColumns.OPERATION]
+        actor = line[_OpColumns.ACTOR]
+        thread = line[_OpColumns.THREAD]
+        ts = line[_OpColumns.TIMESTAMP]
+        duration = line[_OpColumns.DURATION]
+        # Convert timestamp from ns to ms and add offset.
+        unix_time = (ts + self.unix_time_offset) / (1000 * 1000)
+
+        # Transform output into IntermediateCSV format.
+        out = [None] * len(IntermediateCSVColumns.default_columns())
+        out[IntermediateCSVColumns.UNIX_TIME] = unix_time
+        out[IntermediateCSVColumns.TS] = ts
+        out[IntermediateCSVColumns.THREAD] = thread
+        out[IntermediateCSVColumns.OPERATION] = op
+        out[IntermediateCSVColumns.DURATION] = duration
+        out[IntermediateCSVColumns.OUTCOME] = line[_OpColumns.OUTCOME]
+        out[IntermediateCSVColumns.N] = line[_OpColumns.N]
+        out[IntermediateCSVColumns.OPS] = line[_OpColumns.OPS]
+        out[IntermediateCSVColumns.ERRORS] = line[_OpColumns.ERRORS]
+        out[IntermediateCSVColumns.SIZE] = line[_OpColumns.SIZE]
+        out[IntermediateCSVColumns.WORKERS] = self.tc_map[(actor, op)]
 
         return out, actor
 
@@ -270,9 +265,6 @@ class IntermediateCSVColumns(CSVColumns):
     ERRORS = 8
     SIZE = 9
     WORKERS = 10
-
-    # Manually compute the number of columns to speed up processing.
-    NUM_COLUMNS = 11
 
     @classmethod
     def default_columns(cls):
