@@ -286,26 +286,30 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if not env:
-        with open(args.expansions_file, 'r') as f:
-            env = yaml.safe_load(f)
-
-    if args.test_name:
-        env['test_name'] = args.test_name
-    else:
-        env['test_name'] = env['task_name']
+    # if not env:
+    #     with open(args.expansions_file, 'r') as f:
+    #         env = yaml.safe_load(f)
+    #
+    # if args.test_name:
+    #     env['test_name'] = args.test_name
+    # else:
+    #     env['test_name'] = env['task_name']
 
     metrics_file_names, test_run_time = cedar.run(args)
-    config = _Config(env, metrics_file_names, test_run_time)
+    # config = _Config(env, metrics_file_names, test_run_time)
+    #
+    # report_dict = build_report(config)
+    #
+    # with open(args.report_file, 'w') as f:
+    #     json.dump(report_dict, f, cls=RFCDateTimeEncoder)
+    #
+    # jira_user = env['perf_jira_user']
+    # jira_pwd = env['perf_jira_pw']
+    #
+    # cr = cert_retriever_cls(jira_user, jira_pwd)
+    # runner = ShellCuratorRunner(cr, args.report_file)
+    # runner.run(runner.get_command())
 
-    report_dict = build_report(config)
 
-    with open(args.report_file, 'w') as f:
-        json.dump(report_dict, f, cls=RFCDateTimeEncoder)
-
-    jira_user = env['perf_jira_user']
-    jira_pwd = env['perf_jira_pw']
-
-    cr = cert_retriever_cls(jira_user, jira_pwd)
-    runner = ShellCuratorRunner(cr, args.report_file)
-    runner.run(runner.get_command())
+if __name__ == '__main__':
+    main__cedar_report()
