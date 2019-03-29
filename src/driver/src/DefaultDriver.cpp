@@ -199,32 +199,31 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     po::options_description progDescription{u8"🧞‍ Allowed Options 🧞‍"};
     po::positional_options_description positional;
 
-    positional.add("run-mode", 1);
-
     // clang-format off
     const auto runModeHelp = u8R"(
-🧞‍ Allowed Subcommands 🧞‍
-    genny run
-        Run the workload normally; default mode if no subcommand is specified
+Genny run modes
+    normal
+        Run the workload normally; default mode if no run mode is specified
 
-    genny dry-run
-        Exit before the run step -- this may still make network
-        connections during workload initialization
+    dry-run
+        Exit before the run step -- this may still make network connections during workload initialization
 
-    genny evaluate
+    evaluate
         Print the evaluated YAML workload file with minimal validation
 
-    genny list-actors
+    list-actors
         List all actors available for use
     )";
 
     progDescription.add_options()
             ("help,h",
              "Show help message")
+            ("run-mode", po::value<std::string>()->default_value("normal"),
+             runModeHelp)
             ("list-actors",
-                    "See the \"list-actors\" subcommand.")
+                    "DEPRECATED. Please use the \"list-actors\" run mode.")
             ("dry-run",
-                    "See the \"dry-run\" subcommand.")
+                    "DEPRECATED. Please the \"dry-run\" run mode.")
             ("metrics-format,m",
              po::value<std::string>()->default_value("csv"),
              "Metrics format to use")
@@ -236,13 +235,11 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
              "Path to workload configuration yaml file. "
              "Paths are relative to the program's cwd. "
              "Can also specify as the last positional argument.")
-            ("run-mode",po::value<std::string>(),
-                    "Mode for genny to run int. Can also specify as the first positional argument.")
             ("mongo-uri,u",
              po::value<std::string>()->default_value("mongodb://localhost:27017"),
              "Mongo URI to use for the default connection-pool.");
 
-    positional.add("workload-file", 1);
+    positional.add("workload-file", -1);
 
     auto run = po::command_line_parser(argc, argv)
             .options(progDescription)
@@ -252,7 +249,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
 
     {
         auto stream = std::ostringstream();
-        stream << runModeHelp << std::endl << progDescription;
+        stream << progDescription;
         this->description = stream.str();
     }
 
@@ -260,9 +257,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     po::store(run, vm);
     po::notify(vm);
 
-    std::string runModeStr;
-    if (vm.count("run-mode") > 0)
-        runModeStr = vm["run-mode"].as<std::string>();
+    const auto runModeStr = vm["run-mode"].as<std::string>();
 
     if (vm.count("list-actors") >= 1 || runModeStr == "list-actors")
         this->runMode = RunMode::kListActors;
@@ -272,6 +267,9 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
 
     if (runModeStr == "evaluate")
         this->runMode = RunMode::kEvaluate;
+
+    std::cout << runModeStr << "\n";
+
 
     this->isHelp = vm.count("help") >= 1;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
