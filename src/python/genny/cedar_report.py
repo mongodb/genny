@@ -309,3 +309,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     cr = cert_retriever_cls(jira_user, jira_pwd)
     runner = ShellCuratorRunner(cr, args.report_file)
     runner.run(runner.get_command())
+
+
+if __name__ == '__main__':
+    main__cedar_report()
