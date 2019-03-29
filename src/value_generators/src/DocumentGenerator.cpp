@@ -27,12 +27,23 @@
 namespace genny::v1 {
 namespace {
 
+class ParameterExpression {
+public:
+    static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
+};
+
+UniqueExpression ParameterExpression::parse(YAML::Node node, genny::DefaultRandom& rng) {
+    throw InvalidValueGeneratorSyntax(
+        "Encountered unexpected '^Parameter'. This indicates a bug in genny's parameter parsing "
+        "code");
+}
+
 const auto parserMap = std::unordered_map<std::string, Expression::Parser>{
     {"^FastRandomString", FastRandomStringExpression::parse},
     {"^RandomInt", RandomIntExpression::parse},
     {"^RandomString", RandomStringExpression::parse},
-    {"^Verbatim", ConstantExpression::parse}};
-
+    {"^Verbatim", ConstantExpression::parse},
+    {"^Parameter", ParameterExpression::parse}};
 }  // namespace
 
 Value::Value(bool value) : _value(value) {}

@@ -47,6 +47,10 @@ TEST_CASE("Expression::parseExpression error cases") {
 
         auto expr = Expression::parseExpression(yaml, rng);
         REQUIRE(expr != nullptr);
+
+        yaml = YAML::Load(R"({^Parameter: {}})");
+
+        REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
     }
 
     SECTION("must be a mapping type") {
