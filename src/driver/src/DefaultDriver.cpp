@@ -76,7 +76,7 @@ YAML::Node parseExternal(const YAML::Node& external,
 
     if (!fs::is_regular_file(path)) {
         auto os = std::ostringstream();
-        os << "Invalid Path to external PhaseConfig: " << path
+        os << "Invalid path to external PhaseConfig: " << path
            << ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
               "'Path' parameter is relative to the 'phase_configs/' directory";
         throw InvalidConfigurationException(os.str());
@@ -88,6 +88,18 @@ YAML::Node parseExternal(const YAML::Node& external,
         nodeSize++;
         auto newParams = external["Parameters"].as<YamlParameters>();
         params.insert(newParams.begin(), newParams.end());
+    }
+
+    if (external["Key"]) {
+        nodeSize++;
+        const auto key = external["Key"].as<std::string>();
+        if (!replacement[key]) {
+            auto os = std::ostringstream();
+            os << "Could not find top-level key: " << key
+               << " in phase config YAML file: " << path.string();
+            throw InvalidConfigurationException(os.str());
+        }
+        replacement = replacement[key];
     }
 
     if (external.size() != nodeSize) {
