@@ -34,6 +34,7 @@
 #include <testlib/ActorHelper.hpp>
 
 #include <testlib/helpers.hpp>
+#include <testlib/findRepoRoot.hpp>
 
 
 using namespace genny::driver;
@@ -155,6 +156,7 @@ std::pair<DefaultDriver::OutcomeCode, DefaultDriver::ProgramOptions> outcome(
 
 
 TEST_CASE("Various Actor Behaviors") {
+    boost::filesystem::current_path(genny::findRepoRoot());
 
     SECTION("Normal Execution") {
         auto [code, opts] = outcome(R"(
@@ -337,6 +339,22 @@ TEST_CASE("Various Actor Behaviors") {
             - ExternalPhaseConfig:
                 Path: "src/phase_configs/self_tests/Good.yml"
 
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
+        REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("Load External Config Default Parameter") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/phase_configs/self_tests/GoodWithKey.yml"
+                Key: ForSelfTest
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
         REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
