@@ -120,7 +120,6 @@ public:
     genny::Result run() const {
         genny::Result out{*this};
         if (_runMode == RunMode::kExpectException) {
-            return out;
             try {
                 genny::DocumentGenerator::create(this->_givenTemplate, rng);
                 out.expectedExceptionButNotThrown();

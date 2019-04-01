@@ -124,7 +124,6 @@ static const std::string kDefaultAlphabet = std::string{
 
 // Useful typedefs
 using UniqueInt64Generator = std::unique_ptr<class Int64Generator>;
-using UniqueInt32Generator = std::unique_ptr<class Int64Generator>;
 using UniqueStringGenerator = std::unique_ptr<class StringGenerator>;
 using UniqueArrayGenerator = std::unique_ptr<class ArrayGenerator>;
 using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
@@ -135,8 +134,8 @@ using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
 
-UniqueInt64Generator int64OperandBasedOnDistribution(YAML::Node node, DefaultRandom& rng);
-UniqueInt64Generator int64Operand(YAML::Node node, DefaultRandom& rng);
+UniqueInt64Generator intGenerator(YAML::Node node, DefaultRandom& rng);
+UniqueInt64Generator int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng);
 
 template <bool Verbatim>
 UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng);
@@ -165,8 +164,8 @@ public:
     /** @param node `{min:<int>, max:<int>}` */
     UniformInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _minGen{int64Operand(extract(node, "min", "uniform"), _rng)},
-          _maxGen{int64Operand(extract(node, "max", "uniform"), _rng)} {}
+          _minGen{intGenerator(extract(node, "min", "uniform"), _rng)},
+          _maxGen{intGenerator(extract(node, "max", "uniform"), _rng)} {}
 
     ~UniformInt64Generator() override = default;
 
@@ -189,7 +188,7 @@ public:
     /** @param node `{t:<int>, p:double}` */
     BinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _tGen{int64Operand(extract(node, "t", "binomial"), _rng)},
+          _tGen{intGenerator(extract(node, "t", "binomial"), _rng)},
           _p{extract(node, "p", "binomial").as<double>()} {}
 
     ~BinomialInt64Generator() override = default;
@@ -211,7 +210,7 @@ public:
     /** @param node `{k:<int>, p:double}` */
     NegativeBinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _kGen{int64Operand(extract(node, "k", "negative_binomial"), _rng)},
+          _kGen{intGenerator(extract(node, "k", "negative_binomial"), _rng)},
           _p{extract(node, "p", "negative_binomial").as<double>()} {}
 
     ~NegativeBinomialInt64Generator() override = default;
@@ -283,7 +282,7 @@ class StringGenerator : public Appendable {
 public:
     StringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
-          _lengthGen{int64Operand(extract(node, "length", "^RandomString"), rng)},
+          _lengthGen{intGenerator(extract(node, "length", "^RandomString"), rng)},
           _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
           _alphabetLength{_alphabet.size()} {
         if (_alphabetLength <= 0) {
@@ -492,12 +491,13 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
      [](YAML::Node node, DefaultRandom& rng) {
          return std::make_unique<NormalRandomStringGenerator>(node, rng);
      }},
-    {"^RandomInt", int64OperandBasedOnDistribution},
+    {"^RandomInt", int64GeneratorBasedOnDistribution},
     {"^Verbatim",
      [](YAML::Node node, DefaultRandom& rng) {
          return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
      }},
 };
+
 
 /**
  * Used for top-level values that are of type Map.
@@ -559,7 +559,7 @@ UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
 //
 // An alternative would have been to have ^RandomIntUniform etc.
 //
-UniqueInt64Generator int64OperandBasedOnDistribution(YAML::Node node, DefaultRandom& rng) {
+UniqueInt64Generator int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng) {
     if (!node.IsMap()) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
     }
@@ -589,11 +589,11 @@ UniqueInt64Generator int64OperandBasedOnDistribution(YAML::Node node, DefaultRan
  *   either a `^RantomInt` generator (etc--see `intParsers`)
  *   or a constant generator if given a constant/scalar.
  */
-UniqueInt64Generator int64Operand(YAML::Node node, DefaultRandom& rng) {
+UniqueInt64Generator intGenerator(YAML::Node node, DefaultRandom& rng) {
     // Set of parsers to look when we request an int parser
     // see int64Generator
     const static std::map<std::string, Parser<UniqueInt64Generator>> intParsers{
-        {"^RandomInt", int64OperandBasedOnDistribution},
+        {"^RandomInt", int64GeneratorBasedOnDistribution},
     };
 
     if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
