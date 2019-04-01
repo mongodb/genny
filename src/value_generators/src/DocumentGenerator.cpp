@@ -138,11 +138,6 @@ using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
 UniqueInt64Generator int64OperandBasedOnDistribution(YAML::Node node, DefaultRandom& rng);
 UniqueInt64Generator int64Operand(YAML::Node node, DefaultRandom& rng);
 
-UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom& rng);
-UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom& rng);
-
-UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom& rng);
-
 template <bool Verbatim>
 UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng);
 
@@ -397,22 +392,6 @@ private:
 };
 
 /**
- * @param node
- *   the `{v}` value from a `{^FastRandomString:{v}}` node.
- */
-UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom& rng) {
-    return std::make_unique<FastRandomStringGenerator>(node, rng);
-}
-
-/**
- * @param node
- *   the `{v}` value from a `{^RandomString:{v}}` node.
- */
-UniqueStringGenerator randomStringOperand(YAML::Node node, DefaultRandom& rng) {
-    return std::make_unique<NormalRandomStringGenerator>(node, rng);
-}
-
-/**
  * @tparam O
  *   parser output type
  * @param node
@@ -505,10 +484,19 @@ Out valueGenerator(YAML::Node node,
 }
 
 const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
-    {"^FastRandomString", fastRandomStringOperand},
-    {"^RandomString", randomStringOperand},
+    {"^FastRandomString",
+     [](YAML::Node node, DefaultRandom& rng) {
+         return std::make_unique<FastRandomStringGenerator>(node, rng);
+     }},
+    {"^RandomString",
+     [](YAML::Node node, DefaultRandom& rng) {
+         return std::make_unique<NormalRandomStringGenerator>(node, rng);
+     }},
     {"^RandomInt", int64OperandBasedOnDistribution},
-    {"^Verbatim", verbatimOperand},
+    {"^Verbatim",
+     [](YAML::Node node, DefaultRandom& rng) {
+         return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
+     }},
 };
 
 /**
@@ -557,13 +545,6 @@ UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
     return std::make_unique<ArrayGenerator>(std::move(entries));
 }
 
-/**
- * @param node
- *   the `{v}` value from a `{^Verbatim:{v}}` node.
- */
-UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom& rng) {
-    return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
-}
 
 /**
  * @param node
