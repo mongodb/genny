@@ -36,6 +36,14 @@ void assert_arrays_equal(bsoncxx::array::view expected, bsoncxx::array::view act
             bsoncxx::to_json(actual, bsoncxx::ExtendedJsonMode::k_canonical));
 }
 
+TEST_CASE("Expression parsing with Parameter always errors") {
+    genny::DefaultRandom rng{};
+    rng.seed(269849313357703264LL);
+
+    auto yaml = YAML::Load(R"({^Parameter: {Default: "Required", Name: "Required"}})");
+    REQUIRE_THROWS_AS(Expression::parseExpression(yaml, rng), InvalidValueGeneratorSyntax);
+}
+
 TEST_CASE("Expression::parseExpression error cases") {
     genny::DefaultRandom rng{};
     rng.seed(269849313357703264LL);
