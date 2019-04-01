@@ -33,7 +33,7 @@ class CedarReportTest(unittest.TestCase):
         mock_env = {
             'task_name': 'my_task_name',
             'project': 'my_project',
-            'version': 'my_version',
+            'version_id': 'my_version',
             'build_variant': 'my_variant',
             'task_id': 'my_task_id',
             'execution': '1',
@@ -82,7 +82,7 @@ class CedarReportTest(unittest.TestCase):
                     'created_at': MatchAnyString(),
                     'completed_at': MatchAnyString(),
                     'artifacts': [{
-                        'bucket': 'genny',
+                        'bucket': 'genny-metrics',
                         'path': 'HelloWorld-Greetings',
                         'tags': [],
                         'local_path': MatchAnyString(),
@@ -101,7 +101,7 @@ class CedarReportTest(unittest.TestCase):
                     'created_at': MatchAnyString(),
                     'completed_at': MatchAnyString(),
                     'artifacts': [{
-                        'bucket': 'genny',
+                        'bucket': 'genny-metrics',
                         'path': 'InsertRemove-Insert',
                         'tags': [],
                         'local_path': MatchAnyString(),
@@ -120,7 +120,7 @@ class CedarReportTest(unittest.TestCase):
                     'created_at': MatchAnyString(),
                     'completed_at': MatchAnyString(),
                     'artifacts': [{
-                        'bucket': 'genny',
+                        'bucket': 'genny-metrics',
                         'path': 'InsertRemove-Remove',
                         'tags': [],
                         'local_path': MatchAnyString(),
@@ -136,7 +136,7 @@ class CedarReportTest(unittest.TestCase):
                 'api_secret': 'my_aws_secret',
                 'api_token': None,
                 'region': 'us-east-1',
-                'name': 'genny',
+                'name': 'genny-metrics',
                 'prefix': 'my_task_id_1'
             }
         }

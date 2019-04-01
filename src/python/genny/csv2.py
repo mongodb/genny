@@ -84,10 +84,6 @@ class _DataReader:
 
     def _parse_into_intermediate_csv(self, line):
         for i in range(len(line)):
-
-            # Strip spaces from lines
-            line[i] = line[i].strip()
-
             # Convert string digits to ints
             if line[i].isdigit():
                 line[i] = int(line[i])
@@ -106,7 +102,7 @@ class _DataReader:
         unix_time = (ts + self.unix_time_offset) / (1000 * 1000)
 
         # Transform output into IntermediateCSV format.
-        out = [None for _ in range(len(IntermediateCSVColumns.default_columns()))]
+        out = [None] * len(IntermediateCSVColumns.default_columns())
         out[IntermediateCSVColumns.UNIX_TIME] = unix_time
         out[IntermediateCSVColumns.TS] = ts
         out[IntermediateCSVColumns.THREAD] = thread
