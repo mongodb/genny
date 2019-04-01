@@ -35,23 +35,29 @@ public:
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
 
+template <class T>
+class Generator : public Appendable {
+public:
+    virtual ~Generator() = default;
+    virtual T evaluate() = 0;
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(this->evaluate());
+    }
+};
+
+template <class T>
+using UniqueGenerator = std::unique_ptr<Generator<T>>;
 
 template <typename T>
-class ConstantAppender : public Appendable {
+class ConstantAppender : public Generator<T> {
 public:
     explicit ConstantAppender(T value) : _value{value} {}
     explicit ConstantAppender() : _value{} {}
-    T evaluate() {
-        return _value;
-    }
     ~ConstantAppender() override = default;
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, _value));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(_value);
-    }
-
+    T evaluate() override { return _value; }
 protected:
     T _value;
 };
@@ -61,7 +67,7 @@ protected:
 
 namespace genny {
 
-class DocumentGenerator::Impl : public Appendable {
+class DocumentGenerator::Impl : public Generator<bsoncxx::document::value> {
 public:
     using Entries = std::vector<std::pair<std::string, UniqueAppendable>>;
 
@@ -69,15 +75,7 @@ public:
 
     ~Impl() override = default;
 
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
-    }
-
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(this->evaluate());
-    }
-
-    bsoncxx::document::value evaluate() {
+    bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
         for (auto&& [k, app] : _entries) {
             app->append(k, builder);
@@ -88,7 +86,6 @@ public:
 private:
     Entries _entries;
 };
-
 
 namespace {
 
@@ -156,10 +153,10 @@ static const std::string kDefaultAlphabet = std::string{
     "0123456789+/"};
 
 // Useful typedefs
-using UniqueInt64Generator = std::unique_ptr<class Int64Generator>;
-using UniqueStringGenerator = std::unique_ptr<class StringGenerator>;
-using UniqueArrayGenerator = std::unique_ptr<class ArrayGenerator>;
-using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
+//using UniqueInt64Generator = std::unique_ptr<class Int64Generator>;
+//using UniqueStringGenerator = std::unique_ptr<class StringGenerator>;
+//using UniqueArrayGenerator = std::unique_ptr<class ArrayGenerator>;
+//using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
 
 template <typename O>
 using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
@@ -167,32 +164,17 @@ using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
 // Pre-declaring all at once
 // Documentation is at the implementations-site.
 
-UniqueInt64Generator intGenerator(YAML::Node node, DefaultRandom& rng);
-UniqueInt64Generator int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng);
+UniqueGenerator<int64_t> intGenerator(YAML::Node node, DefaultRandom& rng);
+UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng);
 
 template <bool Verbatim>
-UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng);
+DocumentGenerator::Impl::Entries documentGenerator(YAML::Node node, DefaultRandom& rng);
 
 template <bool Verbatim>
-UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
-
-class Int64Generator : public Appendable {
-public:
-    ~Int64Generator() override = default;
-
-    virtual int64_t evaluate() = 0;
-
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
-    }
-
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(this->evaluate());
-    }
-};
+UniqueGenerator<bsoncxx::array::value> arrayGenerator(YAML::Node node, DefaultRandom& rng);
 
 /** `{^RandomInt:{distribution:uniform ...}}` */
-class UniformInt64Generator : public Int64Generator {
+class UniformInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{min:<int>, max:<int>}` */
     UniformInt64Generator(YAML::Node node, DefaultRandom& rng)
@@ -211,12 +193,12 @@ public:
 
 private:
     DefaultRandom& _rng;
-    UniqueInt64Generator _minGen;
-    UniqueInt64Generator _maxGen;
+    UniqueGenerator<int64_t> _minGen;
+    UniqueGenerator<int64_t> _maxGen;
 };
 
 /** `{^RandomInt:{distribution:binomial ...}}` */
-class BinomialInt64Generator : public Int64Generator {
+class BinomialInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{t:<int>, p:double}` */
     BinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
@@ -234,11 +216,11 @@ public:
 private:
     DefaultRandom& _rng;
     double _p;
-    UniqueInt64Generator _tGen;
+    UniqueGenerator<int64_t> _tGen;
 };
 
 /** `{^RandomInt:{distribution:negative_binomial ...}}` */
-class NegativeBinomialInt64Generator : public Int64Generator {
+class NegativeBinomialInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{k:<int>, p:double}` */
     NegativeBinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
@@ -256,11 +238,11 @@ public:
 private:
     DefaultRandom& _rng;
     double _p;
-    UniqueInt64Generator _kGen;
+    UniqueGenerator<int64_t> _kGen;
 };
 
 /** `{^RandomInt:{distribution:poisson...}}` */
-class PoissonInt64Generator : public Int64Generator {
+class PoissonInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{mean:double}` */
     PoissonInt64Generator(YAML::Node node, DefaultRandom& rng)
@@ -279,7 +261,7 @@ private:
 };
 
 /** `{^RandomInt:{distribution:geometric...}}` */
-class GeometricInt64Generator : public Int64Generator {
+class GeometricInt64Generator : public Generator<int64_t> {
 public:
     /** @param node `{mean:double}` */
     GeometricInt64Generator(YAML::Node node, DefaultRandom& rng)
@@ -297,19 +279,6 @@ private:
     const double _p;
 };
 
-class ConstantInt64Generator : public Int64Generator {
-public:
-    explicit ConstantInt64Generator(int64_t value) : _value{value} {}
-
-    ~ConstantInt64Generator() override = default;
-
-    int64_t evaluate() override {
-        return _value;
-    }
-
-private:
-    const int64_t _value;
-};
 
 class StringGenerator : public Appendable {
 public:
@@ -338,7 +307,7 @@ public:
 
 protected:
     DefaultRandom& _rng;
-    UniqueInt64Generator _lengthGen;
+    UniqueGenerator<int64_t> _lengthGen;
     const std::string _alphabet;
     const size_t _alphabetLength;
 };
@@ -395,7 +364,7 @@ public:
 };
 
 /** `{a: [...]}` */
-class ArrayGenerator : public Appendable {
+class ArrayGenerator : public Generator<bsoncxx::array::value> {
 public:
     using ValueType = std::vector<UniqueAppendable>;
 
@@ -507,7 +476,7 @@ Out valueGenerator(YAML::Node node,
         return arrayGenerator<Verbatim>(node, rng);
     }
     if (node.IsMap()) {
-        return documentGenerator<Verbatim>(node, rng);
+        return std::make_unique<DocumentGenerator::Impl>(documentGenerator<Verbatim>(node, rng));
     }
 
     std::stringstream msg;
@@ -538,7 +507,7 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
  * @param node a "top-level"-like node e.g. `{a:1, b:{^RandomInt:{...}}`
  */
 template <bool Verbatim>
-UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
+DocumentGenerator::Impl::Entries documentGenerator(YAML::Node node, DefaultRandom& rng) {
     if (!node.IsMap()) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Must be mapping type"));
     }
@@ -560,7 +529,7 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent.second, rng, allParsers);
         entries.emplace_back(key, std::move(valgen));
     }
-    return std::make_unique<DocumentGenerator::Impl>(std::move(entries));
+    return std::move(entries);
 }
 
 /**
@@ -569,7 +538,7 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
  * @return array generator that has one valueGenerator (recursive type) for each element in the node
  */
 template <bool Verbatim>
-UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
+UniqueGenerator<bsoncxx::array::value> arrayGenerator(YAML::Node node, DefaultRandom& rng) {
     ArrayGenerator::ValueType entries;
     for (const auto&& ent : node) {
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent, rng, allParsers);
@@ -592,7 +561,7 @@ UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
 //
 // An alternative would have been to have ^RandomIntUniform etc.
 //
-UniqueInt64Generator int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng) {
+UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng) {
     if (!node.IsMap()) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
     }
@@ -622,10 +591,10 @@ UniqueInt64Generator int64GeneratorBasedOnDistribution(YAML::Node node, DefaultR
  *   either a `^RantomInt` generator (etc--see `intParsers`)
  *   or a constant generator if given a constant/scalar.
  */
-UniqueInt64Generator intGenerator(YAML::Node node, DefaultRandom& rng) {
+UniqueGenerator<int64_t> intGenerator(YAML::Node node, DefaultRandom& rng) {
     // Set of parsers to look when we request an int parser
     // see int64Generator
-    const static std::map<std::string, Parser<UniqueInt64Generator>> intParsers{
+    const static std::map<std::string, Parser<UniqueGenerator<int64_t>>> intParsers{
         {"^RandomInt", int64GeneratorBasedOnDistribution},
     };
 
@@ -633,7 +602,7 @@ UniqueInt64Generator intGenerator(YAML::Node node, DefaultRandom& rng) {
         // known parser type
         return parserPair->first(node[parserPair->second], rng);
     }
-    return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
+    return std::make_unique<ConstantAppender<int64_t>>(node.as<int64_t>());
 }
 
 }  // namespace
@@ -646,7 +615,7 @@ DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng)
 
 // Kick the recursion into motion
 DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
-    : _impl{documentGenerator<false>(node, rng)} {}
+    : _impl{std::make_unique<DocumentGenerator::Impl>(documentGenerator<false>(node, rng))} {}
 
 DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
 
