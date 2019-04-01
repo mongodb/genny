@@ -28,6 +28,7 @@ namespace {
 
 class Appendable {
 public:
+    virtual ~Appendable() = default;
     virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
     virtual void append(bsoncxx::builder::basic::array& builder) = 0;
 };
@@ -37,6 +38,7 @@ using UniqueAppendable = std::unique_ptr<Appendable>;
 template <class T>
 class Generator : public Appendable {
 public:
+    virtual ~Generator() = default;
     virtual T evaluate() = 0;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
@@ -162,7 +164,7 @@ UniqueGenerator<int64_t> intGenerator(YAML::Node node, DefaultRandom& rng);
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng);
 
 template <bool Verbatim>
-DocumentGenerator::Impl::Entries documentGenerator(YAML::Node node, DefaultRandom& rng);
+std::unique_ptr<DocumentGenerator::Impl> documentGenerator(YAML::Node node, DefaultRandom& rng);
 
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> arrayGenerator(YAML::Node node, DefaultRandom& rng);
@@ -436,7 +438,7 @@ Out valueGenerator(YAML::Node node,
         return arrayGenerator<Verbatim>(node, rng);
     }
     if (node.IsMap()) {
-        return std::make_unique<DocumentGenerator::Impl>(documentGenerator<Verbatim>(node, rng));
+        return documentGenerator<Verbatim>(node, rng);
     }
 
     std::stringstream msg;
@@ -467,7 +469,7 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
  * @param node a "top-level"-like node e.g. `{a:1, b:{^RandomInt:{...}}`
  */
 template <bool Verbatim>
-DocumentGenerator::Impl::Entries documentGenerator(YAML::Node node, DefaultRandom& rng) {
+std::unique_ptr<DocumentGenerator::Impl> documentGenerator(YAML::Node node, DefaultRandom& rng) {
     if (!node.IsMap()) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Must be mapping type"));
     }
@@ -489,7 +491,7 @@ DocumentGenerator::Impl::Entries documentGenerator(YAML::Node node, DefaultRando
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent.second, rng, allParsers);
         entries.emplace_back(key, std::move(valgen));
     }
-    return std::move(entries);
+    return std::make_unique<DocumentGenerator::Impl>(std::move(entries));
 }
 
 /**
@@ -575,7 +577,7 @@ DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng)
 
 // Kick the recursion into motion
 DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
-    : _impl{std::make_unique<DocumentGenerator::Impl>(documentGenerator<false>(node, rng))} {}
+    : _impl{documentGenerator<false>(node, rng)} {}
 
 DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
 
