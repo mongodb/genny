@@ -370,9 +370,7 @@ public:
 /** `{a: [...]}` */
 class ArrayGenerator : public Appendable {
 public:
-    virtual ~ArrayGenerator() = default;
-
-    virtual bsoncxx::array::value evaluate() = 0;
+    ~ArrayGenerator() override = default;
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
@@ -381,18 +379,12 @@ public:
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(this->evaluate());
     }
-};
 
-
-class NormalArrayGenerator : public ArrayGenerator {
-public:
     using ValueType = std::vector<UniqueAppendable>;
 
-    explicit NormalArrayGenerator(ValueType values) : _values{std::move(values)} {}
+    explicit ArrayGenerator(ValueType values) : _values{std::move(values)} {}
 
-    ~NormalArrayGenerator() override = default;
-
-    bsoncxx::array::value evaluate() override {
+    bsoncxx::array::value evaluate() {
         bsoncxx::builder::basic::array builder{};
         for (auto&& value : _values) {
             value->append(builder);
@@ -557,12 +549,12 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
  */
 template <bool Verbatim>
 UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng) {
-    NormalArrayGenerator::ValueType entries;
+    ArrayGenerator::ValueType entries;
     for (const auto&& ent : node) {
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent, rng, allParsers);
         entries.push_back(std::move(valgen));
     }
-    return std::make_unique<NormalArrayGenerator>(std::move(entries));
+    return std::make_unique<ArrayGenerator>(std::move(entries));
 }
 
 /**
