@@ -30,24 +30,21 @@ namespace genny {
 
 class DocumentGenerator::Impl : public Appendable {
 public:
-    virtual bsoncxx::document::value evaluate() = 0;
-
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
     }
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(this->evaluate());
     }
-};
 
-class NormalDocumentGenerator : public DocumentGenerator::Impl {
-public:
     // order matters for comparison in tests; std::map is ordered
     using Entries = std::vector<std::pair<std::string, UniqueAppendable>>;
-    ~NormalDocumentGenerator() override = default;
-    explicit NormalDocumentGenerator(Entries entries) : _entries{std::move(entries)} {}
 
-    bsoncxx::document::value evaluate() override {
+    ~Impl() override = default;
+
+    explicit Impl(Entries entries) : _entries{std::move(entries)} {}
+
+    bsoncxx::document::value evaluate() {
         bsoncxx::builder::basic::document builder;
         for (auto&& [k, app] : _entries) {
             app->append(k, builder);
@@ -543,13 +540,13 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng) {
         }
     }
 
-    NormalDocumentGenerator::Entries entries;
+    DocumentGenerator::Impl::Entries entries;
     for (const auto&& ent : node) {
         auto key = ent.first.as<std::string>();
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent.second, rng, allParsers);
         entries.emplace_back(key, std::move(valgen));
     }
-    return std::make_unique<NormalDocumentGenerator>(std::move(entries));
+    return std::make_unique<DocumentGenerator::Impl>(std::move(entries));
 }
 
 /**
