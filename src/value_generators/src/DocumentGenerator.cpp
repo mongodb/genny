@@ -113,12 +113,6 @@ UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng);
 template <bool Verbatim>
 UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
 
-// Set of parsers to look when we request an int parser
-// see int64Generator
-static std::map<std::string, Parser<UniqueInt64Generator>> intParsers{
-    {"^RandomInt", int64OperandBasedOnDistribution},
-};
-
 // Pass-through for ctor. Can be removed in favor of just calling the ctor?
 DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
     return DocumentGenerator{node, rng};
@@ -438,42 +432,6 @@ private:
 
 /**
  * @param node
- *   the *value* from a `^RandomInt` node.
- *   E.g. if higher-up has `{^RandomInt:{v}}`, this will have `node={v}`
- */
-//
-// We need this additional lookup function for int64s (but not for other types)
-// because we do "double-dispatch" for ^RandomInt. So int64Operand determines
-// if we're looking at ^RandomInt or a constant. If we're looking at ^RandomInt
-// it dispatches to here to determine which Int64Generator to use.
-//
-// An alternative would have been to have ^RandomIntUniform etc.
-//
-UniqueInt64Generator int64OperandBasedOnDistribution(YAML::Node node, DefaultRandom& rng) {
-    if (!node.IsMap()) {
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
-    }
-    auto distribution = node["distribution"].as<std::string>("uniform");
-
-    if (distribution == "uniform") {
-        return std::make_unique<UniformInt64Generator>(node, rng);
-    } else if (distribution == "binomial") {
-        return std::make_unique<BinomialInt64Generator>(node, rng);
-    } else if (distribution == "negative_binomial") {
-        return std::make_unique<NegativeBinomialInt64Generator>(node, rng);
-    } else if (distribution == "poisson") {
-        return std::make_unique<PoissonInt64Generator>(node, rng);
-    } else if (distribution == "geometric") {
-        return std::make_unique<GeometricInt64Generator>(node, rng);
-    } else {
-        std::stringstream error;
-        error << "Unknown distribution '" << distribution << "'";
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(error.str()));
-    }
-}
-
-/**
- * @param node
  *   the `{v}` value from a `{^FastRandomString:{v}}` node.
  */
 UniqueStringGenerator fastRandomStringOperand(YAML::Node node, DefaultRandom& rng) {
@@ -643,12 +601,54 @@ UniqueAppendable verbatimOperand(YAML::Node node, DefaultRandom& rng) {
 
 /**
  * @param node
+ *   the *value* from a `^RandomInt` node.
+ *   E.g. if higher-up has `{^RandomInt:{v}}`, this will have `node={v}`
+ */
+//
+// We need this additional lookup function for int64s (but not for other types)
+// because we do "double-dispatch" for ^RandomInt. So int64Operand determines
+// if we're looking at ^RandomInt or a constant. If we're looking at ^RandomInt
+// it dispatches to here to determine which Int64Generator to use.
+//
+// An alternative would have been to have ^RandomIntUniform etc.
+//
+UniqueInt64Generator int64OperandBasedOnDistribution(YAML::Node node, DefaultRandom& rng) {
+    if (!node.IsMap()) {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
+    }
+    auto distribution = node["distribution"].as<std::string>("uniform");
+
+    if (distribution == "uniform") {
+        return std::make_unique<UniformInt64Generator>(node, rng);
+    } else if (distribution == "binomial") {
+        return std::make_unique<BinomialInt64Generator>(node, rng);
+    } else if (distribution == "negative_binomial") {
+        return std::make_unique<NegativeBinomialInt64Generator>(node, rng);
+    } else if (distribution == "poisson") {
+        return std::make_unique<PoissonInt64Generator>(node, rng);
+    } else if (distribution == "geometric") {
+        return std::make_unique<GeometricInt64Generator>(node, rng);
+    } else {
+        std::stringstream error;
+        error << "Unknown distribution '" << distribution << "'";
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(error.str()));
+    }
+}
+
+/**
+ * @param node
  *   a top-level document value i.e. either a scalar or a `^RandomInt` value
  * @return
  *   either a `^RantomInt` generator (etc--see `intParsers`)
  *   or a constant generator if given a constant/scalar.
  */
 UniqueInt64Generator int64Operand(YAML::Node node, DefaultRandom& rng) {
+    // Set of parsers to look when we request an int parser
+    // see int64Generator
+    const static std::map<std::string, Parser<UniqueInt64Generator>> intParsers{
+            {"^RandomInt", int64OperandBasedOnDistribution},
+    };
+
     if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
         // known parser type
         return parserPair->first(node[parserPair->second], rng);
