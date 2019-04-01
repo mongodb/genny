@@ -24,7 +24,40 @@
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
 
-#include <value_generators/v1/Appendable.hpp>
+namespace {
+
+class Appendable {
+public:
+    virtual ~Appendable() = default;
+    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
+    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
+};
+
+using UniqueAppendable = std::unique_ptr<Appendable>;
+
+
+template <typename T>
+class ConstantAppender : public Appendable {
+public:
+    explicit ConstantAppender(T value) : _value{value} {}
+    explicit ConstantAppender() : _value{} {}
+    T evaluate() {
+        return _value;
+    }
+    ~ConstantAppender() override = default;
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, _value));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(_value);
+    }
+
+protected:
+    T _value;
+};
+
+}  // namespace
+
 
 namespace genny {
 
