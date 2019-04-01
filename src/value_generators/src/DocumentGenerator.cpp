@@ -28,6 +28,38 @@
 
 namespace genny {
 
+class DocumentGenerator::Impl : public Appendable {
+public:
+    virtual bsoncxx::document::value evaluate() = 0;
+
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(this->evaluate());
+    }
+};
+
+class NormalDocumentGenerator : public DocumentGenerator::Impl {
+public:
+    // order matters for comparison in tests; std::map is ordered
+    using Entries = std::vector<std::pair<std::string, UniqueAppendable>>;
+    ~NormalDocumentGenerator() override = default;
+    explicit NormalDocumentGenerator(Entries entries) : _entries{std::move(entries)} {}
+
+    bsoncxx::document::value evaluate() override {
+        bsoncxx::builder::basic::document builder;
+        for (auto&& [k, app] : _entries) {
+            app->append(k, builder);
+        }
+        return builder.extract();
+    }
+
+private:
+    Entries _entries;
+};
+
+
 namespace {
 
 // Used for creating useful exception messages
@@ -89,8 +121,6 @@ const std::string kDefaultAlphabet = std::string{
     "abcdefghijklmnopqrstuvwxyz"
     "0123456789+/"};
 
-}  // namespace
-
 // Useful typedefs
 using UniqueInt64Generator = std::unique_ptr<class Int64Generator>;
 using UniqueInt32Generator = std::unique_ptr<class Int64Generator>;
@@ -112,22 +142,6 @@ template <bool Verbatim>
 UniqueDocumentGenerator documentGenerator(YAML::Node node, DefaultRandom& rng);
 template <bool Verbatim>
 UniqueArrayGenerator arrayGenerator(YAML::Node node, DefaultRandom& rng);
-
-// Pass-through for ctor. Can be removed in favor of just calling the ctor?
-DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
-    return DocumentGenerator{node, rng};
-}
-
-// Kick the recursion into motion
-DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
-    : _impl{documentGenerator<false>(node, rng)} {}
-
-// the operator()() is below because we haven't yet defined the Impl class
-
-DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
-
-DocumentGenerator::~DocumentGenerator() = default;
-
 
 class Int64Generator : public Appendable {
 public:
@@ -392,44 +406,6 @@ private:
     ValueType _values;
 };
 
-/** base-case */
-class DocumentGenerator::Impl : public Appendable {
-public:
-    virtual bsoncxx::document::value evaluate() = 0;
-
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
-    }
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(this->evaluate());
-    }
-};
-
-// Can't define this before DocumentGenerator::Impl ↑
-bsoncxx::document::value DocumentGenerator::operator()() {
-    return _impl->evaluate();
-}
-
-
-class NormalDocumentGenerator : public DocumentGenerator::Impl {
-public:
-    // order matters for comparison in tests; std::map is ordered
-    using Entries = std::vector<std::pair<std::string, UniqueAppendable>>;
-    ~NormalDocumentGenerator() override = default;
-    explicit NormalDocumentGenerator(Entries entries) : _entries{std::move(entries)} {}
-
-    bsoncxx::document::value evaluate() override {
-        bsoncxx::builder::basic::document builder;
-        for (auto&& [k, app] : _entries) {
-            app->append(k, builder);
-        }
-        return builder.extract();
-    }
-
-private:
-    Entries _entries;
-};
-
 /**
  * @param node
  *   the `{v}` value from a `{^FastRandomString:{v}}` node.
@@ -646,7 +622,7 @@ UniqueInt64Generator int64Operand(YAML::Node node, DefaultRandom& rng) {
     // Set of parsers to look when we request an int parser
     // see int64Generator
     const static std::map<std::string, Parser<UniqueInt64Generator>> intParsers{
-            {"^RandomInt", int64OperandBasedOnDistribution},
+        {"^RandomInt", int64OperandBasedOnDistribution},
     };
 
     if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
@@ -654,6 +630,27 @@ UniqueInt64Generator int64Operand(YAML::Node node, DefaultRandom& rng) {
         return parserPair->first(node[parserPair->second], rng);
     }
     return std::make_unique<ConstantInt64Generator>(node.as<int64_t>());
+}
+
+}  // namespace
+
+
+// Pass-through for ctor. Can be removed in favor of just calling the ctor?
+DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
+    return DocumentGenerator{node, rng};
+}
+
+// Kick the recursion into motion
+DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
+    : _impl{documentGenerator<false>(node, rng)} {}
+
+DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
+
+DocumentGenerator::~DocumentGenerator() = default;
+
+// Can't define this before DocumentGenerator::Impl ↑
+bsoncxx::document::value DocumentGenerator::operator()() {
+    return _impl->evaluate();
 }
 
 }  // namespace genny

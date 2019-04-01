@@ -15,11 +15,11 @@
 #ifndef HEADER_6FFA3C56_7A9D_48B9_950F_6373244E3CC1_INCLUDED
 #define HEADER_6FFA3C56_7A9D_48B9_950F_6373244E3CC1_INCLUDED
 
-#include <string>
 #include <memory>
+#include <string>
 
-#include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/array.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
 
 // TODO: move to v1
 namespace genny {
@@ -56,6 +56,6 @@ protected:
 };
 
 
-}
+}  // namespace genny
 
 #endif  // HEADER_6FFA3C56_7A9D_48B9_950F_6373244E3CC1_INCLUDED

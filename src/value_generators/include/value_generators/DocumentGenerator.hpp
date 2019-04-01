@@ -44,6 +44,7 @@ public:
     DocumentGenerator(DocumentGenerator&&) noexcept;
     ~DocumentGenerator();
     class Impl;
+
 private:
     std::unique_ptr<Impl> _impl;
 };
