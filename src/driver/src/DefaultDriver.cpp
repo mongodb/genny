@@ -69,7 +69,7 @@ YAML::Node loadConfig(const std::string& source,
 YAML::Node parseExternal(const YAML::Node& external,
                          YamlParameters& params,
                          const fs::path& phaseConfig) {
-    int nodeSize = 1;
+    int keysSeen = 1;
 
     fs::path path(external["Path"].as<std::string>());
     path = fs::absolute(phaseConfig / path);
@@ -85,26 +85,28 @@ YAML::Node parseExternal(const YAML::Node& external,
     auto replacement = loadConfig(path.string());
 
     if (external["Parameters"]) {
-        nodeSize++;
+        keysSeen++;
         auto newParams = external["Parameters"].as<YamlParameters>();
         params.insert(newParams.begin(), newParams.end());
     }
 
     if (external["Key"]) {
-        nodeSize++;
+        keysSeen++;
         const auto key = external["Key"].as<std::string>();
         if (!replacement[key]) {
             auto os = std::ostringstream();
-            os << "Could not find top-level key: " << key
-               << " in phase config YAML file: " << path.string();
+            os << "Could not find top-level key: " << key << " in phase config YAML file: " << path;
             throw InvalidConfigurationException(os.str());
         }
         replacement = replacement[key];
     }
 
-    if (external.size() != nodeSize) {
-        throw InvalidConfigurationException(
-            "Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters");
+    if (external.size() != keysSeen) {
+        auto os = std::ostringstream();
+        os << "Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters' in the YAML "
+              "file: "
+           << path << " with the following content: " << YAML::Dump(external);
+        throw InvalidConfigurationException(os.str());
     }
 
     return recursiveParse(replacement, params, phaseConfig);
@@ -112,25 +114,22 @@ YAML::Node parseExternal(const YAML::Node& external,
 
 YAML::Node replaceParam(const YAML::Node& input, YamlParameters& params) {
     if (!input["Name"] || !input["Default"]) {
-        throw InvalidConfigurationException(
-            "Invalid keys for '^Parameter', please set 'Name' and 'Default'");
+        auto os = std::ostringstream();
+        os << "Invalid keys for '^Parameter', please set 'Name' and 'Default' in following node"
+           << YAML::Dump(input);
+        throw InvalidConfigurationException(os.str());
     }
 
     auto name = input["Name"].as<std::string>();
     // The default value is mandatory.
     auto defaultVal = input["Default"];
 
-    auto paramVal = params.find(name);
-    YAML::Node out;
-
-    if (paramVal != params.end()) {
-        out = paramVal->second;
-    } else {
-        out = defaultVal;
-    }
-
     // Nested params are ignored for simplicity.
-    return out;
+    if (auto paramVal = params.find(name); paramVal != params.end()) {
+        return paramVal->second;
+    } else {
+        return input["Default"];
+    }
 }
 
 YAML::Node recursiveParse(const YAML::Node& node,
@@ -139,21 +138,25 @@ YAML::Node recursiveParse(const YAML::Node& node,
     YAML::Node out;
     switch (node.Type()) {
         case YAML::NodeType::Map: {
-            std::string fileName;
-            for (YAML::const_iterator it = node.begin(); it != node.end(); ++it) {
-                if (it->first.as<std::string>() == "^Parameter") {
-                    out = replaceParam(it->second, params);
-                } else if (it->first.as<std::string>() == "ExternalPhaseConfig") {
-                    out = parseExternal(it->second, params, phaseConfig);
+            for (auto&& kvp : node) {
+                if (kvp.first.as<std::string>() == "^Parameter") {
+                    out = replaceParam(kvp.second, params);
+                } else if (kvp.first.as<std::string>() == "ExternalPhaseConfig") {
+                    auto external = parseExternal(kvp.second, params, phaseConfig);
+                    // Merge the external node with the any other parameters specified
+                    // for this node like "Repeat" or "Duration".
+                    for (auto&& kvp : external) {
+                        out[kvp.first] = kvp.second;
+                    }
                 } else {
-                    out[it->first] = recursiveParse(it->second, params, phaseConfig);
+                    out[kvp.first] = recursiveParse(kvp.second, params, phaseConfig);
                 }
             }
             break;
         }
         case YAML::NodeType::Sequence: {
-            for (YAML::const_iterator it = node.begin(); it != node.end(); ++it) {
-                out.push_back(recursiveParse(*it, params, phaseConfig));
+            for (auto&& val : node) {
+                out.push_back(recursiveParse(val, params, phaseConfig));
             }
             break;
         }
