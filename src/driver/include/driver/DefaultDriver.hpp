@@ -30,11 +30,10 @@ namespace genny::driver {
 class DefaultDriver {
 public:
     enum class RunMode {
-        kNormal = 0,
-        kDryRun = 1,
-        kEvaluate = 2,
-        kListActors = 3,
-        kSmokeTest = 4,
+        kNormal,
+        kDryRun,
+        kEvaluate,
+        kListActors,
     };
 
 
@@ -43,6 +42,7 @@ public:
         kStandardException = 1,
         kBoostException = 2,
         kInternalException = 3,
+        kUserException = 4,
         kUnknownException = 10,
     };
 

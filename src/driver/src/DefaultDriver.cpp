@@ -40,8 +40,6 @@
 namespace genny::driver {
 namespace {
 
-using namespace genny;
-
 YAML::Node loadConfig(const std::string& source,
                       DefaultDriver::ProgramOptions::YamlSource sourceType) {
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
@@ -86,6 +84,12 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         globalCast().streamProducersTo(std::cout);
         setupCtx.success();
         return DefaultDriver::OutcomeCode::kSuccess;
+    }
+
+    if (!options.workloadSource.empty()) {
+        std::cout << "Must specify a workload YAML file" << std::endl;
+        setupCtx.failure();
+        return DefaultDriver::OutcomeCode::kUserException;
     }
 
     auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
@@ -267,9 +271,6 @@ Genny run modes
 
     if (runModeStr == "evaluate")
         this->runMode = RunMode::kEvaluate;
-
-    std::cout << runModeStr << "\n";
-
 
     this->isHelp = vm.count("help") >= 1;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
