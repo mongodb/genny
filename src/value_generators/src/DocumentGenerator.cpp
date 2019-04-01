@@ -28,7 +28,6 @@ namespace {
 
 class Appendable {
 public:
-    virtual ~Appendable() = default;
     virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
     virtual void append(bsoncxx::builder::basic::array& builder) = 0;
 };
@@ -38,7 +37,6 @@ using UniqueAppendable = std::unique_ptr<Appendable>;
 template <class T>
 class Generator : public Appendable {
 public:
-    virtual ~Generator() = default;
     virtual T evaluate() = 0;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
@@ -56,8 +54,10 @@ class ConstantAppender : public Generator<T> {
 public:
     explicit ConstantAppender(T value) : _value{value} {}
     explicit ConstantAppender() : _value{} {}
-    ~ConstantAppender() override = default;
-    T evaluate() override { return _value; }
+    T evaluate() override {
+        return _value;
+    }
+
 protected:
     T _value;
 };
@@ -72,8 +72,6 @@ public:
     using Entries = std::vector<std::pair<std::string, UniqueAppendable>>;
 
     explicit Impl(Entries entries) : _entries{std::move(entries)} {}
-
-    ~Impl() override = default;
 
     bsoncxx::document::value evaluate() override {
         bsoncxx::builder::basic::document builder;
@@ -153,10 +151,6 @@ static const std::string kDefaultAlphabet = std::string{
     "0123456789+/"};
 
 // Useful typedefs
-//using UniqueInt64Generator = std::unique_ptr<class Int64Generator>;
-//using UniqueStringGenerator = std::unique_ptr<class StringGenerator>;
-//using UniqueArrayGenerator = std::unique_ptr<class ArrayGenerator>;
-//using UniqueDocumentGenerator = std::unique_ptr<DocumentGenerator::Impl>;
 
 template <typename O>
 using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
@@ -182,8 +176,6 @@ public:
           _minGen{intGenerator(extract(node, "min", "uniform"), _rng)},
           _maxGen{intGenerator(extract(node, "max", "uniform"), _rng)} {}
 
-    ~UniformInt64Generator() override = default;
-
     int64_t evaluate() override {
         auto min = _minGen->evaluate();
         auto max = _maxGen->evaluate();
@@ -206,8 +198,6 @@ public:
           _tGen{intGenerator(extract(node, "t", "binomial"), _rng)},
           _p{extract(node, "p", "binomial").as<double>()} {}
 
-    ~BinomialInt64Generator() override = default;
-
     int64_t evaluate() override {
         auto distribution = std::binomial_distribution<int64_t>{_tGen->evaluate(), _p};
         return distribution(_rng);
@@ -228,8 +218,6 @@ public:
           _kGen{intGenerator(extract(node, "k", "negative_binomial"), _rng)},
           _p{extract(node, "p", "negative_binomial").as<double>()} {}
 
-    ~NegativeBinomialInt64Generator() override = default;
-
     int64_t evaluate() override {
         auto distribution = std::negative_binomial_distribution<int64_t>{_kGen->evaluate(), _p};
         return distribution(_rng);
@@ -248,8 +236,6 @@ public:
     PoissonInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng}, _mean{extract(node, "mean", "poisson").as<double>()} {}
 
-    ~PoissonInt64Generator() override = default;
-
     int64_t evaluate() override {
         auto distribution = std::poisson_distribution<int64_t>{_mean};
         return distribution(_rng);
@@ -267,8 +253,6 @@ public:
     GeometricInt64Generator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng}, _p{extract(node, "p", "geometric").as<double>()} {}
 
-    ~GeometricInt64Generator() override = default;
-
     int64_t evaluate() override {
         auto distribution = std::geometric_distribution<int64_t>{_p};
         return distribution(_rng);
@@ -280,7 +264,7 @@ private:
 };
 
 
-class StringGenerator : public Appendable {
+class StringGenerator : public Generator<std::string> {
 public:
     StringGenerator(YAML::Node node, DefaultRandom& rng)
         : _rng{rng},
@@ -291,18 +275,6 @@ public:
             BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
                 "Random string requires non-empty alphabet if specified"));
         }
-    }
-
-    virtual std::string evaluate() = 0;
-
-    virtual ~StringGenerator() = default;
-
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
-    }
-
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(this->evaluate());
     }
 
 protected:
@@ -319,8 +291,6 @@ public:
      * @param node `{length:<int>, alphabet:opt string}`
      */
     NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng) : StringGenerator(node, rng) {}
-
-    ~NormalRandomStringGenerator() override = default;
 
     std::string evaluate() override {
         auto distribution = std::uniform_int_distribution<size_t>{0, _alphabetLength - 1};
@@ -370,17 +340,7 @@ public:
 
     explicit ArrayGenerator(ValueType values) : _values{std::move(values)} {}
 
-    ~ArrayGenerator() override = default;
-
-    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
-        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
-    }
-
-    void append(bsoncxx::builder::basic::array& builder) override {
-        builder.append(this->evaluate());
-    }
-
-    bsoncxx::array::value evaluate() {
+    bsoncxx::array::value evaluate() override {
         bsoncxx::builder::basic::array builder{};
         for (auto&& value : _values) {
             value->append(builder);
