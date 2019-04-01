@@ -179,6 +179,9 @@ def split_into_actor_csv_files(data_reader, out_dir):
     cur_actor = (None, None)
     output_files = []
 
+    # Print progress to prevent the CI task from timing out.
+    counter = 0
+
     for line, actor in data_reader:
         if actor != cur_actor:
             cur_actor = actor
@@ -197,6 +200,10 @@ def split_into_actor_csv_files(data_reader, out_dir):
             cur_out_csv.writerow(IntermediateCSVColumns.default_columns())
 
         cur_out_csv.writerow(line)
+
+        counter += 1
+        if counter % 1e6 == 0:
+            print('Parsed {} metrics'.format(counter))
 
     cur_out_fh.close()
 
