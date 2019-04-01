@@ -38,7 +38,7 @@ using UniqueAppendable = std::unique_ptr<Appendable>;
 template <class T>
 class Generator : public Appendable {
 public:
-    virtual ~Generator() = default;
+    ~Generator() override = default;
     virtual T evaluate() = 0;
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
         builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
@@ -112,7 +112,7 @@ std::string toString(const YAML::Node& node) {
  * @return
  *   `node[key]` if exists else throw with a meaningful error message
  */
-YAML::Node extract(YAML::Node node, const std::string& key, std::string src) {
+YAML::Node extract(YAML::Node node, const std::string& key, const std::string& src) {
     auto out = node[key];
     if (!out) {
         std::stringstream ex;
