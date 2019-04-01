@@ -20,7 +20,6 @@
 #include <string>
 
 #include <bsoncxx/document/value.hpp>
-#include <bsoncxx/array/value.hpp>
 
 #include <yaml-cpp/yaml.h>
 
