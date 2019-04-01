@@ -35,7 +35,7 @@ public:
 UniqueExpression ParameterExpression::parse(YAML::Node node, genny::DefaultRandom& rng) {
     throw InvalidValueGeneratorSyntax(
         "Encountered unexpected key '^Parameter'. This indicates genny failed to find or parse the "
-        "`ExternalPhaseConfig` keyword");
+        "'ExternalPhaseConfig' keyword");
 }
 
 const auto parserMap = std::unordered_map<std::string, Expression::Parser>{
