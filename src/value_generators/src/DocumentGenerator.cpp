@@ -272,7 +272,7 @@ private:
 
 class ConstantInt64Generator : public Int64Generator {
 public:
-    ConstantInt64Generator(int64_t value) : _value{value} {}
+    explicit ConstantInt64Generator(int64_t value) : _value{value} {}
 
     ~ConstantInt64Generator() override = default;
 
@@ -286,6 +286,17 @@ private:
 
 class StringGenerator : public Appendable {
 public:
+    StringGenerator(YAML::Node node, DefaultRandom& rng)
+        : _rng{rng},
+          _lengthGen{int64Operand(extract(node, "length", "^RandomString"), rng)},
+          _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
+          _alphabetLength{_alphabet.size()} {
+        if (_alphabetLength <= 0) {
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                "Random string requires non-empty alphabet if specified"));
+        }
+    }
+
     virtual std::string evaluate() = 0;
 
     virtual ~StringGenerator() = default;
@@ -297,6 +308,12 @@ public:
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(this->evaluate());
     }
+
+protected:
+    DefaultRandom& _rng;
+    UniqueInt64Generator _lengthGen;
+    const std::string _alphabet;
+    const size_t _alphabetLength;
 };
 
 /** `{^RandomString:{...}` */
@@ -305,16 +322,7 @@ public:
     /**
      * @param node `{length:<int>, alphabet:opt string}`
      */
-    NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
-        : _rng{rng},
-          _lengthGen{int64Operand(extract(node, "length", "^RandomString"), rng)},
-          _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
-          _alphabetLength{_alphabet.size()} {
-        if (_alphabetLength <= 0) {
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                "Random string requires non-empty alphabet if specified"));
-        }
-    }
+    NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng) : StringGenerator(node, rng) {}
 
     ~NormalRandomStringGenerator() override = default;
 
@@ -330,28 +338,13 @@ public:
 
         return str;
     }
-
-private:
-    DefaultRandom& _rng;
-    UniqueInt64Generator _lengthGen;
-    const std::string _alphabet;
-    const size_t _alphabetLength;
 };
 
 /** `{^FastRandomString:{...}` */
 class FastRandomStringGenerator : public StringGenerator {
 public:
     /** @param node `{length:<int>, alphabet:opt str}` */
-    FastRandomStringGenerator(YAML::Node node, DefaultRandom& rng)
-        : _rng{rng},
-          _lengthGen{int64Operand(extract(node, "length", "^FastRandomString"), rng)},
-          _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
-          _alphabetLength{_alphabet.size()} {
-        if (_alphabetLength <= 0) {
-            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
-                "Random string requires non-empty alphabet if specified"));
-        }
-    }
+    FastRandomStringGenerator(YAML::Node node, DefaultRandom& rng) : StringGenerator(node, rng) {}
 
     std::string evaluate() override {
         auto length = _lengthGen->evaluate();
@@ -372,12 +365,6 @@ public:
         }
         return str;
     }
-
-private:
-    DefaultRandom& _rng;
-    UniqueInt64Generator _lengthGen;
-    const std::string _alphabet;
-    const size_t _alphabetLength;
 };
 
 /** `{a: [...]}` */
