@@ -370,6 +370,10 @@ public:
 /** `{a: [...]}` */
 class ArrayGenerator : public Appendable {
 public:
+    using ValueType = std::vector<UniqueAppendable>;
+
+    explicit ArrayGenerator(ValueType values) : _values{std::move(values)} {}
+
     ~ArrayGenerator() override = default;
 
     void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
@@ -379,10 +383,6 @@ public:
     void append(bsoncxx::builder::basic::array& builder) override {
         builder.append(this->evaluate());
     }
-
-    using ValueType = std::vector<UniqueAppendable>;
-
-    explicit ArrayGenerator(ValueType values) : _values{std::move(values)} {}
 
     bsoncxx::array::value evaluate() {
         bsoncxx::builder::basic::array builder{};
