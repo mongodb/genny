@@ -81,7 +81,7 @@ buildvariants:
   run_on:
   - rhel70
   tasks:
-  - name: t_compile
+  - name: tg_compile
   - name: t_push
 
 - name: ubuntu1804
@@ -92,7 +92,7 @@ buildvariants:
   run_on:
   - ubuntu1804-build
   tasks:
-  - name: t_compile
+  - name: tg_compile
   - name: t_push
 
 - name: macos-1014
@@ -101,7 +101,7 @@ buildvariants:
   run_on:
   - macos-1014
   tasks:
-  - name: tg_compile_static_host
+  - name: tg_compile
   - name: t_push
 
 
@@ -118,10 +118,6 @@ tasks:
       display_name: Genny
       short_name: genny
       install_dir: dist
-
-- name: t_rm_toolchain_dir_static_host
-  commands:
-  - func: f_rm_toolchain_dir_static_host
 
 - name: t_push
   depends_on: t_compile
@@ -219,10 +215,9 @@ task_groups:
   - t_integration_test_sharded
   - t_test_create_new_actor_script  # Must run this task last.
 
-- name: tg_compile_static_host
+- name: tg_compile
   max_hosts: 1
   tasks:
-  - t_rm_toolchain_dir_static_host
   - t_compile
 
 
@@ -258,15 +253,6 @@ functions:
         set -euo pipefail
         curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
         tar --strip-components=1 -zxvf mongodb.tgz
-
-  # Static hosts may have outdated toolchains that don't support versioning.
-  # Manually remove them until BUILD-7624 is done.
-  f_rm_toolchain_dir_static_host:
-    - command: shell.exec
-      params:
-        shell: bash
-        script: |
-          rm -rf /data/mci/gennytoolchain*
 
   ##
   # Archive an installed library into a tarball and upload it with
@@ -353,6 +339,10 @@ functions:
 
   ##
   # Compile the project in src/build.
+  #
+  # We always remove the toolchain directory because hosts
+  # may have incomplete or invalid toolchain directories from
+  # previous (unsuccessful) builds in the gennytoolchain project.
   ##
   f_compile:
   - command: shell.exec
@@ -361,6 +351,8 @@ functions:
       shell: bash
       script: |
         set -eo pipefail
+
+        rm -rf /data/mci/gennytoolchain*
 
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
 
