@@ -187,16 +187,16 @@ Cases:
     GivenTemplate:
       a: {^RandomInt: {distribution: binomial, t: 1000000000100, p: 0.05}}
     ThenReturns:
-      - {a: 50000235004}
-      - {a: 50000156045}
-      - {a: 50000006376}
-      - {a: 49999767646}
-      - {a: 50000182526}
-      - {a: 49999783187}
-      - {a: 49999885751}
-      - {a: 50000062361}
-      - {a: 50000136231}
-      - {a: 49999715198}
+      - {a: 50000257368}
+      - {a: 50000088428}
+      - {a: 49999660736}
+      - {a: 50000250638}
+      - {a: 50000141863}
+      - {a: 50000213950}
+      - {a: 50000002448}
+      - {a: 49999881544}
+      - {a: 50000048087}
+      - {a: 49999518641}
 
   - Name: Binomial requires t and p
     GivenTemplate:
@@ -226,16 +226,16 @@ Cases:
           k: 1000000000100
           p: 0.05
     ThenReturns:
-      - {a: 18999998848060}
-      - {a: 19000002369207}
-      - {a: 19000007291354}
-      - {a: 19000011471073}
-      - {a: 18999981460521}
-      - {a: 18999986050781}
-      - {a: 18999999696273}
-      - {a: 18999985829620}
-      - {a: 18999982803791}
-      - {a: 19000012669952}
+      - {a: 18999993317885}
+      - {a: 18999998293903}
+      - {a: 18999984525288}
+      - {a: 18999991814976}
+      - {a: 18999999857658}
+      - {a: 19000040152791}
+      - {a: 19000006530453}
+      - {a: 19000042910630}
+      - {a: 18999981955623}
+      - {a: 18999977759587}
 
   - Name: Negative Binomial requires k and p
     GivenTemplate:
@@ -266,16 +266,16 @@ Cases:
     GivenTemplate:
       a: {^RandomInt: {distribution: poisson, mean: 10000000000000}}
     ThenReturns:
-      - {a: 9999995373744}
-      - {a: 9999998326662}
-      - {a: 9999993652227}
-      - {a: 9999996726403}
-      - {a: 9999996299875}
-      - {a: 9999999671415}
-      - {a: 9999997304481}
-      - {a: 9999999509838}
-      - {a: 9999995944132}
-      - {a: 10000000249332}
+      - {a: 9999998585959}
+      - {a: 9999994466398}
+      - {a: 9999993316440}
+      - {a: 9999998077294}
+      - {a: 9999998932246}
+      - {a: 10000005071779}
+      - {a: 10000000476801}
+      - {a: 10000002566643}
+      - {a: 10000003586981}
+      - {a: 9999999843995}
 
   - Name: Poisson distribution requires mean
     GivenTemplate:
@@ -291,21 +291,21 @@ Cases:
     GivenTemplate:
       a: {^RandomString: {length: 15}}
     ThenReturns:
-      - {a: pFUOtUq6zuV56f1}
-      - {a: DJ4DJyPRwNd7aXj}
-      - {a: dE3QnKdS4RWy3eD}
-      - {a: 8+owFOpBgIHI/rl}
-      - {a: xtfd4zT1v8qcj6i}
+      - {a: xR6JCfGx+a5oQyL}
+      - {a: poGsqK1kWcbJHHR}
+      - {a: 2tpFUOtUq6zuV56}
+      - {a: f1DJ4DJyPRwNd7a}
+      - {a: XjdE3QnKdS4RWy3}
 
   - Name: Random string custom alphabet
     GivenTemplate:
       a: {^RandomString: {length: 15, alphabet: xyz}}
     ThenReturns:
-      - {a: yxyyyyyyyzzzxxx}
-      - {a: zyxzyxyzxxzzyzx}
-      - {a: zzyyzzyzyyzzxxx}
-      - {a: yxzxyzxxxzzyyxz}
-      - {a: yyzyxyzyzxyyxxz}
+      - {a: zxzxxyzyyxxxyyy}
+      - {a: yxyxzxzzyxyyyyy}
+      - {a: yyzzzxxxzyxzyxy}
+      - {a: zxxzzyzxzzyyzzy}
+      - {a: zyyzzxxxyxzxyzx}
 
   - Name: Random string custom alphabet can repeat chars
     GivenTemplate:
@@ -331,19 +331,19 @@ Cases:
           length: {^RandomInt: {min: 2, max: 5}}
           alphabet: xyz
     ThenReturns:
-      - {a: yzyz}
       - {a: yy}
-      - {a: xyx}
+      - {a: zyyy}
+      - {a: zy}
 
   - Name: FastRandom string
     GivenTemplate:
       a: {^FastRandomString: {length: 15}}
     ThenReturns:
-      - {a: CvLoAjmgNgLDAAn}
-      - {a: IiGloEGjNBgiCAG}
-      - {a: PIEukstOCshBELJ}
-      - {a: uHDiliMvIPlPDHt}
-      - {a: LNABMuNujmIiqiN}
+      - {a: mnqojklKFsrAiCt}
+      - {a: vrlCkABtlAnsvOn}
+      - {a: hIqKtrnvlOEHjvI}
+      - {a: LJomLqKPrkgqpqE}
+      - {a: kOEBlsnCpnKpCnH}
 
   - Name: FastRandomString string requires length
     GivenTemplate:
@@ -354,9 +354,9 @@ Cases:
     GivenTemplate:
       a: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}
     ThenReturns:
-      - {a: tEk}
-      - {a: rkot}
-      - {a: PB}
+      - {a: JKkMm}
+      - {a: Ho}
+      - {a: kI}
 
   - Name: Parameters blow up
     GivenTemplate:
