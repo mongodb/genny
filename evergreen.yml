@@ -119,10 +119,6 @@ tasks:
       short_name: genny
       install_dir: dist
 
-- name: t_rm_toolchain_dir_static_host
-  commands:
-  - func: f_rm_toolchain_dir_static_host
-
 - name: t_push
   depends_on: t_compile
   patchable: no
@@ -259,15 +255,6 @@ functions:
         curl -LSs "${mongodb_archive_url}" -o mongodb.tgz
         tar --strip-components=1 -zxvf mongodb.tgz
 
-  # Static hosts may have outdated toolchains that don't support versioning.
-  # Manually remove them until BUILD-7624 is done.
-  f_rm_toolchain_dir_static_host:
-    - command: shell.exec
-      params:
-        shell: bash
-        script: |
-          rm -rf /data/mci/gennytoolchain*
-
   ##
   # Archive an installed library into a tarball and upload it with
   # revision suffix.
@@ -361,6 +348,11 @@ functions:
       shell: bash
       script: |
         set -eo pipefail
+
+        # Hosts may have incomplete or invalid toolchain directories from
+        # previous (unsuccessful) builds in the gennytoolchain project. We
+        # always remove the toolchain to avoid problems.
+        rm -rf /data/mci/gennytoolchain*
 
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
 
