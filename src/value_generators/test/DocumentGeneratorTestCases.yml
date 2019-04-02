@@ -358,6 +358,11 @@ Cases:
       - {a: rkot}
       - {a: PB}
 
+  - Name: Parameters blow up
+    GivenTemplate:
+      ^Parameter: {Default: Required, Name: Required}
+    ThenThrows: InvalidValueGeneratorSyntax
+
   - Name: Verbatim
     GivenTemplate:
       a: {^Verbatim: {^RandomInt: {min: 10000000050, max: 10000000060}}}
