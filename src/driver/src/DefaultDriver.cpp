@@ -78,7 +78,7 @@ YAML::Node parseExternal(const YAML::Node& external,
         auto os = std::ostringstream();
         os << "Invalid path to external PhaseConfig: " << path
            << ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
-              "'Path' parameter is relative to the 'phase_configs/' directory";
+              "'Path' parameter is relative to the 'phases/' directory";
         throw InvalidConfigurationException(os.str());
     }
 
@@ -146,7 +146,8 @@ YAML::Node recursiveParse(const YAML::Node& node,
                     // Merge the external node with the any other parameters specified
                     // for this node like "Repeat" or "Duration".
                     for (auto&& kvp : external) {
-                        out[kvp.first] = kvp.second;
+                        if (!out[kvp.first])
+                            out[kvp.first] = kvp.second;
                     }
                 } else {
                     out[kvp.first] = recursiveParse(kvp.second, params, phaseConfig);
@@ -211,19 +212,14 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
          *     /workloads
          *         /[name-of-workload-theme]
          *             /[my-workload.yml]
-         *     /phase_configs
-         *         /[name-of-actor]
-         *             /[name-of-phase-config-snippet.yml]
-         *
          * The path to the phase config snippet is obtained as a relative path from the workload
          * file.
          */
-        phaseConfigSource =
-            fs::path(options.workloadSource).parent_path().parent_path().parent_path() /
-            "phase_configs";
+        phaseConfigSource = fs::path(options.workloadSource).parent_path();
     }
-    YamlParameters params;
-    auto yaml = recursiveParse(config, params, phaseConfigSource);
+
+    std::cout << YAML::Dump(yaml) << std::endl;
+    return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
 
     auto orchestrator = Orchestrator{};
 

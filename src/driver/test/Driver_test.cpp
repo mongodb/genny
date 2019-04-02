@@ -337,7 +337,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/phase_configs/self_tests/Good.yml"
+                Path: "src/testlib/phases/Good.yml"
 
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
@@ -353,7 +353,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/phase_configs/self_tests/GoodWithKey.yml"
+                Path: "src/testlib/phases/GoodWithKey.yml"
                 Key: ForSelfTest
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
@@ -369,13 +369,32 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/phase_configs/self_tests/Good.yml"
+                Path: "src/testlib/phases/Good.yml"
                 Parameters:
                   Repeat: 2
 
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
         REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0});
+        REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("Inline Config Override Parameter") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/Good.yml"
+                Parameters:
+                  Repeat: 2
+              Repeat: 3
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0, 0});
         REQUIRE(hasMetrics(opts));
     }
 
@@ -387,7 +406,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/phase_configs/self_tests/MissingAllFields.yml"
+                Path: "src/testlib/phases/MissingAllFields.yml"
                 Parameters:
                   Repeat: 2
 
@@ -404,7 +423,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/phase_configs/self_tests/MissingDefault.yml"
+                Path: "src/testlib/phases/MissingDefault.yml"
                 Parameters:
                   Repeat: 2
 
@@ -421,7 +440,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/phase_configs/self_tests/MissingName.yml"
+                Path: "src/testlib/phases/MissingName.yml"
                 Parameters:
                   Repeat: 2
 
