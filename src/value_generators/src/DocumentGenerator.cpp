@@ -13,11 +13,16 @@
 // limitations under the License.
 
 #include <cstdlib>
-#include <random>
 #include <sstream>
 #include <unordered_map>
 
 #include <boost/log/trivial.hpp>
+#include <boost/random.hpp>
+#include <boost/random/binomial_distribution.hpp>
+#include <boost/random/geometric_distribution.hpp>
+#include <boost/random/negative_binomial_distribution.hpp>
+#include <boost/random/poisson_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 
 #include <bsoncxx/builder/basic/kvp.hpp>
 #include <bsoncxx/json.hpp>
@@ -458,7 +463,7 @@ Value UniformIntExpression::evaluate(genny::DefaultRandom& rng) const {
     auto min = getInt64Parameter(_min->evaluate(rng), "min");
     auto max = getInt64Parameter(_max->evaluate(rng), "max");
 
-    auto distribution = std::uniform_int_distribution<int64_t>{min, max};
+    auto distribution = boost::random::uniform_int_distribution<int64_t>{min, max};
     return Value{distribution(rng)};
 }
 
@@ -467,7 +472,7 @@ BinomialIntExpression::BinomialIntExpression(UniqueTypedExpression<IntegerValueT
 
 Value BinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
     auto t = getInt64Parameter(_t->evaluate(rng), "t");
-    auto distribution = std::binomial_distribution<int64_t>{t, _p};
+    auto distribution = boost::random::binomial_distribution<int64_t>{t, _p};
     return Value{distribution(rng)};
 }
 
@@ -478,21 +483,21 @@ NegativeBinomialIntExpression::NegativeBinomialIntExpression(
 Value NegativeBinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
     auto k = getInt64Parameter(_k->evaluate(rng), "k");
 
-    auto distribution = std::negative_binomial_distribution<int64_t>{k, _p};
+    auto distribution = boost::random::negative_binomial_distribution<int64_t>{k, _p};
     return Value{distribution(rng)};
 }
 
 GeometricIntExpression::GeometricIntExpression(double p) : _p{p} {}
 
 Value GeometricIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto distribution = std::geometric_distribution<int64_t>{_p};
+    auto distribution = boost::random::geometric_distribution<int64_t>{_p};
     return Value{distribution(rng)};
 }
 
 PoissonIntExpression::PoissonIntExpression(double mean) : _mean{mean} {}
 
 Value PoissonIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto distribution = std::poisson_distribution<int64_t>{_mean};
+    auto distribution = boost::random::poisson_distribution<int64_t>{_mean};
     return Value{distribution(rng)};
 }
 
@@ -530,7 +535,7 @@ Value RandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
     auto alphabet = _alphabet ? std::string_view{_alphabet.value()} : kDefaultAlphabet;
     auto alphabetLength = alphabet.size();
 
-    auto distribution = std::uniform_int_distribution<size_t>{0, alphabetLength - 1};
+    auto distribution = boost::random::uniform_int_distribution<size_t>{0, alphabetLength - 1};
 
     auto length = getInt64Parameter(_length->evaluate(rng), "length");
     std::string str(length, '\0');
