@@ -64,7 +64,7 @@ TEST_CASE("YAML To BSON Simple") {
     // use the smallest type that will fit
     test("foo: 0", BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int32{0})));
 
-    // max valeu for int32 ↓
+    // max value for int32 ↓
     test("foo: 2147483647",
          BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int32{2147483647})));
     //            ↑ + 1
