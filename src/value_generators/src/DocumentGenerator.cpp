@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <value_generators/DocumentGenerator.hpp>
-
-#include <functional>
-#include <map>
+#include <cstdlib>
 #include <sstream>
 
 #include <boost/log/trivial.hpp>
+#include <boost/random.hpp>
+#include <boost/random/binomial_distribution.hpp>
+#include <boost/random/geometric_distribution.hpp>
+#include <boost/random/negative_binomial_distribution.hpp>
+#include <boost/random/poisson_distribution.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
@@ -26,12 +29,24 @@
 
 namespace {
 
-class Appendable {
+class ParameterExpression {
 public:
-    virtual ~Appendable() = default;
-    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
-    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
+    static UniqueExpression parse(YAML::Node node, DefaultRandom& rng);
 };
+
+UniqueExpression ParameterExpression::parse(YAML::Node node, genny::DefaultRandom& rng) {
+    throw InvalidValueGeneratorSyntax(
+        "Encountered unexpected key '^Parameter'. This indicates genny failed to find or parse the "
+        "'ExternalPhaseConfig' keyword");
+}
+
+const auto parserMap = std::unordered_map<std::string, Expression::Parser>{
+    {"^FastRandomString", FastRandomStringExpression::parse},
+    {"^RandomInt", RandomIntExpression::parse},
+    {"^RandomString", RandomStringExpression::parse},
+    {"^Verbatim", ConstantExpression::parse},
+    {"^Parameter", ParameterExpression::parse}};
+}  // namespace
 
 using UniqueAppendable = std::unique_ptr<Appendable>;
 
@@ -542,27 +557,83 @@ UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(YAML::Node node, Defa
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(error.str()));
+        throw InvalidValueGeneratorSyntax(error.str());
     }
 }
 
-/**
- * @param node
- *   a top-level document value i.e. either a scalar or a `^RandomInt` value
- * @return
- *   either a `^RantomInt` generator (etc--see `intParsers`)
- *   or a constant generator if given a constant/scalar.
- */
-UniqueGenerator<int64_t> intGenerator(YAML::Node node, DefaultRandom& rng) {
-    // Set of parsers to look when we request an int parser
-    // see int64Generator
-    const static std::map<std::string, Parser<UniqueGenerator<int64_t>>> intParsers{
-        {"^RandomInt", int64GeneratorBasedOnDistribution},
-    };
+UniformIntExpression::UniformIntExpression(UniqueTypedExpression<IntegerValueType> min,
+                                           UniqueTypedExpression<IntegerValueType> max)
+    : _min(std::move(min)), _max(std::move(max)) {}
 
-    if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
-        // known parser type
-        return parserPair->first(node[parserPair->second], rng);
+Value UniformIntExpression::evaluate(genny::DefaultRandom& rng) const {
+    auto min = getInt64Parameter(_min->evaluate(rng), "min");
+    auto max = getInt64Parameter(_max->evaluate(rng), "max");
+
+    auto distribution = boost::random::uniform_int_distribution<int64_t>{min, max};
+    return Value{distribution(rng)};
+}
+
+BinomialIntExpression::BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, double p)
+    : _t(std::move(t)), _p(p) {}
+
+Value BinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
+    auto t = getInt64Parameter(_t->evaluate(rng), "t");
+    auto distribution = boost::random::binomial_distribution<int64_t>{t, _p};
+    return Value{distribution(rng)};
+}
+
+NegativeBinomialIntExpression::NegativeBinomialIntExpression(
+    UniqueTypedExpression<IntegerValueType> k, double p)
+    : _k(std::move(k)), _p(p) {}
+
+Value NegativeBinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
+    auto k = getInt64Parameter(_k->evaluate(rng), "k");
+
+    auto distribution = boost::random::negative_binomial_distribution<int64_t>{k, _p};
+    return Value{distribution(rng)};
+}
+
+GeometricIntExpression::GeometricIntExpression(double p) : _p{p} {}
+
+Value GeometricIntExpression::evaluate(genny::DefaultRandom& rng) const {
+    auto distribution = boost::random::geometric_distribution<int64_t>{_p};
+    return Value{distribution(rng)};
+}
+
+PoissonIntExpression::PoissonIntExpression(double mean) : _mean{mean} {}
+
+Value PoissonIntExpression::evaluate(genny::DefaultRandom& rng) const {
+    auto distribution = boost::random::poisson_distribution<int64_t>{_mean};
+    return Value{distribution(rng)};
+}
+
+RandomStringExpression::RandomStringExpression(UniqueTypedExpression<IntegerValueType> length,
+                                               std::optional<std::string> alphabet)
+    : _length(std::move(length)), _alphabet(std::move(alphabet)) {}
+
+UniqueExpression RandomStringExpression::parse(YAML::Node node, DefaultRandom& rng) {
+    UniqueExpression length;
+    std::optional<std::string> alphabet;
+
+    if (auto entry = node["length"]) {
+        length = Expression::parseOperand(entry, rng);
+    } else {
+        throw InvalidValueGeneratorSyntax(
+            "Expected 'length' parameter for random string generator");
+    }
+}
+
+Value RandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
+    auto alphabet = _alphabet ? std::string_view{_alphabet.value()} : kDefaultAlphabet;
+    auto alphabetLength = alphabet.size();
+
+    auto distribution = boost::random::uniform_int_distribution<size_t>{0, alphabetLength - 1};
+
+    auto length = getInt64Parameter(_length->evaluate(rng), "length");
+    std::string str(length, '\0');
+
+    for (int i = 0; i < length; ++i) {
+        str[i] = alphabet[distribution(rng)];
     }
     return std::make_unique<ConstantAppender<int64_t>>(node.as<int64_t>());
 }
