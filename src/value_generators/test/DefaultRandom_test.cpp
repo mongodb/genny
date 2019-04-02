@@ -15,7 +15,6 @@
 
 #include <algorithm>
 #include <iostream>
-#include <random>
 
 #include <boost/random/uniform_int_distribution.hpp>
 
@@ -33,8 +32,7 @@ TEST_CASE("genny DefaultRandom") {
         auto output = std::vector<int>(100);
         std::iota(std::begin(output), std::end(output), 1);
 
-        // Can't use DefaultRandom here -- see note in DefaultRandom.hpp
-        v1::Random<std::mt19937_64> rng;
+        DefaultRandom rng;
         rng.seed(12345);
 
         const auto input = output;

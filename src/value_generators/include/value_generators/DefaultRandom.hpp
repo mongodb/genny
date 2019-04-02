@@ -107,10 +107,7 @@ private:
  * DefaultRandom should be used if you need a random number generator.
  */
 // Note we use boost::random because its distributions are
-// cross-platform. The downside to this is that some <algorithm>
-// functions e.g. std::shuffle() don't work with DefaultRandom
-// because Boost's RNGs don't have constexpr min() and max()
-// functions - https://svn.boost.org/trac10/ticket/12251
+// cross-platform.
 using DefaultRandom = v1::Random<boost::random::mt19937_64>;
 
 }  // namespace genny
