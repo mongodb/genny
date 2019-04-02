@@ -21,9 +21,9 @@ import json
 import genny.metrics_output_parser as output_parser
 
 
-def translate(parser_results):
+def translate(timers):
     out = []
-    for name, timer in parser_results.timers().items():
+    for name, timer in timers.items():
         out.append({
             'name': name,
             'workload': name,
@@ -47,5 +47,5 @@ def main__summarize_translate():
     """
     with open('/dev/stdin', 'r') as f:
         results = output_parser.ParserResults(f, '/dev/stdin')
-        translated = translate(results)
+        translated = translate(results.timers())
         print(json.dumps(translated, sort_keys=True, indent=4, separators=(',', ': ')))

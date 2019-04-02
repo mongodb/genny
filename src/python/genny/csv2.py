@@ -84,10 +84,6 @@ class _DataReader:
 
     def _parse_into_intermediate_csv(self, line):
         for i in range(len(line)):
-
-            # Strip spaces from lines
-            line[i] = line[i].strip()
-
             # Convert string digits to ints
             if line[i].isdigit():
                 line[i] = int(line[i])
@@ -106,7 +102,7 @@ class _DataReader:
         unix_time = (ts + self.unix_time_offset) / (1000 * 1000)
 
         # Transform output into IntermediateCSV format.
-        out = [None for _ in range(len(IntermediateCSVColumns.default_columns()))]
+        out = [None] * len(IntermediateCSVColumns.default_columns())
         out[IntermediateCSVColumns.UNIX_TIME] = unix_time
         out[IntermediateCSVColumns.TS] = ts
         out[IntermediateCSVColumns.THREAD] = thread
@@ -163,6 +159,7 @@ class CSV2:
         # The number to add to the metrics timestamp (a.k.a. c++ system_time) to get
         # the UNIX time.
         self._unix_epoch_offset_ns = None
+        self._metrics_time_ns = None
 
         # Map of (actor, operation) to thread count.
         self._operation_thread_count_map = {}
@@ -174,6 +171,10 @@ class CSV2:
         # file handle to raw CSV file; lifecycle is shared with this CSV2 object.
         self._csv2_file_name = csv2_file_name
 
+    def metric_to_system_time_ns(self, metric_time):
+        assert self._unix_epoch_offset_ns, 'test run time not available yet'
+        return metric_time + self._unix_epoch_offset_ns
+
     @property
     def approximate_test_run_time(self):
         """
@@ -182,8 +183,8 @@ class CSV2:
         :raises: AssertionError if the offset has not been set yet.
         :return: datetime.timedelta instance representing the run time.
         """
-        assert self._unix_epoch_offset_ns, 'test run time not available yet'
-        return datetime.timedelta(microseconds=(self._unix_epoch_offset_ns / 1000))
+        assert self._metrics_time_ns, 'test run time not available yet'
+        return datetime.timedelta(microseconds=(self._metrics_time_ns / 1000))
 
     @contextlib.contextmanager
     def data_reader(self):
@@ -224,6 +225,7 @@ class CSV2:
             line = next(reader)
 
         self._unix_epoch_offset_ns = times['SystemTime'] - times['MetricsTime']
+        self._metrics_time_ns = times['MetricsTime']
 
         return False
 
