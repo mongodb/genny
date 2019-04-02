@@ -63,13 +63,13 @@ Cases:
 
   - Name: one RandomInt
     GivenTemplate: {a: {^RandomInt: {min: 10000000000, max: 10000000010}}}
-    ThenReturns: [{a: 10000000006}, {a: 10000000010}, {a: 10000000004}]
+    ThenReturns: [{a: 10000000001}, {a: 10000000001}, {a: 10000000000}]
 
   - Name: two RandomInts in map
     GivenTemplate:
       a: {^RandomInt: {min: 10000000050, max: 10000000060}}
       b: {^RandomInt: {min: 10000000030, max: 10000000040}}
-    ThenReturns: [{a: 10000000059, b: 10000000038}]
+    ThenReturns: [{a: 10000000050, b: 10000000033}]
 
   - Name: RandomInt and literal
     GivenTemplate:
@@ -96,7 +96,7 @@ Cases:
       a:
         - {^RandomInt: {min: 10000000050, max: 10000000060}}
         - {^RandomInt: {min: 10000000030, max: 10000000040}}
-    ThenReturns: [{a: [10000000059, 10000000036]}]
+    ThenReturns: [{a: [10000000059, 10000000038]}]
 
   - Name: Mixing ^ keys with other keys
     GivenTemplate: {a: {otherKey: 1, ^RandomInt: {min: 50, max: 60}}}
@@ -173,10 +173,10 @@ Cases:
           min: 10000000050
           max: 10000000060
     ThenReturns:
+      - {a: 10000000052}
       - {a: 10000000054}
       - {a: 10000000051}
-      - {a: 10000000059}
-      - {a: 10000000051}
+      - {a: 10000000055}
 
   - Name: Explicit uniform distribution no min/max
     GivenTemplate:
@@ -187,6 +187,8 @@ Cases:
     GivenTemplate:
       a: {^RandomInt: {distribution: binomial, t: 1000000000100, p: 0.05}}
     ThenReturns:
+      - {a: 49999867437}
+      - {a: 50000021075}
       - {a: 50000257368}
       - {a: 50000088428}
       - {a: 49999660736}
@@ -195,8 +197,6 @@ Cases:
       - {a: 50000213950}
       - {a: 50000002448}
       - {a: 49999881544}
-      - {a: 50000048087}
-      - {a: 49999518641}
 
   - Name: Binomial requires t and p
     GivenTemplate:
@@ -226,16 +226,16 @@ Cases:
           k: 1000000000100
           p: 0.05
     ThenReturns:
-      - {a: 18999993317885}
-      - {a: 18999998293903}
-      - {a: 18999984525288}
-      - {a: 18999991814976}
-      - {a: 18999999857658}
-      - {a: 19000040152791}
-      - {a: 19000006530453}
-      - {a: 19000042910630}
-      - {a: 18999981955623}
-      - {a: 18999977759587}
+      - {a: 19000032068750}
+      - {a: 19000044165605}
+      - {a: 19000000804896}
+      - {a: 19000001700701}
+      - {a: 19000013250407}
+      - {a: 19000009467884}
+      - {a: 18999995942719}
+      - {a: 18999992778550}
+      - {a: 19000025251188}
+      - {a: 18999991803183}
 
   - Name: Negative Binomial requires k and p
     GivenTemplate:
@@ -266,6 +266,7 @@ Cases:
     GivenTemplate:
       a: {^RandomInt: {distribution: poisson, mean: 10000000000000}}
     ThenReturns:
+      - {a: 9999997883716}
       - {a: 9999998585959}
       - {a: 9999994466398}
       - {a: 9999993316440}
@@ -275,7 +276,6 @@ Cases:
       - {a: 10000000476801}
       - {a: 10000002566643}
       - {a: 10000003586981}
-      - {a: 9999999843995}
 
   - Name: Poisson distribution requires mean
     GivenTemplate:
@@ -291,21 +291,21 @@ Cases:
     GivenTemplate:
       a: {^RandomString: {length: 15}}
     ThenReturns:
-      - {a: xR6JCfGx+a5oQyL}
-      - {a: poGsqK1kWcbJHHR}
-      - {a: 2tpFUOtUq6zuV56}
-      - {a: f1DJ4DJyPRwNd7a}
-      - {a: XjdE3QnKdS4RWy3}
+      - {a: 0xYYXCh/YblEHcm}
+      - {a: XZX/d40BxSQFMHj}
+      - {a: Lkgi6+6zwnNkJy/}
+      - {a: p7K4YyqevkPiYhG}
+      - {a: 87QV1KsYVNJOo6a}
 
   - Name: Random string custom alphabet
     GivenTemplate:
       a: {^RandomString: {length: 15, alphabet: xyz}}
     ThenReturns:
-      - {a: zxzxxyzyyxxxyyy}
-      - {a: yxyxzxzzyxyyyyy}
-      - {a: yyzzzxxxzyxzyxy}
-      - {a: zxxzzyzxzzyyzzy}
-      - {a: zyyzzxxxyxzxyzx}
+      - {a: yzyzxxxzxxyyyyx}
+      - {a: yxxyyzzxyyxzzxz}
+      - {a: xzxyzzyyyyzyzzy}
+      - {a: yzyyzxzxxyxxzzz}
+      - {a: zxyzzzyxxxxzyzy}
 
   - Name: Random string custom alphabet can repeat chars
     GivenTemplate:
@@ -331,19 +331,19 @@ Cases:
           length: {^RandomInt: {min: 2, max: 5}}
           alphabet: xyz
     ThenReturns:
-      - {a: yy}
-      - {a: zyyy}
+      - {a: zzx}
+      - {a: yzx}
       - {a: zy}
 
   - Name: FastRandom string
     GivenTemplate:
       a: {^FastRandomString: {length: 15}}
     ThenReturns:
-      - {a: mnqojklKFsrAiCt}
-      - {a: vrlCkABtlAnsvOn}
-      - {a: hIqKtrnvlOEHjvI}
-      - {a: LJomLqKPrkgqpqE}
-      - {a: kOEBlsnCpnKpCnH}
+      - {a: rqhjqANjNDtunHm}
+      - {a: OpEkKLqLlDMPLMm}
+      - {a: lloNJnuFmnNDAEt}
+      - {a: MjOrDAIPLEMDsHt}
+      - {a: LhMtJsrqKKOvlro}
 
   - Name: FastRandomString string requires length
     GivenTemplate:
@@ -354,9 +354,9 @@ Cases:
     GivenTemplate:
       a: {^FastRandomString: {length: {^RandomInt: {min: 2, max: 5}}}}
     ThenReturns:
-      - {a: JKkMm}
-      - {a: Ho}
-      - {a: kI}
+      - {a: lD}
+      - {a: kj}
+      - {a: sgCO}
 
   - Name: Parameters blow up
     GivenTemplate:

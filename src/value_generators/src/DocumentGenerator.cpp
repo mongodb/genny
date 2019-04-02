@@ -181,7 +181,7 @@ public:
     int64_t evaluate() override {
         auto min = _minGen->evaluate();
         auto max = _maxGen->evaluate();
-        auto distribution = std::uniform_int_distribution<int64_t>{min, max};
+        auto distribution = boost::random::uniform_int_distribution<int64_t>{min, max};
         return distribution(_rng);
     }
 
@@ -295,7 +295,7 @@ public:
     NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng) : StringGenerator(node, rng) {}
 
     std::string evaluate() override {
-        auto distribution = std::uniform_int_distribution<size_t>{0, _alphabetLength - 1};
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, _alphabetLength - 1};
 
         auto length = _lengthGen->evaluate();
         std::string str(length, '\0');
