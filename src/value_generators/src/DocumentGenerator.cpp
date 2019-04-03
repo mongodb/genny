@@ -221,7 +221,8 @@ public:
           _p{extract(node, "p", "negative_binomial").as<double>()} {}
 
     int64_t evaluate() override {
-        auto distribution = boost::random::negative_binomial_distribution<int64_t>{_kGen->evaluate(), _p};
+        auto distribution =
+            boost::random::negative_binomial_distribution<int64_t>{_kGen->evaluate(), _p};
         return distribution(_rng);
     }
 

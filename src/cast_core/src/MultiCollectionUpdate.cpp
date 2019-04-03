@@ -37,7 +37,7 @@ namespace genny::actor {
 
 /** @private */
 struct MultiCollectionUpdate::PhaseConfig {
-    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId& id)
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId id)
         : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
           queryExpr{context.createDocumentGenerator(id, "UpdateFilter")},
@@ -82,10 +82,9 @@ void MultiCollectionUpdate::run() {
 
 MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
     : Actor(context),
-      _rng{context.workload().createRNG()},
       _updateOp{context.operation("Update", MultiCollectionUpdate::id())},
       _client{std::move(context.client())},
-      _loop{context, _client, _rng} {}
+      _loop{context, _client, MultiCollectionUpdate::id()} {}
 
 namespace {
 auto registerMultiCollectionUpdate =

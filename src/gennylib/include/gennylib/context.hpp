@@ -363,9 +363,9 @@ public:
             this->get<std::string>("Name"), operationName, id);
     }
 
-    template<typename...Args>
-    DocumentGenerator createDocumentGenerator(ActorId id, Args&&...args) {
-        if(auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
+    template <typename... Args>
+    DocumentGenerator createDocumentGenerator(ActorId id, Args&&... args) {
+        if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
             _rngRegistry.emplace(id, this->workload().createRNG());
         }
         DefaultRandom& rng = _rngRegistry[id];
@@ -398,8 +398,8 @@ public:
     PhaseContext(PhaseContext&&) = delete;
     void operator=(PhaseContext&&) = delete;
 
-    template<typename...Args>
-    auto createDocumentGenerator(ActorId id, Args&&...args) {
+    template <typename... Args>
+    auto createDocumentGenerator(ActorId id, Args&&... args) {
         return _actor->createDocumentGenerator(id, std::forward<Args>(args)...);
     }
 

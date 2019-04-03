@@ -121,14 +121,13 @@ public:
                          : std::nullopt} {}
 
     static std::unique_ptr<DatabaseOperation> create(YAML::Node node,
-                                                     genny::DefaultRandom& rng,
                                                      PhaseContext& context,
                                                      ActorContext& actorContext,
                                                      ActorId id,
                                                      mongocxx::pool::entry& client,
                                                      const std::string& database) {
         auto yamlCommand = node["OperationCommand"];
-        auto commandExpr = DocumentGenerator::create(yamlCommand, rng);
+        auto commandExpr = context.createDocumentGenerator(id, yamlCommand);
 
         auto options = node.as<DatabaseOperation::OpConfig>(DatabaseOperation::OpConfig{});
         return std::make_unique<DatabaseOperation>(context,
@@ -136,7 +135,6 @@ public:
                                                    id,
                                                    database,
                                                    (*client)[database],
-                                                   rng,
                                                    std::move(commandExpr),
                                                    options);
     };
@@ -194,7 +192,6 @@ private:
 struct actor::RunCommand::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 ActorContext& actorContext,
-                genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 ActorId id)
         : strategy{actorContext.operation("RunCommand", id)},
@@ -207,8 +204,7 @@ struct actor::RunCommand::PhaseConfig {
         }
 
         auto createOperation = [&](YAML::Node node) {
-            return DatabaseOperation::create(
-                node, rng, context, actorContext, id, client, database);
+            return DatabaseOperation::create(node, context, actorContext, id, client, database);
         };
 
         operations = context.getPlural<std::unique_ptr<DatabaseOperation>>(
@@ -236,9 +232,8 @@ void actor::RunCommand::run() {
 
 actor::RunCommand::RunCommand(ActorContext& context)
     : Actor(context),
-      _rng{context.workload().createRNG()},
       _client{std::move(context.client())},
-      _loop{context, context, _rng, _client, RunCommand::id()} {}
+      _loop{context, context, _client, RunCommand::id()} {}
 
 namespace {
 auto registerRunCommand = Cast::registerDefault<actor::RunCommand>();

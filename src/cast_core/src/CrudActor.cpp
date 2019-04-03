@@ -209,7 +209,7 @@ struct BaseOperation {
 };
 
 using OpCallback = std::function<std::unique_ptr<BaseOperation>(
-    YAML::Node, bool, mongocxx::collection, metrics::Operation)>;
+    YAML::Node, bool, mongocxx::collection, metrics::Operation, PhaseContext& context, ActorId id)>;
 
 struct WriteOperation : public BaseOperation {
     virtual mongocxx::model::write getModel() = 0;
@@ -696,7 +696,9 @@ struct StartTransactionOperation : public BaseOperation {
     StartTransactionOperation(YAML::Node opNode,
                               bool onSession,
                               mongocxx::collection collection,
-                              metrics::Operation operation) {
+                              metrics::Operation operation,
+                              PhaseContext& context,
+                              ActorId id) {
         if (!opNode.IsMap())
             return;
         if (opNode["Options"]) {
@@ -723,7 +725,9 @@ struct CommitTransactionOperation : public BaseOperation {
     CommitTransactionOperation(YAML::Node opNode,
                                bool onSession,
                                mongocxx::collection collection,
-                               metrics::Operation operation) {}
+                               metrics::Operation operation,
+                               PhaseContext& context,
+                               ActorId id) {}
 
     void run(mongocxx::client_session& session) override {
         session.commit_transaction();
@@ -749,7 +753,9 @@ struct SetReadConcernOperation : public BaseOperation {
     SetReadConcernOperation(YAML::Node opNode,
                             bool onSession,
                             mongocxx::collection collection,
-                            metrics::Operation operation)
+                            metrics::Operation operation,
+                            PhaseContext& context,
+                            ActorId id)
         : _collection{collection} {
         if (!opNode["ReadConcern"]) {
             throw InvalidConfigurationException(
@@ -782,7 +788,9 @@ struct DropOperation : public BaseOperation {
     DropOperation(YAML::Node opNode,
                   bool onSession,
                   mongocxx::collection collection,
-                  metrics::Operation operation)
+                  metrics::Operation operation,
+                  PhaseContext& context,
+                  ActorId id)
         : _onSession{onSession}, _collection{collection}, _operation{operation} {
         if (!opNode)
             return;
@@ -854,8 +862,12 @@ struct CrudActor::PhaseConfig {
                                                     "' not supported in Crud Actor.");
             }
             auto createOperation = op->second;
-            return createOperation(
-                yamlCommand, onSession, collection, actorContext.operation(opName, id));
+            return createOperation(yamlCommand,
+                                   onSession,
+                                   collection,
+                                   actorContext.operation(opName, id),
+                                   phaseContext,
+                                   id);
         };
 
         operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(

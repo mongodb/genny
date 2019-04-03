@@ -48,7 +48,7 @@ public:
 private:
     /** @private */
     struct PhaseConfig;
-    genny::DefaultRandom _rng;
+
     metrics::Operation _totalBulkLoad;
     metrics::Operation _individualBulkLoad;
     metrics::Operation _indexBuild;

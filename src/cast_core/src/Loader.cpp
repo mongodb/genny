@@ -38,10 +38,7 @@ using index_type = std::pair<DocumentGenerator, std::optional<DocumentGenerator>
 
 /** @private */
 struct Loader::PhaseConfig {
-    PhaseConfig(PhaseContext& context,
-                mongocxx::pool::entry& client,
-                uint thread,
-                ActorId id)
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, uint thread, ActorId id)
         : database{(*client)[context.get<std::string>("Database")]},
           // The next line uses integer division. The Remainder is accounted for below.
           numCollections{context.get<IntegerSpec, true>("CollectionCount") /
@@ -53,7 +50,7 @@ struct Loader::PhaseConfig {
         auto indexNodes = context.get("Indexes");
         for (auto indexNode : indexNodes) {
             indexes.emplace_back(
-                    context.createDocumentGenerator(id, indexNode["keys"]),
+                context.createDocumentGenerator(id, indexNode["keys"]),
                 indexNode["options"]
                     ? std::make_optional(context.createDocumentGenerator(id, indexNode["options"]))
                     : std::nullopt);
@@ -131,12 +128,11 @@ void genny::actor::Loader::run() {
 
 Loader::Loader(genny::ActorContext& context, uint thread)
     : Actor(context),
-      _rng{context.workload().createRNG()},
       _totalBulkLoad{context.operation("TotalBulkInsert", Loader::id())},
       _individualBulkLoad{context.operation("IndividualBulkInsert", Loader::id())},
       _indexBuild{context.operation("IndexBuild", Loader::id())},
       _client{std::move(context.client())},
-      _loop{context, _client, thread, _rng} {}
+      _loop{context, _client, thread, Loader::id()} {}
 
 class LoaderProducer : public genny::ActorProducer {
 public:

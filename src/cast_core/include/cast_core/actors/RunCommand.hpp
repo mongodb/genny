@@ -70,7 +70,6 @@ public:
     void run() override;
 
 private:
-    genny::DefaultRandom _rng;
     mongocxx::pool::entry _client;
 
     struct PhaseConfig;
