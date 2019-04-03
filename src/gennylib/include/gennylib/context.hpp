@@ -377,8 +377,8 @@ public:
             }
         }
         DefaultRandom& rng = _rngRegistry[id];
-        if constexpr (std::is_same_v<std::remove_reference_t<std::remove_cv_t<Arg0>>, YAML::Node>) {
-            // If we're calling via context.createDocGen(id, YAML::Node)...
+        if constexpr (std::is_convertible_v<std::remove_reference_t<std::remove_cv_t<Arg0>>,YAML::Node>) {
+            // If we're calling via context.createDocGen(id, YAML::Node)
             //
             // The std:: garbage before Arg0 is to allow us to pass in
             // YAML::Node as const and/or volatile and/or a ref

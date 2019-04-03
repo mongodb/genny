@@ -131,6 +131,15 @@ Actors:
                     genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
             ++calls;
         });
+
+        auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
+            for(const auto&& doc : a.get("docs")) {
+                auto docgen = a.createDocumentGenerator(0, templ);
+                REQUIRE(docgen().view() ==
+                        genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+                ++calls;
+            }
+        });
         auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
             auto docgen = a.createDocumentGenerator(0, "doc");
             REQUIRE(docgen().view() ==
@@ -138,19 +147,21 @@ Actors:
             ++calls;
         });
 
-        auto cast2 = Cast{{{"HasValGen", fromYaml}, {"HasValGen2", fromDoc}}};
+        auto cast2 = Cast{{{"fromYaml", fromYaml}, {"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
         auto yaml = YAML::Load(
             "SchemaVersion: 2018-07-01\n"
-            "Actors: ["
-            "{Type: HasValGen}, "
-            "{Type: HasValGen2, doc: {foo: bar}}]");
+            "Actors: [ "
+            "  {Type: fromYaml}, "
+            "  {Type: fromDocList, docs: [{foo: bar}]}, "
+            "  {Type: fromDoc,     doc:   {foo: bar}} "
+            "]");
 
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast2);
         };
         test();
 
-        REQUIRE(calls == 2);
+        REQUIRE(calls == 3);
     }
 
 
