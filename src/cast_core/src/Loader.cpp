@@ -41,22 +41,21 @@ struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context,
                 mongocxx::pool::entry& client,
                 uint thread,
-                DefaultRandom& rng)
-        : _rng{rng},
-          database{(*client)[context.get<std::string>("Database")]},
+                ActorId id)
+        : database{(*client)[context.get<std::string>("Database")]},
           // The next line uses integer division. The Remainder is accounted for below.
           numCollections{context.get<IntegerSpec, true>("CollectionCount") /
                          context.get<IntegerSpec, true>("Threads")},
           numDocuments{context.get<IntegerSpec, true>("DocumentCount")},
           batchSize{context.get<IntegerSpec, true>("BatchSize")},
-          documentExpr{DocumentGenerator::create(context.get("Document"), _rng)},
+          documentExpr{context.createDocumentGenerator(id, "Document")},
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");
         for (auto indexNode : indexNodes) {
             indexes.emplace_back(
-                DocumentGenerator::create(indexNode["keys"], _rng),
+                    context.createDocumentGenerator(id, indexNode["keys"]),
                 indexNode["options"]
-                    ? std::make_optional(DocumentGenerator::create(indexNode["options"], _rng))
+                    ? std::make_optional(context.createDocumentGenerator(id, indexNode["options"]))
                     : std::nullopt);
         }
         if (thread == context.get<int>("Threads") - 1) {
@@ -65,7 +64,6 @@ struct Loader::PhaseConfig {
         }
     }
 
-    DefaultRandom& _rng;
     mongocxx::database database;
     int64_t numCollections;
     int64_t numDocuments;

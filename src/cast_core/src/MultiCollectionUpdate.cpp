@@ -37,21 +37,19 @@ namespace genny::actor {
 
 /** @private */
 struct MultiCollectionUpdate::PhaseConfig {
-    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, DefaultRandom& rng)
-        : rng{rng},
-          database{(*client)[context.get<std::string>("Database")]},
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId& id)
+        : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          queryExpr{DocumentGenerator::create(context.get("UpdateFilter"), rng)},
-          updateExpr{DocumentGenerator::create(context.get("Update"), rng)},
+          queryExpr{context.createDocumentGenerator(id, "UpdateFilter")},
+          updateExpr{context.createDocumentGenerator(id, "Update")},
           uniformDistribution{0, numCollections} {}
 
-    DefaultRandom& rng;
     mongocxx::database database;
     int64_t numCollections;
     DocumentGenerator queryExpr;
     DocumentGenerator updateExpr;
     // TODO: Enable passing in update options.
-    //    value_generators::UniqueExpression  updateOptionsExpr;
+    //    DocumentGeerator  updateOptionsExpr;
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;

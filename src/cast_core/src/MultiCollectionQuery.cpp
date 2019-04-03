@@ -38,12 +38,11 @@ namespace genny::actor {
 
 /** @private */
 struct MultiCollectionQuery::PhaseConfig {
-    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, DefaultRandom& rng)
-        : rng{rng},
-          database{(*client)[context.get<std::string>("Database")]},
+    PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId id)
+        : database{(*client)[context.get<std::string>("Database")]},
           numCollections{context.get<IntegerSpec, true>("CollectionCount")},
           readConcern{context.get<mongocxx::read_concern, false>("ReadConcern")},
-          filterExpr{DocumentGenerator::create(context.get("Filter"), rng)},
+          filterExpr{context.createDocumentGenerator(id, "Filter")},
           uniformDistribution{0, numCollections} {
         const auto limit = context.get<int64_t, false>("Limit");
         if (limit) {
@@ -52,11 +51,10 @@ struct MultiCollectionQuery::PhaseConfig {
 
         const auto sort = context.get<YAML::Node, false>("Sort");
         if (sort) {
-            options.sort(DocumentGenerator::create(*sort, rng)());
+            options.sort(context.createDocumentGenerator(id, *sort)());
         }
     }
 
-    DefaultRandom& rng;
     mongocxx::database database;
     int64_t numCollections;
     DocumentGenerator filterExpr;
@@ -106,10 +104,9 @@ void MultiCollectionQuery::run() {
 
 MultiCollectionQuery::MultiCollectionQuery(genny::ActorContext& context)
     : Actor(context),
-      _rng{context.workload().createRNG()},
       _queryOp{context.operation("Query", MultiCollectionQuery::id())},
       _client{std::move(context.client())},
-      _loop{context, _client, _rng} {}
+      _loop{context, _client, MultiCollectionQuery::id()} {}
 
 namespace {
 auto registerMultiCollectionQuery =

@@ -569,12 +569,6 @@ UniqueGenerator<int64_t> intGenerator(YAML::Node node, DefaultRandom& rng) {
 
 }  // namespace
 
-
-// Pass-through for ctor. Can be removed in favor of just calling the ctor?
-DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
-    return DocumentGenerator{node, rng};
-}
-
 // Kick the recursion into motion
 DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
     : _impl{documentGenerator<false>(node, rng)} {}

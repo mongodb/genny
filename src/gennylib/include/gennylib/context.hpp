@@ -42,6 +42,7 @@
 #include <metrics/metrics.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
+#include <value_generators/DocumentGenerator.hpp>
 
 /**
  * @file context.hpp defines WorkloadContext, ActorContext, and PhaseContext.
@@ -351,8 +352,6 @@ public:
         return this->_workload->client(std::forward<Args>(args)...);
     }
 
-    // <Forwarding to delegates>
-
     /**
      * Convenience method for creating a metrics::Operation that's unique for this actor and thread.
      *
@@ -364,7 +363,15 @@ public:
             this->get<std::string>("Name"), operationName, id);
     }
 
-    // </Forwarding to delegates>
+    template<typename...Args>
+    DocumentGenerator createDocumentGenerator(ActorId id, Args&&...args) {
+        if(auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
+            _rngRegistry.emplace(id, this->workload().createRNG());
+        }
+        DefaultRandom& rng = _rngRegistry[id];
+        auto node = this->get(std::forward<Args>(args)...);
+        return DocumentGenerator{node, rng};
+    }
 
 private:
     static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
@@ -373,6 +380,7 @@ private:
 
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
+    std::unordered_map<ActorId, DefaultRandom> _rngRegistry;
 };
 
 /**
@@ -381,7 +389,7 @@ private:
 class PhaseContext final : public v1::ConfigNode {
 
 public:
-    PhaseContext(const YAML::Node& node, const ActorContext& actorContext)
+    PhaseContext(const YAML::Node& node, ActorContext& actorContext)
         : ConfigNode(node, std::addressof(actorContext)), _actor{std::addressof(actorContext)} {}
 
     // no copy or move
@@ -389,6 +397,11 @@ public:
     void operator=(PhaseContext&) = delete;
     PhaseContext(PhaseContext&&) = delete;
     void operator=(PhaseContext&&) = delete;
+
+    template<typename...Args>
+    auto createDocumentGenerator(ActorId id, Args&&...args) {
+        return _actor->createDocumentGenerator(id, std::forward<Args>(args)...);
+    }
 
     /**
      * Called in PhaseLoop during the IterationCompletionCheck constructor.
@@ -406,7 +419,7 @@ private:
     bool _isNop() const;
 
 private:
-    const ActorContext* _actor;
+    ActorContext* _actor;
 };
 
 }  // namespace genny

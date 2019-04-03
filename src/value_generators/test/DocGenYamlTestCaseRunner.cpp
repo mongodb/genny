@@ -121,7 +121,7 @@ public:
         genny::Result out{*this};
         if (_runMode == RunMode::kExpectException) {
             try {
-                genny::DocumentGenerator::create(this->_givenTemplate, rng);
+                genny::DocumentGenerator(this->_givenTemplate, rng);
                 out.expectedExceptionButNotThrown();
             } catch (const std::exception& x) {
                 out.expectEqual("InvalidValueGeneratorSyntax",
@@ -130,7 +130,7 @@ public:
             return out;
         }
 
-        auto docGen = genny::DocumentGenerator::create(this->_givenTemplate, rng);
+        auto docGen = genny::DocumentGenerator(this->_givenTemplate, rng);
         for (const auto&& nextValue : this->_thenReturns) {
             auto expected = testing::toDocumentBson(nextValue);
             auto actual = docGen();
