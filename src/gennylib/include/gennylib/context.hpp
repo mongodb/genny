@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <boost/noncopyable.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <mongocxx/pool.hpp>
 
@@ -365,8 +366,86 @@ public:
             this->get<std::string>("Name"), operationName, id);
     }
 
-    template <typename Arg0, typename... Args>
-    DocumentGenerator createDocumentGenerator(ActorId id, Arg0&& arg0, Args&&... args) {
+    /**
+     * Construct a DocumentGenerator from a given path or YAML::Node.
+     *
+     * Example usage:
+     *
+     * ```yaml
+     * SchemaVersion: 2018-07-01
+     * Actors:
+     * - Type: Foo
+     *   Documents: [{a: {^RandomInt: {min: 7, max: 100}}}]
+     *   ...
+     * ```
+     *
+     * This could be used via:
+     *
+     * ```c++
+     * DocumentGenerator docGen =
+     *     actorContext.createDocumentGenerator(FooActor::id(), "Document", 0);
+     * auto document = docGen(); // => {a: random-between-7-and-10}
+     * ```
+     *
+     * The 2nd and 3rd arguments (`"Document",0`) indicate the path to the
+     * DocumentGenerator "template" to use.
+     *
+     * The second argument, `pathOrNode`, can be either a `YAML::Node` or an argument
+     * that could be passed to `get()` (i.e. a string or int part of a YAML path as
+     * in the example above). If it is a `YAML::Node`, no additional arguments
+     * may be given.
+     *
+     * Example with `YAML::Node` as the second argument:
+     *
+     * ```c++
+     * auto node = YAML::Load("{a: {^RandomInt: {min: 0, max: 5}}}");
+     * DocumentGenerator docGen =
+     *     actorContext.createDocumentGenerator(MyActor::id(), node);
+     * auto document = docGen(); // => {a: random-between-0-and-5}
+     * ```
+     *
+     * In this second example it would be a compiler error to pass
+     * additional arguments after `node`:
+     *
+     * ```c++
+     * auto node = YAML::Load("{}");
+     * //                                       ☣️ Compiler Error ↓ ☣
+     * actorContext.createDocumentGenerator(MyActor::id(), node, "foo");
+     * ```
+     *
+     * Important notes:
+     *
+     * 1. DocumentGenerators constructed with the same `ActorId`
+     *    (the first parameter) will share the same random number
+     *    generator and should not be used at the same time on
+     *    different threads.
+     *
+     * 2. This can only be called during workload setup (not within
+     *    the `run()` method of Actors).
+     *
+     * @param id
+     *   the ActorId that will own this DocumentGenerator.
+     *   In general use YourActorClass::id()
+     * @param pathOrNode
+     *   Either a `YAML::Node` or the first part of the path
+     *   to the structure to use for the document template.
+     *   See `get()`.
+     * @param args
+     *   Remaining path elements. Can only be given if
+     *   `pathOrNode` is *not* a `YAML::Node`.
+     * @return
+     *   A hot and fresh DocumentGenerator
+     */
+    template <typename PathOrNode, typename... Args>
+    DocumentGenerator createDocumentGenerator(ActorId id, PathOrNode&& pathOrNode, Args&&... args) {
+        if (_workload->_done) {
+            std::stringstream msg;
+            msg << "Tried to create DocumentGenerator ";
+            msg << "[";
+            msg << pathOrNode;
+            (msg << ... << args) << "]";
+            BOOST_THROW_EXCEPTION(std::logic_error(msg.str()));
+        }
         if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
             auto [it, success] = _rngRegistry.try_emplace(id, this->workload().createRNG());
             if (!success) {
@@ -377,15 +456,23 @@ public:
             }
         }
         DefaultRandom& rng = _rngRegistry[id];
-        if constexpr (std::is_convertible_v<std::remove_reference_t<std::remove_cv_t<Arg0>>,
+        if constexpr (std::is_convertible_v<std::remove_reference_t<std::remove_cv_t<PathOrNode>>,
                                             YAML::Node>) {
             // If we're calling via context.createDocGen(id, YAML::Node)
             //
             // The std:: garbage before Arg0 is to allow us to pass in
             // YAML::Node as const and/or volatile and/or a ref
-            return DocumentGenerator{arg0, rng};
+
+            // It's undefined what this would even mean so may as well
+            // protect against bad usage.
+            static_assert(sizeof...(args) == 0,
+                          "When calling createDocumentGenerator(id,YAML::Node) "
+                          "there cannot be additional arguments");
+
+            return DocumentGenerator{pathOrNode, rng};
         } else {
-            auto node = this->get(std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+            auto node =
+                this->get(std::forward<PathOrNode>(pathOrNode), std::forward<Args>(args)...);
             return DocumentGenerator{node, rng};
         }
     }
