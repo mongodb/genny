@@ -22,12 +22,16 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <bsoncxx/json.hpp>
+
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <metrics/metrics.hpp>
-#include <testlib/ActorHelper.hpp>
 
+#include <metrics/metrics.hpp>
+
+#include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
+#include <testlib/yamlToBson.hpp>
 
 using namespace genny;
 using namespace std;
@@ -116,6 +120,39 @@ Actors:
         };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
     }
+
+    SECTION("Can Construct RNG") {
+        std::atomic_int calls = 0;
+        YAML::Node templ = YAML::Load("foo: bar");
+
+        auto fromYaml = std::make_shared<OpProducer>([&](ActorContext& a) {
+            auto docgen = a.createDocumentGenerator(0, templ);
+            REQUIRE(docgen().view() ==
+                    genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+            ++calls;
+        });
+        auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
+            auto docgen = a.createDocumentGenerator(0, "doc");
+            REQUIRE(docgen().view() ==
+                    genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+            ++calls;
+        });
+
+        auto cast2 = Cast{{{"HasValGen", fromYaml}, {"HasValGen2", fromDoc}}};
+        auto yaml = YAML::Load(
+            "SchemaVersion: 2018-07-01\n"
+            "Actors: ["
+            "{Type: HasValGen}, "
+            "{Type: HasValGen2, doc: {foo: bar}}]");
+
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast2);
+        };
+        test();
+
+        REQUIRE(calls == 2);
+    }
+
 
     SECTION("Invalid config accesses") {
         // key not found

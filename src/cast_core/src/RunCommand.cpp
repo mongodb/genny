@@ -104,12 +104,10 @@ public:
                       ActorId id,
                       const std::string& databaseName,
                       mongocxx::database database,
-                      genny::DefaultRandom& rng,
                       DocumentGenerator commandExpr,
                       OpConfig opts)
         : _databaseName{databaseName},
           _database{std::move(database)},
-          _rng{rng},
           _commandExpr{std::move(commandExpr)},
           _options{std::move(opts)},
           _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)},
@@ -179,7 +177,6 @@ private:
 
     std::string _databaseName;
     mongocxx::database _database;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _commandExpr;
     OpConfig _options;
 

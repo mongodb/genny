@@ -19,6 +19,8 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <type_traits>
+#include <typeinfo>
 #include <unordered_map>
 #include <vector>
 
@@ -363,14 +365,28 @@ public:
             this->get<std::string>("Name"), operationName, id);
     }
 
-    template <typename... Args>
-    DocumentGenerator createDocumentGenerator(ActorId id, Args&&... args) {
+    template <typename Arg0, typename... Args>
+    DocumentGenerator createDocumentGenerator(ActorId id, Arg0&& arg0, Args&&... args) {
         if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
-            _rngRegistry.emplace(id, this->workload().createRNG());
+            auto [it, success] = _rngRegistry.try_emplace(id, this->workload().createRNG());
+            if (!success) {
+                // This should be impossible.
+                // But invariants don't hurt we only call this during setup
+                throw std::logic_error("Already have DefaultRandom for Actor " +
+                                       std::to_string(id));
+            }
         }
         DefaultRandom& rng = _rngRegistry[id];
-        auto node = this->get(std::forward<Args>(args)...);
-        return DocumentGenerator{node, rng};
+        if constexpr (std::is_same_v<std::remove_reference_t<std::remove_cv_t<Arg0>>, YAML::Node>) {
+            // If we're calling via context.createDocGen(id, YAML::Node)...
+            //
+            // The std:: garbage before Arg0 is to allow us to pass in
+            // YAML::Node as const and/or volatile and/or a ref
+            return DocumentGenerator{arg0, rng};
+        } else {
+            auto node = this->get(std::forward<Arg0>(arg0), std::forward<Args>(args)...);
+            return DocumentGenerator{node, rng};
+        }
     }
 
 private:
