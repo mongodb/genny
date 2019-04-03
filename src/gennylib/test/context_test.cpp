@@ -133,7 +133,7 @@ Actors:
         });
 
         auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
-            for(const auto&& doc : a.get("docs")) {
+            for (const auto&& doc : a.get("docs")) {
                 auto docgen = a.createDocumentGenerator(0, templ);
                 REQUIRE(docgen().view() ==
                         genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
@@ -147,7 +147,8 @@ Actors:
             ++calls;
         });
 
-        auto cast2 = Cast{{{"fromYaml", fromYaml}, {"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
+        auto cast2 =
+            Cast{{{"fromYaml", fromYaml}, {"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
         auto yaml = YAML::Load(
             "SchemaVersion: 2018-07-01\n"
             "Actors: [ "
