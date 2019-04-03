@@ -98,12 +98,19 @@ v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
     return rl;
 }
 
-DefaultRandom WorkloadContext::createRNG() {
-    if (_done) {
-        throw InvalidConfigurationException(
-            "Tried to create a random number generator after construction");
+DefaultRandom& WorkloadContext::getRNGForActor(ActorId id) {
+    if (this->isDone()) {
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
     }
-    return DefaultRandom{_rng()};
+    if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
+        auto [it, success] = _rngRegistry.try_emplace(id, DefaultRandom{_rng()});
+        if (!success) {
+            // This should be impossible.
+            // But invariants don't hurt we only call this during setup
+            throw std::logic_error("Already have DefaultRandom for Actor " + std::to_string(id));
+        }
+    }
+    return _rngRegistry[id];
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts

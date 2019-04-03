@@ -51,7 +51,7 @@ private:
     ExecutionStrategy _insertStrategy;
     ExecutionStrategy _removeStrategy;
     mongocxx::pool::entry _client;
-    DefaultRandom _rng;
+    DefaultRandom& _rng;
 
     /** @private */
     struct PhaseConfig;
