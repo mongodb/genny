@@ -34,6 +34,7 @@ public:
         kDryRun,
         kEvaluate,
         kListActors,
+        kHelp
     };
 
 
@@ -63,7 +64,6 @@ public:
         std::string metricsOutputFileName;
         std::string mongoUri;
         std::string description;
-        bool showHelp = false;
         DefaultDriver::RunMode runMode = RunMode::kNormal;
     };
 

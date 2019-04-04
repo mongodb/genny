@@ -30,7 +30,7 @@
 
 int main(int argc, char** argv) {
     auto opts = genny::driver::DefaultDriver::ProgramOptions(argc, argv);
-    if (opts.showHelp) {
+    if (opts.runMode == genny::driver::DefaultDriver::RunMode::kHelp) {
         auto v = std::make_optional(genny::getVersion());
         // basically just a test that we're using c++17
         std::cout << u8"\n🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔\n";

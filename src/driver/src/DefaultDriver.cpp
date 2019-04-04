@@ -257,7 +257,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
 
     if (!vm.count("subcommand")) {
         std::cerr << "ERROR: missing subcommand" << std::endl;
-        this->showHelp = true;
+        this->runMode = RunMode::kHelp;
         return;
     }
     const auto subcommand = vm["subcommand"].as<std::string>();
@@ -270,13 +270,16 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         this->runMode = RunMode::kEvaluate;
     else if (subcommand == "run")
         this->runMode = RunMode::kNormal;
+    else if (subcommand == "help")
+        this->runMode = RunMode::kHelp;
     else {
         std::cerr << "ERROR: Unexpected subcommand " << subcommand << std::endl;
-        this->showHelp = true;
+        this->runMode = RunMode::kHelp;
         return;
     }
 
-    this->showHelp = vm.count("help") >= 1;
+    if (vm.count("help") >= 1)
+        this->runMode = RunMode::kHelp;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
