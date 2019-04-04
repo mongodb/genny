@@ -17,6 +17,7 @@ CedarBucketConfig = namedtuple('CedarBucketConfig', [
     'api_token',
     'region',
     'name',
+    'permissions',
     'prefix'
 ])
 
@@ -26,7 +27,7 @@ CedarTestArtifact = namedtuple('CedarTestArtifact', [
     'tags',  # [str]
     'local_path',
     'created_at',
-    'is_uncompressed',
+    'convert_bson_to_ftdc',
 ])
 
 CedarTestInfo = namedtuple('CedarTestInfo', [
@@ -105,7 +106,7 @@ def build_report(config):
             tags=[],
             local_path=path,
             created_at=config.created_at,
-            is_uncompressed=True
+            convert_bson_to_ftdc=True
         )
 
         ti = CedarTestInfo(
@@ -133,6 +134,7 @@ def build_report(config):
         api_token=None,
         region=config.cloud_region,
         name=config.cloud_bucket,
+        permissions='public-read',
         prefix=bucket_prefix
     )
 
