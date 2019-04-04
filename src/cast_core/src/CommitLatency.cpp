@@ -24,6 +24,7 @@
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
+#include <boost/random.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -50,7 +51,7 @@ struct CommitLatency::PhaseConfig {
     bool useTransaction;
     int64_t repeat;
     int64_t threads;
-    std::uniform_int_distribution<int64_t> amountDistribution;
+    boost::random::uniform_int_distribution<int64_t> amountDistribution;
     ExecutionStrategy::RunOptions options;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
@@ -178,7 +179,7 @@ void CommitLatency::run() {
 
 CommitLatency::CommitLatency(genny::ActorContext& context)
     : Actor(context),
-      _rng{context.workload().createRNG()},
+      _rng{context.workload().getRNGForActor(CommitLatency::id())},
       _strategy{context.operation("insert", CommitLatency::id())},
       _client{std::move(context.client())},
       _loop{context, (*_client)[context.get<std::string>("Database")]} {}
