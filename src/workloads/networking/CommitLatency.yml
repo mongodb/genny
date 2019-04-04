@@ -1,0 +1,164 @@
+---
+# Test latencies for a classic transaction of money from one account to another,
+# using different write concern, read concern, sessions and transactions.
+# Based on http://henrikingo.github.io/presentations/Highload%202018%20-%20The%20cost%20of%20MongoDB%20ACID%20transactions%20in%20theory%20and%20practice/index.html#/step-24
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+Collection: &Collection CommitLatency
+
+Actors:
+- Name: Load phase
+  Type: RunCommand
+  Threads: 1
+  Database: test
+  Phases:
+  - &DropCollection
+    Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: *Collection
+  - &Load
+    Repeat: 1
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: *Collection
+        documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
+  - &Nop
+    Operation:
+      OperationName: Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+  - *DropCollection
+  - *Load
+  - *Nop
+
+
+
+- Name: CommitLatency
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop # Load phase is different actor
+  - *Nop
+  - WriteConcern:
+      Level: 0
+    ReadConcern:
+      Level: local
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: 1
+    ReadConcern:
+      Level: local
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: 1
+    ReadConcern:
+      Level: local
+    ReadPreference:
+      ReadMode: secondary
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: 1
+      Journal: true
+    ReadConcern:
+      Level: local
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: majority
+    ReadConcern:
+      Level: majority
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: majority
+    ReadConcern:
+      Level: majority
+    ReadPreference:
+      ReadMode: secondary
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: majority
+      Journal: true
+    ReadConcern:
+      Level: majority
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: majority
+    ReadConcern:
+      Level: linearizable
+    ReadPreference:
+      ReadMode: primary
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: majority
+    ReadConcern:
+      Level: majority
+    ReadPreference:
+      ReadMode: primary
+    Session: True
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: majority
+    ReadConcern:
+      Level: majority
+    ReadPreference:
+      ReadMode: secondary
+    Session: True
+  - *Nop
+  - *Nop
+  - WriteConcern:
+      Level: majority
+    ReadConcern:
+      Level: snapshot
+    ReadPreference:
+      ReadMode: primary
+    Transaction: True         # Implies Session
