@@ -29,14 +29,11 @@
 
 
 int main(int argc, char** argv) {
-    // basically just a test that we're using c++17
-    auto v = std::make_optional(genny::getVersion());
-
-    std::cout << u8"🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔" << std::endl;
-
     auto opts = genny::driver::DefaultDriver::ProgramOptions(argc, argv);
-    if (opts.isHelp) {
-        std::cout << u8"🧞 Genny Usage: " << argv[0] << "[options] <workload-file>" << std::endl;
+    if (opts.showHelp) {
+        auto v = std::make_optional(genny::getVersion());
+        // basically just a test that we're using c++17
+        std::cout << u8"\n🧞 Genny" << " Version " << v.value_or("ERROR") << u8" 💝🐹🌇⛔\n";
         std::cout << opts.description << std::endl;
         return 0;
     }

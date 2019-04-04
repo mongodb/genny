@@ -23,7 +23,7 @@ BUILD_DIR="${ROOT_DIR}/build"
 
 CMD=(
     "${GENNY:-genny}"
-    --dry-run
+    dry-run
 )
 
 # Find all of the workload yamls at the specified directory

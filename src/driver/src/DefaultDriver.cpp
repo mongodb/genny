@@ -96,7 +96,6 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     auto orchestrator = Orchestrator{};
 
     if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
-        std::cout << "Printing evaluated workload YAML file:" << std::endl;
         std::cout << YAML::Dump(yaml) << std::endl;
         setupCtx.success();
         return DefaultDriver::OutcomeCode::kSuccess;
@@ -200,34 +199,28 @@ std::string normalizeOutputFile(const std::string& str) {
 DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     namespace po = boost::program_options;
 
-    po::options_description progDescription{u8"🧞‍ Allowed Options 🧞‍"};
+    std::ostringstream progDescStream;
+    // Section headers are prefaced with new lines.
+    progDescStream << u8"\n🧞 Usage:\n";
+    progDescStream << "    " << argv[0] << " <subcommand> [options] <workload-file>\n";
+    progDescStream << u8"\n🧞 Subcommands:‍";
+    progDescStream << u8R"(
+    run          Run the workload normally
+    dry-run      Exit before the run step -- this may still make network
+                 connections during workload initialization
+    evaluate     Print the evaluated YAML workload file with minimal validation
+    list-actors  List all actors available for use
+    )" << "\n";
+
+    progDescStream << "🧞 Options";
+    po::options_description progDescription{progDescStream.str()};
     po::positional_options_description positional;
 
     // clang-format off
-    const auto runModeHelp = u8R"(
-Genny run modes
-    normal
-        Run the workload normally; default mode if no run mode is specified
-
-    dry-run
-        Exit before the run step -- this may still make network connections during workload initialization
-
-    evaluate
-        Print the evaluated YAML workload file with minimal validation
-
-    list-actors
-        List all actors available for use
-    )";
-
     progDescription.add_options()
+            ("subcommand", po::value<std::string>(), "1st positional argument")
             ("help,h",
              "Show help message")
-            ("run-mode", po::value<std::string>()->default_value("normal"),
-             runModeHelp)
-            ("list-actors",
-                    "DEPRECATED. Please use the \"list-actors\" run mode.")
-            ("dry-run",
-                    "DEPRECATED. Please the \"dry-run\" run mode.")
             ("metrics-format,m",
              po::value<std::string>()->default_value("csv"),
              "Metrics format to use")
@@ -243,6 +236,7 @@ Genny run modes
              po::value<std::string>()->default_value("mongodb://localhost:27017"),
              "Mongo URI to use for the default connection-pool.");
 
+    positional.add("subcommand", 1);
     positional.add("workload-file", -1);
 
     auto run = po::command_line_parser(argc, argv)
@@ -261,18 +255,28 @@ Genny run modes
     po::store(run, vm);
     po::notify(vm);
 
-    const auto runModeStr = vm["run-mode"].as<std::string>();
+    if (!vm.count("subcommand")) {
+        std::cerr << "ERROR: missing subcommand" << std::endl;
+        this->showHelp = true;
+        return;
+    }
+    const auto subcommand = vm["subcommand"].as<std::string>();
 
-    if (vm.count("list-actors") >= 1 || runModeStr == "list-actors")
+    if (subcommand == "list-actors")
         this->runMode = RunMode::kListActors;
-
-    if (vm.count("dry-run") >= 1 || runModeStr == "dry-run")
+    else if (subcommand == "dry-run")
         this->runMode = RunMode::kDryRun;
-
-    if (runModeStr == "evaluate")
+    else if (subcommand == "evaluate")
         this->runMode = RunMode::kEvaluate;
+    else if (subcommand == "run")
+        this->runMode = RunMode::kNormal;
+    else {
+        std::cerr << "ERROR: Unexpected subcommand " << subcommand << std::endl;
+        this->showHelp = true;
+        return;
+    }
 
-    this->isHelp = vm.count("help") >= 1;
+    this->showHelp = vm.count("help") >= 1;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();

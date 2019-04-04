@@ -63,7 +63,7 @@ public:
         std::string metricsOutputFileName;
         std::string mongoUri;
         std::string description;
-        bool isHelp = false;
+        bool showHelp = false;
         DefaultDriver::RunMode runMode = RunMode::kNormal;
     };
 
