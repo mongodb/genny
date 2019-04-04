@@ -16,6 +16,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/json.hpp>
 
 #include <testlib/helpers.hpp>
@@ -39,10 +40,10 @@ bsoncxx::document::value fromYaml(const std::string& yamlStr) {
     return toDocumentBson(yaml(yamlStr));
 }
 
-void test(const std::string& yaml, const std::string& json) {
+
+void test(const std::string& yaml, const bsoncxx::document::view_or_value& expect) {
     try {
         auto actual = fromYaml(yaml);
-        auto expect = bson(json);
         INFO(bsoncxx::to_json(expect) << " == " << bsoncxx::to_json(actual));
         REQUIRE(expect.view() == actual.view());
     } catch (const std::exception& x) {
@@ -51,8 +52,29 @@ void test(const std::string& yaml, const std::string& json) {
     }
 }
 
+void test(const std::string& yaml, const std::string& json) {
+    return test(yaml, bson(json));
+}
+
+
+namespace BasicBson = bsoncxx::builder::basic;
+namespace BsonTypes = bsoncxx::types;
 
 TEST_CASE("YAML To BSON Simple") {
+    // use the smallest type that will fit
+    test("foo: 0", BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int32{0})));
+
+    // max value for int32 ↓
+    test("foo: 2147483647",
+         BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int32{2147483647})));
+    //            ↑ + 1
+    test("foo: 2147483648",
+         BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int64{2147483648})));
+
+    // max value for int64 ↓
+    test("foo: 9223372036854775807",
+         BasicBson::make_document(BasicBson::kvp("foo", BsonTypes::b_int64{9223372036854775807})));
+
     test("foo: bar", R"({"foo":"bar"})");
     test("foo: '0'", R"({"foo":"0"})");
     test("foo: 1", R"({"foo":1})");

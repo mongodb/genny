@@ -17,6 +17,7 @@ CedarBucketConfig = namedtuple('CedarBucketConfig', [
     'api_token',
     'region',
     'name',
+    'permissions',
     'prefix'
 ])
 
@@ -26,7 +27,7 @@ CedarTestArtifact = namedtuple('CedarTestArtifact', [
     'tags',  # [str]
     'local_path',
     'created_at',
-    'is_uncompressed',
+    'convert_bson_to_ftdc',
 ])
 
 CedarTestInfo = namedtuple('CedarTestInfo', [
@@ -105,7 +106,7 @@ def build_report(config):
             tags=[],
             local_path=path,
             created_at=config.created_at,
-            is_uncompressed=True
+            convert_bson_to_ftdc=True
         )
 
         ti = CedarTestInfo(
@@ -133,6 +134,7 @@ def build_report(config):
         api_token=None,
         region=config.cloud_region,
         name=config.cloud_bucket,
+        permissions='public-read',
         prefix=bucket_prefix
     )
 
@@ -309,3 +311,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     cr = cert_retriever_cls(jira_user, jira_pwd)
     runner = ShellCuratorRunner(cr, args.report_file)
     runner.run(runner.get_command())
+
+
+if __name__ == '__main__':
+    main__cedar_report()

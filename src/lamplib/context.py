@@ -39,7 +39,7 @@ def _create_compile_environment(triplet_os, toolchain_dir):
 
 class Context:
     # Permanent constants.
-    TOOLCHAIN_BUILD_ID = '7297534c3dc1df9f6d315098174171eaf75c5846_19_02_09_02_19_44'
+    TOOLCHAIN_BUILD_ID = 'bec4a8117957b9aa63e8b1ecf32fd10679fe61eb_19_04_02_15_06_33'
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split('_')[0]
     TOOLCHAIN_ROOT = '/data/mci'  # TODO BUILD-7624 change this to /opt.
 
