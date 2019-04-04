@@ -137,7 +137,7 @@ class CedarReportTest(unittest.TestCase):
                 'api_token': None,
                 'region': 'us-east-1',
                 'name': 'genny-metrics',
-                'permission': 'public-read',
+                'permissions': 'public-read',
                 'prefix': 'my_task_id_1'
             }
         }

@@ -17,7 +17,7 @@ CedarBucketConfig = namedtuple('CedarBucketConfig', [
     'api_token',
     'region',
     'name',
-    'permission',
+    'permissions',
     'prefix'
 ])
 
@@ -134,7 +134,7 @@ def build_report(config):
         api_token=None,
         region=config.cloud_region,
         name=config.cloud_bucket,
-        permission='public-read',
+        permissions='public-read',
         prefix=bucket_prefix
     )
 
