@@ -87,7 +87,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     }
 
     if (options.workloadSource.empty()) {
-        std::cout << "Must specify a workload YAML file" << std::endl;
+        std::cerr << "Must specify a workload YAML file" << std::endl;
         setupCtx.failure();
         return DefaultDriver::OutcomeCode::kUserException;
     }
