@@ -178,7 +178,6 @@ void CommitLatency::run() {
 
 CommitLatency::CommitLatency(genny::ActorContext& context)
     : Actor(context),
-      _rng{context.workload().createRNG()},
       _strategy{context.operation("insert", CommitLatency::id())},
       _client{std::move(context.client())},
       _loop{context, (*_client)[context.get<std::string>("Database")]} {}
