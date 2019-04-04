@@ -69,7 +69,7 @@ struct CommitLatency::PhaseConfig {
             optionsTransaction.write_concern(wc);
             optionsTransaction.read_preference(rp);
             // Transactions ignore the read_concern of a collection handle, must set transaction
-            // options (DRIVERS-619).
+            // options.
             optionsTransaction.read_concern(rc);
         } else {
             optionsUpdate.write_concern(wc);
