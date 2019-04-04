@@ -1,3 +1,4 @@
+SchemaVersion: 2019-04-01
 ForSelfTest:
   Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
   Mode: NoException

@@ -47,7 +47,7 @@ namespace fs = boost::filesystem;
 
 using YamlParameters = std::map<std::string, YAML::Node>;
 
-YAML::Node recursiveParse(const YAML::Node& node,
+YAML::Node recursiveParse(YAML::Node node,
                           YamlParameters& params,
                           const fs::path& phaseConfigPath);
 
@@ -66,7 +66,7 @@ YAML::Node loadConfig(const std::string& source,
     }
 }
 
-YAML::Node parseExternal(const YAML::Node& external,
+YAML::Node parseExternal(YAML::Node external,
                          YamlParameters& params,
                          const fs::path& phaseConfig) {
     int keysSeen = 1;
@@ -112,7 +112,7 @@ YAML::Node parseExternal(const YAML::Node& external,
     return recursiveParse(replacement, params, phaseConfig);
 }
 
-YAML::Node replaceParam(const YAML::Node& input, YamlParameters& params) {
+YAML::Node replaceParam(YAML::Node input, YamlParameters& params) {
     if (!input["Name"] || !input["Default"]) {
         auto os = std::ostringstream();
         os << "Invalid keys for '^Parameter', please set 'Name' and 'Default' in following node"
@@ -132,22 +132,22 @@ YAML::Node replaceParam(const YAML::Node& input, YamlParameters& params) {
     }
 }
 
-YAML::Node recursiveParse(const YAML::Node& node,
+YAML::Node recursiveParse(YAML::Node node,
                           YamlParameters& params,
                           const fs::path& phaseConfig) {
     YAML::Node out;
     switch (node.Type()) {
         case YAML::NodeType::Map: {
-            for (auto&& kvp : node) {
+            for (auto kvp : node) {
                 if (kvp.first.as<std::string>() == "^Parameter") {
                     out = replaceParam(kvp.second, params);
                 } else if (kvp.first.as<std::string>() == "ExternalPhaseConfig") {
                     auto external = parseExternal(kvp.second, params, phaseConfig);
                     // Merge the external node with the any other parameters specified
                     // for this node like "Repeat" or "Duration".
-                    for (auto&& kvp : external) {
-                        if (!out[kvp.first])
-                            out[kvp.first] = kvp.second;
+                    for (auto externalKvp : external) {
+                        if (!out[externalKvp.first])
+                            out[externalKvp.first] = externalKvp.second;
                     }
                 } else {
                     out[kvp.first] = recursiveParse(kvp.second, params, phaseConfig);
@@ -156,8 +156,8 @@ YAML::Node recursiveParse(const YAML::Node& node,
             break;
         }
         case YAML::NodeType::Sequence: {
-            for (auto&& val : node) {
-                out.push_back(recursiveParse(val, params, phaseConfig));
+            for (auto val : node) {
+                out.push_back(recursiveParse(val.first, params, phaseConfig));
             }
             break;
         }
@@ -201,7 +201,6 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     auto actorSetup = metrics.operation("Genny", "Setup", 0u);
     auto setupCtx = actorSetup.start();
 
-    auto config = loadConfig(options.workloadSource, options.workloadSourceType);
     fs::path phaseConfigSource;
     if (options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         phaseConfigSource = fs::current_path();
@@ -218,13 +217,14 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
         phaseConfigSource = fs::path(options.workloadSource).parent_path();
     }
 
-    std::cout << YAML::Dump(yaml) << std::endl;
-    return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
-
     auto orchestrator = Orchestrator{};
 
+    YamlParameters params;
+    auto config = loadConfig(options.workloadSource);
+    auto yaml = recursiveParse(config, params, phaseConfigSource);
+
     auto workloadContext =
-        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, globalCast()};
+        WorkloadContext{config, metrics, orchestrator, options.mongoUri, globalCast()};
 
     if (options.isDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;
