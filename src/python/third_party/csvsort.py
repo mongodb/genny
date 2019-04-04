@@ -10,7 +10,6 @@ MongoDB Modifications:
 
 import csv
 import heapq
-import logging
 import os
 import sys
 import tempfile
@@ -63,7 +62,7 @@ def csvsort(input_filename,
 
         filenames = csvsplit(reader, max_size, quoting)
         if show_progress:
-            logging.info('Merging %d splits' % len(filenames))
+            print('Merging %d splits' % len(filenames))
         for filename in filenames:
             memorysort(filename, columns, quoting)
         sorted_filename = mergesort(filenames, columns, quoting)

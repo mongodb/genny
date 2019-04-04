@@ -20,6 +20,10 @@
 #include <cmath>
 #include <sstream>
 
+#include <mongocxx/read_concern.hpp>
+#include <mongocxx/read_preference.hpp>
+#include <mongocxx/write_concern.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 #include <gennylib/InvalidConfigurationException.hpp>
@@ -161,6 +165,152 @@ struct PhaseRangeSpec {
 namespace YAML {
 
 using genny::decodeNodeInto;
+
+template <>
+struct convert<mongocxx::read_preference> {
+    using ReadPreference = mongocxx::read_preference;
+    using ReadMode = mongocxx::read_preference::read_mode;
+    static Node encode(const ReadPreference& rhs) {
+        Node node;
+        auto mode = rhs.mode();
+        if (mode == ReadMode::k_primary) {
+            node["ReadMode"] = "primary";
+        } else if (mode == ReadMode::k_primary_preferred) {
+            node["ReadMode"] = "primaryPreferred";
+        } else if (mode == ReadMode::k_secondary) {
+            node["ReadMode"] = "secondary";
+        } else if (mode == ReadMode::k_secondary_preferred) {
+            node["ReadMode"] = "secondaryPreferred";
+        } else if (mode == ReadMode::k_nearest) {
+            node["ReadMode"] = "nearest";
+        }
+        auto maxStaleness = rhs.max_staleness();
+        if (maxStaleness) {
+            node["MaxStaleness"] = genny::TimeSpec(*maxStaleness);
+        }
+        return node;
+    }
+
+    static bool decode(const Node& node, ReadPreference& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (!node["ReadMode"]) {
+            // readPreference must have a read mode specified.
+            return false;
+        }
+        auto readMode = node["ReadMode"].as<std::string>();
+        if (readMode == "primary") {
+            rhs.mode(ReadMode::k_primary);
+        } else if (readMode == "primaryPreferred") {
+            rhs.mode(ReadMode::k_primary_preferred);
+        } else if (readMode == "secondary") {
+            rhs.mode(ReadMode::k_secondary);
+        } else if (readMode == "secondaryPreferred") {
+            rhs.mode(ReadMode::k_secondary_preferred);
+        } else if (readMode == "nearest") {
+            rhs.mode(ReadMode::k_nearest);
+        } else {
+            return false;
+        }
+        if (node["MaxStaleness"]) {
+            auto maxStaleness = node["MaxStaleness"].as<genny::TimeSpec>();
+            rhs.max_staleness(std::chrono::seconds{maxStaleness});
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<mongocxx::write_concern> {
+    using WriteConcern = mongocxx::write_concern;
+    static Node encode(const WriteConcern& rhs) {
+        Node node;
+        node["Timeout"] = genny::TimeSpec{rhs.timeout()};
+
+        auto journal = rhs.journal();
+        node["Journal"] = journal;
+
+        auto ackLevel = rhs.acknowledge_level();
+        if (ackLevel == WriteConcern::level::k_majority) {
+            node["Level"] = "majority";
+        } else if (ackLevel == WriteConcern::level::k_acknowledged) {
+            auto numNodes = rhs.nodes();
+            if (numNodes) {
+                node["Level"] = *numNodes;
+            }
+        }
+        return node;
+    }
+
+    static bool decode(const Node& node, WriteConcern& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (!node["Level"]) {
+            // writeConcern must specify the write concern level.
+            return false;
+        }
+        auto level = node["Level"].as<std::string>();
+        try {
+            auto level = node["Level"].as<int>();
+            rhs.nodes(level);
+        } catch (const BadConversion& e) {
+            auto level = node["Level"].as<std::string>();
+            if (level == "majority") {
+                rhs.majority(std::chrono::milliseconds{0});
+            } else {
+                // writeConcern level must be of valid integer or 'majority'.
+                return false;
+            }
+        }
+        if (node["Timeout"]) {
+            auto timeout = node["Timeout"].as<genny::TimeSpec>();
+            rhs.timeout(std::chrono::milliseconds{timeout});
+        }
+        if (node["Journal"]) {
+            auto journal = node["Journal"].as<bool>();
+            rhs.journal(journal);
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<mongocxx::read_concern> {
+    using ReadConcern = mongocxx::read_concern;
+    using ReadConcernLevel = mongocxx::read_concern::level;
+    static Node encode(const ReadConcern& rhs) {
+        Node node;
+        auto level = std::string(rhs.acknowledge_string());
+        if (!level.empty()) {
+            node["Level"] = level;
+        }
+        return node;
+    }
+
+    static bool isValidReadConcernString(std::string_view rcString) {
+        return (rcString == "local" || rcString == "majority" || rcString == "linearizable" ||
+                rcString == "snapshot" || rcString == "available");
+    }
+
+    static bool decode(const Node& node, ReadConcern& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (!node["Level"]) {
+            // readConcern must have a read concern level specified.
+            return false;
+        }
+        auto level = node["Level"].as<std::string>();
+        if (isValidReadConcernString(level)) {
+            rhs.acknowledge_string(level);
+            return true;
+        } else {
+            return false;
+        }
+    }
+};
 
 /**
  * Convert between YAML and genny::PhaseRange
