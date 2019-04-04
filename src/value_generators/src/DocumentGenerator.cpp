@@ -12,562 +12,580 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstdlib>
-#include <random>
+#include <value_generators/DocumentGenerator.hpp>
+
+#include <functional>
+#include <map>
 #include <sstream>
-#include <unordered_map>
 
 #include <boost/log/trivial.hpp>
 
+#include <bsoncxx/builder/basic/array.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
-#include <bsoncxx/json.hpp>
 
-#include <value_generators/DocumentGenerator.hpp>
-
-namespace genny::v1 {
 namespace {
 
-const auto parserMap = std::unordered_map<std::string, Expression::Parser>{
-    {"^FastRandomString", FastRandomStringExpression::parse},
-    {"^RandomInt", RandomIntExpression::parse},
-    {"^RandomString", RandomStringExpression::parse},
-    {"^Verbatim", ConstantExpression::parse}};
-
-}  // namespace
-
-Value::Value(bool value) : _value(value) {}
-Value::Value(int32_t value) : _value(value) {}
-Value::Value(int64_t value) : _value(value) {}
-Value::Value(double value) : _value(value) {}
-Value::Value(std::string value) : _value(std::move(value)) {}
-Value::Value(bsoncxx::types::b_null value) : _value(std::move(value)) {}
-Value::Value(bsoncxx::document::view_or_value value) : _value(std::move(value)) {}
-Value::Value(bsoncxx::array::view_or_value value) : _value(std::move(value)) {}
-
-bool Value::getBool() const {
-    return std::get<bool>(_value);
-}
-
-int32_t Value::getInt32() const {
-    return std::get<int32_t>(_value);
-}
-
-int64_t Value::getInt64() const {
-    return std::get<int64_t>(_value);
-}
-
-double Value::getDouble() const {
-    return std::get<double>(_value);
-}
-
-std::string Value::getString() const {
-    return std::get<std::string>(_value);
-}
-
-bsoncxx::types::b_null Value::getNull() const {
-    return std::get<bsoncxx::types::b_null>(_value);
-}
-
-bsoncxx::document::view_or_value Value::getDocument() const {
-    return std::get<bsoncxx::document::view_or_value>(_value);
-}
-
-bsoncxx::array::view_or_value Value::getArray() const {
-    return std::get<bsoncxx::array::view_or_value>(_value);
-}
-
-template <class... Ts>
-struct overloaded : Ts... {
-    using Ts::operator()...;
+class Appendable {
+public:
+    virtual ~Appendable() = default;
+    virtual void append(const std::string& key, bsoncxx::builder::basic::document& builder) = 0;
+    virtual void append(bsoncxx::builder::basic::array& builder) = 0;
 };
 
-template <class... Ts>
-overloaded(Ts...)->overloaded<Ts...>;
+using UniqueAppendable = std::unique_ptr<Appendable>;
 
-std::optional<int64_t> Value::tryAsInt64() const {
-    std::optional<int64_t> ret;
+template <class T>
+class Generator : public Appendable {
+public:
+    ~Generator() override = default;
+    virtual T evaluate() = 0;
+    void append(const std::string& key, bsoncxx::builder::basic::document& builder) override {
+        builder.append(bsoncxx::builder::basic::kvp(key, this->evaluate()));
+    }
+    void append(bsoncxx::builder::basic::array& builder) override {
+        builder.append(this->evaluate());
+    }
+};
 
-    std::visit(overloaded{[&](int32_t arg) { ret = arg; },
-                          [&](int64_t arg) { ret = arg; },
-                          [&](auto&& arg) {}},
-               _value);
+template <class T>
+using UniqueGenerator = std::unique_ptr<Generator<T>>;
 
-    return ret;
-}
-
-namespace {
-
-int64_t getInt64Parameter(int64_t value, std::string_view name) {
-    return value;
-}
-
-int64_t getInt64Parameter(const Value& value, std::string_view name) {
-    auto ret = value.tryAsInt64();
-
-    if (!ret) {
-        std::stringstream error;
-        error << "Expected integer for parameter '" << name << "', but got " << value;
-        throw InvalidValueGeneratorSyntax(error.str());
+template <typename T>
+class ConstantAppender : public Generator<T> {
+public:
+    explicit ConstantAppender(T value) : _value{value} {}
+    explicit ConstantAppender() : _value{} {}
+    T evaluate() override {
+        return _value;
     }
 
-    return *ret;
-}
+protected:
+    T _value;
+};
 
 }  // namespace
 
-void Value::appendToBuilder(bsoncxx::builder::basic::document& doc, std::string key) {
-    std::visit([&](auto&& arg) { doc.append(bsoncxx::builder::basic::kvp(std::move(key), arg)); },
-               std::move(_value));
+
+namespace genny {
+
+class DocumentGenerator::Impl : public Generator<bsoncxx::document::value> {
+public:
+    using Entries = std::vector<std::pair<std::string, UniqueAppendable>>;
+
+    explicit Impl(Entries entries) : _entries{std::move(entries)} {}
+
+    bsoncxx::document::value evaluate() override {
+        bsoncxx::builder::basic::document builder;
+        for (auto&& [k, app] : _entries) {
+            app->append(k, builder);
+        }
+        return builder.extract();
+    }
+
+private:
+    Entries _entries;
+};
+
+namespace {
+
+/**
+ * @param node
+ *  a yaml node
+ * @return
+ *   a string representation (in standard yaml formatting) of the node
+ */
+std::string toString(const YAML::Node& node) {
+    YAML::Emitter e;
+    e << node;
+    return std::string{e.c_str()};
 }
 
-void Value::appendToBuilder(bsoncxx::builder::basic::array& arr) {
-    std::visit([&](auto&& arg) { arr.append(arg); }, std::move(_value));
-}
-
-std::ostream& operator<<(std::ostream& out, const Value& value) {
-    std::visit(overloaded{
-                   [&](bool arg) { out << arg; },
-                   [&](int32_t arg) { out << arg; },
-                   [&](int64_t arg) { out << arg; },
-                   [&](double arg) { out << arg; },
-                   [&](const std::string& arg) { out << arg; },
-                   [&](bsoncxx::types::b_null arg) { out << "null"; },
-                   [&](const bsoncxx::document::value& arg) {
-                       out << bsoncxx::to_json(arg.view(), bsoncxx::ExtendedJsonMode::k_canonical);
-                   },
-                   [&](bsoncxx::document::view arg) {
-                       out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
-                   },
-                   [&](const bsoncxx::array::value& arg) {
-                       out << bsoncxx::to_json(arg.view(), bsoncxx::ExtendedJsonMode::k_canonical);
-                   },
-                   [&](bsoncxx::array::view arg) {
-                       out << bsoncxx::to_json(arg, bsoncxx::ExtendedJsonMode::k_canonical);
-                   },
-               },
-               value._value);
-
+/**
+ * Extract a required key from a node or barf if not there
+ * @param node
+ *   haystack to look in
+ * @param key
+ *   needle key to look for
+ * @param src
+ *   useful source location included in the exception message
+ * @return
+ *   `node[key]` if exists else throw with a meaningful error message
+ */
+YAML::Node extract(YAML::Node node, const std::string& key, const std::string& src) {
+    auto out = node[key];
+    if (!out) {
+        std::stringstream ex;
+        ex << "Missing '" << key << "' for '" << src << "' in input " << toString(node);
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(ex.str()));
+    }
     return out;
 }
 
-UniqueExpression Expression::parseExpression(YAML::Node node, DefaultRandom& rng) {
-    if (!node.IsMap()) {
-        throw InvalidValueGeneratorSyntax("Expected mapping type to parse into an expression");
+/**
+ * @param node
+ *   a "sub"-structure e.g. should get `{v}` in `{a:{v}`
+ * @return
+ *   the single ^-prefixed key if there is exactly one
+ *   ^-prefixed key. If there is a ^-prefixed keys
+ *   *and* any additional keys then barf.
+ */
+std::optional<std::string> getMetaKey(YAML::Node node) {
+    size_t foundKeys = 0;
+    std::optional<std::string> out = std::nullopt;
+    for (const auto&& kvp : node) {
+        ++foundKeys;
+        auto key = kvp.first.as<std::string>();
+        if (!key.empty() && key[0] == '^') {
+            out = key;
+        }
+        if (foundKeys > 1 && out) {
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Found multiple meta-keys"));
+        }
     }
-
-    auto nodeIt = node.begin();
-    if (nodeIt == node.end()) {
-        throw InvalidValueGeneratorSyntax(
-            "Expected mapping to have a single '^'-prefixed key, but was empty");
-    }
-
-    auto key = nodeIt->first;
-    auto value = nodeIt->second;
-
-    ++nodeIt;
-    if (nodeIt != node.end()) {
-        throw InvalidValueGeneratorSyntax(
-            "Expected mapping to have a single '^'-prefixed key, but had multiple keys");
-    }
-
-    auto parserIt = parserMap.find(key.as<std::string>());
-    if (parserIt == parserMap.end()) {
-        std::stringstream error;
-        error << "Unknown expression type '" << key.as<std::string>() << "'";
-        throw InvalidValueGeneratorSyntax(error.str());
-    }
-
-    return parserIt->second(value, rng);
+    return out;
 }
 
-UniqueExpression Expression::parseObject(YAML::Node node, DefaultRandom& rng) {
-    if (!node.IsMap()) {
-        throw InvalidValueGeneratorSyntax("Expected mapping type to parse into an object");
+/** Default alphabet for string generators */
+static const std::string kDefaultAlphabet = std::string{
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/"};
+
+// Useful typedefs
+
+template <typename O>
+using Parser = std::function<O(YAML::Node, DefaultRandom&)>;
+
+// Pre-declaring all at once
+// Documentation is at the implementations-site.
+
+UniqueGenerator<int64_t> intGenerator(YAML::Node node, DefaultRandom& rng);
+UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng);
+
+template <bool Verbatim>
+std::unique_ptr<DocumentGenerator::Impl> documentGenerator(YAML::Node node, DefaultRandom& rng);
+
+template <bool Verbatim>
+UniqueGenerator<bsoncxx::array::value> arrayGenerator(YAML::Node node, DefaultRandom& rng);
+
+/** `{^RandomInt:{distribution:uniform ...}}` */
+class UniformInt64Generator : public Generator<int64_t> {
+public:
+    /** @param node `{min:<int>, max:<int>}` */
+    UniformInt64Generator(YAML::Node node, DefaultRandom& rng)
+        : _rng{rng},
+          _minGen{intGenerator(extract(node, "min", "uniform"), _rng)},
+          _maxGen{intGenerator(extract(node, "max", "uniform"), _rng)} {}
+
+    int64_t evaluate() override {
+        auto min = _minGen->evaluate();
+        auto max = _maxGen->evaluate();
+        auto distribution = boost::random::uniform_int_distribution<int64_t>{min, max};
+        return distribution(_rng);
     }
 
-    auto nodeIt = node.begin();
-    if (nodeIt != node.end()) {
-        auto key = nodeIt->first;
+private:
+    DefaultRandom& _rng;
+    UniqueGenerator<int64_t> _minGen;
+    UniqueGenerator<int64_t> _maxGen;
+};
 
-        ++nodeIt;
-        if (nodeIt == node.end() && key.as<std::string>()[0] == '^') {
-            return Expression::parseExpression(node, rng);
+/** `{^RandomInt:{distribution:binomial ...}}` */
+class BinomialInt64Generator : public Generator<int64_t> {
+public:
+    /** @param node `{t:<int>, p:double}` */
+    BinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
+        : _rng{rng},
+          _tGen{intGenerator(extract(node, "t", "binomial"), _rng)},
+          _p{extract(node, "p", "binomial").as<double>()} {}
+
+    int64_t evaluate() override {
+        auto distribution = boost::random::binomial_distribution<int64_t>{_tGen->evaluate(), _p};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    double _p;
+    UniqueGenerator<int64_t> _tGen;
+};
+
+/** `{^RandomInt:{distribution:negative_binomial ...}}` */
+class NegativeBinomialInt64Generator : public Generator<int64_t> {
+public:
+    /** @param node `{k:<int>, p:double}` */
+    NegativeBinomialInt64Generator(YAML::Node node, DefaultRandom& rng)
+        : _rng{rng},
+          _kGen{intGenerator(extract(node, "k", "negative_binomial"), _rng)},
+          _p{extract(node, "p", "negative_binomial").as<double>()} {}
+
+    int64_t evaluate() override {
+        auto distribution = boost::random::negative_binomial_distribution<int64_t>{_kGen->evaluate(), _p};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    double _p;
+    UniqueGenerator<int64_t> _kGen;
+};
+
+/** `{^RandomInt:{distribution:poisson...}}` */
+class PoissonInt64Generator : public Generator<int64_t> {
+public:
+    /** @param node `{mean:double}` */
+    PoissonInt64Generator(YAML::Node node, DefaultRandom& rng)
+        : _rng{rng}, _mean{extract(node, "mean", "poisson").as<double>()} {}
+
+    int64_t evaluate() override {
+        auto distribution = boost::random::poisson_distribution<int64_t>{_mean};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    double _mean;
+};
+
+/** `{^RandomInt:{distribution:geometric...}}` */
+class GeometricInt64Generator : public Generator<int64_t> {
+public:
+    /** @param node `{mean:double}` */
+    GeometricInt64Generator(YAML::Node node, DefaultRandom& rng)
+        : _rng{rng}, _p{extract(node, "p", "geometric").as<double>()} {}
+
+    int64_t evaluate() override {
+        auto distribution = boost::random::geometric_distribution<int64_t>{_p};
+        return distribution(_rng);
+    }
+
+private:
+    DefaultRandom& _rng;
+    const double _p;
+};
+
+
+class StringGenerator : public Generator<std::string> {
+public:
+    StringGenerator(YAML::Node node, DefaultRandom& rng)
+        : _rng{rng},
+          _lengthGen{intGenerator(extract(node, "length", "^RandomString"), rng)},
+          _alphabet{node["alphabet"].as<std::string>(kDefaultAlphabet)},
+          _alphabetLength{_alphabet.size()} {
+        if (_alphabetLength <= 0) {
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(
+                "Random string requires non-empty alphabet if specified"));
         }
     }
 
-    return DocumentExpression::parse(node, rng);
-}
+protected:
+    DefaultRandom& _rng;
+    UniqueGenerator<int64_t> _lengthGen;
+    const std::string _alphabet;
+    const size_t _alphabetLength;
+};
 
-UniqueExpression Expression::parseOperand(YAML::Node node, DefaultRandom& rng) {
-    switch (node.Type()) {
-        case YAML::NodeType::Map:
-            return Expression::parseObject(node, rng);
-        case YAML::NodeType::Sequence:
-            return ArrayExpression::parse(node, rng);
-        case YAML::NodeType::Scalar:
-        case YAML::NodeType::Null:
-            return ConstantExpression::parse(node, rng);
-        case YAML::NodeType::Undefined:
-            throw InvalidValueGeneratorSyntax(
-                "C++ programmer error: Failed to check for node's existence before attempting to"
-                " parse it");
+/** `{^RandomString:{...}` */
+class NormalRandomStringGenerator : public StringGenerator {
+public:
+    /**
+     * @param node `{length:<int>, alphabet:opt string}`
+     */
+    NormalRandomStringGenerator(YAML::Node node, DefaultRandom& rng) : StringGenerator(node, rng) {}
+
+    std::string evaluate() override {
+        auto distribution = boost::random::uniform_int_distribution<size_t>{0, _alphabetLength - 1};
+
+        auto length = _lengthGen->evaluate();
+        std::string str(length, '\0');
+
+        for (int i = 0; i < length; ++i) {
+            str[i] = _alphabet[distribution(_rng)];
+        }
+
+        return str;
     }
+};
 
-    std::abort();
-}
+/** `{^FastRandomString:{...}` */
+class FastRandomStringGenerator : public StringGenerator {
+public:
+    /** @param node `{length:<int>, alphabet:opt str}` */
+    FastRandomStringGenerator(YAML::Node node, DefaultRandom& rng) : StringGenerator(node, rng) {}
 
-ConstantExpression::ConstantExpression(Value value, ValueType type)
-    : _type{type}, _value{std::move(value)} {}
+    std::string evaluate() override {
+        auto length = _lengthGen->evaluate();
+        std::string str(length, '\0');
 
-UniqueExpression ConstantExpression::parse(YAML::Node node, DefaultRandom& rng) {
-    switch (node.Type()) {
-        case YAML::NodeType::Map: {
-            auto elements = std::vector<DocumentExpression::ElementType>{};
-            for (auto&& entry : node) {
-                elements.emplace_back(entry.first.as<std::string>(),
-                                      ConstantExpression::parse(entry.second, rng));
+        auto randomValue = _rng();
+        int bits = 64;
+
+        for (int i = 0; i < length; ++i) {
+            if (bits < 6) {
+                randomValue = _rng();
+                bits = 64;
             }
 
-            return std::make_unique<DocumentExpression>(std::move(elements));
+            str[i] = _alphabet[(randomValue & 0x2f) % _alphabetLength];
+            randomValue >>= 6;
+            bits -= 6;
         }
-        case YAML::NodeType::Sequence: {
-            auto elements = std::vector<ArrayExpression::ElementType>{};
-            for (auto&& entry : node) {
-                elements.emplace_back(ConstantExpression::parse(entry, rng));
+        return str;
+    }
+};
+
+/** `{a: [...]}` */
+class ArrayGenerator : public Generator<bsoncxx::array::value> {
+public:
+    using ValueType = std::vector<UniqueAppendable>;
+
+    explicit ArrayGenerator(ValueType values) : _values{std::move(values)} {}
+
+    bsoncxx::array::value evaluate() override {
+        bsoncxx::builder::basic::array builder{};
+        for (auto&& value : _values) {
+            value->append(builder);
+        }
+        return builder.extract();
+    }
+
+private:
+    const ValueType _values;
+};
+
+/**
+ * @tparam O
+ *   parser output type
+ * @param node
+ *   a sub-field e.g. {^RandomInt:{...}} or a scalar.
+ * @param parsers
+ *   Which parsers (all of type Parser<O>) to use.
+ * @return Parser<O>
+ *   if the document reprents a evaluate-able structure.
+ *   E.g. returns the randomInt parser if node is {^RandomInt:{...}}
+ *   or nullopt if node is a scalar etc. Throws if node looks
+ *   evaluate-able but e.g. has two ^-prefixed keys or if the ^-prefixed
+ *   key isn't in the list of parsers.
+ */
+template <typename O>
+std::optional<std::pair<Parser<O>, std::string>> extractKnownParser(
+    YAML::Node node, DefaultRandom& rng, std::map<std::string, Parser<O>> parsers) {
+    if (!node || !node.IsMap()) {
+        return std::nullopt;
+    }
+
+    auto metaKey = getMetaKey(node);
+    if (!metaKey) {
+        return std::nullopt;
+    }
+
+    if (auto parser = parsers.find(*metaKey); parser != parsers.end()) {
+        return std::make_optional<std::pair<Parser<O>, std::string>>({parser->second, *metaKey});
+    }
+
+    std::stringstream msg;
+    msg << "Unknown parser '" << *metaKey << "' in node '" << toString(node) << "'";
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
+}
+
+/**
+ * Main entry-point into depth-first construction.
+ *
+ * @tparam Verbatim if we're in a ^Verbatim node
+ * @tparam Out desired Parser output type
+ * @param node any type of node e.g. {a:1}, {^RandomInt:{...}}, [{a:1},{^RandomInt}]
+ * @param parsers must all be of type Parser<O>
+ * @return the indicated parser
+ */
+template <bool Verbatim, typename Out>
+Out valueGenerator(YAML::Node node,
+                   DefaultRandom& rng,
+                   const std::map<std::string, Parser<Out>>& parsers) {
+    if constexpr (!Verbatim) {
+        if (auto parserPair = extractKnownParser(node, rng, parsers)) {
+            // known parser type
+            return parserPair->first(node[parserPair->second], rng);
+        }
+    }
+    // switch-statement on node.Type() may be clearer
+
+    if (node.IsNull()) {
+        return std::make_unique<ConstantAppender<bsoncxx::types::b_null>>();
+    }
+    if (node.IsScalar()) {
+        if (node.Tag() != "!") {
+            try {
+                return std::make_unique<ConstantAppender<int32_t>>(node.as<int32_t>());
+            } catch (const YAML::BadConversion& e) {
             }
-
-            return std::make_unique<ArrayExpression>(std::move(elements));
+            try {
+                return std::make_unique<ConstantAppender<int64_t>>(node.as<int64_t>());
+            } catch (const YAML::BadConversion& e) {
+            }
+            try {
+                return std::make_unique<ConstantAppender<double>>(node.as<double>());
+            } catch (const YAML::BadConversion& e) {
+            }
+            try {
+                return std::make_unique<ConstantAppender<bool>>(node.as<bool>());
+            } catch (const YAML::BadConversion& e) {
+            }
         }
-        case YAML::NodeType::Null:
-            return std::make_unique<ConstantExpression>(Value{bsoncxx::types::b_null{}},
-                                                        ValueType::Null);
-        case YAML::NodeType::Scalar:
-        case YAML::NodeType::Undefined:
-            // YAML::NodeType::Scalar and YAML::NodeType::Undefined are handled below.
-            break;
+        return std::make_unique<ConstantAppender<std::string>>(node.as<std::string>());
+    }
+    if (node.IsSequence()) {
+        return arrayGenerator<Verbatim>(node, rng);
+    }
+    if (node.IsMap()) {
+        return documentGenerator<Verbatim>(node, rng);
     }
 
-    if (!node.IsScalar()) {
-        throw InvalidValueGeneratorSyntax("Expected scalar value to parse");
-    }
-
-    // `YAML::Node::Tag() == "!"` means that the scalar value is quoted. In that case, we want to
-    // avoid converting any numeric string values to numbers. See
-    // https://github.com/jbeder/yaml-cpp/issues/261 for more details.
-    if (node.Tag() != "!") {
-        try {
-            return std::make_unique<ConstantExpression>(Value{node.as<int32_t>()},
-                                                        ValueType::Integer);
-        } catch (const YAML::BadConversion& e) {
-        }
-
-        try {
-            return std::make_unique<ConstantExpression>(Value{node.as<int64_t>()},
-                                                        ValueType::Integer);
-        } catch (const YAML::BadConversion& e) {
-        }
-
-        try {
-            return std::make_unique<ConstantExpression>(Value{node.as<double>()},
-                                                        ValueType::Double);
-        } catch (const YAML::BadConversion& e) {
-        }
-
-        try {
-            return std::make_unique<ConstantExpression>(Value{node.as<bool>()}, ValueType::Boolean);
-        } catch (const YAML::BadConversion& e) {
-        }
-    }
-
-    return std::make_unique<ConstantExpression>(Value{node.as<std::string>()}, ValueType::String);
+    std::stringstream msg;
+    msg << "Malformed node " << toString(node);
+    BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
-Value ConstantExpression::evaluate(genny::DefaultRandom& rng) const {
-    return _value;
-}
+const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
+    {"^FastRandomString",
+     [](YAML::Node node, DefaultRandom& rng) {
+         return std::make_unique<FastRandomStringGenerator>(node, rng);
+     }},
+    {"^RandomString",
+     [](YAML::Node node, DefaultRandom& rng) {
+         return std::make_unique<NormalRandomStringGenerator>(node, rng);
+     }},
+    {"^RandomInt", int64GeneratorBasedOnDistribution},
+    {"^Verbatim",
+     [](YAML::Node node, DefaultRandom& rng) {
+         return valueGenerator<true, UniqueAppendable>(node, rng, allParsers);
+     }},
+};
 
-DocumentExpression::DocumentExpression(std::vector<ElementType> elements)
-    : _elements(std::move(elements)) {}
 
-UniqueExpression DocumentExpression::parse(YAML::Node node, DefaultRandom& rng) {
+/**
+ * Used for top-level values that are of type Map.
+ * @tparam Verbatim if we are in a `^Verbatim` block
+ * @param node a "top-level"-like node e.g. `{a:1, b:{^RandomInt:{...}}`
+ */
+template <bool Verbatim>
+std::unique_ptr<DocumentGenerator::Impl> documentGenerator(YAML::Node node, DefaultRandom& rng) {
     if (!node.IsMap()) {
-        throw InvalidValueGeneratorSyntax("Expected mapping type to parse into an object");
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Must be mapping type"));
     }
-
-    auto elements = std::vector<ElementType>{};
-    for (auto&& entry : node) {
-        if (entry.first.as<std::string>()[0] == '^') {
-            throw InvalidValueGeneratorSyntax(
-                "'^'-prefix keys are reserved for expressions, but attempted to parse as an"
-                " object");
+    if constexpr (!Verbatim) {
+        auto meta = getMetaKey(node);
+        if (meta) {
+            if (meta == "^Verbatim") {
+                return documentGenerator<true>(node["^Verbatim"], rng);
+            }
+            std::stringstream msg;
+            msg << "Invalid meta-key " << *meta << " at top-level";
+            BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
         }
-
-        elements.emplace_back(entry.first.as<std::string>(),
-                              Expression::parseOperand(entry.second, rng));
     }
 
-    return std::make_unique<DocumentExpression>(std::move(elements));
+    DocumentGenerator::Impl::Entries entries;
+    for (const auto&& ent : node) {
+        auto key = ent.first.as<std::string>();
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent.second, rng, allParsers);
+        entries.emplace_back(key, std::move(valgen));
+    }
+    return std::make_unique<DocumentGenerator::Impl>(std::move(entries));
 }
 
-Value DocumentExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto doc = bsoncxx::builder::basic::document{};
-
-    for (auto&& elem : _elements) {
-        elem.second->evaluate(rng).appendToBuilder(doc, elem.first);
+/**
+ * @tparam Verbatim if we're in a `^Verbatim block`
+ * @param node sequence node
+ * @return array generator that has one valueGenerator (recursive type) for each element in the node
+ */
+template <bool Verbatim>
+UniqueGenerator<bsoncxx::array::value> arrayGenerator(YAML::Node node, DefaultRandom& rng) {
+    ArrayGenerator::ValueType entries;
+    for (const auto&& ent : node) {
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent, rng, allParsers);
+        entries.push_back(std::move(valgen));
     }
-
-    return Value{doc.extract()};
+    return std::make_unique<ArrayGenerator>(std::move(entries));
 }
 
-ArrayExpression::ArrayExpression(std::vector<ElementType> elements)
-    : _elements(std::move(elements)) {}
 
-UniqueExpression ArrayExpression::parse(YAML::Node node, DefaultRandom& rng) {
-    if (!node.IsSequence()) {
-        throw InvalidValueGeneratorSyntax("Expected sequence type to parse into an array");
+/**
+ * @param node
+ *   the *value* from a `^RandomInt` node.
+ *   E.g. if higher-up has `{^RandomInt:{v}}`, this will have `node={v}`
+ */
+//
+// We need this additional lookup function for int64s (but not for other types)
+// because we do "double-dispatch" for ^RandomInt. So int64Operand determines
+// if we're looking at ^RandomInt or a constant. If we're looking at ^RandomInt
+// it dispatches to here to determine which Int64Generator to use.
+//
+// An alternative would have been to have ^RandomIntUniform etc.
+//
+UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(YAML::Node node, DefaultRandom& rng) {
+    if (!node.IsMap()) {
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
     }
-
-    auto elements = std::vector<ElementType>{};
-    for (auto&& entry : node) {
-        elements.emplace_back(Expression::parseOperand(entry, rng));
-    }
-
-    return std::make_unique<ArrayExpression>(std::move(elements));
-}
-
-Value ArrayExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto arr = bsoncxx::builder::basic::array{};
-
-    for (auto&& elem : _elements) {
-        elem->evaluate(rng).appendToBuilder(arr);
-    }
-
-    return Value{arr.extract()};
-}
-
-UniqueExpression RandomIntExpression::parse(YAML::Node node, DefaultRandom& rng) {
     auto distribution = node["distribution"].as<std::string>("uniform");
 
     if (distribution == "uniform") {
-        UniqueExpression min;
-        UniqueExpression max;
-
-        if (auto entry = node["min"]) {
-            min = Expression::parseOperand(entry, rng);
-        } else {
-            throw InvalidValueGeneratorSyntax("Expected 'min' parameter for uniform distribution");
-        }
-
-        if (auto entry = node["max"]) {
-            max = Expression::parseOperand(entry, rng);
-        } else {
-            throw InvalidValueGeneratorSyntax("Expected 'max' parameter for uniform distribution");
-        }
-
-        UniqueTypedExpression<IntegerValueType> minT =
-            std::make_unique<TypedExpression<IntegerValueType>>(std::move(min));
-        UniqueTypedExpression<IntegerValueType> maxT =
-            std::make_unique<TypedExpression<IntegerValueType>>(std::move(max));
-
-        return std::make_unique<UniformIntExpression>(std::move(minT), std::move(maxT));
+        return std::make_unique<UniformInt64Generator>(node, rng);
     } else if (distribution == "binomial") {
-        UniqueExpression t;
-        double p;
-
-        if (auto entry = node["t"]) {
-            t = Expression::parseOperand(entry, rng);
-        } else {
-            throw InvalidValueGeneratorSyntax("Expected 't' parameter for binomial distribution");
-        }
-
-        if (auto entry = node["p"]) {
-            p = entry.as<double>();
-        } else {
-            throw InvalidValueGeneratorSyntax("Expected 'p' parameter for binomial distribution");
-        }
-
-        UniqueTypedExpression<IntegerValueType> tTyped =
-            std::make_unique<TypedExpression<IntegerValueType>>(std::move(t));
-
-        return std::make_unique<BinomialIntExpression>(std::move(tTyped), p);
+        return std::make_unique<BinomialInt64Generator>(node, rng);
     } else if (distribution == "negative_binomial") {
-        UniqueExpression k;
-        double p;
-
-        if (auto entry = node["k"]) {
-            k = Expression::parseOperand(entry, rng);
-        } else {
-            throw InvalidValueGeneratorSyntax(
-                "Expected 'k' parameter for negative binomial distribution");
-        }
-
-        if (auto entry = node["p"]) {
-            p = entry.as<double>();
-        } else {
-            throw InvalidValueGeneratorSyntax(
-                "Expected 'p' parameter for negative binomial distribution");
-        }
-
-        UniqueTypedExpression<IntegerValueType> kTyped =
-            std::make_unique<TypedExpression<IntegerValueType>>(std::move(k));
-
-        return std::make_unique<NegativeBinomialIntExpression>(std::move(kTyped), p);
-    } else if (distribution == "geometric") {
-        double p;
-
-        if (auto entry = node["p"]) {
-            p = entry.as<double>();
-        } else {
-            throw InvalidValueGeneratorSyntax("Expected 'p' parameter for geometric distribution");
-        }
-
-        return std::make_unique<GeometricIntExpression>(p);
+        return std::make_unique<NegativeBinomialInt64Generator>(node, rng);
     } else if (distribution == "poisson") {
-        double mean;
-
-        if (auto entry = node["mean"]) {
-            mean = entry.as<double>();
-        } else {
-            throw InvalidValueGeneratorSyntax("Expected 'mean' parameter for poisson distribution");
-        }
-
-        return std::make_unique<PoissonIntExpression>(mean);
+        return std::make_unique<PoissonInt64Generator>(node, rng);
+    } else if (distribution == "geometric") {
+        return std::make_unique<GeometricInt64Generator>(node, rng);
     } else {
         std::stringstream error;
         error << "Unknown distribution '" << distribution << "'";
-        throw InvalidValueGeneratorSyntax(error.str());
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(error.str()));
     }
 }
 
-UniformIntExpression::UniformIntExpression(UniqueTypedExpression<IntegerValueType> min,
-                                           UniqueTypedExpression<IntegerValueType> max)
-    : _min(std::move(min)), _max(std::move(max)) {}
+/**
+ * @param node
+ *   a top-level document value i.e. either a scalar or a `^RandomInt` value
+ * @return
+ *   either a `^RantomInt` generator (etc--see `intParsers`)
+ *   or a constant generator if given a constant/scalar.
+ */
+UniqueGenerator<int64_t> intGenerator(YAML::Node node, DefaultRandom& rng) {
+    // Set of parsers to look when we request an int parser
+    // see int64Generator
+    const static std::map<std::string, Parser<UniqueGenerator<int64_t>>> intParsers{
+        {"^RandomInt", int64GeneratorBasedOnDistribution},
+    };
 
-Value UniformIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto min = getInt64Parameter(_min->evaluate(rng), "min");
-    auto max = getInt64Parameter(_max->evaluate(rng), "max");
-
-    auto distribution = std::uniform_int_distribution<int64_t>{min, max};
-    return Value{distribution(rng)};
-}
-
-BinomialIntExpression::BinomialIntExpression(UniqueTypedExpression<IntegerValueType> t, double p)
-    : _t(std::move(t)), _p(p) {}
-
-Value BinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto t = getInt64Parameter(_t->evaluate(rng), "t");
-    auto distribution = std::binomial_distribution<int64_t>{t, _p};
-    return Value{distribution(rng)};
-}
-
-NegativeBinomialIntExpression::NegativeBinomialIntExpression(
-    UniqueTypedExpression<IntegerValueType> k, double p)
-    : _k(std::move(k)), _p(p) {}
-
-Value NegativeBinomialIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto k = getInt64Parameter(_k->evaluate(rng), "k");
-
-    auto distribution = std::negative_binomial_distribution<int64_t>{k, _p};
-    return Value{distribution(rng)};
-}
-
-GeometricIntExpression::GeometricIntExpression(double p) : _p{p} {}
-
-Value GeometricIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto distribution = std::geometric_distribution<int64_t>{_p};
-    return Value{distribution(rng)};
-}
-
-PoissonIntExpression::PoissonIntExpression(double mean) : _mean{mean} {}
-
-Value PoissonIntExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto distribution = std::poisson_distribution<int64_t>{_mean};
-    return Value{distribution(rng)};
-}
-
-RandomStringExpression::RandomStringExpression(UniqueTypedExpression<IntegerValueType> length,
-                                               std::optional<std::string> alphabet)
-    : _length(std::move(length)), _alphabet(std::move(alphabet)) {}
-
-UniqueExpression RandomStringExpression::parse(YAML::Node node, DefaultRandom& rng) {
-    UniqueExpression length;
-    std::optional<std::string> alphabet;
-
-    if (auto entry = node["length"]) {
-        length = Expression::parseOperand(entry, rng);
-    } else {
-        throw InvalidValueGeneratorSyntax(
-            "Expected 'length' parameter for random string generator");
+    if (auto parserPair = extractKnownParser(node, rng, intParsers)) {
+        // known parser type
+        return parserPair->first(node[parserPair->second], rng);
     }
-
-    if (auto entry = node["alphabet"]) {
-        alphabet = entry.as<std::string>();
-
-        if (alphabet->empty()) {
-            throw InvalidValueGeneratorSyntax(
-                "Expected non-empty 'alphabet' parameter for random string generator");
-        }
-    }
-
-    UniqueTypedExpression<IntegerValueType> lengthT =
-        std::make_unique<TypedExpression<IntegerValueType>>(std::move(length));
-
-    return std::make_unique<RandomStringExpression>(std::move(lengthT), std::move(alphabet));
+    return std::make_unique<ConstantAppender<int64_t>>(node.as<int64_t>());
 }
 
-Value RandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto alphabet = _alphabet ? std::string_view{_alphabet.value()} : kDefaultAlphabet;
-    auto alphabetLength = alphabet.size();
+}  // namespace
 
-    auto distribution = std::uniform_int_distribution<size_t>{0, alphabetLength - 1};
 
-    auto length = getInt64Parameter(_length->evaluate(rng), "length");
-    std::string str(length, '\0');
-
-    for (int i = 0; i < length; ++i) {
-        str[i] = alphabet[distribution(rng)];
-    }
-
-    return Value{str};
+// Pass-through for ctor. Can be removed in favor of just calling the ctor?
+DocumentGenerator DocumentGenerator::create(YAML::Node node, DefaultRandom& rng) {
+    return DocumentGenerator{node, rng};
 }
 
-FastRandomStringExpression::FastRandomStringExpression(
-    UniqueTypedExpression<IntegerValueType> length)
-    : _length(std::move(length)) {}
+// Kick the recursion into motion
+DocumentGenerator::DocumentGenerator(YAML::Node node, DefaultRandom& rng)
+    : _impl{documentGenerator<false>(node, rng)} {}
 
-UniqueExpression FastRandomStringExpression::parse(YAML::Node node, DefaultRandom& rng) {
-    UniqueExpression length;
+DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
 
-    if (auto entry = node["length"]) {
-        length = Expression::parseOperand(entry, rng);
-    } else {
-        throw InvalidValueGeneratorSyntax("Expected 'length' parameter for fast random string");
-    }
+DocumentGenerator::~DocumentGenerator() = default;
 
-    UniqueTypedExpression<IntegerValueType> lengthT =
-        std::make_unique<TypedExpression<IntegerValueType>>(std::move(length));
-    return std::make_unique<FastRandomStringExpression>(std::move(lengthT));
+// Can't define this before DocumentGenerator::Impl ↑
+bsoncxx::document::value DocumentGenerator::operator()() {
+    return _impl->evaluate();
 }
 
-Value FastRandomStringExpression::evaluate(genny::DefaultRandom& rng) const {
-    auto length = getInt64Parameter(_length->evaluate(rng), "length");
-    std::string str(length, '\0');
-
-    auto randomValue = rng();
-    int bits = 64;
-
-    for (int i = 0; i < length; ++i) {
-        if (bits < 6) {
-            randomValue = rng();
-            bits = 64;
-        }
-
-        str[i] = kAlphabet[(randomValue & 0x2f) % kAlphabetLength];
-        randomValue >>= 6;
-        bits -= 6;
-    }
-
-    return Value{str};
-}
-
-}  // namespace genny::v1
+}  // namespace genny
