@@ -39,10 +39,9 @@
 
 #include <driver/DefaultDriver.hpp>
 
+namespace genny::driver {
 namespace {
 
-using namespace genny;
-using namespace genny::driver;
 namespace fs = boost::filesystem;
 
 using YamlParameters = std::map<std::string, YAML::Node>;
@@ -189,17 +188,22 @@ void runActor(Actor&& actor,
     }
 }
 
-genny::driver::DefaultDriver::OutcomeCode doRunLogic(
-    const genny::driver::DefaultDriver::ProgramOptions& options) {
-    if (options.shouldListActors) {
-        globalCast().streamProducersTo(std::cout);
-        return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
-    }
-
+DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
-
     auto actorSetup = metrics.operation("Genny", "Setup", 0u);
     auto setupCtx = actorSetup.start();
+
+    if (options.runMode == DefaultDriver::RunMode::kListActors) {
+        globalCast().streamProducersTo(std::cout);
+        setupCtx.success();
+        return DefaultDriver::OutcomeCode::kSuccess;
+    }
+
+    if (options.workloadSource.empty()) {
+        std::cerr << "Must specify a workload YAML file" << std::endl;
+        setupCtx.failure();
+        return DefaultDriver::OutcomeCode::kUserException;
+    }
 
     fs::path phaseConfigSource;
     if (options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
@@ -217,18 +221,24 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
         phaseConfigSource = fs::path(options.workloadSource).parent_path();
     }
 
-    auto orchestrator = Orchestrator{};
-
     YamlParameters params;
     auto config = loadConfig(options.workloadSource);
     auto yaml = recursiveParse(config, params, phaseConfigSource);
+    auto orchestrator = Orchestrator{};
+
+    if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
+        std::cout << YAML::Dump(yaml) << std::endl;
+        setupCtx.success();
+        return DefaultDriver::OutcomeCode::kSuccess;
+    }
 
     auto workloadContext =
-        WorkloadContext{config, metrics, orchestrator, options.mongoUri, globalCast()};
+        WorkloadContext{yaml, metrics, orchestrator, options.mongoUri, globalCast()};
 
-    if (options.isDryRun) {
+    if (options.runMode == DefaultDriver::RunMode::kDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;
-        return genny::driver::DefaultDriver::OutcomeCode::kSuccess;
+        setupCtx.success();
+        return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     orchestrator.addRequiredTokens(
@@ -239,8 +249,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
     auto startedActors = metrics.operation("Genny", "ActorStarted", 0u);
     auto finishedActors = metrics.operation("Genny", "ActorFinished", 0u);
 
-    std::atomic<driver::DefaultDriver::OutcomeCode> outcomeCode =
-        driver::DefaultDriver::OutcomeCode::kSuccess;
+    std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
     std::mutex reporting;
     std::vector<std::thread> threads;
@@ -285,8 +294,7 @@ genny::driver::DefaultDriver::OutcomeCode doRunLogic(
 }  // namespace
 
 
-genny::driver::DefaultDriver::OutcomeCode genny::driver::DefaultDriver::run(
-    const genny::driver::DefaultDriver::ProgramOptions& options) const {
+DefaultDriver::OutcomeCode DefaultDriver::run(const DefaultDriver::ProgramOptions& options) const {
     try {
         // Wrap doRunLogic in another catch block in case it throws an exception of its own e.g.
         // file not found or io errors etc - exceptions not thrown by ActorProducers.
@@ -294,7 +302,7 @@ genny::driver::DefaultDriver::OutcomeCode genny::driver::DefaultDriver::run(
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Caught exception " << x.what();
     }
-    return genny::driver::DefaultDriver::OutcomeCode::kInternalException;
+    return DefaultDriver::OutcomeCode::kInternalException;
 }
 
 
@@ -319,48 +327,58 @@ std::string normalizeOutputFile(const std::string& str) {
 }  // namespace
 
 
-genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
+DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     namespace po = boost::program_options;
 
-    po::options_description description{u8"🧞‍ Allowed Options 🧞‍"};
+    std::ostringstream progDescStream;
+    // Section headers are prefaced with new lines.
+    progDescStream << u8"\n🧞 Usage:\n";
+    progDescStream << "    " << argv[0] << " <subcommand> [options] <workload-file>\n";
+    progDescStream << u8"\n🧞 Subcommands:‍";
+    progDescStream << u8R"(
+    run          Run the workload normally
+    dry-run      Exit before the run step -- this may still make network
+                 connections during workload initialization
+    evaluate     Print the evaluated YAML workload file with minimal validation
+    list-actors  List all actors available for use
+    )" << "\n";
+
+    progDescStream << "🧞 Options";
+    po::options_description progDescription{progDescStream.str()};
     po::positional_options_description positional;
 
     // clang-format off
-    description.add_options()
-        ("help,h",
-            "Show help message")
-        ("list-actors",
-            "List all actors available for use")
-        ("dry-run",
-            "Exit before the run step---"
-            "this may still make network connections during workload initialization")
-        ("metrics-format,m",
+    progDescription.add_options()
+            ("subcommand", po::value<std::string>(), "1st positional argument")
+            ("help,h",
+             "Show help message")
+            ("metrics-format,m",
              po::value<std::string>()->default_value("csv"),
              "Metrics format to use")
-        ("metrics-output-file,o",
-            po::value<std::string>()->default_value("/dev/stdout"),
-            "Save metrics data to this file. Use `-` or `/dev/stdout` for stdout.")
-        ("workload-file,w",
-            po::value<std::string>(),
-            "Path to workload configuration yaml file. "
-            "Paths are relative to the program's cwd. "
-            "Can also specify as first positional argument.")
-        ("mongo-uri,u",
-            po::value<std::string>()->default_value("mongodb://localhost:27017"),
-            "Mongo URI to use for the default connection-pool.")
-    ;
+            ("metrics-output-file,o",
+             po::value<std::string>()->default_value("/dev/stdout"),
+             "Save metrics data to this file. Use `-` or `/dev/stdout` for stdout.")
+            ("workload-file,w",
+             po::value<std::string>(),
+             "Path to workload configuration yaml file. "
+             "Paths are relative to the program's cwd. "
+             "Can also specify as the last positional argument.")
+            ("mongo-uri,u",
+             po::value<std::string>()->default_value("mongodb://localhost:27017"),
+             "Mongo URI to use for the default connection-pool.");
 
+    positional.add("subcommand", 1);
     positional.add("workload-file", -1);
 
     auto run = po::command_line_parser(argc, argv)
-        .options(description)
-        .positional(positional)
-        .run();
+            .options(progDescription)
+            .positional(positional)
+            .run();
     // clang-format on
 
     {
         auto stream = std::ostringstream();
-        stream << description;
+        stream << progDescription;
         this->description = stream.str();
     }
 
@@ -368,9 +386,31 @@ genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** ar
     po::store(run, vm);
     po::notify(vm);
 
-    this->isHelp = vm.count("help") >= 1;
-    this->shouldListActors = vm.count("list-actors") >= 1;
-    this->isDryRun = vm.count("dry-run") >= 1;
+    if (!vm.count("subcommand")) {
+        std::cerr << "ERROR: missing subcommand" << std::endl;
+        this->runMode = RunMode::kHelp;
+        return;
+    }
+    const auto subcommand = vm["subcommand"].as<std::string>();
+
+    if (subcommand == "list-actors")
+        this->runMode = RunMode::kListActors;
+    else if (subcommand == "dry-run")
+        this->runMode = RunMode::kDryRun;
+    else if (subcommand == "evaluate")
+        this->runMode = RunMode::kEvaluate;
+    else if (subcommand == "run")
+        this->runMode = RunMode::kNormal;
+    else if (subcommand == "help")
+        this->runMode = RunMode::kHelp;
+    else {
+        std::cerr << "ERROR: Unexpected subcommand " << subcommand << std::endl;
+        this->runMode = RunMode::kHelp;
+        return;
+    }
+
+    if (vm.count("help") >= 1)
+        this->runMode = RunMode::kHelp;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
@@ -382,3 +422,4 @@ genny::driver::DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** ar
         this->workloadSourceType = YamlSource::kString;
     }
 }
+}  // namespace genny::driver
