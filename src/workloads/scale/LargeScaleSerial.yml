@@ -15,6 +15,8 @@ Actors:
       Parameters:
         CollectionCount: 1
     Repeat: 1
+  - &NoOp {Operation: Nop}
+  - *NoOp
 
 - Name: WarmupUpdate
   Type: MultiCollectionUpdate
@@ -27,12 +29,15 @@ Actors:
     # Note: total ops generated approximately 1MB oplog / second (assumes avg write is 200 bytes of oplog with 2:1 compression)
     # TBD: Is this a target or a requirement? (Is it a max or a min?)
     Rate: 10 per 1 millisecond # 10 operations on every millisecond.
+  - *NoOp
+  - *NoOp
 
 - Name: WarmupQuery
   Type: MultiCollectionQuery
   Threads: 1
   Phases:
-  - &NoOp {Operation: Nop}
+  - *NoOp
+  - *NoOp
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Query

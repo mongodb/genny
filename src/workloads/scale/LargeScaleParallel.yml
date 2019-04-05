@@ -15,12 +15,13 @@ Actors:
       Parameters:
         CollectionCount: 1
     Repeat: 1
+  - &NoOp {Operation: Nop}
 
 - Name: Update
   Type: MultiCollectionUpdate
   Threads: 1
   Phases:
-  - &NoOp {Operation: Nop}
+  - *NoOp
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Update
