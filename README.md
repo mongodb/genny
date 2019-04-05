@@ -147,7 +147,7 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-./build/src/driver/genny                                            \
+./build/src/driver/genny run                                        \
     --workload-file       ./src/workloads/scale/InsertRemove.yml    \
     --metrics-format      csv                                       \
     --metrics-output-file build/genny-metrics.csv                   \
@@ -262,18 +262,18 @@ Running with TSAN:
     FLAGS="-pthread -fsanitize=thread -g -O1"
     ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
     ./scripts/lamp cmake-test
-    ./build/src/driver/genny ./workloads/docs/Workload.yml
+    ./build/src/driver/genny run ./workloads/docs/Workload.yml
 
 Running with ASAN:
 
     FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
     ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
     ./scripts/lamp cmake-test
-    ./build/src/driver/genny ./workloads/docs/Workload.yml
+    ./build/src/driver/genny run ./workloads/docs/Workload.yml
 
 Running with UBSAN
 
     FLAGS="-pthread -fsanitize=undefined -g -O1"
     ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
     ./scripts/lamp cmake-test
-    ./build/src/driver/genny ./workloads/docs/Workload.yml
+    ./build/src/driver/genny run ./workloads/docs/Workload.yml

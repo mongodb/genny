@@ -565,6 +565,3 @@ Actors:
     ReadPreference:
       ReadMode: primary
     Transaction: True         # Implies Session
-
-
-
