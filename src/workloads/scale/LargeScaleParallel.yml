@@ -1,0 +1,56 @@
+# Load phase of ../BigWorkload.yml
+SchemaVersion: 2018-07-01
+
+Pool:
+  QueryOptions:
+    maxPoolSize: 100
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
+      Key: Loader
+      Parameters:
+        CollectionCount: 1
+    Repeat: 1
+
+- Name: Update
+  Type: MultiCollectionUpdate
+  Threads: 1
+  Phases:
+  - &NoOp {Operation: Nop}
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: Update
+    Duration: 1 second
+    # Note: total ops generated approximately 1MB oplog / second (assumes avg write is 200 bytes of oplog with 2:1 compression)
+    # TBD: Is this a target or a requirement? (Is it a max or a min?)
+    Rate: 10 per 1 millisecond # 10 operations on every millisecond.
+
+- Name: Query
+  Type: MultiCollectionQuery
+  Threads: 1
+  Phases:
+  - *NoOp
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: Query
+    Duration: 1 second
+
+- Name: SnapshotQuery
+  Type: MultiCollectionQuery
+  Threads: 2
+  Phases:
+  - *NoOp
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: LargeQuery
+      Parameters:
+        CollectionCount: 1
+        # Documents are 1KB so we want to read 1024 documents over 2 minutes.
+        Limit: 4096
+    Duration: 1 second
+    Sort: {z: 1}

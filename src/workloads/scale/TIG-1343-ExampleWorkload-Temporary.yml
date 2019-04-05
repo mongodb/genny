@@ -88,7 +88,7 @@ Actors:
   Threads: 100
   Database: *DB
   CollectionCount: 100 # This is specifically 1% of collections
-  UpdateFilter: {y: {^RandomInt: {distribution: zipfian, mean: 100}}}
+  UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
   Update: {$inc: {x: 1}}
   Phases:
   - Duration: 1 hour
