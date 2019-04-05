@@ -156,7 +156,7 @@ YAML::Node recursiveParse(YAML::Node node,
         }
         case YAML::NodeType::Sequence: {
             for (auto val : node) {
-                out.push_back(recursiveParse(val.first, params, phaseConfig));
+                out.push_back(recursiveParse(val, params, phaseConfig));
             }
             break;
         }
