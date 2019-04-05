@@ -34,7 +34,7 @@ public:
         kDryRun,
         kEvaluate,
         kListActors,
-        kHelp
+        kHelp,
     };
 
 
