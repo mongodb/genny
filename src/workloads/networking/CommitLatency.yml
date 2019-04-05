@@ -63,13 +63,16 @@ Actors:
 
 
 
-- Name: CommitLatency
+# All of the below is really just the same actor, but as Genny reports statistics using the actor
+# name, we need a different actor instance for each configuration. All of the below run in their
+# own slot, nothing is concurrent.
+- Name: CommitLatency_w0_local
   Type: CommitLatency
   Threads: 1
   Repeat: 500
   Database: test
   Phases:
-  - *Nop # Load phase is different actor
+  - *Nop # Load
   - *Nop
   - WriteConcern:
       Level: 0
@@ -79,6 +82,46 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_w1_local
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - WriteConcern:
       Level: 1
     ReadConcern:
@@ -87,12 +130,92 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_w1_local_sec
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - WriteConcern:
       Level: 1
     ReadConcern:
       Level: local
     ReadPreference:
       ReadMode: secondary
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_w1_jtrue_local_sec
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - WriteConcern:
@@ -104,12 +227,92 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_wmajority_majority
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - WriteConcern:
       Level: majority
     ReadConcern:
       Level: majority
     ReadPreference:
       ReadMode: primary
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_wmajority_majority_sec
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - WriteConcern:
@@ -120,6 +323,46 @@ Actors:
       ReadMode: secondary
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_wmajority_jtrue_majority
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - WriteConcern:
       Level: majority
       Journal: true
@@ -127,6 +370,46 @@ Actors:
       Level: majority
     ReadPreference:
       ReadMode: primary
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_wmajority_linearizable
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - WriteConcern:
@@ -137,6 +420,46 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_wmajority_majority_session
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - WriteConcern:
       Level: majority
     ReadConcern:
@@ -144,6 +467,46 @@ Actors:
     ReadPreference:
       ReadMode: primary
     Session: True
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CommitLatency_wmajority_majority_sec_session
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - *Nop
   - *Nop
   - WriteConcern:
@@ -155,6 +518,46 @@ Actors:
     Session: True
   - *Nop
   - *Nop
+  - *Nop
+
+- Name: CommitLatency_wmajority_majority_trx
+  Type: CommitLatency
+  Threads: 1
+  Repeat: 500
+  Database: test
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
   - WriteConcern:
       Level: majority
     ReadConcern:
@@ -162,3 +565,6 @@ Actors:
     ReadPreference:
       ReadMode: primary
     Transaction: True         # Implies Session
+
+
+
