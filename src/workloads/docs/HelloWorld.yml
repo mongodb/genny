@@ -1,4 +1,4 @@
-SchemaVersion: 2018-07-01
+SchemaVersion: 2019-04-01
 Owner: "@mongodb/stm"
 
 Actors:
@@ -13,3 +13,7 @@ Actors:
       # SleepAfter: 17 microseconds
     - Message: Hello Phase 1 👬
       Repeat: 100
+    - ExternalPhaseConfig:
+        Path: ../../phases/HelloWorld/ExamplePhase2.yml
+        Parameters:
+          Repeat: 2
