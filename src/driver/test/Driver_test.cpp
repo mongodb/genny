@@ -127,7 +127,7 @@ StaticFailsInfo Fails::state = {};
 
 
 DefaultDriver::ProgramOptions create(const std::string& yaml) {
-    boost::filesystem::path ph = boost::filesystem::unique_path();
+    boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     boost::filesystem::create_directories(ph);
     auto metricsOutputFileName = (ph / "metrics.csv").string();
 
@@ -444,6 +444,20 @@ TEST_CASE("Various Actor Behaviors") {
                 Parameters:
                   Repeat: 2
 
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
+        REQUIRE(!hasMetrics(opts));
+    }
+
+    SECTION("Load Bad External State 4") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/MissingSchemaVersion.yml"
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
         REQUIRE(!hasMetrics(opts));

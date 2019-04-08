@@ -46,9 +46,7 @@ namespace fs = boost::filesystem;
 
 using YamlParameters = std::map<std::string, YAML::Node>;
 
-YAML::Node recursiveParse(YAML::Node node,
-                          YamlParameters& params,
-                          const fs::path& phaseConfigPath);
+YAML::Node recursiveParse(YAML::Node node, YamlParameters& params, const fs::path& phaseConfigPath);
 
 YAML::Node loadConfig(const std::string& source,
                       DefaultDriver::ProgramOptions::YamlSource sourceType =
@@ -65,12 +63,22 @@ YAML::Node loadConfig(const std::string& source,
     }
 }
 
-YAML::Node parseExternal(YAML::Node external,
-                         YamlParameters& params,
-                         const fs::path& phaseConfig) {
-    int keysSeen = 1;
+YAML::Node parseExternal(YAML::Node external, YamlParameters& params, const fs::path& phaseConfig) {
 
+    auto phaseSchemaVersion = external["PhaseSchemaVersion"].as<std::string>();
+    if (phaseSchemaVersion != "2018-07-01") {
+        auto os = std::ostringstream();
+        os << "Invalid phase schema version: " << phaseSchemaVersion
+           << ". Please ensure the schema for your external phase config is valid and the "
+              "`PhaseSchemaVersion` top-level key is set correctly";
+        throw InvalidConfigurationException(os.str());
+    }
+    external.remove("PhaseSchemaVersion");
+
+    int keysSeen = 0;
     fs::path path(external["Path"].as<std::string>());
+    keysSeen++;
+
     path = fs::absolute(phaseConfig / path);
 
     if (!fs::is_regular_file(path)) {
@@ -131,9 +139,7 @@ YAML::Node replaceParam(YAML::Node input, YamlParameters& params) {
     }
 }
 
-YAML::Node recursiveParse(YAML::Node node,
-                          YamlParameters& params,
-                          const fs::path& phaseConfig) {
+YAML::Node recursiveParse(YAML::Node node, YamlParameters& params, const fs::path& phaseConfig) {
     YAML::Node out;
     switch (node.Type()) {
         case YAML::NodeType::Map: {
