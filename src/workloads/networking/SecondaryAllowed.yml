@@ -20,11 +20,11 @@ Actors:
           NoOp: true
         - Phase: 1
           Repeat: 1
+          SleepBefore: 30 seconds
+          SleepAter: 30 seconds
           Operation:
               OperationMetricsName: "Stepdown"
               OperationName: AdminCommand
-              OperationSleepBefore: 30 seconds
-              OperationSleepAfter: 30 seconds
               OperationCommand:
                   replSetStepDown: 60
               OperationAwaitStepdown: yes
@@ -39,11 +39,11 @@ Actors:
         - Phase: 0
           NoOp: true
         - Phase: 1
+          Rate: 1 per 100 microseconds
           Operation: &find_one
               OperationMetricsName: "Find"
               OperationName: RunCommand
               OperationIsQuiet: yes
-              OperationMinPeriod: 100 microseconds
               OperationCommand:
                   find: Collection0
                   readConcern: { level: local }
