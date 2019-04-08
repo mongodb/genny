@@ -21,6 +21,14 @@ SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 BUILD_DIR="${ROOT_DIR}/build"
 
+if [[ $+[genny] && -z "${GENNY+x}" ]]; then
+    if [ -e "$ROOT_DIR/build/src/genny" ]; then
+        GENNY="$ROOT_DIR/build/src/genny"
+    elif [ -e "$ROOT_DIR/dist/bin/genny" ]; then
+        GENNY="$ROOT_DIR/dist/bin/genny"
+    fi
+fi
+
 CMD=(
     "${GENNY:-genny}"
     dry-run
