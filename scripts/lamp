@@ -4,4 +4,4 @@
 # for mongodbtoolchain python3
 export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
-python3 "$PWD/src/lamplib" $@
+python3 "$PWD/src/lamplib" "$@"
