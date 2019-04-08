@@ -127,7 +127,8 @@ StaticFailsInfo Fails::state = {};
 
 
 DefaultDriver::ProgramOptions create(const std::string& yaml) {
-    boost::filesystem::path ph = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    boost::filesystem::path ph =
+        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     boost::filesystem::create_directories(ph);
     auto metricsOutputFileName = (ph / "metrics.csv").string();
 
@@ -379,7 +380,7 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE(hasMetrics(opts));
     }
 
-    SECTION("Inline Config Override Parameter") {
+    SECTION("With Inline Parameter") {
         auto [code, opts] = outcome(R"(
         SchemaVersion: 2018-07-01
         Actors:
@@ -387,11 +388,8 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/testlib/phases/Good.yml"
-                Parameters:
-                  Repeat: 2
+                Path: "src/testlib/phases/GoodNoRepeat.yml"
               Repeat: 3
-
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
         REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0, 0});
