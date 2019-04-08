@@ -84,6 +84,7 @@ create_header_text() {
     echo "    mongocxx::pool::entry _client;"
     echo "    genny::DefaultRandom _rng;"
     echo ""
+    echo "    /** @private */"
     echo "    struct PhaseConfig;"
     echo "    PhaseLoop<PhaseConfig> _loop;"
     echo "};"
