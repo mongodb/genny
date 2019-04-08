@@ -103,4 +103,3 @@ CollScan:
   Database: *DB
   CollectionCount: {^Parameter: {Default: *DefaultCollectionCount, Name: "CollectionCount"}}
   Filter: {_id: {$ne: 0}}
-  
