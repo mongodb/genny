@@ -26,15 +26,9 @@ Actors:
             OperationCommand:
                 insert: *Collection
                 documents: [{_id: 1, n: 0}]
-      - &Nop
+      - Phase: 2..9
         Operation:
           OperationName: Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
 
 
   - Name: SingleThreadUpdate_w0
@@ -42,154 +36,135 @@ Actors:
     Threads: 1
     Database: test
     Phases:
-      - *Nop
-      - *Nop
+      - Phase: 0..1
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern: { w: 0 }
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 3..9
+        Operation:
+          OperationName: Nop
 
   - Name: SingleThreadUpdate_w1
     Type: RunCommand
     Threads: 1
     Database: test
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 0..2
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 1 }
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 4..9
+        Operation:
+          OperationName: Nop
 
   - Name: SingleThreadUpdate_w2
     Type: RunCommand
     Threads: 1
     Database: test
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 0..3
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 2 }
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 5..9
+        Operation:
+          OperationName: Nop
 
   - Name: SingleThreadUpdate_w3
     Type: RunCommand
     Threads: 1
     Database: test
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 0..4
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 3 }
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 6..9
+        Operation:
+          OperationName: Nop
 
   - Name: SingleThreadUpdate_jtrue
     Type: RunCommand
     Threads: 1
     Database: test
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 0..5
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { j: true }
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 7..9
+        Operation:
+          OperationName: Nop
 
   - Name: SingleThreadUpdate_w2_jtrue
     Type: RunCommand
     Threads: 1
     Database: test
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 0..6
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 2, j: true }
-      - *Nop
-      - *Nop
+      - Phase: 8..9
+        Operation:
+          OperationName: Nop
 
   - Name: SingleThreadUpdate_wmajority
     Type: RunCommand
     Threads: 1
     Database: test
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 0..7
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: majority, j: false }
-      - *Nop
+      - Phase: 9
+        Operation:
+          OperationName: Nop
 
   - Name: SingleThreadUpdate_wmajority_jtrue
     Type: RunCommand
     Threads: 1
     Database: test
     Phases:
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
-      - *Nop
+      - Phase: 0..8
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
