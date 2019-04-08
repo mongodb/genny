@@ -29,7 +29,12 @@ ALWAYS_DETAILED_SEC    = NO
 INLINE_INHERITED_MEMB  = NO
 FULL_PATH_NAMES        = YES
 STRIP_FROM_PATH        =
-STRIP_FROM_INC_PATH    = src/gennylib/include src/cast_core/include src/driver/src
+STRIP_FROM_INC_PATH    = src/cast_core/include \
+                         src/driver/include \
+                         src/gennylib/include \
+                         src/metrics/include \
+                         src/testlib/include \
+                         src/value_generators/include
 SHORT_NAMES            = NO
 JAVADOC_AUTOBRIEF      = YES
 QT_AUTOBRIEF           = NO
@@ -115,62 +120,25 @@ WARN_LOGFILE           = doxygen-warnings.log
 #---------------------------------------------------------------------------
 INPUT                  =
 INPUT_ENCODING         = UTF-8
-FILE_PATTERNS          = *.c \
-                         *.cc \
-                         *.cxx \
-                         *.cpp \
-                         *.c++ \
-                         *.java \
-                         *.ii \
-                         *.ixx \
-                         *.ipp \
-                         *.i++ \
-                         *.inl \
-                         *.idl \
-                         *.ddl \
-                         *.odl \
-                         *.h \
-                         *.hh \
-                         *.hxx \
-                         *.hpp \
-                         *.h++ \
-                         *.cs \
-                         *.d \
-                         *.php \
-                         *.php4 \
-                         *.php5 \
-                         *.phtml \
-                         *.inc \
-                         *.m \
-                         *.markdown \
+FILE_PATTERNS          = *.hpp \
                          *.md \
-                         *.mm \
-                         *.dox \
-                         *.py \
-                         *.pyw \
-                         *.f90 \
-                         *.f95 \
-                         *.f03 \
-                         *.f08 \
-                         *.f \
-                         *.for \
-                         *.tcl \
-                         *.vhd \
-                         *.vhdl \
-                         *.ucf \
-                         *.qsf
+                         *.dox
 RECURSIVE              = YES
 EXCLUDE                = build \
+                         dist \
                          src/python \
+                         src/lamplib \
                          src/third_party \
                          src/gennylib/test \
                          src/driver/test \
                          src/cast_core/test \
+                         src/value_generators/test \
+                         src/metrics/test \
                          CONTRIBUTING.md \
                          README.md
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       =
-EXCLUDE_SYMBOLS        = genny::V1 genny::metrics::V1
+EXCLUDE_SYMBOLS        = genny::v1 genny::metrics::v1
 EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO
