@@ -102,6 +102,7 @@ private:
     mongocxx::pool::entry _client;
     genny::DefaultRandom _rng;
 
+    /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
 };
