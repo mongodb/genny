@@ -337,7 +337,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/testlib/phases/Good.yml"
+                Path: src/testlib/phases/Good.yml
 
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
@@ -353,7 +353,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/testlib/phases/GoodWithKey.yml"
+                Path: src/testlib/phases/GoodWithKey.yml
                 Key: ForSelfTest
         )");
         REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
@@ -369,7 +369,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/testlib/phases/Good.yml"
+                Path: src/testlib/phases/Good.yml
                 Parameters:
                   Repeat: 2
 
@@ -387,7 +387,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/testlib/phases/Good.yml"
+                Path: src/testlib/phases/Good.yml
                 Parameters:
                   Repeat: 2
               Repeat: 3
@@ -406,7 +406,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/testlib/phases/MissingAllFields.yml"
+                Path: src/testlib/phases/MissingAllFields.yml
                 Parameters:
                   Repeat: 2
 
@@ -423,7 +423,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/testlib/phases/MissingDefault.yml"
+                Path: src/testlib/phases/MissingDefault.yml
                 Parameters:
                   Repeat: 2
 
@@ -440,7 +440,7 @@ TEST_CASE("Various Actor Behaviors") {
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
-                Path: "src/testlib/phases/MissingName.yml"
+                Path: src/testlib/phases/MissingName.yml
                 Parameters:
                   Repeat: 2
 
