@@ -25,6 +25,7 @@ using namespace std::literals::chrono_literals;
 // The template is to allow different DummyClocks classes to be created so calling static methods
 // won't conflict.
 template <typename DummyT>
+/** @private */
 struct DummyClock {
     static int64_t nowRaw;
 

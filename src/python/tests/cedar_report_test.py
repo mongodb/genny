@@ -87,7 +87,9 @@ class CedarReportTest(unittest.TestCase):
                         'tags': [],
                         'local_path': MatchAnyString(),
                         'created_at': MatchAnyString(),
-                        'is_uncompressed': True
+                        'convert_bson_to_ftdc': True,
+                        'permissions': 'public-read',
+                        'prefix': 'my_task_id_1'
                     }],
                     'metrics': None,
                     'sub_tests': None
@@ -106,7 +108,9 @@ class CedarReportTest(unittest.TestCase):
                         'tags': [],
                         'local_path': MatchAnyString(),
                         'created_at': MatchAnyString(),
-                        'is_uncompressed': True
+                        'convert_bson_to_ftdc': True,
+                        'permissions': 'public-read',
+                        'prefix': 'my_task_id_1'
                     }],
                     'metrics': None,
                     'sub_tests': None
@@ -125,7 +129,9 @@ class CedarReportTest(unittest.TestCase):
                         'tags': [],
                         'local_path': MatchAnyString(),
                         'created_at': MatchAnyString(),
-                        'is_uncompressed': True
+                        'convert_bson_to_ftdc': True,
+                        'permissions': 'public-read',
+                        'prefix': 'my_task_id_1'
                     }],
                     'metrics': None,
                     'sub_tests': None
@@ -137,7 +143,6 @@ class CedarReportTest(unittest.TestCase):
                 'api_token': None,
                 'region': 'us-east-1',
                 'name': 'genny-metrics',
-                'prefix': 'my_task_id_1'
             }
         }
 

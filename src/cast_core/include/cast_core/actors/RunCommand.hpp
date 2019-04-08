@@ -72,6 +72,7 @@ public:
 private:
     mongocxx::pool::entry _client;
 
+    /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
 };

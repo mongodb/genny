@@ -16,8 +16,7 @@ CedarBucketConfig = namedtuple('CedarBucketConfig', [
     'api_secret',
     'api_token',
     'region',
-    'name',
-    'prefix'
+    'name'
 ])
 
 CedarTestArtifact = namedtuple('CedarTestArtifact', [
@@ -26,7 +25,9 @@ CedarTestArtifact = namedtuple('CedarTestArtifact', [
     'tags',  # [str]
     'local_path',
     'created_at',
-    'is_uncompressed',
+    'convert_bson_to_ftdc',
+    'prefix',
+    'permissions'
 ])
 
 CedarTestInfo = namedtuple('CedarTestInfo', [
@@ -96,16 +97,22 @@ class _Config(object):
 
 def build_report(config):
     sub_tests = []
+
+    bucket_prefix = '{}_{}'.format(config.task_id, config.execution_number)
+
     for path in config.metrics_file_names:
         base_name = os.path.basename(path)
         test_name = os.path.splitext(base_name)[0]
+
         a = CedarTestArtifact(
             bucket=config.cloud_bucket,
             path=test_name,
             tags=[],
             local_path=path,
             created_at=config.created_at,
-            is_uncompressed=True
+            convert_bson_to_ftdc=True,
+            permissions='public-read',
+            prefix=bucket_prefix
         )
 
         ti = CedarTestInfo(
@@ -125,7 +132,7 @@ def build_report(config):
         )
         sub_tests.append(t._asdict())
 
-    bucket_prefix = '{}_{}'.format(config.task_id, config.execution_number)
+
 
     bucket_config = CedarBucketConfig(
         api_key=config.api_key,
@@ -133,7 +140,6 @@ def build_report(config):
         api_token=None,
         region=config.cloud_region,
         name=config.cloud_bucket,
-        prefix=bucket_prefix
     )
 
     test_info = CedarTestInfo(

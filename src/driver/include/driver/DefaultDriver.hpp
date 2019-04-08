@@ -28,8 +28,25 @@ namespace genny::driver {
  * Basic workload driver that spins up one thread per actor.
  */
 class DefaultDriver {
-
 public:
+    enum class RunMode {
+        kNormal,
+        kDryRun,
+        kEvaluate,
+        kListActors,
+        kHelp,
+    };
+
+
+    enum class OutcomeCode {
+        kSuccess = 0,
+        kStandardException = 1,
+        kBoostException = 2,
+        kInternalException = 3,
+        kUserException = 4,
+        kUnknownException = 10,
+    };
+
     struct ProgramOptions {
         explicit ProgramOptions() = default;
 
@@ -47,18 +64,7 @@ public:
         std::string metricsOutputFileName;
         std::string mongoUri;
         std::string description;
-        bool isHelp = false;
-        bool shouldListActors = false;
-        bool isDryRun = false;
-    };
-
-
-    enum class OutcomeCode {
-        kSuccess = 0,
-        kStandardException = 1,
-        kBoostException = 2,
-        kInternalException = 3,
-        kUnknownException = 10,
+        DefaultDriver::RunMode runMode = RunMode::kNormal;
     };
 
     /**
