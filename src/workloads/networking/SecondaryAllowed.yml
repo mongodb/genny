@@ -40,6 +40,8 @@ Actors:
           NoOp: true
         - Phase: 1
           Rate: 1 per 100 microseconds
+          # This should be how long the StepdownCommand Actor Phase 1 takes
+          Duration: 2 minutes
           Operation: &find_one
               OperationMetricsName: "Find"
               OperationName: RunCommand
