@@ -38,7 +38,7 @@ WorkloadContext::WorkloadContext(const YAML::Node& node,
       _rateLimiters{10},
       _poolManager{mongoUri, apmCallback} {
 
-    std::set<std::string> validSchemaVersions{"2018-07-01", "2019-04-01"};
+    std::set<std::string> validSchemaVersions{"2018-07-01"};
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.

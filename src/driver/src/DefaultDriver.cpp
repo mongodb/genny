@@ -64,9 +64,15 @@ YAML::Node loadConfig(const std::string& source,
 }
 
 YAML::Node parseExternal(YAML::Node external, YamlParameters& params, const fs::path& phaseConfig) {
-    int keysSeen = 1;
+    int keysSeen = 0;
 
+    if (!external["Path"]) {
+        throw InvalidConfigurationException(
+            "Missing the `Path` to-level key in your external phase configuration");
+    }
     fs::path path(external["Path"].as<std::string>());
+    keysSeen++;
+
     path = fs::absolute(phaseConfig / path);
 
     if (!fs::is_regular_file(path)) {
@@ -78,6 +84,26 @@ YAML::Node parseExternal(YAML::Node external, YamlParameters& params, const fs::
     }
 
     auto replacement = loadConfig(path.string());
+
+    // Block of code for parsing the schema version.
+    {
+        if (!replacement["PhaseSchemaVersion"]) {
+            throw InvalidConfigurationException(
+                "Missing the `PhaseSchemaVersion` top-level key in your external phase "
+                "configuration");
+        }
+        auto phaseSchemaVersion = replacement["PhaseSchemaVersion"].as<std::string>();
+        if (phaseSchemaVersion != "2018-07-01") {
+            auto os = std::ostringstream();
+            os << "Invalid phase schema version: " << phaseSchemaVersion
+               << ". Please ensure the schema for your external phase config is valid and the "
+                  "`PhaseSchemaVersion` top-level key is set correctly";
+            throw InvalidConfigurationException(os.str());
+        }
+
+        // Delete the schema version instead of adding it to `keysSeen`.
+        replacement.remove("PhaseSchemaVersion");
+    }
 
     if (external["Parameters"]) {
         keysSeen++;
@@ -216,7 +242,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     }
 
     YamlParameters params;
-    auto config = loadConfig(options.workloadSource);
+    auto config = loadConfig(options.workloadSource, options.workloadSourceType);
     auto yaml = recursiveParse(config, params, phaseConfigSource);
     auto orchestrator = Orchestrator{};
 
