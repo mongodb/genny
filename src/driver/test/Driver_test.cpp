@@ -33,6 +33,7 @@
 #include <gennylib/context.hpp>
 #include <testlib/ActorHelper.hpp>
 
+#include <testlib/findRepoRoot.hpp>
 #include <testlib/helpers.hpp>
 
 
@@ -126,7 +127,8 @@ StaticFailsInfo Fails::state = {};
 
 
 DefaultDriver::ProgramOptions create(const std::string& yaml) {
-    boost::filesystem::path ph = boost::filesystem::unique_path();
+    boost::filesystem::path ph =
+        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     boost::filesystem::create_directories(ph);
     auto metricsOutputFileName = (ph / "metrics.csv").string();
 
@@ -155,6 +157,7 @@ std::pair<DefaultDriver::OutcomeCode, DefaultDriver::ProgramOptions> outcome(
 
 
 TEST_CASE("Various Actor Behaviors") {
+    boost::filesystem::current_path(genny::findRepoRoot());
 
     SECTION("Normal Execution") {
         auto [code, opts] = outcome(R"(
@@ -325,5 +328,136 @@ TEST_CASE("Various Actor Behaviors") {
         REQUIRE((Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0} ||
                  Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0}));
         REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("Load External Config Default Parameter") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/Good.yml"
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
+        REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("Load External Config Default Parameter") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/GoodWithKey.yml"
+                Key: ForSelfTest
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0});
+        REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("Load External Config Override Parameter") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/Good.yml"
+                Parameters:
+                  Repeat: 2
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0});
+        REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("With Inline Parameter") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/GoodNoRepeat.yml"
+              Repeat: 3
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kSuccess);
+        REQUIRE(Fails::state.reachedPhases() == std::multiset<genny::PhaseNumber>{0, 0, 0});
+        REQUIRE(hasMetrics(opts));
+    }
+
+    SECTION("Load Bad External State 1") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/MissingAllFields.yml"
+                Parameters:
+                  Repeat: 2
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
+        REQUIRE(!hasMetrics(opts));
+    }
+
+    SECTION("Load Bad External State 2") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/MissingDefault.yml"
+                Parameters:
+                  Repeat: 2
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
+        REQUIRE(!hasMetrics(opts));
+    }
+
+    SECTION("Load Bad External State 3") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/MissingName.yml"
+                Parameters:
+                  Repeat: 2
+
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
+        REQUIRE(!hasMetrics(opts));
+    }
+
+    SECTION("Load Bad External State 4") {
+        auto [code, opts] = outcome(R"(
+        SchemaVersion: 2018-07-01
+        Actors:
+          - Type: Fails
+            Threads: 1
+            Phases:
+            - ExternalPhaseConfig:
+                Path: "src/testlib/phases/MissingSchemaVersion.yml"
+        )");
+        REQUIRE(code == DefaultDriver::OutcomeCode::kInternalException);
+        REQUIRE(!hasMetrics(opts));
     }
 }

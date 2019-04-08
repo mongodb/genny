@@ -16,12 +16,14 @@
 #include <cassert>
 #include <cstdlib>
 #include <fstream>
+#include <map>
 #include <sstream>
 #include <thread>
 #include <vector>
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/exception/exception.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
@@ -40,8 +42,16 @@
 namespace genny::driver {
 namespace {
 
+namespace fs = boost::filesystem;
+
+using YamlParameters = std::map<std::string, YAML::Node>;
+
+YAML::Node recursiveParse(YAML::Node node, YamlParameters& params, const fs::path& phaseConfigPath);
+
 YAML::Node loadConfig(const std::string& source,
-                      DefaultDriver::ProgramOptions::YamlSource sourceType) {
+                      DefaultDriver::ProgramOptions::YamlSource sourceType =
+                          DefaultDriver::ProgramOptions::YamlSource::kFile) {
+
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         return YAML::Load(source);
     }
@@ -51,6 +61,129 @@ YAML::Node loadConfig(const std::string& source,
         BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
         throw;
     }
+}
+
+YAML::Node parseExternal(YAML::Node external, YamlParameters& params, const fs::path& phaseConfig) {
+    int keysSeen = 0;
+
+    if (!external["Path"]) {
+        throw InvalidConfigurationException(
+            "Missing the `Path` to-level key in your external phase configuration");
+    }
+    fs::path path(external["Path"].as<std::string>());
+    keysSeen++;
+
+    path = fs::absolute(phaseConfig / path);
+
+    if (!fs::is_regular_file(path)) {
+        auto os = std::ostringstream();
+        os << "Invalid path to external PhaseConfig: " << path
+           << ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
+              "'Path' parameter is relative to the 'phases/' directory";
+        throw InvalidConfigurationException(os.str());
+    }
+
+    auto replacement = loadConfig(path.string());
+
+    // Block of code for parsing the schema version.
+    {
+        if (!replacement["PhaseSchemaVersion"]) {
+            throw InvalidConfigurationException(
+                "Missing the `PhaseSchemaVersion` top-level key in your external phase "
+                "configuration");
+        }
+        auto phaseSchemaVersion = replacement["PhaseSchemaVersion"].as<std::string>();
+        if (phaseSchemaVersion != "2018-07-01") {
+            auto os = std::ostringstream();
+            os << "Invalid phase schema version: " << phaseSchemaVersion
+               << ". Please ensure the schema for your external phase config is valid and the "
+                  "`PhaseSchemaVersion` top-level key is set correctly";
+            throw InvalidConfigurationException(os.str());
+        }
+
+        // Delete the schema version instead of adding it to `keysSeen`.
+        replacement.remove("PhaseSchemaVersion");
+    }
+
+    if (external["Parameters"]) {
+        keysSeen++;
+        auto newParams = external["Parameters"].as<YamlParameters>();
+        params.insert(newParams.begin(), newParams.end());
+    }
+
+    if (external["Key"]) {
+        keysSeen++;
+        const auto key = external["Key"].as<std::string>();
+        if (!replacement[key]) {
+            auto os = std::ostringstream();
+            os << "Could not find top-level key: " << key << " in phase config YAML file: " << path;
+            throw InvalidConfigurationException(os.str());
+        }
+        replacement = replacement[key];
+    }
+
+    if (external.size() != keysSeen) {
+        auto os = std::ostringstream();
+        os << "Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters' in the YAML "
+              "file: "
+           << path << " with the following content: " << YAML::Dump(external);
+        throw InvalidConfigurationException(os.str());
+    }
+
+    return recursiveParse(replacement, params, phaseConfig);
+}
+
+YAML::Node replaceParam(YAML::Node input, YamlParameters& params) {
+    if (!input["Name"] || !input["Default"]) {
+        auto os = std::ostringstream();
+        os << "Invalid keys for '^Parameter', please set 'Name' and 'Default' in following node"
+           << YAML::Dump(input);
+        throw InvalidConfigurationException(os.str());
+    }
+
+    auto name = input["Name"].as<std::string>();
+    // The default value is mandatory.
+    auto defaultVal = input["Default"];
+
+    // Nested params are ignored for simplicity.
+    if (auto paramVal = params.find(name); paramVal != params.end()) {
+        return paramVal->second;
+    } else {
+        return input["Default"];
+    }
+}
+
+YAML::Node recursiveParse(YAML::Node node, YamlParameters& params, const fs::path& phaseConfig) {
+    YAML::Node out;
+    switch (node.Type()) {
+        case YAML::NodeType::Map: {
+            for (auto kvp : node) {
+                if (kvp.first.as<std::string>() == "^Parameter") {
+                    out = replaceParam(kvp.second, params);
+                } else if (kvp.first.as<std::string>() == "ExternalPhaseConfig") {
+                    auto external = parseExternal(kvp.second, params, phaseConfig);
+                    // Merge the external node with the any other parameters specified
+                    // for this node like "Repeat" or "Duration".
+                    for (auto externalKvp : external) {
+                        if (!out[externalKvp.first])
+                            out[externalKvp.first] = externalKvp.second;
+                    }
+                } else {
+                    out[kvp.first] = recursiveParse(kvp.second, params, phaseConfig);
+                }
+            }
+            break;
+        }
+        case YAML::NodeType::Sequence: {
+            for (auto val : node) {
+                out.push_back(recursiveParse(val, params, phaseConfig));
+            }
+            break;
+        }
+        default:
+            return node;
+    }
+    return out;
 }
 
 template <typename Actor>
@@ -92,7 +225,25 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         return DefaultDriver::OutcomeCode::kUserException;
     }
 
-    auto yaml = loadConfig(options.workloadSource, options.workloadSourceType);
+    fs::path phaseConfigSource;
+    if (options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
+        phaseConfigSource = fs::current_path();
+    } else {
+        /*
+         * The directory structure for workloads and phase configs is as follows:
+         * /etc (or /src if building without installing)
+         *     /workloads
+         *         /[name-of-workload-theme]
+         *             /[my-workload.yml]
+         * The path to the phase config snippet is obtained as a relative path from the workload
+         * file.
+         */
+        phaseConfigSource = fs::path(options.workloadSource).parent_path();
+    }
+
+    YamlParameters params;
+    auto config = loadConfig(options.workloadSource, options.workloadSourceType);
+    auto yaml = recursiveParse(config, params, phaseConfigSource);
     auto orchestrator = Orchestrator{};
 
     if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
