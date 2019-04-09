@@ -106,6 +106,10 @@ private:  // Data members.
         };
     };
 
+public:
+    using time_point = typename ClockSource::time_point;
+    using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
+
     struct OperationThreshold {
         std::chrono::nanoseconds duration;
         double_t failedPercentageThreshold;
@@ -114,11 +118,6 @@ private:  // Data members.
         OperationThreshold(std::chrono::nanoseconds duration, double_t failedPct)
             : duration(duration), failedPercentageThreshold(failedPct), counter() {}
     };
-
-public:
-    using time_point = typename ClockSource::time_point;
-    using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
-
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
 

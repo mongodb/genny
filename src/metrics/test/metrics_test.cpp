@@ -369,5 +369,35 @@ TEST_CASE("Genny.ActiveActors metric") {
     }
 }
 
+TEST_CASE("Operation with threshold") {
+    RegistryClockSourceStub::reset();
+    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+
+    genny::metrics::v1::ReporterT{metrics};
+
+    // Create an actor where 50% of the operations cannot exceed 10ns.
+    auto actorWithThreshold = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 50.0);
+
+    auto runActor = [&]() {
+        auto ctx = actorWithThreshold.start();
+        ctx.addDocuments(1);
+        ctx.success();
+    };
+
+    // Start 2 actors, have 1 finish, start 1 more, and have the remaining 2 finish.
+    RegistryClockSourceStub::advance(5ns);
+    runActor();
+    RegistryClockSourceStub::advance(10ns);
+    runActor();
+    RegistryClockSourceStub::advance(20ns);
+    runActor();
+    RegistryClockSourceStub::advance(50ns);
+    runActor();
+    RegistryClockSourceStub::advance(100ns);
+    runActor();
+    RegistryClockSourceStub::advance(200ns);
+    runActor();
+}
+
 }  // namespace
 }  // namespace genny::metrics

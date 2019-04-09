@@ -16,6 +16,7 @@
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
 #include <chrono>
+#include <optional>
 #include <type_traits>
 #include <unordered_map>
 
@@ -101,7 +102,11 @@ public:
         auto opIt =
             opsByThread
                 .try_emplace(
-                    actorId, std::move(actorName), std::move(opName), {threshold, percentage})
+                    actorId,
+                    std::move(actorName),
+                    std::move(opName),
+                    std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
+                        threshold, percentage))
                 .first;
         return OperationT{opIt->second};
     }
