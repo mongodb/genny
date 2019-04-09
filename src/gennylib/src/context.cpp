@@ -98,7 +98,7 @@ v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
     return rl;
 }
 
-DefaultRandom& WorkloadContext::getRNGForActor(ActorId id) {
+DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
     if (this->isDone()) {
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
     }

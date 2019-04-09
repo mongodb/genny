@@ -146,7 +146,7 @@ public:
      *   should not use the same `DefaultRandom` at the same time.
      *   If you use `YourActorClass::id()` for `id` you'll be fine.
      */
-    DefaultRandom& getRNGForActor(ActorId id);
+    DefaultRandom& getRNGForThread(ActorId id);
 
     /**
      * @return if we're done constructing the WorkloadContext.
@@ -542,15 +542,17 @@ DocumentGenerator createDocumentGeneratorImpl(genny::WorkloadContext& workloadCo
                                               Args&&... args) {
     if (workloadContext.isDone()) {
         std::stringstream msg;
-        msg << "Tried to create DocumentGenerator ";
-        msg << "[";
-        msg << pathOrNode;
-        (msg << ... << args) << "]";
+        msg << "Tried to create DocumentGenerator";
+        if constexpr (!IsLooselyConvertible<PathOrNode, YAML::Node>::value) {
+            msg << " [";
+            msg << pathOrNode;
+            (msg << ... << args) << "]";
+        }
         msg << " after workload setup completed.";
         BOOST_THROW_EXCEPTION(std::logic_error(msg.str()));
     }
 
-    DefaultRandom& rng = workloadContext.getRNGForActor(id);
+    DefaultRandom& rng = workloadContext.getRNGForThread(id);
 
     if constexpr (IsLooselyConvertible<PathOrNode, YAML::Node>::value) {
         // If we're calling via context.createDocGen(id, YAML::Node)

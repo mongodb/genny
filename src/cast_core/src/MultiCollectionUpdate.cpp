@@ -49,7 +49,7 @@ struct MultiCollectionUpdate::PhaseConfig {
     DocumentGenerator queryExpr;
     DocumentGenerator updateExpr;
     // TODO: Enable passing in update options.
-    //    DocumentGeerator  updateOptionsExpr;
+    //    DocumentGenerator  updateOptionsExpr;
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;
