@@ -19,7 +19,6 @@
 #include <memory>
 #include <ostream>
 #include <string>
-#include <utility>
 
 #include <boost/core/noncopyable.hpp>
 #include <boost/log/trivial.hpp>
@@ -92,12 +91,30 @@ struct OperationEvent final {
     OutcomeType outcome = OutcomeType::kUnknown;  // corresponds to the 'outcome' field in Cedar
 };
 
+class OperationThresholdExceededException: public boost::exception {};
 
 template <typename ClockSource>
 class OperationImpl final : private boost::noncopyable {
 public:
     using time_point = typename ClockSource::time_point;
     using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
+
+    struct OperationCount {
+        int64_t failed = 0;
+        int64_t total = 0;
+
+        constexpr double_t failedPercentage() const {
+            return static_cast<double_t>(failed) / total;
+        };
+    };
+
+    struct OperationThreshold {
+        std::chrono::nanoseconds duration;
+        int64_t failedPercentageThreshold;
+        OperationCount counter;
+    };
+
+    using OptionalOperationThreshold = std::optional<OperationThreshold>;
 
     OperationImpl(std::string actorName, std::string opName)
         : _actorName(std::move(actorName)), _opName(std::move(opName)) {}
@@ -123,13 +140,24 @@ public:
         return _events;
     }
 
-    void reportAt(time_point finished, OperationEvent<ClockSource>&& event) {
+    void reportAt(time_point started, time_point finished, OperationEvent<ClockSource>&& event) {
+        if (_threshold) {
+            _threshold->counter.total++;
+            if ((finished - started) > _threshold->duration) {
+                _threshold->counter.failed++;
+            }
+
+            if (_threshold->counter.failedPercentage() > _threshold->failedPercentageThreshold) {
+                throw OperationThresholdExceededException();
+            }
+        }
         _events.addAt(finished, event);
     }
 
 private:
     const std::string _actorName;
     const std::string _opName;
+    OptionalOperationThreshold _threshold;
     EventSeries _events;
 };
 
@@ -234,7 +262,7 @@ private:
             _event.iters = 1;
         }
 
-        _op->reportAt(finished, std::move(_event));
+        _op->reportAt(_started, finished, std::move(_event));
         _isClosed = true;
     }
 
