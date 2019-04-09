@@ -99,7 +99,10 @@ public:
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt =
-            opsByThread.try_emplace(actorId, std::move(actorName), std::move(opName), {threshold, percentage}).first;
+            opsByThread
+                .try_emplace(
+                    actorId, std::move(actorName), std::move(opName), {threshold, percentage})
+                .first;
         return OperationT{opIt->second};
     }
 

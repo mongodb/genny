@@ -111,7 +111,8 @@ private:  // Data members.
         double_t failedPercentageThreshold;
         OperationCount counter;
 
-        OperationThreshold(std::chrono::nanoseconds duration, double_t failedPct) : duration(duration), failedPercentageThreshold(failedPct), counter() {}
+        OperationThreshold(std::chrono::nanoseconds duration, double_t failedPct)
+            : duration(duration), failedPercentageThreshold(failedPct), counter() {}
     };
 
 public:
@@ -124,7 +125,7 @@ public:
     OperationImpl(std::string actorName,
                   std::string opName,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : _actorName(std::move(actorName)), _opName(std::move(opName)), _threshold(threshold) {};
+        : _actorName(std::move(actorName)), _opName(std::move(opName)), _threshold(threshold){};
 
     /**
      * @return the name of the actor running the operation.
