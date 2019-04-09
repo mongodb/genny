@@ -103,7 +103,7 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
     }
     if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
-        auto [it, success] = _rngRegistry.try_emplace(id, DefaultRandom{_rng()});
+        auto [it, success] = _rngRegistry.try_emplace(id, _rng());
         if (!success) {
             // This should be impossible.
             // But invariants don't hurt we only call this during setup
