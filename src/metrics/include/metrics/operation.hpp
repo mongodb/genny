@@ -91,33 +91,40 @@ struct OperationEvent final {
     OutcomeType outcome = OutcomeType::kUnknown;  // corresponds to the 'outcome' field in Cedar
 };
 
-class OperationThresholdExceededException: public boost::exception {};
+class OperationThresholdExceededException : public virtual boost::exception,
+                                            public virtual std::exception {};
 
 template <typename ClockSource>
 class OperationImpl final : private boost::noncopyable {
-public:
-    using time_point = typename ClockSource::time_point;
-    using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
-
+private:  // Data members.
     struct OperationCount {
         int64_t failed = 0;
         int64_t total = 0;
 
         constexpr double_t failedPercentage() const {
-            return static_cast<double_t>(failed) / total;
+            return static_cast<double_t>(failed) / total * 100;
         };
     };
 
     struct OperationThreshold {
         std::chrono::nanoseconds duration;
-        int64_t failedPercentageThreshold;
+        double_t failedPercentageThreshold;
         OperationCount counter;
+
+        OperationThreshold(std::chrono::nanoseconds duration, double_t failedPct) : duration(duration), failedPercentageThreshold(failedPct), counter() {}
     };
+
+public:
+    using time_point = typename ClockSource::time_point;
+    using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
+
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
 
-    OperationImpl(std::string actorName, std::string opName)
-        : _actorName(std::move(actorName)), _opName(std::move(opName)) {}
+    OperationImpl(std::string actorName,
+                  std::string opName,
+                  std::optional<OperationThreshold> threshold = std::nullopt)
+        : _actorName(std::move(actorName)), _opName(std::move(opName)), _threshold(threshold) {};
 
     /**
      * @return the name of the actor running the operation.

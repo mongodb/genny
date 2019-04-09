@@ -19,6 +19,8 @@
 #include <type_traits>
 #include <unordered_map>
 
+#include <gennylib/conventions.hpp>
+
 #include <metrics/operation.hpp>
 #include <metrics/passkey.hpp>
 
@@ -86,6 +88,18 @@ public:
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt = opsByThread.try_emplace(actorId, std::move(actorName), std::move(opName)).first;
+        return OperationT{opIt->second};
+    }
+
+    OperationT<ClockSource> operation(std::string actorName,
+                                      std::string opName,
+                                      ActorId actorId,
+                                      genny::TimeSpec threshold,
+                                      double_t percentage) {
+        auto& opsByType = this->_ops[actorName];
+        auto& opsByThread = opsByType[opName];
+        auto opIt =
+            opsByThread.try_emplace(actorId, std::move(actorName), std::move(opName), {threshold, percentage}).first;
         return OperationT{opIt->second};
     }
 
