@@ -12,40 +12,36 @@ Actors:
   - ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
-      Parameters:
-        CollectionCount: 1
     Repeat: 1
   - &NoOp {Operation: Nop}
   - *NoOp
 
 - Name: WarmupUpdate
   Type: MultiCollectionUpdate
-  Threads: 1
+  Threads: 100
   Phases:
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Update
-    Duration: 1 second
-    # Note: total ops generated approximately 1MB oplog / second (assumes avg write is 200 bytes of oplog with 2:1 compression)
-    # TBD: Is this a target or a requirement? (Is it a max or a min?)
-    Rate: 10 per 1 millisecond # 10 operations on every millisecond.
+    Duration: &Duration 1 hour
+    Rate: 10 per 1 millisecond  # Target is 10 operations on every millisecond.
   - *NoOp
   - *NoOp
 
 - Name: WarmupQuery
   Type: MultiCollectionQuery
-  Threads: 1
+  Threads: 1000
   Phases:
   - *NoOp
   - *NoOp
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Query
-    Duration: 1 second
+    Duration: *Duration
 
 - Name: TwoMinuteQuery
   Type: MultiCollectionQuery
-  Threads: 2
+  Threads: 2  # 2 threads for doing a two-minute query every minute.
   Phases:
   - *NoOp
   - *NoOp
@@ -53,24 +49,21 @@ Actors:
       Path: *PhasePath
       Key: LargeQuery
       Parameters:
-        CollectionCount: 1
         Limit: 1024
-    Duration: 1 second
+    Duration: *Duration
 
 - Name: TenMinuteQuery
   Type: MultiCollectionQuery
-  Threads: 2
+  Threads: 2  # 2 threads for doing a two-minute query every minute.
   Phases:
   - *NoOp
   - *NoOp
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: LargeQuery
-      Parameters:
-        CollectionCount: 1
         # Documents are 1KB so we want to read 1024 documents over 2 minutes.
-        Limit: 4096
-    Duration: 1 second
+        Limit: 1024
+    Duration: *Duration
     Sort: {z: 1}
 
 - Name: FullCollScan
@@ -82,5 +75,10 @@ Actors:
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: CollScan
-    Duration: 1 second
-#    StaggerThreadStart: 5 minutes # Second thread starts after 60 seconds
+    Duration: *Duration
+
+# TODO: Actor for "10K MongoDB writes / second" from the design doc.
+# TODO: Actor for "1 collection with 9 indexes created and dropped / second".
+# TODO: tail the oplog while queries and updates are happening.
+# TODO: Need a way to express "queries are rarer and larger as collections get older".
+#       Probably using a geometric distribution.

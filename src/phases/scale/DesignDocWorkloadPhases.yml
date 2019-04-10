@@ -1,4 +1,4 @@
-Document: &Doc # Documents are approximately 1 KiB in size
+Document: &Doc # Documents are approximately 1 KB in size
   t: {^RandomInt: {min: 0, max: 10}}
   w: {^RandomInt: {distribution: geometric, p: 0.1}}
   x: 0
@@ -14,8 +14,6 @@ Document: &Doc # Documents are approximately 1 KiB in size
   int7: *int
   int8: *int
   int9: *int
-  # Note -- genny does not support value generation within lists
-  # yet. https://jira.mongodb.org/browse/TIG-1245
   intArray:
   - 1000
   - 2000
