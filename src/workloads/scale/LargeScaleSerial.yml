@@ -61,6 +61,7 @@ Actors:
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: LargeQuery
+      Parameters:
         # Documents are 1KB so we want to read 1024 documents over 2 minutes.
         Limit: 1024
     Duration: *Duration
