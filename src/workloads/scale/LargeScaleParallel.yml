@@ -17,7 +17,7 @@ Actors:
 
 - Name: Update
   Type: MultiCollectionUpdate
-  Threads: 100
+  Threads: 10
   Phases:
   - *NoOp
   - ExternalPhaseConfig:
@@ -28,7 +28,7 @@ Actors:
 
 - Name: Query
   Type: MultiCollectionQuery
-  Threads: 1000
+  Threads: 10
   Phases:
   - *NoOp
   - ExternalPhaseConfig:

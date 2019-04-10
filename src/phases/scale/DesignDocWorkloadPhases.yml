@@ -1,5 +1,5 @@
 PhaseSchemaVersion: 2018-07-01
-  
+
 Document: &Doc # Documents are approximately 1 KB in size
   t: {^RandomInt: {min: 0, max: 10}}
   w: {^RandomInt: {distribution: geometric, p: 0.1}}
