@@ -20,8 +20,8 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
@@ -48,8 +48,8 @@ public:
     void run() override;
 
 private:
-    ExecutionStrategy _insertStrategy;
-    ExecutionStrategy _removeStrategy;
+    RetryStrategy _insertStrategy;
+    RetryStrategy _removeStrategy;
     mongocxx::pool::entry _client;
     DefaultRandom& _rng;
 

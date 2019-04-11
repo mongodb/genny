@@ -55,9 +55,10 @@ create_header_text() {
     echo "#include <mongocxx/pool.hpp>"
     echo ""
     echo "#include <gennylib/Actor.hpp>"
-    echo "#include <gennylib/ExecutionStrategy.hpp>"
     echo "#include <gennylib/PhaseLoop.hpp>"
     echo "#include <gennylib/context.hpp>"
+    echo ""
+    echo "#include <metrics/metrics.hpp>"
     echo ""
     echo "namespace genny::actor {"
     echo ""
@@ -79,8 +80,9 @@ create_header_text() {
     echo "    void run() override;"
     echo ""
     echo "private:"
-    echo "    ExecutionStrategy _strategy;"
     echo "    mongocxx::pool::entry _client;"
+    echo ""
+    echo "    genny::metrics::Operation _totalInserts;"
     echo ""
     echo "    /** @private */"
     echo "    struct PhaseConfig;"
@@ -126,7 +128,7 @@ create_impl_text() {
     echo "#include <boost/log/trivial.hpp>"
     echo ""
     echo "#include <gennylib/Cast.hpp>"
-    echo "#include <gennylib/ExecutionStrategy.hpp>"
+    echo "#include <gennylib/RetryStrategy.hpp>"
     echo "#include <gennylib/context.hpp>"
     echo ""
     echo "#include <value_generators/DocumentGenerator.hpp>"
@@ -137,35 +139,31 @@ create_impl_text() {
     echo "struct ${actor_name}::PhaseConfig {"
     echo "    mongocxx::collection collection;"
     echo "    DocumentGenerator documentExpr;"
-    echo "    ExecutionStrategy::RunOptions options;"
     echo ""
     echo "    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)"
     echo "        : collection{db[phaseContext.get<std::string>(\"Collection\")]},"
-    echo "          documentExpr{phaseContext.createDocumentGenerator(id, \"Document\")},"
-    echo "          options{ExecutionStrategy::getOptionsFrom(phaseContext, \"ExecutionsStrategy\")} {}"
+    echo "          documentExpr{phaseContext.createDocumentGenerator(id, \"Document\")} {}"
     echo "};"
     echo ""
     echo "void ${actor_name}::run() {"
     echo "    for (auto&& config : _loop) {"
     echo "        for (const auto&& _ : config) {"
-    echo "            _strategy.run("
-    echo "                [&](metrics::OperationContext& ctx) {"
-    echo "                    // TODO: main logic"
-    echo "                    auto document = config->documentExpr();"
-    echo "                    BOOST_LOG_TRIVIAL(info) << \" ${actor_name} Inserting \""
-    echo "                                            << bsoncxx::to_json(document.view());"
-    echo "                    config->collection.insert_one(document.view());"
-    echo "                    ctx.addDocuments(1);"
-    echo "                    ctx.addBytes(document.view().length());"
-    echo "                },"
-    echo "                config->options);"
+    echo "            auto inserts = _totalInserts.start();"
+    echo "            // TODO: main logic"
+    echo "            auto document = config->documentExpr();"
+    echo "            BOOST_LOG_TRIVIAL(info) << \" ${actor_name} Inserting \""
+    echo "                                    << bsoncxx::to_json(document.view());"
+    echo "            config->collection.insert_one(document.view());"
+    echo "            inserts.addDocuments(1);"
+    echo "            inserts.addBytes(document.view().length());"
+    echo "            inserts.success();"
     echo "        }"
     echo "    }"
     echo "}"
     echo ""
     echo "${actor_name}::${actor_name}(genny::ActorContext& context)"
     echo "    : Actor(context),"
-    echo "      _strategy{context.operation(\"insert\", ${actor_name}::id())},"
+    echo "      _totalInserts{context.operation(\"Insert\", ${actor_name}::id())},"
     echo "      _client{std::move(context.client())},"
     echo "      _loop{context, (*_client)[context.get<std::string>(\"Database\")], ${actor_name}::id()} {}"
     echo ""
@@ -211,7 +209,6 @@ Actors:
   Phases:
   - Phase: 0
     Repeat: 10 # used by PhaesLoop
-    Retries: 7 # used by ExecutionStrategy
     # below used by PhaseConfig in ${actor_name}.cpp
     Collection: test
     Document: {foo: {^RandomInt: {min: 0, max: 100}}}
@@ -266,7 +263,7 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
         - Name: ${actor_name}
           Type: ${actor_name}
           Database: mydb
-          ExecutionStrategy:
+          RetryStrategy:
             ThrowOnFailure: true
           Phases:
           - Repeat: 100

@@ -24,9 +24,9 @@
 
 #include <loki/ScopeGuard.h>
 
-#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/PhaseLoop.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 #include <testlib/ActorHelper.hpp>
 
@@ -39,18 +39,19 @@ struct StrategyActor : public Actor {
 public:
     struct PhaseState {
         PhaseState(const PhaseContext& context)
-            : options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")},
+            : options{context.get<RetryStrategy::Options, false>("RetryStrategy")
+                          .value_or(RetryStrategy::Options{})},
               throwCount{context.get<int, false>("ThrowCount").value_or(0)},
               shouldThrow{context.get<bool, false>("ShouldThrow").value_or(false)} {}
 
-        ExecutionStrategy::RunOptions options;
+        RetryStrategy::Options options;
         signed long long throwCount;
         bool shouldThrow;
     };
 
     using Exception = genny::MongoException;
 
-    static constexpr auto kErrorMessage = "Testing ExecutionStrategy catching";
+    static constexpr auto kErrorMessage = "Testing RetryStrategy catching";
 
 public:
     StrategyActor(ActorContext& context)
@@ -97,7 +98,7 @@ public:
     }
 
 public:
-    ExecutionStrategy strategy;
+    RetryStrategy strategy;
     size_t allRuns = 0;
     size_t failedRuns = 0;
     size_t goodRuns = 0;
@@ -114,7 +115,7 @@ const StrategyActor* extractActor(const std::unique_ptr<Actor>& baseActor) {
 }
 }  // namespace genny::test
 
-TEST_CASE("ExecutionStrategy") {
+TEST_CASE("RetryStrategy") {
     mongocxx::instance::current();
 
     SECTION("Test a clean function") {
@@ -198,7 +199,7 @@ Actors:
     - Phase: 0
       ThrowCount: 1
       ShouldThrow: True
-      ExecutionStrategy:
+      RetryStrategy:
         ThrowOnFailure: True
         Retries: 0
 )");
@@ -240,21 +241,21 @@ Actors:
 
         // Do not throw but be very willing to catch
         yamlSimpleActor["Phases"][0]["ThrowCount"] = 0;
-        yamlSimpleActor["Phases"][0]["ExecutionStrategy"]["Retries"] = 10;
+        yamlSimpleActor["Phases"][0]["RetryStrategy"]["Retries"] = 10;
         ++run;
         ++good;
 
         // Throw one more time than we can catch
         constexpr size_t kOverthrows = 4;
         yamlSimpleActor["Phases"][1]["ThrowCount"] = kOverthrows;
-        yamlSimpleActor["Phases"][1]["ExecutionStrategy"]["Retries"] = kOverthrows - 1;
+        yamlSimpleActor["Phases"][1]["RetryStrategy"]["Retries"] = kOverthrows - 1;
         run += kOverthrows;
         ++failed;
 
         // Throw exactly as many times as we can catch
         constexpr size_t kMatchedThrows = 2;
         yamlSimpleActor["Phases"][2]["ThrowCount"] = kMatchedThrows;
-        yamlSimpleActor["Phases"][2]["ExecutionStrategy"]["Retries"] = kMatchedThrows;
+        yamlSimpleActor["Phases"][2]["RetryStrategy"]["Retries"] = kMatchedThrows;
         run += kMatchedThrows + 1;
         ++good;
 

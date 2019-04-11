@@ -37,8 +37,8 @@ struct InsertRemove::PhaseConfig {
                 const std::string collection_name,
                 genny::DefaultRandom& rng,
                 int id,
-                ExecutionStrategy::RunOptions insertOpts = {},
-                ExecutionStrategy::RunOptions removeOpts = {})
+                RetryStrategy::Options insertOpts = {},
+                RetryStrategy::Options removeOpts = {})
         : database{db},
           collection{db[collection_name]},
           myDoc(bsoncxx::builder::stream::document{} << "_id" << id
@@ -50,20 +50,21 @@ struct InsertRemove::PhaseConfig {
                 genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 int id)
-        : PhaseConfig(
-              (*client)[context.get<std::string>("Database")],
-              context.get<std::string>("Collection"),
-              rng,
-              id,
-              ExecutionStrategy::getOptionsFrom(context, "InsertStage", "ExecutionsStrategy"),
-              ExecutionStrategy::getOptionsFrom(context, "RemoveStage", "ExecutionsStrategy")) {}
+        : PhaseConfig((*client)[context.get<std::string>("Database")],
+                      context.get<std::string>("Collection"),
+                      rng,
+                      id,
+                      context.get<RetryStrategy::Options, false>("InsertStage", "RetryStrategy")
+                          .value_or(RetryStrategy::Options{}),
+                      context.get<RetryStrategy::Options, false>("RemoveStage", "RetryStrategy")
+                          .value_or(RetryStrategy::Options{})) {}
 
     mongocxx::database database;
     mongocxx::collection collection;
     bsoncxx::document::value myDoc;
 
-    ExecutionStrategy::RunOptions insertOptions;
-    ExecutionStrategy::RunOptions removeOptions;
+    RetryStrategy::Options insertOptions;
+    RetryStrategy::Options removeOptions;
 };
 
 void InsertRemove::run() {

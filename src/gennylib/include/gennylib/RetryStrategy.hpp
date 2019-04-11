@@ -20,9 +20,70 @@
 
 #include <loki/ScopeGuard.h>
 
-#include <gennylib/config/ExecutionStrategyOptions.hpp>
-
 #include <metrics/metrics.hpp>
+
+
+namespace genny {
+
+/**
+ * Configuration for a `genny::RetryStrategy`.
+ */
+struct RetryOptions {
+    /** Default values for each key */
+    struct Defaults {
+        static constexpr auto kMaxRetries = size_t{0};
+        static constexpr auto kThrowOnFailure = false;
+    };
+
+    /** YAML keys to use */
+    struct Keys {
+        static constexpr auto kMaxRetries = "Retries";
+        static constexpr auto kThrowOnFailure = "ThrowOnFailure";
+    };
+
+    size_t maxRetries = Defaults::kMaxRetries;
+    bool throwOnFailure = Defaults::kThrowOnFailure;
+};
+
+}  // namespace genny
+
+
+namespace YAML {
+
+/**
+ * Convert to/from `genny::RetryOptions` and YAML
+ */
+template <>
+struct convert<genny::RetryOptions> {
+    using Config = genny::RetryOptions;
+    using Defaults = typename Config::Defaults;
+    using Keys = typename Config::Keys;
+
+    static Node encode(const Config& rhs) {
+        Node node;
+
+        node[Keys::kMaxRetries] = rhs.maxRetries;
+        node[Keys::kThrowOnFailure] = rhs.throwOnFailure;
+
+        return node;
+    }
+
+    static bool decode(const Node& node, Config& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+
+        genny::decodeNodeInto(rhs.maxRetries, node[Keys::kMaxRetries], Defaults::kMaxRetries);
+        genny::decodeNodeInto(
+            rhs.throwOnFailure, node[Keys::kThrowOnFailure], Defaults::kThrowOnFailure);
+
+        return true;
+    }
+};
+
+
+}  // namespace YAML
+
 
 namespace genny {
 
@@ -31,39 +92,25 @@ class ActorContext;
 /**
  * A small wrapper for running Mongo commands and recording metrics.
  *
- * This class is intended to make it painless and safe to run mongo commands that may throw
- * boost exceptions.
- *
- * The ExecutionStrategy also allows the user to specify a maximum number of retries for failed
+ * The RetryStrategy allows the user to specify a maximum number of retries for failed
  * operations. Note that failed operations do not throw -- It is the user's responsibility to check
  * `lastResult()` when different behavior is desired for failed operations.
  */
-class ExecutionStrategy {
+class RetryStrategy {
 public:
     struct Result {
         bool wasSuccessful = false;
         size_t numAttempts = 0;
     };
 
-    using RunOptions = config::ExecutionStrategyOptions;
+    using Options = RetryOptions;
 
 public:
-    explicit ExecutionStrategy(metrics::Operation op) : _op{std::move(op)} {}
-    ~ExecutionStrategy() = default;
-
-    /*
-     * Either get a set of options at the specified path in the config,
-     * or return a default constructed set of the options.
-     * This function is mostly about abstracting a fairly common pattern for DRYness
-     */
-    template <typename ConfigT, class... Args>
-    static RunOptions getOptionsFrom(const ConfigT& config, Args&&... args) {
-        return config.template get<RunOptions, false>(std::forward<Args>(args)...)
-            .value_or(RunOptions{});
-    }
+    explicit RetryStrategy(metrics::Operation op) : _op{std::move(op)} {}
+    ~RetryStrategy() = default;
 
     template <typename F>
-    void run(F&& fun, const RunOptions& options = RunOptions{}) {
+    void run(F&& fun, const Options& options = Options{}) {
         Result result;
 
         // Always report our results, even if we threw
@@ -103,7 +150,7 @@ public:
     }
 
 private:
-    void _finishRun(const RunOptions& options, Result result);
+    void _finishRun(const Options& options, Result result);
 
     metrics::Operation _op;
     Result _lastResult;

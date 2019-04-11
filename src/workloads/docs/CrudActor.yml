@@ -5,7 +5,7 @@ Actors:
 - Name: CrudActor
   Type: CrudActor
   Database: mydb
-  ExecutionStrategy:
+  RetryStrategy:
     ThrowOnFailure: true
   Phases:
   - Repeat: 10

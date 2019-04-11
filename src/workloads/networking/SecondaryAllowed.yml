@@ -12,7 +12,7 @@ Actors:
     - Name: StepdownCommand
       Type: AdminCommand
       Threads: 1
-      ExecutionStrategy:
+      RetryStrategy:
           Retries: 0
           ThrowOnFailure: false
       Phases:
@@ -31,7 +31,7 @@ Actors:
     - Name: SecondaryPreferredRead
       Type: RunCommand
       Threads: 100
-      ExecutionStrategy:
+      RetryStrategy:
           Retries: 0
           ThrowOnFailure: false
       Database: test

@@ -45,7 +45,7 @@ TEST_CASE_METHOD(MongoTestFixture,
       - Name: CrudActor
         Type: CrudActor
         Database: mydb
-        ExecutionStrategy:
+        RetryStrategy:
           ThrowOnFailure: true
         Phases:
         - Repeat: 1
@@ -90,7 +90,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -125,7 +125,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -164,7 +164,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -199,7 +199,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -249,7 +249,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -288,7 +288,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -326,7 +326,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -385,7 +385,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: CrudActor
               Type: CrudActor
               Database: mydb
-              ExecutionStrategy:
+              RetryStrategy:
                 ThrowOnFailure: true
               Phases:
               - Repeat: 1
@@ -432,7 +432,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -482,7 +482,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -533,7 +533,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -571,7 +571,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -617,7 +617,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -656,7 +656,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -700,7 +700,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -731,7 +731,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -769,7 +769,7 @@ TEST_CASE_METHOD(MongoTestFixture,
       - Name: CrudActor
         Type: CrudActor
         Database: mydb
-        ExecutionStrategy:
+        RetryStrategy:
           ThrowOnFailure: true
         Phases:
         - Repeat: 1
@@ -818,7 +818,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -846,7 +846,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -893,7 +893,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -937,7 +937,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -967,7 +967,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -1004,7 +1004,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -1041,7 +1041,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -1081,7 +1081,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
@@ -1115,7 +1115,7 @@ TEST_CASE_METHOD(MongoTestFixture,
           - Name: CrudActor
             Type: CrudActor
             Database: mydb
-            ExecutionStrategy:
+            RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1

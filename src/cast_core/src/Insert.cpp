@@ -37,12 +37,13 @@ namespace genny::actor {
 struct Insert::PhaseConfig {
     mongocxx::collection collection;
     DocumentGenerator documentExpr;
-    ExecutionStrategy::RunOptions options;
+    RetryStrategy::Options options;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           documentExpr{phaseContext.createDocumentGenerator(id, "Document")},
-          options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
+          options{phaseContext.get<RetryStrategy::Options, false>("RetryStrategy")
+                      .value_or(RetryStrategy::Options{})} {}
 };
 
 void Insert::run() {

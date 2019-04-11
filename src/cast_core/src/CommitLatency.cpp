@@ -24,13 +24,13 @@
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
-#include <boost/random.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/random.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 
 
@@ -52,7 +52,7 @@ struct CommitLatency::PhaseConfig {
     int64_t repeat;
     int64_t threads;
     boost::random::uniform_int_distribution<int64_t> amountDistribution;
-    ExecutionStrategy::RunOptions options;
+    RetryStrategy::Options options;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
         : collection{db[phaseContext.get<std::string>("Collection")]},
@@ -65,7 +65,8 @@ struct CommitLatency::PhaseConfig {
           repeat{phaseContext.get<IntegerSpec>("Repeat")},
           threads{phaseContext.get<IntegerSpec>("Threads")},
           amountDistribution{-100, 100},
-          options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
+          options{phaseContext.get<RetryStrategy::Options, false>("RetryStategy")
+                      .value_or(RetryStrategy::Options{})} {
         if (useTransaction) {
             optionsTransaction.write_concern(wc);
             optionsTransaction.read_preference(rp);

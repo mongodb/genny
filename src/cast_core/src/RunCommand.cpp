@@ -29,8 +29,8 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
+#include <gennylib/RetryStrategy.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -87,7 +87,66 @@ void runThenAwaitStepdown(mongocxx::database& database, bsoncxx::document::view&
     }
 }
 
+struct RunCommandOperationConfig {
+    /** Default values for each of the keys */
+    struct Defaults {
+        static constexpr auto kMetricsName = "";
+        static constexpr auto kIsQuiet = false;
+        static constexpr auto kAwaitStepdown = false;
+    };
+
+    /** YAML keys */
+    struct Keys {
+        static constexpr auto kAwaitStepdown = "OperationAwaitStepdown";
+        static constexpr auto kMetricsName = "OperationMetricsName";
+        static constexpr auto kIsQuiet = "OperationIsQuiet";
+        static constexpr auto kMinPeriod = "OperationMinPeriod";
+        static constexpr auto kPreSleep = "OperationSleepBefore";
+        static constexpr auto kPostSleep = "OperationSleepAfter";
+    };
+
+    std::string metricsName = Defaults::kMetricsName;
+    bool isQuiet = Defaults::kIsQuiet;
+    bool awaitStepdown = Defaults::kAwaitStepdown;
+};
+
 }  // namespace
+
+namespace YAML {
+
+template <>
+struct convert<RunCommandOperationConfig> {
+    using Config = RunCommandOperationConfig;
+    using Defaults = typename Config::Defaults;
+    using Keys = typename Config::Keys;
+
+    static Node encode(const Config& rhs) {
+        Node node;
+
+        // If we don't have a MetricsName, this key is null
+        node[Keys::kMetricsName] = rhs.metricsName;
+
+        node[Keys::kIsQuiet] = rhs.isQuiet;
+        node[Keys::kAwaitStepdown] = rhs.awaitStepdown;
+
+        return node;
+    }
+
+    static bool decode(const Node& node, Config& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+
+        genny::decodeNodeInto(rhs.metricsName, node[Keys::kMetricsName], Defaults::kMetricsName);
+        genny::decodeNodeInto(rhs.isQuiet, node[Keys::kIsQuiet], Defaults::kIsQuiet);
+        genny::decodeNodeInto(
+            rhs.awaitStepdown, node[Keys::kAwaitStepdown], Defaults::kAwaitStepdown);
+
+        return true;
+    }
+};
+
+}  // namespace YAML
 
 
 namespace genny {
@@ -95,7 +154,7 @@ namespace genny {
 /** @private */
 class DatabaseOperation {
 public:
-    using OpConfig = config::RunCommandConfig::Operation;
+    using OpConfig = RunCommandOperationConfig;
 
 public:
     DatabaseOperation(PhaseContext& phaseContext,
@@ -186,7 +245,8 @@ struct actor::RunCommand::PhaseConfig {
                 mongocxx::pool::entry& client,
                 ActorId id)
         : strategy{actorContext.operation("RunCommand", id)},
-          options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")} {
+          options{context.get<RetryStrategy::Options, false>("RetryStrategy")
+                      .value_or(RetryStrategy::Options{})} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
@@ -202,8 +262,8 @@ struct actor::RunCommand::PhaseConfig {
             "Operation", "Operations", createOperation);
     }
 
-    ExecutionStrategy strategy;
-    ExecutionStrategy::RunOptions options;
+    RetryStrategy strategy;
+    RetryStrategy::Options options;
     std::vector<std::unique_ptr<DatabaseOperation>> operations;
 };
 
