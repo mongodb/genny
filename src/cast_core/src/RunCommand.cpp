@@ -89,6 +89,69 @@ void runThenAwaitStepdown(mongocxx::database& database, bsoncxx::document::view&
 
 }  // namespace
 
+namespace genny::config {
+
+struct RunCommandOperationConfig {
+    /** Default values for each of the keys */
+    struct Defaults {
+        static constexpr auto kMetricsName = "";
+        static constexpr auto kIsQuiet = false;
+        static constexpr auto kAwaitStepdown = false;
+    };
+
+    /** YAML keys */
+    struct Keys {
+        static constexpr auto kAwaitStepdown = "OperationAwaitStepdown";
+        static constexpr auto kMetricsName = "OperationMetricsName";
+        static constexpr auto kIsQuiet = "OperationIsQuiet";
+        static constexpr auto kMinPeriod = "OperationMinPeriod";
+        static constexpr auto kPreSleep = "OperationSleepBefore";
+        static constexpr auto kPostSleep = "OperationSleepAfter";
+    };
+
+    std::string metricsName = Defaults::kMetricsName;
+    bool isQuiet = Defaults::kIsQuiet;
+    bool awaitStepdown = Defaults::kAwaitStepdown;
+};
+
+}  // namespace genny::config
+
+namespace YAML {
+
+template <>
+struct convert<genny::config::RunCommandOperationConfig> {
+    using Config = genny::config::RunCommandOperationConfig;
+    using Defaults = typename Config::Defaults;
+    using Keys = typename Config::Keys;
+
+    static Node encode(const Config& rhs) {
+        Node node;
+
+        // If we don't have a MetricsName, this key is null
+        node[Keys::kMetricsName] = rhs.metricsName;
+
+        node[Keys::kIsQuiet] = rhs.isQuiet;
+        node[Keys::kAwaitStepdown] = rhs.awaitStepdown;
+
+        return node;
+    }
+
+    static bool decode(const Node& node, Config& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+
+        genny::decodeNodeInto(rhs.metricsName, node[Keys::kMetricsName], Defaults::kMetricsName);
+        genny::decodeNodeInto(rhs.isQuiet, node[Keys::kIsQuiet], Defaults::kIsQuiet);
+        genny::decodeNodeInto(
+                rhs.awaitStepdown, node[Keys::kAwaitStepdown], Defaults::kAwaitStepdown);
+
+        return true;
+    }
+};
+
+}  // namespace YAML
+
 
 namespace genny {
 
