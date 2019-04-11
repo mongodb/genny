@@ -412,8 +412,14 @@ TEST_CASE("Operation with threshold") {
         auto metrics = setup();
         auto actor = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 0.0);
 
-        REQUIRE_THROWS_AS(runActor(actor, 51ns), v1::OperationThresholdExceededException);
         runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        REQUIRE_THROWS_AS(runActor(actor, 11ns), v1::OperationThresholdExceededException);
     }
 }
 
