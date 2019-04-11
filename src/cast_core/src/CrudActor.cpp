@@ -26,8 +26,8 @@
 #include <bsoncxx/json.hpp>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/MongoException.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
 

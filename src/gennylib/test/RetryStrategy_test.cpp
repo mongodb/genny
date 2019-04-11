@@ -24,9 +24,9 @@
 
 #include <loki/ScopeGuard.h>
 
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/PhaseLoop.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 #include <testlib/ActorHelper.hpp>
 

@@ -29,8 +29,8 @@
 #include <boost/throw_exception.hpp>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 
 

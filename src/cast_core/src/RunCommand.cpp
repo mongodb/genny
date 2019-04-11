@@ -29,8 +29,8 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/MongoException.hpp>
+#include <gennylib/RetryStrategy.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 

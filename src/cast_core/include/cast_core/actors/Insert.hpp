@@ -21,8 +21,8 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>

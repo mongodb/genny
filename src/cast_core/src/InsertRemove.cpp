@@ -50,15 +50,14 @@ struct InsertRemove::PhaseConfig {
                 genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 int id)
-        : PhaseConfig(
-              (*client)[context.get<std::string>("Database")],
-              context.get<std::string>("Collection"),
-              rng,
-              id,
-              context.get<RetryStrategy::Options, false>("InsertStage", "RetryStrategy")
-                  .value_or(RetryStrategy::Options{}),
-              context.get<RetryStrategy::Options, false>("RemoveStage", "RetryStrategy")
-                  .value_or(RetryStrategy::Options{})) {}
+        : PhaseConfig((*client)[context.get<std::string>("Database")],
+                      context.get<std::string>("Collection"),
+                      rng,
+                      id,
+                      context.get<RetryStrategy::Options, false>("InsertStage", "RetryStrategy")
+                          .value_or(RetryStrategy::Options{}),
+                      context.get<RetryStrategy::Options, false>("RemoveStage", "RetryStrategy")
+                          .value_or(RetryStrategy::Options{})) {}
 
     mongocxx::database database;
     mongocxx::collection collection;
