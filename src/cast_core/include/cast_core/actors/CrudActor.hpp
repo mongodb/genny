@@ -21,7 +21,6 @@
 #include <mongocxx/pool.hpp>
 
 #include <gennylib/Actor.hpp>
-#include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -43,7 +42,7 @@ namespace genny::actor {
  *   Database:
  *   Type: CrudActor
  *   Database: testdb
- *   ExecutionStrategy:
+ *   RetryStrategy:
  *     ThrowOnFailure: true
  *   Phases:
  *   - Repeat: 1

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gennylib/ExecutionStrategy.hpp>
+#include <gennylib/RetryStrategy.hpp>
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/log/trivial.hpp>
@@ -21,7 +21,7 @@
 
 namespace genny {
 
-void ExecutionStrategy::_finishRun(const RunOptions& options, Result result) {
+void RetryStrategy::_finishRun(const Options& options, Result result) {
     if (!result.wasSuccessful) {
         BOOST_LOG_TRIVIAL(error) << "Operation failed after " << options.maxRetries
                                  << " retry attempts.";

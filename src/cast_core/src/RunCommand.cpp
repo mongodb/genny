@@ -29,7 +29,7 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/ExecutionStrategy.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/MongoException.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
@@ -245,8 +245,8 @@ struct actor::RunCommand::PhaseConfig {
                 mongocxx::pool::entry& client,
                 ActorId id)
         : strategy{actorContext.operation("RunCommand", id)},
-          options{context.get<ExecutionStrategy::RunOptions, false>("ExecutionsStrategy")
-                      .value_or(ExecutionStrategy::RunOptions{})} {
+          options{context.get<RetryStrategy::Options, false>("RetryStrategy")
+                      .value_or(RetryStrategy::Options{})} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
@@ -262,8 +262,8 @@ struct actor::RunCommand::PhaseConfig {
             "Operation", "Operations", createOperation);
     }
 
-    ExecutionStrategy strategy;
-    ExecutionStrategy::RunOptions options;
+    RetryStrategy strategy;
+    RetryStrategy::Options options;
     std::vector<std::unique_ptr<DatabaseOperation>> operations;
 };
 

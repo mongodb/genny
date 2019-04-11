@@ -26,9 +26,9 @@
 namespace genny {
 
 /**
- * Configuration for a `genny::ExecutionStrategy`.
+ * Configuration for a `genny::RetryStrategy`.
  */
-struct ExecutionStrategyOptions {
+struct RetryOptions {
     /** Default values for each key */
     struct Defaults {
         static constexpr auto kMaxRetries = size_t{0};
@@ -51,11 +51,11 @@ struct ExecutionStrategyOptions {
 namespace YAML {
 
 /**
- * Convert to/from `genny::ExecutionStrategyOptions` and YAML
+ * Convert to/from `genny::RetryOptions` and YAML
  */
 template <>
-struct convert<genny::ExecutionStrategyOptions> {
-    using Config = genny::ExecutionStrategyOptions;
+struct convert<genny::RetryOptions> {
+    using Config = genny::RetryOptions;
     using Defaults = typename Config::Defaults;
     using Keys = typename Config::Keys;
 
@@ -92,28 +92,25 @@ class ActorContext;
 /**
  * A small wrapper for running Mongo commands and recording metrics.
  *
- * This class is intended to make it painless and safe to run mongo commands that may throw
- * boost exceptions.
- *
- * The ExecutionStrategy also allows the user to specify a maximum number of retries for failed
+ * The RetryStrategy allows the user to specify a maximum number of retries for failed
  * operations. Note that failed operations do not throw -- It is the user's responsibility to check
  * `lastResult()` when different behavior is desired for failed operations.
  */
-class ExecutionStrategy {
+class RetryStrategy {
 public:
     struct Result {
         bool wasSuccessful = false;
         size_t numAttempts = 0;
     };
 
-    using RunOptions = ExecutionStrategyOptions;
+    using Options = RetryOptions;
 
 public:
-    explicit ExecutionStrategy(metrics::Operation op) : _op{std::move(op)} {}
-    ~ExecutionStrategy() = default;
+    explicit RetryStrategy(metrics::Operation op) : _op{std::move(op)} {}
+    ~RetryStrategy() = default;
 
     template <typename F>
-    void run(F&& fun, const RunOptions& options = RunOptions{}) {
+    void run(F&& fun, const Options& options = Options{}) {
         Result result;
 
         // Always report our results, even if we threw
@@ -153,7 +150,7 @@ public:
     }
 
 private:
-    void _finishRun(const RunOptions& options, Result result);
+    void _finishRun(const Options& options, Result result);
 
     metrics::Operation _op;
     Result _lastResult;

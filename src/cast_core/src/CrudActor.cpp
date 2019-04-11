@@ -26,7 +26,7 @@
 #include <bsoncxx/json.hpp>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/ExecutionStrategy.hpp>
+#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
@@ -835,9 +835,9 @@ namespace genny::actor {
 
 struct CrudActor::PhaseConfig {
     mongocxx::collection collection;
-    ExecutionStrategy::RunOptions options;
+    RetryStrategy::Options options;
     std::vector<std::unique_ptr<BaseOperation>> operations;
-    ExecutionStrategy strategy;
+    RetryStrategy strategy;
 
     PhaseConfig(PhaseContext& phaseContext,
                 const mongocxx::database& db,
@@ -845,8 +845,8 @@ struct CrudActor::PhaseConfig {
                 ActorId id)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           strategy{actorContext.operation("Crud", id)},
-          options{phaseContext.get<ExecutionStrategy::RunOptions, false>("ExecutionsStrategy")
-                      .value_or(ExecutionStrategy::RunOptions{})} {
+          options{phaseContext.get<RetryStrategy::Options, false>("RetryStrategy")
+                      .value_or(RetryStrategy::Options{})} {
         auto addOperation = [&](YAML::Node node) {
             auto yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].as<std::string>();

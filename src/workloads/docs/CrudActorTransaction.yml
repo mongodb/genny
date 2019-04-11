@@ -5,7 +5,7 @@ Actors:
 - Name: BulkWriteInTransaction
   Type: CrudActor
   Database: testdb
-  ExecutionStrategy:
+  RetryStrategy:
     ThrowOnFailure: true
   Phases:
   - Repeat: 1

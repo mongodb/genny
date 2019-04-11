@@ -156,7 +156,7 @@ class MyActor {
 
     // Note that while here the MyActor class here stores the
     // metrics::Operation type, some actors wrap it in an
-    // ExecutionStrategy in order to be able to handle retry logic.
+    // RetryStrategy in order to be able to handle retry logic.
     metrics::Operation _insertOp;
 };
 ```
