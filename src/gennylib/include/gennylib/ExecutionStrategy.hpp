@@ -22,7 +22,8 @@
 
 #include <metrics/metrics.hpp>
 
-namespace genny::config {
+
+namespace genny {
 
 /**
  * Configuration for a `genny::ExecutionStrategy`.
@@ -44,16 +45,17 @@ struct ExecutionStrategyOptions {
     bool throwOnFailure = Defaults::kThrowOnFailure;
 };
 
-}  // namespace genny::config
+}
+
 
 namespace YAML {
 
 /**
- * Convert to/from `genny::config::ExecutionStrategyOptions` and YAML
+ * Convert to/from `genny::ExecutionStrategyOptions` and YAML
  */
 template <>
-struct convert<genny::config::ExecutionStrategyOptions> {
-    using Config = genny::config::ExecutionStrategyOptions;
+struct convert<genny::ExecutionStrategyOptions> {
+    using Config = genny::ExecutionStrategyOptions;
     using Defaults = typename Config::Defaults;
     using Keys = typename Config::Keys;
 
@@ -79,8 +81,8 @@ struct convert<genny::config::ExecutionStrategyOptions> {
     }
 };
 
-}  // namespace YAML
 
+}
 
 
 namespace genny {
@@ -104,7 +106,7 @@ public:
         size_t numAttempts = 0;
     };
 
-    using RunOptions = config::ExecutionStrategyOptions;
+    using RunOptions = ExecutionStrategyOptions;
 
 public:
     explicit ExecutionStrategy(metrics::Operation op) : _op{std::move(op)} {}
