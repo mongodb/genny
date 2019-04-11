@@ -209,7 +209,6 @@ Actors:
   Phases:
   - Phase: 0
     Repeat: 10 # used by PhaesLoop
-    Retries: 7 # used by RetryStrategy
     # below used by PhaseConfig in ${actor_name}.cpp
     Collection: test
     Document: {foo: {^RandomInt: {min: 0, max: 100}}}
