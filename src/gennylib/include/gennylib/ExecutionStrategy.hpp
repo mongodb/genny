@@ -45,7 +45,7 @@ struct ExecutionStrategyOptions {
     bool throwOnFailure = Defaults::kThrowOnFailure;
 };
 
-}
+}  // namespace genny
 
 
 namespace YAML {
@@ -75,14 +75,14 @@ struct convert<genny::ExecutionStrategyOptions> {
 
         genny::decodeNodeInto(rhs.maxRetries, node[Keys::kMaxRetries], Defaults::kMaxRetries);
         genny::decodeNodeInto(
-                rhs.throwOnFailure, node[Keys::kThrowOnFailure], Defaults::kThrowOnFailure);
+            rhs.throwOnFailure, node[Keys::kThrowOnFailure], Defaults::kThrowOnFailure);
 
         return true;
     }
 };
 
 
-}
+}  // namespace YAML
 
 
 namespace genny {

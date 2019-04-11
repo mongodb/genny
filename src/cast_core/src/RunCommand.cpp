@@ -140,7 +140,7 @@ struct convert<RunCommandOperationConfig> {
         genny::decodeNodeInto(rhs.metricsName, node[Keys::kMetricsName], Defaults::kMetricsName);
         genny::decodeNodeInto(rhs.isQuiet, node[Keys::kIsQuiet], Defaults::kIsQuiet);
         genny::decodeNodeInto(
-                rhs.awaitStepdown, node[Keys::kAwaitStepdown], Defaults::kAwaitStepdown);
+            rhs.awaitStepdown, node[Keys::kAwaitStepdown], Defaults::kAwaitStepdown);
 
         return true;
     }

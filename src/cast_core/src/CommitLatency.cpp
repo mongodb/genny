@@ -24,8 +24,8 @@
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
-#include <boost/random.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/random.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <gennylib/Cast.hpp>
