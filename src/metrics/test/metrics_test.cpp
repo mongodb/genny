@@ -370,25 +370,51 @@ TEST_CASE("Genny.ActiveActors metric") {
 }
 
 TEST_CASE("Operation with threshold") {
-    RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
 
-    genny::metrics::v1::ReporterT{metrics};
+    auto setup = []() {
+        RegistryClockSourceStub::reset();
+        auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
 
-    // Create an actor where 50% of the operations cannot exceed 10ns.
-    auto actorWithThreshold = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 50.0);
+        genny::metrics::v1::ReporterT{metrics};
 
-    auto runActor = [&](std::chrono::nanoseconds advance) {
-        auto ctx = actorWithThreshold.start();
+        return metrics;
+    };
+
+    auto runActor = [](v1::OperationT<RegistryClockSourceStub>& actor,
+                       std::chrono::nanoseconds advance) {
+        auto ctx = actor.start();
         RegistryClockSourceStub::advance(advance);
         ctx.success();
     };
 
-    runActor(1ns);
-    runActor(1ns);
-    runActor(51ns);
-    runActor(51ns);
-    REQUIRE_THROWS_AS(runActor(51ns), v1::OperationThresholdExceededException);
+    SECTION("50% threshold") {
+        auto metrics = setup();
+        auto actor = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 50.0);
+
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 51ns);
+        runActor(actor, 51ns);
+        REQUIRE_THROWS_AS(runActor(actor, 51ns), v1::OperationThresholdExceededException);
+    }
+
+    SECTION("100% threshold") {
+        auto metrics = setup();
+        auto actor = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 100.0);
+
+        runActor(actor, 9999ns);
+        runActor(actor, 9999ns);
+        runActor(actor, 9999ns);
+        runActor(actor, 9999ns);
+    }
+
+    SECTION("0% threshold") {
+        auto metrics = setup();
+        auto actor = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 0.0);
+
+        REQUIRE_THROWS_AS(runActor(actor, 51ns), v1::OperationThresholdExceededException);
+        runActor(actor, 1ns);
+    }
 }
 
 }  // namespace
