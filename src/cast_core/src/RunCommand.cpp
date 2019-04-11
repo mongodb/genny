@@ -31,7 +31,6 @@
 
 #include <gennylib/ExecutionStrategy.hpp>
 #include <gennylib/MongoException.hpp>
-#include <gennylib/v1/RateLimiter.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -110,7 +109,6 @@ public:
           _database{std::move(database)},
           _commandExpr{std::move(commandExpr)},
           _options{std::move(opts)},
-          _rateLimiter{std::make_unique<v1::RateLimiterSimple>(_options.rateLimit)},
           _awaitStepdown{opts.awaitStepdown},
           // Only record metrics if we have a name for the operation.
           _operation{!_options.metricsName.empty()
@@ -138,11 +136,6 @@ public:
     };
 
     void run() {
-        _rateLimiter->run([&] { _run(); });
-    }
-
-private:
-    void _run() {
         auto command = _commandExpr();
         auto view = command.view();
 
@@ -175,12 +168,13 @@ private:
         }
     }
 
+
+private:
     std::string _databaseName;
     mongocxx::database _database;
     DocumentGenerator _commandExpr;
     OpConfig _options;
 
-    std::unique_ptr<v1::RateLimiter> _rateLimiter;
     std::optional<metrics::Operation> _operation;
     bool _awaitStepdown;
 };

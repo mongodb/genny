@@ -15,6 +15,7 @@
 #include <gennylib/context.hpp>
 
 #include <memory>
+#include <set>
 #include <sstream>
 
 #include <mongocxx/instance.hpp>
@@ -37,10 +38,15 @@ WorkloadContext::WorkloadContext(const YAML::Node& node,
       _rateLimiters{10},
       _poolManager{mongoUri, apmCallback} {
 
+    std::set<std::string> validSchemaVersions{"2018-07-01"};
+
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
-    if (this->get_noinherit<std::string>("SchemaVersion") != "2018-07-01") {
-        throw InvalidConfigurationException("Invalid schema version");
+    if (const std::string schemaVersion = this->get_noinherit<std::string>("SchemaVersion");
+        validSchemaVersions.count(schemaVersion) != 1) {
+        std::ostringstream errMsg;
+        errMsg << "Invalid Schema Version: " << schemaVersion;
+        throw InvalidConfigurationException(errMsg.str());
     }
 
     // Make sure we have a valid mongocxx instance happening here

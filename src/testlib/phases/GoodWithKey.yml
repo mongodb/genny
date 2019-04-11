@@ -1,0 +1,4 @@
+PhaseSchemaVersion: 2018-07-01
+ForSelfTest:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 1}}
+  Mode: NoException

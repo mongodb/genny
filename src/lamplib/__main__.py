@@ -43,17 +43,20 @@ def main():
                     env=compile_env, cmdline_cmake_args=cmake_args)
         tasks.compile_all(context, compile_env)
         tasks.install(context, compile_env)
+    elif args.subcommand == 'clean':
+        tasks.clean(context, compile_env)
     else:
-        # Always compile genny regardless of the subcommand.
         tasks.compile_all(context, compile_env)
 
-    if args.subcommand == 'install':
-        tasks.install(context, compile_env)
-    elif args.subcommand == 'cmake-test':
-        tasks.run_tests.cmake_test(compile_env)
-    elif args.subcommand == 'resmoke-test':
-        tasks.run_tests.resmoke_test(compile_env, suites=args.resmoke_suites,
-                                     mongo_dir=args.resmoke_mongo_dir, is_cnats=args.resmoke_cnats)
+        if args.subcommand == 'install':
+            tasks.install(context, compile_env)
+        elif args.subcommand == 'cmake-test':
+            tasks.run_tests.cmake_test(compile_env)
+        elif args.subcommand == 'resmoke-test':
+            tasks.run_tests.resmoke_test(compile_env, suites=args.resmoke_suites,
+                                         mongo_dir=args.resmoke_mongo_dir, is_cnats=args.resmoke_cnats)
+        else:
+            raise ValueError('Unknown subcommand: ', args.subcommand)
 
 
 if __name__ == '__main__':

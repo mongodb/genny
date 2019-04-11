@@ -1,0 +1,105 @@
+PhaseSchemaVersion: 2018-07-01
+
+Document: &Doc # Documents are approximately 1 KB in size
+  t: {^RandomInt: {min: 0, max: 10}}
+  w: {^RandomInt: {distribution: geometric, p: 0.1}}
+  x: 0
+  y: {^RandomInt: {min: 0, max: 1000}}
+  z: {^RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
+  int0: &int {^RandomInt: {distribution: binomial, t: 200, p: 0.5}}
+  int1: *int
+  int2: *int
+  int3: *int
+  int4: *int
+  int5: *int
+  int6: *int
+  int7: *int
+  int8: *int
+  int9: *int
+  intArray:
+  - 1000
+  - 2000
+  - 3000
+  - 4000
+  - 5000
+  - 6000
+  - 7000
+  - 8000
+  - 9000
+  string0: &string {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}}}
+  string1: *string
+  string2: *string
+  string3: *string
+  string4: *string
+  string5: *string
+  string6: *string
+  string7: *string
+  string8: *string
+  string9: *string
+  stringShort: {^RandomString: {length: 1}}
+  stringLong: {^RandomString: {length: 100}}
+  compressibleStringArray:
+  - &cstring AAAAAAAAAAAAAAAAAAAA
+  - *cstring
+  - *cstring
+  - *cstring
+  - *cstring
+  - *cstring
+  - *cstring
+  - *cstring
+  - *cstring
+  - *cstring
+  some: {embedded: {document: {with: {some: {depth: *string}}}}}
+
+Indexes: &Indexes
+- keys: {t: 1, w: 1}
+- keys: {y: 1}
+- keys: {t: 1, stringShort: 1}
+- keys: {string0: 1}
+- keys: {stringLong: 1}
+#    options: {unique: 1}
+- keys: {stringShort: 1, y: 1}
+- keys: {int0: 1, int1: 1, int2: 1}
+- keys: {int3: 1}
+- keys: {int4: 1}
+- keys: {int5: 1, int6: 1}
+
+Loader:
+  CollectionCount: {^Parameter: {Default: &DefaultCollectionCount 10000, Name: "CollectionCount"}}
+  DocumentCount: {^Parameter: {Default: 1e4, Name: "DocumentCount"}}
+  BatchSize: 1000
+  Document: *Doc
+  Database: &DB test
+  Indexes: *Indexes
+
+Update:
+  Database: *DB
+  CollectionCount: 100 # This is specifically 1% of collections
+  UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+  Update: {$inc: {x: 1}}
+
+Query:
+  Database: *DB
+  CollectionCount: 1000  # This is specifically 10% of collections.
+  Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+  Limit: 20
+
+LargeQuery:
+  Database: *DB
+  CollectionCount: {^Parameter: {Default: *DefaultCollectionCount, Name: "CollectionCount"}}
+  Filter: {z: { "$gt": { ^RandomInt: {min: 0, max: 2147483647} } } }
+  # Documents are 1KB so we want to read 1024 documents over 2 minutes.
+  Limit: {^Parameter: {Default: 0, Name: "Limit"}}
+#  Transactions: true
+#  ReadConcern: Snapshot
+  #  MinDelay: 117 milliseconds  # Sleep between next()
+  #  StaggerThreadStart: 1 minute # Second thread starts after 60 seconds
+  #  HardLimits:
+  #    Next: # Note, this refers to the next() operation of a cursor
+  #      Latency: 500 milliseconds
+  #      SLA: 99.5
+
+CollScan:
+  Database: *DB
+  CollectionCount: {^Parameter: {Default: *DefaultCollectionCount, Name: "CollectionCount"}}
+  Filter: {_id: {$ne: 0}}
