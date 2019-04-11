@@ -87,10 +87,6 @@ void runThenAwaitStepdown(mongocxx::database& database, bsoncxx::document::view&
     }
 }
 
-}  // namespace
-
-namespace genny::config {
-
 struct RunCommandOperationConfig {
     /** Default values for each of the keys */
     struct Defaults {
@@ -114,13 +110,13 @@ struct RunCommandOperationConfig {
     bool awaitStepdown = Defaults::kAwaitStepdown;
 };
 
-}  // namespace genny::config
+}  // namespace
 
 namespace YAML {
 
 template <>
-struct convert<genny::config::RunCommandOperationConfig> {
-    using Config = genny::config::RunCommandOperationConfig;
+struct convert<RunCommandOperationConfig> {
+    using Config = RunCommandOperationConfig;
     using Defaults = typename Config::Defaults;
     using Keys = typename Config::Keys;
 
@@ -158,7 +154,7 @@ namespace genny {
 /** @private */
 class DatabaseOperation {
 public:
-    using OpConfig = genny::config::RunCommandOperationConfig;
+    using OpConfig = RunCommandOperationConfig;
 
 public:
     DatabaseOperation(PhaseContext& phaseContext,
