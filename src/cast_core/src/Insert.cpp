@@ -35,15 +35,13 @@ namespace genny::actor {
 
 /** @private */
 struct Insert::PhaseConfig {
-    DefaultRandom& rng;
     mongocxx::collection collection;
     DocumentGenerator documentExpr;
     ExecutionStrategy::RunOptions options;
 
-    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, DefaultRandom& rng)
-        : rng{rng},
-          collection{db[phaseContext.get<std::string>("Collection")]},
-          documentExpr{DocumentGenerator::create(phaseContext.get("Document"), rng)},
+    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
+        : collection{db[phaseContext.get<std::string>("Collection")]},
+          documentExpr{phaseContext.createDocumentGenerator(id, "Document")},
           options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
 };
 
@@ -65,10 +63,9 @@ void Insert::run() {
 
 Insert::Insert(genny::ActorContext& context)
     : Actor(context),
-      _rng{context.workload().createRNG()},
       _strategy{context.operation("Insert", Insert::id())},
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context.get<std::string>("Database")], _rng} {}
+      _loop{context, (*_client)[context.get<std::string>("Database")], Insert::id()} {}
 
 namespace {
 auto registerInsert = genny::Cast::registerDefault<genny::actor::Insert>();

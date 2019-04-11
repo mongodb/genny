@@ -13,3 +13,8 @@ Actors:
       # SleepAfter: 17 microseconds
     - Message: Hello Phase 1 👬
       Repeat: 100
+    - ExternalPhaseConfig:
+        Path: ../../phases/HelloWorld/ExamplePhase2.yml
+        Key: UseMe  # Only load the YAML structure from this top-level key.
+        Parameters:
+          Repeat: 2

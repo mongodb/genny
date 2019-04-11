@@ -22,12 +22,16 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <bsoncxx/json.hpp>
+
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
-#include <metrics/metrics.hpp>
-#include <testlib/ActorHelper.hpp>
 
+#include <metrics/metrics.hpp>
+
+#include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
+#include <testlib/yamlToBson.hpp>
 
 using namespace genny;
 using namespace std;
@@ -114,8 +118,53 @@ Actors:
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
-        REQUIRE_THROWS_WITH(test(), Matches("Invalid schema version"));
+        REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
     }
+
+    SECTION("Can Construct RNG") {
+        std::atomic_int calls = 0;
+        YAML::Node templ = YAML::Load("foo: bar");
+
+        auto fromYaml = std::make_shared<OpProducer>([&](ActorContext& a) {
+            auto docgen = a.createDocumentGenerator(0, templ);
+            REQUIRE(docgen().view() ==
+                    genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+            ++calls;
+        });
+
+        auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
+            for (const auto&& doc : a.get("docs")) {
+                auto docgen = a.createDocumentGenerator(0, templ);
+                REQUIRE(docgen().view() ==
+                        genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+                ++calls;
+            }
+        });
+        auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
+            auto docgen = a.createDocumentGenerator(0, "doc");
+            REQUIRE(docgen().view() ==
+                    genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+            ++calls;
+        });
+
+        auto cast2 =
+            Cast{{{"fromYaml", fromYaml}, {"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
+        auto yaml = YAML::Load(
+            "SchemaVersion: 2018-07-01\n"
+            "Actors: [ "
+            "  {Type: fromYaml}, "
+            "  {Type: fromDocList, docs: [{foo: bar}]}, "
+            "  {Type: fromDoc,     doc:   {foo: bar}} "
+            "]");
+
+        auto test = [&]() {
+            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast2);
+        };
+        test();
+
+        REQUIRE(calls == 3);
+    }
+
 
     SECTION("Invalid config accesses") {
         // key not found

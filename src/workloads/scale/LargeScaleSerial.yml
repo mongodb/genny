@@ -1,0 +1,85 @@
+SchemaVersion: 2018-07-01
+
+Pool:
+  QueryOptions:
+    maxPoolSize: 100
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
+      Key: Loader
+    Repeat: 1
+  - &NoOp {Operation: Nop}
+  - *NoOp
+
+- Name: WarmupUpdate
+  Type: MultiCollectionUpdate
+  Threads: 10
+  Phases:
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: Update
+    Duration: &Duration 1 hour
+    Rate: 10 per 1 millisecond  # Target is 10 operations on every millisecond.
+  - *NoOp
+  - *NoOp
+
+- Name: WarmupQuery
+  Type: MultiCollectionQuery
+  Threads: 10
+  Phases:
+  - *NoOp
+  - *NoOp
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: Query
+    Duration: *Duration
+
+- Name: TwoMinuteQuery
+  Type: MultiCollectionQuery
+  Threads: 2  # 2 threads for doing a two-minute query every minute.
+  Phases:
+  - *NoOp
+  - *NoOp
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: LargeQuery
+      Parameters:
+        Limit: 1024
+    Duration: *Duration
+
+- Name: TenMinuteQuery
+  Type: MultiCollectionQuery
+  Threads: 2  # 2 threads for doing a two-minute query every minute.
+  Phases:
+  - *NoOp
+  - *NoOp
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: LargeQuery
+      Parameters:
+        # Documents are 1KB so we want to read 1024 documents over 2 minutes.
+        Limit: 1024
+    Duration: *Duration
+    Sort: {z: 1}
+
+- Name: FullCollScan
+  Type: MultiCollectionQuery
+  Threads: 1
+  Phases:
+  - *NoOp
+  - *NoOp
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: CollScan
+    Duration: *Duration
+
+# TODO: Actor for "10K MongoDB writes / second" from the design doc.
+# TODO: Actor for "1 collection with 9 indexes created and dropped / second".
+# TODO: tail the oplog while queries and updates are happening.
+# TODO: Need a way to express "queries are rarer and larger as collections get older".
+#       Probably using a geometric distribution.

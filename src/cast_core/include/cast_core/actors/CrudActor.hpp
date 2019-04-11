@@ -25,7 +25,6 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
-#include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
@@ -100,7 +99,6 @@ public:
 
 private:
     mongocxx::pool::entry _client;
-    genny::DefaultRandom _rng;
 
     /** @private */
     struct PhaseConfig;

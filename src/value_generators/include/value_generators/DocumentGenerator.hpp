@@ -37,8 +37,6 @@ public:
 
 class DocumentGenerator {
 public:
-    // TODO: deprecate in favor of ctor
-    static DocumentGenerator create(YAML::Node node, DefaultRandom& rng);
     explicit DocumentGenerator(YAML::Node node, DefaultRandom& rng);
     bsoncxx::document::value operator()();
     DocumentGenerator(DocumentGenerator&&) noexcept;

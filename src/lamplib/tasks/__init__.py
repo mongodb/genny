@@ -37,3 +37,17 @@ def install(context, env):
     install_cmd = [context.BUILD_SYSTEM, '-C', 'build', 'install']
     logging.info('Running install: %s', ' '.join(install_cmd))
     subprocess.run(install_cmd, env=env)
+
+
+def clean(context, env):
+    clean_cmd = [context.BUILD_SYSTEM, '-C', 'build', 'clean']
+    logging.info('Running clean: %s', ' '.join(clean_cmd))
+    subprocess.run(clean_cmd, env=env)
+
+    # Physically remove all built files.
+    logging.info('Erasing `build/` and `dist/`')
+    subprocess.run(['rm', '-rf', 'build'], env=env)
+    subprocess.run(['rm', '-rf', 'dist'], env=env)
+
+    # Put back build/.gitinore
+    subprocess.run(['git', 'checkout', '--', 'build'], env=env)

@@ -369,5 +369,59 @@ TEST_CASE("Genny.ActiveActors metric") {
     }
 }
 
+TEST_CASE("Operation with threshold") {
+
+    auto setup = []() {
+        RegistryClockSourceStub::reset();
+        auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+
+        genny::metrics::v1::ReporterT{metrics};
+
+        return metrics;
+    };
+
+    auto runActor = [](v1::OperationT<RegistryClockSourceStub>& actor,
+                       std::chrono::nanoseconds advance) {
+        auto ctx = actor.start();
+        RegistryClockSourceStub::advance(advance);
+        ctx.success();
+    };
+
+    SECTION("50% threshold") {
+        auto metrics = setup();
+        auto actor = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 50.0);
+
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 51ns);
+        runActor(actor, 51ns);
+        REQUIRE_THROWS_AS(runActor(actor, 51ns), v1::OperationThresholdExceededException);
+    }
+
+    SECTION("100% threshold") {
+        auto metrics = setup();
+        auto actor = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 100.0);
+
+        runActor(actor, 9999ns);
+        runActor(actor, 9999ns);
+        runActor(actor, 9999ns);
+        runActor(actor, 9999ns);
+    }
+
+    SECTION("0% threshold") {
+        auto metrics = setup();
+        auto actor = metrics.operation("MyActor", "MyOp", 0u, TimeSpec(10), 0.0);
+
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        runActor(actor, 1ns);
+        REQUIRE_THROWS_AS(runActor(actor, 11ns), v1::OperationThresholdExceededException);
+    }
+}
+
 }  // namespace
 }  // namespace genny::metrics

@@ -44,8 +44,6 @@ public:
     void run() override;
 
 private:
-    genny::DefaultRandom _rng;
-
     ExecutionStrategy _strategy;
     mongocxx::pool::entry _client;
 

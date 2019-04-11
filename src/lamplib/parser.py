@@ -45,6 +45,7 @@ def parse_args(args, os_family):
 
     subparsers.add_parser('compile', help='just run the compile step for genny')
     subparsers.add_parser('install', help='just run the install step for genny')
+    subparsers.add_parser('clean', help='cleanup existing build')
     subparsers.add_parser('self-test', help='run lamplib unittests')
 
     known_args, unknown_args = parser.parse_known_args(args)

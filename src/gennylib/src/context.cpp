@@ -15,6 +15,7 @@
 #include <gennylib/context.hpp>
 
 #include <memory>
+#include <set>
 #include <sstream>
 
 #include <mongocxx/instance.hpp>
@@ -37,10 +38,15 @@ WorkloadContext::WorkloadContext(const YAML::Node& node,
       _rateLimiters{10},
       _poolManager{mongoUri, apmCallback} {
 
+    std::set<std::string> validSchemaVersions{"2018-07-01"};
+
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
-    if (this->get_noinherit<std::string>("SchemaVersion") != "2018-07-01") {
-        throw InvalidConfigurationException("Invalid schema version");
+    if (const std::string schemaVersion = this->get_noinherit<std::string>("SchemaVersion");
+        validSchemaVersions.count(schemaVersion) != 1) {
+        std::ostringstream errMsg;
+        errMsg << "Invalid Schema Version: " << schemaVersion;
+        throw InvalidConfigurationException(errMsg.str());
     }
 
     // Make sure we have a valid mongocxx instance happening here
@@ -98,12 +104,19 @@ v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
     return rl;
 }
 
-DefaultRandom WorkloadContext::createRNG() {
-    if (_done) {
-        throw InvalidConfigurationException(
-            "Tried to create a random number generator after construction");
+DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
+    if (this->isDone()) {
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
     }
-    return DefaultRandom{_rng()};
+    if (auto rng = _rngRegistry.find(id); rng == _rngRegistry.end()) {
+        auto [it, success] = _rngRegistry.try_emplace(id, _rng());
+        if (!success) {
+            // This should be impossible.
+            // But invariants don't hurt we only call this during setup
+            throw std::logic_error("Already have DefaultRandom for Actor " + std::to_string(id));
+        }
+    }
+    return _rngRegistry[id];
 }
 
 // Helper method to convert Phases:[...] to PhaseContexts

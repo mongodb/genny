@@ -181,6 +181,30 @@ should receive PRs for the YAML. The files must end with the `.yml` suffix.
 Workload YAML itself is not currently linted but please try to make the files
 look tidy.
 
+### Workload Phase Configs
+
+If your workload YAML files get too complex or if you would like to reuse parts
+of a workload in another one, you can define one or more of your phases in a
+separate YAML file.
+
+The phase configurations live in `src/phases`. There's roughly one sub-directory
+per theme, similar to how `src/workloads` is organized.
+
+For an example external phase config, please see the
+`ExternalPhaseConfig` section of the `HelloWorld.yml` workload.
+
+A couple of tips on defining external phase configs:
+
+1. Most existing workloads define their options at the `Actor` level, which is one
+level above `Phases`. Because genny recursively traverses up the YAML to find an
+option, most of the options can be pushed down and defined at the phase level
+instead. The notable exceptions are `Name`, `Type`, and `Threads`,
+which must be defined on `Actor`.
+
+2. `genny evaluate /path/to/your/workload` is your friend. `evaluate` prints out
+the final YAML workload with all external phase definitions inlined.
+
+
 ## Patch-Testing Genny Changes with Sys-Perf / DSI
 
 Install the [evergreen command-line client](https://evergreen.mongodb.com/settings) and put it

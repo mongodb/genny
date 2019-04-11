@@ -44,10 +44,11 @@ public:
      */
     explicit Random(result_type seed = 6514393) : _rng(seed) {}
 
-    // No moves or copies.
-    Random(Random&&) = delete;
-    Random& operator=(Random&&) = delete;
+    // Moves are okay
+    Random(Random&&) noexcept = default;
+    Random& operator=(Random&&) noexcept = default;
 
+    // But no copies
     Random(const Random&) = delete;
     Random& operator=(const Random&) = delete;
 
