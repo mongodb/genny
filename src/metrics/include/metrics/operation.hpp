@@ -16,10 +16,10 @@
 #define HEADER_3D319F23_C539_4B6B_B4E7_23D23E2DCD52_INCLUDED
 
 #include <cstdint>
+#include <exception>
 #include <memory>
 #include <ostream>
 #include <string>
-#include <utility>
 
 #include <boost/core/noncopyable.hpp>
 #include <boost/log/trivial.hpp>
@@ -92,15 +92,63 @@ struct OperationEvent final {
     OutcomeType outcome = OutcomeType::kUnknown;  // corresponds to the 'outcome' field in Cedar
 };
 
+/**
+ * Throw this to indicate the percentage of operations exceeding the
+ * time limit went above the threshold.
+ *
+ * Intended to be used alongside OperationImpl::OperationThreshold
+ */
+class OperationThresholdExceededException : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
 
 template <typename ClockSource>
 class OperationImpl final : private boost::noncopyable {
+private:  // Data members.
+    struct OperationCount {
+        int64_t failed = 0;
+        int64_t total = 0;
+
+        constexpr double_t failedPercentage() const {
+            return static_cast<double_t>(failed) / total * 100;
+        };
+    };
+
 public:
     using time_point = typename ClockSource::time_point;
     using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
 
-    OperationImpl(std::string actorName, std::string opName)
-        : _actorName(std::move(actorName)), _opName(std::move(opName)) {}
+    struct OperationThreshold {
+        std::chrono::nanoseconds maxDuration;
+        double_t maxPercentAllowedToExceed;
+        OperationCount opCounter;
+
+        OperationThreshold(std::chrono::nanoseconds maxDuration, double_t failedPct)
+            : maxDuration(maxDuration), maxPercentAllowedToExceed(failedPct), opCounter() {}
+
+        void check(time_point started, time_point finished) {
+            opCounter.total++;
+            if ((finished - started) > maxDuration) {
+                opCounter.failed++;
+            }
+
+            if (opCounter.failedPercentage() > maxPercentAllowedToExceed) {
+                std::ostringstream os;
+                os << opCounter.failedPercentage()
+                   << "% of operations failed, exceeding the threshold of "
+                   << maxPercentAllowedToExceed << "%";
+                BOOST_THROW_EXCEPTION(OperationThresholdExceededException(os.str()));
+            }
+        }
+    };
+
+    using OptionalOperationThreshold = std::optional<OperationThreshold>;
+
+    OperationImpl(std::string actorName,
+                  std::string opName,
+                  std::optional<OperationThreshold> threshold = std::nullopt)
+        : _actorName(std::move(actorName)), _opName(std::move(opName)), _threshold(threshold){};
 
     /**
      * @return the name of the actor running the operation.
@@ -123,13 +171,17 @@ public:
         return _events;
     }
 
-    void reportAt(time_point finished, OperationEvent<ClockSource>&& event) {
+    void reportAt(time_point started, time_point finished, OperationEvent<ClockSource>&& event) {
+        if (_threshold) {
+            _threshold->check(started, finished);
+        }
         _events.addAt(finished, event);
     }
 
 private:
     const std::string _actorName;
     const std::string _opName;
+    OptionalOperationThreshold _threshold;
     EventSeries _events;
 };
 
@@ -234,7 +286,7 @@ private:
             _event.iters = 1;
         }
 
-        _op->reportAt(finished, std::move(_event));
+        _op->reportAt(_started, finished, std::move(_event));
         _isClosed = true;
     }
 
