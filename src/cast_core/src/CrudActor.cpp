@@ -209,28 +209,29 @@ struct BaseOperation {
 };
 
 using OpCallback = std::function<std::unique_ptr<BaseOperation>(
-    YAML::Node, bool, mongocxx::collection, genny::DefaultRandom&, metrics::Operation)>;
+    YAML::Node, bool, mongocxx::collection, metrics::Operation, PhaseContext& context, ActorId id)>;
 
 struct WriteOperation : public BaseOperation {
     virtual mongocxx::model::write getModel() = 0;
 };
 
 using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(
-    YAML::Node, bool, mongocxx::collection, genny::DefaultRandom&, metrics::Operation)>;
+    YAML::Node, bool, mongocxx::collection, metrics::Operation, PhaseContext&, ActorId)>;
 
 namespace {
 
 auto createGenerator(YAML::Node source,
                      const std::string& opType,
                      const std::string& key,
-                     DefaultRandom& rng) {
+                     PhaseContext& context,
+                     ActorId id) {
     auto doc = source[key];
     if (!doc) {
         std::stringstream msg;
         msg << "'" << opType << "' expects a '" << key << "' field.";
         throw InvalidConfigurationException(msg.str());
     }
-    return DocumentGenerator::create(doc, rng);
+    return context.createDocumentGenerator(id, doc);
 }
 
 }  // namespace
@@ -239,13 +240,13 @@ struct InsertOneOperation : public WriteOperation {
     InsertOneOperation(YAML::Node opNode,
                        bool onSession,
                        mongocxx::collection collection,
-                       genny::DefaultRandom& rng,
-                       metrics::Operation operation)
+                       metrics::Operation operation,
+                       PhaseContext& context,
+                       ActorId id)
         : _onSession{onSession},
           _collection{collection},
-          _rng{rng},
           _operation{operation},
-          _docExpr{createGenerator(opNode, "insertOne", "Document", rng)} {
+          _docExpr{createGenerator(opNode, "insertOne", "Document", context, id)} {
 
         // TODO: parse insert options.
     }
@@ -266,7 +267,6 @@ struct InsertOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _docExpr;
     metrics::Operation _operation;
     mongocxx::options::insert _options;
@@ -277,14 +277,14 @@ struct UpdateOneOperation : public WriteOperation {
     UpdateOneOperation(YAML::Node opNode,
                        bool onSession,
                        mongocxx::collection collection,
-                       genny::DefaultRandom& rng,
-                       metrics::Operation operation)
+                       metrics::Operation operation,
+                       PhaseContext& context,
+                       ActorId id)
         : _onSession{onSession},
           _collection{collection},
-          _rng{rng},
           _operation{operation},
-          _filterExpr{createGenerator(opNode, "updateOne", "Filter", rng)},
-          _updateExpr{createGenerator(opNode, "updateOne", "Update", rng)} {}
+          _filterExpr{createGenerator(opNode, "updateOne", "Filter", context, id)},
+          _updateExpr{createGenerator(opNode, "updateOne", "Update", context, id)} {}
     // TODO: parse update options.
 
     mongocxx::model::write getModel() override {
@@ -306,7 +306,6 @@ struct UpdateOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _filterExpr;
     DocumentGenerator _updateExpr;
     metrics::Operation _operation;
@@ -317,14 +316,14 @@ struct UpdateManyOperation : public WriteOperation {
     UpdateManyOperation(YAML::Node opNode,
                         bool onSession,
                         mongocxx::collection collection,
-                        genny::DefaultRandom& rng,
-                        metrics::Operation operation)
+                        metrics::Operation operation,
+                        PhaseContext& context,
+                        ActorId id)
         : _onSession{onSession},
           _collection{collection},
-          _rng{rng},
           _operation{operation},
-          _filterExpr{createGenerator(opNode, "updateMany", "Filter", rng)},
-          _updateExpr{createGenerator(opNode, "updateMany", "Update", rng)} {}
+          _filterExpr{createGenerator(opNode, "updateMany", "Filter", context, id)},
+          _updateExpr{createGenerator(opNode, "updateMany", "Update", context, id)} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -345,7 +344,6 @@ struct UpdateManyOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _filterExpr;
     DocumentGenerator _updateExpr;
     metrics::Operation _operation;
@@ -356,13 +354,13 @@ struct DeleteOneOperation : public WriteOperation {
     DeleteOneOperation(YAML::Node opNode,
                        bool onSession,
                        mongocxx::collection collection,
-                       genny::DefaultRandom& rng,
-                       metrics::Operation operation)
+                       metrics::Operation operation,
+                       PhaseContext& context,
+                       ActorId id)
         : _onSession{onSession},
           _collection{collection},
-          _rng{rng},
           _operation{operation},
-          _filterExpr(createGenerator(opNode, "deleteOne", "Filter", rng)) {}
+          _filterExpr(createGenerator(opNode, "deleteOne", "Filter", context, id)) {}
     // TODO: parse delete options.
 
     mongocxx::model::write getModel() override {
@@ -381,7 +379,6 @@ struct DeleteOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _filterExpr;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
@@ -391,13 +388,13 @@ struct DeleteManyOperation : public WriteOperation {
     DeleteManyOperation(YAML::Node opNode,
                         bool onSession,
                         mongocxx::collection collection,
-                        genny::DefaultRandom& rng,
-                        metrics::Operation operation)
+                        metrics::Operation operation,
+                        PhaseContext& context,
+                        ActorId id)
         : _onSession{onSession},
           _collection{collection},
-          _rng{rng},
           _operation{operation},
-          _filterExpr{createGenerator(opNode, "deleteMany", "Filter", rng)} {}
+          _filterExpr{createGenerator(opNode, "deleteMany", "Filter", context, id)} {}
     // TODO: parse delete options.
 
     mongocxx::model::write getModel() override {
@@ -416,7 +413,6 @@ struct DeleteManyOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _filterExpr;
     metrics::Operation _operation;
     mongocxx::options::delete_options _options;
@@ -426,14 +422,14 @@ struct ReplaceOneOperation : public WriteOperation {
     ReplaceOneOperation(YAML::Node opNode,
                         bool onSession,
                         mongocxx::collection collection,
-                        genny::DefaultRandom& rng,
-                        metrics::Operation operation)
+                        metrics::Operation operation,
+                        PhaseContext& context,
+                        ActorId id)
         : _onSession{onSession},
           _collection{collection},
-          _rng{rng},
           _operation{operation},
-          _filterExpr{createGenerator(opNode, "replaceOne", "Filter", rng)},
-          _replacementExpr{createGenerator(opNode, "replaceOne", "Replacement", rng)} {}
+          _filterExpr{createGenerator(opNode, "replaceOne", "Filter", context, id)},
+          _replacementExpr{createGenerator(opNode, "replaceOne", "Replacement", context, id)} {}
 
     // TODO: parse replace options.
 
@@ -456,7 +452,6 @@ struct ReplaceOneOperation : public WriteOperation {
 private:
     bool _onSession;
     mongocxx::collection _collection;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _filterExpr;
     DocumentGenerator _replacementExpr;
     metrics::Operation _operation;
@@ -467,9 +462,10 @@ template <class P, class C, class O>
 C baseCallback = [](YAML::Node opNode,
                     bool onSession,
                     mongocxx::collection collection,
-                    genny::DefaultRandom& rng,
-                    metrics::Operation operation) -> std::unique_ptr<P> {
-    return std::make_unique<O>(opNode, onSession, collection, rng, operation);
+                    metrics::Operation operation,
+                    PhaseContext& context,
+                    ActorId id) -> std::unique_ptr<P> {
+    return std::make_unique<O>(opNode, onSession, collection, operation, context, id);
 };
 
 // Maps the WriteCommand name to the constructor of the designated Operation struct.
@@ -504,23 +500,24 @@ struct BulkWriteOperation : public BaseOperation {
     BulkWriteOperation(YAML::Node opNode,
                        bool onSession,
                        mongocxx::collection collection,
-                       genny::DefaultRandom& rng,
-                       metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+                       metrics::Operation operation,
+                       PhaseContext& context,
+                       ActorId id)
+        : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
         auto writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.IsSequence()) {
             throw InvalidConfigurationException(
                 "'bulkWrite' requires a 'WriteOperations' node of sequence type.");
         }
         for (auto&& writeOp : writeOpsYaml) {
-            createOps(writeOp, rng);
+            createOps(writeOp, context, id);
         }
         if (opNode["Options"]) {
             _options = opNode["Options"].as<mongocxx::options::bulk_write>();
         }
     }
 
-    void createOps(const YAML::Node& writeOp, genny::DefaultRandom& rng) {
+    void createOps(const YAML::Node& writeOp, PhaseContext& context, ActorId id) {
         auto writeCommand = writeOp["WriteCommand"].as<std::string>();
         auto writeOpConstructor = bulkWriteConstructors.find(writeCommand);
         if (writeOpConstructor == bulkWriteConstructors.end()) {
@@ -528,7 +525,8 @@ struct BulkWriteOperation : public BaseOperation {
                                                 "' not supported in bulkWrite operations.");
         }
         auto createWriteOp = writeOpConstructor->second;
-        _writeOps.push_back(createWriteOp(writeOp, _onSession, _collection, rng, _operation));
+        _writeOps.push_back(
+            createWriteOp(writeOp, _onSession, _collection, _operation, context, id));
     }
 
     void run(mongocxx::client_session& session) override {
@@ -565,13 +563,13 @@ struct CountDocumentsOperation : public BaseOperation {
     CountDocumentsOperation(YAML::Node opNode,
                             bool onSession,
                             mongocxx::collection collection,
-                            genny::DefaultRandom& rng,
-                            metrics::Operation operation)
+                            metrics::Operation operation,
+                            PhaseContext& context,
+                            ActorId id)
         : _onSession{onSession},
           _collection{collection},
-          _rng{rng},
           _operation{operation},
-          _filterExpr{createGenerator(opNode, "Count", "Filter", rng)} {
+          _filterExpr{createGenerator(opNode, "Count", "Filter", context, id)} {
         if (opNode["Options"]) {
             _options = opNode["Options"].as<mongocxx::options::count>();
         }
@@ -590,7 +588,6 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::count _options;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _filterExpr;
     metrics::Operation _operation;
 };
@@ -599,13 +596,13 @@ struct FindOperation : public BaseOperation {
     FindOperation(YAML::Node opNode,
                   bool onSession,
                   mongocxx::collection collection,
-                  genny::DefaultRandom& rng,
-                  metrics::Operation operation)
+                  metrics::Operation operation,
+                  PhaseContext& context,
+                  ActorId id)
         : _onSession{onSession},
           _collection{collection},
-          _rng{rng},
           _operation{operation},
-          _filterExpr{createGenerator(opNode, "Find", "Filter", rng)} {}
+          _filterExpr{createGenerator(opNode, "Find", "Filter", context, id)} {}
     // TODO: parse Find Options
 
     void run(mongocxx::client_session& session) override {
@@ -625,7 +622,6 @@ private:
     bool _onSession;
     mongocxx::collection _collection;
     mongocxx::options::find _options;
-    genny::DefaultRandom& _rng;
     DocumentGenerator _filterExpr;
     metrics::Operation _operation;
 };
@@ -644,16 +640,17 @@ struct InsertManyOperation : public BaseOperation {
     InsertManyOperation(YAML::Node opNode,
                         bool onSession,
                         mongocxx::collection collection,
-                        genny::DefaultRandom& rng,
-                        metrics::Operation operation)
-        : _onSession{onSession}, _collection{collection}, _operation{operation}, _rng{rng} {
+                        metrics::Operation operation,
+                        PhaseContext& context,
+                        ActorId id)
+        : _onSession{onSession}, _collection{collection}, _operation{operation} {
         auto documents = opNode["Documents"];
         if (!documents && !documents.IsSequence()) {
             throw InvalidConfigurationException(
                 "'insertMany' expects a 'Documents' field of sequence type.");
         }
         for (auto&& document : documents) {
-            _docExprs.push_back(DocumentGenerator::create(document, _rng));
+            _docExprs.push_back(context.createDocumentGenerator(id, document));
         }
         // TODO: parse insert options.
     }
@@ -675,7 +672,6 @@ private:
     std::vector<bsoncxx::document::view_or_value> _writeOps;
     mongocxx::options::insert _options;
     metrics::Operation _operation;
-    genny::DefaultRandom& _rng;
     std::vector<DocumentGenerator> _docExprs;
 };
 
@@ -700,8 +696,9 @@ struct StartTransactionOperation : public BaseOperation {
     StartTransactionOperation(YAML::Node opNode,
                               bool onSession,
                               mongocxx::collection collection,
-                              genny::DefaultRandom& rng,
-                              metrics::Operation operation) {
+                              metrics::Operation operation,
+                              PhaseContext& context,
+                              ActorId id) {
         if (!opNode.IsMap())
             return;
         if (opNode["Options"]) {
@@ -728,8 +725,9 @@ struct CommitTransactionOperation : public BaseOperation {
     CommitTransactionOperation(YAML::Node opNode,
                                bool onSession,
                                mongocxx::collection collection,
-                               genny::DefaultRandom& rng,
-                               metrics::Operation operation) {}
+                               metrics::Operation operation,
+                               PhaseContext& context,
+                               ActorId id) {}
 
     void run(mongocxx::client_session& session) override {
         session.commit_transaction();
@@ -755,8 +753,9 @@ struct SetReadConcernOperation : public BaseOperation {
     SetReadConcernOperation(YAML::Node opNode,
                             bool onSession,
                             mongocxx::collection collection,
-                            genny::DefaultRandom& rng,
-                            metrics::Operation operation)
+                            metrics::Operation operation,
+                            PhaseContext& context,
+                            ActorId id)
         : _collection{collection} {
         if (!opNode["ReadConcern"]) {
             throw InvalidConfigurationException(
@@ -789,8 +788,9 @@ struct DropOperation : public BaseOperation {
     DropOperation(YAML::Node opNode,
                   bool onSession,
                   mongocxx::collection collection,
-                  genny::DefaultRandom& rng,
-                  metrics::Operation operation)
+                  metrics::Operation operation,
+                  PhaseContext& context,
+                  ActorId id)
         : _onSession{onSession}, _collection{collection}, _operation{operation} {
         if (!opNode)
             return;
@@ -840,7 +840,6 @@ struct CrudActor::PhaseConfig {
     ExecutionStrategy strategy;
 
     PhaseConfig(PhaseContext& phaseContext,
-                genny::DefaultRandom& rng,
                 const mongocxx::database& db,
                 ActorContext& actorContext,
                 ActorId id)
@@ -863,8 +862,12 @@ struct CrudActor::PhaseConfig {
                                                     "' not supported in Crud Actor.");
             }
             auto createOperation = op->second;
-            return createOperation(
-                yamlCommand, onSession, collection, rng, actorContext.operation(opName, id));
+            return createOperation(yamlCommand,
+                                   onSession,
+                                   collection,
+                                   actorContext.operation(opName, id),
+                                   phaseContext,
+                                   id);
         };
 
         operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
@@ -889,13 +892,8 @@ void CrudActor::run() {
 
 CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
-      _rng{context.workload().createRNG()},
       _client{std::move(context.client())},
-      _loop{context,
-            _rng,
-            (*_client)[context.get<std::string>("Database")],
-            context,
-            CrudActor::id()} {}
+      _loop{context, (*_client)[context.get<std::string>("Database")], context, CrudActor::id()} {}
 
 namespace {
 auto registerCrudActor = Cast::registerDefault<CrudActor>();
