@@ -112,17 +112,6 @@ public:
     explicit ExecutionStrategy(metrics::Operation op) : _op{std::move(op)} {}
     ~ExecutionStrategy() = default;
 
-    /*
-     * Either get a set of options at the specified path in the config,
-     * or return a default constructed set of the options.
-     * This function is mostly about abstracting a fairly common pattern for DRYness
-     */
-    template <typename ConfigT, class... Args>
-    static RunOptions getOptionsFrom(const ConfigT& config, Args&&... args) {
-        return config.template get<RunOptions, false>(std::forward<Args>(args)...)
-            .value_or(RunOptions{});
-    }
-
     template <typename F>
     void run(F&& fun, const RunOptions& options = RunOptions{}) {
         Result result;

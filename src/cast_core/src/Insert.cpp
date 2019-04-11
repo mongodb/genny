@@ -42,7 +42,7 @@ struct Insert::PhaseConfig {
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           documentExpr{phaseContext.createDocumentGenerator(id, "Document")},
-          options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {}
+          options{phaseContext.get<ExecutionStrategy::RunOptions,false>("ExecutionsStrategy").value_or(ExecutionStrategy::RunOptions{})} {}
 };
 
 void Insert::run() {

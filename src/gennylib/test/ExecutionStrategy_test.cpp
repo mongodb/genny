@@ -39,7 +39,7 @@ struct StrategyActor : public Actor {
 public:
     struct PhaseState {
         PhaseState(const PhaseContext& context)
-            : options{ExecutionStrategy::getOptionsFrom(context, "ExecutionStrategy")},
+            : options{context.get<ExecutionStrategy::RunOptions,false>("ExecutionStrategy").value_or(ExecutionStrategy::RunOptions{})},
               throwCount{context.get<int, false>("ThrowCount").value_or(0)},
               shouldThrow{context.get<bool, false>("ShouldThrow").value_or(false)} {}
 

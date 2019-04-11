@@ -845,8 +845,7 @@ struct CrudActor::PhaseConfig {
                 ActorId id)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           strategy{actorContext.operation("Crud", id)},
-          options{ExecutionStrategy::getOptionsFrom(phaseContext, "ExecutionsStrategy")} {
-
+          options{phaseContext.get<ExecutionStrategy::RunOptions,false>("ExecutionsStrategy").value_or(ExecutionStrategy::RunOptions{})} {
         auto addOperation = [&](YAML::Node node) {
             auto yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].as<std::string>();
