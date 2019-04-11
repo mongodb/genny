@@ -55,8 +55,10 @@ struct InsertRemove::PhaseConfig {
               context.get<std::string>("Collection"),
               rng,
               id,
-              context.get<ExecutionStrategy::RunOptions,false>("InsertStage", "ExecutionsStrategy").value_or(ExecutionStrategy::RunOptions{}),
-              context.get<ExecutionStrategy::RunOptions,false>("RemoveStage", "ExecutionsStrategy").value_or(ExecutionStrategy::RunOptions{})) {}
+              context.get<ExecutionStrategy::RunOptions, false>("InsertStage", "ExecutionsStrategy")
+                  .value_or(ExecutionStrategy::RunOptions{}),
+              context.get<ExecutionStrategy::RunOptions, false>("RemoveStage", "ExecutionsStrategy")
+                  .value_or(ExecutionStrategy::RunOptions{})) {}
 
     mongocxx::database database;
     mongocxx::collection collection;

@@ -245,7 +245,8 @@ struct actor::RunCommand::PhaseConfig {
                 mongocxx::pool::entry& client,
                 ActorId id)
         : strategy{actorContext.operation("RunCommand", id)},
-          options{context.get<ExecutionStrategy::RunOptions,false>("ExecutionsStrategy").value_or(ExecutionStrategy::RunOptions{})} {
+          options{context.get<ExecutionStrategy::RunOptions, false>("ExecutionsStrategy")
+                      .value_or(ExecutionStrategy::RunOptions{})} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
