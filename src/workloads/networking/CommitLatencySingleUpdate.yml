@@ -4,8 +4,11 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
+# All of the below is really just the same actor, but as Genny reports statistics using the actor
+# name, we need a different actor instance for each configuration. All of the below run in their
+# own slot, nothing is concurrent.
 Actors:
-  - Name: SingleThreadUpdate
+  - Name: Load
     Type: RunCommand
     Threads: 1
     Database: test
@@ -23,49 +26,145 @@ Actors:
             OperationCommand:
                 insert: *Collection
                 documents: [{_id: 1, n: 0}]
-        # Tests
+      - Phase: 2..9
+        Operation:
+          OperationName: Nop
+
+
+  - Name: SingleThreadUpdate_w0
+    Type: RunCommand
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0..1
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern: { w: 0 }
+      - Phase: 3..9
+        Operation:
+          OperationName: Nop
+
+  - Name: SingleThreadUpdate_w1
+    Type: RunCommand
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0..2
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 1 }
+      - Phase: 4..9
+        Operation:
+          OperationName: Nop
+
+  - Name: SingleThreadUpdate_w2
+    Type: RunCommand
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0..3
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 2 }
+      - Phase: 5..9
+        Operation:
+          OperationName: Nop
+
+  - Name: SingleThreadUpdate_w3
+    Type: RunCommand
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0..4
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 3 }
+      - Phase: 6..9
+        Operation:
+          OperationName: Nop
+
+  - Name: SingleThreadUpdate_jtrue
+    Type: RunCommand
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0..5
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { j: true }
+      - Phase: 7..9
+        Operation:
+          OperationName: Nop
+
+  - Name: SingleThreadUpdate_w2_jtrue
+    Type: RunCommand
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0..6
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: 2, j: true }
+      - Phase: 8..9
+        Operation:
+          OperationName: Nop
+
+  - Name: SingleThreadUpdate_wmajority
+    Type: RunCommand
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0..7
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
             update: *Collection
             updates: [ { q: { _id: 1 }, u: { $inc: { n: 1 } } } ]
             writeConcern:  { w: majority, j: false }
+      - Phase: 9
+        Operation:
+          OperationName: Nop
+
+  - Name: SingleThreadUpdate_wmajority_jtrue
+    Type: RunCommand
+    Threads: 1
+    Database: test
+    Phases:
+      - Phase: 0..8
+        Operation:
+          OperationName: Nop
       - Repeat: 500
         Operations:
         - OperationCommand:
