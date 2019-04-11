@@ -21,15 +21,7 @@
 
 namespace genny::config {
 
-/**
- * Configuration for `genny::actor::RunCommand`.
- */
-struct RunCommandConfig {
-    /** Represents each `Operation:` block in the `Phase:` block */
-    struct Operation;
-};
-
-struct RunCommandConfig::Operation {
+struct RunCommandOperationConfig {
     /** Default values for each of the keys */
     struct Defaults {
         static constexpr auto kMetricsName = "";
@@ -57,8 +49,8 @@ struct RunCommandConfig::Operation {
 namespace YAML {
 
 template <>
-struct convert<genny::config::RunCommandConfig::Operation> {
-    using Config = genny::config::RunCommandConfig::Operation;
+struct convert<genny::config::RunCommandOperationConfig> {
+    using Config = genny::config::RunCommandOperationConfig;
     using Defaults = typename Config::Defaults;
     using Keys = typename Config::Keys;
 

@@ -95,7 +95,7 @@ namespace genny {
 /** @private */
 class DatabaseOperation {
 public:
-    using OpConfig = config::RunCommandConfig::Operation;
+    using OpConfig = genny::config::RunCommandOperationConfig;
 
 public:
     DatabaseOperation(PhaseContext& phaseContext,
