@@ -15,14 +15,21 @@
 # limitations under the License.
 
 set -euo pipefail
-set -x
 
 SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 BUILD_DIR="${ROOT_DIR}/build"
 
+if [[ -z "${GENNY+x}" && -e "$ROOT_DIR/build/src/driver/genny" ]]; then
+    GENNY="$ROOT_DIR/build/src/driver/genny"
+fi
+
+GENNY_EXECUTABLE="${GENNY:-genny}"
+
+echo "Dry running with genny [$GENNY_EXECUTABLE]"
+
 CMD=(
-    "${GENNY:-genny}"
+    "$GENNY_EXECUTABLE"
     dry-run
 )
 
