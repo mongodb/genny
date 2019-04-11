@@ -18,14 +18,9 @@ set -euo pipefail
 
 SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
-BUILD_DIR="${ROOT_DIR}/build"
 
-if [[ -z "${GENNY+x}" ]]; then
-    if [ -e "$ROOT_DIR/build/src/driver/genny" ]; then
-        GENNY="$ROOT_DIR/build/src/driver/genny"
-    elif [ -e "$ROOT_DIR/dist/bin/genny" ]; then
-        GENNY="$ROOT_DIR/dist/bin/genny"
-    fi
+if [[ -z "${GENNY+x}" && -e "$ROOT_DIR/build/src/driver/genny" ]]; then
+    GENNY="$ROOT_DIR/build/src/driver/genny"
 fi
 
 GENNY_EXECUTABLE="${GENNY:-genny}"
