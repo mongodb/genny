@@ -1,3 +1,5 @@
+#include <utility>
+
 // Copyright 2019-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -246,7 +248,7 @@ struct InsertOneOperation : public WriteOperation {
                        PhaseContext& context,
                        ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _docExpr{createGenerator(opNode, "insertOne", "Document", context, id)} {
 
@@ -283,7 +285,7 @@ struct UpdateOneOperation : public WriteOperation {
                        PhaseContext& context,
                        ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "updateOne", "Filter", context, id)},
           _updateExpr{createGenerator(opNode, "updateOne", "Update", context, id)} {}
@@ -322,7 +324,7 @@ struct UpdateManyOperation : public WriteOperation {
                         PhaseContext& context,
                         ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "updateMany", "Filter", context, id)},
           _updateExpr{createGenerator(opNode, "updateMany", "Update", context, id)} {}
@@ -360,7 +362,7 @@ struct DeleteOneOperation : public WriteOperation {
                        PhaseContext& context,
                        ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr(createGenerator(opNode, "deleteOne", "Filter", context, id)) {}
     // TODO: parse delete options.
@@ -394,7 +396,7 @@ struct DeleteManyOperation : public WriteOperation {
                         PhaseContext& context,
                         ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "deleteMany", "Filter", context, id)} {}
     // TODO: parse delete options.
@@ -428,7 +430,7 @@ struct ReplaceOneOperation : public WriteOperation {
                         PhaseContext& context,
                         ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "replaceOne", "Filter", context, id)},
           _replacementExpr{createGenerator(opNode, "replaceOne", "Replacement", context, id)} {}
@@ -569,7 +571,7 @@ struct CountDocumentsOperation : public BaseOperation {
                             PhaseContext& context,
                             ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "Count", "Filter", context, id)} {
         if (opNode["Options"]) {
@@ -645,7 +647,7 @@ struct InsertManyOperation : public BaseOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
         auto documents = opNode["Documents"];
         if (!documents && !documents.IsSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
@@ -660,7 +662,7 @@ struct InsertManyOperation : public BaseOperation {
     void run(mongocxx::client_session& session) override {
         for (auto&& docExpr : _docExprs) {
             auto doc = docExpr();
-            _writeOps.push_back(std::move(doc));
+            _writeOps.emplace_back(std::move(doc));
         }
         auto ctx = _operation.start();
         (_onSession) ? _collection.insert_many(session, _writeOps, _options)
@@ -758,7 +760,7 @@ struct SetReadConcernOperation : public BaseOperation {
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : _collection{collection} {
+        : _collection{std::move(collection)} {
         if (!opNode["ReadConcern"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'setReadConcern' operation expects a 'ReadConcern' field."));
@@ -793,7 +795,7 @@ struct DropOperation : public BaseOperation {
                   metrics::Operation operation,
                   PhaseContext& context,
                   ActorId id)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
         if (!opNode)
             return;
         if (opNode["Options"] && opNode["Options"]["WriteConcern"]) {
