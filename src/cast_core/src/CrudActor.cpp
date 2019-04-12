@@ -263,8 +263,14 @@ struct InsertOneOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto document = _docExpr();
         auto ctx = _operation.start();
+        auto size = document.view().length();
+
         (_onSession) ? _collection.insert_one(session, std::move(document), _options)
                      : _collection.insert_one(std::move(document), _options);
+
+        ctx.addDocuments(1);
+        ctx.addBytes(size);
+
         ctx.success();
     }
 
@@ -301,9 +307,12 @@ struct UpdateOneOperation : public WriteOperation {
         auto filter = _filterExpr();
         auto update = _updateExpr();
         auto ctx = _operation.start();
-        (_onSession)
+        auto result = (_onSession)
             ? _collection.update_one(session, std::move(filter), std::move(update), _options)
             : _collection.update_one(std::move(filter), std::move(update), _options);
+        if (result) {
+            ctx.addDocuments(result->modified_count());
+        }
         ctx.success();
     }
 
@@ -339,9 +348,12 @@ struct UpdateManyOperation : public WriteOperation {
         auto filter = _filterExpr();
         auto update = _updateExpr();
         auto ctx = _operation.start();
-        (_onSession)
+        auto result = (_onSession)
             ? _collection.update_many(session, std::move(filter), std::move(update), _options)
             : _collection.update_many(std::move(filter), std::move(update), _options);
+        if (result) {
+            ctx.addDocuments(result->modified_count());
+        }
         ctx.success();
     }
 
@@ -375,8 +387,11 @@ struct DeleteOneOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
-                     : _collection.delete_one(std::move(filter), _options);
+        auto result = (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
+                                   : _collection.delete_one(std::move(filter), _options);
+        if (result) {
+            ctx.addDocuments(result->deleted_count());
+        }
         ctx.success();
     }
 
@@ -409,8 +424,11 @@ struct DeleteManyOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
-                     : _collection.delete_many(std::move(filter), _options);
+        auto results = (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
+                                    : _collection.delete_many(std::move(filter), _options);
+        if (results) {
+            ctx.addDocuments(results->deleted_count());
+        }
         ctx.success();
     }
 
@@ -446,10 +464,18 @@ struct ReplaceOneOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto replacement = _replacementExpr();
+        auto size = replacement.view().length();
+
         auto ctx = _operation.start();
-        (_onSession)
+        auto result = (_onSession)
             ? _collection.replace_one(session, std::move(filter), std::move(replacement), _options)
             : _collection.replace_one(std::move(filter), std::move(replacement), _options);
+
+        if (result) {
+            ctx.addDocuments(result->modified_count());
+        }
+        ctx.addBytes(size);
+
         ctx.success();
     }
 
@@ -542,6 +568,16 @@ struct BulkWriteOperation : public BaseOperation {
         }
         auto ctx = _operation.start();
         auto result = bulk.execute();
+
+        size_t docs = 0;
+        if (result) {
+            docs += result->modified_count();
+            docs += result->deleted_count();
+            docs += result->inserted_count();
+            docs += result->upserted_count();
+            ctx.addDocuments(docs);
+        }
+
         ctx.success();
     }
 
@@ -660,13 +696,22 @@ struct InsertManyOperation : public BaseOperation {
     }
 
     void run(mongocxx::client_session& session) override {
+        size_t bytes = 0;
         for (auto&& docExpr : _docExprs) {
             auto doc = docExpr();
+            bytes += doc.view().length();
             _writeOps.emplace_back(std::move(doc));
         }
+
         auto ctx = _operation.start();
-        (_onSession) ? _collection.insert_many(session, _writeOps, _options)
-                     : _collection.insert_many(_writeOps, _options);
+
+        auto result = (_onSession) ? _collection.insert_many(session, _writeOps, _options)
+                                   : _collection.insert_many(_writeOps, _options);
+
+        ctx.addBytes(bytes);
+        if (result) {
+            ctx.addDocuments(result->inserted_count());
+        }
         ctx.success();
     }
 
@@ -748,12 +793,6 @@ struct CommitTransactionOperation : public BaseOperation {
  */
 
 struct SetReadConcernOperation : public BaseOperation {
-
-    static bool isValidReadConcernString(std::string_view rcString) {
-        return (rcString == "local" || rcString == "majority" || rcString == "linearizable" ||
-                rcString == "snapshot" || rcString == "available");
-    }
-
     SetReadConcernOperation(YAML::Node opNode,
                             bool onSession,
                             mongocxx::collection collection,
