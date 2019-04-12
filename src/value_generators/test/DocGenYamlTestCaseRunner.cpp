@@ -26,31 +26,16 @@ namespace {
 
 genny::DefaultRandom rng;
 
-std::string toString(const std::string& str) {
-    return str;
-}
-
-std::string toString(const bsoncxx::document::view_or_value& t) {
-    return bsoncxx::to_json(t, bsoncxx::ExtendedJsonMode::k_canonical);
-}
-
-std::string toString(const YAML::Node& node) {
-    YAML::Emitter out;
-    out << node;
-    return std::string{out.c_str()};
-}
 
 }  // namespace
 
-
-class YamlTests;
 struct YamlTestCase;
-
 
 using Result = genny::testing::ResultT<YamlTestCase>;
 
 class YamlTestCase {
 public:
+    using Result = Result;
     explicit YamlTestCase() = default;
 
     explicit YamlTestCase(YAML::Node node)
@@ -61,25 +46,25 @@ public:
           _expectedExceptionMessage{node["ThenThrows"]} {
         if (!_givenTemplate) {
             std::stringstream msg;
-            msg << "Need GivenTemplate in '" << toString(node) << "'";
+            msg << "Need GivenTemplate in '" << testing::toString(node) << "'";
             throw std::invalid_argument(msg.str());
         }
         if (_thenReturns && _expectedExceptionMessage) {
             std::stringstream msg;
-            msg << "Can't have ThenReturns and ThenThrows in '" << toString(node) << "'";
+            msg << "Can't have ThenReturns and ThenThrows in '" << testing::toString(node) << "'";
             throw std::invalid_argument(msg.str());
         }
         if (_thenReturns) {
             if (!_thenReturns.IsSequence()) {
                 std::stringstream msg;
-                msg << "ThenReturns must be list in '" << toString(node) << "'";
+                msg << "ThenReturns must be list in '" << testing::toString(node) << "'";
                 throw std::invalid_argument(msg.str());
             }
             _runMode = RunMode::kExpectReturn;
         } else {
             if (!_expectedExceptionMessage) {
                 std::stringstream msg;
-                msg << "Need ThenThrows if no ThenReturns in '" << toString(node) << "'";
+                msg << "Need ThenThrows if no ThenReturns in '" << testing::toString(node) << "'";
                 throw std::invalid_argument(msg.str());
             }
             _runMode = RunMode::kExpectException;
@@ -137,7 +122,7 @@ std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) 
     out << std::endl;
     for (auto&& result : results) {
         out << "- Name: " << result.testCase().name() << std::endl;
-        out << "  GivenTemplate: " << toString(result.testCase().givenTemplate()) << std::endl;
+        out << "  GivenTemplate: " << testing::toString(result.testCase().givenTemplate()) << std::endl;
         out << "  ThenReturns: " << std::endl;
         for (auto&& [expect, actual] : result.expectedVsActual()) {
             out << "    - " << actual << std::endl;
@@ -152,13 +137,13 @@ std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) 
 namespace YAML {
 
 template <>
-struct convert<genny::YamlTests> {
-    static Node encode(const genny::YamlTests& rhs) {
+struct convert<genny::testing::YamlTests<genny::YamlTestCase>> {
+    static Node encode(const genny::testing::YamlTests<genny::YamlTestCase>& rhs) {
         return {};
     }
 
-    static bool decode(const Node& node, genny::YamlTests& rhs) {
-        rhs = genny::YamlTests(node);
+    static bool decode(const Node& node, genny::testing::YamlTests<genny::YamlTestCase>& rhs) {
+        rhs = genny::testing::YamlTests<genny::YamlTestCase>(node);
         return true;
     }
 };
@@ -185,7 +170,7 @@ TEST_CASE("YAML Tests") {
         const auto file =
             genny::findRepoRoot() + "/src/value_generators/test/DocumentGeneratorTestCases.yml";
         const auto yaml = YAML::LoadFile(file);
-        auto tests = yaml.as<genny::YamlTests>();
+        auto tests = yaml.as<genny::testing::YamlTests<genny::YamlTestCase>>();
         std::vector<genny::Result> results = tests.run();
         if (!results.empty()) {
             std::stringstream msg;
