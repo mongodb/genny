@@ -15,6 +15,7 @@
 #include <testlib/findRepoRoot.hpp>
 #include <testlib/helpers.hpp>
 #include <testlib/yamlToBson.hpp>
+#include <testlib/yamltest.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
@@ -46,39 +47,7 @@ class YamlTests;
 struct YamlTestCase;
 
 
-class Result {
-public:
-    explicit Result(const YamlTestCase& testCase) : _testCase{testCase} {}
-
-    bool pass() const {
-        return _expectedVsActual.empty() && !_expectedExceptionButNotThrown;
-    }
-
-    template <typename E, typename A>
-    void expectEqual(E expect, A actual) {
-        if (expect != actual) {
-            _expectedVsActual.emplace_back(toString(expect), toString(actual));
-        }
-    }
-
-    void expectedExceptionButNotThrown() {
-        _expectedExceptionButNotThrown = true;
-    }
-
-    const std::vector<std::pair<std::string, std::string>>& expectedVsActual() const {
-        return _expectedVsActual;
-    }
-
-    const YamlTestCase& testCase() const {
-        return _testCase;
-    }
-
-private:
-    const YamlTestCase& _testCase;
-    std::vector<std::pair<std::string, std::string>> _expectedVsActual;
-    bool _expectedExceptionButNotThrown = false;
-};
-
+using Result = genny::testing::ResultT<YamlTestCase>;
 
 class YamlTestCase {
 public:
@@ -163,32 +132,6 @@ private:
     YAML::Node _expectedExceptionMessage;
 };
 
-
-class YamlTests {
-public:
-    explicit YamlTests() = default;
-    YamlTests(const YamlTests&) = default;
-
-    explicit YamlTests(const YAML::Node& node) {
-        for (auto&& n : node["Cases"]) {
-            _cases.push_back(std::move(n.as<genny::YamlTestCase>()));
-        }
-    }
-
-    std::vector<Result> run() const {
-        std::vector<Result> out{};
-        for (auto& tcase : _cases) {
-            auto result = tcase.run();
-            if (!result.pass()) {
-                out.push_back(std::move(result));
-            }
-        }
-        return out;
-    }
-
-private:
-    std::vector<YamlTestCase> _cases;
-};
 
 std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) {
     out << std::endl;
