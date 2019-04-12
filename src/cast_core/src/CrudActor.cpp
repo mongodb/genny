@@ -23,6 +23,8 @@
 #include <mongocxx/collection.hpp>
 
 #include <boost/log/trivial.hpp>
+#include <boost/throw_exception.hpp>
+
 #include <bsoncxx/json.hpp>
 
 #include <gennylib/Cast.hpp>
@@ -229,7 +231,7 @@ auto createGenerator(YAML::Node source,
     if (!doc) {
         std::stringstream msg;
         msg << "'" << opType << "' expects a '" << key << "' field.";
-        throw InvalidConfigurationException(msg.str());
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException(msg.str()));
     }
     return context.createDocumentGenerator(id, doc);
 }
@@ -506,8 +508,8 @@ struct BulkWriteOperation : public BaseOperation {
         : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
         auto writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.IsSequence()) {
-            throw InvalidConfigurationException(
-                "'bulkWrite' requires a 'WriteOperations' node of sequence type.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "'bulkWrite' requires a 'WriteOperations' node of sequence type."));
         }
         for (auto&& writeOp : writeOpsYaml) {
             createOps(writeOp, context, id);
@@ -521,8 +523,8 @@ struct BulkWriteOperation : public BaseOperation {
         auto writeCommand = writeOp["WriteCommand"].as<std::string>();
         auto writeOpConstructor = bulkWriteConstructors.find(writeCommand);
         if (writeOpConstructor == bulkWriteConstructors.end()) {
-            throw InvalidConfigurationException("WriteCommand '" + writeCommand +
-                                                "' not supported in bulkWrite operations.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "WriteCommand '" + writeCommand + "' not supported in bulkWrite operations."));
         }
         auto createWriteOp = writeOpConstructor->second;
         _writeOps.push_back(
@@ -646,8 +648,8 @@ struct InsertManyOperation : public BaseOperation {
         : _onSession{onSession}, _collection{collection}, _operation{operation} {
         auto documents = opNode["Documents"];
         if (!documents && !documents.IsSequence()) {
-            throw InvalidConfigurationException(
-                "'insertMany' expects a 'Documents' field of sequence type.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "'insertMany' expects a 'Documents' field of sequence type."));
         }
         for (auto&& document : documents) {
             _docExprs.push_back(context.createDocumentGenerator(id, document));
@@ -758,8 +760,8 @@ struct SetReadConcernOperation : public BaseOperation {
                             ActorId id)
         : _collection{collection} {
         if (!opNode["ReadConcern"]) {
-            throw InvalidConfigurationException(
-                "'setReadConcern' operation expects a 'ReadConcern' field.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "'setReadConcern' operation expects a 'ReadConcern' field."));
         }
         _readConcern = opNode["ReadConcern"].as<mongocxx::read_concern>();
     }
@@ -858,8 +860,8 @@ struct CrudActor::PhaseConfig {
             // Grab the appropriate Operation struct defined by 'OperationName'.
             auto op = opConstructors.find(opName);
             if (op == opConstructors.end()) {
-                throw InvalidConfigurationException("Operation '" + opName +
-                                                    "' not supported in Crud Actor.");
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Operation '" + opName + "' not supported in Crud Actor."));
             }
             auto createOperation = op->second;
             return createOperation(yamlCommand,
