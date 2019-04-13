@@ -1,5 +1,3 @@
-#include <utility>
-
 // Copyright 2019-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +16,7 @@
 
 #include <chrono>
 #include <memory>
+#include <utility>
 
 #include <yaml-cpp/yaml.h>
 
