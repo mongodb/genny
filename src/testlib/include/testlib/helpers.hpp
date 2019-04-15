@@ -19,8 +19,8 @@
 
 #include <string>
 
-#include <bsoncxx/json.hpp>
 #include <bsoncxx/document/view_or_value.hpp>
+#include <bsoncxx/json.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -41,6 +41,6 @@ inline std::string toString(const YAML::Node& node) {
 }
 
 
-}
+}  // namespace genny
 
 #endif  // HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED

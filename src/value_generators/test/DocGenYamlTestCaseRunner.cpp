@@ -14,8 +14,8 @@
 #include <testlib/ActorHelper.hpp>
 #include <testlib/findRepoRoot.hpp>
 #include <testlib/helpers.hpp>
-#include <testlib/yamlToBson.hpp>
 #include <testlib/yamlTest.hpp>
+#include <testlib/yamlToBson.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
@@ -26,9 +26,21 @@ namespace {
 genny::DefaultRandom rng;
 }  // namespace
 
+
+class ValGenTestCaseResult : public genny::testing::Result {
+public:
+    explicit ValGenTestCaseResult(class ValGenTestCase const* testCase) : _testCase(testCase) {}
+    auto testCase() const {
+        return _testCase;
+    }
+
+private:
+    const ValGenTestCase* _testCase;
+};
+
 class ValGenTestCase {
 public:
-    using Result = typename genny::testing::Result<ValGenTestCase>;
+    using Result = ValGenTestCaseResult;
     explicit ValGenTestCase() = default;
 
     explicit ValGenTestCase(YAML::Node node)
@@ -64,8 +76,8 @@ public:
         }
     }
 
-    Result run() const {
-        Result out{*this};
+    ValGenTestCaseResult run() const {
+        ValGenTestCaseResult out{this};
         if (_runMode == RunMode::kExpectException) {
             try {
                 genny::DocumentGenerator(this->_givenTemplate, rng);
@@ -110,12 +122,11 @@ private:
     YAML::Node _expectedExceptionMessage;
 };
 
-
-std::ostream& operator<<(std::ostream& out, const std::vector<ValGenTestCase::Result>& results) {
+std::ostream& operator<<(std::ostream& out, const std::vector<ValGenTestCaseResult>& results) {
     out << std::endl;
     for (auto&& result : results) {
-        out << "- Name: " << result.testCase().name() << std::endl;
-        out << "  GivenTemplate: " << toString(result.testCase().givenTemplate()) << std::endl;
+        out << "- Name: " << result.testCase()->name() << std::endl;
+        out << "  GivenTemplate: " << toString(result.testCase()->givenTemplate()) << std::endl;
         out << "  ThenReturns: " << std::endl;
         for (auto&& [expect, actual] : result.expectedVsActual()) {
             out << "    - " << actual << std::endl;
@@ -144,5 +155,6 @@ struct convert<genny::ValGenTestCase> {
 }  // namespace YAML
 
 TEST_CASE("YAML Tests") {
-    genny::testing::runTestCaseYaml<genny::ValGenTestCase>("/src/value_generators/test/DocumentGeneratorTestCases.yml");
+    genny::testing::runTestCaseYaml<genny::ValGenTestCase>(
+        "/src/value_generators/test/DocumentGeneratorTestCases.yml");
 }

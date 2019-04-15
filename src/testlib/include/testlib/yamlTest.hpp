@@ -20,16 +20,10 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace genny::testing {
+namespace genny::testing::v1 {
 
-namespace v1 {
-
-
-template <typename TC>
-class ResultT {
+class Result {
 public:
-    explicit ResultT(const TC& testCase) : _testCase{testCase} {}
-
     bool pass() const {
         return _expectedVsActual.empty() && !_expectedExceptionButNotThrown;
     }
@@ -49,12 +43,7 @@ public:
         return _expectedVsActual;
     }
 
-    const TC& testCase() const {
-        return _testCase;
-    }
-
 private:
-    const TC& _testCase;
     std::vector<std::pair<std::string, std::string>> _expectedVsActual;
     bool _expectedExceptionButNotThrown = false;
 };
@@ -89,12 +78,7 @@ private:
     std::vector<TC> _cases;
 };
 
-}  // namespace v1
-
-template <typename TC>
-using Result = v1::ResultT<TC>;
-
-}  // namespace genny::testing
+}  // namespace genny::testing::v1
 
 namespace YAML {
 
@@ -112,6 +96,8 @@ struct convert<genny::testing::v1::YamlTests<TC>> {
 }  // namespace YAML
 
 namespace genny::testing {
+
+using Result = v1::Result;
 
 template <typename TC>
 void runTestCaseYaml(const std::string& repoRelativePathToYaml) {
