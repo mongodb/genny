@@ -23,19 +23,12 @@
 namespace genny {
 
 namespace {
-
 genny::DefaultRandom rng;
-
-
 }  // namespace
-
-struct ValGenTestCase;
-
-using ValGenResult = genny::testing::ResultT<ValGenTestCase>;
 
 class ValGenTestCase {
 public:
-    using Result = ValGenResult;
+    using Result = typename genny::testing::ResultT<ValGenTestCase>;
     explicit ValGenTestCase() = default;
 
     explicit ValGenTestCase(YAML::Node node)
@@ -71,8 +64,8 @@ public:
         }
     }
 
-    genny::ValGenResult run() const {
-        genny::ValGenResult out{*this};
+    Result run() const {
+        Result out{*this};
         if (_runMode == RunMode::kExpectException) {
             try {
                 genny::DocumentGenerator(this->_givenTemplate, rng);
@@ -118,7 +111,7 @@ private:
 };
 
 
-std::ostream& operator<<(std::ostream& out, const std::vector<ValGenResult>& results) {
+std::ostream& operator<<(std::ostream& out, const std::vector<ValGenTestCase::Result>& results) {
     out << std::endl;
     for (auto&& result : results) {
         out << "- Name: " << result.testCase().name() << std::endl;
