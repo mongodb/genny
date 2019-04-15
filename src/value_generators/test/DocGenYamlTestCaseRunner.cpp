@@ -15,7 +15,7 @@
 #include <testlib/findRepoRoot.hpp>
 #include <testlib/helpers.hpp>
 #include <testlib/yamlToBson.hpp>
-#include <testlib/yamltest.hpp>
+#include <testlib/yamlTest.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
 #include <value_generators/DocumentGenerator.hpp>
@@ -28,7 +28,7 @@ genny::DefaultRandom rng;
 
 class ValGenTestCase {
 public:
-    using Result = typename genny::testing::ResultT<ValGenTestCase>;
+    using Result = typename genny::testing::Result<ValGenTestCase>;
     explicit ValGenTestCase() = default;
 
     explicit ValGenTestCase(YAML::Node node)
@@ -39,25 +39,25 @@ public:
           _expectedExceptionMessage{node["ThenThrows"]} {
         if (!_givenTemplate) {
             std::stringstream msg;
-            msg << "Need GivenTemplate in '" << testing::toString(node) << "'";
+            msg << "Need GivenTemplate in '" << toString(node) << "'";
             throw std::invalid_argument(msg.str());
         }
         if (_thenReturns && _expectedExceptionMessage) {
             std::stringstream msg;
-            msg << "Can't have ThenReturns and ThenThrows in '" << testing::toString(node) << "'";
+            msg << "Can't have ThenReturns and ThenThrows in '" << toString(node) << "'";
             throw std::invalid_argument(msg.str());
         }
         if (_thenReturns) {
             if (!_thenReturns.IsSequence()) {
                 std::stringstream msg;
-                msg << "ThenReturns must be list in '" << testing::toString(node) << "'";
+                msg << "ThenReturns must be list in '" << toString(node) << "'";
                 throw std::invalid_argument(msg.str());
             }
             _runMode = RunMode::kExpectReturn;
         } else {
             if (!_expectedExceptionMessage) {
                 std::stringstream msg;
-                msg << "Need ThenThrows if no ThenReturns in '" << testing::toString(node) << "'";
+                msg << "Need ThenThrows if no ThenReturns in '" << toString(node) << "'";
                 throw std::invalid_argument(msg.str());
             }
             _runMode = RunMode::kExpectException;
@@ -115,7 +115,7 @@ std::ostream& operator<<(std::ostream& out, const std::vector<ValGenTestCase::Re
     out << std::endl;
     for (auto&& result : results) {
         out << "- Name: " << result.testCase().name() << std::endl;
-        out << "  GivenTemplate: " << testing::toString(result.testCase().givenTemplate()) << std::endl;
+        out << "  GivenTemplate: " << toString(result.testCase().givenTemplate()) << std::endl;
         out << "  ThenReturns: " << std::endl;
         for (auto&& [expect, actual] : result.expectedVsActual()) {
             out << "    - " << actual << std::endl;
@@ -130,20 +130,8 @@ std::ostream& operator<<(std::ostream& out, const std::vector<ValGenTestCase::Re
 namespace YAML {
 
 template <>
-struct convert<genny::testing::YamlTests<genny::ValGenTestCase>> {
-    static Node encode(const genny::testing::YamlTests<genny::ValGenTestCase>& rhs) {
-        return {};
-    }
-
-    static bool decode(const Node& node, genny::testing::YamlTests<genny::ValGenTestCase>& rhs) {
-        rhs = genny::testing::YamlTests<genny::ValGenTestCase>(node);
-        return true;
-    }
-};
-
-template <>
 struct convert<genny::ValGenTestCase> {
-    static Node encode(const genny::ValGenTestCase& rhs) {
+    static Node encode(genny::ValGenTestCase& rhs) {
         return {};
     }
 

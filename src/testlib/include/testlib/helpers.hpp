@@ -17,4 +17,30 @@
 
 #include <catch2/catch.hpp>
 
+#include <string>
+
+#include <bsoncxx/json.hpp>
+#include <bsoncxx/document/view_or_value.hpp>
+
+#include <yaml-cpp/yaml.h>
+
+namespace genny {
+
+inline std::string toString(const std::string& str) {
+    return str;
+}
+
+inline std::string toString(const bsoncxx::document::view_or_value& t) {
+    return bsoncxx::to_json(t, bsoncxx::ExtendedJsonMode::k_canonical);
+}
+
+inline std::string toString(const YAML::Node& node) {
+    YAML::Emitter out;
+    out << node;
+    return std::string{out.c_str()};
+}
+
+
+}
+
 #endif  // HEADER_E501BBB0_810A_4185_96B2_60CE322C4B78_INCLUDED

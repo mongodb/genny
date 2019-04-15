@@ -15,28 +15,17 @@
 #ifndef HEADER_8A80B79E_1A24_4745_BB59_B1FCD1439C6D_INCLUDED
 #define HEADER_8A80B79E_1A24_4745_BB59_B1FCD1439C6D_INCLUDED
 
-#include <vector>
 #include <string>
+#include <vector>
+
+#include <yaml-cpp/yaml.h>
 
 namespace genny::testing {
 
-inline std::string toString(const std::string& str) {
-    return str;
-}
-
-inline std::string toString(const bsoncxx::document::view_or_value& t) {
-    return bsoncxx::to_json(t, bsoncxx::ExtendedJsonMode::k_canonical);
-}
-
-inline std::string toString(const YAML::Node& node) {
-    YAML::Emitter out;
-    out << node;
-    return std::string{out.c_str()};
-}
+namespace v1 {
 
 
-
-template<typename TC>
+template <typename TC>
 class ResultT {
 public:
     explicit ResultT(const TC& testCase) : _testCase{testCase} {}
@@ -71,7 +60,7 @@ private:
 };
 
 
-template<typename TC>
+template <typename TC>
 class YamlTests {
 public:
     using Result = typename TC::Result;
@@ -80,7 +69,7 @@ public:
     YamlTests(const YamlTests&) = default;
 
     explicit YamlTests(const YAML::Node& node) {
-        for (auto&& n : node["Cases"]) {
+        for (auto&& n : node["Tests"]) {
             _cases.push_back(std::move(n.as<TC>()));
         }
     }
@@ -100,14 +89,36 @@ private:
     std::vector<TC> _cases;
 };
 
+}  // namespace v1
 
-template<typename TC>
+template <typename TC>
+using Result = v1::ResultT<TC>;
+
+}  // namespace genny::testing
+
+namespace YAML {
+
+template <typename TC>
+struct convert<genny::testing::v1::YamlTests<TC>> {
+    static Node encode(const genny::testing::v1::YamlTests<TC>& rhs) {
+        return {};
+    }
+    static bool decode(const Node& node, genny::testing::v1::YamlTests<TC>& rhs) {
+        rhs = genny::testing::v1::YamlTests<TC>(node);
+        return true;
+    }
+};
+
+}  // namespace YAML
+
+namespace genny::testing {
+
+template <typename TC>
 void runTestCaseYaml(const std::string& repoRelativePathToYaml) {
     try {
-        const auto file =
-                genny::findRepoRoot() + repoRelativePathToYaml;
-        const auto yaml = YAML::LoadFile(file);
-        auto tests = yaml.as<genny::testing::YamlTests<TC>>();
+        const auto file = genny::findRepoRoot() + repoRelativePathToYaml;
+        const auto yaml = ::YAML::LoadFile(file);
+        auto tests = yaml.as<genny::testing::v1::YamlTests<TC>>();
         auto results = tests.run();
         if (!results.empty()) {
             std::stringstream msg;
@@ -121,7 +132,7 @@ void runTestCaseYaml(const std::string& repoRelativePathToYaml) {
     }
 }
 
-}  // namespae genny::testing
+}  // namespace genny::testing
 
 
 #endif  // HEADER_8A80B79E_1A24_4745_BB59_B1FCD1439C6D_INCLUDED
