@@ -1,6 +1,6 @@
 ---
 
-Cases:
+Tests:
 
   # These tests use large numbers for number parameters
   # because short numbers get automatically narrowed to
