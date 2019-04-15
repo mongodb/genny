@@ -1,5 +1,3 @@
-#include <utility>
-
 // Copyright 2019-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +16,7 @@
 
 #include <chrono>
 #include <memory>
+#include <utility>
 
 #include <yaml-cpp/yaml.h>
 
@@ -618,8 +617,10 @@ struct CountDocumentsOperation : public BaseOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.count_documents(session, std::move(filter), _options)
-                     : _collection.count_documents(std::move(filter), _options);
+        auto count = (_onSession)
+            ? _collection.count_documents(session, std::move(filter), _options)
+            : _collection.count_documents(std::move(filter), _options);
+        ctx.addDocuments(count);
         ctx.success();
     }
 
@@ -640,7 +641,7 @@ struct FindOperation : public BaseOperation {
                   PhaseContext& context,
                   ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "Find", "Filter", context, id)} {}
     // TODO: parse Find Options
