@@ -70,6 +70,9 @@ struct CrudActorTestCase {
           tcase{node} {}
 
     static void assertAfterState(mongocxx::pool::entry& client, YAML::Node tcase) {
+        // TODO: handle ExpectedEvents
+        // TODO: handle OutcomeCounts
+        // TODO: handle ExpectedCollectionsExist
         if (auto ocd = tcase["OutcomeData"]; ocd) {
             assertOutcomeData(client, ocd);
         }
@@ -78,9 +81,8 @@ struct CrudActorTestCase {
     static void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata) {
         for(auto&& filterYaml : ocdata) {
             auto filter = genny::testing::toDocumentBson(filterYaml);
+            INFO("Requiring 1 document in mydb.test matching " << bsoncxx::to_json(filter.view()));
             long long actual = (*client)["mydb"]["test"].count_documents(filter.view());
-            BOOST_LOG_TRIVIAL(info) << "Filter " << bsoncxx::to_json(filter.view()) << " => " << actual;
-            // TODO: better error messaging
             REQUIRE(actual == 1);
         }
     }
@@ -110,10 +112,9 @@ struct CrudActorTestCase {
             dropAllDatabases(client);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
-
             if (runMode == RunMode::kExpectedSetupException ||
                 runMode == RunMode::kExpectedRuntimeException) {
-                FAIL("Expected exception but not thrown");
+                FAIL("Expected exception " << error.as<std::string>() << " but not thrown");
             } else {
                 assertAfterState(client, tcase);
             }
