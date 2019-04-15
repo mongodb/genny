@@ -26,21 +26,8 @@ namespace {
 genny::DefaultRandom rng;
 }  // namespace
 
-
-class ValGenTestCaseResult : public genny::testing::Result {
-public:
-    explicit ValGenTestCaseResult(class ValGenTestCase const* testCase) : _testCase(testCase) {}
-    auto testCase() const {
-        return _testCase;
-    }
-
-private:
-    const ValGenTestCase* _testCase;
-};
-
 class ValGenTestCase {
 public:
-    using Result = ValGenTestCaseResult;
     explicit ValGenTestCase() = default;
 
     explicit ValGenTestCase(YAML::Node node)
@@ -76,26 +63,26 @@ public:
         }
     }
 
-    ValGenTestCaseResult run() const {
-        ValGenTestCaseResult out{this};
-        if (_runMode == RunMode::kExpectException) {
-            try {
-                genny::DocumentGenerator(this->_givenTemplate, rng);
-                out.expectedExceptionButNotThrown();
-            } catch (const std::exception& x) {
-                out.expectEqual("InvalidValueGeneratorSyntax",
-                                this->_expectedExceptionMessage.as<std::string>());
+    void run() const {
+        DYNAMIC_SECTION("DocGenYamlTestCaseRunner " << name()) {
+            if (_runMode == RunMode::kExpectException) {
+                try {
+                    genny::DocumentGenerator(this->_givenTemplate, rng);
+                    FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>() << " but none occurred");
+                } catch (const std::exception& x) {
+                    REQUIRE("InvalidValueGeneratorSyntax" ==
+                            this->_expectedExceptionMessage.as<std::string>());
+                }
+                return;
             }
-            return out;
-        }
 
-        auto docGen = genny::DocumentGenerator(this->_givenTemplate, rng);
-        for (const auto&& nextValue : this->_thenReturns) {
-            auto expected = testing::toDocumentBson(nextValue);
-            auto actual = docGen();
-            out.expectEqual(expected.view(), actual.view());
+            auto docGen = genny::DocumentGenerator(this->_givenTemplate, rng);
+            for (const auto&& nextValue : this->_thenReturns) {
+                auto expected = testing::toDocumentBson(nextValue);
+                auto actual = docGen();
+                REQUIRE(toString(expected.view()) == toString(actual.view()));
+            }
         }
-        return out;
     }
 
     const std::string name() const {
@@ -122,19 +109,6 @@ private:
     YAML::Node _expectedExceptionMessage;
 };
 
-std::ostream& operator<<(std::ostream& out, const std::vector<ValGenTestCaseResult>& results) {
-    out << std::endl;
-    for (auto&& result : results) {
-        out << "- Name: " << result.testCase()->name() << std::endl;
-        out << "  GivenTemplate: " << toString(result.testCase()->givenTemplate()) << std::endl;
-        out << "  ThenReturns: " << std::endl;
-        for (auto&& [expect, actual] : result.expectedVsActual()) {
-            out << "    - " << actual << std::endl;
-        }
-    }
-    return out;
-}
-
 }  // namespace genny
 
 
@@ -154,7 +128,7 @@ struct convert<genny::ValGenTestCase> {
 
 }  // namespace YAML
 
-TEST_CASE("YAML Tests") {
-    genny::testing::runTestCaseYaml<genny::ValGenTestCase>(
+TEMPLATE_TEST_CASE("YAML Tests", "", genny::ValGenTestCase) {
+    genny::testing::runTestCaseYaml<TestType>(
         "/src/value_generators/test/DocumentGeneratorTestCases.yml");
 }
