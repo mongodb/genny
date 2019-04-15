@@ -71,19 +71,36 @@ struct CrudActorTestCase {
 
     static void assertAfterState(mongocxx::pool::entry& client, YAML::Node tcase) {
         // TODO: handle ExpectedEvents
-        // TODO: handle OutcomeCounts
         // TODO: handle ExpectedCollectionsExist
         if (auto ocd = tcase["OutcomeData"]; ocd) {
             assertOutcomeData(client, ocd);
         }
+        if (auto ocounts = tcase["OutcomeCounts"]; ocounts) {
+            assertOutcomeCounts(client, ocounts);
+        }
+    }
+
+    static void assertCount(mongocxx::pool::entry& client,
+                            YAML::Node filterYaml,
+                            long expected = 1,
+                            std::string db = "mydb",
+                            std::string coll = "test") {
+        auto filter = genny::testing::toDocumentBson(filterYaml);
+        INFO("Requiring " << expected << " document" << (expected == 1 ? "" : "s") << " in " << db
+                          << "." << coll << " matching " << bsoncxx::to_json(filter.view()));
+        long long actual = (*client)[db][coll].count_documents(filter.view());
+        REQUIRE(actual == expected);
     }
 
     static void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata) {
-        for(auto&& filterYaml : ocdata) {
-            auto filter = genny::testing::toDocumentBson(filterYaml);
-            INFO("Requiring 1 document in mydb.test matching " << bsoncxx::to_json(filter.view()));
-            long long actual = (*client)["mydb"]["test"].count_documents(filter.view());
-            REQUIRE(actual == 1);
+        for (auto&& filterYaml : ocdata) {
+            assertCount(client, filterYaml);
+        }
+    }
+
+    static void assertOutcomeCounts(mongocxx::pool::entry& client, YAML::Node ocounts) {
+        for (auto&& countAssertion : ocounts) {
+            assertCount(client, countAssertion["Filter"], countAssertion["Count"].as<long>());
         }
     }
 
