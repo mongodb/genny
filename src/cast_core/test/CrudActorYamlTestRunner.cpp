@@ -36,11 +36,7 @@
 
 namespace genny::testing {
 
-class CrudActorResult : public Result {};
-
-
 struct CrudActorTestCase {
-    using Result = CrudActorResult;
 
     enum class RunMode { kNormal, kExpectedSetupException, kExpectedRuntimeException };
 
@@ -73,19 +69,19 @@ struct CrudActorTestCase {
           error{node["Error"]},
           tcase{node} {}
 
-    static void assertAfterState(mongocxx::pool::entry& client, YAML::Node tcase, Result& result) {
+    static void assertAfterState(mongocxx::pool::entry& client, YAML::Node tcase) {
         if (auto ocd = tcase["OutcomeData"]; ocd) {
-            assertOutcomeData(client, ocd, result);
+            assertOutcomeData(client, ocd);
         }
     }
 
-    static void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata, Result& result) {
+    static void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata) {
         for(auto&& filterYaml : ocdata) {
             auto filter = genny::testing::toDocumentBson(filterYaml);
             long long actual = (*client)["mydb"]["test"].count_documents(filter.view());
             BOOST_LOG_TRIVIAL(info) << "Filter " << bsoncxx::to_json(filter.view()) << " => " << actual;
             // TODO: better error messaging
-            result.expectEqual(1, actual);
+            REQUIRE(actual == 1);
         }
     }
 
@@ -106,8 +102,7 @@ struct CrudActorTestCase {
         return config;
     }
 
-    Result run() const {
-        Result out;
+    void doRun() const {
         try {
             auto config = build(operations);
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
@@ -118,24 +113,30 @@ struct CrudActorTestCase {
 
             if (runMode == RunMode::kExpectedSetupException ||
                 runMode == RunMode::kExpectedRuntimeException) {
-                out.expectedExceptionButNotThrown();
+                FAIL("Expected exception but not thrown");
             } else {
-                assertAfterState(client, tcase, out);
+                assertAfterState(client, tcase);
             }
         } catch (const std::exception& e) {
             if (runMode == RunMode::kExpectedSetupException ||
                 runMode == RunMode::kExpectedRuntimeException) {
                 auto actual = boost::trim_copy(std::string{e.what()});
                 auto expect = boost::trim_copy(error.as<std::string>());
-                out.expectEqual(actual, expect);
+                REQUIRE(actual == expect);
             } else {
                 auto diagInfo = boost::diagnostic_information(e);
                 INFO(description << "CAUGHT " << diagInfo);
                 FAIL(diagInfo);
             }
         }
-        return out;
     }
+
+    void run() const {
+        DYNAMIC_SECTION(description) {
+            this->doRun();
+        }
+    }
+
 
     YAML::Node error;
     RunMode runMode;
@@ -143,17 +144,6 @@ struct CrudActorTestCase {
     YAML::Node operations;
     YAML::Node tcase;
 };
-
-std::ostream& operator<<(std::ostream& out, const std::vector<CrudActorResult>& results) {
-    out << std::endl;
-    for (auto&& result : results) {
-        out << "- Test Case" << std::endl;
-        for (auto&& [expect, actual] : result.expectedVsActual()) {
-            out << "    - [" << expect << "] != [" << actual << "]" << std::endl;
-        }
-    }
-    return out;
-}
 
 }  // namespace genny::testing
 
