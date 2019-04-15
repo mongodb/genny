@@ -20,6 +20,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <testlib/helpers.hpp>
 #include <testlib/findRepoRoot.hpp>
 
 namespace genny::testing::v1 {

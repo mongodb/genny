@@ -31,6 +31,7 @@
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
 #include <testlib/yamlTest.hpp>
+#include <testlib/yamlToBson.hpp>
 
 
 namespace genny::testing {
@@ -79,7 +80,13 @@ struct CrudActorTestCase {
     }
 
     static void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata, Result& result) {
-        BOOST_LOG_TRIVIAL(info) << "Asserting outcome data";
+        for(auto&& filterYaml : ocdata) {
+            auto filter = genny::testing::toDocumentBson(filterYaml);
+            long long actual = (*client)["mydb"]["test"].count_documents(filter.view());
+            BOOST_LOG_TRIVIAL(info) << "Filter " << bsoncxx::to_json(filter.view()) << " => " << actual;
+            // TODO: better error messaging
+            result.expectEqual(1, actual);
+        }
     }
 
     static YAML::Node build(YAML::Node operations) {
@@ -104,8 +111,10 @@ struct CrudActorTestCase {
         try {
             auto config = build(operations);
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
-            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
             auto client = ah.client();
+            dropAllDatabases(client);
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+
 
             if (runMode == RunMode::kExpectedSetupException ||
                 runMode == RunMode::kExpectedRuntimeException) {
