@@ -29,16 +29,16 @@ genny::DefaultRandom rng;
 
 }  // namespace
 
-struct YamlTestCase;
+struct ValGenTestCase;
 
-using Result = genny::testing::ResultT<YamlTestCase>;
+using ValGenResult = genny::testing::ResultT<ValGenTestCase>;
 
-class YamlTestCase {
+class ValGenTestCase {
 public:
-    using Result = Result;
-    explicit YamlTestCase() = default;
+    using Result = ValGenResult;
+    explicit ValGenTestCase() = default;
 
-    explicit YamlTestCase(YAML::Node node)
+    explicit ValGenTestCase(YAML::Node node)
         : _wholeTest{node},
           _name{node["Name"].as<std::string>("No Name")},
           _givenTemplate{node["GivenTemplate"]},
@@ -71,8 +71,8 @@ public:
         }
     }
 
-    genny::Result run() const {
-        genny::Result out{*this};
+    genny::ValGenResult run() const {
+        genny::ValGenResult out{*this};
         if (_runMode == RunMode::kExpectException) {
             try {
                 genny::DocumentGenerator(this->_givenTemplate, rng);
@@ -118,7 +118,7 @@ private:
 };
 
 
-std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) {
+std::ostream& operator<<(std::ostream& out, const std::vector<ValGenResult>& results) {
     out << std::endl;
     for (auto&& result : results) {
         out << "- Name: " << result.testCase().name() << std::endl;
@@ -137,25 +137,25 @@ std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) 
 namespace YAML {
 
 template <>
-struct convert<genny::testing::YamlTests<genny::YamlTestCase>> {
-    static Node encode(const genny::testing::YamlTests<genny::YamlTestCase>& rhs) {
+struct convert<genny::testing::YamlTests<genny::ValGenTestCase>> {
+    static Node encode(const genny::testing::YamlTests<genny::ValGenTestCase>& rhs) {
         return {};
     }
 
-    static bool decode(const Node& node, genny::testing::YamlTests<genny::YamlTestCase>& rhs) {
-        rhs = genny::testing::YamlTests<genny::YamlTestCase>(node);
+    static bool decode(const Node& node, genny::testing::YamlTests<genny::ValGenTestCase>& rhs) {
+        rhs = genny::testing::YamlTests<genny::ValGenTestCase>(node);
         return true;
     }
 };
 
 template <>
-struct convert<genny::YamlTestCase> {
-    static Node encode(const genny::YamlTestCase& rhs) {
+struct convert<genny::ValGenTestCase> {
+    static Node encode(const genny::ValGenTestCase& rhs) {
         return {};
     }
 
-    static bool decode(const Node& node, genny::YamlTestCase& rhs) {
-        rhs = genny::YamlTestCase(node);
+    static bool decode(const Node& node, genny::ValGenTestCase& rhs) {
+        rhs = genny::ValGenTestCase(node);
         return true;
     }
 };
@@ -170,8 +170,8 @@ TEST_CASE("YAML Tests") {
         const auto file =
             genny::findRepoRoot() + "/src/value_generators/test/DocumentGeneratorTestCases.yml";
         const auto yaml = YAML::LoadFile(file);
-        auto tests = yaml.as<genny::testing::YamlTests<genny::YamlTestCase>>();
-        std::vector<genny::Result> results = tests.run();
+        auto tests = yaml.as<genny::testing::YamlTests<genny::ValGenTestCase>>();
+        std::vector<genny::ValGenResult> results = tests.run();
         if (!results.empty()) {
             std::stringstream msg;
             msg << results;

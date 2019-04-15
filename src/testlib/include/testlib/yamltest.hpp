@@ -97,7 +97,7 @@ public:
     }
 
 private:
-    std::vector<Result> _cases;
+    std::vector<TC> _cases;
 };
 
 
