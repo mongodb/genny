@@ -162,26 +162,6 @@ struct convert<genny::ValGenTestCase> {
 
 }  // namespace YAML
 
-
-namespace {
-
 TEST_CASE("YAML Tests") {
-    try {
-        const auto file =
-            genny::findRepoRoot() + "/src/value_generators/test/DocumentGeneratorTestCases.yml";
-        const auto yaml = YAML::LoadFile(file);
-        auto tests = yaml.as<genny::testing::YamlTests<genny::ValGenTestCase>>();
-        std::vector<genny::ValGenResult> results = tests.run();
-        if (!results.empty()) {
-            std::stringstream msg;
-            msg << results;
-            WARN(msg.str());
-        }
-        REQUIRE(results.empty());
-    } catch (const std::exception& ex) {
-        WARN(ex.what());
-        throw;
-    }
+    genny::testing::runTestCaseYaml<genny::ValGenTestCase>("/src/value_generators/test/DocumentGeneratorTestCases.yml");
 }
-
-}  // namespace

@@ -101,7 +101,25 @@ private:
 };
 
 
-
+template<typename TC>
+void runTestCaseYaml(const std::string& repoRelativePathToYaml) {
+    try {
+        const auto file =
+                genny::findRepoRoot() + repoRelativePathToYaml;
+        const auto yaml = YAML::LoadFile(file);
+        auto tests = yaml.as<genny::testing::YamlTests<TC>>();
+        auto results = tests.run();
+        if (!results.empty()) {
+            std::stringstream msg;
+            msg << results;
+            WARN(msg.str());
+        }
+        REQUIRE(results.empty());
+    } catch (const std::exception& ex) {
+        WARN(ex.what());
+        throw;
+    }
+}
 
 }  // namespae genny::testing
 
