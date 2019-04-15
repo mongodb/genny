@@ -22,38 +22,9 @@
 
 namespace genny::testing::v1 {
 
-class Result {
-public:
-    bool pass() const {
-        return _expectedVsActual.empty() && !_expectedExceptionButNotThrown;
-    }
-
-    template <typename E, typename A>
-    void expectEqual(E expect, A actual) {
-        if (expect != actual) {
-            _expectedVsActual.emplace_back(toString(expect), toString(actual));
-        }
-    }
-
-    void expectedExceptionButNotThrown() {
-        _expectedExceptionButNotThrown = true;
-    }
-
-    const std::vector<std::pair<std::string, std::string>>& expectedVsActual() const {
-        return _expectedVsActual;
-    }
-
-private:
-    std::vector<std::pair<std::string, std::string>> _expectedVsActual;
-    bool _expectedExceptionButNotThrown = false;
-};
-
-
 template <typename TC>
 class YamlTests {
 public:
-    using Result = typename TC::Result;
-
     explicit YamlTests() = default;
     YamlTests(const YamlTests&) = default;
 
@@ -63,15 +34,10 @@ public:
         }
     }
 
-    std::vector<Result> run() const {
-        std::vector<Result> out{};
+    void run() const {
         for (auto& tcase : _cases) {
-            auto result = tcase.run();
-            if (!result.pass()) {
-                out.push_back(std::move(result));
-            }
+            tcase.run();
         }
-        return out;
     }
 
 private:
@@ -97,21 +63,13 @@ struct convert<genny::testing::v1::YamlTests<TC>> {
 
 namespace genny::testing {
 
-using Result = v1::Result;
-
 template <typename TC>
 void runTestCaseYaml(const std::string& repoRelativePathToYaml) {
     try {
         const auto file = genny::findRepoRoot() + repoRelativePathToYaml;
         const auto yaml = ::YAML::LoadFile(file);
         auto tests = yaml.as<genny::testing::v1::YamlTests<TC>>();
-        auto results = tests.run();
-        if (!results.empty()) {
-            std::stringstream msg;
-            msg << results;
-            WARN(msg.str());
-        }
-        REQUIRE(results.empty());
+        tests.run();
     } catch (const std::exception& ex) {
         WARN(ex.what());
         throw;
