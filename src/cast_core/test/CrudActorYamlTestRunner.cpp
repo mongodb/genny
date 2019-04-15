@@ -14,6 +14,11 @@
 
 #include <vector>
 
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/exception/detail/exception_ptr.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+
+
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
@@ -25,21 +30,11 @@
 #include <testlib/helpers.hpp>
 #include <testlib/yamlTest.hpp>
 #include <testlib/ActorHelper.hpp>
-#include <boost/exception/detail/exception_ptr.hpp>
-#include <boost/exception/diagnostic_information.hpp>
+
 
 namespace genny::testing {
 
 class CrudActorResult : public Result {};
-
-
-// lol
-// https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
-static inline void rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-        return !std::isspace(ch);
-    }).base(), s.end());
-}
 
 
 struct CrudActorTestCase {
@@ -104,10 +99,8 @@ struct CrudActorTestCase {
             }
         } catch (const std::exception& e) {
             if (runMode == RunMode::kExpectedSetupException || runMode == RunMode::kExpectedRuntimeException) {
-                std::string actual = std::string{e.what()};
-                rtrim(actual);
-                std::string expect = error.as<std::string>();
-                rtrim(expect);
+                auto actual = boost::trim_copy(std::string{e.what()});
+                auto expect = boost::trim_copy(error.as<std::string>());
                 out.expectEqual(actual, expect);
             } else {
                 auto diagInfo = boost::diagnostic_information(e);
