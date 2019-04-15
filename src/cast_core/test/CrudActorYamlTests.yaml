@@ -1,22 +1,39 @@
 ---
 
-Cases:
+# Syntax is inspired by the Crud driver specs:
+# https://github.com/mongodb/specifications/tree/master/source/crud/tests
+# but modified for casing and to eliminate some boilerplate. Idea is that
+# if we wanted to translate these tests to exactly the above spec it could
+# be a trivial data-format conversion.
+#
+# Exception to this:
+#
+# - OutcomeCounts: is a shortcut these tests take to avoid having to
+#   specify every single document in the collection.
+#
+# - Error: indicates a string of what type of error (syntax error
+#   encountered during setup or a runtime error
+#
+# - name: (omitted) we always assume everything happens on the same db and collection
+#
+# - ExpectedCollectionsExist: allows tests to assert that a collection has been
+#   created or dropped.
+#
 
-  - Name: Inserts documents into the database.
-    WhenRunOperations:
+Tests:
+
+  - Description: Inserts documents into the database.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
             - WriteCommand: insertOne
               Document: { a: 1 }
-    # syntax sugar for
-    # ThenHasCounts: [{Filter: {a: 1}, Count: 1}]
-    ThenHaveDocuments:
+    OutcomeData:
       - {a: 1}
 
-  - Name: BulkWrite insert, delete, then re-insert
-    GivenDocuments: {}
-    WhenRunOperations:
+  - Description: BulkWrite insert, delete, then re-insert
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -26,11 +43,11 @@ Cases:
               Filter: { a: 1 }
             - WriteCommand: insertOne
               Document: { a: 2 }
-    ThenHaveDocuments:
+    OutcomeData:
       - {a: 2}
 
-  - Name: Inserts and updates document in the database.
-    WhenRunOperations:
+  - Description: Inserts and updates document in the database.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -39,11 +56,11 @@ Cases:
             - WriteCommand: updateOne
               Filter: { a: 1 }
               Update: { $set: { a: 5 } }
-    ThenHaveDocuments:
+    OutcomeData:
       - {a: 5}
 
-  - Name: Inserts and deletes documents in the database.
-    WhenRunOperations:
+  - Description: Inserts and deletes documents in the database.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -53,11 +70,11 @@ Cases:
               Filter: { a: 1 }
             - WriteCommand: insertOne
               Document: { a: 2 }
-    ThenHaveDocuments:
+    OutcomeData:
       - {a: 2}
 
-  - Name: Inserts and replaces document in the database.
-    WhenRunOperations:
+  - Description: Inserts and replaces document in the database.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -66,11 +83,11 @@ Cases:
             - WriteCommand: replaceOne
               Filter: { a : 1 }
               Replacement: { name: test }
-    ThenHaveDocuments:
+    OutcomeData:
       - {name: test}
 
-  - Name: Inserts and updates with 'BypassDocumentValidation' true and 'Ordered' false.
-    WhenRunOperations:
+  - Description: Inserts and updates with 'BypassDocumentValidation' true and 'Ordered' false.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -82,13 +99,13 @@ Cases:
           Options:
             Ordered: false
             BypassDocumentValidation: true
-        ThenHaveDocuments:
-          - {a: 5}
-        AndEvents:
-          - {ordered: false, bypassDocumentValidation: true}
+    OutcomeData:
+      - {a: 5}
+    ExpectedEvents:
+      - {ordered: false, bypassDocumentValidation: true}
 
-  - Name: Inserts and updates many documents in the database.
-    WhenRunOperations:
+  - Description: Inserts and updates many documents in the database.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -101,12 +118,12 @@ Cases:
             - WriteCommand: updateMany
               Filter: { a: {$gte: 5} }
               Update: { $set: { a: 1 } }
-    ThenHasCounts:
+    OutcomeCounts:
       - Filter: {a: 1}
         Count: 3
 
-  - Name: Inserts and deletes many documents in the database.
-    WhenRunOperations:
+  - Description: Inserts and deletes many documents in the database.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -118,12 +135,12 @@ Cases:
               Document: { a: {^RandomInt: {min: 5, max: 15} } }
             - WriteCommand: deleteMany
               Filter: { a: {$gte: 5} }
-    ThenHasCounts:
+    OutcomeCounts:
       - Filter: {a: {$gte: 5}}
         Count: 0
 
-  - Name: Insert randomly generated doc and update with write concern majority.
-    WhenRunOperations:
+  - Description: Insert randomly generated doc and update with write concern majority.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -136,14 +153,14 @@ Cases:
             WriteConcern:
               Level: majority
               Timeout: 6000 milliseconds
-    ThenHasCounts:
+    OutcomeCounts:
       - Filter: {a: 8}
         Count: 1
-    AndEvents:
+    ExpectedEvents:
       - writeConcern: {w: majority, wtimeout: 6000}
 
-  - Name: Write concern without 'Level' field should throw.
-    WhenRunOperations:
+  - Description: Write concern without 'Level' field should throw.
+    Operations:
       - OperationName: bulkWrite
         OperationCommand:
           WriteOperations:
@@ -156,13 +173,13 @@ Cases:
             WriteConcern:
               Timeout: 3000 milliseconds
               Journal: false
-    ThenThrows: InvalidSyntax
+    Error: InvalidSyntax
 
-  - Name: The 'test' collection is dropped with write concern majority.
-    WhenRunOperations:
+  - Description: The 'test' collection is dropped with write concern majority.
+    Operations:
       - Repeat: 1
         Collection: test
         Operation:
           OperationName: drop
-    ThenCollectionExists:
+    ExpectedCollectionsExist:
       test: false
