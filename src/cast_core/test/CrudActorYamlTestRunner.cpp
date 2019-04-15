@@ -24,6 +24,9 @@
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
 #include <testlib/yamlTest.hpp>
+#include <testlib/ActorHelper.hpp>
+#include <boost/exception/detail/exception_ptr.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace genny::testing {
 
@@ -38,8 +41,34 @@ struct CrudActorTestCase {
     explicit CrudActorTestCase(YAML::Node node)
         : description{node["Description"].as<std::string>()}, operations{node["Operations"]} {}
 
+    static YAML::Node build(YAML::Node operations) {
+        YAML::Node config = YAML::Load(R"(
+          SchemaVersion: 2018-07-01
+          Actors:
+          - Name: CrudActor
+            Type: CrudActor
+            Database: mydb
+            RetryStrategy:
+              ThrowOnFailure: true
+            Phases:
+            - Repeat: 1
+              Collection: test
+          )");
+          config["Actors"][0]["Phases"][0]["Operations"] = operations;
+          return config;
+    }
+
     Result run() const {
         Result out;
+        auto config = build(operations);
+        try {
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+        } catch (const std::exception& e) {
+            auto diagInfo = boost::diagnostic_information(e);
+            INFO(description << "CAUGHT " << diagInfo);
+            FAIL(diagInfo);
+        }
         return out;
     }
 
