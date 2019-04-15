@@ -26,10 +26,10 @@
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
 
+#include <testlib/ActorHelper.hpp>
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
 #include <testlib/yamlTest.hpp>
-#include <testlib/ActorHelper.hpp>
 
 
 namespace genny::testing {
@@ -40,17 +40,19 @@ class CrudActorResult : public Result {};
 struct CrudActorTestCase {
     using Result = CrudActorResult;
 
-    enum class RunMode {
-        kNormal,
-        kExpectedSetupException,
-        kExpectedRuntimeException
-    };
+    enum class RunMode { kNormal, kExpectedSetupException, kExpectedRuntimeException };
 
     static RunMode convertRunMode(YAML::Node tcase) {
-        if(tcase["OutcomeData"]) { return RunMode::kNormal; }
-        if(tcase["OutcomeCounts"]) { return RunMode::kNormal; }
-        if(tcase["ExpectedCollectionsExist"]){ return RunMode::kNormal; }
-        if(tcase["Error"]) {
+        if (tcase["OutcomeData"]) {
+            return RunMode::kNormal;
+        }
+        if (tcase["OutcomeCounts"]) {
+            return RunMode::kNormal;
+        }
+        if (tcase["ExpectedCollectionsExist"]) {
+            return RunMode::kNormal;
+        }
+        if (tcase["Error"]) {
             auto error = tcase["Error"].as<std::string>();
             if (error == "InvalidSyntax") {
                 return RunMode::kExpectedSetupException;
@@ -63,7 +65,8 @@ struct CrudActorTestCase {
     explicit CrudActorTestCase() = default;
 
     explicit CrudActorTestCase(YAML::Node node)
-        : description{node["Description"].as<std::string>()}, operations{node["Operations"]},
+        : description{node["Description"].as<std::string>()},
+          operations{node["Operations"]},
           runMode{convertRunMode(node)},
           error{node["Error"]} {}
 
@@ -80,8 +83,8 @@ struct CrudActorTestCase {
             - Repeat: 1
               Collection: test
           )");
-          config["Actors"][0]["Phases"][0]["Operations"] = operations;
-          return config;
+        config["Actors"][0]["Phases"][0]["Operations"] = operations;
+        return config;
     }
 
     void doRun() const {
@@ -94,11 +97,13 @@ struct CrudActorTestCase {
         Result out;
         try {
             doRun();
-            if (runMode == RunMode::kExpectedSetupException || runMode == RunMode::kExpectedRuntimeException) {
+            if (runMode == RunMode::kExpectedSetupException ||
+                runMode == RunMode::kExpectedRuntimeException) {
                 out.expectedExceptionButNotThrown();
             }
         } catch (const std::exception& e) {
-            if (runMode == RunMode::kExpectedSetupException || runMode == RunMode::kExpectedRuntimeException) {
+            if (runMode == RunMode::kExpectedSetupException ||
+                runMode == RunMode::kExpectedRuntimeException) {
                 auto actual = boost::trim_copy(std::string{e.what()});
                 auto expect = boost::trim_copy(error.as<std::string>());
                 out.expectEqual(actual, expect);
@@ -107,7 +112,6 @@ struct CrudActorTestCase {
                 INFO(description << "CAUGHT " << diagInfo);
                 FAIL(diagInfo);
             }
-
         }
         return out;
     }
