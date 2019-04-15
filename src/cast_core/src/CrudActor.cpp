@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <memory>
+#include <utility>
 
 #include <yaml-cpp/yaml.h>
 
@@ -23,6 +24,8 @@
 #include <mongocxx/collection.hpp>
 
 #include <boost/log/trivial.hpp>
+#include <boost/throw_exception.hpp>
+
 #include <bsoncxx/json.hpp>
 
 #include <gennylib/Cast.hpp>
@@ -229,7 +232,7 @@ auto createGenerator(YAML::Node source,
     if (!doc) {
         std::stringstream msg;
         msg << "'" << opType << "' expects a '" << key << "' field.";
-        throw InvalidConfigurationException(msg.str());
+        BOOST_THROW_EXCEPTION(InvalidConfigurationException(msg.str()));
     }
     return context.createDocumentGenerator(id, doc);
 }
@@ -244,7 +247,7 @@ struct InsertOneOperation : public WriteOperation {
                        PhaseContext& context,
                        ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _docExpr{createGenerator(opNode, "insertOne", "Document", context, id)} {
 
@@ -259,8 +262,14 @@ struct InsertOneOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto document = _docExpr();
         auto ctx = _operation.start();
+        auto size = document.view().length();
+
         (_onSession) ? _collection.insert_one(session, std::move(document), _options)
                      : _collection.insert_one(std::move(document), _options);
+
+        ctx.addDocuments(1);
+        ctx.addBytes(size);
+
         ctx.success();
     }
 
@@ -281,7 +290,7 @@ struct UpdateOneOperation : public WriteOperation {
                        PhaseContext& context,
                        ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "updateOne", "Filter", context, id)},
           _updateExpr{createGenerator(opNode, "updateOne", "Update", context, id)} {}
@@ -297,9 +306,12 @@ struct UpdateOneOperation : public WriteOperation {
         auto filter = _filterExpr();
         auto update = _updateExpr();
         auto ctx = _operation.start();
-        (_onSession)
+        auto result = (_onSession)
             ? _collection.update_one(session, std::move(filter), std::move(update), _options)
             : _collection.update_one(std::move(filter), std::move(update), _options);
+        if (result) {
+            ctx.addDocuments(result->modified_count());
+        }
         ctx.success();
     }
 
@@ -320,7 +332,7 @@ struct UpdateManyOperation : public WriteOperation {
                         PhaseContext& context,
                         ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "updateMany", "Filter", context, id)},
           _updateExpr{createGenerator(opNode, "updateMany", "Update", context, id)} {}
@@ -335,9 +347,12 @@ struct UpdateManyOperation : public WriteOperation {
         auto filter = _filterExpr();
         auto update = _updateExpr();
         auto ctx = _operation.start();
-        (_onSession)
+        auto result = (_onSession)
             ? _collection.update_many(session, std::move(filter), std::move(update), _options)
             : _collection.update_many(std::move(filter), std::move(update), _options);
+        if (result) {
+            ctx.addDocuments(result->modified_count());
+        }
         ctx.success();
     }
 
@@ -358,7 +373,7 @@ struct DeleteOneOperation : public WriteOperation {
                        PhaseContext& context,
                        ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr(createGenerator(opNode, "deleteOne", "Filter", context, id)) {}
     // TODO: parse delete options.
@@ -371,8 +386,11 @@ struct DeleteOneOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
-                     : _collection.delete_one(std::move(filter), _options);
+        auto result = (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
+                                   : _collection.delete_one(std::move(filter), _options);
+        if (result) {
+            ctx.addDocuments(result->deleted_count());
+        }
         ctx.success();
     }
 
@@ -392,7 +410,7 @@ struct DeleteManyOperation : public WriteOperation {
                         PhaseContext& context,
                         ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "deleteMany", "Filter", context, id)} {}
     // TODO: parse delete options.
@@ -405,8 +423,11 @@ struct DeleteManyOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
-                     : _collection.delete_many(std::move(filter), _options);
+        auto results = (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
+                                    : _collection.delete_many(std::move(filter), _options);
+        if (results) {
+            ctx.addDocuments(results->deleted_count());
+        }
         ctx.success();
     }
 
@@ -426,7 +447,7 @@ struct ReplaceOneOperation : public WriteOperation {
                         PhaseContext& context,
                         ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "replaceOne", "Filter", context, id)},
           _replacementExpr{createGenerator(opNode, "replaceOne", "Replacement", context, id)} {}
@@ -442,10 +463,18 @@ struct ReplaceOneOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto replacement = _replacementExpr();
+        auto size = replacement.view().length();
+
         auto ctx = _operation.start();
-        (_onSession)
+        auto result = (_onSession)
             ? _collection.replace_one(session, std::move(filter), std::move(replacement), _options)
             : _collection.replace_one(std::move(filter), std::move(replacement), _options);
+
+        if (result) {
+            ctx.addDocuments(result->modified_count());
+        }
+        ctx.addBytes(size);
+
         ctx.success();
     }
 
@@ -506,8 +535,8 @@ struct BulkWriteOperation : public BaseOperation {
         : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
         auto writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.IsSequence()) {
-            throw InvalidConfigurationException(
-                "'bulkWrite' requires a 'WriteOperations' node of sequence type.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "'bulkWrite' requires a 'WriteOperations' node of sequence type."));
         }
         for (auto&& writeOp : writeOpsYaml) {
             createOps(writeOp, context, id);
@@ -521,8 +550,8 @@ struct BulkWriteOperation : public BaseOperation {
         auto writeCommand = writeOp["WriteCommand"].as<std::string>();
         auto writeOpConstructor = bulkWriteConstructors.find(writeCommand);
         if (writeOpConstructor == bulkWriteConstructors.end()) {
-            throw InvalidConfigurationException("WriteCommand '" + writeCommand +
-                                                "' not supported in bulkWrite operations.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "WriteCommand '" + writeCommand + "' not supported in bulkWrite operations."));
         }
         auto createWriteOp = writeOpConstructor->second;
         _writeOps.push_back(
@@ -538,6 +567,16 @@ struct BulkWriteOperation : public BaseOperation {
         }
         auto ctx = _operation.start();
         auto result = bulk.execute();
+
+        size_t docs = 0;
+        if (result) {
+            docs += result->modified_count();
+            docs += result->deleted_count();
+            docs += result->inserted_count();
+            docs += result->upserted_count();
+            ctx.addDocuments(docs);
+        }
+
         ctx.success();
     }
 
@@ -567,7 +606,7 @@ struct CountDocumentsOperation : public BaseOperation {
                             PhaseContext& context,
                             ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "Count", "Filter", context, id)} {
         if (opNode["Options"]) {
@@ -578,8 +617,10 @@ struct CountDocumentsOperation : public BaseOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
-        (_onSession) ? _collection.count_documents(session, std::move(filter), _options)
-                     : _collection.count_documents(std::move(filter), _options);
+        auto count = (_onSession)
+            ? _collection.count_documents(session, std::move(filter), _options)
+            : _collection.count_documents(std::move(filter), _options);
+        ctx.addDocuments(count);
         ctx.success();
     }
 
@@ -600,7 +641,7 @@ struct FindOperation : public BaseOperation {
                   PhaseContext& context,
                   ActorId id)
         : _onSession{onSession},
-          _collection{collection},
+          _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "Find", "Filter", context, id)} {}
     // TODO: parse Find Options
@@ -643,11 +684,11 @@ struct InsertManyOperation : public BaseOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
         auto documents = opNode["Documents"];
         if (!documents && !documents.IsSequence()) {
-            throw InvalidConfigurationException(
-                "'insertMany' expects a 'Documents' field of sequence type.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "'insertMany' expects a 'Documents' field of sequence type."));
         }
         for (auto&& document : documents) {
             _docExprs.push_back(context.createDocumentGenerator(id, document));
@@ -656,13 +697,22 @@ struct InsertManyOperation : public BaseOperation {
     }
 
     void run(mongocxx::client_session& session) override {
+        size_t bytes = 0;
         for (auto&& docExpr : _docExprs) {
             auto doc = docExpr();
-            _writeOps.push_back(std::move(doc));
+            bytes += doc.view().length();
+            _writeOps.emplace_back(std::move(doc));
         }
+
         auto ctx = _operation.start();
-        (_onSession) ? _collection.insert_many(session, _writeOps, _options)
-                     : _collection.insert_many(_writeOps, _options);
+
+        auto result = (_onSession) ? _collection.insert_many(session, _writeOps, _options)
+                                   : _collection.insert_many(_writeOps, _options);
+
+        ctx.addBytes(bytes);
+        if (result) {
+            ctx.addDocuments(result->inserted_count());
+        }
         ctx.success();
     }
 
@@ -744,22 +794,16 @@ struct CommitTransactionOperation : public BaseOperation {
  */
 
 struct SetReadConcernOperation : public BaseOperation {
-
-    static bool isValidReadConcernString(std::string_view rcString) {
-        return (rcString == "local" || rcString == "majority" || rcString == "linearizable" ||
-                rcString == "snapshot" || rcString == "available");
-    }
-
     SetReadConcernOperation(YAML::Node opNode,
                             bool onSession,
                             mongocxx::collection collection,
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : _collection{collection} {
+        : _collection{std::move(collection)} {
         if (!opNode["ReadConcern"]) {
-            throw InvalidConfigurationException(
-                "'setReadConcern' operation expects a 'ReadConcern' field.");
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "'setReadConcern' operation expects a 'ReadConcern' field."));
         }
         _readConcern = opNode["ReadConcern"].as<mongocxx::read_concern>();
     }
@@ -791,7 +835,7 @@ struct DropOperation : public BaseOperation {
                   metrics::Operation operation,
                   PhaseContext& context,
                   ActorId id)
-        : _onSession{onSession}, _collection{collection}, _operation{operation} {
+        : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
         if (!opNode)
             return;
         if (opNode["Options"] && opNode["Options"]["WriteConcern"]) {
@@ -858,8 +902,8 @@ struct CrudActor::PhaseConfig {
             // Grab the appropriate Operation struct defined by 'OperationName'.
             auto op = opConstructors.find(opName);
             if (op == opConstructors.end()) {
-                throw InvalidConfigurationException("Operation '" + opName +
-                                                    "' not supported in Crud Actor.");
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "Operation '" + opName + "' not supported in Crud Actor."));
             }
             auto createOperation = op->second;
             return createOperation(yamlCommand,
