@@ -33,13 +33,44 @@ namespace genny::testing {
 class CrudActorResult : public Result {};
 
 
+// lol
+// https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+
 struct CrudActorTestCase {
     using Result = CrudActorResult;
+
+    enum class RunMode {
+        kNormal,
+        kExpectedSetupException,
+        kExpectedRuntimeException
+    };
+
+    static RunMode convertRunMode(YAML::Node tcase) {
+        if(tcase["OutcomeData"]) { return RunMode::kNormal; }
+        if(tcase["OutcomeCounts"]) { return RunMode::kNormal; }
+        if(tcase["ExpectedCollectionsExist"]){ return RunMode::kNormal; }
+        if(tcase["Error"]) {
+            auto error = tcase["Error"].as<std::string>();
+            if (error == "InvalidSyntax") {
+                return RunMode::kExpectedSetupException;
+            }
+            return RunMode::kExpectedRuntimeException;
+        }
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid test-case"));
+    }
 
     explicit CrudActorTestCase() = default;
 
     explicit CrudActorTestCase(YAML::Node node)
-        : description{node["Description"].as<std::string>()}, operations{node["Operations"]} {}
+        : description{node["Description"].as<std::string>()}, operations{node["Operations"]},
+          runMode{convertRunMode(node)},
+          error{node["Error"]} {}
 
     static YAML::Node build(YAML::Node operations) {
         YAML::Node config = YAML::Load(R"(
@@ -58,20 +89,38 @@ struct CrudActorTestCase {
           return config;
     }
 
+    void doRun() const {
+        auto config = build(operations);
+        genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+    }
+
     Result run() const {
         Result out;
-        auto config = build(operations);
         try {
-            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
-            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            doRun();
+            if (runMode == RunMode::kExpectedSetupException || runMode == RunMode::kExpectedRuntimeException) {
+                out.expectedExceptionButNotThrown();
+            }
         } catch (const std::exception& e) {
-            auto diagInfo = boost::diagnostic_information(e);
-            INFO(description << "CAUGHT " << diagInfo);
-            FAIL(diagInfo);
+            if (runMode == RunMode::kExpectedSetupException || runMode == RunMode::kExpectedRuntimeException) {
+                std::string actual = std::string{e.what()};
+                rtrim(actual);
+                std::string expect = error.as<std::string>();
+                rtrim(expect);
+                out.expectEqual(actual, expect);
+            } else {
+                auto diagInfo = boost::diagnostic_information(e);
+                INFO(description << "CAUGHT " << diagInfo);
+                FAIL(diagInfo);
+            }
+
         }
         return out;
     }
 
+    YAML::Node error;
+    RunMode runMode;
     std::string description;
     YAML::Node operations;
 };
@@ -81,7 +130,7 @@ std::ostream& operator<<(std::ostream& out, const std::vector<CrudActorResult>& 
     for (auto&& result : results) {
         out << "- Test Case" << std::endl;
         for (auto&& [expect, actual] : result.expectedVsActual()) {
-            out << "    - " << actual << std::endl;
+            out << "    - [" << expect << "] != [" << actual << "]" << std::endl;
         }
     }
     return out;

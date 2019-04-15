@@ -173,13 +173,13 @@ Tests:
             WriteConcern:
               Timeout: 3000 milliseconds
               Journal: false
-    Error: InvalidSyntax
+    Error: |
+      yaml-cpp: error at line 174, column 15: bad conversion
 
   - Description: The 'test' collection is dropped with write concern majority.
     Operations:
-      - Repeat: 1
-        Collection: test
-        Operation:
-          OperationName: drop
+      - OperationName: drop
+        OperationCommand:
+          Collection: test
     ExpectedCollectionsExist:
       test: false
