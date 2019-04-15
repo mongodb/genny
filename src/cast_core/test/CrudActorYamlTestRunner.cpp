@@ -23,6 +23,7 @@
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types.hpp>
 
+#include <mongocxx/client.hpp>
 #include <mongocxx/stdx.hpp>
 #include <mongocxx/uri.hpp>
 
@@ -68,7 +69,18 @@ struct CrudActorTestCase {
         : description{node["Description"].as<std::string>()},
           operations{node["Operations"]},
           runMode{convertRunMode(node)},
-          error{node["Error"]} {}
+          error{node["Error"]},
+          tcase{node} {}
+
+    static void assertAfterState(mongocxx::pool::entry& client, YAML::Node tcase, Result& result) {
+        if (auto ocd = tcase["OutcomeData"]; ocd) {
+            assertOutcomeData(client, ocd, result);
+        }
+    }
+
+    static void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata, Result& result) {
+        BOOST_LOG_TRIVIAL(info) << "Asserting outcome data";
+    }
 
     static YAML::Node build(YAML::Node operations) {
         YAML::Node config = YAML::Load(R"(
@@ -87,19 +99,19 @@ struct CrudActorTestCase {
         return config;
     }
 
-    void doRun() const {
-        auto config = build(operations);
-        genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
-        ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-    }
-
     Result run() const {
         Result out;
         try {
-            doRun();
+            auto config = build(operations);
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+            auto client = ah.client();
+
             if (runMode == RunMode::kExpectedSetupException ||
                 runMode == RunMode::kExpectedRuntimeException) {
                 out.expectedExceptionButNotThrown();
+            } else {
+                assertAfterState(client, tcase, out);
             }
         } catch (const std::exception& e) {
             if (runMode == RunMode::kExpectedSetupException ||
@@ -120,6 +132,7 @@ struct CrudActorTestCase {
     RunMode runMode;
     std::string description;
     YAML::Node operations;
+    YAML::Node tcase;
 };
 
 std::ostream& operator<<(std::ostream& out, const std::vector<CrudActorResult>& results) {
