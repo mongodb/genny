@@ -14,6 +14,7 @@
 #include <testlib/ActorHelper.hpp>
 #include <testlib/findRepoRoot.hpp>
 #include <testlib/helpers.hpp>
+#include <testlib/yamlTest.hpp>
 #include <testlib/yamlToBson.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
@@ -22,69 +23,27 @@
 namespace genny {
 
 namespace {
-
 genny::DefaultRandom rng;
-
-std::string toString(const std::string& str) {
-    return str;
-}
-
-std::string toString(const bsoncxx::document::view_or_value& t) {
-    return bsoncxx::to_json(t, bsoncxx::ExtendedJsonMode::k_canonical);
-}
-
-std::string toString(const YAML::Node& node) {
-    YAML::Emitter out;
-    out << node;
-    return std::string{out.c_str()};
-}
-
 }  // namespace
 
 
-class YamlTests;
-struct YamlTestCase;
-
-
-class Result {
+class ValGenTestCaseResult : public genny::testing::Result {
 public:
-    explicit Result(const YamlTestCase& testCase) : _testCase{testCase} {}
-
-    bool pass() const {
-        return _expectedVsActual.empty() && !_expectedExceptionButNotThrown;
-    }
-
-    template <typename E, typename A>
-    void expectEqual(E expect, A actual) {
-        if (expect != actual) {
-            _expectedVsActual.emplace_back(toString(expect), toString(actual));
-        }
-    }
-
-    void expectedExceptionButNotThrown() {
-        _expectedExceptionButNotThrown = true;
-    }
-
-    const std::vector<std::pair<std::string, std::string>>& expectedVsActual() const {
-        return _expectedVsActual;
-    }
-
-    const YamlTestCase& testCase() const {
+    explicit ValGenTestCaseResult(class ValGenTestCase const* testCase) : _testCase(testCase) {}
+    auto testCase() const {
         return _testCase;
     }
 
 private:
-    const YamlTestCase& _testCase;
-    std::vector<std::pair<std::string, std::string>> _expectedVsActual;
-    bool _expectedExceptionButNotThrown = false;
+    const ValGenTestCase* _testCase;
 };
 
-
-class YamlTestCase {
+class ValGenTestCase {
 public:
-    explicit YamlTestCase() = default;
+    using Result = ValGenTestCaseResult;
+    explicit ValGenTestCase() = default;
 
-    explicit YamlTestCase(YAML::Node node)
+    explicit ValGenTestCase(YAML::Node node)
         : _wholeTest{node},
           _name{node["Name"].as<std::string>("No Name")},
           _givenTemplate{node["GivenTemplate"]},
@@ -117,8 +76,8 @@ public:
         }
     }
 
-    genny::Result run() const {
-        genny::Result out{*this};
+    ValGenTestCaseResult run() const {
+        ValGenTestCaseResult out{this};
         if (_runMode == RunMode::kExpectException) {
             try {
                 genny::DocumentGenerator(this->_givenTemplate, rng);
@@ -163,38 +122,11 @@ private:
     YAML::Node _expectedExceptionMessage;
 };
 
-
-class YamlTests {
-public:
-    explicit YamlTests() = default;
-    YamlTests(const YamlTests&) = default;
-
-    explicit YamlTests(const YAML::Node& node) {
-        for (auto&& n : node["Cases"]) {
-            _cases.push_back(std::move(n.as<genny::YamlTestCase>()));
-        }
-    }
-
-    std::vector<Result> run() const {
-        std::vector<Result> out{};
-        for (auto& tcase : _cases) {
-            auto result = tcase.run();
-            if (!result.pass()) {
-                out.push_back(std::move(result));
-            }
-        }
-        return out;
-    }
-
-private:
-    std::vector<YamlTestCase> _cases;
-};
-
-std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) {
+std::ostream& operator<<(std::ostream& out, const std::vector<ValGenTestCaseResult>& results) {
     out << std::endl;
     for (auto&& result : results) {
-        out << "- Name: " << result.testCase().name() << std::endl;
-        out << "  GivenTemplate: " << toString(result.testCase().givenTemplate()) << std::endl;
+        out << "- Name: " << result.testCase()->name() << std::endl;
+        out << "  GivenTemplate: " << toString(result.testCase()->givenTemplate()) << std::endl;
         out << "  ThenReturns: " << std::endl;
         for (auto&& [expect, actual] : result.expectedVsActual()) {
             out << "    - " << actual << std::endl;
@@ -209,51 +141,20 @@ std::ostream& operator<<(std::ostream& out, const std::vector<Result>& results) 
 namespace YAML {
 
 template <>
-struct convert<genny::YamlTests> {
-    static Node encode(const genny::YamlTests& rhs) {
+struct convert<genny::ValGenTestCase> {
+    static Node encode(genny::ValGenTestCase& rhs) {
         return {};
     }
 
-    static bool decode(const Node& node, genny::YamlTests& rhs) {
-        rhs = genny::YamlTests(node);
-        return true;
-    }
-};
-
-template <>
-struct convert<genny::YamlTestCase> {
-    static Node encode(const genny::YamlTestCase& rhs) {
-        return {};
-    }
-
-    static bool decode(const Node& node, genny::YamlTestCase& rhs) {
-        rhs = genny::YamlTestCase(node);
+    static bool decode(const Node& node, genny::ValGenTestCase& rhs) {
+        rhs = genny::ValGenTestCase(node);
         return true;
     }
 };
 
 }  // namespace YAML
 
-
-namespace {
-
 TEST_CASE("YAML Tests") {
-    try {
-        const auto file =
-            genny::findRepoRoot() + "/src/value_generators/test/DocumentGeneratorTestCases.yml";
-        const auto yaml = YAML::LoadFile(file);
-        auto tests = yaml.as<genny::YamlTests>();
-        std::vector<genny::Result> results = tests.run();
-        if (!results.empty()) {
-            std::stringstream msg;
-            msg << results;
-            WARN(msg.str());
-        }
-        REQUIRE(results.empty());
-    } catch (const std::exception& ex) {
-        WARN(ex.what());
-        throw;
-    }
+    genny::testing::runTestCaseYaml<genny::ValGenTestCase>(
+        "/src/value_generators/test/DocumentGeneratorTestCases.yml");
 }
-
-}  // namespace
