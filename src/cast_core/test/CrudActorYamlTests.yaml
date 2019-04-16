@@ -102,8 +102,8 @@ Tests:
     OutcomeData:
       - {a: 5}
     ExpectAllEvents:
-      Ordered: false
-      BypassDocumentValidation: true
+      ordered: false
+      bypassDocumentValidation: true
 
   - Description: Inserts and updates many documents in the database.
     Operations:
@@ -158,8 +158,9 @@ Tests:
       - Filter: {a: 8}
         Count: 1
     ExpectAllEvents:
-      W: majority
-      WTimeout: 6000
+      writeConcern:
+        w: majority
+        wtimeout: 6000
 
   - Description: Write concern without 'Level' field should throw.
     Operations:
@@ -175,8 +176,7 @@ Tests:
             WriteConcern:
               Timeout: 3000 milliseconds
               Journal: false
-    Error: |
-      yaml-cpp: error at line 176, column 15: bad conversion
+    Error: '.*yaml-cpp: error at line.*bad conversion$'
 
   - Description: The 'test' collection is dropped with write concern majority.
     Operations:
@@ -196,7 +196,7 @@ Tests:
     ExpectedCollectionsExist:
       test: false
     ExpectAllEvents:
-      W: majority
+      writeConcern: {w: majority}
 
   - Description: Write concern majority with timeout.
     Operations:
@@ -213,8 +213,9 @@ Tests:
               Level: majority
               Timeout: 5000 milliseconds
     ExpectAllEvents:
-      W: majority
-      WTimeout: 5000
+      writeConcern:
+        w: majority
+        wtimeout: 5000
 
   - Description: Write concern 1 with timeout and journalling true.
     Operations:
@@ -232,9 +233,10 @@ Tests:
               Timeout: 2500 milliseconds
               Journal: true
     ExpectAllEvents:
-      W: 1
-      WTimeout: 2500
-      J: true
+      writeConcern:
+        w: 1
+        wtimeout: 2500
+        j: true
 
   - Description: Write concern 0 with timeout and journalling false.
     Operations:
@@ -253,9 +255,11 @@ Tests:
               Timeout: 3000 milliseconds
               Journal: false
     ExpectAllEvents:
-      W: 0
-      WTimeout: 3000
-      J: false
+      writeConcern:
+        w: 0
+        wtimeout: 3000
+        j: false
+        ordered: true
 
   - Description: Invalid write concern level should throw.
     Operations:
@@ -270,8 +274,7 @@ Tests:
           Options:
             WriteConcern:
               Level: infinite
-    Error: |
-      yaml-cpp: error at line 272, column 15: bad conversion
+    Error: '.*yaml-cpp: error at line.*bad conversion$'
 
   - Description: Read preference is 'secondaryPreferred'.
     Operations:
@@ -282,7 +285,8 @@ Tests:
             ReadPreference:
               ReadMode: secondaryPreferred
     ExpectAllEvents:
-      ReadPreferenceMode: secondaryPreferred
+      $readPreference:
+        mode: secondaryPreferred
 
   - Description: Read preference is 'nearest' with MaxStaleness set.
     Operations:
@@ -294,8 +298,9 @@ Tests:
               ReadMode: nearest
               MaxStaleness: 100 seconds
     ExpectAllEvents:
-      ReadPreferenceMode: nearest
-      ReadPreferenceMaxStalenessSeconds: 100
+      $readPreference:
+        mode: nearest
+        maxStalenessSeconds: 100
 
   - Description: Read preference without 'ReadMode' should throw.
     Operations:
@@ -305,8 +310,7 @@ Tests:
           Options:
             ReadPreference:
               MaxStaleness: 100 seconds
-    Error: |
-      yaml-cpp: error at line 307, column 15: bad conversion
+    Error: '.*yaml-cpp: error at line.*bad conversion$'
 
   - Description: Read preference with invalid 'ReadMode' should throw.
     Operations:
@@ -316,8 +320,7 @@ Tests:
           Options:
             ReadPreference:
               ReadMode: badReadMode
-    Error: |
-      yaml-cpp: error at line 318, column 15: bad conversion
+    Error: '.*yaml-cpp: error at line.*bad conversion$'
 
   - Description: Delete a document in a collection.
     Operations:

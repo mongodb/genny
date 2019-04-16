@@ -108,55 +108,50 @@ struct CrudActorTestCase {
         return out.str();
     }
 
+    static bool isNumeric(YAML::Node node) {
+        try {
+            node.as<long>();
+            return true;
+        } catch(const std::exception& x) {}
+        return false;
+    }
+
+    // This isn't ideal. We want to assert only a subset of the keys in the ApmEvents
+    // that we receive. Doing a subsetCompare(YAML::Node, bsoncxx::document::view) is nontrivial.
+    // (Mostly fighting the compiler with yaml scalars versus the many numeric bson types.)
+    // For now just assert a subset
+
+    static void checkEvent(ApmEvent& event, YAML::Node requirements) {
+        if(auto w = requirements["writeConcern"]["w"]; w) {
+            if (isNumeric(w)) {
+                REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
+            } else {
+                REQUIRE(event.command["writeConcern"]["w"].get_utf8().value == w.as<std::string>());
+            }
+        }
+        if (auto j = requirements["writeConcern"]["j"]; j) {
+            REQUIRE(event.command["writeConcern"]["j"].get_bool().value == j.as<bool>());
+        }
+        if (auto wtimeout = requirements["writeConcern"]["wtimeout"]; wtimeout) {
+            REQUIRE(event.command["writeConcern"]["wtimeout"].get_int32() == wtimeout.as<int32_t>());
+        }
+        if (auto ordered = requirements["ordered"]; ordered) {
+            REQUIRE(event.command["ordered"].get_bool() == ordered.as<bool>());
+        }
+        if (auto bypass = requirements["bypassDocumentValidation"]; bypass) {
+            REQUIRE(event.command["bypassDocumentValidation"].get_bool() == bypass.as<bool>());
+        }
+        if(auto readPref = requirements["$readPreference"]["mode"]; readPref) {
+            REQUIRE(event.command["$readPreference"]["mode"].get_utf8().value == readPref.as<std::string>());
+        }
+        if (auto staleness = requirements["$readPreference"]["maxStalenessSeconds"]) {
+            REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"].get_int64().value == staleness.as<int64_t>());
+        }
+    }
+
     static void assertAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {
         for(auto&& event : events) {
-            // ensure requirements doesn't have keys we don't know about
-            auto toCheck = requirements.size();
-            if(auto w = requirements["W"]; w) {
-                bool isNumeric = false;
-                try {
-                    w.as<long>();
-                    isNumeric = true;
-                } catch(const std::exception& x) {}
-                if (isNumeric) {
-                    // if we can't convert to string then assume int32
-                    REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
-                } else {
-                    INFO("expect w: " << w.as<std::string>());
-                    INFO("actual w: " << event.command["writeConcern"]["w"].get_utf8().value);
-                    INFO("Event " << bsoncxx::to_json(event.command));
-                    REQUIRE(event.command["writeConcern"]["w"].get_utf8().value == w.as<std::string>());
-                }
-                --toCheck;
-            }
-            if (auto wtimeout = requirements["WTimeout"]; wtimeout) {
-                INFO("WTimout on " << bsoncxx::to_json(event.command));
-                REQUIRE(event.command["writeConcern"]["wtimeout"].get_int32() == wtimeout.as<int32_t>());
-                --toCheck;
-            }
-            if (auto ordered = requirements["Ordered"]; ordered) {
-                REQUIRE(event.command["ordered"].get_bool() == ordered.as<bool>());
-                --toCheck;
-            }
-            if (auto j = requirements["J"]; j) {
-                REQUIRE(event.command["writeConcern"]["j"].get_bool().value == j.as<bool>());
-                --toCheck;
-            }
-            if (auto bypass = requirements["BypassDocumentValidation"]; bypass) {
-                REQUIRE(event.command["bypassDocumentValidation"].get_bool() == bypass.as<bool>());
-                --toCheck;
-            }
-            if(auto readPref = requirements["ReadPreferenceMode"]; readPref) {
-                REQUIRE(event.command["$readPreference"]["mode"].get_utf8().value == readPref.as<std::string>());
-                --toCheck;
-            }
-            if (auto staleness = requirements["ReadPreferenceMaxStalenessSeconds"]) {
-                REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"].get_int64().value == staleness.as<int64_t>());
-                --toCheck;
-            }
-            if (toCheck != 0) {
-                FAIL("Only a limited number of fields is supported to assert in ExpectAllEvents");
-            }
+            checkEvent(event, requirements);
         }
     }
 
@@ -228,7 +223,7 @@ struct CrudActorTestCase {
                 runMode == RunMode::kExpectedRuntimeException) {
                 auto actual = boost::trim_copy(std::string{e.what()});
                 auto expect = boost::trim_copy(error.as<std::string>());
-                REQUIRE(actual == expect);
+                REQUIRE_THAT(actual, Catch::Matches(expect));
             } else {
                 auto diagInfo = boost::diagnostic_information(e);
                 INFO(description << "CAUGHT " << diagInfo);
