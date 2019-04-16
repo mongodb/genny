@@ -26,7 +26,7 @@ namespace genny::testing {
 class ApmEvent {
 public:
     ApmEvent(const std::string& command_name_, const bsoncxx::document::value& document_)
-            : command_name(command_name_), value(document_), command(value.view()) {}
+        : command_name(command_name_), value(document_), command(value.view()) {}
 
     std::string command_name;
     bsoncxx::document::value value;

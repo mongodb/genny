@@ -18,10 +18,12 @@
 #include <string>
 #include <vector>
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include <yaml-cpp/yaml.h>
 
-#include <testlib/helpers.hpp>
 #include <testlib/findRepoRoot.hpp>
+#include <testlib/helpers.hpp>
 
 namespace genny::testing::v1 {
 
