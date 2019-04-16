@@ -206,7 +206,31 @@ namespace {
 
 using namespace genny;
 
+enum class ThrowMode {
+    kSwallow,
+    kRethrow,
+};
+
+ThrowMode decodeThrowMode(YAML::Node) {
+    // TODO: read from existing RetryStrategy config
+    return ThrowMode::kSwallow;
+}
+
 struct BaseOperation {
+    ThrowMode throwMode;
+
+    explicit BaseOperation(YAML::Node operation) : throwMode{decodeThrowMode(operation)} {}
+
+    virtual void run(mongocxx::client_session& session) {
+        try {
+            this->doRun(session);
+        } catch (const mongocxx::exception& x) {
+            if (throwMode == ThrowMode::kRethrow) {
+                BOOST_THROW_EXCEPTION(MongoException(x.what()));
+            }
+        }
+    }
+
     virtual void doRun(mongocxx::client_session& session) = 0;
     virtual ~BaseOperation() = default;
 };
@@ -215,6 +239,7 @@ using OpCallback = std::function<std::unique_ptr<BaseOperation>(
     YAML::Node, bool, mongocxx::collection, metrics::Operation, PhaseContext& context, ActorId id)>;
 
 struct WriteOperation : public BaseOperation {
+    WriteOperation(const YAML::Node& operation) : BaseOperation(operation) {}
     virtual mongocxx::model::write getModel() = 0;
 };
 
@@ -246,7 +271,8 @@ struct InsertOneOperation : public WriteOperation {
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : _onSession{onSession},
+        : WriteOperation(opNode),
+          _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
           _docExpr{createGenerator(opNode, "insertOne", "Document", context, id)} {
@@ -261,8 +287,9 @@ struct InsertOneOperation : public WriteOperation {
 
     void doRun(mongocxx::client_session& session) override {
         auto document = _docExpr();
-        auto ctx = _operation.start();
         auto size = document.view().length();
+
+        auto ctx = _operation.start();
 
         (_onSession) ? _collection.insert_one(session, std::move(document), _options)
                      : _collection.insert_one(std::move(document), _options);
@@ -289,7 +316,8 @@ struct UpdateOneOperation : public WriteOperation {
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : _onSession{onSession},
+        : WriteOperation(opNode),
+          _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "updateOne", "Filter", context, id)},
@@ -331,7 +359,8 @@ struct UpdateManyOperation : public WriteOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : _onSession{onSession},
+        : WriteOperation(opNode),
+          _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "updateMany", "Filter", context, id)},
@@ -372,7 +401,8 @@ struct DeleteOneOperation : public WriteOperation {
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : _onSession{onSession},
+        : WriteOperation(opNode),
+          _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr(createGenerator(opNode, "deleteOne", "Filter", context, id)) {}
@@ -409,7 +439,8 @@ struct DeleteManyOperation : public WriteOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : _onSession{onSession},
+        : WriteOperation(opNode),
+          _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "deleteMany", "Filter", context, id)} {}
@@ -446,7 +477,8 @@ struct ReplaceOneOperation : public WriteOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : _onSession{onSession},
+        : WriteOperation(opNode),
+          _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "replaceOne", "Filter", context, id)},
@@ -532,7 +564,10 @@ struct BulkWriteOperation : public BaseOperation {
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
+        : BaseOperation(opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation} {
         auto writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.IsSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
@@ -605,7 +640,8 @@ struct CountDocumentsOperation : public BaseOperation {
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : _onSession{onSession},
+        : BaseOperation(opNode),
+          _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "Count", "Filter", context, id)} {
@@ -640,7 +676,8 @@ struct FindOperation : public BaseOperation {
                   metrics::Operation operation,
                   PhaseContext& context,
                   ActorId id)
-        : _onSession{onSession},
+        : BaseOperation(opNode),
+          _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "Find", "Filter", context, id)} {}
@@ -684,7 +721,10 @@ struct InsertManyOperation : public BaseOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
+        : BaseOperation(opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation} {
         auto documents = opNode["Documents"];
         if (!documents && !documents.IsSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
@@ -748,7 +788,8 @@ struct StartTransactionOperation : public BaseOperation {
                               mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
-                              ActorId id) {
+                              ActorId id)
+        : BaseOperation(opNode) {
         if (!opNode.IsMap())
             return;
         if (opNode["Options"]) {
@@ -777,7 +818,8 @@ struct CommitTransactionOperation : public BaseOperation {
                                mongocxx::collection collection,
                                metrics::Operation operation,
                                PhaseContext& context,
-                               ActorId id) {}
+                               ActorId id)
+        : BaseOperation(opNode) {}
 
     void doRun(mongocxx::client_session& session) override {
         session.commit_transaction();
@@ -800,7 +842,7 @@ struct SetReadConcernOperation : public BaseOperation {
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : _collection{std::move(collection)} {
+        : BaseOperation(opNode), _collection{std::move(collection)} {
         if (!opNode["ReadConcern"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'setReadConcern' operation expects a 'ReadConcern' field."));
@@ -835,7 +877,10 @@ struct DropOperation : public BaseOperation {
                   metrics::Operation operation,
                   PhaseContext& context,
                   ActorId id)
-        : _onSession{onSession}, _collection{std::move(collection)}, _operation{operation} {
+        : BaseOperation(opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation} {
         if (!opNode)
             return;
         if (opNode["Options"] && opNode["Options"]["WriteConcern"]) {
@@ -881,16 +926,14 @@ struct CrudActor::PhaseConfig {
     mongocxx::collection collection;
     RetryStrategy::Options options;
     std::vector<std::unique_ptr<BaseOperation>> operations;
-    RetryStrategy strategy;
+    metrics::Operation metrics;
 
     PhaseConfig(PhaseContext& phaseContext,
                 const mongocxx::database& db,
                 ActorContext& actorContext,
                 ActorId id)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          strategy{actorContext.operation("Crud", id)},
-          options{phaseContext.get<RetryStrategy::Options, false>("RetryStrategy")
-                      .value_or(RetryStrategy::Options{})} {
+          metrics{actorContext.operation("Crud", id)} {
         auto addOperation = [&](YAML::Node node) {
             auto yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].as<std::string>();
@@ -922,14 +965,14 @@ struct CrudActor::PhaseConfig {
 void CrudActor::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
+            auto metricsContext = config->metrics.start();
+
             auto session = _client->start_session();
-            config->strategy.run(
-                [&](metrics::OperationContext&) {
-                    for (auto&& op : config->operations) {
-                        op->doRun(session);
-                    }
-                },
-                config->options);
+            for (auto&& op : config->operations) {
+                op->doRun(session);
+            }
+
+            metricsContext.success();
         }
     }
 }
