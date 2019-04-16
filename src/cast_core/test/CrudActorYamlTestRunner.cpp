@@ -78,6 +78,33 @@ struct CrudActorTestCase {
         if (auto ocounts = tcase["OutcomeCounts"]; ocounts) {
             assertOutcomeCounts(client, ocounts);
         }
+        if(auto expectedEvents = tcase["ExpectedEvents"]; expectedEvents) {
+            assertExpectedEvents(client, events, expectedEvents);
+        }
+    }
+
+    static std::string toString(ApmEvents& events) {
+        std::stringstream out;
+        for(auto&& event : events) {
+            out << bsoncxx::to_json(event.command) << std::endl;
+        }
+        return out.str();
+    }
+
+    static void assertExpectedEvents(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node expectedEvents) {
+        for(auto&& expectedEvent : expectedEvents) {
+            auto expect = toDocumentBson(expectedEvent);
+            // TODO: this is too strict!
+            auto it = std::find_if(events.begin(), events.end(), [&](ApmEvent& event){
+                return event.command == expect.view();
+            });
+            if (it == events.end()) {
+                FAIL("Could not find event "
+                   << "\n"
+                   << bsoncxx::to_json(expect.view())
+                   << "\n in events \n" << toString(events));
+            }
+        }
     }
 
     static void assertCount(mongocxx::pool::entry& client,
