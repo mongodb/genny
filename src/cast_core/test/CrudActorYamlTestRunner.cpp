@@ -33,154 +33,134 @@
 #include <testlib/yamlTest.hpp>
 #include <testlib/yamlToBson.hpp>
 
-
 namespace genny::testing {
 
-struct CrudActorTestCase {
+namespace {
 
-    enum class RunMode { kNormal, kExpectedSetupException, kExpectedRuntimeException };
+enum class RunMode { kNormal, kExpectedSetupException, kExpectedRuntimeException };
 
-    static RunMode convertRunMode(YAML::Node tcase) {
-        if (tcase["OutcomeData"]) {
-            return RunMode::kNormal;
-        }
-        if (tcase["OutcomeCounts"]) {
-            return RunMode::kNormal;
-        }
-        if (tcase["ExpectAllEvents"]) {
-            return RunMode::kNormal;
-        }
-        if (tcase["ExpectedCollectionsExist"]) {
-            return RunMode::kNormal;
-        }
-        if (tcase["Error"]) {
-            auto error = tcase["Error"].as<std::string>();
-            if (error == "InvalidSyntax") {
-                return RunMode::kExpectedSetupException;
-            }
-            return RunMode::kExpectedRuntimeException;
-        }
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid test-case"));
+RunMode convertRunMode(YAML::Node tcase) {
+    if (tcase["OutcomeData"]) {
+        return RunMode::kNormal;
     }
-
-    explicit CrudActorTestCase() = default;
-
-    explicit CrudActorTestCase(YAML::Node node)
-        : description{node["Description"].as<std::string>()},
-          operations{node["Operations"]},
-          runMode{convertRunMode(node)},
-          error{node["Error"]},
-          tcase{node} {}
-
-    static void assertAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
-        if (auto ocd = tcase["OutcomeData"]; ocd) {
-            assertOutcomeData(client, ocd);
-        }
-        if (auto ocounts = tcase["OutcomeCounts"]; ocounts) {
-            assertOutcomeCounts(client, ocounts);
-        }
-        if(auto requirements = tcase["ExpectAllEvents"]; requirements) {
-            assertAllEvents(client, events, requirements);
-        }
-        if (auto expectCollections = tcase["ExpectedCollectionsExist"]; expectCollections) {
-            assertExpectedCollectionsExist(client, events, expectCollections);
-        }
+    if (tcase["OutcomeCounts"]) {
+        return RunMode::kNormal;
     }
-
-    static void assertExpectedCollectionsExist(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node expectCollections) {
-        auto db = (*client)["mydb"];
-        auto haystack = db.list_collection_names();
-
-        for(auto&& kvp : expectCollections) {
-            auto needle = kvp.first.as<std::string>();
-            auto expect = kvp.second.as<bool>();
-            auto actual = std::find(haystack.begin(), haystack.end(), needle) != haystack.end();
-            INFO("Expecting collection " << needle << "to exist? " << actual);
-            REQUIRE(expect == actual);
-        }
+    if (tcase["ExpectAllEvents"]) {
+        return RunMode::kNormal;
     }
-
-    static std::string toString(ApmEvents& events) {
-        std::stringstream out;
-        for(auto&& event : events) {
-            out << bsoncxx::to_json(event.command) << std::endl;
-        }
-        return out.str();
+    if (tcase["ExpectedCollectionsExist"]) {
+        return RunMode::kNormal;
     }
-
-    static bool isNumeric(YAML::Node node) {
-        try {
-            node.as<long>();
-            return true;
-        } catch(const std::exception& x) {}
-        return false;
+    if (tcase["Error"]) {
+        auto error = tcase["Error"].as<std::string>();
+        if (error == "InvalidSyntax") {
+            return RunMode::kExpectedSetupException;
+        }
+        return RunMode::kExpectedRuntimeException;
     }
+    BOOST_THROW_EXCEPTION(std::logic_error("Invalid test-case"));
+}
 
-    // This isn't ideal. We want to assert only a subset of the keys in the ApmEvents
-    // that we receive. Doing a subsetCompare(YAML::Node, bsoncxx::document::view) is nontrivial.
-    // (Mostly fighting the compiler with yaml scalars versus the many numeric bson types.)
-    // For now just assert a subset
 
-    static void checkEvent(ApmEvent& event, YAML::Node requirements) {
-        if(auto w = requirements["writeConcern"]["w"]; w) {
-            if (isNumeric(w)) {
-                REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
-            } else {
-                REQUIRE(event.command["writeConcern"]["w"].get_utf8().value == w.as<std::string>());
-            }
-        }
-        if (auto j = requirements["writeConcern"]["j"]; j) {
-            REQUIRE(event.command["writeConcern"]["j"].get_bool().value == j.as<bool>());
-        }
-        if (auto wtimeout = requirements["writeConcern"]["wtimeout"]; wtimeout) {
-            REQUIRE(event.command["writeConcern"]["wtimeout"].get_int32() == wtimeout.as<int32_t>());
-        }
-        if (auto ordered = requirements["ordered"]; ordered) {
-            REQUIRE(event.command["ordered"].get_bool() == ordered.as<bool>());
-        }
-        if (auto bypass = requirements["bypassDocumentValidation"]; bypass) {
-            REQUIRE(event.command["bypassDocumentValidation"].get_bool() == bypass.as<bool>());
-        }
-        if(auto readPref = requirements["$readPreference"]["mode"]; readPref) {
-            REQUIRE(event.command["$readPreference"]["mode"].get_utf8().value == readPref.as<std::string>());
-        }
-        if (auto staleness = requirements["$readPreference"]["maxStalenessSeconds"]) {
-            REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"].get_int64().value == staleness.as<int64_t>());
+void assertExpectedCollectionsExist(mongocxx::pool::entry& client,
+                                    ApmEvents& events,
+                                    YAML::Node expectCollections) {
+    auto db = (*client)["mydb"];
+    auto haystack = db.list_collection_names();
+
+    for (auto&& kvp : expectCollections) {
+        auto needle = kvp.first.as<std::string>();
+        auto expect = kvp.second.as<bool>();
+        auto actual = std::find(haystack.begin(), haystack.end(), needle) != haystack.end();
+        INFO("Expecting collection " << needle << "to exist? " << actual);
+        REQUIRE(expect == actual);
+    }
+}
+
+std::string toString(ApmEvents& events) {
+    std::stringstream out;
+    for (auto&& event : events) {
+        out << bsoncxx::to_json(event.command) << std::endl;
+    }
+    return out.str();
+}
+
+bool isNumeric(YAML::Node node) {
+    try {
+        node.as<long>();
+        return true;
+    } catch (const std::exception& x) {
+    }
+    return false;
+}
+
+// This isn't ideal. We want to assert only a subset of the keys in the ApmEvents
+// that we receive. Doing a subsetCompare(YAML::Node, bsoncxx::document::view) is nontrivial.
+// (Mostly fighting the compiler with yaml scalars versus the many numeric bson types.)
+// For now just assert a subset
+void checkEvent(ApmEvent& event, YAML::Node requirements) {
+    if (auto w = requirements["writeConcern"]["w"]; w) {
+        if (isNumeric(w)) {
+            REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
+        } else {
+            REQUIRE(event.command["writeConcern"]["w"].get_utf8().value == w.as<std::string>());
         }
     }
-
-    static void assertAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {
-        for(auto&& event : events) {
-            checkEvent(event, requirements);
-        }
+    if (auto j = requirements["writeConcern"]["j"]; j) {
+        REQUIRE(event.command["writeConcern"]["j"].get_bool().value == j.as<bool>());
     }
-
-    static void assertCount(mongocxx::pool::entry& client,
-                            YAML::Node filterYaml,
-                            long expected = 1,
-                            std::string db = "mydb",
-                            std::string coll = "test") {
-        auto filter = genny::testing::toDocumentBson(filterYaml);
-        INFO("Requiring " << expected << " document" << (expected == 1 ? "" : "s") << " in " << db
-                          << "." << coll << " matching " << bsoncxx::to_json(filter.view()));
-        long long actual = (*client)[db][coll].count_documents(filter.view());
-        REQUIRE(actual == expected);
+    if (auto wtimeout = requirements["writeConcern"]["wtimeout"]; wtimeout) {
+        REQUIRE(event.command["writeConcern"]["wtimeout"].get_int32() == wtimeout.as<int32_t>());
     }
-
-    static void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata) {
-        for (auto&& filterYaml : ocdata) {
-            assertCount(client, filterYaml);
-        }
+    if (auto ordered = requirements["ordered"]; ordered) {
+        REQUIRE(event.command["ordered"].get_bool() == ordered.as<bool>());
     }
-
-    static void assertOutcomeCounts(mongocxx::pool::entry& client, YAML::Node ocounts) {
-        for (auto&& countAssertion : ocounts) {
-            assertCount(client, countAssertion["Filter"], countAssertion["Count"].as<long>());
-        }
+    if (auto bypass = requirements["bypassDocumentValidation"]; bypass) {
+        REQUIRE(event.command["bypassDocumentValidation"].get_bool() == bypass.as<bool>());
     }
+    if (auto readPref = requirements["$readPreference"]["mode"]; readPref) {
+        REQUIRE(event.command["$readPreference"]["mode"].get_utf8().value ==
+                readPref.as<std::string>());
+    }
+    if (auto staleness = requirements["$readPreference"]["maxStalenessSeconds"]) {
+        REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"].get_int64().value ==
+                staleness.as<int64_t>());
+    }
+}
 
-    static YAML::Node build(YAML::Node operations) {
-        YAML::Node config = YAML::Load(R"(
+void assertAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {
+    for (auto&& event : events) {
+        checkEvent(event, requirements);
+    }
+}
+
+void assertCount(mongocxx::pool::entry& client,
+                 YAML::Node filterYaml,
+                 long expected = 1,
+                 std::string db = "mydb",
+                 std::string coll = "test") {
+    auto filter = genny::testing::toDocumentBson(filterYaml);
+    INFO("Requiring " << expected << " document" << (expected == 1 ? "" : "s") << " in " << db
+                      << "." << coll << " matching " << bsoncxx::to_json(filter.view()));
+    long long actual = (*client)[db][coll].count_documents(filter.view());
+    REQUIRE(actual == expected);
+}
+
+void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata) {
+    for (auto&& filterYaml : ocdata) {
+        assertCount(client, filterYaml);
+    }
+}
+
+void assertOutcomeCounts(mongocxx::pool::entry& client, YAML::Node ocounts) {
+    for (auto&& countAssertion : ocounts) {
+        assertCount(client, countAssertion["Filter"], countAssertion["Count"].as<long>());
+    }
+}
+
+YAML::Node build(YAML::Node operations) {
+    YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01
           Actors:
           - Name: CrudActor
@@ -192,9 +172,37 @@ struct CrudActorTestCase {
             - Repeat: 1
               Collection: test
           )");
-        config["Actors"][0]["Phases"][0]["Operations"] = operations;
-        return config;
+    config["Actors"][0]["Phases"][0]["Operations"] = operations;
+    return config;
+}
+
+void assertAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
+    if (auto ocd = tcase["OutcomeData"]; ocd) {
+        assertOutcomeData(client, ocd);
     }
+    if (auto ocounts = tcase["OutcomeCounts"]; ocounts) {
+        assertOutcomeCounts(client, ocounts);
+    }
+    if (auto requirements = tcase["ExpectAllEvents"]; requirements) {
+        assertAllEvents(client, events, requirements);
+    }
+    if (auto expectCollections = tcase["ExpectedCollectionsExist"]; expectCollections) {
+        assertExpectedCollectionsExist(client, events, expectCollections);
+    }
+}
+
+}  // namespace
+
+struct CrudActorTestCase {
+
+    explicit CrudActorTestCase() = default;
+
+    explicit CrudActorTestCase(YAML::Node node)
+        : description{node["Description"].as<std::string>()},
+          operations{node["Operations"]},
+          runMode{convertRunMode(node)},
+          error{node["Error"]},
+          tcase{node} {}
 
     void doRun() const {
         try {
@@ -202,7 +210,8 @@ struct CrudActorTestCase {
             auto apmCallback = makeApmCallback(events);
 
             auto config = build(operations);
-            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+            genny::ActorHelper ah(
+                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             auto client = ah.client();
             dropAllDatabases(client);
             events.clear();
@@ -240,7 +249,7 @@ struct CrudActorTestCase {
 
 
     YAML::Node error;
-    RunMode runMode;
+    RunMode runMode = RunMode::kNormal;
     std::string description;
     YAML::Node operations;
     YAML::Node tcase;
