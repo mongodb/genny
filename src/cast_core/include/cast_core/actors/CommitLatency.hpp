@@ -21,7 +21,6 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 #include <value_generators/DefaultRandom.hpp>
 
@@ -45,7 +44,6 @@ public:
     void run() override;
 
 private:
-    RetryStrategy _strategy;
     mongocxx::pool::entry _client;
     genny::DefaultRandom& _rng;
 

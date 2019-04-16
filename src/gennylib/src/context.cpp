@@ -140,8 +140,8 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
             phase["Phase"].as<PhaseRangeSpec>(PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
         for (int rangeIndex = configuredRange.start; rangeIndex <= configuredRange.end;
              rangeIndex++) {
-            auto [it, success] =
-                out.try_emplace(rangeIndex, std::make_unique<PhaseContext>(phase, *actorContext));
+            auto [it, success] = out.try_emplace(
+                rangeIndex, std::make_unique<PhaseContext>(phase, lastPhaseNumber, *actorContext));
             if (!success) {
                 std::stringstream msg;
                 msg << "Duplicate phase " << rangeIndex;
