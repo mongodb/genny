@@ -271,3 +271,17 @@ Tests:
               ReadMode: secondaryPreferred
     ExpectAllEvents:
       ReadPreferenceMode: secondaryPreferred
+
+  - Description: Read preference is 'nearest' with MaxStaleness set.
+    Operations:
+      - OperationName: countDocuments
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            ReadPreference:
+              ReadMode: nearest
+              MaxStaleness: 100 seconds
+    ExpectAllEvents:
+      ReadPreferenceMode: nearest
+      ReadPreferenceMaxStalenessSeconds: 100
+

@@ -150,6 +150,10 @@ struct CrudActorTestCase {
                 REQUIRE(event.command["$readPreference"]["mode"].get_utf8().value == readPref.as<std::string>());
                 --toCheck;
             }
+            if (auto staleness = requirements["ReadPreferenceMaxStalenessSeconds"]) {
+                REQUIRE(event.command["$readPreference"]["maxStalenessSeconds"].get_int64().value == staleness.as<int64_t>());
+                --toCheck;
+            }
             if (toCheck != 0) {
                 FAIL("Only a limited number of fields is supported to assert in ExpectAllEvents");
             }
