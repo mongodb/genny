@@ -186,6 +186,18 @@ Tests:
     ExpectedCollectionsExist:
       test: false
 
+  - Description: The 'test' collection is dropped with write concern majority.
+    Operations:
+      - OperationName: drop
+        OperationCommand:
+          Options:
+            WriteConcern:
+              Level: majority
+    ExpectedCollectionsExist:
+      test: false
+    ExpectAllEvents:
+      W: majority
+
   - Description: Write concern majority with timeout.
     Operations:
       - OperationName: bulkWrite
@@ -259,7 +271,7 @@ Tests:
             WriteConcern:
               Level: infinite
     Error: |
-      yaml-cpp: error at line 260, column 15: bad conversion
+      yaml-cpp: error at line 272, column 15: bad conversion
 
   - Description: Read preference is 'secondaryPreferred'.
     Operations:
@@ -294,7 +306,7 @@ Tests:
             ReadPreference:
               MaxStaleness: 100 seconds
     Error: |
-      yaml-cpp: error at line 295, column 15: bad conversion
+      yaml-cpp: error at line 307, column 15: bad conversion
 
   - Description: Read preference with invalid 'ReadMode' should throw.
     Operations:
@@ -305,7 +317,7 @@ Tests:
             ReadPreference:
               ReadMode: badReadMode
     Error: |
-      yaml-cpp: error at line 306, column 15: bad conversion
+      yaml-cpp: error at line 318, column 15: bad conversion
 
   - Description: Delete a document in a collection.
     Operations:
@@ -320,3 +332,17 @@ Tests:
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 0
+
+  - Description: The correct documents are inserted.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 2
+      - Filter: {b: 1}
+        Count: 1
