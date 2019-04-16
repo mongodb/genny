@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef HEADER_C8D12C92_7C08_4B7F_9857_8B25F7258BB9_INCLUDED
+#define HEADER_C8D12C92_7C08_4B7F_9857_8B25F7258BB9_INCLUDED
+
 #include <iostream>
 
 #include <gennylib/PhaseLoop.hpp>
@@ -58,3 +61,5 @@ private:
     int64_t _iterations;
 };
 }  // namespace genny::canaries
+
+#endif    // HEADER_C8D12C92_7C08_4B7F_9857_8B25F7258BB9_INCLUDED
