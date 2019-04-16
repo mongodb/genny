@@ -101,8 +101,9 @@ Tests:
             BypassDocumentValidation: true
     OutcomeData:
       - {a: 5}
-    ExpectedEvents:
-      - {ordered: false, bypassDocumentValidation: true}
+    ExpectAllEvents:
+      Ordered: false
+      BypassDocumentValidation: true
 
   - Description: Inserts and updates many documents in the database.
     Operations:
@@ -156,8 +157,9 @@ Tests:
     OutcomeCounts:
       - Filter: {a: 8}
         Count: 1
-    ExpectedEvents:
-      - writeConcern: {w: majority, wtimeout: 6000}
+    ExpectAllEvents:
+      W: majority
+      WTimeout: 6000
 
   - Description: Write concern without 'Level' field should throw.
     Operations:
@@ -174,7 +176,7 @@ Tests:
               Timeout: 3000 milliseconds
               Journal: false
     Error: |
-      yaml-cpp: error at line 174, column 15: bad conversion
+      yaml-cpp: error at line 176, column 15: bad conversion
 
   - Description: The 'test' collection is dropped with write concern majority.
     Operations:

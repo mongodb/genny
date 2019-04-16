@@ -70,7 +70,6 @@ struct CrudActorTestCase {
           tcase{node} {}
 
     static void assertAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
-        // TODO: handle ExpectedEvents
         // TODO: handle ExpectedCollectionsExist
         if (auto ocd = tcase["OutcomeData"]; ocd) {
             assertOutcomeData(client, ocd);
@@ -78,8 +77,8 @@ struct CrudActorTestCase {
         if (auto ocounts = tcase["OutcomeCounts"]; ocounts) {
             assertOutcomeCounts(client, ocounts);
         }
-        if(auto expectedEvents = tcase["ExpectedEvents"]; expectedEvents) {
-            assertExpectedEvents(client, events, expectedEvents);
+        if(auto requirements = tcase["ExpectAllEvents"]; requirements) {
+            assertAllEvents(client, events, requirements);
         }
     }
 
@@ -91,18 +90,36 @@ struct CrudActorTestCase {
         return out.str();
     }
 
-    static void assertExpectedEvents(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node expectedEvents) {
-        for(auto&& expectedEvent : expectedEvents) {
-            auto expect = toDocumentBson(expectedEvent);
-            // TODO: this is too strict!
-            auto it = std::find_if(events.begin(), events.end(), [&](ApmEvent& event){
-                return event.command == expect.view();
-            });
-            if (it == events.end()) {
-                FAIL("Could not find event "
-                   << "\n"
-                   << bsoncxx::to_json(expect.view())
-                   << "\n in events \n" << toString(events));
+    static void assertAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {
+        for(auto&& event : events) {
+            // ensure requirements doesn't have keys we don't know about
+            auto toCheck = requirements.size();
+            if(auto w = requirements["W"]; w) {
+                if (w.as<std::string>("_") == "_") {
+                    // if we can't convert to string then assume int32
+                    REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
+                } else {
+                    INFO("expect w: " << w.as<std::string>());
+                    INFO("Event " << bsoncxx::to_json(event.command));
+                    REQUIRE(event.command["writeConcern"]["w"].get_utf8().value == w.as<std::string>());
+                }
+                --toCheck;
+            }
+            if (auto wtimeout = requirements["WTimeout"]; wtimeout) {
+                INFO("WTimout on " << bsoncxx::to_json(event.command));
+                REQUIRE(event.command["writeConcern"]["wtimeout"].get_int32() == wtimeout.as<int32_t>());
+                --toCheck;
+            }
+            if (auto ordered = requirements["Ordered"]; ordered) {
+                REQUIRE(event.command["ordered"].get_bool() == ordered.as<bool>());
+                --toCheck;
+            }
+            if (auto bypass = requirements["BypassDocumentValidation"]; bypass) {
+                REQUIRE(event.command["bypassDocumentValidation"].get_bool() == bypass.as<bool>());
+                --toCheck;
+            }
+            if (toCheck != 0) {
+                FAIL("Only a limited number of fields is supported to assert in ExpectAllEvents");
             }
         }
     }
@@ -157,13 +174,18 @@ struct CrudActorTestCase {
             genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             auto client = ah.client();
             dropAllDatabases(client);
+            events.clear();
+
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
+
+            // assert on copies so tests that themselves query don't affect the events
+            auto eventsCopy = events;
 
             if (runMode == RunMode::kExpectedSetupException ||
                 runMode == RunMode::kExpectedRuntimeException) {
                 FAIL("Expected exception " << error.as<std::string>() << " but not thrown");
             } else {
-                assertAfterState(client, events, tcase);
+                assertAfterState(client, eventsCopy, tcase);
             }
         } catch (const std::exception& e) {
             if (runMode == RunMode::kExpectedSetupException ||
