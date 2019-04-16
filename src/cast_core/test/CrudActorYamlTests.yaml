@@ -223,3 +223,40 @@ Tests:
       W: 1
       WTimeout: 2500
       J: true
+
+  - Description: Write concern 0 with timeout and journalling false.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            Ordered: true
+            WriteConcern:
+              Level: 0
+              Timeout: 3000 milliseconds
+              Journal: false
+    ExpectAllEvents:
+      W: 0
+      WTimeout: 3000
+      J: false
+
+  - Description: Invalid write concern level should throw.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            WriteConcern:
+              Level: infinite
+    Error: |
+      yaml-cpp: error at line 260, column 15: bad conversion
