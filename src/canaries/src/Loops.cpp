@@ -25,13 +25,16 @@
 
 #if defined(__APPLE__)
 
-#include "../../testlib/include/testlib/clocks.hpp"
 #include <mach/mach_time.h>
 
 #endif
 
-// Adapted from Google Benchmark
-// https://github.com/google/benchmark/blob/439d6b1c2a6da5cb6adc4c4dfc555af235722396/src/cycleclock.h#L61
+/**
+ * Use `rdtsc` as a low overhead, high resolution clock.
+ *
+ * Adapted from Google Benchmark
+ * https://github.com/google/benchmark/blob/439d6b1c2a6da5cb6adc4c4dfc555af235722396/src/cycleclock.h#L61
+ */
 inline int64_t now() {
 #if defined(__APPLE__)
     return mach_absolute_time();
@@ -42,6 +45,13 @@ inline int64_t now() {
 #endif
 }
 
+/**
+ * Do something in each iteration of the loop.
+ *
+ * @tparam WithPing Template to dictate what to do. Right now there are only
+ *                  two options, but this will be expanded over time to
+ *                  support more action types.
+ */
 template <bool WithPing>
 inline void doPingIfNeeded() {
     if constexpr (WithPing) {
@@ -59,14 +69,9 @@ genny::TimeSpec operator""_ts(unsigned long long v) {
 namespace genny::canaries {
 
 template <bool WithPing>
-int64_t Loops<WithPing>::simpleLoop(int64_t iterations) {
-    // Warm up.
-    for (int i = 0; i < iterations; i++) {
-        doPingIfNeeded<WithPing>();
-    }
-
+int64_t Loops<WithPing>::simpleLoop() {
     int64_t before = now();
-    for (int i = 0; i < iterations; i++) {
+    for (int i = 0; i < _iterations; i++) {
         doPingIfNeeded<WithPing>();
     }
     int64_t after = now();
@@ -75,13 +80,13 @@ int64_t Loops<WithPing>::simpleLoop(int64_t iterations) {
 }
 
 template <bool WithPing>
-int64_t Loops<WithPing>::phaseLoop(int64_t iterations) {
+int64_t Loops<WithPing>::phaseLoop() {
 
     Orchestrator o{};
     v1::ActorPhase<int> loop{
         o,
         std::make_unique<v1::IterationChecker>(std::nullopt,
-                                               std::make_optional(IntegerSpec(iterations)),
+                                               std::make_optional(IntegerSpec(_iterations)),
                                                false,
                                                0_ts,
                                                0_ts,
@@ -97,16 +102,15 @@ int64_t Loops<WithPing>::phaseLoop(int64_t iterations) {
 }
 
 template <bool WithPing>
-int64_t Loops<WithPing>::metricsLoop(int64_t iterations) {
+int64_t Loops<WithPing>::metricsLoop() {
 
     auto metrics = genny::metrics::Registry{};
-    metrics::Reporter{metrics};
+    metrics::Reporter reporter(metrics);
 
-    // dummyOp to measure the performance overhead of having metrics. The results are unused.
     auto dummyOp = metrics.operation("metricsLoop", WithPing ? "db.ping()" : "Nop", 0u);
 
     int64_t before = now();
-    for (int i = 0; i < iterations; i++) {
+    for (int i = 0; i < _iterations; i++) {
         auto ctx = dummyOp.start();
         doPingIfNeeded<WithPing>();
         ctx.success();
@@ -117,24 +121,23 @@ int64_t Loops<WithPing>::metricsLoop(int64_t iterations) {
 }
 
 template <bool WithPing>
-int64_t Loops<WithPing>::metricsPhaseLoop(int64_t iterations) {
+int64_t Loops<WithPing>::metricsPhaseLoop() {
 
     // Copy/pasted from phaseLoop() and metricsLoop()
     Orchestrator o{};
     v1::ActorPhase<int> loop{
-            o,
-            std::make_unique<v1::IterationChecker>(std::nullopt,
-                                                   std::make_optional(IntegerSpec(iterations)),
-                                                   false,
-                                                   0_ts,
-                                                   0_ts,
-                                                   std::nullopt),
-            1};
+        o,
+        std::make_unique<v1::IterationChecker>(std::nullopt,
+                                               std::make_optional(IntegerSpec(_iterations)),
+                                               false,
+                                               0_ts,
+                                               0_ts,
+                                               std::nullopt),
+        1};
 
     auto metrics = genny::metrics::Registry{};
     metrics::Reporter{metrics};
 
-    // dummyOp to measure the performance overhead of having metrics. The results are unused.
     auto dummyOp = metrics.operation("metricsLoop", WithPing ? "db.ping()" : "Nop", 0u);
 
     int64_t before = now();

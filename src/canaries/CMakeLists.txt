@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-project(driver VERSION 0.0.1 LANGUAGES CXX)
+project(canaries VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
         NAME    canaries

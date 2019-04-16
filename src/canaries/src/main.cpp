@@ -88,18 +88,24 @@ struct ProgramOptions {
 
 template<bool WithPing>
 void runTest(std::vector<std::string>& testNames, int64_t iterations) {
-    canaries::Loops<WithPing> loops;
+    canaries::Loops<WithPing> loops(iterations);
     for (const auto& testName : testNames) {
         int64_t time;
-        if (testName == "simple-loop")
-            time = loops.simpleLoop(iterations);
-        else if (testName == "phase-loop")
-            time = loops.phaseLoop(iterations);
-        else if (testName == "metrics-loop")
-            time = loops.metricsLoop(iterations);
-        else if (testName == "real-loop")
-            time = loops.metricsPhaseLoop(iterations);
-        else {
+
+        // Run each test twice, the first time is warm up and the results are discarded.
+        if (testName == "simple-loop") {
+            loops.simpleLoop();
+            time = loops.simpleLoop();
+        } else if (testName == "phase-loop") {
+            loops.simpleLoop();
+            time = loops.phaseLoop();
+        } else if (testName == "metrics-loop") {
+            loops.simpleLoop();
+            time = loops.metricsLoop();
+        } else if (testName == "real-loop") {
+            loops.simpleLoop();
+            time = loops.metricsPhaseLoop();
+        } else {
             std::ostringstream stm;
             stm << "Unknown test name: " << testName;
             throw InvalidConfigurationException(stm.str());

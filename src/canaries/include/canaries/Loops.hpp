@@ -20,17 +20,41 @@
 
 namespace genny::canaries {
 
+/**
+ * Class for benchmarking Genny internals. It's recommended to run
+ * these benchmarks as canaries before running Genny workloads.
+ *
+ * @tparam WithPing whether to issue db.ping() to a mongo cluster or just
+ *                  do a simple increment. The former is useful for gauging
+ *                  the overhead of Genny and the latter is useful for seeing
+ *                  how this overhead changes over time.
+ */
 template <bool WithPing>
 class Loops {
 public:
-    Loops() = default;
+    explicit Loops(int64_t iterations) : _iterations(iterations){};
 
-    int64_t simpleLoop(int64_t iterations);
+    /**
+     * Run a basic for-loop, used as the baseline.
+     */
+    int64_t simpleLoop();
 
-    int64_t phaseLoop(int64_t iterations);
+    /**
+     * Run just the phase loop.
+     */
+    int64_t phaseLoop();
 
-    int64_t metricsLoop(int64_t iterations);
+    /**
+     * Run a basic for-loop and record one timer metric per loop.
+     */
+    int64_t metricsLoop();
 
-    int64_t metricsPhaseLoop(int64_t iterations);
+    /**
+     * Run the phase loop and record one timer metric per loop.
+     */
+    int64_t metricsPhaseLoop();
+
+private:
+    int64_t _iterations;
 };
 }  // namespace genny::canaries
