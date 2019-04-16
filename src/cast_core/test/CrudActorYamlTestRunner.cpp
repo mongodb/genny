@@ -37,19 +37,14 @@ namespace genny::testing {
 
 namespace {
 
+const char* DEFAULT_DB = "mydb";
+const char* DEFAULT_COLLECTION = "test";
+
 enum class RunMode { kNormal, kExpectedSetupException, kExpectedRuntimeException };
 
 RunMode convertRunMode(YAML::Node tcase) {
-    if (tcase["OutcomeData"]) {
-        return RunMode::kNormal;
-    }
-    if (tcase["OutcomeCounts"]) {
-        return RunMode::kNormal;
-    }
-    if (tcase["ExpectAllEvents"]) {
-        return RunMode::kNormal;
-    }
-    if (tcase["ExpectedCollectionsExist"]) {
+    if (tcase["OutcomeData"] || tcase["OutcomeCounts"] || tcase["ExpectAllEvents"] ||
+        tcase["ExpectedCollectionsExist"]) {
         return RunMode::kNormal;
     }
     if (tcase["Error"]) {
@@ -66,7 +61,7 @@ RunMode convertRunMode(YAML::Node tcase) {
 void requireExpectedCollectionsExist(mongocxx::pool::entry& client,
                                      ApmEvents& events,
                                      YAML::Node expectCollections) {
-    auto db = (*client)["mydb"];
+    auto db = (*client)[DEFAULT_DB];
     auto haystack = db.list_collection_names();
 
     for (auto&& kvp : expectCollections) {
@@ -130,8 +125,8 @@ void requireAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Nod
 void requireCollectionHasCount(mongocxx::pool::entry& client,
                                YAML::Node filterYaml,
                                long expected = 1,
-                               std::string db = "mydb",
-                               std::string coll = "test") {
+                               std::string db = DEFAULT_DB,
+                               std::string coll = DEFAULT_COLLECTION) {
     auto filter = genny::testing::toDocumentBson(filterYaml);
     INFO("Requiring " << expected << " document" << (expected == 1 ? "" : "s") << " in " << db
                       << "." << coll << " matching " << bsoncxx::to_json(filter.view()));
@@ -152,19 +147,19 @@ void requireOutcomeCounts(mongocxx::pool::entry& client, YAML::Node outcomeCount
     }
 }
 
-YAML::Node build(YAML::Node operations) {
+YAML::Node createConfigurationYaml(YAML::Node operations) {
     YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01
           Actors:
           - Name: CrudActor
             Type: CrudActor
-            Database: mydb
             RetryStrategy:
               ThrowOnFailure: true
             Phases:
             - Repeat: 1
-              Collection: test
           )");
+    config["Actors"][0]["Database"] = DEFAULT_DB;
+    config["Actors"][0]["Phases"][0]["Collection"] = DEFAULT_COLLECTION;
     config["Actors"][0]["Phases"][0]["Operations"] = operations;
     return config;
 }
@@ -202,7 +197,7 @@ struct CrudActorTestCase {
             auto events = ApmEvents{};
             auto apmCallback = makeApmCallback(events);
 
-            auto config = build(operations);
+            auto config = createConfigurationYaml(operations);
             genny::ActorHelper ah(
                 config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             auto client = ah.client();
