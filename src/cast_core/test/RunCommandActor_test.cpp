@@ -60,8 +60,6 @@ TEST_CASE_METHOD(MongoTestFixture,
         Actors:
         - Name: TestRunCommand
           Type: RunCommand
-          RetryStrategy:
-            ThrowOnFailure: true
           Phases:
           - Repeat: 1
             Database: mydb

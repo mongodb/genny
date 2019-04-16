@@ -21,8 +21,9 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
+
+#include <metrics/operation.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -48,10 +49,11 @@ public:
     void run() override;
 
 private:
-    RetryStrategy _insertStrategy;
-    RetryStrategy _removeStrategy;
     mongocxx::pool::entry _client;
     DefaultRandom& _rng;
+
+    metrics::Operation _insert;
+    metrics::Operation _remove;
 
     /** @private */
     struct PhaseConfig;

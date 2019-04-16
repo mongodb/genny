@@ -21,8 +21,8 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
+#include <metrics/operation.hpp>
 #include <value_generators/DefaultRandom.hpp>
 
 namespace genny::actor {
@@ -45,12 +45,12 @@ public:
     void run() override;
 
 private:
-    RetryStrategy _strategy;
     mongocxx::pool::entry _client;
     genny::DefaultRandom& _rng;
 
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
+    metrics::Operation _insert;
 };
 
 }  // namespace genny::actor
