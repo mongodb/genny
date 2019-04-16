@@ -346,3 +346,78 @@ Tests:
         Count: 2
       - Filter: {b: 1}
         Count: 1
+
+  - Description: Insert a document into a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+    OutcomeData:
+      - {a: 1}
+
+  - Description: Insert and replace document in a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+      - OperationName: replaceOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Replacement: { newfile: test }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 0
+      - Filter: {newfile: test}
+        Count: 1
+
+  - Description: Insert and update document in a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Update: { $set: { a: 10 } }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 0
+      - Filter: {a: 10}
+        Count: 1
+
+  - Description: Insert and update multiple documents in a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: {^RandomInt: {min: 5, max: 15} } }
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: {^RandomInt: {min: 5, max: 15} } }
+      - OperationName: updateMany
+        OperationCommand:
+          Filter: { a: { $gte: 5 } }
+          Update: { $set: { a: 2 } }
+    OutcomeCounts:
+      - Filter: {a: {$gte: 5}}
+        Count: 0
+      - Filter: {a: 2}
+        Count: 2
+
+  - Description: Delete multiple documents in a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+      - OperationName: deleteMany
+        OperationCommand:
+          Filter: { a: 1 }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 0
+
+# TODO: add test for ReadConcern
+# TODO: add test for Find
+# TODO: add test for start and commit transaction.
