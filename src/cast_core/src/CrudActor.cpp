@@ -207,7 +207,7 @@ namespace {
 using namespace genny;
 
 struct BaseOperation {
-    virtual void run(mongocxx::client_session& session) = 0;
+    virtual void doRun(mongocxx::client_session& session) = 0;
     virtual ~BaseOperation() = default;
 };
 
@@ -259,7 +259,7 @@ struct InsertOneOperation : public WriteOperation {
         return mongocxx::model::insert_one{std::move(document)};
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto document = _docExpr();
         auto ctx = _operation.start();
         auto size = document.view().length();
@@ -302,7 +302,7 @@ struct UpdateOneOperation : public WriteOperation {
         return mongocxx::model::update_one{std::move(filter), std::move(update)};
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto update = _updateExpr();
         auto ctx = _operation.start();
@@ -343,7 +343,7 @@ struct UpdateManyOperation : public WriteOperation {
         return mongocxx::model::update_many{std::move(filter), std::move(update)};
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto update = _updateExpr();
         auto ctx = _operation.start();
@@ -383,7 +383,7 @@ struct DeleteOneOperation : public WriteOperation {
         return mongocxx::model::delete_one{std::move(filter)};
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
         auto result = (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
@@ -420,7 +420,7 @@ struct DeleteManyOperation : public WriteOperation {
         return mongocxx::model::delete_many{std::move(filter)};
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
         auto results = (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
@@ -460,7 +460,7 @@ struct ReplaceOneOperation : public WriteOperation {
         return mongocxx::model::replace_one{std::move(filter), std::move(replacement)};
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto replacement = _replacementExpr();
         auto size = replacement.view().length();
@@ -558,7 +558,7 @@ struct BulkWriteOperation : public BaseOperation {
             createWriteOp(writeOp, _onSession, _collection, _operation, context, id));
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto bulk = (_onSession) ? _collection.create_bulk_write(session, _options)
                                  : _collection.create_bulk_write(_options);
         for (auto&& op : _writeOps) {
@@ -614,7 +614,7 @@ struct CountDocumentsOperation : public BaseOperation {
         }
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
         auto count = (_onSession)
@@ -646,7 +646,7 @@ struct FindOperation : public BaseOperation {
           _filterExpr{createGenerator(opNode, "Find", "Filter", context, id)} {}
     // TODO: parse Find Options
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto ctx = _operation.start();
         auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
@@ -696,7 +696,7 @@ struct InsertManyOperation : public BaseOperation {
         // TODO: parse insert options.
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         size_t bytes = 0;
         for (auto&& docExpr : _docExprs) {
             auto doc = docExpr();
@@ -756,7 +756,7 @@ struct StartTransactionOperation : public BaseOperation {
         }
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         session.start_transaction(_options);
     }
 
@@ -779,7 +779,7 @@ struct CommitTransactionOperation : public BaseOperation {
                                PhaseContext& context,
                                ActorId id) {}
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         session.commit_transaction();
     }
 };
@@ -808,7 +808,7 @@ struct SetReadConcernOperation : public BaseOperation {
         _readConcern = opNode["ReadConcern"].as<mongocxx::read_concern>();
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         _collection.read_concern(_readConcern);
     }
 
@@ -843,7 +843,7 @@ struct DropOperation : public BaseOperation {
         }
     }
 
-    void run(mongocxx::client_session& session) override {
+    void doRun(mongocxx::client_session& session) override {
         auto ctx = _operation.start();
         (_onSession) ? _collection.drop(session, _wc) : _collection.drop(_wc);
         ctx.success();
@@ -926,7 +926,7 @@ void CrudActor::run() {
             config->strategy.run(
                 [&](metrics::OperationContext&) {
                     for (auto&& op : config->operations) {
-                        op->run(session);
+                        op->doRun(session);
                     }
                 },
                 config->options);
