@@ -185,3 +185,41 @@ Tests:
           Collection: test
     ExpectedCollectionsExist:
       test: false
+
+  - Description: Write concern majority with timeout.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            WriteConcern:
+              Level: majority
+              Timeout: 5000 milliseconds
+    ExpectAllEvents:
+      W: majority
+      WTimeout: 5000
+
+  - Description: Write concern 1 with timeout and journalling true.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            WriteConcern:
+              Level: 1
+              Timeout: 2500 milliseconds
+              Journal: true
+    ExpectAllEvents:
+      W: 1
+      WTimeout: 2500
+      J: true

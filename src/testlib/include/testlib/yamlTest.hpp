@@ -74,7 +74,7 @@ void runTestCaseYaml(const std::string& repoRelativePathToYaml) {
         auto tests = yaml.as<genny::testing::v1::YamlTests<TC>>();
         tests.run();
     } catch (const std::exception& ex) {
-        WARN(ex.what());
+        WARN(boost::diagnostic_information(ex));
         throw;
     }
 }

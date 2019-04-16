@@ -47,6 +47,9 @@ struct CrudActorTestCase {
         if (tcase["OutcomeCounts"]) {
             return RunMode::kNormal;
         }
+        if (tcase["ExpectAllEvents"]) {
+            return RunMode::kNormal;
+        }
         if (tcase["ExpectedCollectionsExist"]) {
             return RunMode::kNormal;
         }
@@ -110,11 +113,17 @@ struct CrudActorTestCase {
             // ensure requirements doesn't have keys we don't know about
             auto toCheck = requirements.size();
             if(auto w = requirements["W"]; w) {
-                if (w.as<std::string>("_") == "_") {
+                bool isNumeric = false;
+                try {
+                    w.as<long>();
+                    isNumeric = true;
+                } catch(const std::exception& x) {}
+                if (isNumeric) {
                     // if we can't convert to string then assume int32
                     REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
                 } else {
                     INFO("expect w: " << w.as<std::string>());
+                    INFO("actual w: " << event.command["writeConcern"]["w"].get_utf8().value);
                     INFO("Event " << bsoncxx::to_json(event.command));
                     REQUIRE(event.command["writeConcern"]["w"].get_utf8().value == w.as<std::string>());
                 }
@@ -127,6 +136,10 @@ struct CrudActorTestCase {
             }
             if (auto ordered = requirements["Ordered"]; ordered) {
                 REQUIRE(event.command["ordered"].get_bool() == ordered.as<bool>());
+                --toCheck;
+            }
+            if (auto j = requirements["J"]; j) {
+                REQUIRE(event.command["writeConcern"]["j"].get_bool().value == j.as<bool>());
                 --toCheck;
             }
             if (auto bypass = requirements["BypassDocumentValidation"]; bypass) {
