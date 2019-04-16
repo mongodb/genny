@@ -264,6 +264,43 @@ auto createGenerator(YAML::Node source,
 
 }  // namespace
 
+struct CreateIndexOperation : public BaseOperation {
+    mongocxx::collection _collection;
+    metrics::Operation _operation;
+    DocumentGenerator _keysGenerator;
+    DocumentGenerator _indexOptionsGenerator;
+    mongocxx::options::index_view _operationOptions;
+    // TODO: convert from yaml
+
+    bool _onSession;
+
+    CreateIndexOperation(YAML::Node opNode,
+                         bool onSession,
+                         mongocxx::collection collection,
+                         metrics::Operation operation,
+                         PhaseContext& context,
+                         ActorId id)
+        : BaseOperation(opNode),
+          _collection(std::move(collection)),
+          _operation{operation},
+          _onSession{onSession},
+          _keysGenerator{createGenerator(opNode, "createIndex", "Keys", context, id)},
+          _indexOptionsGenerator{
+              createGenerator(opNode, "createIndex", "IndexOptions", context, id)} {}
+
+
+    void doRun(mongocxx::client_session& session) override {
+        auto keys = _keysGenerator();
+        auto indexOptions = _indexOptionsGenerator();
+
+        auto ctx = _operation.start();
+        _onSession ? _collection.create_index(keys.view(), indexOptions.view(), _operationOptions)
+                   : _collection.create_index(
+                         session, keys.view(), indexOptions.view(), _operationOptions);
+        ctx.success();
+    }
+};
+
 struct InsertOneOperation : public WriteOperation {
     InsertOneOperation(YAML::Node opNode,
                        bool onSession,
@@ -906,6 +943,7 @@ private:
 std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
     {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
+    {"createIndex", baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
     {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
     {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
     {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
