@@ -58,6 +58,8 @@ inline void doPingIfNeeded() {
         std::cout << "PING!" << std::endl;
     } else {
         int x = 0;
+        // Ensure memory is flushed and instruct the compiler
+        // to not optimize this line out.
         asm volatile("" : : "r,m"(x++) : "memory");
     }
 }
