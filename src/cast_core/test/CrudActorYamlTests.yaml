@@ -307,3 +307,16 @@ Tests:
     Error: |
       yaml-cpp: error at line 306, column 15: bad conversion
 
+  - Description: Delete a document in a collection.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+      - OperationName: deleteOne
+        OperationCommand:
+          Filter: { a: 1 }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 0

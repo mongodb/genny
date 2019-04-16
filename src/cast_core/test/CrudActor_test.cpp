@@ -350,40 +350,6 @@ TEST_CASE_METHOD(MongoTestFixture,
         }
     }
 
-    SECTION("Delete a document in a collection.") {
-        YAML::Node config = YAML::Load(R"(
-          SchemaVersion: 2018-07-01
-          Actors:
-          - Name: CrudActor
-            Type: CrudActor
-            Database: mydb
-            RetryStrategy:
-              ThrowOnFailure: true
-            Phases:
-            - Repeat: 1
-              Collection: test
-              Operations:
-              - OperationName: deleteOne
-                OperationCommand:
-                  Filter: { a: 1 }
-          )");
-        try {
-            db.collection("test").insert_one(BasicBson::make_document(BasicBson::kvp("a", 1)));
-            auto count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 1)));
-            REQUIRE(count == 1);
-            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
-            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            count = db.collection("test").count_documents(
-                BasicBson::make_document(BasicBson::kvp("a", 1)));
-            REQUIRE(count == 0);
-        } catch (const std::exception& e) {
-            auto diagInfo = boost::diagnostic_information(e);
-            INFO("CAUGHT " << diagInfo);
-            FAIL(diagInfo);
-        }
-    }
-
     SECTION("Delete multiple documents in a collection.") {
         YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01
