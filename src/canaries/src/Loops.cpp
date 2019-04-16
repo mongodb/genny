@@ -19,6 +19,7 @@
 
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
 
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
@@ -55,7 +56,7 @@ inline int64_t now() {
 template <bool WithPing>
 inline void doPingIfNeeded() {
     if constexpr (WithPing) {
-        std::cout << "PING!" << std::endl;
+        // TODO: call db.ping();
     } else {
         int x = 0;
         // Ensure memory is flushed and instruct the compiler
