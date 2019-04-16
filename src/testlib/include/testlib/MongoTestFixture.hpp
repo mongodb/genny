@@ -20,6 +20,24 @@
 
 namespace genny::testing {
 
+// TODO: move to separate class/helper
+// This was copied from
+// github.com/mongodb/mongo-cxx-driver/blob/r3.4.0/src/mongocxx/test/client_session.cpp#L285
+class ApmEvent {
+public:
+    ApmEvent(const std::string& command_name_, const bsoncxx::document::value& document_)
+            : command_name(command_name_), value(document_), command(value.view()) {}
+
+    std::string command_name;
+    bsoncxx::document::value value;
+    bsoncxx::document::view command;
+};
+
+using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
+using ApmEvents = std::vector<ApmEvent>;
+
+ApmCallback makeApmCallback(ApmEvents& events);
+
 class MongoTestFixture {
 public:
     MongoTestFixture() : instance{mongocxx::instance::current()}, client{connectionUri()} {}
@@ -32,22 +50,6 @@ private:
     mongocxx::instance& instance;
 
 protected:
-    // This was copied from
-    // github.com/mongodb/mongo-cxx-driver/blob/r3.4.0/src/mongocxx/test/client_session.cpp#L285
-    class ApmEvent {
-    public:
-        ApmEvent(const std::string& command_name_, const bsoncxx::document::value& document_)
-            : command_name(command_name_), value(document_), command(value.view()) {}
-
-        std::string command_name;
-        bsoncxx::document::value value;
-        bsoncxx::document::view command;
-    };
-
-    using ApmCallback = std::function<void(const mongocxx::events::command_started_event&)>;
-    using ApmEvents = std::vector<ApmEvent>;
-    static ApmCallback makeApmCallback(ApmEvents& events);
-
     mongocxx::client client;
 };
 }  // namespace genny::testing

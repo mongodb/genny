@@ -69,7 +69,7 @@ struct CrudActorTestCase {
           error{node["Error"]},
           tcase{node} {}
 
-    static void assertAfterState(mongocxx::pool::entry& client, YAML::Node tcase) {
+    static void assertAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
         // TODO: handle ExpectedEvents
         // TODO: handle ExpectedCollectionsExist
         if (auto ocd = tcase["OutcomeData"]; ocd) {
@@ -123,8 +123,11 @@ struct CrudActorTestCase {
 
     void doRun() const {
         try {
+            auto events = ApmEvents{};
+            auto apmCallback = makeApmCallback(events);
+
             auto config = build(operations);
-            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             auto client = ah.client();
             dropAllDatabases(client);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
@@ -133,7 +136,7 @@ struct CrudActorTestCase {
                 runMode == RunMode::kExpectedRuntimeException) {
                 FAIL("Expected exception " << error.as<std::string>() << " but not thrown");
             } else {
-                assertAfterState(client, tcase);
+                assertAfterState(client, events, tcase);
             }
         } catch (const std::exception& e) {
             if (runMode == RunMode::kExpectedSetupException ||
