@@ -63,9 +63,9 @@ RunMode convertRunMode(YAML::Node tcase) {
 }
 
 
-void assertExpectedCollectionsExist(mongocxx::pool::entry& client,
-                                    ApmEvents& events,
-                                    YAML::Node expectCollections) {
+void requireExpectedCollectionsExist(mongocxx::pool::entry& client,
+                                     ApmEvents& events,
+                                     YAML::Node expectCollections) {
     auto db = (*client)["mydb"];
     auto haystack = db.list_collection_names();
 
@@ -76,14 +76,6 @@ void assertExpectedCollectionsExist(mongocxx::pool::entry& client,
         INFO("Expecting collection " << needle << "to exist? " << actual);
         REQUIRE(expect == actual);
     }
-}
-
-std::string toString(ApmEvents& events) {
-    std::stringstream out;
-    for (auto&& event : events) {
-        out << bsoncxx::to_json(event.command) << std::endl;
-    }
-    return out.str();
 }
 
 bool isNumeric(YAML::Node node) {
@@ -99,7 +91,7 @@ bool isNumeric(YAML::Node node) {
 // that we receive. Doing a subsetCompare(YAML::Node, bsoncxx::document::view) is nontrivial.
 // (Mostly fighting the compiler with yaml scalars versus the many numeric bson types.)
 // For now just assert a subset
-void checkEvent(ApmEvent& event, YAML::Node requirements) {
+void requireEvent(ApmEvent& event, YAML::Node requirements) {
     if (auto w = requirements["writeConcern"]["w"]; w) {
         if (isNumeric(w)) {
             REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
@@ -129,17 +121,17 @@ void checkEvent(ApmEvent& event, YAML::Node requirements) {
     }
 }
 
-void assertAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {
+void requireAllEvents(mongocxx::pool::entry& client, ApmEvents events, YAML::Node requirements) {
     for (auto&& event : events) {
-        checkEvent(event, requirements);
+        requireEvent(event, requirements);
     }
 }
 
-void assertCount(mongocxx::pool::entry& client,
-                 YAML::Node filterYaml,
-                 long expected = 1,
-                 std::string db = "mydb",
-                 std::string coll = "test") {
+void requireCollectionHasCount(mongocxx::pool::entry& client,
+                               YAML::Node filterYaml,
+                               long expected = 1,
+                               std::string db = "mydb",
+                               std::string coll = "test") {
     auto filter = genny::testing::toDocumentBson(filterYaml);
     INFO("Requiring " << expected << " document" << (expected == 1 ? "" : "s") << " in " << db
                       << "." << coll << " matching " << bsoncxx::to_json(filter.view()));
@@ -147,15 +139,16 @@ void assertCount(mongocxx::pool::entry& client,
     REQUIRE(actual == expected);
 }
 
-void assertOutcomeData(mongocxx::pool::entry& client, YAML::Node ocdata) {
-    for (auto&& filterYaml : ocdata) {
-        assertCount(client, filterYaml);
+void requireCounts(mongocxx::pool::entry& client, YAML::Node outcomeData) {
+    for (auto&& filterYaml : outcomeData) {
+        requireCollectionHasCount(client, filterYaml);
     }
 }
 
-void assertOutcomeCounts(mongocxx::pool::entry& client, YAML::Node ocounts) {
-    for (auto&& countAssertion : ocounts) {
-        assertCount(client, countAssertion["Filter"], countAssertion["Count"].as<long>());
+void requireOutcomeCounts(mongocxx::pool::entry& client, YAML::Node outcomeCounts) {
+    for (auto&& countAssertion : outcomeCounts) {
+        requireCollectionHasCount(
+            client, countAssertion["Filter"], countAssertion["Count"].as<long>());
     }
 }
 
@@ -176,18 +169,18 @@ YAML::Node build(YAML::Node operations) {
     return config;
 }
 
-void assertAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
+void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
     if (auto ocd = tcase["OutcomeData"]; ocd) {
-        assertOutcomeData(client, ocd);
+        requireCounts(client, ocd);
     }
     if (auto ocounts = tcase["OutcomeCounts"]; ocounts) {
-        assertOutcomeCounts(client, ocounts);
+        requireOutcomeCounts(client, ocounts);
     }
     if (auto requirements = tcase["ExpectAllEvents"]; requirements) {
-        assertAllEvents(client, events, requirements);
+        requireAllEvents(client, events, requirements);
     }
     if (auto expectCollections = tcase["ExpectedCollectionsExist"]; expectCollections) {
-        assertExpectedCollectionsExist(client, events, expectCollections);
+        requireExpectedCollectionsExist(client, events, expectCollections);
     }
 }
 
@@ -225,7 +218,7 @@ struct CrudActorTestCase {
                 runMode == RunMode::kExpectedRuntimeException) {
                 FAIL("Expected exception " << error.as<std::string>() << " but not thrown");
             } else {
-                assertAfterState(client, eventsCopy, tcase);
+                requireAfterState(client, eventsCopy, tcase);
             }
         } catch (const std::exception& e) {
             if (runMode == RunMode::kExpectedSetupException ||
