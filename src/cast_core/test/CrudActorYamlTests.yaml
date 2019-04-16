@@ -260,3 +260,14 @@ Tests:
               Level: infinite
     Error: |
       yaml-cpp: error at line 260, column 15: bad conversion
+
+  - Description: Read preference is 'secondaryPreferred'.
+    Operations:
+      - OperationName: countDocuments
+        OperationCommand:
+          Filter: { a : 1 }
+          Options:
+            ReadPreference:
+              ReadMode: secondaryPreferred
+    ExpectAllEvents:
+      ReadPreferenceMode: secondaryPreferred

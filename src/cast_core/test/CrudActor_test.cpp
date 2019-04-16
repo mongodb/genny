@@ -40,45 +40,6 @@ TEST_CASE_METHOD(MongoTestFixture,
     auto events = ApmEvents{};
     auto db = client.database("mydb");
 
-    SECTION("Read preference is 'secondaryPreferred'.") {
-        YAML::Node config = YAML::Load(R"(
-          SchemaVersion: 2018-07-01
-          Actors:
-          - Name: CrudActor
-            Type: CrudActor
-            Database: mydb
-            RetryStrategy:
-              ThrowOnFailure: true
-            Phases:
-            - Repeat: 1
-              Collection: test
-              Operations:
-              - OperationName: countDocuments
-                OperationCommand:
-                  Filter: { a : 1 }
-                  Options:
-                    ReadPreference:
-                      ReadMode: secondaryPreferred
-          )");
-        try {
-            auto apmCallback = makeApmCallback(events);
-            genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
-            ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
-            REQUIRE(events.size() > 0);
-            for (auto&& event : events) {
-                REQUIRE(event.command["$readPreference"]);
-                REQUIRE(event.command["$readPreference"]["mode"]);
-                auto readMode = event.command["$readPreference"]["mode"].get_utf8().value;
-                REQUIRE(std::string(readMode) == "secondaryPreferred");
-            }
-        } catch (const std::exception& e) {
-            auto diagInfo = boost::diagnostic_information(e);
-            INFO("CAUGHT " << diagInfo);
-            FAIL(diagInfo);
-        }
-    }
-
     SECTION("Read preference is 'nearest' with MaxStaleness set.") {
         YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01

@@ -146,6 +146,10 @@ struct CrudActorTestCase {
                 REQUIRE(event.command["bypassDocumentValidation"].get_bool() == bypass.as<bool>());
                 --toCheck;
             }
+            if(auto readPref = requirements["ReadPreferenceMode"]; readPref) {
+                REQUIRE(event.command["$readPreference"]["mode"].get_utf8().value == readPref.as<std::string>());
+                --toCheck;
+            }
             if (toCheck != 0) {
                 FAIL("Only a limited number of fields is supported to assert in ExpectAllEvents");
             }
