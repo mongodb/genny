@@ -285,3 +285,25 @@ Tests:
       ReadPreferenceMode: nearest
       ReadPreferenceMaxStalenessSeconds: 100
 
+  - Description: Read preference without 'ReadMode' should throw.
+    Operations:
+      - OperationName: countDocuments
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            ReadPreference:
+              MaxStaleness: 100 seconds
+    Error: |
+      yaml-cpp: error at line 295, column 15: bad conversion
+
+  - Description: Read preference with invalid 'ReadMode' should throw.
+    Operations:
+      - OperationName: countDocuments
+        OperationCommand:
+          Filter: { a : 1 }
+          Options:
+            ReadPreference:
+              ReadMode: badReadMode
+    Error: |
+      yaml-cpp: error at line 306, column 15: bad conversion
+
