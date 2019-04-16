@@ -70,7 +70,6 @@ struct CrudActorTestCase {
           tcase{node} {}
 
     static void assertAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {
-        // TODO: handle ExpectedCollectionsExist
         if (auto ocd = tcase["OutcomeData"]; ocd) {
             assertOutcomeData(client, ocd);
         }
@@ -79,6 +78,22 @@ struct CrudActorTestCase {
         }
         if(auto requirements = tcase["ExpectAllEvents"]; requirements) {
             assertAllEvents(client, events, requirements);
+        }
+        if (auto expectCollections = tcase["ExpectedCollectionsExist"]; expectCollections) {
+            assertExpectedCollectionsExist(client, events, expectCollections);
+        }
+    }
+
+    static void assertExpectedCollectionsExist(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node expectCollections) {
+        auto db = (*client)["mydb"];
+        auto haystack = db.list_collection_names();
+
+        for(auto&& kvp : expectCollections) {
+            auto needle = kvp.first.as<std::string>();
+            auto expect = kvp.second.as<bool>();
+            auto actual = std::find(haystack.begin(), haystack.end(), needle) != haystack.end();
+            INFO("Expecting collection " << needle << "to exist? " << actual);
+            REQUIRE(expect == actual);
         }
     }
 
