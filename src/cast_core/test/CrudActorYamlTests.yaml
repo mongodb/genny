@@ -1,0 +1,426 @@
+---
+
+# Syntax is inspired by the Crud driver specs:
+# https://github.com/mongodb/specifications/tree/master/source/crud/tests
+# but modified for casing and to eliminate some boilerplate. Idea is that
+# if we wanted to translate these tests to exactly the above spec it could
+# be a trivial data-format conversion.
+#
+# Exception to this:
+#
+# - OutcomeCounts: is a shortcut these tests take to avoid having to
+#   specify every single document in the collection.
+#
+# - Error: indicates a string of what type of error (syntax error
+#   encountered during setup or a runtime error
+#
+# - name: (omitted) we always assume everything happens on the same db and collection
+#
+# - ExpectedCollectionsExist: allows tests to assert that a collection has been
+#   created or dropped.
+#
+
+Tests:
+
+  - Description: Inserts documents into the database.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+    OutcomeData:
+      - {a: 1}
+
+  - Description: BulkWrite insert, delete, then re-insert
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: deleteOne
+              Filter: { a: 1 }
+            - WriteCommand: insertOne
+              Document: { a: 2 }
+    OutcomeData:
+      - {a: 2}
+
+  - Description: Inserts and updates document in the database.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+    OutcomeData:
+      - {a: 5}
+
+  - Description: Inserts and deletes documents in the database.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: deleteOne
+              Filter: { a: 1 }
+            - WriteCommand: insertOne
+              Document: { a: 2 }
+    OutcomeData:
+      - {a: 2}
+
+  - Description: Inserts and replaces document in the database.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: replaceOne
+              Filter: { a : 1 }
+              Replacement: { name: test }
+    OutcomeData:
+      - {name: test}
+
+  - Description: Inserts and updates with 'BypassDocumentValidation' true and 'Ordered' false.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            Ordered: false
+            BypassDocumentValidation: true
+    OutcomeData:
+      - {a: 5}
+    ExpectAllEvents:
+      ordered: false
+      bypassDocumentValidation: true
+
+  - Description: Inserts and updates many documents in the database.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: {^RandomInt: {min: 5, max: 15} } }
+            - WriteCommand: insertOne
+              Document: { a: {^RandomInt: {min: 5, max: 15} } }
+            - WriteCommand: insertOne
+              Document: { a: {^RandomInt: {min: 5, max: 15} } }
+            - WriteCommand: updateMany
+              Filter: { a: {$gte: 5} }
+              Update: { $set: { a: 1 } }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 3
+
+  - Description: Inserts and deletes many documents in the database.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: {^RandomInt: {min: 5, max: 15} } }
+            - WriteCommand: insertOne
+              Document: { a: {^RandomInt: {min: 5, max: 15} } }
+            - WriteCommand: insertOne
+              Document: { a: {^RandomInt: {min: 5, max: 15} } }
+            - WriteCommand: deleteMany
+              Filter: { a: {$gte: 5} }
+    OutcomeCounts:
+      - Filter: {a: {$gte: 5}}
+        Count: 0
+
+  - Description: Insert randomly generated doc and update with write concern majority.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: {^RandomInt: {min: 2, max: 5} }}
+            - WriteCommand: updateOne
+              Filter: { a: { $gte: 2 } }
+              Update: { $set: { a: 8 } }
+          Options:
+            WriteConcern:
+              Level: majority
+              Timeout: 6000 milliseconds
+    OutcomeCounts:
+      - Filter: {a: 8}
+        Count: 1
+    ExpectAllEvents:
+      writeConcern:
+        w: majority
+        wtimeout: 6000
+
+  - Description: Write concern without 'Level' field should throw.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            WriteConcern:
+              Timeout: 3000 milliseconds
+              Journal: false
+    Error: '.*yaml-cpp: error at line.*bad conversion$'
+
+  - Description: The 'test' collection is dropped with write concern majority.
+    Operations:
+      - OperationName: drop
+        OperationCommand:
+          Collection: test
+    ExpectedCollectionsExist:
+      test: false
+
+  - Description: The 'test' collection is dropped with write concern majority.
+    Operations:
+      - OperationName: drop
+        OperationCommand:
+          Options:
+            WriteConcern:
+              Level: majority
+    ExpectedCollectionsExist:
+      test: false
+    ExpectAllEvents:
+      writeConcern: {w: majority}
+
+  - Description: Write concern majority with timeout.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            WriteConcern:
+              Level: majority
+              Timeout: 5000 milliseconds
+    ExpectAllEvents:
+      writeConcern:
+        w: majority
+        wtimeout: 5000
+
+  - Description: Write concern 1 with timeout and journalling true.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            WriteConcern:
+              Level: 1
+              Timeout: 2500 milliseconds
+              Journal: true
+    ExpectAllEvents:
+      writeConcern:
+        w: 1
+        wtimeout: 2500
+        j: true
+
+  - Description: Write concern 0 with timeout and journalling false.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            Ordered: true
+            WriteConcern:
+              Level: 0
+              Timeout: 3000 milliseconds
+              Journal: false
+    ExpectAllEvents:
+      writeConcern:
+        w: 0
+        wtimeout: 3000
+        j: false
+        ordered: true
+
+  - Description: Invalid write concern level should throw.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+            - WriteCommand: updateOne
+              Filter: { a: 1 }
+              Update: { $set: { a: 5 } }
+          Options:
+            WriteConcern:
+              Level: infinite
+    Error: '.*yaml-cpp: error at line.*bad conversion$'
+
+  - Description: Read preference is 'secondaryPreferred'.
+    Operations:
+      - OperationName: countDocuments
+        OperationCommand:
+          Filter: { a : 1 }
+          Options:
+            ReadPreference:
+              ReadMode: secondaryPreferred
+    ExpectAllEvents:
+      $readPreference:
+        mode: secondaryPreferred
+
+  - Description: Read preference is 'nearest' with MaxStaleness set.
+    Operations:
+      - OperationName: countDocuments
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            ReadPreference:
+              ReadMode: nearest
+              MaxStaleness: 100 seconds
+    ExpectAllEvents:
+      $readPreference:
+        mode: nearest
+        maxStalenessSeconds: 100
+
+  - Description: Read preference without 'ReadMode' should throw.
+    Operations:
+      - OperationName: countDocuments
+        OperationCommand:
+          Filter: { a: 1 }
+          Options:
+            ReadPreference:
+              MaxStaleness: 100 seconds
+    Error: '.*yaml-cpp: error at line.*bad conversion$'
+
+  - Description: Read preference with invalid 'ReadMode' should throw.
+    Operations:
+      - OperationName: countDocuments
+        OperationCommand:
+          Filter: { a : 1 }
+          Options:
+            ReadPreference:
+              ReadMode: badReadMode
+    Error: '.*yaml-cpp: error at line.*bad conversion$'
+
+  - Description: Delete a document in a collection.
+    Operations:
+      - OperationName: bulkWrite
+        OperationCommand:
+          WriteOperations:
+            - WriteCommand: insertOne
+              Document: { a: 1 }
+      - OperationName: deleteOne
+        OperationCommand:
+          Filter: { a: 1 }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 0
+
+  - Description: The correct documents are inserted.
+    Operations:
+      - OperationName: insertMany
+        OperationCommand:
+          Documents:
+            - { a: 1 }
+            - { a: 1 }
+            - { b: 1 }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 2
+      - Filter: {b: 1}
+        Count: 1
+
+  - Description: Insert a document into a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+    OutcomeData:
+      - {a: 1}
+
+  - Description: Insert and replace document in a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+      - OperationName: replaceOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Replacement: { newfile: test }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 0
+      - Filter: {newfile: test}
+        Count: 1
+
+  - Description: Insert and update document in a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+      - OperationName: updateOne
+        OperationCommand:
+          Filter: { a: 1 }
+          Update: { $set: { a: 10 } }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 0
+      - Filter: {a: 10}
+        Count: 1
+
+  - Description: Insert and update multiple documents in a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: {^RandomInt: {min: 5, max: 15} } }
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: {^RandomInt: {min: 5, max: 15} } }
+      - OperationName: updateMany
+        OperationCommand:
+          Filter: { a: { $gte: 5 } }
+          Update: { $set: { a: 2 } }
+    OutcomeCounts:
+      - Filter: {a: {$gte: 5}}
+        Count: 0
+      - Filter: {a: 2}
+        Count: 2
+
+  - Description: Delete multiple documents in a collection.
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+      - OperationName: insertOne
+        OperationCommand:
+          Document: { a: 1 }
+      - OperationName: deleteMany
+        OperationCommand:
+          Filter: { a: 1 }
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 0
+
+# TODO: add test for ReadConcern
+# TODO: add test for Find
+# TODO: add test for start and commit transaction.
