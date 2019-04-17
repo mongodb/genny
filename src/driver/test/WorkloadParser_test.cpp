@@ -11,3 +11,41 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+#include <driver/WorkloadParser.hpp>
+
+#include <testlib/helpers.hpp>
+
+namespace genny::driver {
+namespace {
+
+TEST_CASE("WorkloadParser can run generate smoke test configurations") {
+    const auto input = (R"(
+Actors:
+- Name: WorkloadParserTest
+  Type: NonExistent
+  Threads: 2.718281828   # This field is ignored for the purpose of this test.
+  Phases:
+  - Duration: 4 scores            # Removed
+    Repeat: 1e999                 # Replaced with "1"
+    Rate: 1 per 2 megannum        # Removed
+    SleepBefore: 1 per 2 planks   # Removed
+    SleepAfter: a long time       # Removed
+)");
+
+    const auto expected = (R"(Actors:
+  - Name: WorkloadParserTest
+    Type: NonExistent
+    Threads: 2.718281828
+    Phases:
+      - Repeat: 1)");
+
+    auto cwd = boost::filesystem::current_path();
+
+    WorkloadParser p{cwd, true};
+    auto parsedConfig = p.parse(input, DefaultDriver::ProgramOptions::YamlSource::kString);
+    REQUIRE(YAML::Dump(parsedConfig) == expected);
+}
+
+}  // namespace
+}  // namespace genny::driver
