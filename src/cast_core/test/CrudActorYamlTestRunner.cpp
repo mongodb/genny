@@ -153,8 +153,6 @@ YAML::Node createConfigurationYaml(YAML::Node operations) {
           Actors:
           - Name: CrudActor
             Type: CrudActor
-            RetryStrategy:
-              ThrowOnFailure: true
             Phases:
             - Repeat: 1
           )");
