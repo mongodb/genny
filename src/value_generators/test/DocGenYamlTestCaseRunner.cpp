@@ -12,8 +12,6 @@
 #include <yaml-cpp/yaml.h>
 
 #include <testlib/ActorHelper.hpp>
-#include <testlib/findRepoRoot.hpp>
-#include <testlib/helpers.hpp>
 #include <testlib/yamlTest.hpp>
 #include <testlib/yamlToBson.hpp>
 
