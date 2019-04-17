@@ -20,6 +20,8 @@
 
 namespace genny::canaries {
 
+using Nanosecond = int64_t;
+
 /**
  * Class for benchmarking Genny internals. It's recommended to run
  * these benchmarks as canaries before running Genny workloads.
@@ -37,22 +39,22 @@ public:
     /**
      * Run a basic for-loop, used as the baseline.
      */
-    int64_t simpleLoop();
+    Nanosecond simpleLoop();
 
     /**
      * Run just the phase loop.
      */
-    int64_t phaseLoop();
+    Nanosecond phaseLoop();
 
     /**
      * Run a basic for-loop and record one timer metric per loop.
      */
-    int64_t metricsLoop();
+    Nanosecond metricsLoop();
 
     /**
      * Run the phase loop and record one timer metric per loop.
      */
-    int64_t metricsPhaseLoop();
+    Nanosecond metricsPhaseLoop();
 
 private:
     int64_t _iterations;

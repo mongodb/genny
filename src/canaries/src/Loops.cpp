@@ -31,22 +31,6 @@
 #endif
 
 /**
- * Use `rdtsc` as a low overhead, high resolution clock.
- *
- * Adapted from Google Benchmark
- * https://github.com/google/benchmark/blob/439d6b1c2a6da5cb6adc4c4dfc555af235722396/src/cycleclock.h#L61
- */
-inline int64_t now() {
-#if defined(__APPLE__)
-    return mach_absolute_time();
-#elif defined(__x86_64__) || defined(__amd64__)
-    uint64_t low, high;
-    __asm__ volatile("rdtsc" : "=a"(low), "=d"(high));
-    return (high << 32) | low;
-#endif
-}
-
-/**
  * Do something in each iteration of the loop.
  *
  * @tparam WithPing Template to dictate what to do. Right now there are only
@@ -71,8 +55,24 @@ genny::TimeSpec operator""_ts(unsigned long long v) {
 
 namespace genny::canaries {
 
+/**
+ * Use `rdtsc` as a low overhead, high resolution clock.
+ *
+ * Adapted from Google Benchmark
+ * https://github.com/google/benchmark/blob/439d6b1c2a6da5cb6adc4c4dfc555af235722396/src/cycleclock.h#L61
+ */
+inline Nanosecond now() {
+#if defined(__APPLE__)
+    return mach_absolute_time();
+#elif defined(__x86_64__) || defined(__amd64__)
+    uint64_t low, high;
+    __asm__ volatile("rdtsc" : "=a"(low), "=d"(high));
+    return (high << 32) | low;
+#endif
+}
+
 template <bool WithPing>
-int64_t Loops<WithPing>::simpleLoop() {
+Nanosecond Loops<WithPing>::simpleLoop() {
     int64_t before = now();
     for (int i = 0; i < _iterations; i++) {
         doPingIfNeeded<WithPing>();
@@ -83,7 +83,7 @@ int64_t Loops<WithPing>::simpleLoop() {
 }
 
 template <bool WithPing>
-int64_t Loops<WithPing>::phaseLoop() {
+Nanosecond Loops<WithPing>::phaseLoop() {
 
     Orchestrator o{};
     v1::ActorPhase<int> loop{
@@ -105,7 +105,7 @@ int64_t Loops<WithPing>::phaseLoop() {
 }
 
 template <bool WithPing>
-int64_t Loops<WithPing>::metricsLoop() {
+Nanosecond Loops<WithPing>::metricsLoop() {
 
     auto metrics = genny::metrics::Registry{};
     metrics::Reporter reporter(metrics);
@@ -124,7 +124,7 @@ int64_t Loops<WithPing>::metricsLoop() {
 }
 
 template <bool WithPing>
-int64_t Loops<WithPing>::metricsPhaseLoop() {
+Nanosecond Loops<WithPing>::metricsPhaseLoop() {
 
     // Copy/pasted from phaseLoop() and metricsLoop()
     Orchestrator o{};
