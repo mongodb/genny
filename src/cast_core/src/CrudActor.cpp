@@ -183,24 +183,47 @@ struct convert<mongocxx::options::update> {
         if (node.IsSequence() || node.IsMap()) {
             return false;
         }
-        if (node["write_concern"]) {
-            rhs.write_concern(node["write_concern"].as<mongocxx::write_concern>());
+        if (node["WriteConcern"]) {
+            rhs.write_concern(node["WriteConcern"].as<mongocxx::write_concern>());
         }
         /* not supported yet
         if(node["array_filters"]) {
             rhs.array_filters(node["array_filters"].as<genny::DocumentGenerator>());
         }
         */
-        if (node["upsert"]) {
-            rhs.upsert(node["upsert"].as<bool>());
+        if (node["Upsert"]) {
+            rhs.upsert(node["Upsert"].as<bool>());
         }
         /* not supported yet
         if(node["collation"]) {
             rhs.collation(node["collation"].as<genny::DocumentGenerator>());
         }
         */
-        if (node["bypass_document_validation"]) {
-            rhs.bypass_document_validation(node["bypass_document_validation"].as<bool>());
+        if (node["BypassDocumentValidation"]) {
+            rhs.bypass_document_validation(node["BypassDocumentValidation"].as<bool>());
+        }
+
+        return true;
+    }
+};
+
+template <>
+struct convert<mongocxx::options::insert> {
+    static Node encode(const mongocxx::options::insert& rhs) {
+        return {};
+    }
+    static bool decode(const Node& node, mongocxx::options::insert& rhs) {
+        if (node.IsSequence() || node.IsMap()) {
+            return false;
+        }
+        if(node["Ordered"]) {
+            rhs.ordered(node["Ordered"].as<bool>());
+        }
+        if(node["BypassDocumentValidation"]) {
+            rhs.bypass_document_validation(node["BypassDocumentValidation"].as<bool>());
+        }
+        if(node["WriteConcern"]) {
+            rhs.write_concern(node["WriteConcern"].as<mongocxx::write_concern>());
         }
 
         return true;
@@ -364,6 +387,7 @@ struct InsertOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
+          _options{opNode["OperationOptions"].as<mongocxx::options::insert>(mongocxx::options::insert{})},
           _docExpr{createGenerator(opNode, "insertOne", "Document", context, id)} {
 
         // TODO: parse insert options.
