@@ -18,7 +18,12 @@
 #include <string>
 #include <vector>
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include <yaml-cpp/yaml.h>
+
+#include <testlib/findRepoRoot.hpp>
+#include <testlib/helpers.hpp>
 
 namespace genny::testing::v1 {
 
@@ -71,7 +76,7 @@ void runTestCaseYaml(const std::string& repoRelativePathToYaml) {
         auto tests = yaml.as<genny::testing::v1::YamlTests<TC>>();
         tests.run();
     } catch (const std::exception& ex) {
-        WARN(ex.what());
+        WARN(boost::diagnostic_information(ex));
         throw;
     }
 }
