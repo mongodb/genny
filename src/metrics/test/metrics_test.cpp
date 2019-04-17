@@ -446,8 +446,7 @@ TEST_CASE("Phases can set metrics") {
         ah.run();
 
         const auto metrics = ah.getMetricsOutput();
-        std::cout << metrics << std::endl;
-        REQUIRE_THAT(std::string(metrics), Catch::Contains("Phase1MetricsWithUniqueName_bytes,13"));
+        REQUIRE_THAT(std::string(metrics), Catch::Contains("Phase1Metrics_bytes,13"));
     }
 
     SECTION("With default metrics name") {
@@ -466,8 +465,7 @@ TEST_CASE("Phases can set metrics") {
         ah.run();
 
         const auto metrics = ah.getMetricsOutput();
-        std::cout << metrics << std::endl;
-        REQUIRE_THAT(std::string(metrics), Catch::Contains("DefaultMetricsName_bytes,13"));
+        REQUIRE_THAT(std::string(metrics), Catch::Contains("DefaultMetricsName.0_bytes,13"));
     }
 }
 

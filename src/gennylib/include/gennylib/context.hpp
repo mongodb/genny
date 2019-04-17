@@ -524,17 +524,23 @@ public:
     /**
      * Convenience method for creating a metrics::Operation that's unique for this phase and thread.
      *
+     * If "MetricsName" is specified for a phase, it is used.
+     * Otherwise "[defaultMetricsName].[phaseNumber]" is used.
+     *
      * @param defaultMetricName the default name of the metric if "MetricsName" is not specified
      *                          for a phase in the workload YAML.
      * @param id the id of this Actor.
      */
-    auto operation(const std::string& defaultMetricName, ActorId id) const {
-        std::string opName = defaultMetricName;
+    auto operation(const std::string& defaultMetricsName, ActorId id) const {
+        std::ostringstream stm;
         if (auto metricsName = this->get<std::string, false>("MetricsName")) {
-            opName = *metricsName;
+            stm << *metricsName;
+        } else {
+            stm << defaultMetricsName << "." << _phaseNumber;
         }
 
-        return this->workload()._registry->operation(this->get<std::string>("Name"), opName, id);
+        return this->workload()._registry->operation(
+            this->_actor->get<std::string>("Name"), stm.str(), id);
     }
 
 
