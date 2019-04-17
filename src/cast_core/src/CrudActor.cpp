@@ -43,16 +43,7 @@ template <>
 struct convert<mongocxx::options::aggregate> {
     using AggregateOptions = mongocxx::options::aggregate;
     static Node encode(const AggregateOptions& rhs) {
-        Node node;
-        auto allowDiskUse = rhs.allow_disk_use();
-        if (allowDiskUse) {
-            node["allowDiskUse"] = *allowDiskUse;
-        }
-        auto batchSize = rhs.batch_size();
-        if (batchSize) {
-            node["batchSize"] = *batchSize;
-        }
-        return node;
+        return {};
     }
 
     static bool decode(const Node& node, AggregateOptions& rhs) {
@@ -97,14 +88,7 @@ template <>
 struct convert<mongocxx::options::bulk_write> {
     using BulkWriteOptions = mongocxx::options::bulk_write;
     static Node encode(const BulkWriteOptions& rhs) {
-        Node node;
-        auto bypassDocValidation = rhs.bypass_document_validation();
-        if (bypassDocValidation) {
-            node["BypassDocumentValidation"] = *bypassDocValidation;
-        }
-        auto isOrdered = rhs.ordered();
-        node["Ordered"] = isOrdered;
-        return node;
+        return {};
     }
 
     static bool decode(const Node& node, BulkWriteOptions& rhs) {
@@ -131,21 +115,7 @@ template <>
 struct convert<mongocxx::options::count> {
     using CountOptions = mongocxx::options::count;
     static Node encode(const CountOptions& rhs) {
-        Node node;
-        auto h = rhs.hint();
-        if (h) {
-            auto hint = h->to_value().get_utf8().value;
-            node["Hint"] = std::string(hint);
-        }
-        auto limit = rhs.limit();
-        if (limit) {
-            node["Limit"] = *limit;
-        }
-        auto maxTime = rhs.max_time();
-        if (maxTime) {
-            node["MaxTime"] = genny::TimeSpec(*maxTime);
-        }
-        return node;
+        return {};
     }
 
     static bool decode(const Node& node, CountOptions& rhs) {
@@ -169,39 +139,6 @@ struct convert<mongocxx::options::count> {
             auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
             rhs.read_preference(readPref);
         }
-        return true;
-    }
-};
-
-template <>
-struct convert<mongocxx::options::update> {
-    static Node encode(const mongocxx::options::update& rhs) {
-        return {};
-    }
-    static bool decode(const Node& node, mongocxx::options::update& rhs) {
-        if (node.IsSequence() || node.IsMap()) {
-            return false;
-        }
-        if (node["WriteConcern"]) {
-            rhs.write_concern(node["WriteConcern"].as<mongocxx::write_concern>());
-        }
-        /* not supported yet
-        if(node["array_filters"]) {
-            rhs.array_filters(node["array_filters"].as<genny::DocumentGenerator>());
-        }
-        */
-        if (node["Upsert"]) {
-            rhs.upsert(node["Upsert"].as<bool>());
-        }
-        /* not supported yet
-        if(node["collation"]) {
-            rhs.collation(node["collation"].as<genny::DocumentGenerator>());
-        }
-        */
-        if (node["BypassDocumentValidation"]) {
-            rhs.bypass_document_validation(node["BypassDocumentValidation"].as<bool>());
-        }
-
         return true;
     }
 };
@@ -233,8 +170,7 @@ template <>
 struct convert<mongocxx::options::transaction> {
     using TransactionOptions = mongocxx::options::transaction;
     static Node encode(const TransactionOptions& rhs) {
-        Node node;
-        return node;
+        return {};
     }
 
     static bool decode(const Node& node, TransactionOptions& rhs) {
@@ -432,10 +368,7 @@ struct UpdateOneOperation : public WriteOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "updateOne", "Filter", context, id)},
-          _updateExpr{createGenerator(opNode, "updateOne", "Update", context, id)},
-          _options{opNode["OperationOptions"].as<mongocxx::options::update>(
-              mongocxx::options::update{})} {}
-    // TODO: parse update options.
+          _updateExpr{createGenerator(opNode, "updateOne", "Update", context, id)} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -464,6 +397,7 @@ private:
     DocumentGenerator _filterExpr;
     DocumentGenerator _updateExpr;
     metrics::Operation _operation;
+    // TODO: parse options from opNode
     mongocxx::options::update _options;
 };
 
