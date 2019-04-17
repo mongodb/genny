@@ -25,6 +25,7 @@
 using namespace genny;
 
 struct ProgramOptions {
+
     std::vector<std::string> _testNames;
     std::string _description;
     bool _isHelp = false;
@@ -37,24 +38,32 @@ struct ProgramOptions {
         namespace po = boost::program_options;
 
         std::ostringstream progDesc;
-        progDesc << "Genny Canaries - Microbenchmarks for measuring overhead of various Genny "
-                    "functionality by running various low-level workloads with Genny\n\n";
+        progDesc << "Genny Canaries - Microbenchmarks for measuring overhead of Genny\n";
+        progDesc << "                 by running low-level workloads in Genny loops\n\n";
         progDesc << "Usage:\n";
-        progDesc << "    " << argv[0] << " work-name <loop-type [loop-type] ...>\n\n";
-        progDesc << "Workloads:‍";
-        progDesc << u8R"(
-    noop    Trivial workload that reads a value from a register; intended for testing loops
-            with the minimum amount of unrelated code. Note that fully "noop" is not possible
-            as it will cause the entire loop to be optimized out.
-    sleep   Sleep for a 100ms.
-    cpu     Multiply a large number 10000 times to stress the CPU's ALU.
-    l2      Traverse through a 2MB array in 64KB strides. This stresses the CPU's L2 cache.
-    l3      Traverse through a 8MB array in 64KB strides. This stresses the CPU's L3 cache
-            and/or RAM depending the CPU and its load.
-    ping    call db.ping() on a MongoDB server (running externally)
+        progDesc << "    " << argv[0] << " work-name <loop-type [loop-type] ..>\n\n";
+        progDesc << "Types of work:‍";
+        progDesc << R"(
+    noop     Trivial workload that reads a value from a register; intended for
+             testing loops with the minimum amount of unrelated code
+    sleep    Sleep for 100ms
+    cpu      Multiply a large number 10000 times to stress the CPU's ALU.
+    l2       Traverse through a 2MB array in 64KB strides; stress the CPU's L2 cache
+    l3       Traverse through a 8MB array in 64KB strides; stress the CPU's L3 cache
+             and/or RAM depending the CPU and its load
+    ping     call db.ping() on a MongoDB server (running externally)
+    )" << "\n\n";
+
+        progDesc << "Types of loops:‍";
+        progDesc << R"(
+    simple   Run native for-loop; used as the control group with no Genny code
+    phase    Run just the PhaseLoop
+    metrics  Run native for-loop and record one timer metric per iteration
+    real     Run PhaseLoop and record one timer metric per iteration; resembles
+             how a real actor runs
     )" << "\n";
 
-        progDesc << "Options:";
+        progDesc << "Options";
         po::options_description optDesc(progDesc.str());
         po::positional_options_description positional;
 
@@ -106,16 +115,16 @@ void runTest(std::vector<std::string>& testNames, int64_t iterations) {
         int64_t time;
 
         // Run each test twice, the first time is warm up and the results are discarded.
-        if (testName == "simple-loop") {
+        if (testName == "simple") {
             loops.simpleLoop();
             time = loops.simpleLoop();
-        } else if (testName == "phase-loop") {
+        } else if (testName == "phase") {
             loops.simpleLoop();
             time = loops.phaseLoop();
-        } else if (testName == "metrics-loop") {
+        } else if (testName == "metrics") {
             loops.simpleLoop();
             time = loops.metricsLoop();
-        } else if (testName == "real-loop") {
+        } else if (testName == "real") {
             loops.simpleLoop();
             time = loops.metricsPhaseLoop();
         } else {

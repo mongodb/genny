@@ -39,22 +39,22 @@ public:
     explicit Loops(int64_t iterations) : _iterations(iterations){};
 
     /**
-     * Run a basic for-loop, used as the baseline.
+     * Run native for-loop; used as the control group with no Genny code.
      */
     Nanosecond simpleLoop();
 
     /**
-     * Run just the phase loop.
+     * Run PhaseLoop.
      */
     Nanosecond phaseLoop();
 
     /**
-     * Run a basic for-loop and record one timer metric per loop.
+     *  Run native for-loop and record one timer metric per iteration.
      */
     Nanosecond metricsLoop();
 
     /**
-     * Run the phase loop and record one timer metric per loop.
+     * Run PhaseLoop and record one timer metric per iteration.
      */
     Nanosecond metricsPhaseLoop();
 
