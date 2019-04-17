@@ -466,6 +466,20 @@ Tests:
       - Filter: {a: 100}
         Count: 1
 
-# TODO: add test for ReadConcern
-# TODO: add test for Find
-# TODO: add test for start and commit transaction.
+  - Description: set ReadConcern on a find in a transaction
+    Operations:
+      - OperationName: startTransaction
+      - OperationName: setReadConcern
+        OperationCommand:
+          ReadConcern:
+            Level: local
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 1}
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 1}
+      - OperationName: commitTransaction
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 1
