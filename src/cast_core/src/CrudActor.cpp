@@ -175,6 +175,39 @@ struct convert<mongocxx::options::count> {
 };
 
 template <>
+struct convert<mongocxx::options::update> {
+    static Node encode(const mongocxx::options::update& rhs) {
+        return {};
+    }
+    static bool decode(const Node& node, mongocxx::options::update& rhs) {
+        if (node.IsSequence() || node.IsMap()) {
+            return false;
+        }
+        if (node["write_concern"]) {
+            rhs.write_concern(node["write_concern"].as<mongocxx::write_concern>());
+        }
+        /* not supported yet
+        if(node["array_filters"]) {
+            rhs.array_filters(node["array_filters"].as<genny::DocumentGenerator>());
+        }
+        */
+        if (node["upsert"]) {
+            rhs.upsert(node["upsert"].as<bool>());
+        }
+        /* not supported yet
+        if(node["collation"]) {
+            rhs.collation(node["collation"].as<genny::DocumentGenerator>());
+        }
+        */
+        if (node["bypass_document_validation"]) {
+            rhs.bypass_document_validation(node["bypass_document_validation"].as<bool>());
+        }
+
+        return true;
+    }
+};
+
+template <>
 struct convert<mongocxx::options::transaction> {
     using TransactionOptions = mongocxx::options::transaction;
     static Node encode(const TransactionOptions& rhs) {
@@ -375,7 +408,9 @@ struct UpdateOneOperation : public WriteOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createGenerator(opNode, "updateOne", "Filter", context, id)},
-          _updateExpr{createGenerator(opNode, "updateOne", "Update", context, id)} {}
+          _updateExpr{createGenerator(opNode, "updateOne", "Update", context, id)},
+          _options{opNode["OperationOptions"].as<mongocxx::options::update>(
+              mongocxx::options::update{})} {}
     // TODO: parse update options.
 
     mongocxx::model::write getModel() override {
