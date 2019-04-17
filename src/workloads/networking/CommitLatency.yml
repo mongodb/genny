@@ -71,7 +71,8 @@ Actors:
   Phases:
   - *Nop # Load phase is different actor
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_w0_local
+    WriteConcern:
       Level: 0
     ReadConcern:
       Level: local
@@ -79,7 +80,8 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_w1_local
+    WriteConcern:
       Level: 1
     ReadConcern:
       Level: local
@@ -87,7 +89,8 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_w1_local_sec
+    WriteConcern:
       Level: 1
     ReadConcern:
       Level: local
@@ -95,7 +98,8 @@ Actors:
       ReadMode: secondary
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_w1_jtrue_local_sec
+    WriteConcern:
       Level: 1
       Journal: true
     ReadConcern:
@@ -104,7 +108,8 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_wmajority_majority
+    WriteConcern:
       Level: majority
     ReadConcern:
       Level: majority
@@ -112,7 +117,8 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_wmajority_majority_sec
+    WriteConcern:
       Level: majority
     ReadConcern:
       Level: majority
@@ -120,7 +126,8 @@ Actors:
       ReadMode: secondary
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_wmajority_jtrue_majority
+    WriteConcern:
       Level: majority
       Journal: true
     ReadConcern:
@@ -129,7 +136,8 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_wmajority_linearizable
+    WriteConcern:
       Level: majority
     ReadConcern:
       Level: linearizable
@@ -137,7 +145,8 @@ Actors:
       ReadMode: primary
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_wmajority_majority_session
+    WriteConcern:
       Level: majority
     ReadConcern:
       Level: majority
@@ -146,7 +155,8 @@ Actors:
     Session: True
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_wmajority_majority_sec_session
+    WriteConcern:
       Level: majority
     ReadConcern:
       Level: majority
@@ -155,7 +165,8 @@ Actors:
     Session: True
   - *Nop
   - *Nop
-  - WriteConcern:
+  - MetricsName: CommitLatency_wmajority_majority_trx
+    WriteConcern:
       Level: majority
     ReadConcern:
       Level: snapshot
