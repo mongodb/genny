@@ -339,8 +339,8 @@ struct InsertOneOperation : public WriteOperation {
         auto size = document.view().length();
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
-            (_onSession) ? _collection.insert_one(session, std::move(document), _options)
-                         : _collection.insert_one(std::move(document), _options);
+            (_onSession) ? _collection.insert_one(session, document.view(), _options)
+                         : _collection.insert_one(document.view(), _options);
             ctx.addDocuments(1);
             ctx.addBytes(size);
             return std::make_optional(std::move(document));
@@ -381,8 +381,8 @@ struct UpdateOneOperation : public WriteOperation {
         auto update = _updateExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
-                ? _collection.update_one(session, std::move(filter), std::move(update), _options)
-                : _collection.update_one(std::move(filter), std::move(update), _options);
+                ? _collection.update_one(session, filter.view(), update.view(), _options)
+                : _collection.update_one(filter.view(), update.view(), _options);
             if (result) {
                 ctx.addDocuments(result->modified_count());
             }
@@ -427,8 +427,8 @@ struct UpdateManyOperation : public WriteOperation {
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
-                ? _collection.update_many(session, std::move(filter), std::move(update), _options)
-                : _collection.update_many(std::move(filter), std::move(update), _options);
+                ? _collection.update_many(session, filter.view(), update.view(), _options)
+                : _collection.update_many(filter.view(), update.view(), _options);
             if (result) {
                 ctx.addDocuments(result->modified_count());
             }
@@ -468,8 +468,8 @@ struct DeleteOneOperation : public WriteOperation {
         auto filter = _filterExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
-                ? _collection.delete_one(session, std::move(filter), _options)
-                : _collection.delete_one(std::move(filter), _options);
+                ? _collection.delete_one(session, filter.view(), _options)
+                : _collection.delete_one(filter.view(), _options);
             if (result) {
                 ctx.addDocuments(result->deleted_count());
             }
@@ -508,8 +508,8 @@ struct DeleteManyOperation : public WriteOperation {
         auto filter = _filterExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto results = (_onSession)
-                ? _collection.delete_many(session, std::move(filter), _options)
-                : _collection.delete_many(std::move(filter), _options);
+                ? _collection.delete_many(session, filter.view(), _options)
+                : _collection.delete_many(filter.view(), _options);
             if (results) {
                 ctx.addDocuments(results->deleted_count());
             }
@@ -555,8 +555,8 @@ struct ReplaceOneOperation : public WriteOperation {
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
                 ? _collection.replace_one(
-                      session, std::move(filter), std::move(replacement), _options)
-                : _collection.replace_one(std::move(filter), std::move(replacement), _options);
+                      session, filter.view(), replacement.view(), _options)
+                : _collection.replace_one(filter.view(), replacement.view(), _options);
 
             if (result) {
                 ctx.addDocuments(result->modified_count());
@@ -714,8 +714,8 @@ struct CountDocumentsOperation : public BaseOperation {
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto count = (_onSession)
-                ? _collection.count_documents(session, std::move(filter), _options)
-                : _collection.count_documents(std::move(filter), _options);
+                ? _collection.count_documents(session, filter.view(), _options)
+                : _collection.count_documents(filter.view(), _options);
             ctx.addDocuments(count);
             return std::make_optional(std::move(filter));
         });
@@ -747,8 +747,8 @@ struct FindOperation : public BaseOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
-            auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
-                                       : _collection.find(std::move(filter), _options);
+            auto cursor = (_onSession) ? _collection.find(session, filter.view(), _options)
+                                       : _collection.find(filter.view(), _options);
             for (auto&& doc : cursor) {
                 ctx.addDocuments(1);
                 ctx.addBytes(doc.length());
