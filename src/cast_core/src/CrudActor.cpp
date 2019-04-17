@@ -28,12 +28,12 @@
 
 #include <bsoncxx/json.hpp>
 
+#include <bsoncxx/builder/stream/document.hpp>
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
-#include <bsoncxx/builder/stream/document.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -232,7 +232,7 @@ struct BaseOperation {
     explicit BaseOperation(PhaseContext& phaseContext, YAML::Node operation)
         : throwMode{decodeThrowMode(operation, phaseContext)} {}
 
-    template<typename F>
+    template <typename F>
     void doBlock(metrics::Operation& op, F&& f) {
         MaybeDoc info = std::nullopt;
         auto ctx = op.start();
@@ -310,9 +310,11 @@ struct CreateIndexOperation : public BaseOperation {
         auto keys = _keysGenerator();
         auto indexOptions = _indexOptionsGenerator();
 
-        this->doBlock(_operation, [&](metrics::OperationContext& ctx){
-            _onSession ? _collection.create_index(keys.view(), indexOptions.view(), _operationOptions)
-                       : _collection.create_index(session, keys.view(), indexOptions.view(), _operationOptions);
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            _onSession
+                ? _collection.create_index(keys.view(), indexOptions.view(), _operationOptions)
+                : _collection.create_index(
+                      session, keys.view(), indexOptions.view(), _operationOptions);
             return std::make_optional(std::move(keys));
         });
     }
@@ -387,8 +389,8 @@ struct UpdateOneOperation : public WriteOperation {
         auto update = _updateExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
-                          ? _collection.update_one(session, std::move(filter), std::move(update), _options)
-                          : _collection.update_one(std::move(filter), std::move(update), _options);
+                ? _collection.update_one(session, std::move(filter), std::move(update), _options)
+                : _collection.update_one(std::move(filter), std::move(update), _options);
             if (result) {
                 ctx.addDocuments(result->modified_count());
             }
@@ -432,8 +434,8 @@ struct UpdateManyOperation : public WriteOperation {
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
-                          ? _collection.update_many(session, std::move(filter), std::move(update), _options)
-                          : _collection.update_many(std::move(filter), std::move(update), _options);
+                ? _collection.update_many(session, std::move(filter), std::move(update), _options)
+                : _collection.update_many(std::move(filter), std::move(update), _options);
             if (result) {
                 ctx.addDocuments(result->modified_count());
             }
@@ -472,8 +474,9 @@ struct DeleteOneOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
-            auto result = (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
-                                       : _collection.delete_one(std::move(filter), _options);
+            auto result = (_onSession)
+                ? _collection.delete_one(session, std::move(filter), _options)
+                : _collection.delete_one(std::move(filter), _options);
             if (result) {
                 ctx.addDocuments(result->deleted_count());
             }
@@ -511,8 +514,9 @@ struct DeleteManyOperation : public WriteOperation {
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
-            auto results = (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
-                                        : _collection.delete_many(std::move(filter), _options);
+            auto results = (_onSession)
+                ? _collection.delete_many(session, std::move(filter), _options)
+                : _collection.delete_many(std::move(filter), _options);
             if (results) {
                 ctx.addDocuments(results->deleted_count());
             }
@@ -557,8 +561,9 @@ struct ReplaceOneOperation : public WriteOperation {
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
-                          ? _collection.replace_one(session, std::move(filter), std::move(replacement), _options)
-                          : _collection.replace_one(std::move(filter), std::move(replacement), _options);
+                ? _collection.replace_one(
+                      session, std::move(filter), std::move(replacement), _options)
+                : _collection.replace_one(std::move(filter), std::move(replacement), _options);
 
             if (result) {
                 ctx.addDocuments(result->modified_count());
@@ -716,8 +721,8 @@ struct CountDocumentsOperation : public BaseOperation {
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto count = (_onSession)
-                         ? _collection.count_documents(session, std::move(filter), _options)
-                         : _collection.count_documents(std::move(filter), _options);
+                ? _collection.count_documents(session, std::move(filter), _options)
+                : _collection.count_documents(std::move(filter), _options);
             ctx.addDocuments(count);
             return std::make_optional(std::move(filter));
         });
@@ -751,7 +756,7 @@ struct FindOperation : public BaseOperation {
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
                                        : _collection.find(std::move(filter), _options);
-            for (auto &&doc : cursor) {
+            for (auto&& doc : cursor) {
                 ctx.addDocuments(1);
                 ctx.addBytes(doc.length());
             }
@@ -853,8 +858,7 @@ struct StartTransactionOperation : public BaseOperation {
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
-        : BaseOperation(context, opNode),
-          _operation{operation} {
+        : BaseOperation(context, opNode), _operation{operation} {
         if (!opNode.IsMap())
             return;
         if (opNode["Options"]) {
@@ -888,8 +892,7 @@ struct CommitTransactionOperation : public BaseOperation {
                                metrics::Operation operation,
                                PhaseContext& context,
                                ActorId id)
-        : BaseOperation(context, opNode),
-          _operation{operation} {}
+        : BaseOperation(context, opNode), _operation{operation} {}
 
     void run(mongocxx::client_session& session) override {
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
@@ -918,7 +921,9 @@ struct SetReadConcernOperation : public BaseOperation {
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : BaseOperation(context, opNode), _collection{std::move(collection)}, _operation{operation} {
+        : BaseOperation(context, opNode),
+          _collection{std::move(collection)},
+          _operation{operation} {
         if (!opNode["ReadConcern"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'setReadConcern' operation expects a 'ReadConcern' field."));

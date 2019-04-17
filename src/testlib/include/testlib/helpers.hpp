@@ -66,17 +66,18 @@ inline void dropAllDatabases(Client& client) {
 // The matcher class
 class MultiLineRegexMatch : public Catch::MatcherBase<std::string> {
     std::string regex;
+
 public:
-    explicit MultiLineRegexMatch(std::string regex)
-    : regex{regex} {}
+    explicit MultiLineRegexMatch(std::string regex) : regex{regex} {}
 
     // Performs the test for this matcher
-    virtual bool match( const std::string& matchee ) const override {
+    virtual bool match(const std::string& matchee) const override {
         try {
-            boost::regex reg(regex, boost::regex::ECMAScript | boost::regex::newline_alt | boost::regex::icase);
+            boost::regex reg(
+                regex, boost::regex::ECMAScript | boost::regex::newline_alt | boost::regex::icase);
             auto out = boost::regex_match(matchee, reg);
             return out;
-        } catch(const std::exception& x) {
+        } catch (const std::exception& x) {
             FAIL("Invalid regex: " << x.what());
             return false;
         }

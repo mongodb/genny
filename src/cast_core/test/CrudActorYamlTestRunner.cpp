@@ -15,9 +15,9 @@
 #include <vector>
 
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/exception/exception.hpp>
 #include <boost/exception/detail/exception_ptr.hpp>
 #include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/exception.hpp>
 
 
 #include <bsoncxx/builder/stream/document.hpp>
@@ -218,13 +218,12 @@ struct CrudActorTestCase {
             }
         } catch (const boost::exception& e) {
             launderException(e);
-        }
-        catch (const std::exception& e) {
+        } catch (const std::exception& e) {
             launderException(e);
         }
     }
 
-    template<typename X>
+    template <typename X>
     void launderException(const X& e) const {
         auto diagInfo = boost::diagnostic_information(e);
         if (runMode == RunMode::kExpectedSetupException ||
