@@ -211,15 +211,21 @@ enum class ThrowMode {
     kRethrow,
 };
 
-ThrowMode decodeThrowMode(YAML::Node) {
-    // TODO: read from existing RetryStrategy config
-    return ThrowMode::kSwallow;
+ThrowMode decodeThrowMode(YAML::Node operation, PhaseContext& phaseContext) {
+    static const char* key = "ThrowOnFailure";
+
+    // look in operation otherwise fallback to phasecontext
+    // we really need to kill YAML::Node and only use ConfigNode...
+    bool throwOnFailure = operation[key] ? operation[key].as<bool>()
+                                         : phaseContext.get<bool, false>(key).value_or(true);
+    return throwOnFailure ? ThrowMode::kRethrow : ThrowMode::kSwallow;
 }
 
 struct BaseOperation {
     ThrowMode throwMode;
 
-    explicit BaseOperation(YAML::Node operation) : throwMode{decodeThrowMode(operation)} {}
+    explicit BaseOperation(PhaseContext& phaseContext, YAML::Node operation)
+        : throwMode{decodeThrowMode(operation, phaseContext)} {}
 
     virtual void run(mongocxx::client_session& session) {
         try {
@@ -239,7 +245,8 @@ using OpCallback = std::function<std::unique_ptr<BaseOperation>(
     YAML::Node, bool, mongocxx::collection, metrics::Operation, PhaseContext& context, ActorId id)>;
 
 struct WriteOperation : public BaseOperation {
-    WriteOperation(const YAML::Node& operation) : BaseOperation(operation) {}
+    WriteOperation(PhaseContext& phaseContext, YAML::Node operation)
+        : BaseOperation(phaseContext, operation) {}
     virtual mongocxx::model::write getModel() = 0;
 };
 
@@ -280,7 +287,7 @@ struct CreateIndexOperation : public BaseOperation {
                          metrics::Operation operation,
                          PhaseContext& context,
                          ActorId id)
-        : BaseOperation(opNode),
+        : BaseOperation(context, opNode),
           _collection(std::move(collection)),
           _operation{operation},
           _onSession{onSession},
@@ -308,7 +315,7 @@ struct InsertOneOperation : public WriteOperation {
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : WriteOperation(opNode),
+        : WriteOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -353,7 +360,7 @@ struct UpdateOneOperation : public WriteOperation {
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : WriteOperation(opNode),
+        : WriteOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -396,7 +403,7 @@ struct UpdateManyOperation : public WriteOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : WriteOperation(opNode),
+        : WriteOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -438,7 +445,7 @@ struct DeleteOneOperation : public WriteOperation {
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : WriteOperation(opNode),
+        : WriteOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -476,7 +483,7 @@ struct DeleteManyOperation : public WriteOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : WriteOperation(opNode),
+        : WriteOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -514,7 +521,7 @@ struct ReplaceOneOperation : public WriteOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : WriteOperation(opNode),
+        : WriteOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -601,7 +608,7 @@ struct BulkWriteOperation : public BaseOperation {
                        metrics::Operation operation,
                        PhaseContext& context,
                        ActorId id)
-        : BaseOperation(opNode),
+        : BaseOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
@@ -677,7 +684,7 @@ struct CountDocumentsOperation : public BaseOperation {
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : BaseOperation(opNode),
+        : BaseOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -713,7 +720,7 @@ struct FindOperation : public BaseOperation {
                   metrics::Operation operation,
                   PhaseContext& context,
                   ActorId id)
-        : BaseOperation(opNode),
+        : BaseOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
@@ -758,7 +765,7 @@ struct InsertManyOperation : public BaseOperation {
                         metrics::Operation operation,
                         PhaseContext& context,
                         ActorId id)
-        : BaseOperation(opNode),
+        : BaseOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
@@ -826,7 +833,7 @@ struct StartTransactionOperation : public BaseOperation {
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
-        : BaseOperation(opNode) {
+        : BaseOperation(context, opNode) {
         if (!opNode.IsMap())
             return;
         if (opNode["Options"]) {
@@ -856,7 +863,7 @@ struct CommitTransactionOperation : public BaseOperation {
                                metrics::Operation operation,
                                PhaseContext& context,
                                ActorId id)
-        : BaseOperation(opNode) {}
+        : BaseOperation(context, opNode) {}
 
     void doRun(mongocxx::client_session& session) override {
         session.commit_transaction();
@@ -879,7 +886,7 @@ struct SetReadConcernOperation : public BaseOperation {
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : BaseOperation(opNode), _collection{std::move(collection)} {
+        : BaseOperation(context, opNode), _collection{std::move(collection)} {
         if (!opNode["ReadConcern"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'setReadConcern' operation expects a 'ReadConcern' field."));
@@ -914,7 +921,7 @@ struct DropOperation : public BaseOperation {
                   metrics::Operation operation,
                   PhaseContext& context,
                   ActorId id)
-        : BaseOperation(opNode),
+        : BaseOperation(context, opNode),
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
@@ -1007,7 +1014,7 @@ void CrudActor::run() {
 
             auto session = _client->start_session();
             for (auto&& op : config->operations) {
-                op->doRun(session);
+                op->run(session);
             }
 
             metricsContext.success();

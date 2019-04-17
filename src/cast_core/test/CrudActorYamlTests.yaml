@@ -446,10 +446,25 @@ Tests:
       - OperationName: insertOne
         OperationCommand:
           Document: {a: 100}
+    Error: |
+      .*duplicate key error.*
+
+  - Description: createIndex can swallow dupe errors
+    Operations:
+      - OperationName: createIndex
+        OperationCommand:
+          Keys: {a: 1}
+          IndexOptions: {unique: true}
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: insertOne
+        OperationCommand:
+          ThrowOnFailure: false
+          Document: {a: 100}
     OutcomeCounts:
       - Filter: {a: 100}
-        Count: 0
-
+        Count: 1
 
 # TODO: add test for ReadConcern
 # TODO: add test for Find
