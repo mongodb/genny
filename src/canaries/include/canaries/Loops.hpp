@@ -18,6 +18,8 @@
 
 #include <cstdint>
 
+#include <canaries/Workloads.hpp>
+
 namespace genny::canaries {
 
 using Nanosecond = int64_t;
@@ -31,7 +33,7 @@ using Nanosecond = int64_t;
  *                  the overhead of Genny and the latter is useful for seeing
  *                  how this overhead changes over time.
  */
-template <bool WithPing>
+template <WorkloadType WType>
 class Loops {
 public:
     explicit Loops(int64_t iterations) : _iterations(iterations){};

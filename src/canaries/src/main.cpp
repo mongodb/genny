@@ -20,6 +20,7 @@
 
 #include <canaries/Loops.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/context.hpp>
 
 using namespace genny;
 
@@ -37,9 +38,21 @@ struct ProgramOptions {
 
         std::ostringstream progDesc;
         progDesc << "Genny Canaries - Microbenchmarks for measuring overhead of various Genny "
-                    "functionality\n\n";
+                    "functionality by running various low-level workloads with Genny\n\n";
         progDesc << "Usage:\n";
-        progDesc << "    " << argv[0] << " <test-name [test-name] ...>\n";
+        progDesc << "    " << argv[0] << " work-name <loop-type [loop-type] ...>\n\n";
+        progDesc << "Workloads:‍";
+        progDesc << u8R"(
+    noop    Trivial workload that reads a value from a register; intended for testing loops
+            with the minimum amount of unrelated code. Note that fully "noop" is not possible
+            as it will cause the entire loop to be optimized out.
+    sleep   Sleep for a 100ms.
+    cpu     Multiply a large number 10000 times to stress the CPU's ALU.
+    l2      Traverse through a 2MB array in 64KB strides. This stresses the CPU's L2 cache.
+    l3      Traverse through a 8MB array in 64KB strides. This stresses the CPU's L3 cache
+            and/or RAM depending the CPU and its load.
+    ping    call db.ping() on a MongoDB server (running externally)
+    )" << "\n";
 
         progDesc << "Options:";
         po::options_description optDesc(progDesc.str());
@@ -86,9 +99,9 @@ struct ProgramOptions {
     }
 };
 
-template<bool WithPing>
+template <genny::canaries::WorkloadType WType>
 void runTest(std::vector<std::string>& testNames, int64_t iterations) {
-    canaries::Loops<WithPing> loops(iterations);
+    canaries::Loops<WType> loops(iterations);
     for (const auto& testName : testNames) {
         int64_t time;
 
@@ -116,6 +129,7 @@ void runTest(std::vector<std::string>& testNames, int64_t iterations) {
 }
 
 int main(int argc, char** argv) {
+    using genny::canaries::WorkloadType;
     auto opts = ProgramOptions(argc, argv);
     if (opts._isHelp || opts._testNames.empty()) {
         std::cout << opts._description << std::endl;
@@ -123,9 +137,9 @@ int main(int argc, char** argv) {
     }
 
     if (opts._withPing)
-        runTest<true>(opts._testNames, opts._iterations);
+        runTest<WorkloadType::kDbPing>(opts._testNames, opts._iterations);
     else
-        runTest<false>(opts._testNames, opts._iterations);
+        runTest<WorkloadType::kNoop>(opts._testNames, opts._iterations);
 
     return 0;
 }

@@ -30,25 +30,6 @@
 
 #endif
 
-/**
- * Do something in each iteration of the loop.
- *
- * @tparam WithPing Template to dictate what to do. Right now there are only
- *                  two options, but this will be expanded over time to
- *                  support more action types.
- */
-template <bool WithPing>
-inline void doPingIfNeeded() {
-    if constexpr (WithPing) {
-        // TODO: call db.ping();
-    } else {
-        int x = 0;
-        // Ensure memory is flushed and instruct the compiler
-        // to not optimize this line out.
-        asm volatile("" : : "r,m"(x++) : "memory");
-    }
-}
-
 genny::TimeSpec operator""_ts(unsigned long long v) {
     return genny::TimeSpec(std::chrono::milliseconds{v});
 }
@@ -71,19 +52,19 @@ inline Nanosecond now() {
 #endif
 }
 
-template <bool WithPing>
-Nanosecond Loops<WithPing>::simpleLoop() {
+template <WorkloadType WType>
+Nanosecond Loops<WType>::simpleLoop() {
     int64_t before = now();
     for (int i = 0; i < _iterations; i++) {
-        doPingIfNeeded<WithPing>();
+        doWork<WType>();
     }
     int64_t after = now();
 
     return after - before;
 }
 
-template <bool WithPing>
-Nanosecond Loops<WithPing>::phaseLoop() {
+template <WorkloadType WType>
+Nanosecond Loops<WType>::phaseLoop() {
 
     Orchestrator o{};
     v1::ActorPhase<int> loop{
@@ -98,24 +79,24 @@ Nanosecond Loops<WithPing>::phaseLoop() {
 
     int64_t before = now();
     for (auto _ : loop)
-        doPingIfNeeded<WithPing>();
+        doWork<WType>();
     int64_t after = now();
 
     return after - before;
 }
 
-template <bool WithPing>
-Nanosecond Loops<WithPing>::metricsLoop() {
+template <WorkloadType WType>
+Nanosecond Loops<WType>::metricsLoop() {
 
     auto metrics = genny::metrics::Registry{};
     metrics::Reporter reporter(metrics);
 
-    auto dummyOp = metrics.operation("metricsLoop", WithPing ? "db.ping()" : "Nop", 0u);
+    auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
 
     int64_t before = now();
     for (int i = 0; i < _iterations; i++) {
         auto ctx = dummyOp.start();
-        doPingIfNeeded<WithPing>();
+        doWork<WType>();
         ctx.success();
     }
     int64_t after = now();
@@ -123,8 +104,8 @@ Nanosecond Loops<WithPing>::metricsLoop() {
     return after - before;
 }
 
-template <bool WithPing>
-Nanosecond Loops<WithPing>::metricsPhaseLoop() {
+template <WorkloadType WType>
+Nanosecond Loops<WType>::metricsPhaseLoop() {
 
     // Copy/pasted from phaseLoop() and metricsLoop()
     Orchestrator o{};
@@ -141,12 +122,12 @@ Nanosecond Loops<WithPing>::metricsPhaseLoop() {
     auto metrics = genny::metrics::Registry{};
     metrics::Reporter{metrics};
 
-    auto dummyOp = metrics.operation("metricsLoop", WithPing ? "db.ping()" : "Nop", 0u);
+    auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
 
     int64_t before = now();
     for (auto _ : loop) {
         auto ctx = dummyOp.start();
-        doPingIfNeeded<WithPing>();
+        doWork<WType>();
         ctx.success();
     }
     int64_t after = now();
@@ -157,7 +138,7 @@ Nanosecond Loops<WithPing>::metricsPhaseLoop() {
 // "The definition of ... a non-exported member function or static data member
 // of a class template shall be present in every translation unit in which it
 // is explicitly instantiated."
-template class Loops<true>;
+template class Loops<WorkloadType::kNoop>;
+template class Loops<WorkloadType::kDbPing>;
 
-template class Loops<false>;
 }  // namespace genny::canaries
