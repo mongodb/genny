@@ -17,11 +17,15 @@
 #include <optional>
 #include <sstream>
 
+#include <gennylib/context.hpp>
+
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
+#include <testlib/ActorHelper.hpp>
 #include <testlib/clocks.hpp>
 #include <testlib/helpers.hpp>
+
 
 namespace genny::metrics {
 namespace {
@@ -420,6 +424,50 @@ TEST_CASE("Operation with threshold") {
         runActor(actor, 1ns);
         runActor(actor, 1ns);
         REQUIRE_THROWS_AS(runActor(actor, 11ns), v1::OperationThresholdExceededException);
+    }
+}
+
+TEST_CASE("Phases can set metrics") {
+
+    SECTION("With MetricsName") {
+        auto yaml = YAML::Load(R"(
+    SchemaVersion: 2018-07-01
+    Database: test
+    Actors:
+    - Name: MetricsNameTest
+      Type: HelloWorld
+      Threads: 1
+      Phases:
+      - Repeat: 1
+        MetricsName: Phase1Metrics
+    )");
+
+        ActorHelper ah{yaml, 1};
+        ah.run();
+
+        const auto metrics = ah.getMetricsOutput();
+        std::cout << metrics << std::endl;
+        REQUIRE_THAT(std::string(metrics), Catch::Contains("Phase1MetricsWithUniqueName_bytes,13"));
+    }
+
+    SECTION("With default metrics name") {
+        auto yaml = YAML::Load(R"(
+    SchemaVersion: 2018-07-01
+    Database: test
+    Actors:
+    - Name: MetricsNameTest
+      Type: HelloWorld
+      Threads: 1
+      Phases:
+      - Repeat: 1
+    )");
+
+        ActorHelper ah{yaml, 1};
+        ah.run();
+
+        const auto metrics = ah.getMetricsOutput();
+        std::cout << metrics << std::endl;
+        REQUIRE_THAT(std::string(metrics), Catch::Contains("DefaultMetricsName_bytes,13"));
     }
 }
 

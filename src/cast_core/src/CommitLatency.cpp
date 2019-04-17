@@ -65,7 +65,7 @@ struct CommitLatency::PhaseConfig {
           repeat{phaseContext.get<IntegerSpec>("Repeat")},
           threads{phaseContext.get<IntegerSpec>("Threads")},
           amountDistribution{-100, 100},
-          op{phaseContext.operation("insert", actorId)} {
+          op{phaseContext.operation("Insert", actorId)} {
         if (useTransaction) {
             optionsTransaction.write_concern(wc);
             optionsTransaction.read_preference(rp);
