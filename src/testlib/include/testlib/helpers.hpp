@@ -50,7 +50,7 @@ inline std::string toString(int i) {
 /**
  * @tparam Client either mongocxx::client or *mongocxx::pool::entry
  */
-template<typename Client>
+template <typename Client>
 inline void dropAllDatabases(Client& client) {
     for (auto&& dbDoc : client.list_databases()) {
         const auto dbName = dbDoc["name"].get_utf8().value;
