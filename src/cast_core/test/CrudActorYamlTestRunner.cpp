@@ -201,7 +201,7 @@ struct CrudActorTestCase {
             genny::ActorHelper ah(
                 config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             auto client = ah.client();
-            dropAllDatabases(client);
+            dropAllDatabases(*client);
             events.clear();
 
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
