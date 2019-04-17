@@ -35,18 +35,25 @@ public:
                          DefaultDriver::ProgramOptions::YamlSource::kFile);
 
 private:
+    enum class ParseMode {
+        kSmokeTest,
+        kNormal,
+    };
     YamlParameters _params;
-    bool _isSmokeTest;
-    fs::path _phaseConfigPath;
+    const fs::path _phaseConfigPath;
+
+    const bool _isSmokeTest;
 
     YAML::Node loadFile(const std::string& path);
+    YAML::Node recursiveParse(YAML::Node, ParseMode parseMode);
+
+    // Handle external configuration files.
+    void convertExternal(std::string key, YAML::Node value, YAML::Node& out);
     YAML::Node parseExternal(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
 
-    YAML::Node recursiveParse(YAML::Node);
-
-    void convertExternal(std::string key, YAML::Node value, YAML::Node out);
-    void convertToSmokeTest(std::string key, YAML::Node value, YAML::Node out);
+    // Handle smoke test mode.
+    void convertToSmokeTest(std::string key, YAML::Node value, YAML::Node& out);
 };
 
 }  // namespace genny::driver
