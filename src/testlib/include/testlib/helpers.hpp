@@ -47,13 +47,16 @@ inline std::string toString(int i) {
     return std::to_string(i);
 }
 
-// TODO: this is duped with MongoTestFixture
-inline void dropAllDatabases(mongocxx::pool::entry& client) {
-    for (auto&& dbDoc : client->list_databases()) {
+/**
+ * @tparam Client either mongocxx::client or *mongocxx::pool::entry
+ */
+template<typename Client>
+inline void dropAllDatabases(Client& client) {
+    for (auto&& dbDoc : client.list_databases()) {
         const auto dbName = dbDoc["name"].get_utf8().value;
         const auto dbNameString = std::string(dbName);
         if (dbNameString != "admin" && dbNameString != "config" && dbNameString != "local") {
-            client->database(dbName).drop();
+            client.database(dbName).drop();
         }
     }
 }
