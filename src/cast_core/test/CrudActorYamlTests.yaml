@@ -421,6 +421,19 @@ Tests:
       - Filter: {a: 1}
         Count: 0
 
+  - Description: simple findOneAndUpdate
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: findOneAndUpdate
+        OperationCommand:
+          Filter: {a: 100}
+          Update: {$inc: {a: 13}}
+    OutcomeCounts:
+      - Filter: {a: 113}
+        Count: 1
+
   - Description: Simple createIndex
     Operations:
       - OperationName: createIndex

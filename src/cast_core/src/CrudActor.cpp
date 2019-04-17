@@ -28,7 +28,6 @@
 
 #include <bsoncxx/json.hpp>
 
-#include <bsoncxx/builder/stream/document.hpp>
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/RetryStrategy.hpp>
@@ -216,13 +215,13 @@ struct convert<mongocxx::options::insert> {
         if (node.IsSequence() || node.IsMap()) {
             return false;
         }
-        if(node["Ordered"]) {
+        if (node["Ordered"]) {
             rhs.ordered(node["Ordered"].as<bool>());
         }
-        if(node["BypassDocumentValidation"]) {
+        if (node["BypassDocumentValidation"]) {
             rhs.bypass_document_validation(node["BypassDocumentValidation"].as<bool>());
         }
-        if(node["WriteConcern"]) {
+        if (node["WriteConcern"]) {
             rhs.write_concern(node["WriteConcern"].as<mongocxx::write_concern>());
         }
 
@@ -387,7 +386,8 @@ struct InsertOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _options{opNode["OperationOptions"].as<mongocxx::options::insert>(mongocxx::options::insert{})},
+          _options{opNode["OperationOptions"].as<mongocxx::options::insert>(
+              mongocxx::options::insert{})},
           _docExpr{createGenerator(opNode, "insertOne", "Document", context, id)} {
 
         // TODO: parse insert options.
@@ -832,6 +832,47 @@ private:
     metrics::Operation _operation;
 };
 
+struct FindOneAndUpdateOperation : public BaseOperation {
+    FindOneAndUpdateOperation(YAML::Node opNode,
+                              bool onSession,
+                              mongocxx::collection collection,
+                              metrics::Operation operation,
+                              PhaseContext& context,
+                              ActorId id)
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation},
+          _filterExpr{createGenerator(opNode, "FindOneAndUpdate", "Filter", context, id)},
+          _updateExpr{createGenerator(opNode, "FindOneAndUpdate", "Update", context, id)} {}
+
+    void run(mongocxx::client_session& session) override {
+        auto filter = _filterExpr();
+        auto update = _updateExpr();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            // TODO: remove moves from calls into _collection methods
+            auto result = (_onSession)
+                ? _collection.find_one_and_update(session, filter.view(), update.view(), _options)
+                : _collection.find_one_and_update(filter.view(), update.view(), _options);
+            if (result) {
+                ctx.addDocuments(1);
+                ctx.addBytes(result->view().length());
+            }
+            return std::make_optional(std::move(filter));
+        });
+    }
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    // TODO: parse _options
+    mongocxx::options::find_one_and_update _options;
+    DocumentGenerator _filterExpr;
+    DocumentGenerator _updateExpr;
+    metrics::Operation _operation;
+};
+
+
 /**
  * Example usage:
  *    Operations:
@@ -1054,6 +1095,7 @@ std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
     {"createIndex", baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
     {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
+    {"findOneAndUpdate", baseCallback<BaseOperation, OpCallback, FindOneAndUpdateOperation>},
     {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
     {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
     {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
