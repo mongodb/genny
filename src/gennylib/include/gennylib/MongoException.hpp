@@ -44,7 +44,7 @@ public:
         *this << MongoException::Message("SOME MESSAGE");
     }
 
-    MongoException(mongocxx::operation_exception& x,
+    MongoException(const mongocxx::operation_exception& x,
                    MongoException::BsonView info,
                    const std::string& message = "") {
 

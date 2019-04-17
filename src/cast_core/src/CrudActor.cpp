@@ -33,6 +33,7 @@
 #include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
 
 using BsonView = bsoncxx::document::view;
 using CrudActor = genny::actor::CrudActor;
@@ -221,23 +222,32 @@ ThrowMode decodeThrowMode(YAML::Node operation, PhaseContext& phaseContext) {
     return throwOnFailure ? ThrowMode::kRethrow : ThrowMode::kSwallow;
 }
 
+bsoncxx::document::value emptyDoc = bsoncxx::from_json("{}");
+
 struct BaseOperation {
     ThrowMode throwMode;
+
+    using MaybeDoc = std::optional<bsoncxx::document::value>;
 
     explicit BaseOperation(PhaseContext& phaseContext, YAML::Node operation)
         : throwMode{decodeThrowMode(operation, phaseContext)} {}
 
-    virtual void run(mongocxx::client_session& session) {
+    template<typename F>
+    void doBlock(metrics::Operation& op, F&& f) {
+        MaybeDoc info = std::nullopt;
+        auto ctx = op.start();
         try {
-            this->doRun(session);
-        } catch (const mongocxx::exception& x) {
+            info = f(ctx);
+        } catch (const mongocxx::operation_exception& x) {
             if (throwMode == ThrowMode::kRethrow) {
-                BOOST_THROW_EXCEPTION(MongoException(x.what()));
+                ctx.failure();
+                BOOST_THROW_EXCEPTION(MongoException(x, info ? info->view() : emptyDoc.view()));
             }
         }
+        ctx.success();
     }
 
-    virtual void doRun(mongocxx::client_session& session) = 0;
+    virtual void run(mongocxx::client_session& session) = 0;
     virtual ~BaseOperation() = default;
 };
 
@@ -296,15 +306,15 @@ struct CreateIndexOperation : public BaseOperation {
               createGenerator(opNode, "createIndex", "IndexOptions", context, id)} {}
 
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto keys = _keysGenerator();
         auto indexOptions = _indexOptionsGenerator();
 
-        auto ctx = _operation.start();
-        _onSession ? _collection.create_index(keys.view(), indexOptions.view(), _operationOptions)
-                   : _collection.create_index(
-                         session, keys.view(), indexOptions.view(), _operationOptions);
-        ctx.success();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx){
+            _onSession ? _collection.create_index(keys.view(), indexOptions.view(), _operationOptions)
+                       : _collection.create_index(session, keys.view(), indexOptions.view(), _operationOptions);
+            return std::make_optional(std::move(keys));
+        });
     }
 };
 
@@ -329,19 +339,17 @@ struct InsertOneOperation : public WriteOperation {
         return mongocxx::model::insert_one{std::move(document)};
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto document = _docExpr();
         auto size = document.view().length();
 
-        auto ctx = _operation.start();
-
-        (_onSession) ? _collection.insert_one(session, std::move(document), _options)
-                     : _collection.insert_one(std::move(document), _options);
-
-        ctx.addDocuments(1);
-        ctx.addBytes(size);
-
-        ctx.success();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            (_onSession) ? _collection.insert_one(session, std::move(document), _options)
+                         : _collection.insert_one(std::move(document), _options);
+            ctx.addDocuments(1);
+            ctx.addBytes(size);
+            return std::make_optional(std::move(document));
+        });
     }
 
 private:
@@ -374,17 +382,19 @@ struct UpdateOneOperation : public WriteOperation {
         return mongocxx::model::update_one{std::move(filter), std::move(update)};
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto update = _updateExpr();
-        auto ctx = _operation.start();
-        auto result = (_onSession)
-            ? _collection.update_one(session, std::move(filter), std::move(update), _options)
-            : _collection.update_one(std::move(filter), std::move(update), _options);
-        if (result) {
-            ctx.addDocuments(result->modified_count());
-        }
-        ctx.success();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto result = (_onSession)
+                          ? _collection.update_one(session, std::move(filter), std::move(update), _options)
+                          : _collection.update_one(std::move(filter), std::move(update), _options);
+            if (result) {
+                ctx.addDocuments(result->modified_count());
+            }
+            // pick an 'info' document...either one makes sense
+            return std::make_optional(std::move(update));
+        });
     }
 
 private:
@@ -416,17 +426,19 @@ struct UpdateManyOperation : public WriteOperation {
         return mongocxx::model::update_many{std::move(filter), std::move(update)};
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto update = _updateExpr();
-        auto ctx = _operation.start();
-        auto result = (_onSession)
-            ? _collection.update_many(session, std::move(filter), std::move(update), _options)
-            : _collection.update_many(std::move(filter), std::move(update), _options);
-        if (result) {
-            ctx.addDocuments(result->modified_count());
-        }
-        ctx.success();
+
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto result = (_onSession)
+                          ? _collection.update_many(session, std::move(filter), std::move(update), _options)
+                          : _collection.update_many(std::move(filter), std::move(update), _options);
+            if (result) {
+                ctx.addDocuments(result->modified_count());
+            }
+            return std::make_optional(std::move(update));
+        });
     }
 
 private:
@@ -457,15 +469,16 @@ struct DeleteOneOperation : public WriteOperation {
         return mongocxx::model::delete_one{std::move(filter)};
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
-        auto ctx = _operation.start();
-        auto result = (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
-                                   : _collection.delete_one(std::move(filter), _options);
-        if (result) {
-            ctx.addDocuments(result->deleted_count());
-        }
-        ctx.success();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto result = (_onSession) ? _collection.delete_one(session, std::move(filter), _options)
+                                       : _collection.delete_one(std::move(filter), _options);
+            if (result) {
+                ctx.addDocuments(result->deleted_count());
+            }
+            return std::make_optional(std::move(filter));
+        });
     }
 
 private:
@@ -495,15 +508,16 @@ struct DeleteManyOperation : public WriteOperation {
         return mongocxx::model::delete_many{std::move(filter)};
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
-        auto ctx = _operation.start();
-        auto results = (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
-                                    : _collection.delete_many(std::move(filter), _options);
-        if (results) {
-            ctx.addDocuments(results->deleted_count());
-        }
-        ctx.success();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto results = (_onSession) ? _collection.delete_many(session, std::move(filter), _options)
+                                        : _collection.delete_many(std::move(filter), _options);
+            if (results) {
+                ctx.addDocuments(results->deleted_count());
+            }
+            return std::make_optional(std::move(filter));
+        });
     }
 
 private:
@@ -536,22 +550,23 @@ struct ReplaceOneOperation : public WriteOperation {
         return mongocxx::model::replace_one{std::move(filter), std::move(replacement)};
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto replacement = _replacementExpr();
         auto size = replacement.view().length();
 
-        auto ctx = _operation.start();
-        auto result = (_onSession)
-            ? _collection.replace_one(session, std::move(filter), std::move(replacement), _options)
-            : _collection.replace_one(std::move(filter), std::move(replacement), _options);
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto result = (_onSession)
+                          ? _collection.replace_one(session, std::move(filter), std::move(replacement), _options)
+                          : _collection.replace_one(std::move(filter), std::move(replacement), _options);
 
-        if (result) {
-            ctx.addDocuments(result->modified_count());
-        }
-        ctx.addBytes(size);
+            if (result) {
+                ctx.addDocuments(result->modified_count());
+            }
+            ctx.addBytes(size);
 
-        ctx.success();
+            return std::make_optional(std::move(replacement));
+        });
     }
 
 private:
@@ -637,26 +652,28 @@ struct BulkWriteOperation : public BaseOperation {
             createWriteOp(writeOp, _onSession, _collection, _operation, context, id));
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto bulk = (_onSession) ? _collection.create_bulk_write(session, _options)
                                  : _collection.create_bulk_write(_options);
         for (auto&& op : _writeOps) {
             auto writeModel = op->getModel();
             bulk.append(writeModel);
         }
-        auto ctx = _operation.start();
-        auto result = bulk.execute();
 
-        size_t docs = 0;
-        if (result) {
-            docs += result->modified_count();
-            docs += result->deleted_count();
-            docs += result->inserted_count();
-            docs += result->upserted_count();
-            ctx.addDocuments(docs);
-        }
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto result = bulk.execute();
 
-        ctx.success();
+            size_t docs = 0;
+            if (result) {
+                docs += result->modified_count();
+                docs += result->deleted_count();
+                docs += result->inserted_count();
+                docs += result->upserted_count();
+                ctx.addDocuments(docs);
+            }
+            // no viable option
+            return std::nullopt;
+        });
     }
 
 private:
@@ -694,14 +711,16 @@ struct CountDocumentsOperation : public BaseOperation {
         }
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
-        auto ctx = _operation.start();
-        auto count = (_onSession)
-            ? _collection.count_documents(session, std::move(filter), _options)
-            : _collection.count_documents(std::move(filter), _options);
-        ctx.addDocuments(count);
-        ctx.success();
+
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto count = (_onSession)
+                         ? _collection.count_documents(session, std::move(filter), _options)
+                         : _collection.count_documents(std::move(filter), _options);
+            ctx.addDocuments(count);
+            return std::make_optional(std::move(filter));
+        });
     }
 
 
@@ -727,16 +746,17 @@ struct FindOperation : public BaseOperation {
           _filterExpr{createGenerator(opNode, "Find", "Filter", context, id)} {}
     // TODO: parse Find Options
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
-        auto ctx = _operation.start();
-        auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
-                                   : _collection.find(std::move(filter), _options);
-        for (auto&& doc : cursor) {
-            ctx.addDocuments(1);
-            ctx.addBytes(doc.length());
-        }
-        ctx.success();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto cursor = (_onSession) ? _collection.find(session, std::move(filter), _options)
+                                       : _collection.find(std::move(filter), _options);
+            for (auto &&doc : cursor) {
+                ctx.addDocuments(1);
+                ctx.addBytes(doc.length());
+            }
+            return std::make_optional(std::move(filter));
+        });
     }
 
 
@@ -780,7 +800,7 @@ struct InsertManyOperation : public BaseOperation {
         // TODO: parse insert options.
     }
 
-    void doRun(mongocxx::client_session& session) override {
+    void run(mongocxx::client_session& session) override {
         size_t bytes = 0;
         for (auto&& docExpr : _docExprs) {
             auto doc = docExpr();
@@ -788,16 +808,16 @@ struct InsertManyOperation : public BaseOperation {
             _writeOps.emplace_back(std::move(doc));
         }
 
-        auto ctx = _operation.start();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto result = (_onSession) ? _collection.insert_many(session, _writeOps, _options)
+                                       : _collection.insert_many(_writeOps, _options);
 
-        auto result = (_onSession) ? _collection.insert_many(session, _writeOps, _options)
-                                   : _collection.insert_many(_writeOps, _options);
-
-        ctx.addBytes(bytes);
-        if (result) {
-            ctx.addDocuments(result->inserted_count());
-        }
-        ctx.success();
+            ctx.addBytes(bytes);
+            if (result) {
+                ctx.addDocuments(result->inserted_count());
+            }
+            return std::nullopt;
+        });
     }
 
 private:
@@ -833,7 +853,8 @@ struct StartTransactionOperation : public BaseOperation {
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
-        : BaseOperation(context, opNode) {
+        : BaseOperation(context, opNode),
+          _operation{operation} {
         if (!opNode.IsMap())
             return;
         if (opNode["Options"]) {
@@ -841,12 +862,16 @@ struct StartTransactionOperation : public BaseOperation {
         }
     }
 
-    void doRun(mongocxx::client_session& session) override {
-        session.start_transaction(_options);
+    void run(mongocxx::client_session& session) override {
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            session.start_transaction(_options);
+            return std::nullopt;
+        });
     }
 
 private:
     mongocxx::options::transaction _options;
+    metrics::Operation _operation;
 };
 
 /**
@@ -863,11 +888,18 @@ struct CommitTransactionOperation : public BaseOperation {
                                metrics::Operation operation,
                                PhaseContext& context,
                                ActorId id)
-        : BaseOperation(context, opNode) {}
+        : BaseOperation(context, opNode),
+          _operation{operation} {}
 
-    void doRun(mongocxx::client_session& session) override {
-        session.commit_transaction();
+    void run(mongocxx::client_session& session) override {
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            session.commit_transaction();
+            return std::nullopt;
+        });
     }
+
+private:
+    metrics::Operation _operation;
 };
 
 /**
@@ -886,7 +918,7 @@ struct SetReadConcernOperation : public BaseOperation {
                             metrics::Operation operation,
                             PhaseContext& context,
                             ActorId id)
-        : BaseOperation(context, opNode), _collection{std::move(collection)} {
+        : BaseOperation(context, opNode), _collection{std::move(collection)}, _operation{operation} {
         if (!opNode["ReadConcern"]) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'setReadConcern' operation expects a 'ReadConcern' field."));
@@ -894,13 +926,17 @@ struct SetReadConcernOperation : public BaseOperation {
         _readConcern = opNode["ReadConcern"].as<mongocxx::read_concern>();
     }
 
-    void doRun(mongocxx::client_session& session) override {
-        _collection.read_concern(_readConcern);
+    void run(mongocxx::client_session& session) override {
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            _collection.read_concern(_readConcern);
+            return std::nullopt;
+        });
     }
 
 private:
     mongocxx::collection _collection;
     mongocxx::read_concern _readConcern;
+    metrics::Operation _operation;
 };
 
 /**
@@ -932,10 +968,12 @@ struct DropOperation : public BaseOperation {
         }
     }
 
-    void doRun(mongocxx::client_session& session) override {
-        auto ctx = _operation.start();
-        (_onSession) ? _collection.drop(session, _wc) : _collection.drop(_wc);
-        ctx.success();
+    void run(mongocxx::client_session& session) override {
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            (_onSession) ? _collection.drop(session, _wc) : _collection.drop(_wc);
+            // ideally return something indicating collection name
+            return std::nullopt;
+        });
     }
 
 private:
