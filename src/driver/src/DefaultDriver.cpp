@@ -100,8 +100,9 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         phaseConfigSource = fs::path(options.workloadSource).parent_path();
     }
 
-    WorkloadParser parser;
-    auto yaml = parser.parse(options.workloadSource, phaseConfigSource, options.workloadSourceType);
+    WorkloadParser parser{phaseConfigSource, options.isSmokeTest};
+
+    auto yaml = parser.parse(options.workloadSource, options.workloadSourceType);
     auto orchestrator = Orchestrator{};
 
     if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
@@ -243,7 +244,10 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
              "Can also specify as the last positional argument.")
             ("mongo-uri,u",
              po::value<std::string>()->default_value("mongodb://localhost:27017"),
-             "Mongo URI to use for the default connection-pool.");
+             "Mongo URI to use for the default connection-pool.")
+            ("smoke-test,s",
+             po::value<bool>()->default_value(false),
+             "Run a workload in smoke test mode where all phases are set to Repeat=1");
 
     positional.add("subcommand", 1);
     positional.add("workload-file", -1);
@@ -290,6 +294,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     if (vm.count("help") >= 1)
         this->runMode = RunMode::kHelp;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
+    this->isSmokeTest = vm["smoke-test"].as<bool>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 

@@ -26,22 +26,27 @@ using YamlParameters = std::map<std::string, YAML::Node>;
 namespace fs = boost::filesystem;
 
 class WorkloadParser {
-
 public:
-    WorkloadParser() = default;
+    explicit WorkloadParser(fs::path& phaseConfigPath, bool isSmokeTest = false)
+        : _isSmokeTest{isSmokeTest}, _phaseConfigPath{phaseConfigPath} {};
 
     YAML::Node parse(const std::string& source,
-                     const fs::path& phaseConfig,
                      DefaultDriver::ProgramOptions::YamlSource =
                          DefaultDriver::ProgramOptions::YamlSource::kFile);
 
 private:
     YamlParameters _params;
+    bool _isSmokeTest;
+    fs::path _phaseConfigPath;
 
-    YAML::Node recursiveParse(YAML::Node, const fs::path&);
     YAML::Node loadFile(const std::string& path);
-    YAML::Node parseExternal(YAML::Node, const fs::path&);
+    YAML::Node parseExternal(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
+
+    YAML::Node recursiveParse(YAML::Node);
+
+    void convertExternal(std::string key, YAML::Node value, YAML::Node out);
+    void convertToSmokeTest(std::string key, YAML::Node value, YAML::Node out);
 };
 
 }  // namespace genny::driver

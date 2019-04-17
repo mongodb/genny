@@ -21,9 +21,7 @@
 namespace genny::driver {
 
 YAML::Node WorkloadParser::parse(const std::string& source,
-                                 const fs::path& phaseConfig,
                                  DefaultDriver::ProgramOptions::YamlSource sourceType) {
-
     YAML::Node workload;
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         workload = YAML::Load(source);
@@ -31,7 +29,7 @@ YAML::Node WorkloadParser::parse(const std::string& source,
         workload = loadFile(source);
     }
 
-    return recursiveParse(workload, phaseConfig);
+    return recursiveParse(workload);
 }
 
 YAML::Node WorkloadParser::loadFile(const std::string& source) {
@@ -43,30 +41,21 @@ YAML::Node WorkloadParser::loadFile(const std::string& source) {
     }
 }
 
-YAML::Node WorkloadParser::recursiveParse(YAML::Node node, const fs::path& phaseConfig) {
+YAML::Node WorkloadParser::recursiveParse(YAML::Node node) {
     YAML::Node out;
     switch (node.Type()) {
         case YAML::NodeType::Map: {
             for (auto kvp : node) {
-                if (kvp.first.as<std::string>() == "^Parameter") {
-                    out = replaceParam(kvp.second);
-                } else if (kvp.first.as<std::string>() == "ExternalPhaseConfig") {
-                    auto external = parseExternal(kvp.second, phaseConfig);
-                    // Merge the external node with the any other parameters specified
-                    // for this node like "Repeat" or "Duration".
-                    for (auto externalKvp : external) {
-                        if (!out[externalKvp.first])
-                            out[externalKvp.first] = externalKvp.second;
-                    }
-                } else {
-                    out[kvp.first] = recursiveParse(kvp.second, phaseConfig);
-                }
+                convertExternal(kvp.first.as<std::string>(), kvp.second, out);
+                if (_isSmokeTest)
+                    // Do a second pass to set node values for smoke test.
+                    convertToSmokeTest(kvp.first.as<std::string>(), kvp.second, out);
             }
             break;
         }
         case YAML::NodeType::Sequence: {
             for (auto val : node) {
-                out.push_back(recursiveParse(val, phaseConfig));
+                out.push_back(recursiveParse(val));
             }
             break;
         }
@@ -96,7 +85,33 @@ YAML::Node WorkloadParser::replaceParam(YAML::Node input) {
     }
 }
 
-YAML::Node WorkloadParser::parseExternal(YAML::Node external, const fs::path& phaseConfig) {
+void WorkloadParser::convertExternal(std::string key, YAML::Node value, YAML::Node out) {
+    if (key == "^Parameter") {
+        out = replaceParam(value);
+    } else if (key == "ExternalPhaseConfig") {
+        auto external = parseExternal(value);
+        // Merge the external node with the any other parameters specified
+        // for this node like "Repeat" or "Duration".
+        for (auto externalKvp : external) {
+            if (!out[externalKvp.first])
+                out[externalKvp.first] = externalKvp.second;
+        }
+    } else {
+        out[key] = recursiveParse(value);
+    }
+}
+
+void WorkloadParser::convertToSmokeTest(std::string key, YAML::Node value, YAML::Node out) {
+    if (key == "Duration" || key == "Repeat") {
+        out["Repeat"] = 1;
+    } else if (key == "Rate" || key == "SleepBefore" || key == "SleepAfter") {
+        // Ignore those keys in smoke tests.
+    } else {
+        out[key] = recursiveParse(value);
+    }
+}
+
+YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
     int keysSeen = 0;
 
     if (!external["Path"]) {
@@ -106,7 +121,7 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external, const fs::path& ph
     fs::path path(external["Path"].as<std::string>());
     keysSeen++;
 
-    path = fs::absolute(phaseConfig / path);
+    path = fs::absolute(_phaseConfigPath / path);
 
     if (!fs::is_regular_file(path)) {
         auto os = std::ostringstream();
@@ -163,6 +178,6 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external, const fs::path& ph
         throw InvalidConfigurationException(os.str());
     }
 
-    return recursiveParse(replacement, phaseConfig);
+    return recursiveParse(replacement);
 }
 }  // namespace genny::driver

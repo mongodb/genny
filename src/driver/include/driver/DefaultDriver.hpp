@@ -64,6 +64,7 @@ public:
         std::string metricsOutputFileName;
         std::string mongoUri;
         std::string description;
+        bool isSmokeTest;
         DefaultDriver::RunMode runMode = RunMode::kNormal;
     };
 
