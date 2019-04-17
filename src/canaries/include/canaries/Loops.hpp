@@ -61,4 +61,4 @@ private:
 };
 }  // namespace genny::canaries
 
-#endif    // HEADER_C8D12C92_7C08_4B7F_9857_8B25F7258BB9_INCLUDED
+#endif  // HEADER_C8D12C92_7C08_4B7F_9857_8B25F7258BB9_INCLUDED
