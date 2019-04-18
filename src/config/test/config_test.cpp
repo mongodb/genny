@@ -7,14 +7,42 @@
 
 using namespace genny;
 
-struct Ctx {
+struct WorkloadContext : public NodeT<nullptr_t> {
+    WorkloadContext(YAML::Node node)
+    : NodeT<nullptr_t>{node, nullptr} {}
     int rng() {
         return 7;
     }
 };
 
-using Node = NodeT<Ctx>;
+struct ActorContext : public NodeT<WorkloadContext> {
 
+};
+
+TEST_CASE("foo") {
+    auto yaml = YAML::Load(R"(
+a: 7
+b: 900
+Children:
+  a: 100
+  One: {}
+  Two: {a: 9}
+  Three: {b: 70}
+  Four:
+    FourChild:
+      a: 11
+)");
+
+    WorkloadContext context{yaml};
+    REQUIRE(context["a"].as<int>() == 7);
+    REQUIRE(context["Children"]["One"]["a"].as<int>() == 100);
+
+    ActorContext actorContext{yaml, &context};
+}
+
+// using Node = NodeT<Ctx>;/**/
+
+/*
 TEST_CASE("ConfigNode inheritance") {
     Ctx context;
 
@@ -151,3 +179,4 @@ b: {}
         REQUIRE(three.x == 9);
     }
 }
+ */
