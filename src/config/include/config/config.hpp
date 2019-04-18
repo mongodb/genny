@@ -85,9 +85,14 @@ public:
 
     template <typename O>
     O as() {  // TODO: const version
+        return this->from<O>();
+    }
+
+    template<typename O, typename...Args>
+    O from(Args&&...args) {
         static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
-        if constexpr (std::is_constructible_v<O, Node&, C*>) {
-            return O{*this, this->_context};
+        if constexpr (std::is_constructible_v<O, Node&, C*, Args...>) {
+            return O{*this, this->_context, std::forward<Args>(args)...};
         } else {
             return NodeConvert<O>::convert(_yaml);
         }

@@ -97,8 +97,6 @@ ListOfMapStringString:
 }
 
 
-namespace genny {
-
 struct MyType {
     std::string msg;
     MyType(Node<Ctx>& node, Ctx* ctx)
@@ -107,9 +105,7 @@ struct MyType {
     }
 };
 
-}
-
-TEST_CASE("ConfigNode User-Defined Conversions") {
+TEST_CASE("ConfigNode Simple User-Defined Conversions") {
     Ctx context;
 
     auto yaml = YAML::Load(R"(
@@ -129,3 +125,33 @@ Two: {}
     }
 }
 
+struct HasOtherCtorParams {
+    int x;
+    HasOtherCtorParams(Node<Ctx>& node, Ctx* ctx, int x)
+            : x{x} {
+        REQUIRE(node["x"].as<int>() == x);
+    }
+};
+
+TEST_CASE("Configurable additional-ctor-params Conversions") {
+    Ctx context;
+
+    auto yaml = YAML::Load(R"(
+x: 9
+a: {x: 7}
+b: {}
+)");
+    Node node(yaml, &context);
+    {
+        HasOtherCtorParams one = node.from<HasOtherCtorParams,int>(9);
+        REQUIRE(one.x == 9);
+    }
+    {
+        HasOtherCtorParams two = node["a"].from<HasOtherCtorParams,int>(7);
+        REQUIRE(two.x == 7);
+    }
+    {
+        HasOtherCtorParams three = node["b"].from<HasOtherCtorParams,int>(9);
+        REQUIRE(three.x == 9);
+    }
+}
