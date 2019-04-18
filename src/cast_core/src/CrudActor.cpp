@@ -30,7 +30,6 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
 
@@ -1031,7 +1030,6 @@ namespace genny::actor {
 
 struct CrudActor::PhaseConfig {
     mongocxx::collection collection;
-    RetryStrategy::Options options;
     std::vector<std::unique_ptr<BaseOperation>> operations;
     metrics::Operation metrics;
 

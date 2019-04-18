@@ -36,15 +36,11 @@ struct InsertRemove::PhaseConfig {
     PhaseConfig(mongocxx::database db,
                 const std::string collection_name,
                 genny::DefaultRandom& rng,
-                int id,
-                RetryStrategy::Options insertOpts = {},
-                RetryStrategy::Options removeOpts = {})
+                int id)
         : database{db},
           collection{db[collection_name]},
           myDoc(bsoncxx::builder::stream::document{} << "_id" << id
-                                                     << bsoncxx::builder::stream::finalize),
-          insertOptions{std::move(insertOpts)},
-          removeOptions{std::move(removeOpts)} {}
+                                                     << bsoncxx::builder::stream::finalize) {}
 
     PhaseConfig(PhaseContext& context,
                 genny::DefaultRandom& rng,
@@ -53,40 +49,31 @@ struct InsertRemove::PhaseConfig {
         : PhaseConfig((*client)[context.get<std::string>("Database")],
                       context.get<std::string>("Collection"),
                       rng,
-                      id,
-                      context.get<RetryStrategy::Options, false>("InsertStage", "RetryStrategy")
-                          .value_or(RetryStrategy::Options{}),
-                      context.get<RetryStrategy::Options, false>("RemoveStage", "RetryStrategy")
-                          .value_or(RetryStrategy::Options{})) {}
+                      id) {}
 
     mongocxx::database database;
     mongocxx::collection collection;
     bsoncxx::document::value myDoc;
-
-    RetryStrategy::Options insertOptions;
-    RetryStrategy::Options removeOptions;
 };
 
 void InsertRemove::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
             BOOST_LOG_TRIVIAL(debug) << " Inserting and then removing";
-            _insertStrategy.run(
-                [&](metrics::OperationContext& ctx) {
-                    // First we insert
-                    auto view = config->myDoc.view();
-                    config->collection.insert_one(view);
-                    ctx.addBytes(view.length());
-                    ctx.addDocuments(1);
-                },
-                config->insertOptions);
-            _removeStrategy.run(
-                [&](metrics::OperationContext& ctx) {
-                    // Then we remove
-                    auto results = config->collection.delete_many(config->myDoc.view());
-                    ctx.addDocuments(1);
-                },
-                config->removeOptions);
+
+            // First we insert
+            auto insertCtx = _insert.start();
+            auto view = config->myDoc.view();
+            config->collection.insert_one(view);
+            insertCtx.addBytes(view.length());
+            insertCtx.addDocuments(1);
+            insertCtx.success();
+
+            // Then we remove
+            auto removeCtx = _remove.start();
+            auto results = config->collection.delete_many(config->myDoc.view());
+            removeCtx.addDocuments(1);
+            removeCtx.success();
         }
     }
 }
@@ -94,8 +81,8 @@ void InsertRemove::run() {
 InsertRemove::InsertRemove(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().getRNGForThread(InsertRemove::id())},
-      _insertStrategy{context.operation("Insert", InsertRemove::id())},
-      _removeStrategy{context.operation("Remove", InsertRemove::id())},
+      _insert{context.operation("Insert", InsertRemove::id())},
+      _remove{context.operation("Remove", InsertRemove::id())},
       _client{std::move(context.client())},
       _loop{context, _rng, _client, InsertRemove::id()} {}
 

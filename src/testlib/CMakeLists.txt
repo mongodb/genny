@@ -19,6 +19,7 @@ CreateGennyTargets(
     TYPE    STATIC
     DEPENDS
         gennylib
+        cast_core
         MongoCxx::mongocxx
         MongoCxx::bsoncxx
         Boost::boost
