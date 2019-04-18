@@ -37,34 +37,29 @@ namespace genny::actor {
 struct Insert::PhaseConfig {
     mongocxx::collection collection;
     DocumentGenerator documentExpr;
-    RetryStrategy::Options options;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          documentExpr{phaseContext.createDocumentGenerator(id, "Document")},
-          options{phaseContext.get<RetryStrategy::Options, false>("RetryStrategy")
-                      .value_or(RetryStrategy::Options{})} {}
+          documentExpr{phaseContext.createDocumentGenerator(id, "Document")} {}
 };
 
 void Insert::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            _strategy.run(
-                [&](metrics::OperationContext& ctx) {
-                    auto document = config->documentExpr();
-                    BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(document.view());
-                    config->collection.insert_one(document.view());
-                    ctx.addDocuments(1);
-                    ctx.addBytes(document.view().length());
-                },
-                config->options);
+            auto ctx = _insert.start();
+            auto document = config->documentExpr();
+            BOOST_LOG_TRIVIAL(info) << " Inserting " << bsoncxx::to_json(document.view());
+            config->collection.insert_one(document.view());
+            ctx.addDocuments(1);
+            ctx.addBytes(document.view().length());
+            ctx.success();
         }
     }
 }
 
 Insert::Insert(genny::ActorContext& context)
     : Actor(context),
-      _strategy{context.operation("Insert", Insert::id())},
+      _insert{context.operation("Insert", Insert::id())},
       _client{std::move(context.client())},
       _loop{context, (*_client)[context.get<std::string>("Database")], Insert::id()} {}
 

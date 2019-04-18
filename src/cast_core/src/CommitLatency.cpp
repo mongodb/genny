@@ -30,7 +30,6 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 
 
@@ -52,9 +51,9 @@ struct CommitLatency::PhaseConfig {
     int64_t repeat;
     int64_t threads;
     boost::random::uniform_int_distribution<int64_t> amountDistribution;
-    RetryStrategy::Options options;
+    metrics::Operation op;
 
-    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
+    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId actorId)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           wc{phaseContext.get<mongocxx::write_concern>("WriteConcern")},
           rc{phaseContext.get<mongocxx::read_concern>("ReadConcern")},
@@ -65,8 +64,7 @@ struct CommitLatency::PhaseConfig {
           repeat{phaseContext.get<IntegerSpec>("Repeat")},
           threads{phaseContext.get<IntegerSpec>("Threads")},
           amountDistribution{-100, 100},
-          options{phaseContext.get<RetryStrategy::Options, false>("RetryStategy")
-                      .value_or(RetryStrategy::Options{})} {
+          op{phaseContext.operation("Insert", actorId)} {
         if (useTransaction) {
             optionsTransaction.write_concern(wc);
             optionsTransaction.read_preference(rp);
@@ -110,70 +108,69 @@ void CommitLatency::run() {
                 _session = std::make_shared<mongocxx::client_session>(_client->start_session());
             }
         }
+
         for (const auto&& _ : config) {
-            _strategy.run(
-                [&](metrics::OperationContext& ctx) {
-                    // Basically we withdraw `amount` from account 1 and deposit to account 2
-                    // amount = random.randint(-100, 100)
-                    auto amount = config->amountDistribution(_rng);
+            auto ctx = config->op.start();
+            // Basically we withdraw `amount` from account 1 and deposit to account 2
+            // amount = random.randint(-100, 100)
+            auto amount = config->amountDistribution(_rng);
 
-                    if (config->useTransaction) {
-                        _session->start_transaction(config->optionsTransaction);
-                    }
+            if (config->useTransaction) {
+                _session->start_transaction(config->optionsTransaction);
+            }
 
-                    // result1 = db.hltest.find_one( { '_id': 1 }, session=session )
-                    bsoncxx::document::value doc_filter1 = document{} << "_id" << 1 << finalize;
-                    auto result1 = config->collection.find_one(
-                        *_session, doc_filter1.view(), config->optionsFind);
+            // result1 = db.hltest.find_one( { '_id': 1 }, session=session )
+            bsoncxx::document::value doc_filter1 = document{} << "_id" << 1 << finalize;
+            auto result1 =
+                config->collection.find_one(*_session, doc_filter1.view(), config->optionsFind);
 
-                    // db.hltest.update_one( {'_id': 1}, {'$inc': {'n': -amount}}, session=session )
-                    bsoncxx::document::value doc_update1 = document{}
-                        << "$inc" << open_document << "n" << -amount << close_document << finalize;
-                    config->collection.update_one(
-                        *_session, doc_filter1.view(), doc_update1.view(), config->optionsUpdate);
+            // db.hltest.update_one( {'_id': 1}, {'$inc': {'n': -amount}}, session=session )
+            bsoncxx::document::value doc_update1 = document{}
+                << "$inc" << open_document << "n" << -amount << close_document << finalize;
+            config->collection.update_one(
+                *_session, doc_filter1.view(), doc_update1.view(), config->optionsUpdate);
 
-                    // result2 = db.hltest.find_one( { '_id': 2 }, session=session )
-                    bsoncxx::document::value doc_filter2 = document{} << "_id" << 2 << finalize;
-                    auto result2 = config->collection.find_one(
-                        *_session, doc_filter2.view(), config->optionsFind);
+            // result2 = db.hltest.find_one( { '_id': 2 }, session=session )
+            bsoncxx::document::value doc_filter2 = document{} << "_id" << 2 << finalize;
+            auto result2 =
+                config->collection.find_one(*_session, doc_filter2.view(), config->optionsFind);
 
-                    // db.hltest.update_one( {'_id': 2}, {'$inc': {'n': amount}}, session=session )
-                    bsoncxx::document::value doc_update2 = document{}
-                        << "$inc" << open_document << "n" << amount << close_document << finalize;
-                    config->collection.update_one(
-                        *_session, doc_filter2.view(), doc_update2.view(), config->optionsUpdate);
+            // db.hltest.update_one( {'_id': 2}, {'$inc': {'n': amount}}, session=session )
+            bsoncxx::document::value doc_update2 = document{}
+                << "$inc" << open_document << "n" << amount << close_document << finalize;
+            config->collection.update_one(
+                *_session, doc_filter2.view(), doc_update2.view(), config->optionsUpdate);
 
-                    // result = db.hltest.aggregate( [ { '$group': { '_id': 'foo', 'total' : {
-                    // '$sum': '$n' } } } ], session=session ).next()
-                    mongocxx::pipeline p{};
-                    bsoncxx::document::value doc_group = document{}
-                        << "_id"
-                        << "foo"
-                        << "total" << open_document << "$sum"
-                        << "$n" << close_document << finalize;
-                    p.group(doc_group.view());
-                    auto cursor =
-                        config->collection.aggregate(*_session, p, config->optionsAggregate);
-                    // Check for isolation or consistency errors.
-                    //
-                    // These are expected when read_preference is secondary and not in a session.
-                    // Also could happen on a primary if using multiple threads.
-                    //
-                    // Note: If there's skew in the sum total, we never fix it. So after the first
-                    // error, this counter is likely to increment on every loop after that. The
-                    // exact value of the metric is therefore uninteresting, it's only significant
-                    // whether it is zero or non-zero.
-                    for (auto doc : cursor) {
-                        if (doc["total"].get_int64() != 200) {
-                            ctx.addErrors(1);
-                        }
-                    }
+            // result = db.hltest.aggregate( [ { '$group': { '_id': 'foo', 'total' : {
+            // '$sum': '$n' } } } ], session=session ).next()
+            mongocxx::pipeline p{};
 
-                    if (config->useTransaction) {
-                        _session->commit_transaction();
-                    }
-                },
-                config->options);
+            bsoncxx::document::value doc_group = document{} << "_id"
+                                                            << "foo"
+                                                            << "total" << open_document << "$sum"
+                                                            << "$n" << close_document << finalize;
+            p.group(doc_group.view());
+            auto cursor = config->collection.aggregate(*_session, p, config->optionsAggregate);
+
+            // Check for isolation or consistency errors.
+            //
+            // These are expected when read_preference is secondary and not in a session.
+            // Also could happen on a primary if using multiple threads.
+            //
+            // Note: If there's skew in the sum total, we never fix it. So after the first
+            // error, this counter is likely to increment on every loop after that. The
+            // exact value of the metric is therefore uninteresting, it's only significant
+            // whether it is zero or non-zero.
+            for (auto doc : cursor) {
+                if (doc["total"].get_int64() != 200) {
+                    ctx.addErrors(1);
+                }
+            }
+
+            if (config->useTransaction) {
+                _session->commit_transaction();
+            }
+            ctx.success();
         }
     }
 }
@@ -181,9 +178,8 @@ void CommitLatency::run() {
 CommitLatency::CommitLatency(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().getRNGForThread(CommitLatency::id())},
-      _strategy{context.operation("insert", CommitLatency::id())},
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context.get<std::string>("Database")]} {}
+      _loop{context, (*_client)[context.get<std::string>("Database")], CommitLatency::id()} {}
 
 namespace {
 auto registerCommitLatency = Cast::registerDefault<CommitLatency>();

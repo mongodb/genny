@@ -30,7 +30,6 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 #include <gennylib/conventions.hpp>
 
@@ -879,18 +878,15 @@ namespace genny::actor {
 
 struct CrudActor::PhaseConfig {
     mongocxx::collection collection;
-    RetryStrategy::Options options;
     std::vector<std::unique_ptr<BaseOperation>> operations;
-    RetryStrategy strategy;
+    bool throwOnFailure;
 
     PhaseConfig(PhaseContext& phaseContext,
                 const mongocxx::database& db,
                 ActorContext& actorContext,
                 ActorId id)
         : collection{db[phaseContext.get<std::string>("Collection")]},
-          strategy{actorContext.operation("Crud", id)},
-          options{phaseContext.get<RetryStrategy::Options, false>("RetryStrategy")
-                      .value_or(RetryStrategy::Options{})} {
+          throwOnFailure{phaseContext.get<bool, false>("ThrowOnFailure").value_or(true)} {
         auto addOperation = [&](YAML::Node node) {
             auto yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].as<std::string>();
@@ -923,13 +919,19 @@ void CrudActor::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
             auto session = _client->start_session();
-            config->strategy.run(
-                [&](metrics::OperationContext&) {
-                    for (auto&& op : config->operations) {
-                        op->run(session);
+
+            for (auto&& op : config->operations) {
+                try {
+                    op->run(session);
+                } catch (const boost::exception& ex) {
+                    if (config->throwOnFailure) {
+                        throw;
+                    } else {
+                        BOOST_LOG_TRIVIAL(debug)
+                            << "Caught error: " << boost::diagnostic_information(ex);
                     }
-                },
-                config->options);
+                }
+            }
         }
     }
 }
