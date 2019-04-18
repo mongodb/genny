@@ -31,14 +31,10 @@ template <typename C>
 class NodeT {
     YAML::Node _yaml;
     NodeT* _parent;
-    C* _context;
 
     // TODO: keep track of the key we came from so we can report it in error-messages
     // using KeyType = std::optional<std::variant<std::string, int>>;
     // KeyType _key;
-
-    NodeT(YAML::Node yaml, NodeT* parent, C* context)
-        : _yaml{yaml}, _parent{parent}, _context{context} {}
 
     template <typename K>
     std::optional<YAML::Node> yamlGet(const K& key) {
@@ -68,14 +64,18 @@ class NodeT {
         }
         std::optional<YAML::Node> yaml = this->yamlGet(key);
         if (yaml) {
-            return NodeT{*yaml, this, _context};
+            return NodeT{*yaml, this};
         } else {
             throw std::logic_error("TODO");  // TODO: better messaging
         }
     }
 
 public:
-    NodeT(YAML::Node topLevel, C* context) : NodeT{topLevel, nullptr, context} {}
+    NodeT(YAML::Node yaml, NodeT* parent)
+            : _yaml{yaml}, _parent{parent} {}
+
+    NodeT(YAML::Node yaml)
+        : NodeT{yaml, nullptr} {}
 
     template <typename O>
     O as() {  // TODO: const version
@@ -88,11 +88,11 @@ public:
     O from(Args&&... args) { // TODO: const version
         // TODO: assert on remove_cv<O>
         static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
-        // TODO: allow constructible with NodeT& and/or C* being const
+        // TODO: allow constructible with NodeT& being const
         // TODO: if sizeof...(Args) > 0 then this becomes a static_assert rather than an if
         //       (or put static_assert(sizeof == 0) in the else block)
-        if constexpr (std::is_constructible_v<O, NodeT&, C*, Args...>) {
-            return O{*this, this->_context, std::forward<Args>(args)...};
+        if constexpr (std::is_constructible_v<O, NodeT&,Args...>) {
+            return O{*this, std::forward<Args>(args)...};
         } else {
             return NodeConvert<O>::convert(_yaml);
         }

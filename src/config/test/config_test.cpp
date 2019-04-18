@@ -30,7 +30,7 @@ Children:
     FourChild:
       a: 11
 )");
-    Node node(yaml, &context);
+    Node node(yaml);
 
     SECTION("Parent traversal") {
         REQUIRE(node["a"].as<int>() == 7);
@@ -81,7 +81,7 @@ ListOfMapStringString:
 - {a: A}
 - {b: B}
 )");
-    Node node(yaml, &context);
+    Node node(yaml);
 
     { REQUIRE(node["SomeString"].as<std::string>() == "some_string"); }
     { REQUIRE((node["IntList"].as<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
@@ -110,14 +110,14 @@ msg: bar
 One: {msg: foo}
 Two: {}
 )");
-    Node node(yaml, &context);
+    Node node(yaml);
 
     {
-        MyType one = node["One"].as<MyType>();
+        MyType one = node["One"].from<MyType>(&context);
         REQUIRE(one.msg == "foo");
     }
     {
-        MyType one = node["Two"].as<MyType>();
+        MyType one = node["Two"].from<MyType>(&context);
         REQUIRE(one.msg == "bar");
     }
 }
@@ -137,17 +137,17 @@ x: 9
 a: {x: 7}
 b: {}
 )");
-    Node node(yaml, &context);
+    Node node(yaml);
     {
-        HasOtherCtorParams one = node.from<HasOtherCtorParams, int>(9);
+        HasOtherCtorParams one = node.from<HasOtherCtorParams>(&context, 9);
         REQUIRE(one.x == 9);
     }
     {
-        HasOtherCtorParams two = node["a"].from<HasOtherCtorParams, int>(7);
+        HasOtherCtorParams two = node["a"].from<HasOtherCtorParams>(&context, 7);
         REQUIRE(two.x == 7);
     }
     {
-        HasOtherCtorParams three = node["b"].from<HasOtherCtorParams, int>(9);
+        HasOtherCtorParams three = node["b"].from<HasOtherCtorParams>(&context, 9);
         REQUIRE(three.x == 9);
     }
 }
