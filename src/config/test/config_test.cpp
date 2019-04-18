@@ -13,7 +13,8 @@ struct Ctx {
     }
 };
 
-using Node = NodeT<Ctx>;
+// TODO: rename NodeT to just node...not templated on ptr type anymore
+using Node = NodeT;
 
 TEST_CASE("ConfigNode inheritance") {
     Ctx context;

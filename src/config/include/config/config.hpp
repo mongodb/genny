@@ -27,7 +27,6 @@ struct NodeConvert {
     }
 };
 
-template <typename C>
 class NodeT {
     YAML::Node _yaml;
     NodeT* _parent;
