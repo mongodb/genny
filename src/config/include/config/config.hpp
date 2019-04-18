@@ -1,19 +1,3 @@
-#include <utility>
-
-// Copyright 2019-present MongoDB Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 #pragma once
 // TODO: proper header
 
@@ -21,6 +5,7 @@
 #include <optional>
 #include <type_traits>
 #include <variant>
+#include <utility>
 
 #include <boost/log/trivial.hpp>
 
@@ -28,6 +13,13 @@
 
 namespace genny {
 
+// We don't actually care about YAML::convert<T>
+// because we never go from T to YAML::Node just the
+// other way around.
+//
+// This template *may* be specialized by the user if
+// they wish to do special post-processing (e.g. if
+// the O type is a ptr-type and want to do dynamic_cast)
 template <typename O>
 struct NodeConvert {
     static O convert(YAML::Node node) {
@@ -41,8 +33,9 @@ class NodeT {
     NodeT* _parent;
     C* _context;
 
-    using KeyType = std::optional<std::variant<std::string, int>>;
-    KeyType _key;
+    // TODO: keep track of the key we came from so we can report it in error-messages
+    // using KeyType = std::optional<std::variant<std::string, int>>;
+    // KeyType _key;
 
     NodeT(YAML::Node yaml, NodeT* parent, C* context)
         : _yaml{yaml}, _parent{parent}, _context{context} {}
@@ -63,9 +56,11 @@ class NodeT {
     template <typename K>
     NodeT get(const K& key) {  // TODO: const version
         if constexpr (std::is_convertible_v<K, std::string>) {
+            // this lets us avoid having to repeat parent key names
+            // E.g. OperationName can now just be Name. If Actor
+            // wants the Actor name they can look up `node[..][Name]`.
             if (key == "..") {
                 if (!_parent) {
-                    BOOST_LOG_TRIVIAL(info) << "No parent in node= " << YAML::Dump(_yaml);
                     throw std::logic_error("TODO");  // TODO: better messaging
                 }
                 return *_parent;
@@ -75,7 +70,6 @@ class NodeT {
         if (yaml) {
             return NodeT{*yaml, this, _context};
         } else {
-            BOOST_LOG_TRIVIAL(info) << "Key " << key << " not found";
             throw std::logic_error("TODO");  // TODO: better messaging
         }
     }
@@ -88,9 +82,15 @@ public:
         return this->from<O>();
     }
 
+
+    // TODO: this is a bad name
     template <typename O, typename... Args>
-    O from(Args&&... args) {
+    O from(Args&&... args) { // TODO: const version
+        // TODO: assert on remove_cv<O>
         static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
+        // TODO: allow constructible with NodeT& and/or C* being const
+        // TODO: if sizeof...(Args) > 0 then this becomes a static_assert rather than an if
+        //       (or put static_assert(sizeof == 0) in the else block)
         if constexpr (std::is_constructible_v<O, NodeT&, C*, Args...>) {
             return O{*this, this->_context, std::forward<Args>(args)...};
         } else {
