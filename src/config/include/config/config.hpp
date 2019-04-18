@@ -76,15 +76,9 @@ public:
     NodeT(YAML::Node yaml)
         : NodeT{yaml, nullptr} {}
 
-    template <typename O>
-    O as() {  // TODO: const version
-        return this->from<O>();
-    }
-
-
     // TODO: this is a bad name
     template <typename O, typename... Args>
-    O from(Args&&... args) { // TODO: const version
+    O to(Args&&... args) { // TODO: const version
         // TODO: assert on remove_cv<O>
         static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
         // TODO: allow constructible with NodeT& being const

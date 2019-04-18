@@ -34,39 +34,39 @@ Children:
     Node node(yaml);
 
     SECTION("Parent traversal") {
-        REQUIRE(node["a"].as<int>() == 7);
-        REQUIRE(node["Children"]["a"].as<int>() == 100);
-        REQUIRE(node["Children"][".."]["a"].as<int>() == 7);
+        REQUIRE(node["a"].to<int>() == 7);
+        REQUIRE(node["Children"]["a"].to<int>() == 100);
+        REQUIRE(node["Children"][".."]["a"].to<int>() == 7);
     }
 
     SECTION("Inheritance") {
         {
-            int b = node["Children"]["b"].as<int>();
+            int b = node["Children"]["b"].to<int>();
             REQUIRE(b == 900);
         }
         {
-            int b = node["Children"]["One"]["b"].as<int>();
+            int b = node["Children"]["One"]["b"].to<int>();
             REQUIRE(b == 900);
         }
         {
-            int b = node["Children"]["Three"]["b"].as<int>();
+            int b = node["Children"]["Three"]["b"].to<int>();
             REQUIRE(b == 70);
         }
     }
 
     SECTION("No inheritance") {
         {
-            int a = node["a"].as<int>();
+            int a = node["a"].to<int>();
             REQUIRE(a == 7);
         }
 
         {
-            int a = node["Children"]["a"].as<int>();
+            int a = node["Children"]["a"].to<int>();
             REQUIRE(a == 100);
         }
 
         {
-            int b = node["Children"]["Three"]["b"].as<int>();
+            int b = node["Children"]["Three"]["b"].to<int>();
             REQUIRE(b == 70);
         }
     }
@@ -84,12 +84,12 @@ ListOfMapStringString:
 )");
     Node node(yaml);
 
-    { REQUIRE(node["SomeString"].as<std::string>() == "some_string"); }
-    { REQUIRE((node["IntList"].as<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
+    { REQUIRE(node["SomeString"].to<std::string>() == "some_string"); }
+    { REQUIRE((node["IntList"].to<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
     {
         using ListMapStrStr = std::vector<std::map<std::string, std::string>>;
         auto expect = ListMapStrStr{{{"a", "A"}}, {{"b", "B"}}};
-        auto actual = node["ListOfMapStringString"].as<ListMapStrStr>();
+        auto actual = node["ListOfMapStringString"].to<ListMapStrStr>();
 
         REQUIRE(expect == actual);
     }
@@ -98,7 +98,7 @@ ListOfMapStringString:
 
 struct MyType {
     std::string msg;
-    MyType(Node& node, Ctx* ctx) : msg{node["msg"].as<std::string>()} {
+    MyType(Node& node, Ctx* ctx) : msg{node["msg"].to<std::string>()} {
         REQUIRE(ctx->rng() == 7);
     }
 };
@@ -114,11 +114,11 @@ Two: {}
     Node node(yaml);
 
     {
-        MyType one = node["One"].from<MyType>(&context);
+        MyType one = node["One"].to<MyType>(&context);
         REQUIRE(one.msg == "foo");
     }
     {
-        MyType one = node["Two"].from<MyType>(&context);
+        MyType one = node["Two"].to<MyType>(&context);
         REQUIRE(one.msg == "bar");
     }
 }
@@ -126,7 +126,7 @@ Two: {}
 struct HasOtherCtorParams {
     int x;
     HasOtherCtorParams(Node& node, Ctx* ctx, int x) : x{x} {
-        REQUIRE(node["x"].as<int>() == x);
+        REQUIRE(node["x"].to<int>() == x);
     }
 };
 
@@ -140,15 +140,15 @@ b: {}
 )");
     Node node(yaml);
     {
-        HasOtherCtorParams one = node.from<HasOtherCtorParams>(&context, 9);
+        HasOtherCtorParams one = node.to<HasOtherCtorParams>(&context, 9);
         REQUIRE(one.x == 9);
     }
     {
-        HasOtherCtorParams two = node["a"].from<HasOtherCtorParams>(&context, 7);
+        HasOtherCtorParams two = node["a"].to<HasOtherCtorParams>(&context, 7);
         REQUIRE(two.x == 7);
     }
     {
-        HasOtherCtorParams three = node["b"].from<HasOtherCtorParams>(&context, 9);
+        HasOtherCtorParams three = node["b"].to<HasOtherCtorParams>(&context, 9);
         REQUIRE(three.x == 9);
     }
 }
