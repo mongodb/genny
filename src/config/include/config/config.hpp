@@ -28,31 +28,26 @@
 
 namespace genny {
 
-template<typename O>
-struct NodeConvert{
+template <typename O>
+struct NodeConvert {
     static O convert(YAML::Node node) {
         return node.as<O>();
     }
 };
 
-struct WLContext {
-    int rng() {
-        return 7;
-    }
-};
-
+template <typename C>
 class Node {
     YAML::Node _yaml;
     Node* _parent;
-    WLContext* _context;
+    C* _context;
 
     using KeyType = std::optional<std::variant<std::string, int>>;
     KeyType _key;
 
-    Node(YAML::Node yaml, Node* parent, WLContext* context)
-    : _yaml{yaml}, _parent{parent}, _context{context} {}
+    Node(YAML::Node yaml, Node* parent, C* context)
+        : _yaml{yaml}, _parent{parent}, _context{context} {}
 
-    template<typename K>
+    template <typename K>
     std::optional<YAML::Node> yamlGet(const K& key) {
         YAML::Node found = _yaml[key];
         if (found) {
@@ -63,43 +58,46 @@ class Node {
             }
             return _parent->yamlGet(key);
         }
-
     }
 
-    template<typename K>
-    Node get(const K& key) { // TODO: const version
-        // TODO: if key == ".." then look up in parent
+    template <typename K>
+    Node get(const K& key) {  // TODO: const version
+        if constexpr (std::is_convertible_v<K, std::string>) {
+            if (key == "..") {
+                if (!_parent) {
+                    BOOST_LOG_TRIVIAL(info) << "No parent in node= " << YAML::Dump(_yaml);
+                    throw std::logic_error("TODO");  // TODO: better messaging
+                }
+                return *_parent;
+            }
+        }
         std::optional<YAML::Node> yaml = this->yamlGet(key);
         if (yaml) {
             return Node{*yaml, this, _context};
         } else {
             BOOST_LOG_TRIVIAL(info) << "Key " << key << " not found";
-            throw std::logic_error("TODO"); // TODO: better messaging
+            throw std::logic_error("TODO");  // TODO: better messaging
         }
     }
 
 public:
-    Node(YAML::Node topLevel, WLContext* context)
-    : Node{topLevel, nullptr, context} {}
+    Node(YAML::Node topLevel, C* context) : Node{topLevel, nullptr, context} {}
 
-    template<typename O>
-    O as() { // TODO: const version
+    template <typename O>
+    O as() {  // TODO: const version
         static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
-        if constexpr( std::is_constructible_v<O,Node&,WLContext*> ) {
+        if constexpr (std::is_constructible_v<O, Node&, C*>) {
             return O{*this, this->_context};
         } else {
             return NodeConvert<O>::convert(_yaml);
         }
     }
 
-    template<typename K>
-    Node operator[](const K& key) { // TODO: const version
+    template <typename K>
+    Node operator[](const K& key) {  // TODO: const version
         return this->get(key);
     }
 };
 
 
-
-
-}
-
+}  // namespace genny

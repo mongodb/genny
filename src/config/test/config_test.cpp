@@ -7,8 +7,12 @@
 
 using namespace genny;
 
+struct Ctx {
+    int rng() { return 7; }
+};
+
 TEST_CASE("ConfigNode inheritance") {
-    WLContext context;
+    Ctx context;
 
     auto yaml = YAML::Load(R"(
 a: 7
@@ -22,7 +26,13 @@ Children:
     FourChild:
       a: 11
 )");
-    Node node(yaml, &context);
+    Node<Ctx> node(yaml, &context);
+
+    SECTION("Parent traversal") {
+        REQUIRE(node["a"].as<int>() == 7);
+        REQUIRE(node["Children"]["a"].as<int>() == 100);
+        REQUIRE(node["Children"][".."]["a"].as<int>() == 7);
+    }
 
     SECTION("Inheritance") {
         {
@@ -58,7 +68,7 @@ Children:
 }
 
 TEST_CASE("ConfigNode Built-Ins Construction") {
-    WLContext context;
+    Ctx context;
 
     auto yaml = YAML::Load(R"(
 SomeString: some_string
@@ -67,7 +77,7 @@ ListOfMapStringString:
 - {a: A}
 - {b: B}
 )");
-    Node node(yaml, &context);
+    Node<Ctx> node(yaml, &context);
 
     {
         REQUIRE(node["SomeString"].as<std::string>() == "some_string");
@@ -91,7 +101,7 @@ namespace genny {
 
 struct MyType {
     std::string msg;
-    MyType(Node& node, WLContext* ctx)
+    MyType(Node<Ctx>& node, Ctx* ctx)
     : msg{node["msg"].as<std::string>()}{
         REQUIRE(ctx->rng() == 7);
     }
@@ -100,7 +110,7 @@ struct MyType {
 }
 
 TEST_CASE("ConfigNode User-Defined Conversions") {
-    WLContext context;
+    Ctx context;
 
     auto yaml = YAML::Load(R"(
 msg: bar
