@@ -128,7 +128,6 @@ create_impl_text() {
     echo "#include <boost/log/trivial.hpp>"
     echo ""
     echo "#include <gennylib/Cast.hpp>"
-    echo "#include <gennylib/RetryStrategy.hpp>"
     echo "#include <gennylib/context.hpp>"
     echo ""
     echo "#include <value_generators/DocumentGenerator.hpp>"
@@ -263,8 +262,6 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
         - Name: ${actor_name}
           Type: ${actor_name}
           Database: mydb
-          RetryStrategy:
-            ThrowOnFailure: true
           Phases:
           - Repeat: 100
             Collection: mycoll

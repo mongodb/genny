@@ -22,6 +22,7 @@
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
+#include <metrics/operation.hpp>
 #include <value_generators/DefaultRandom.hpp>
 
 namespace genny::actor {
@@ -49,6 +50,7 @@ private:
 
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
+    metrics::Operation _insert;
 };
 
 }  // namespace genny::actor

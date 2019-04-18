@@ -154,9 +154,6 @@ class MyActor {
     MyActor(ActorContext& context)
         : _insertOp{context.operation("Insert", MyActor::id())} {}
 
-    // Note that while here the MyActor class here stores the
-    // metrics::Operation type, some actors wrap it in an
-    // RetryStrategy in order to be able to handle retry logic.
     metrics::Operation _insertOp;
 };
 ```

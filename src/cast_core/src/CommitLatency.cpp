@@ -30,7 +30,6 @@
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
 
 
@@ -145,12 +144,14 @@ void CommitLatency::run() {
             // result = db.hltest.aggregate( [ { '$group': { '_id': 'foo', 'total' : {
             // '$sum': '$n' } } } ], session=session ).next()
             mongocxx::pipeline p{};
+
             bsoncxx::document::value doc_group = document{} << "_id"
                                                             << "foo"
                                                             << "total" << open_document << "$sum"
                                                             << "$n" << close_document << finalize;
             p.group(doc_group.view());
             auto cursor = config->collection.aggregate(*_session, p, config->optionsAggregate);
+
             // Check for isolation or consistency errors.
             //
             // These are expected when read_preference is secondary and not in a session.
