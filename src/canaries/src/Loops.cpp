@@ -52,19 +52,21 @@ inline Nanosecond now() {
 #endif
 }
 
-template <WorkloadType WType>
-Nanosecond Loops<WType>::simpleLoop() {
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::simpleLoop(Args&&... args) {
+    auto task = Task(std::forward<Args>(args)...);
+
     int64_t before = now();
     for (int i = 0; i < _iterations; i++) {
-        doWork<WType>();
+        task.run();
     }
     int64_t after = now();
 
     return after - before;
 }
 
-template <WorkloadType WType>
-Nanosecond Loops<WType>::phaseLoop() {
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::phaseLoop(Args&&... args) {
 
     Orchestrator o{};
     v1::ActorPhase<int> loop{
@@ -76,27 +78,29 @@ Nanosecond Loops<WType>::phaseLoop() {
                                                0_ts,
                                                std::nullopt),
         1};
+    auto task = Task(std::forward<Args>(args)...);
 
     int64_t before = now();
     for (auto _ : loop)
-        doWork<WType>();
+        task.run();
     int64_t after = now();
 
     return after - before;
 }
 
-template <WorkloadType WType>
-Nanosecond Loops<WType>::metricsLoop() {
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::metricsLoop(Args&&... args) {
 
     auto metrics = genny::metrics::Registry{};
     metrics::Reporter reporter(metrics);
 
     auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
+    auto task = Task(std::forward<Args>(args)...);
 
     int64_t before = now();
     for (int i = 0; i < _iterations; i++) {
         auto ctx = dummyOp.start();
-        doWork<WType>();
+        task.run();
         ctx.success();
     }
     int64_t after = now();
@@ -104,8 +108,8 @@ Nanosecond Loops<WType>::metricsLoop() {
     return after - before;
 }
 
-template <WorkloadType WType>
-Nanosecond Loops<WType>::metricsPhaseLoop() {
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::metricsPhaseLoop(Args&&... args) {
 
     // Copy/pasted from phaseLoop() and metricsLoop()
     Orchestrator o{};
@@ -118,6 +122,7 @@ Nanosecond Loops<WType>::metricsPhaseLoop() {
                                                0_ts,
                                                std::nullopt),
         1};
+    auto task = Task(std::forward<Args>(args)...);
 
     auto metrics = genny::metrics::Registry{};
     metrics::Reporter{metrics};
@@ -127,7 +132,7 @@ Nanosecond Loops<WType>::metricsPhaseLoop() {
     int64_t before = now();
     for (auto _ : loop) {
         auto ctx = dummyOp.start();
-        doWork<WType>();
+        task.run();
         ctx.success();
     }
     int64_t after = now();
@@ -138,7 +143,11 @@ Nanosecond Loops<WType>::metricsPhaseLoop() {
 // "The definition of ... a non-exported member function or static data member
 // of a class template shall be present in every translation unit in which it
 // is explicitly instantiated."
-template class Loops<WorkloadType::kNoop>;
-template class Loops<WorkloadType::kDbPing>;
+template class Loops<NopTask>;
+template class Loops<SleepTask>;
+template class Loops<CPUTask>;
+template class Loops<L2Task>;
+template class Loops<L3Task>;
+template class Loops<PingTask, std::string&>;
 
 }  // namespace genny::canaries

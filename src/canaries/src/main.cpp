@@ -21,16 +21,21 @@
 #include <canaries/Loops.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/context.hpp>
+#include <iomanip>
 
 using namespace genny;
 
 struct ProgramOptions {
 
-    std::vector<std::string> _testNames;
-    std::string _description;
+    std::vector<std::string> _loopNames;
+
     bool _isHelp = false;
-    bool _withPing = false;
+
     int64_t _iterations = 0;
+
+    std::string _description;
+    std::string _mongoUri;
+    std::string _task;
 
     explicit ProgramOptions() = default;
 
@@ -39,20 +44,21 @@ struct ProgramOptions {
 
         std::ostringstream progDesc;
         progDesc << "Genny Canaries - Microbenchmarks for measuring overhead of Genny\n";
-        progDesc << "                 by running low-level workloads in Genny loops\n\n";
+        progDesc << "                 by running low-level tasks in Genny loops\n\n";
         progDesc << "Usage:\n";
-        progDesc << "    " << argv[0] << " work-name <loop-type [loop-type] ..>\n\n";
-        progDesc << "Types of work:‍";
+        progDesc << "    " << argv[0] << " <task-name> [loop-type [loop-type] ..]\n\n";
+        progDesc << "Types of task:‍";
         progDesc << R"(
-    noop     Trivial workload that reads a value from a register; intended for
+    nop     Trivial task that reads a value from a register; intended for
              testing loops with the minimum amount of unrelated code
-    sleep    Sleep for 100ms
+    sleep    Sleep for 1ms
     cpu      Multiply a large number 10000 times to stress the CPU's ALU.
-    l2       Traverse through a 2MB array in 64KB strides; stress the CPU's L2 cache
+    l2       Traverse through a 256KB array in 64KB strides; stress the CPU's L2 cache
     l3       Traverse through a 8MB array in 64KB strides; stress the CPU's L3 cache
              and/or RAM depending the CPU and its load
     ping     call db.ping() on a MongoDB server (running externally)
-    )" << "\n\n";
+    )"
+                 << "\n\n";
 
         progDesc << "Types of loops:‍";
         progDesc << R"(
@@ -61,7 +67,8 @@ struct ProgramOptions {
     metrics  Run native for-loop and record one timer metric per iteration
     real     Run PhaseLoop and record one timer metric per iteration; resembles
              how a real actor runs
-    )" << "\n";
+    )"
+                 << "\n";
 
         progDesc << "Options";
         po::options_description optDesc(progDesc.str());
@@ -71,20 +78,22 @@ struct ProgramOptions {
         optDesc.add_options()
         ("help,h",
                 "Show this help message")
-        ("test-name",
-                po::value<std::vector<std::string>>()->multitoken(),
-                "One or more names of tests to run")
-        ("run-ping,p",
-                po::value<bool>()->default_value(true),
-                "Whether to run a db.ping() in each iteration of the canary or do nothing."
-                "Running db.ping() will simulate real-world performance more closely while"
-                "running nothing may help profile genny code with less noise")
+        ("loop-type",
+                po::value<std::vector<std::string>>()
+                ->multitoken(),
+                "The type of loop to benchmark; defaults to all loop types")
+        ("task",
+                po::value<std::string>(),
+                "What type of task to do within each iteration of the loop")
         ("iterations,i",
                 po::value<int64_t>()->default_value(1e6),
-                "number of iterations to run the tests");
+                "Number of iterations to run the tests")
+        ("mongo-uri,u",
+                po::value<std::string>()->default_value("mongodb://localhost:27017"));
         //clang-format on
 
-        positional.add("test-name", -1);
+        positional.add("task", 1);
+        positional.add("loop-type", -1);
 
         auto run =
             po::command_line_parser(argc, argv).options(optDesc).positional(positional).run();
@@ -100,55 +109,84 @@ struct ProgramOptions {
         if (vm.count("help") >= 1)
             _isHelp = true;
 
-        _withPing = vm["run-ping"].as<bool>();
-        _iterations = vm["iterations"].as<int64_t>();
+        if (!vm.count("task")) {
+            _isHelp = true;
+        } else {
+            _task = vm["task"].as<std::string>();
+        }
 
-        if (vm.count("test-name") >= 1)
-            _testNames = vm["test-name"].as<std::vector<std::string>>();
+        if (vm.count("loop-type") >= 1)
+            _loopNames = vm["loop-name"].as<std::vector<std::string>>();
+        else
+            _loopNames = {"simple", "phase", "metrics", "real"};
+
+        _iterations = vm["iterations"].as<int64_t>();
+        _mongoUri = vm["mongo-uri"].as<std::string>();
     }
 };
 
-template <genny::canaries::WorkloadType WType>
-void runTest(std::vector<std::string>& testNames, int64_t iterations) {
-    canaries::Loops<WType> loops(iterations);
-    for (const auto& testName : testNames) {
-        int64_t time;
+template <class Task, class... Args>
+void runTest(std::vector<std::string>& loopNames, int64_t iterations, Args&&... args) {
+    canaries::Loops<Task, Args...> loops(iterations);
 
-        // Run each test twice, the first time is warm up and the results are discarded.
-        if (testName == "simple") {
-            loops.simpleLoop();
-            time = loops.simpleLoop();
-        } else if (testName == "phase") {
-            loops.simpleLoop();
-            time = loops.phaseLoop();
-        } else if (testName == "metrics") {
-            loops.simpleLoop();
-            time = loops.metricsLoop();
-        } else if (testName == "real") {
-            loops.simpleLoop();
-            time = loops.metricsPhaseLoop();
-        } else {
-            std::ostringstream stm;
-            stm << "Unknown test name: " << testName;
-            throw InvalidConfigurationException(stm.str());
+    std::vector<canaries::Nanosecond> results;
+
+    for (auto& loopName : loopNames) {
+        canaries::Nanosecond time;
+
+        // Run each test 3 times, the first two are warm up and the results are discarded.
+        for (int i = 0; i < 3; i++) {
+            if (loopName == "simple") {
+                time = loops.simpleLoop(std::forward<Args>(args)...);
+            } else if (loopName == "phase") {
+                time = loops.phaseLoop(std::forward<Args>(args)...);
+            } else if (loopName == "metrics") {
+                time = loops.metricsLoop(std::forward<Args>(args)...);
+            } else if (loopName == "real") {
+                time = loops.metricsPhaseLoop(std::forward<Args>(args)...);
+            } else {
+                std::ostringstream stm;
+                stm << "Unknown loop type: " << loopName;
+                throw InvalidConfigurationException(stm.str());
+            }
+
+            if (i == 2) {
+                results.push_back(time);
+            }
         }
-        std::cout << testName << ":\t" << time << "ns" << std::endl;
     }
 
+    std::cout << "Results:" << std::endl;
+    for (int i = 0; i < results.size(); i++) {
+        std::cout << std::setw(8) << loopNames[i] << ": " << results[i] << "ns" << std::endl;
+    }
 }
 
 int main(int argc, char** argv) {
-    using genny::canaries::WorkloadType;
+    using namespace genny::canaries;
     auto opts = ProgramOptions(argc, argv);
-    if (opts._isHelp || opts._testNames.empty()) {
+    if (opts._isHelp || opts._loopNames.empty()) {
         std::cout << opts._description << std::endl;
         return 0;
     }
 
-    if (opts._withPing)
-        runTest<WorkloadType::kDbPing>(opts._testNames, opts._iterations);
-    else
-        runTest<WorkloadType::kNoop>(opts._testNames, opts._iterations);
+    if (opts._task == "nop")
+        runTest<NopTask>(opts._loopNames, opts._iterations);
+    else if (opts._task == "sleep")
+        runTest<SleepTask>(opts._loopNames, opts._iterations);
+    else if (opts._task == "cpu")
+        runTest<CPUTask>(opts._loopNames, opts._iterations);
+    else if (opts._task == "l2")
+        runTest<L2Task>(opts._loopNames, opts._iterations);
+    else if (opts._task == "l3")
+        runTest<L3Task>(opts._loopNames, opts._iterations);
+    else if (opts._task == "ping")
+        runTest<PingTask>(opts._loopNames, opts._iterations, opts._mongoUri);
+    else {
+        std::ostringstream stm;
+        stm << "Unknown task name: " << opts._task;
+        throw InvalidConfigurationException(stm.str());
+    }
 
     return 0;
 }

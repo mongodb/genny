@@ -33,7 +33,7 @@ using Nanosecond = int64_t;
  *                  the overhead of Genny and the latter is useful for seeing
  *                  how this overhead changes over time.
  */
-template <WorkloadType WType>
+template <class Task, class... Args>
 class Loops {
 public:
     explicit Loops(int64_t iterations) : _iterations(iterations){};
@@ -41,22 +41,22 @@ public:
     /**
      * Run native for-loop; used as the control group with no Genny code.
      */
-    Nanosecond simpleLoop();
+    Nanosecond simpleLoop(Args&&... args);
 
     /**
      * Run PhaseLoop.
      */
-    Nanosecond phaseLoop();
+    Nanosecond phaseLoop(Args&&... args);
 
     /**
      *  Run native for-loop and record one timer metric per iteration.
      */
-    Nanosecond metricsLoop();
+    Nanosecond metricsLoop(Args&&... args);
 
     /**
      * Run PhaseLoop and record one timer metric per iteration.
      */
-    Nanosecond metricsPhaseLoop();
+    Nanosecond metricsPhaseLoop(Args&&... args);
 
 private:
     int64_t _iterations;
