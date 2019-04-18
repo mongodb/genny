@@ -36,15 +36,15 @@ struct NodeConvert {
 };
 
 template <typename C>
-class Node {
+class NodeT {
     YAML::Node _yaml;
-    Node* _parent;
+    NodeT* _parent;
     C* _context;
 
     using KeyType = std::optional<std::variant<std::string, int>>;
     KeyType _key;
 
-    Node(YAML::Node yaml, Node* parent, C* context)
+    NodeT(YAML::Node yaml, NodeT* parent, C* context)
         : _yaml{yaml}, _parent{parent}, _context{context} {}
 
     template <typename K>
@@ -61,7 +61,7 @@ class Node {
     }
 
     template <typename K>
-    Node get(const K& key) {  // TODO: const version
+    NodeT get(const K& key) {  // TODO: const version
         if constexpr (std::is_convertible_v<K, std::string>) {
             if (key == "..") {
                 if (!_parent) {
@@ -73,7 +73,7 @@ class Node {
         }
         std::optional<YAML::Node> yaml = this->yamlGet(key);
         if (yaml) {
-            return Node{*yaml, this, _context};
+            return NodeT{*yaml, this, _context};
         } else {
             BOOST_LOG_TRIVIAL(info) << "Key " << key << " not found";
             throw std::logic_error("TODO");  // TODO: better messaging
@@ -81,17 +81,17 @@ class Node {
     }
 
 public:
-    Node(YAML::Node topLevel, C* context) : Node{topLevel, nullptr, context} {}
+    NodeT(YAML::Node topLevel, C* context) : NodeT{topLevel, nullptr, context} {}
 
     template <typename O>
     O as() {  // TODO: const version
         return this->from<O>();
     }
 
-    template<typename O, typename...Args>
-    O from(Args&&...args) {
+    template <typename O, typename... Args>
+    O from(Args&&... args) {
         static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
-        if constexpr (std::is_constructible_v<O, Node&, C*, Args...>) {
+        if constexpr (std::is_constructible_v<O, NodeT&, C*, Args...>) {
             return O{*this, this->_context, std::forward<Args>(args)...};
         } else {
             return NodeConvert<O>::convert(_yaml);
@@ -99,7 +99,7 @@ public:
     }
 
     template <typename K>
-    Node operator[](const K& key) {  // TODO: const version
+    NodeT operator[](const K& key) {  // TODO: const version
         return this->get(key);
     }
 };

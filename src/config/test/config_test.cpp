@@ -1,15 +1,19 @@
+#include <catch2/catch.hpp>
 #include <config/config.hpp>
 #include <testlib/helpers.hpp>
-#include <catch2/catch.hpp>
 
-#include <vector>
 #include <map>
+#include <vector>
 
 using namespace genny;
 
 struct Ctx {
-    int rng() { return 7; }
+    int rng() {
+        return 7;
+    }
 };
+
+using Node = NodeT<Ctx>;
 
 TEST_CASE("ConfigNode inheritance") {
     Ctx context;
@@ -26,7 +30,7 @@ Children:
     FourChild:
       a: 11
 )");
-    Node<Ctx> node(yaml, &context);
+    Node node(yaml, &context);
 
     SECTION("Parent traversal") {
         REQUIRE(node["a"].as<int>() == 7);
@@ -77,19 +81,13 @@ ListOfMapStringString:
 - {a: A}
 - {b: B}
 )");
-    Node<Ctx> node(yaml, &context);
+    Node node(yaml, &context);
 
+    { REQUIRE(node["SomeString"].as<std::string>() == "some_string"); }
+    { REQUIRE((node["IntList"].as<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
     {
-        REQUIRE(node["SomeString"].as<std::string>() == "some_string");
-    }
-    {
-        REQUIRE((node["IntList"].as<std::vector<int>>() == std::vector<int>{1,2,3}));
-    }
-    {
-        using ListMapStrStr = std::vector<std::map<std::string,std::string>>;
-        auto expect = ListMapStrStr{
-                {{"a", "A"}}, {{"b", "B"}}
-        };
+        using ListMapStrStr = std::vector<std::map<std::string, std::string>>;
+        auto expect = ListMapStrStr{{{"a", "A"}}, {{"b", "B"}}};
         auto actual = node["ListOfMapStringString"].as<ListMapStrStr>();
 
         REQUIRE(expect == actual);
@@ -99,8 +97,7 @@ ListOfMapStringString:
 
 struct MyType {
     std::string msg;
-    MyType(Node<Ctx>& node, Ctx* ctx)
-    : msg{node["msg"].as<std::string>()}{
+    MyType(Node& node, Ctx* ctx) : msg{node["msg"].as<std::string>()} {
         REQUIRE(ctx->rng() == 7);
     }
 };
@@ -127,8 +124,7 @@ Two: {}
 
 struct HasOtherCtorParams {
     int x;
-    HasOtherCtorParams(Node<Ctx>& node, Ctx* ctx, int x)
-            : x{x} {
+    HasOtherCtorParams(Node& node, Ctx* ctx, int x) : x{x} {
         REQUIRE(node["x"].as<int>() == x);
     }
 };
@@ -143,15 +139,15 @@ b: {}
 )");
     Node node(yaml, &context);
     {
-        HasOtherCtorParams one = node.from<HasOtherCtorParams,int>(9);
+        HasOtherCtorParams one = node.from<HasOtherCtorParams, int>(9);
         REQUIRE(one.x == 9);
     }
     {
-        HasOtherCtorParams two = node["a"].from<HasOtherCtorParams,int>(7);
+        HasOtherCtorParams two = node["a"].from<HasOtherCtorParams, int>(7);
         REQUIRE(two.x == 7);
     }
     {
-        HasOtherCtorParams three = node["b"].from<HasOtherCtorParams,int>(9);
+        HasOtherCtorParams three = node["b"].from<HasOtherCtorParams, int>(9);
         REQUIRE(three.x == 9);
     }
 }
