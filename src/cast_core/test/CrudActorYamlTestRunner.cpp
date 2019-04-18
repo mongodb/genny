@@ -272,6 +272,6 @@ TEST_CASE("CrudActor YAML Tests",
           "[standalone][single_node_replset][three_node_replset][CrudActor]") {
 
     genny::testing::runTestCaseYaml<genny::testing::CrudActorTestCase>(
-        "/src/cast_core/test/CrudActorYamlTests.yaml");
+        "/src/cast_core/test/CrudActorYamlTests.yml");
 }
 }  // namespace
