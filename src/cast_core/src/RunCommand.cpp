@@ -168,11 +168,16 @@ public:
           _commandExpr{std::move(commandExpr)},
           _options{std::move(opts)},
           _awaitStepdown{opts.awaitStepdown},
-          // Only record metrics if we have a name for the operation.
+          // Record metrics for the operation or the phase depending on
+          // whether metricsName is set for the operation.
+          //
+          // Note: actorContext.operation() must be called to use
+          // OperationMetricsName. phaseContext.operation() will try to
+          // override the name with the metrics name for the phase.
           _operation{!_options.metricsName.empty()
                          ? std::make_optional<metrics::Operation>(
                                actorContext.operation(_options.metricsName, id))
-                         : std::nullopt} {}
+                         : phaseContext.operation("DatabaseOperation", id)} {}
 
     static std::unique_ptr<DatabaseOperation> create(YAML::Node node,
                                                      PhaseContext& context,

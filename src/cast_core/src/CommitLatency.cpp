@@ -51,8 +51,9 @@ struct CommitLatency::PhaseConfig {
     int64_t repeat;
     int64_t threads;
     boost::random::uniform_int_distribution<int64_t> amountDistribution;
+    metrics::Operation op;
 
-    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db)
+    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId actorId)
         : collection{db[phaseContext.get<std::string>("Collection")]},
           wc{phaseContext.get<mongocxx::write_concern>("WriteConcern")},
           rc{phaseContext.get<mongocxx::read_concern>("ReadConcern")},
@@ -62,7 +63,8 @@ struct CommitLatency::PhaseConfig {
           useTransaction{phaseContext.get<bool, false>("Transaction").value_or(false)},
           repeat{phaseContext.get<IntegerSpec>("Repeat")},
           threads{phaseContext.get<IntegerSpec>("Threads")},
-          amountDistribution{-100, 100} {
+          amountDistribution{-100, 100},
+          op{phaseContext.operation("Insert", actorId)} {
         if (useTransaction) {
             optionsTransaction.write_concern(wc);
             optionsTransaction.read_preference(rp);
@@ -106,8 +108,9 @@ void CommitLatency::run() {
                 _session = std::make_shared<mongocxx::client_session>(_client->start_session());
             }
         }
+
         for (const auto&& _ : config) {
-            auto ctx = _insert.start();
+            auto ctx = config->op.start();
             // Basically we withdraw `amount` from account 1 and deposit to account 2
             // amount = random.randint(-100, 100)
             auto amount = config->amountDistribution(_rng);
@@ -118,8 +121,8 @@ void CommitLatency::run() {
 
             // result1 = db.hltest.find_one( { '_id': 1 }, session=session )
             bsoncxx::document::value doc_filter1 = document{} << "_id" << 1 << finalize;
-            auto result1 = config->collection.find_one(
-                *_session, doc_filter1.view(), config->optionsFind);
+            auto result1 =
+                config->collection.find_one(*_session, doc_filter1.view(), config->optionsFind);
 
             // db.hltest.update_one( {'_id': 1}, {'$inc': {'n': -amount}}, session=session )
             bsoncxx::document::value doc_update1 = document{}
@@ -129,8 +132,8 @@ void CommitLatency::run() {
 
             // result2 = db.hltest.find_one( { '_id': 2 }, session=session )
             bsoncxx::document::value doc_filter2 = document{} << "_id" << 2 << finalize;
-            auto result2 = config->collection.find_one(
-                *_session, doc_filter2.view(), config->optionsFind);
+            auto result2 =
+                config->collection.find_one(*_session, doc_filter2.view(), config->optionsFind);
 
             // db.hltest.update_one( {'_id': 2}, {'$inc': {'n': amount}}, session=session )
             bsoncxx::document::value doc_update2 = document{}
@@ -141,14 +144,14 @@ void CommitLatency::run() {
             // result = db.hltest.aggregate( [ { '$group': { '_id': 'foo', 'total' : {
             // '$sum': '$n' } } } ], session=session ).next()
             mongocxx::pipeline p{};
-            bsoncxx::document::value doc_group = document{}
-                << "_id"
-                << "foo"
-                << "total" << open_document << "$sum"
-                << "$n" << close_document << finalize;
+
+            bsoncxx::document::value doc_group = document{} << "_id"
+                                                            << "foo"
+                                                            << "total" << open_document << "$sum"
+                                                            << "$n" << close_document << finalize;
             p.group(doc_group.view());
-            auto cursor =
-                config->collection.aggregate(*_session, p, config->optionsAggregate);
+            auto cursor = config->collection.aggregate(*_session, p, config->optionsAggregate);
+
             // Check for isolation or consistency errors.
             //
             // These are expected when read_preference is secondary and not in a session.
@@ -175,9 +178,8 @@ void CommitLatency::run() {
 CommitLatency::CommitLatency(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().getRNGForThread(CommitLatency::id())},
-      _insert{context.operation("insert", CommitLatency::id())},
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context.get<std::string>("Database")]} {}
+      _loop{context, (*_client)[context.get<std::string>("Database")], CommitLatency::id()} {}
 
 namespace {
 auto registerCommitLatency = Cast::registerDefault<CommitLatency>();

@@ -11,6 +11,7 @@ Actors:
       # Rate: 99 per 88 nanoseconds
       # SleepBefore: 11 milliseconds
       # SleepAfter: 17 microseconds
+      # MetricsName: 🐳Message
     - Message: Hello Phase 1 👬
       Repeat: 100
     - ExternalPhaseConfig:

@@ -50,7 +50,6 @@ private:
 
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
-    metrics::Operation _insert;
 };
 
 }  // namespace genny::actor
