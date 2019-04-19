@@ -30,7 +30,7 @@ struct NodeConvert {
 template <typename C>
 class NodeT {
     YAML::Node _yaml;
-    NodeT<C>* _parent;
+    C* _parent;
 
     // TODO: keep track of the key we came from so we can report it in error-messages
     // using KeyType = std::optional<std::variant<std::string, int>>;
@@ -52,27 +52,27 @@ class NodeT {
 
     template <typename K>
     NodeT get(const K& key) {  // TODO: const version
-        if constexpr (std::is_convertible_v<K, std::string>) {
-            // this lets us avoid having to repeat parent key names
-            // E.g. OperationName can now just be Name. If Actor
-            // wants the Actor name they can look up `node[..][Name]`.
-            if (key == "..") {
-                if (!_parent) {
-                    throw std::logic_error("TODO");  // TODO: better messaging
-                }
-                return *_parent;
-            }
-        }
+//        if constexpr (std::is_convertible_v<K, std::string>) {
+//            // this lets us avoid having to repeat parent key names
+//            // E.g. OperationName can now just be Name. If Actor
+//            // wants the Actor name they can look up `node[..][Name]`.
+//            if (key == "..") {
+//                if (!_parent) {
+//                    throw std::logic_error("TODO");  // TODO: better messaging
+//                }
+//                return *_parent;
+//            }
+//        }
         std::optional<YAML::Node> yaml = this->yamlGet(key);
         if (yaml) {
-            return NodeT{*yaml, this};
+            return NodeT{*yaml, _parent};
         } else {
             throw std::logic_error("TODO");  // TODO: better messaging
         }
     }
 
 public:
-    explicit NodeT(YAML::Node yaml, NodeT<C>* parent)
+    explicit NodeT(YAML::Node yaml, C* parent)
             : _yaml{yaml}, _parent{parent} {}
 
     template <typename O>
@@ -94,6 +94,10 @@ public:
         } else {
             return NodeConvert<O>::convert(_yaml);
         }
+    }
+
+    C* parent() {
+        return _parent;
     }
 
     template <typename K>

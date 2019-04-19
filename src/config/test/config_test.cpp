@@ -7,16 +7,15 @@
 
 using namespace genny;
 
-struct WorkloadContext : public NodeT<nullptr_t> {
-    WorkloadContext(YAML::Node node)
-    : NodeT<nullptr_t>{node, nullptr} {}
+struct WorkloadContext : public NodeT<WorkloadContext> {
+    using NodeT::NodeT;
     int rng() {
         return 7;
     }
 };
 
 struct ActorContext : public NodeT<WorkloadContext> {
-
+    using NodeT::NodeT;
 };
 
 TEST_CASE("foo") {
@@ -33,11 +32,12 @@ Children:
       a: 11
 )");
 
-    WorkloadContext context{yaml};
+    WorkloadContext context{yaml, nullptr};
     REQUIRE(context["a"].as<int>() == 7);
-    REQUIRE(context["Children"]["One"]["a"].as<int>() == 100);
+//    REQUIRE(context["Children"]["One"]["a"].as<int>() == 100);
 
     ActorContext actorContext{yaml, &context};
+    REQUIRE((*actorContext.parent())["a"].as<int>() == 7);
 }
 
 // using Node = NodeT<Ctx>;/**/
