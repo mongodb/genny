@@ -22,6 +22,7 @@ CreateGennyTargets(
     DEPENDS
         yaml-cpp
         loki
+        config
         metrics
         value_generators
         Boost::boost
