@@ -15,11 +15,11 @@
 project(canaries VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
-        NAME    canaries
-        TYPE    STATIC
-        DEPENDS
+    NAME    canaries
+    TYPE    STATIC
+    DEPENDS
         gennylib
         metrics
         Boost::program_options
-        EXECUTABLE    genny-canaries
+    EXECUTABLE    genny-canaries
 )

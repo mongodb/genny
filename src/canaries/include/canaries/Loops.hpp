@@ -18,6 +18,8 @@
 
 #include <cstdint>
 
+#include <canaries/tasks.hpp>
+
 namespace genny::canaries {
 
 using Nanosecond = int64_t;
@@ -31,30 +33,42 @@ using Nanosecond = int64_t;
  *                  the overhead of Genny and the latter is useful for seeing
  *                  how this overhead changes over time.
  */
-template <bool WithPing>
+template <class Task, class... Args>
 class Loops {
 public:
     explicit Loops(int64_t iterations) : _iterations(iterations){};
 
     /**
-     * Run a basic for-loop, used as the baseline.
+     * Run native for-loop; used as the control group with no Genny code.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
-    Nanosecond simpleLoop();
+    Nanosecond simpleLoop(Args&&... args);
 
     /**
-     * Run just the phase loop.
+     * Run PhaseLoop.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
-    Nanosecond phaseLoop();
+    Nanosecond phaseLoop(Args&&... args);
 
     /**
-     * Run a basic for-loop and record one timer metric per loop.
+     *  Run native for-loop and record one timer metric per iteration.
+     *
+     *  @param args arguments forwarded to the workload being run.
+     *  @return the CPU time this function took, in nanoseconds.
      */
-    Nanosecond metricsLoop();
+    Nanosecond metricsLoop(Args&&... args);
 
     /**
-     * Run the phase loop and record one timer metric per loop.
+     * Run PhaseLoop and record one timer metric per iteration.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
-    Nanosecond metricsPhaseLoop();
+    Nanosecond metricsPhaseLoop(Args&&... args);
 
 private:
     int64_t _iterations;
