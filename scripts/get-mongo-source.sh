@@ -23,7 +23,9 @@ ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
 VENV_DIR="${ROOT_DIR}/build/venv"
 
-git clone git@github.com:mongodb/mongo.git "${SOURCE_DIR}"
+if [ ! -d "${SOURCE_DIR}" ]; then
+    git clone git@github.com:mongodb/mongo.git "${SOURCE_DIR}"
+fi
 
 (
     cd "${SOURCE_DIR}"
@@ -31,7 +33,7 @@ git clone git@github.com:mongodb/mongo.git "${SOURCE_DIR}"
     git checkout 8cdc51e7810f7fd8898a4c60b935e389f04659ee
 )
 
-virtualenv -p python2 "${VENV_DIR}"
+virtualenv "${VENV_DIR}"
 
 export VIRTUAL_ENV_DISABLE_PROMPT="yes"
 # shellcheck disable=SC1090

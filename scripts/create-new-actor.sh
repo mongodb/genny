@@ -551,8 +551,9 @@ cat << EOF
 Build and test ${actor_name} with the following command:
 
     ./scripts/lamp
-    ./scripts/lamp resmoke-test --suites src/resmokeconfig/genny_standalone.yml
     ./scripts/lamp cmake-test
+    ./scripts/get-mongo-source.sh
+    ./scripts/lamp resmoke-test --suites src/resmokeconfig/genny_standalone.yml
 
 Run your workload as follows:
 
