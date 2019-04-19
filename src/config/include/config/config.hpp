@@ -28,18 +28,18 @@ struct NodeConvert {
 };
 
 class NodeT {
-    YAML::Node _yaml;
-    NodeT* _parent;
+    const YAML::Node _yaml;
+    const NodeT* const _parent;
 
     // TODO: keep track of the key we came from so we can report it in error-messages
     // using KeyType = std::optional<std::variant<std::string, int>>;
     // KeyType _key;
 
     template <typename K>
-    std::optional<YAML::Node> yamlGet(const K& key) {
-        YAML::Node found = _yaml[key];
+    std::optional<const YAML::Node> yamlGet(const K& key) const {
+        const YAML::Node found = _yaml[key];
         if (found) {
-            return std::make_optional(found);
+            return std::make_optional<const YAML::Node>(found);
         } else {
             if (!_parent) {
                 return std::nullopt;
@@ -49,7 +49,7 @@ class NodeT {
     }
 
     template <typename K>
-    NodeT get(const K& key) {  // TODO: const version
+    const NodeT get(const K& key) const {
         if constexpr (std::is_convertible_v<K, std::string>) {
             // this lets us avoid having to repeat parent key names
             // E.g. OperationName can now just be Name. If Actor
@@ -61,7 +61,7 @@ class NodeT {
                 return *_parent;
             }
         }
-        std::optional<YAML::Node> yaml = this->yamlGet(key);
+        std::optional<const YAML::Node> yaml = this->yamlGet(key);
         if (yaml) {
             return NodeT{*yaml, this};
         } else {
@@ -70,15 +70,15 @@ class NodeT {
     }
 
 public:
-    NodeT(YAML::Node yaml, NodeT* parent)
+    NodeT(const YAML::Node yaml, const NodeT* const parent)
             : _yaml{yaml}, _parent{parent} {}
 
-    NodeT(YAML::Node yaml)
+    explicit NodeT(const YAML::Node yaml)
         : NodeT{yaml, nullptr} {}
 
     // TODO: this is a bad name
     template <typename O, typename... Args>
-    O to(Args&&... args) { // TODO: const version
+    O to(Args&&... args) const {
         // TODO: assert on remove_cv<O>
         static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
         // TODO: allow constructible with NodeT& being const
@@ -92,7 +92,7 @@ public:
     }
 
     template <typename K>
-    NodeT operator[](const K& key) {  // TODO: const version
+    const NodeT operator[](const K& key) const {
         return this->get(key);
     }
 };

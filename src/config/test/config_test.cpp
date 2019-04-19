@@ -98,7 +98,7 @@ ListOfMapStringString:
 
 struct MyType {
     std::string msg;
-    MyType(Node& node, Ctx* ctx) : msg{node["msg"].to<std::string>()} {
+    MyType(const Node& node, Ctx* ctx) : msg{node["msg"].to<std::string>()} {
         REQUIRE(ctx->rng() == 7);
     }
 };
@@ -125,7 +125,7 @@ Two: {}
 
 struct HasOtherCtorParams {
     int x;
-    HasOtherCtorParams(Node& node, Ctx* ctx, int x) : x{x} {
+    HasOtherCtorParams(const Node& node, Ctx* ctx, int x) : x{x} {
         REQUIRE(node["x"].to<int>() == x);
     }
 };
