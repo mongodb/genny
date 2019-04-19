@@ -17,6 +17,7 @@
 set -eou pipefail
 
 year="$(date '+%Y')"
+q='`'
 
 usage() {
 cat << EOF
@@ -68,79 +69,70 @@ namespace genny::actor {
 /**
  * TODO: document me
  *
- * <remove>
  * Indicate what the Actor does and give an example yaml configuration.
  * Markdown is supported in all docstrings so you could list an example here:
  *
- * ```yaml
+ * ${q}${q}${q}yaml
  * SchemaVersion: 2017-07-01
  * Actors:
  * - Name: ${actor_name}
  *   Type: ${actor_name}
  *   Phases:
  *   - Document: foo
- * ```
+ * ${q}${q}${q}
  *
  * Or you can fill out the generated workloads/docs/${actor_name}.yml
  * file with extended documentation. If you do this, please mention
  * that extended documentation can be found in the docs/${actor_name}.yml
  * file.
- * </remove>
  *
  * Owner: TODO (which github team owns this Actor?)
  */
 class $actor_name : public Actor {
 
-// <remove>
 // This generated Actor does a simple collection.insert_one()
 // operation. You may need to add a few private fields to this
 // header file, but most of the work is in the associated
 // ${actor_name}.cpp file and its assocated ${actor_name}_test.cpp
 // integration-test file.
-// </remove>
 
 public:
     explicit $actor_name(ActorContext& context);
     ~$actor_name() = default;
 
-    // <remove>
     // Genny starts all Actor instances in their own threads
     // and waits for all the run() methods to complete and that's
     // "all there is".
     //
     // To help Actors coordinate, however, there is a built-in
-    // template-type called `genny::PhaseLoop`. All Actors that
-    // use `PhaseLoop` will be run in "lock-step" within Phases.
+    // template-type called ${q}genny::PhaseLoop${q}. All Actors that
+    // use ${q}PhaseLoop${q} will be run in "lock-step" within Phases.
     // See further explanation in the .cpp file.
-    // </remove>
     void run() override;
 
-    // <remove>
-    // This is how Genny knows that `Type: $actor_name`
+    // This is how Genny knows that ${q}Type: $actor_name{$q}
     // in workload YAMLs corresponds to this Actor class.
-    // It it also used by the `genny list-actors` command.
-    // </remove>
+    // It it also used by the ${q}genny list-actors${q} command.
     static std::string_view defaultName() {
         return "$actor_name";
     }
 
 private:
-    // <remove>
+
     // Each Actor can get its own connection from
     // a number of connection-pools configured in
-    // the `Clients` section of the workload yaml.
+    // the ${q}Clients${q} section of the workload yaml.
     // Since each Actor is its own thread, there
     // is no need for you to worry about thread-safety
     // in your Actor's internals. You likely do not
     // need to have more than one connection open
     // per Actor instance but of course you do you™️
-    // </remove>
     mongocxx::pool::entry _client;
 
-    // <remove>
+
     // Your Actor can record an arbitrary
     // number of different metrics which are
-    // tracked by the `metrics::Operation` type.
+    // tracked by the ${q}metrics::Operation${q} type.
     // This skeleton Actor does a simple
     // insert_one operation so the name of
     // this property corresponds to that.
@@ -152,19 +144,16 @@ private:
     // in which case you can remove this from the
     // class and put it in the PhaseConfig, discussed
     // in the .cpp implementation.
-    // </remove>
     genny::metrics::Operation _totalInserts;
 
-    // <remove>
     // The below struct and PhaseConfig
     // are discussed in depth in the ${actor_name}.cpp
     // implementation file.
     //
-    // Note that since `PhaseLoop` uses pointers
+    // Note that since ${q}PhaseLoop${q} uses pointers
     // internally you don't need to define anything
     // about this type in this header it just needs
     // to be pre-declared.
-    // </remove>
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
@@ -400,9 +389,10 @@ create_test                  "$actor_name"
 create_workload_yml          "$actor_name"
 
 cat << EOF
-🧞‍♂️ Successfully generated Actor skeleton for ${actor_name}:
+🧞‍ Successfully generated Actor skeleton for ${actor_name}:
 
 git status:
+
 EOF
 
 git status --porcelain=v1 | sed 's/^/    /'
