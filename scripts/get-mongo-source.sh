@@ -27,7 +27,8 @@ git clone git@github.com:mongodb/mongo.git "${SOURCE_DIR}"
 
 (
     cd "${SOURCE_DIR}"
-    git checkout 6734c12d17dd4c0e2738a47feb7114221d6ba66d
+    # Latest community dev version release as of 2019-04-19
+    git checkout 8cdc51e7810f7fd8898a4c60b935e389f04659ee
 )
 
 virtualenv -p python2 "${VENV_DIR}"
