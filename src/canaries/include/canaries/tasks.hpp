@@ -28,20 +28,31 @@
 
 namespace genny::canaries {
 
+/**
+ * The tasks described in this file are adapted from the canary
+ * benchmarks for MongoDB.
+ *
+ * See the following link for more detail:
+ * https://github.com/mongodb/mongo/blob/r4.1.6/src/mongo/unittest/system_resource_canary_bm.cpp
+ */
 class Task {
 public:
     virtual inline void run() = 0;
 
 protected:
+
+    /**
+     * Adapted from Google Benchmark's benchmark::DoNotOptimize().
+     */
     template <class T>
-    inline void doNotOptimize(T const& value) {
+    void doNotOptimize(T const& value) {
         asm volatile("" : : "r,m"(value) : "memory");
     }
 };
 
 class NopTask : public Task {
 public:
-    inline void run() override {
+    void run() override {
         // Ensure memory is flushed and instruct the compiler
         // to not optimize this line out.
         doNotOptimize(_inc());
@@ -58,7 +69,7 @@ private:
 
 class SleepTask : public Task {
 public:
-    inline void run() override {
+    void run() override {
         using namespace std::literals::chrono_literals;
         std::this_thread::sleep_for(1ms);
     }
@@ -66,7 +77,7 @@ public:
 
 class CPUTask : public Task {
 public:
-    inline void run() override {
+    void run() override {
         uint64_t limit = 10000;
         uint64_t lresult = 0;
         uint64_t x = 100;
@@ -128,7 +139,7 @@ public:
         char** ptrToNextLinkedListNode = reinterpret_cast<char**>(_strider.data.get()[0]);
 
         for (size_t i = 0; i < _counter; ++i) {
-            HUNDRED;
+            HUNDRED
         }
         doNotOptimize(dummyResult = ptrToNextLinkedListNode);
     }
@@ -148,7 +159,7 @@ public:
         char** ptrToNextLinkedListNode = reinterpret_cast<char**>(_strider.data.get()[0]);
 
         for (size_t i = 0; i < _counter; ++i) {
-            HUNDRED;
+            HUNDRED
         }
         doNotOptimize(dummyResult = ptrToNextLinkedListNode);
     }

@@ -1,4 +1,4 @@
-#include <canaries/Workloads.hpp>
+#include <canaries/tasks.hpp>
 
 namespace genny::canaries::ping_task {
 Singleton* Singleton::instance = nullptr;

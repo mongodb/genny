@@ -18,7 +18,7 @@
 
 #include <cstdint>
 
-#include <canaries/Workloads.hpp>
+#include <canaries/tasks.hpp>
 
 namespace genny::canaries {
 
@@ -40,21 +40,33 @@ public:
 
     /**
      * Run native for-loop; used as the control group with no Genny code.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
     Nanosecond simpleLoop(Args&&... args);
 
     /**
      * Run PhaseLoop.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
     Nanosecond phaseLoop(Args&&... args);
 
     /**
      *  Run native for-loop and record one timer metric per iteration.
+     *
+     *  @param args arguments forwarded to the workload being run.
+     *  @return the CPU time this function took, in nanoseconds.
      */
     Nanosecond metricsLoop(Args&&... args);
 
     /**
      * Run PhaseLoop and record one timer metric per iteration.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
     Nanosecond metricsPhaseLoop(Args&&... args);
 
