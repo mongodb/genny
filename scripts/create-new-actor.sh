@@ -555,12 +555,16 @@ Build and test ${actor_name} with the following command:
     ./scripts/get-mongo-source.sh
     ./scripts/lamp resmoke-test --suites src/resmokeconfig/genny_standalone.yml
 
+The resmoke-test will fail because there is a "hidden" bug in the generated
+integration-test-case that you are expected to find as a part of reading through
+the generated code.
+
 Run your workload as follows:
 
-    ./dist/bin/genny run                                         \\
-        --workload-file       ./workloads/docs/${actor_name}.yml \\
-        --metrics-format      csv                                \\
-        --metrics-output-file build/genny-metrics.csv            \\
+    ./dist/bin/genny run \\
+        --workload-file       ./src/workloads/docs/${actor_name}.yml \\
+        --metrics-format      csv \\
+        --metrics-output-file build/genny-metrics.csv \\
         --mongo-uri           'mongodb://localhost:27017'
 
 EOF
