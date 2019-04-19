@@ -21,5 +21,6 @@ CreateGennyTargets(
         gennylib
         metrics
         Boost::program_options
+    TEST_DEPENDS  testlib
     EXECUTABLE    genny-canaries
 )
