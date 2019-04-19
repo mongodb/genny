@@ -426,6 +426,10 @@ Actors:
     # below used by PhaseConfig in ${actor_name}.cpp
     Collection: test
     Document: {foo: {^RandomInt: {min: 0, max: 100}}}
+  - Phase: 1
+    Duration: 5 seconds
+    Collection: test
+    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
 EOF
 }
 
