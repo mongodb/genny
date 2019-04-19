@@ -26,11 +26,11 @@ Actors:
   Type: NonExistent
   Threads: 2.718281828   # This field is ignored for the purpose of this test.
   Phases:
-  - Duration: 4 scores            # Removed
-    Repeat: 1e999                 # Replaced with "1"
-    Rate: 1 per 2 megannum        # Removed
-    SleepBefore: 1 per 2 planks   # Removed
-    SleepAfter: a long time       # Removed
+  - Duration: 4 scores        # Removed
+    Repeat: 1e999             # Replaced with "1"
+    Rate: 1 per 2 megannum    # Removed
+    SleepBefore: 2 planks     # Removed
+    SleepAfter: 1 longtime    # Removed
 )");
 
     const auto expected = (R"(Actors:
