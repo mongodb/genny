@@ -17,6 +17,7 @@
 
 
 #include <cstdint>
+#include <iomanip>
 
 #include <canaries/tasks.hpp>
 
@@ -73,6 +74,46 @@ public:
 private:
     int64_t _iterations;
 };
+
+template <class Task, class... Args>
+std::vector<Nanosecond> runTest(std::vector<std::string>& loopNames,
+                                int64_t iterations,
+                                Args&&... args) {
+    Loops<Task, Args...> loops(iterations);
+
+    std::vector<Nanosecond> results;
+
+    int numIterations = 4;
+
+    for (auto& loopName : loopNames) {
+        Nanosecond time;
+
+        // Run each test 4 times, all but the last iteration are warm up and the
+        // results are discarded.
+        for (int i = 0; i < numIterations; i++) {
+            if (loopName == "simple") {
+                time = loops.simpleLoop(std::forward<Args>(args)...);
+            } else if (loopName == "phase") {
+                time = loops.phaseLoop(std::forward<Args>(args)...);
+            } else if (loopName == "metrics") {
+                time = loops.metricsLoop(std::forward<Args>(args)...);
+            } else if (loopName == "real") {
+                time = loops.metricsPhaseLoop(std::forward<Args>(args)...);
+            } else {
+                std::ostringstream stm;
+                stm << "Unknown loop type: " << loopName;
+                throw InvalidConfigurationException(stm.str());
+            }
+
+            if (i == numIterations - 1) {
+                results.push_back(time);
+            }
+        }
+    }
+
+    return results;
+}
+
 }  // namespace genny::canaries
 
 #endif  // HEADER_C8D12C92_7C08_4B7F_9857_8B25F7258BB9_INCLUDED

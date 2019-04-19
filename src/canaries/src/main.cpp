@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -21,7 +22,6 @@
 #include <canaries/Loops.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/context.hpp>
-#include <iomanip>
 
 using namespace genny;
 
@@ -36,6 +36,7 @@ struct ProgramOptions {
     std::string _description;
     std::string _mongoUri;
     std::string _task;
+    std::string _metricsFileName;
 
     explicit ProgramOptions() = default;
 
@@ -89,7 +90,11 @@ struct ProgramOptions {
                 po::value<int64_t>()->default_value(1e6),
                 "Number of iterations to run the tests")
         ("mongo-uri,u",
-                po::value<std::string>()->default_value("mongodb://localhost:27017"));
+                po::value<std::string>()->default_value("mongodb://localhost:27017"))
+        ("metrics-output-file,o",
+                po::value<std::string>(),
+                "Write output to file in addition to stdout. The format ouf the output"
+                "file is [task-name],[loop-type],[average_duration_in_picoseconds]");
         //clang-format on
 
         positional.add("task", 1);
@@ -110,9 +115,14 @@ struct ProgramOptions {
             _isHelp = true;
 
         if (!vm.count("task")) {
+            // Missing required argument, print help.
             _isHelp = true;
         } else {
             _task = vm["task"].as<std::string>();
+        }
+
+        if (vm.count("metrics-output-file") >= 1) {
+            _metricsFileName = vm["metrics-output-file"].as<std::string>();
         }
 
         if (vm.count("loop-type") >= 1)
@@ -125,43 +135,6 @@ struct ProgramOptions {
     }
 };
 
-template <class Task, class... Args>
-void runTest(std::vector<std::string>& loopNames, int64_t iterations, Args&&... args) {
-    canaries::Loops<Task, Args...> loops(iterations);
-
-    std::vector<canaries::Nanosecond> results;
-
-    for (auto& loopName : loopNames) {
-        canaries::Nanosecond time;
-
-        // Run each test 3 times, the first two are warm up and the results are discarded.
-        for (int i = 0; i < 3; i++) {
-            if (loopName == "simple") {
-                time = loops.simpleLoop(std::forward<Args>(args)...);
-            } else if (loopName == "phase") {
-                time = loops.phaseLoop(std::forward<Args>(args)...);
-            } else if (loopName == "metrics") {
-                time = loops.metricsLoop(std::forward<Args>(args)...);
-            } else if (loopName == "real") {
-                time = loops.metricsPhaseLoop(std::forward<Args>(args)...);
-            } else {
-                std::ostringstream stm;
-                stm << "Unknown loop type: " << loopName;
-                throw InvalidConfigurationException(stm.str());
-            }
-
-            if (i == 2) {
-                results.push_back(time);
-            }
-        }
-    }
-
-    std::cout << "Results:" << std::endl;
-    for (int i = 0; i < results.size(); i++) {
-        std::cout << std::setw(8) << loopNames[i] << ": " << results[i] << "ns" << std::endl;
-    }
-}
-
 int main(int argc, char** argv) {
     using namespace genny::canaries;
     auto opts = ProgramOptions(argc, argv);
@@ -170,22 +143,38 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    std::vector<Nanosecond> results;
+
     if (opts._task == "nop")
-        runTest<NopTask>(opts._loopNames, opts._iterations);
+        results = runTest<NopTask>(opts._loopNames, opts._iterations);
     else if (opts._task == "sleep")
-        runTest<SleepTask>(opts._loopNames, opts._iterations);
+        results = runTest<SleepTask>(opts._loopNames, opts._iterations);
     else if (opts._task == "cpu")
-        runTest<CPUTask>(opts._loopNames, opts._iterations);
+        results = runTest<CPUTask>(opts._loopNames, opts._iterations);
     else if (opts._task == "l2")
-        runTest<L2Task>(opts._loopNames, opts._iterations);
+        results = runTest<L2Task>(opts._loopNames, opts._iterations);
     else if (opts._task == "l3")
-        runTest<L3Task>(opts._loopNames, opts._iterations);
+        results = runTest<L3Task>(opts._loopNames, opts._iterations);
     else if (opts._task == "ping")
-        runTest<PingTask>(opts._loopNames, opts._iterations, opts._mongoUri);
+        results = runTest<PingTask>(opts._loopNames, opts._iterations, opts._mongoUri);
     else {
         std::ostringstream stm;
         stm << "Unknown task name: " << opts._task;
         throw InvalidConfigurationException(stm.str());
+    }
+
+    std::cout << "Total duration for " << opts._task << ":" << std::endl;
+    for (int i = 0; i < results.size(); i++) {
+        std::cout << std::setw(8) << opts._loopNames[i] << ": " << results[i] << "ns" << std::endl;
+    }
+
+    if (!opts._metricsFileName.empty()) {
+        std::ofstream metrics;
+        metrics.open(opts._metricsFileName, std::ofstream::out | std::ofstream::trunc);
+        for (int i = 0; i < results.size(); i++) {
+            metrics << opts._task << "_" << opts._loopNames[i] << "," << (results[i] * 1000 / opts._iterations);
+            metrics << std::endl;
+        }
     }
 
     return 0;
