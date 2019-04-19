@@ -78,6 +78,10 @@ public:
         return _metricsOutput.str();
     }
 
+    auto client() {
+        return workload()->client("Default");
+    }
+
     WorkloadContext* workload() {
         return _wlc.get();
     }

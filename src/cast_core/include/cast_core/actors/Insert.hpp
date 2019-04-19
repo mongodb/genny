@@ -22,9 +22,8 @@
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
-#include <gennylib/RetryStrategy.hpp>
 #include <gennylib/context.hpp>
-
+#include <metrics/operation.hpp>
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
@@ -44,12 +43,13 @@ public:
     void run() override;
 
 private:
-    RetryStrategy _strategy;
     mongocxx::pool::entry _client;
+    metrics::Operation _insert;
 
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
+
 };
 
 }  // namespace genny::actor

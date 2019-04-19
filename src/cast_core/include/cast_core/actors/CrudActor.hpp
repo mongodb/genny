@@ -42,8 +42,6 @@ namespace genny::actor {
  *   Database:
  *   Type: CrudActor
  *   Database: testdb
- *   RetryStrategy:
- *     ThrowOnFailure: true
  *   Phases:
  *   - Repeat: 1
  *     Collection: test

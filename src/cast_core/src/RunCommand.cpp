@@ -30,7 +30,6 @@
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/MongoException.hpp>
-#include <gennylib/RetryStrategy.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -169,11 +168,16 @@ public:
           _commandExpr{std::move(commandExpr)},
           _options{std::move(opts)},
           _awaitStepdown{opts.awaitStepdown},
-          // Only record metrics if we have a name for the operation.
+          // Record metrics for the operation or the phase depending on
+          // whether metricsName is set for the operation.
+          //
+          // Note: actorContext.operation() must be called to use
+          // OperationMetricsName. phaseContext.operation() will try to
+          // override the name with the metrics name for the phase.
           _operation{!_options.metricsName.empty()
                          ? std::make_optional<metrics::Operation>(
                                actorContext.operation(_options.metricsName, id))
-                         : std::nullopt} {}
+                         : phaseContext.operation("DatabaseOperation", id)} {}
 
     static std::unique_ptr<DatabaseOperation> create(YAML::Node node,
                                                      PhaseContext& context,
@@ -227,7 +231,6 @@ public:
         }
     }
 
-
 private:
     std::string _databaseName;
     mongocxx::database _database;
@@ -244,9 +247,7 @@ struct actor::RunCommand::PhaseConfig {
                 ActorContext& actorContext,
                 mongocxx::pool::entry& client,
                 ActorId id)
-        : strategy{actorContext.operation("RunCommand", id)},
-          options{context.get<RetryStrategy::Options, false>("RetryStrategy")
-                      .value_or(RetryStrategy::Options{})} {
+                : throwOnFailure{context.get<bool, false>("ThrowOnFailure").value_or(true)} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
@@ -262,21 +263,25 @@ struct actor::RunCommand::PhaseConfig {
             "Operation", "Operations", createOperation);
     }
 
-    RetryStrategy strategy;
-    RetryStrategy::Options options;
+    bool throwOnFailure;
     std::vector<std::unique_ptr<DatabaseOperation>> operations;
 };
 
 void actor::RunCommand::run() {
     for (auto&& config : _loop) {
         for (auto&& _ : config) {
-            config->strategy.run(
-                [&](metrics::OperationContext& ctx) {
-                    for (auto&& op : config->operations) {
-                        op->run();
+            for (auto&& op : config->operations) {
+                try {
+                    op->run();
+                } catch (const boost::exception& ex) {
+                    if (config->throwOnFailure) {
+                        throw;
+                    } else {
+                        BOOST_LOG_TRIVIAL(debug)
+                            << "Caught error: " << boost::diagnostic_information(ex);
                     }
-                },
-                config->options);
+                }
+            }
         }
     }
 }

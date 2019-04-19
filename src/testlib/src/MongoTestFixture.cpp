@@ -21,6 +21,8 @@
 
 #include <mongocxx/uri.hpp>
 
+#include <testlib/helpers.hpp>
+
 namespace genny::testing {
 
 mongocxx::uri MongoTestFixture::connectionUri() {
@@ -36,17 +38,10 @@ mongocxx::uri MongoTestFixture::connectionUri() {
 };
 
 void MongoTestFixture::dropAllDatabases() {
-    for (auto&& dbDoc : client.list_databases()) {
-        const auto dbName = dbDoc["name"].get_utf8().value;
-        const auto dbNameString = std::string(dbName);
-        if (dbNameString != "admin" && dbNameString != "config" && dbNameString != "local") {
-            client.database(dbName).drop();
-        }
-    }
+    ::genny::dropAllDatabases(this->client);
 };
 
-MongoTestFixture::ApmCallback MongoTestFixture::makeApmCallback(
-    MongoTestFixture::ApmEvents& events) {
+ApmCallback makeApmCallback(ApmEvents& events) {
     // This was copied from
     // github.com/mongodb/mongo-cxx-driver/blob/r3.4.0/src/mongocxx/test/client_session.cpp#L224
     return [&](const mongocxx::events::command_started_event& event) {

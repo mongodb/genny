@@ -15,6 +15,7 @@
 add_subdirectory(third_party)
 
 # keep in alpha order
+add_subdirectory(canaries)
 add_subdirectory(cast_core)
 add_subdirectory(config)
 add_subdirectory(driver)

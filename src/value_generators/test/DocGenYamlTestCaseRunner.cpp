@@ -12,8 +12,6 @@
 #include <yaml-cpp/yaml.h>
 
 #include <testlib/ActorHelper.hpp>
-#include <testlib/findRepoRoot.hpp>
-#include <testlib/helpers.hpp>
 #include <testlib/yamlTest.hpp>
 #include <testlib/yamlToBson.hpp>
 
@@ -68,7 +66,8 @@ public:
             if (_runMode == RunMode::kExpectException) {
                 try {
                     genny::DocumentGenerator(this->_givenTemplate, rng);
-                    FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>() << " but none occurred");
+                    FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
+                                               << " but none occurred");
                 } catch (const std::exception& x) {
                     REQUIRE("InvalidValueGeneratorSyntax" ==
                             this->_expectedExceptionMessage.as<std::string>());
