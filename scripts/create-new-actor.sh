@@ -19,12 +19,13 @@ set -eou pipefail
 year="$(date '+%Y')"
 
 usage() {
-    echo "Usage:"
-    echo ""
-    echo "    $0 ActorName"
-    echo ""
-    echo "Creates and modifies boiler-plate necessary to create a new Actor."
-    echo ""
+cat << EOF
+Usage:
+
+    $0 ActorName
+
+Creates and modifies boiler-plate necessary to create a new Actor.
+EOF
 }
 
 create_header_text() {
@@ -33,65 +34,67 @@ create_header_text() {
     uuid_tag="$1"
     actor_name="$2"
 
-    echo "// Copyright ${year}-present MongoDB Inc."
-    echo "//"
-    echo "// Licensed under the Apache License, Version 2.0 (the \"License\");"
-    echo "// you may not use this file except in compliance with the License."
-    echo "// You may obtain a copy of the License at"
-    echo "//"
-    echo "// http://www.apache.org/licenses/LICENSE-2.0"
-    echo "//"
-    echo "// Unless required by applicable law or agreed to in writing, software"
-    echo "// distributed under the License is distributed on an \"AS IS\" BASIS,"
-    echo "// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied."
-    echo "// See the License for the specific language governing permissions and"
-    echo "// limitations under the License."
-    echo ""
-    echo "#ifndef $uuid_tag"
-    echo "#define $uuid_tag"
-    echo ""
-    echo "#include <string_view>"
-    echo ""
-    echo "#include <mongocxx/pool.hpp>"
-    echo ""
-    echo "#include <gennylib/Actor.hpp>"
-    echo "#include <gennylib/PhaseLoop.hpp>"
-    echo "#include <gennylib/context.hpp>"
-    echo ""
-    echo "#include <metrics/metrics.hpp>"
-    echo ""
-    echo "namespace genny::actor {"
-    echo ""
-    echo "/**"
-    echo " * TODO: document me"
-    echo " *"
-    echo " * Owner: TODO (which github team owns this Actor?)"
-    echo " */"
-    echo "class $actor_name : public Actor {"
-    echo ""
-    echo "public:"
-    echo "    explicit $actor_name(ActorContext& context);"
-    echo "    ~$actor_name() = default;"
-    echo ""
-    echo "    static std::string_view defaultName() {"
-    echo "        return \"$actor_name\";"
-    echo "    }"
-    echo ""
-    echo "    void run() override;"
-    echo ""
-    echo "private:"
-    echo "    mongocxx::pool::entry _client;"
-    echo ""
-    echo "    genny::metrics::Operation _totalInserts;"
-    echo ""
-    echo "    /** @private */"
-    echo "    struct PhaseConfig;"
-    echo "    PhaseLoop<PhaseConfig> _loop;"
-    echo "};"
-    echo ""
-    echo "}  // namespace genny::actor"
-    echo ""
-    echo "#endif  // $uuid_tag"
+    cat << EOF
+// Copyright ${year}-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef $uuid_tag
+#define $uuid_tag
+
+#include <string_view>
+
+#include <mongocxx/pool.hpp>
+
+#include <gennylib/Actor.hpp>
+#include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
+
+#include <metrics/metrics.hpp>
+
+namespace genny::actor {
+
+/**
+ * TODO: document me
+ *
+ * Owner: TODO (which github team owns this Actor?)
+ */
+class $actor_name : public Actor {
+
+public:
+    explicit $actor_name(ActorContext& context);
+    ~$actor_name() = default;
+
+    static std::string_view defaultName() {
+        return "$actor_name";
+    }
+
+    void run() override;
+
+private:
+    mongocxx::pool::entry _client;
+
+    genny::metrics::Operation _totalInserts;
+
+    /** @private */
+    struct PhaseConfig;
+    PhaseLoop<PhaseConfig> _loop;
+};
+
+}  // namespace genny::actor
+
+#endif  // $uuid_tag
+EOF
 }
 
 create_impl_text() {
@@ -100,76 +103,78 @@ create_impl_text() {
     uuid_tag="$1"
     actor_name="$2"
 
-    echo "// Copyright ${year}-present MongoDB Inc."
-    echo "//"
-    echo "// Licensed under the Apache License, Version 2.0 (the \"License\");"
-    echo "// you may not use this file except in compliance with the License."
-    echo "// You may obtain a copy of the License at"
-    echo "//"
-    echo "// http://www.apache.org/licenses/LICENSE-2.0"
-    echo "//"
-    echo "// Unless required by applicable law or agreed to in writing, software"
-    echo "// distributed under the License is distributed on an \"AS IS\" BASIS,"
-    echo "// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied."
-    echo "// See the License for the specific language governing permissions and"
-    echo "// limitations under the License."
-    echo ""
-    echo "#include <cast_core/actors/${actor_name}.hpp>"
-    echo ""
-    echo "#include <memory>"
-    echo ""
-    echo "#include <yaml-cpp/yaml.h>"
-    echo ""
-    echo "#include <bsoncxx/json.hpp>"
-    echo "#include <mongocxx/client.hpp>"
-    echo "#include <mongocxx/collection.hpp>"
-    echo "#include <mongocxx/database.hpp>"
-    echo ""
-    echo "#include <boost/log/trivial.hpp>"
-    echo ""
-    echo "#include <gennylib/Cast.hpp>"
-    echo "#include <gennylib/context.hpp>"
-    echo ""
-    echo "#include <value_generators/DocumentGenerator.hpp>"
-    echo ""
-    echo ""
-    echo "namespace genny::actor {"
-    echo ""
-    echo "struct ${actor_name}::PhaseConfig {"
-    echo "    mongocxx::collection collection;"
-    echo "    DocumentGenerator documentExpr;"
-    echo ""
-    echo "    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)"
-    echo "        : collection{db[phaseContext.get<std::string>(\"Collection\")]},"
-    echo "          documentExpr{phaseContext.createDocumentGenerator(id, \"Document\")} {}"
-    echo "};"
-    echo ""
-    echo "void ${actor_name}::run() {"
-    echo "    for (auto&& config : _loop) {"
-    echo "        for (const auto&& _ : config) {"
-    echo "            auto inserts = _totalInserts.start();"
-    echo "            // TODO: main logic"
-    echo "            auto document = config->documentExpr();"
-    echo "            BOOST_LOG_TRIVIAL(info) << \" ${actor_name} Inserting \""
-    echo "                                    << bsoncxx::to_json(document.view());"
-    echo "            config->collection.insert_one(document.view());"
-    echo "            inserts.addDocuments(1);"
-    echo "            inserts.addBytes(document.view().length());"
-    echo "            inserts.success();"
-    echo "        }"
-    echo "    }"
-    echo "}"
-    echo ""
-    echo "${actor_name}::${actor_name}(genny::ActorContext& context)"
-    echo "    : Actor(context),"
-    echo "      _totalInserts{context.operation(\"Insert\", ${actor_name}::id())},"
-    echo "      _client{std::move(context.client())},"
-    echo "      _loop{context, (*_client)[context.get<std::string>(\"Database\")], ${actor_name}::id()} {}"
-    echo ""
-    echo "namespace {"
-    echo "auto register${actor_name} = Cast::registerDefault<${actor_name}>();"
-    echo "}  // namespace"
-    echo "}  // namespace genny::actor"
+cat << EOF
+// Copyright ${year}-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <cast_core/actors/${actor_name}.hpp>
+
+#include <memory>
+
+#include <yaml-cpp/yaml.h>
+
+#include <bsoncxx/json.hpp>
+#include <mongocxx/client.hpp>
+#include <mongocxx/collection.hpp>
+#include <mongocxx/database.hpp>
+
+#include <boost/log/trivial.hpp>
+
+#include <gennylib/Cast.hpp>
+#include <gennylib/context.hpp>
+
+#include <value_generators/DocumentGenerator.hpp>
+
+
+namespace genny::actor {
+
+struct ${actor_name}::PhaseConfig {
+    mongocxx::collection collection;
+    DocumentGenerator documentExpr;
+
+    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
+        : collection{db[phaseContext.get<std::string>("Collection")]},
+          documentExpr{phaseContext.createDocumentGenerator(id, "Document")} {}
+};
+
+void ${actor_name}::run() {
+    for (auto&& config : _loop) {
+        for (const auto&& _ : config) {
+            auto inserts = _totalInserts.start();
+            // TODO: main logic
+            auto document = config->documentExpr();
+            BOOST_LOG_TRIVIAL(info) << " ${actor_name} Inserting "
+                                    << bsoncxx::to_json(document.view());
+            config->collection.insert_one(document.view());
+            inserts.addDocuments(1);
+            inserts.addBytes(document.view().length());
+            inserts.success();
+        }
+    }
+}
+
+${actor_name}::${actor_name}(genny::ActorContext& context)
+    : Actor(context),
+      _totalInserts{context.operation("Insert", ${actor_name}::id())},
+      _client{std::move(context.client())},
+      _loop{context, (*_client)[context.get<std::string>("Database")], ${actor_name}::id()} {}
+
+namespace {
+auto register${actor_name} = Cast::registerDefault<${actor_name}>();
+}  // namespace
+}  // namespace genny::actor
+EOF
 }
 
 create_header() {
@@ -315,21 +320,27 @@ create_impl                  "$uuid_tag" "$actor_name"
 create_test                  "$actor_name"
 create_workload_yml          "$actor_name"
 
-echo "Successfully generated Actor skeleton for ${actor_name}:"
-echo ""
+cat << EOF
+🧞‍♂️ Successfully generated Actor skeleton for ${actor_name}:
+
+EOF
+
 git status --porcelain=v1 | sed 's/^/    /'
-echo ""
-echo "Build and test ${actor_name} with the following command:"
-echo ""
-echo "    ./scripts/lamp"
-echo "    ./scripts/lamp resmoke-test --suites src/resmokeconfig/genny_standalone.yml"
-echo "    ./scripts/lamp cmake-test"
-echo ""
-echo "Run your workload as follows:"
-echo ""
-echo "    ./dist/bin/genny run                                         \\"
-echo "        --workload-file       ./workloads/docs/${actor_name}.yml \\"
-echo "        --metrics-format      csv                                \\"
-echo "        --metrics-output-file build/genny-metrics.csv            \\"
-echo "        --mongo-uri           'mongodb://localhost:27017'"
-echo ""
+
+cat << EOF
+
+Build and test ${actor_name} with the following command:
+
+    ./scripts/lamp
+    ./scripts/lamp resmoke-test --suites src/resmokeconfig/genny_standalone.yml
+    ./scripts/lamp cmake-test
+
+Run your workload as follows:
+
+    ./dist/bin/genny run                                         \\
+        --workload-file       ./workloads/docs/${actor_name}.yml \\
+        --metrics-format      csv                                \\
+        --metrics-output-file build/genny-metrics.csv            \\
+        --mongo-uri           'mongodb://localhost:27017'
+
+EOF
