@@ -40,7 +40,6 @@ public:
     virtual inline void run() = 0;
 
 protected:
-
     /**
      * Adapted from Google Benchmark's benchmark::DoNotOptimize().
      */
