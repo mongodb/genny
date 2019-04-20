@@ -1,24 +1,15 @@
 #include <catch2/catch.hpp>
 #include <config/config.hpp>
-#include <testlib/helpers.hpp>
 
 #include <map>
 #include <vector>
 
 using namespace genny;
 
-struct Ctx {
-    int rng() {
-        return 7;
-    }
-};
-
 // TODO: rename NodeT to just node...not templated on ptr type anymore
 using Node = NodeT;
 
 TEST_CASE("ConfigNode inheritance") {
-    Ctx context;
-
     auto yaml = YAML::Load(R"(
 a: 7
 b: 900
@@ -73,8 +64,6 @@ Children:
 }
 
 TEST_CASE("ConfigNode Built-Ins Construction") {
-    Ctx context;
-
     auto yaml = YAML::Load(R"(
 SomeString: some_string
 IntList: [1,2,3]
@@ -95,6 +84,10 @@ ListOfMapStringString:
     }
 }
 
+
+struct Ctx {
+    int rng() const { return 7; }
+};
 
 struct MyType {
     std::string msg;
