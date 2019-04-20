@@ -190,7 +190,7 @@ TEST_CASE("Iteration") {
     auto yaml = YAML::Load(R"(
 Scalar: foo
 SimpleMap: {a: b}
-List: [1,2,3]
+ListOfScalars: [1,2]
 ListOfMap:
 - {a: A, b: B}
 - {A: a, B: B}
@@ -209,9 +209,23 @@ ListOfMap:
         REQUIRE(mp);
         int seen = 0;
         for (auto kvp : mp) {
+            Node k = kvp.first;
+            Node v = kvp.second;
+            REQUIRE(k.to<std::string>() == "a");
+            REQUIRE(v.to<std::string>() == "b");
             ++seen;
         }
         REQUIRE(seen == 1);
+    }
+
+    SECTION("ListOfScalars") {
+        auto lst = node["ListOfScalars"];
+        REQUIRE(lst);
+        int i = 1;
+        for (auto v : lst) {
+            REQUIRE(v.first.to<int>() == i);
+        }
+        REQUIRE(i == 3);
     }
 }
 

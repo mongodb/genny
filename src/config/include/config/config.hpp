@@ -159,34 +159,54 @@ public:
         return this->get(key);
     }
 
-    struct iterator {
-        YAML::const_iterator _child;
-        auto operator++() {
-            return _child.operator++();
-        }
-        auto operator*() {
-            return _child.operator*();
-        }
-        auto operator->() {
-            return _child.operator->();
-        }
-        auto operator==(const iterator& rhs) {
-            return _child == rhs._child;
-        }
-        auto operator!=(const iterator& rhs) {
-            return _child != rhs._child;
-        }
-    };
-
-    iterator begin() const {
-        return iterator{_yaml.begin()};
-    }
-
-    iterator end() const {
-        return iterator{_yaml.end()};
-    }
+    struct iterator;
+    iterator begin() const;
+    iterator end() const;
 
 };
+
+template<class T>
+class TD;
+
+struct IteratorValue : std::pair<NodeT,NodeT> {
+    using NodePair = std::pair<NodeT,NodeT>;
+    using NodePair::NodePair;
+};
+
+struct NodeT::iterator {
+    YAML::const_iterator _child;
+    const NodeT* parent;
+
+    auto operator++() {
+        return _child.operator++();
+    }
+
+    auto operator*() {
+        auto out = _child.operator*();
+        return IteratorValue{NodeT{out.first, parent, out.first}, NodeT{out.second, parent, out.second}};
+    }
+
+    auto operator->() {
+        auto out = _child.operator*();
+        return IteratorValue{NodeT{out.first, parent, out.first}, NodeT{out.second, parent, out.second}};
+    }
+
+    auto operator==(const iterator &rhs) {
+        return _child == rhs._child;
+    }
+
+    auto operator!=(const iterator &rhs) {
+        return _child != rhs._child;
+    }
+};
+
+inline NodeT::iterator NodeT::begin() const {
+    return NodeT::iterator{_yaml.begin()};
+}
+
+inline NodeT::iterator NodeT::end() const {
+    return NodeT::iterator{_yaml.end()};
+}
 
 // TODO: rename NodeT to just node...not templated on ptr type anymore
 using Node = NodeT;
