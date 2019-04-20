@@ -28,7 +28,7 @@ struct NodeConvert {
 };
 
 
-template<typename T>
+template <typename T>
 using BaseType = std::remove_reference<std::remove_cv_t<std::remove_pointer_t<T>>>;
 /**
  * Is A same as B after removing all cv, ref, and ptr-ness
@@ -114,26 +114,29 @@ public:
         return _yaml && _valid;
     }
 
-    // TODO: this is a bad name
     template <typename O, typename... Args>
     O to(Args&&... args) const {
         return *maybe<O, Args...>(std::forward<Args>(args)...);
     }
 
+    // synonym...do we actually want this? could allow for confusion...
+    template<typename...Args>
+    auto as(Args&&... args) const {
+        return to(std::forward<Args>(args)...);
+    }
+
     template <typename O, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
-        if (*this) {
-            static_assert(!IsLooselySame<O, YAML::Node>::value, "🙈 YAML::Node");
-            // TODO: if sizeof...(Args) > 0 then this becomes a static_assert rather than an if
-            //       (or put static_assert(sizeof == 0) in the else block)
-            if constexpr (std::is_constructible_v<O, NodeT&, Args...> ||
-                          std::is_constructible_v<O, const NodeT&, Args...>) {
-                return std::make_optional<O>(*this, std::forward<Args>(args)...);
-            } else {
-                return std::make_optional<O>(NodeConvert<O>::convert(_yaml));
-            }
-        } else {
+        static_assert(!IsLooselySame<O, YAML::Node>::value, "🙈 YAML::Node");
+        if (!*this) {
             return std::nullopt;
+        }
+        if constexpr (std::is_constructible_v<O, NodeT&, Args...> ||
+                      std::is_constructible_v<O, const NodeT&, Args...>) {
+            return std::make_optional<O>(*this, std::forward<Args>(args)...);
+        } else {
+            static_assert(sizeof...(args) == 0, "Must be constructible from Node& and given args");
+            return std::make_optional<O>(NodeConvert<O>::convert(_yaml));
         }
     }
 
@@ -184,7 +187,7 @@ struct NodeT::iterator {
         return IteratorValue{parent, out};
     }
 
-    auto operator->() const {
+    auto operator-> () const {
         auto out = _child.operator*();
         return IteratorValue{parent, out};
     }
