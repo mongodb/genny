@@ -47,8 +47,16 @@ def cmake_test(env):
     ctest_cmd = [
         'ctest',
         '--label-exclude',
-        '(standalone|sharded|single_node_replset|three_node_replset)'
+        '(standalone|sharded|single_node_replset|three_node_replset|benchmark)'
     ]
+
+    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+
+
+def benchmark_test(env):
+    workdir = os.path.join(os.getcwd(), 'build')
+
+    ctest_cmd = ['ctest', '--label-regex', '(benchmark)']
 
     _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
 

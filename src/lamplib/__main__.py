@@ -52,6 +52,8 @@ def main():
             tasks.install(context, compile_env)
         elif args.subcommand == 'cmake-test':
             tasks.run_tests.cmake_test(compile_env)
+        elif args.subcommand == 'benchmark-test':
+            tasks.run_tests.benchmark_test(compile_env)
         elif args.subcommand == 'resmoke-test':
             tasks.run_tests.resmoke_test(compile_env, suites=args.resmoke_suites,
                                          mongo_dir=args.resmoke_mongo_dir, is_cnats=args.resmoke_cnats)
