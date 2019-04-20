@@ -194,7 +194,7 @@ SimpleMap: {a: b}
 ListOfScalars: [1,2]
 ListOfMap:
 - {a: A, b: B}
-- {A: a, B: B}
+SingleItemList: [37]
 )");
     Node node(yaml);
 
@@ -228,6 +228,47 @@ ListOfMap:
             ++i;
         }
         REQUIRE(i == 3);
+    }
+
+    SECTION("ListOfMap") {
+        auto lom = node["ListOfMap"];
+        REQUIRE(lom);
+        REQUIRE(lom.size() == 1);
+        auto countMaps = 0;
+        for(auto m : lom) {
+            ++countMaps;
+            REQUIRE(m.size() == 2);
+
+            auto countEntries = 0;
+            for(auto kvp : m) {
+                ++countEntries;
+            }
+            REQUIRE(countEntries == 2);
+
+            REQUIRE(m["a"].to<std::string>() == "A");
+            REQUIRE(m["b"].to<std::string>() == "B");
+
+            // still get inheritance
+            REQUIRE(m["Scalar"].to<std::string>() == "foo");
+            // still get parent relationship:s
+            REQUIRE(m[".."]["Scalar"].to<std::string>() == "foo");
+            REQUIRE(m[".."]["SimpleMap"]["a"][".."]["Scalar"].to<std::string>() == "foo");
+        }
+        REQUIRE(countMaps == 1);
+    }
+
+    SECTION("SingleItemList") {
+        auto sil = node["SingleItemList"];
+        REQUIRE(sil.size() == 1);
+        REQUIRE(sil[0].to<int>() == 37);
+        auto count = 0;
+        for(auto v : sil) {
+            REQUIRE(v.to<int>() == 37);
+            // we still get parents
+            REQUIRE(v[".."]["Scalar"].to<std::string>() == "foo");
+            ++count;
+        }
+        REQUIRE(count == 1);
     }
 }
 
