@@ -159,6 +159,7 @@ Children:
     Node node(yaml);
 
     node["does"]["not"]["exist"].maybe<RequiresParamToEqualNodeX>(3);
+    REQUIRE(!node["does"]["not"]["exist"].maybe<ExtractsMsg>());
     REQUIRE(node["Children"].maybe<ExtractsMsg>()->msg == "inherited");
     REQUIRE(node["Children"]["overrides"].maybe<ExtractsMsg>()->msg == "overridden");
     REQUIRE(node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg == "inherited");
