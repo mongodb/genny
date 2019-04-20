@@ -27,16 +27,6 @@ struct NodeConvert {
     }
 };
 
-
-template <typename T>
-using BaseType = std::remove_reference<std::remove_cv_t<std::remove_pointer_t<T>>>;
-/**
- * Is A same as B after removing all cv, ref, and ptr-ness
- */
-template <typename A, typename B>
-using IsLooselySame = typename std::is_same<typename BaseType<A>::type, typename BaseType<B>::type>;
-
-
 class NodeT {
     const YAML::Node _yaml;
     const NodeT* const _parent;
@@ -71,6 +61,7 @@ class NodeT {
             // this lets us avoid having to repeat parent key names
             // E.g. OperationName can now just be Name. If Actor
             // wants the Actor name they can look up `node[..][Name]`.
+            // TOOD: test that we can [..] past the root element by a bunch and not blow up
             if (key == "..") {
                 if (!_parent) {
                     throw std::logic_error("TODO");  // TODO: better messaging
@@ -92,7 +83,8 @@ public:
 
     explicit NodeT(const YAML::Node yaml) : NodeT{yaml, nullptr, (bool)yaml} {}
 
-    // TODO: should this do fallback>?
+    // TODO: this syntax-sugar could be too confusing versus when you should
+    // just do node.maybe<T>().value_or(T{})
     template <typename T>
     T value_or(T&& fallback) const {
         if (!_valid) {
@@ -109,9 +101,8 @@ public:
         return _yaml.size();
     }
 
-    // TODO: should this do fallback?
     explicit operator bool() const {
-        return _yaml && _valid;
+        return _valid && _yaml;
     }
 
     template <typename O, typename... Args>
@@ -127,14 +118,17 @@ public:
 
     template <typename O, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
-        static_assert(!IsLooselySame<O, YAML::Node>::value, "🙈 YAML::Node");
+        // TODO: tests of this
+        static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>, "🙈 YAML::Node");
         if (!*this) {
             return std::nullopt;
         }
+        // TODO: tests of the const-ness
         if constexpr (std::is_constructible_v<O, NodeT&, Args...> ||
                       std::is_constructible_v<O, const NodeT&, Args...>) {
             return std::make_optional<O>(*this, std::forward<Args>(args)...);
         } else {
+            // TODO: tests the sizeof failure-case
             static_assert(sizeof...(args) == 0, "Must be constructible from Node& and given args");
             return std::make_optional<O>(NodeConvert<O>::convert(_yaml));
         }
@@ -192,10 +186,12 @@ struct NodeT::iterator {
         return IteratorValue{parent, out};
     }
 
+    // TODO: just forward directly
     auto operator==(const iterator& rhs) const {
         return _child == rhs._child;
     }
 
+    // TODO: just forward directly
     auto operator!=(const iterator& rhs) const {
         return _child != rhs._child;
     }
