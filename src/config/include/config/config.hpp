@@ -122,15 +122,6 @@ public:
         }
     }
 
-//    // TODO: should this do fallback>?
-//    template<typename T>
-//    std::optional<T> maybe() const {
-//        if (!_valid || !_yaml) {
-//            return std::nullopt;
-//        }
-//        return to<T>();
-//    }
-
     auto size() const {
         return _yaml.size();
     }
