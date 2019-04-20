@@ -137,25 +137,32 @@ public:
 
     // TODO: should this do fallback?
     explicit operator bool() const {
-        return _yaml;
+        return _yaml && _valid;
     }
 
     // TODO: this is a bad name
     template <typename O, typename... Args>
     O to(Args&&... args) const {
-        // TODO: assert on remove_cv<O>
-        static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
-        // TODO: allow constructible with NodeT& being const
-        // TODO: if sizeof...(Args) > 0 then this becomes a static_assert rather than an if
-        //       (or put static_assert(sizeof == 0) in the else block)
-        if constexpr (std::is_constructible_v<O, NodeT&,Args...>) {
-            return O{*this, std::forward<Args>(args)...};
-        } else {
-            return NodeConvert<O>::convert(_yaml);
-        }
+        return *maybe<O,Args...>(std::forward<Args>(args)...);
     }
 
-
+    template <typename O, typename... Args>
+    std::optional<O> maybe(Args&&... args) const {
+        if (*this) {
+            // TODO: assert on remove_cv<O>
+            static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
+            // TODO: allow constructible with NodeT& being const
+            // TODO: if sizeof...(Args) > 0 then this becomes a static_assert rather than an if
+            //       (or put static_assert(sizeof == 0) in the else block)
+            if constexpr (std::is_constructible_v<O, NodeT&,Args...>) {
+                return std::make_optional<O>(*this, std::forward<Args>(args)...);
+            } else {
+                return std::make_optional<O>(NodeConvert<O>::convert(_yaml));
+            }
+        } else {
+            return std::nullopt;
+        }
+    }
 
     template <typename K>
     const NodeT operator[](const K& key) const {
