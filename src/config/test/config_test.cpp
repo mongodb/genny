@@ -186,6 +186,7 @@ b: {}
     node["b"].to<RequiresParamToEqualNodeX>(9);
 }
 
+// TODO: how to handle iterating over inherited keys?
 TEST_CASE("Iteration") {
     auto yaml = YAML::Load(R"(
 Scalar: foo
@@ -223,7 +224,8 @@ ListOfMap:
         REQUIRE(lst);
         int i = 1;
         for (auto v : lst) {
-            REQUIRE(v.first.to<int>() == i);
+            REQUIRE(v.to<int>() == i);
+            ++i;
         }
         REQUIRE(i == 3);
     }

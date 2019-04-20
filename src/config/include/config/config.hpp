@@ -168,9 +168,15 @@ public:
 template<class T>
 class TD;
 
-struct IteratorValue : std::pair<NodeT,NodeT> {
+
+struct IteratorValue : std::pair<NodeT,NodeT>, NodeT {
     using NodePair = std::pair<NodeT,NodeT>;
-    using NodePair::NodePair;
+    // jump through immense hoops to avoid knowing anything about the actual yaml iterator other than
+    // its pair form is a pair of {YAML::Node, YAML::Node}
+    template<typename ITVal>
+    IteratorValue(const NodeT* parent, ITVal itVal)
+    : NodePair{std::make_pair(NodeT{itVal.first, parent, itVal.first}, NodeT{itVal.second, parent, itVal.second})},
+      NodeT{itVal, parent, itVal} {}
 };
 
 struct NodeT::iterator {
@@ -183,12 +189,12 @@ struct NodeT::iterator {
 
     auto operator*() {
         auto out = _child.operator*();
-        return IteratorValue{NodeT{out.first, parent, out.first}, NodeT{out.second, parent, out.second}};
+        return IteratorValue{parent, out};
     }
 
     auto operator->() {
         auto out = _child.operator*();
-        return IteratorValue{NodeT{out.first, parent, out.first}, NodeT{out.second, parent, out.second}};
+        return IteratorValue{parent, out};
     }
 
     auto operator==(const iterator &rhs) {
