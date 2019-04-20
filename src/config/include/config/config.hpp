@@ -27,32 +27,6 @@ struct NodeConvert {
     }
 };
 
-// template<typename T>
-// class ValueOrHolder {
-//    // TODO: also wire in path and barf if try to access via operatorT() and _value is nullopt
-//    std::optional<T> _value;
-//
-// public:
-//    auto operator->() const {
-//        return _value.operator->();
-//    }
-//    operator T() const {
-//        return *_value;
-//    }
-//    template <typename R>
-//    bool operator==(R&& r) {
-//        return _value.operator==(std::forward<R>(r));
-//    }
-//    template<typename...Args>
-//    T value_or(Args&&...args) {
-//        if (_value) {
-//            return *_value;
-//        } else {
-//            return T{std::forward<Args>(args)...};
-//        }
-//    }
-//};
-
 class NodeT {
     const YAML::Node _yaml;
     const NodeT* const _parent;
@@ -164,11 +138,10 @@ public:
     iterator end() const;
 };
 
-template <class T>
-class TD;
 
-
-struct IteratorValue : std::pair<NodeT, NodeT>, NodeT {
+// we can act like a NodeT if iterated value is a scalar or
+// we can act like a pair of NodeTs if iterated value is a map entry
+struct IteratorValue : public std::pair<NodeT, NodeT>, public NodeT {
     using NodePair = std::pair<NodeT, NodeT>;
     // jump through immense hoops to avoid knowing anything about the actual yaml iterator other
     // than its pair form is a pair of {YAML::Node, YAML::Node}
@@ -197,21 +170,21 @@ struct NodeT::iterator {
         return _child.operator++();
     }
 
-    auto operator*() {
+    auto operator*() const {
         auto out = _child.operator*();
         return IteratorValue{parent, out};
     }
 
-    auto operator-> () {
+    auto operator->() const {
         auto out = _child.operator*();
         return IteratorValue{parent, out};
     }
 
-    auto operator==(const iterator& rhs) {
+    auto operator==(const iterator& rhs) const {
         return _child == rhs._child;
     }
 
-    auto operator!=(const iterator& rhs) {
+    auto operator!=(const iterator& rhs) const {
         return _child != rhs._child;
     }
 };
