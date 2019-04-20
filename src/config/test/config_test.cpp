@@ -44,6 +44,10 @@ Children:
 
     SECTION("What does YAML::Node do?") {
         REQUIRE(yaml["does"]["not"]["exist"].as<int>(9) == 9);
+        auto a = yaml["a"];
+        for(auto kvp : a) {
+            FAIL("nothing to iterate");
+        }
     }
 
     SECTION("Parent traversal") {
@@ -181,3 +185,44 @@ b: {}
     node["a"].to<RequiresParamToEqualNodeX>(7);
     node["b"].to<RequiresParamToEqualNodeX>(9);
 }
+
+TEST_CASE("Iteration") {
+    auto yaml = YAML::Load(R"(
+Scalar: foo
+SimpleMap: {a: b}
+List: [1,2,3]
+ListOfMap:
+- {a: A, b: B}
+- {A: a, B: B}
+)");
+    Node node(yaml);
+
+    SECTION("Scalar") {
+        auto a = node["Scalar"];
+        REQUIRE(a);
+        for(auto kvp : a) {
+            FAIL("nothing to iterate");
+        }
+    }
+    SECTION("SimpleMap") {
+        auto mp = node["SimpleMap"];
+        REQUIRE(mp);
+        int seen = 0;
+        for (auto kvp : mp) {
+            ++seen;
+        }
+        REQUIRE(seen == 1);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+

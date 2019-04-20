@@ -158,6 +158,34 @@ public:
     const NodeT operator[](const K& key) const {
         return this->get(key);
     }
+
+    struct iterator {
+        YAML::const_iterator _child;
+        auto operator++() {
+            return _child.operator++();
+        }
+        auto operator*() {
+            return _child.operator*();
+        }
+        auto operator->() {
+            return _child.operator->();
+        }
+        auto operator==(const iterator& rhs) {
+            return _child == rhs._child;
+        }
+        auto operator!=(const iterator& rhs) {
+            return _child != rhs._child;
+        }
+    };
+
+    iterator begin() const {
+        return iterator{_yaml.begin()};
+    }
+
+    iterator end() const {
+        return iterator{_yaml.end()};
+    }
+
 };
 
 // TODO: rename NodeT to just node...not templated on ptr type anymore
