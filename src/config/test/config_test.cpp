@@ -9,12 +9,10 @@ using namespace config;
 
 struct EmptyStruct {};
 
-struct ExtractsStringMsgOrTakesStringCtor {
+struct ExtractsMsg {
     std::string msg;
-    ExtractsStringMsgOrTakesStringCtor(std::string msg)
-    : msg{msg} {}
-    ExtractsStringMsgOrTakesStringCtor(const Node& node)
-    : ExtractsStringMsgOrTakesStringCtor(node["msg"].to<std::string>()) {}
+    ExtractsMsg(const Node& node)
+    : msg{node["msg"].to<std::string>()} {}
 };
 
 struct TakesEmptyStructAndExtractsMsg {
@@ -161,10 +159,10 @@ Children:
     Node node(yaml);
 
     node["does"]["not"]["exist"].maybe<RequiresParamToEqualNodeX>(3);
-    REQUIRE(node["Children"].maybe<ExtractsStringMsgOrTakesStringCtor>()->msg == "inherited");
-    REQUIRE(node["Children"]["overrides"].maybe<ExtractsStringMsgOrTakesStringCtor>()->msg == "overridden");
-    REQUIRE(node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsStringMsgOrTakesStringCtor>()->msg == "inherited");
-    REQUIRE(node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsStringMsgOrTakesStringCtor>()->msg == "deeply_overridden");
+    REQUIRE(node["Children"].maybe<ExtractsMsg>()->msg == "inherited");
+    REQUIRE(node["Children"]["overrides"].maybe<ExtractsMsg>()->msg == "overridden");
+    REQUIRE(node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg == "inherited");
+    REQUIRE(node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsMsg>()->msg == "deeply_overridden");
 }
 
 TEST_CASE("Configurable additional-ctor-params Conversions") {
