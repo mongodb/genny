@@ -11,7 +11,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace genny {
+namespace config {
 
 // We don't actually care about YAML::convert<T>
 // because we never go from T to YAML::Node just the
@@ -26,6 +26,32 @@ struct NodeConvert {
         return node.as<O>();
     }
 };
+
+//template<typename T>
+//class ValueOrHolder {
+//    // TODO: also wire in path and barf if try to access via operatorT() and _value is nullopt
+//    std::optional<T> _value;
+//
+//public:
+//    auto operator->() const {
+//        return _value.operator->();
+//    }
+//    operator T() const {
+//        return *_value;
+//    }
+//    template <typename R>
+//    bool operator==(R&& r) {
+//        return _value.operator==(std::forward<R>(r));
+//    }
+//    template<typename...Args>
+//    T value_or(Args&&...args) {
+//        if (_value) {
+//            return *_value;
+//        } else {
+//            return T{std::forward<Args>(args)...};
+//        }
+//    }
+//};
 
 class NodeT {
     const YAML::Node _yaml;
@@ -96,14 +122,14 @@ public:
         }
     }
 
-    // TODO: should this do fallback>?
-    template<typename T>
-    std::optional<T> maybe() const {
-        if (!_valid || !_yaml) {
-            return std::nullopt;
-        }
-        return to<T>();
-    }
+//    // TODO: should this do fallback>?
+//    template<typename T>
+//    std::optional<T> maybe() const {
+//        if (!_valid || !_yaml) {
+//            return std::nullopt;
+//        }
+//        return to<T>();
+//    }
 
     auto size() const {
         return _yaml.size();
@@ -129,12 +155,15 @@ public:
         }
     }
 
+
+
     template <typename K>
     const NodeT operator[](const K& key) const {
         return this->get(key);
     }
 };
 
+// TODO: rename NodeT to just node...not templated on ptr type anymore
 using Node = NodeT;
 
 }  // namespace genny

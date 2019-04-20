@@ -5,10 +5,20 @@
 #include <map>
 #include <vector>
 
-using namespace genny;
+using namespace config;
 
-// TODO: rename NodeT to just node...not templated on ptr type anymore
-using Node = NodeT;
+struct Ctx {
+    int rng() const { return 7; }
+};
+
+struct MyType {
+    std::string msg;
+    MyType(std::string msg) : msg{msg} {}
+    MyType(const Node& node, Ctx* ctx) : msg{node["msg"].to<std::string>()} {
+        REQUIRE(ctx->rng() == 7);
+    }
+};
+
 
 TEST_CASE("ConfigNode inheritance") {
     auto yaml = YAML::Load(R"(
@@ -42,6 +52,12 @@ Children:
             REQUIRE(node["a"].value_or(100) == 7);
             REQUIRE(node["Children"]["a"].value_or(42) == 100);
             REQUIRE(node["does"]["not"]["exist"].value_or(90) == 90);
+            {
+                Ctx ctx;
+                // TODO: what should this syntax look like?
+//                REQUIRE(node["foo"].to<MyType>(&ctx).value_or("from_other_ctor").msg == "from_other_ctor");
+            }
+
         }
     }
 
@@ -100,16 +116,6 @@ ListOfMapStringString:
 }
 
 
-struct Ctx {
-    int rng() const { return 7; }
-};
-
-struct MyType {
-    std::string msg;
-    MyType(const Node& node, Ctx* ctx) : msg{node["msg"].to<std::string>()} {
-        REQUIRE(ctx->rng() == 7);
-    }
-};
 
 TEST_CASE("ConfigNode Simple User-Defined Conversions") {
     Ctx context;
