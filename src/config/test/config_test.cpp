@@ -1,5 +1,6 @@
-#include <catch2/catch.hpp>
 #include <config/config.hpp>
+
+#include <catch2/catch.hpp>
 
 #include <map>
 #include <vector>
@@ -24,10 +25,24 @@ Children:
 )");
     Node node(yaml);
 
+    SECTION("What does YAML::Node do?") {
+        REQUIRE(yaml["does"]["not"]["exist"].as<int>(9) == 9);
+    }
+
     SECTION("Parent traversal") {
         REQUIRE(node["a"].to<int>() == 7);
         REQUIRE(node["Children"]["a"].to<int>() == 100);
         REQUIRE(node["Children"][".."]["a"].to<int>() == 7);
+    }
+
+    SECTION("value_or") {
+        {
+            auto c = node["c"];
+            REQUIRE(c.value_or(1) == 1);
+            REQUIRE(node["a"].value_or(100) == 7);
+            REQUIRE(node["Children"]["a"].value_or(42) == 100);
+            REQUIRE(node["does"]["not"]["exist"].value_or(90) == 90);
+        }
     }
 
     SECTION("Inheritance") {

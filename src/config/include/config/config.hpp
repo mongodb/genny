@@ -30,6 +30,7 @@ struct NodeConvert {
 class NodeT {
     const YAML::Node _yaml;
     const NodeT* const _parent;
+    const bool _valid;
 
     // TODO: keep track of the key we came from so we can report it in error-messages
     // using KeyType = std::optional<std::variant<std::string, int>>;
@@ -37,6 +38,9 @@ class NodeT {
 
     template <typename K>
     std::optional<const YAML::Node> yamlGet(const K& key) const {
+        if (!_valid) {
+            return std::nullopt;
+        }
         const YAML::Node found = _yaml[key];
         if (found) {
             return std::make_optional<const YAML::Node>(found);
@@ -50,6 +54,9 @@ class NodeT {
 
     template <typename K>
     const NodeT get(const K& key) const {
+        if (!_valid) {
+            return NodeT{YAML::Node{}, this, false};
+        }
         if constexpr (std::is_convertible_v<K, std::string>) {
             // this lets us avoid having to repeat parent key names
             // E.g. OperationName can now just be Name. If Actor
@@ -63,18 +70,49 @@ class NodeT {
         }
         std::optional<const YAML::Node> yaml = this->yamlGet(key);
         if (yaml) {
-            return NodeT{*yaml, this};
+            return NodeT{*yaml, this, true};
         } else {
-            throw std::logic_error("TODO");  // TODO: better messaging
+            return NodeT{YAML::Node{}, this, false};
         }
     }
 
 public:
-    NodeT(const YAML::Node yaml, const NodeT* const parent)
-            : _yaml{yaml}, _parent{parent} {}
+    NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid)
+            : _yaml{yaml}, _parent{parent}, _valid{valid} {}
 
     explicit NodeT(const YAML::Node yaml)
-        : NodeT{yaml, nullptr} {}
+        : NodeT{yaml, nullptr, (bool)yaml} {}
+
+    // TODO: should this do fallback>?
+    template<typename T>
+    T value_or(T&& fallback) const {
+        if (!_valid) {
+            return fallback;
+        }
+        if (_yaml) {
+            return to<T>();
+        } else {
+            return fallback;
+        }
+    }
+
+    // TODO: should this do fallback>?
+    template<typename T>
+    std::optional<T> maybe() const {
+        if (!_valid || !_yaml) {
+            return std::nullopt;
+        }
+        return to<T>();
+    }
+
+    auto size() const {
+        return _yaml.size();
+    }
+
+    // TODO: should this do fallback?
+    explicit operator bool() const {
+        return _yaml;
+    }
 
     // TODO: this is a bad name
     template <typename O, typename... Args>
@@ -97,5 +135,6 @@ public:
     }
 };
 
+using Node = NodeT;
 
 }  // namespace genny
