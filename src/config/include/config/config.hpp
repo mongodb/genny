@@ -27,6 +27,16 @@ struct NodeConvert {
     }
 };
 
+
+template<typename T>
+using BaseType = std::remove_reference<std::remove_cv_t<std::remove_pointer_t<T>>>;
+/**
+ * Is A same as B after removing all cv, ref, and ptr-ness
+ */
+template <typename A, typename B>
+using IsLooselySame = typename std::is_same<typename BaseType<A>::type, typename BaseType<B>::type>;
+
+
 class NodeT {
     const YAML::Node _yaml;
     const NodeT* const _parent;
@@ -113,12 +123,11 @@ public:
     template <typename O, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
         if (*this) {
-            // TODO: assert on remove_cv<O>
-            static_assert(!std::is_same_v<O, YAML::Node>, "🙈 YAML::Node");
-            // TODO: allow constructible with NodeT& being const
+            static_assert(!IsLooselySame<O, YAML::Node>::value, "🙈 YAML::Node");
             // TODO: if sizeof...(Args) > 0 then this becomes a static_assert rather than an if
             //       (or put static_assert(sizeof == 0) in the else block)
-            if constexpr (std::is_constructible_v<O, NodeT&, Args...>) {
+            if constexpr (std::is_constructible_v<O, NodeT&, Args...> ||
+                          std::is_constructible_v<O, const NodeT&, Args...>) {
                 return std::make_optional<O>(*this, std::forward<Args>(args)...);
             } else {
                 return std::make_optional<O>(NodeConvert<O>::convert(_yaml));
