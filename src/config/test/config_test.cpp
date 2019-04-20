@@ -7,18 +7,19 @@
 
 using namespace config;
 
-struct Ctx {
-    int rng() const { return 7; }
+struct EmptyStruct {};
+
+struct TakesEmptyStructAndExtractsMsg {
+    std::string msg;
+    TakesEmptyStructAndExtractsMsg(const Node& node, EmptyStruct*)
+        : msg{node["msg"].to<std::string>()} {}
 };
 
-struct MyType {
-    std::string msg;
-    MyType(std::string msg) : msg{msg} {}
-    MyType(const Node& node, Ctx* ctx) : msg{node["msg"].to<std::string>()} {
-        REQUIRE(ctx->rng() == 7);
+struct RequiresParamToEqualNodeX {
+    RequiresParamToEqualNodeX(const Node& node, int x) {
+        REQUIRE(node["x"].to<int>() == x);
     }
 };
-
 
 TEST_CASE("ConfigNode inheritance") {
     auto yaml = YAML::Load(R"(
@@ -53,11 +54,11 @@ Children:
             REQUIRE(node["Children"]["a"].value_or(42) == 100);
             REQUIRE(node["does"]["not"]["exist"].value_or(90) == 90);
             {
-                Ctx ctx;
+                EmptyStruct ctx;
                 // TODO: what should this syntax look like?
-//                REQUIRE(node["foo"].to<MyType>(&ctx).value_or("from_other_ctor").msg == "from_other_ctor");
+                //                REQUIRE(node["foo"].to<MyType>(&ctx).value_or("from_other_ctor").msg
+                //                == "from_other_ctor");
             }
-
         }
     }
 
@@ -116,9 +117,8 @@ ListOfMapStringString:
 }
 
 
-
 TEST_CASE("ConfigNode Simple User-Defined Conversions") {
-    Ctx context;
+    EmptyStruct context;
 
     auto yaml = YAML::Load(R"(
 msg: bar
@@ -128,41 +128,26 @@ Two: {}
     Node node(yaml);
 
     {
-        MyType one = node["One"].to<MyType>(&context);
+        TakesEmptyStructAndExtractsMsg one =
+            node["One"].to<TakesEmptyStructAndExtractsMsg>(&context);
         REQUIRE(one.msg == "foo");
     }
     {
-        MyType one = node["Two"].to<MyType>(&context);
+        TakesEmptyStructAndExtractsMsg one =
+            node["Two"].to<TakesEmptyStructAndExtractsMsg>(&context);
         REQUIRE(one.msg == "bar");
     }
 }
 
-struct HasOtherCtorParams {
-    int x;
-    HasOtherCtorParams(const Node& node, Ctx* ctx, int x) : x{x} {
-        REQUIRE(node["x"].to<int>() == x);
-    }
-};
-
 TEST_CASE("Configurable additional-ctor-params Conversions") {
-    Ctx context;
-
     auto yaml = YAML::Load(R"(
 x: 9
 a: {x: 7}
 b: {}
 )");
     Node node(yaml);
-    {
-        HasOtherCtorParams one = node.to<HasOtherCtorParams>(&context, 9);
-        REQUIRE(one.x == 9);
-    }
-    {
-        HasOtherCtorParams two = node["a"].to<HasOtherCtorParams>(&context, 7);
-        REQUIRE(two.x == 7);
-    }
-    {
-        HasOtherCtorParams three = node["b"].to<HasOtherCtorParams>(&context, 9);
-        REQUIRE(three.x == 9);
-    }
+
+    node.to<RequiresParamToEqualNodeX>(9);
+    node["a"].to<RequiresParamToEqualNodeX>(7);
+    node["b"].to<RequiresParamToEqualNodeX>(9);
 }
