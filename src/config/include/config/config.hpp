@@ -4,8 +4,8 @@
 #include <memory>
 #include <optional>
 #include <type_traits>
-#include <variant>
 #include <utility>
+#include <variant>
 
 #include <boost/log/trivial.hpp>
 
@@ -27,12 +27,12 @@ struct NodeConvert {
     }
 };
 
-//template<typename T>
-//class ValueOrHolder {
+// template<typename T>
+// class ValueOrHolder {
 //    // TODO: also wire in path and barf if try to access via operatorT() and _value is nullopt
 //    std::optional<T> _value;
 //
-//public:
+// public:
 //    auto operator->() const {
 //        return _value.operator->();
 //    }
@@ -104,13 +104,12 @@ class NodeT {
 
 public:
     NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid)
-            : _yaml{yaml}, _parent{parent}, _valid{valid} {}
+        : _yaml{yaml}, _parent{parent}, _valid{valid} {}
 
-    explicit NodeT(const YAML::Node yaml)
-        : NodeT{yaml, nullptr, (bool)yaml} {}
+    explicit NodeT(const YAML::Node yaml) : NodeT{yaml, nullptr, (bool)yaml} {}
 
     // TODO: should this do fallback>?
-    template<typename T>
+    template <typename T>
     T value_or(T&& fallback) const {
         if (!_valid) {
             return fallback;
@@ -134,7 +133,7 @@ public:
     // TODO: this is a bad name
     template <typename O, typename... Args>
     O to(Args&&... args) const {
-        return *maybe<O,Args...>(std::forward<Args>(args)...);
+        return *maybe<O, Args...>(std::forward<Args>(args)...);
     }
 
     template <typename O, typename... Args>
@@ -145,7 +144,7 @@ public:
             // TODO: allow constructible with NodeT& being const
             // TODO: if sizeof...(Args) > 0 then this becomes a static_assert rather than an if
             //       (or put static_assert(sizeof == 0) in the else block)
-            if constexpr (std::is_constructible_v<O, NodeT&,Args...>) {
+            if constexpr (std::is_constructible_v<O, NodeT&, Args...>) {
                 return std::make_optional<O>(*this, std::forward<Args>(args)...);
             } else {
                 return std::make_optional<O>(NodeConvert<O>::convert(_yaml));
@@ -164,4 +163,4 @@ public:
 // TODO: rename NodeT to just node...not templated on ptr type anymore
 using Node = NodeT;
 
-}  // namespace genny
+}  // namespace config

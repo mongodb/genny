@@ -11,8 +11,7 @@ struct EmptyStruct {};
 
 struct ExtractsMsg {
     std::string msg;
-    ExtractsMsg(const Node& node)
-    : msg{node["msg"].to<std::string>()} {}
+    ExtractsMsg(const Node& node) : msg{node["msg"].to<std::string>()} {}
 };
 
 struct TakesEmptyStructAndExtractsMsg {
@@ -162,8 +161,12 @@ Children:
     REQUIRE(!node["does"]["not"]["exist"].maybe<ExtractsMsg>());
     REQUIRE(node["Children"].maybe<ExtractsMsg>()->msg == "inherited");
     REQUIRE(node["Children"]["overrides"].maybe<ExtractsMsg>()->msg == "overridden");
-    REQUIRE(node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg == "inherited");
-    REQUIRE(node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsMsg>()->msg == "deeply_overridden");
+    REQUIRE(
+        node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg ==
+        "inherited");
+    REQUIRE(
+        node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsMsg>()->msg ==
+        "deeply_overridden");
 }
 
 TEST_CASE("Configurable additional-ctor-params Conversions") {
