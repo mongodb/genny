@@ -238,6 +238,14 @@ ThrowMode decodeThrowMode(YAML::Node operation, PhaseContext& phaseContext) {
 
 bsoncxx::document::value emptyDoc = bsoncxx::from_json("{}");
 
+
+// A large number of subclasses have
+// - metrics::Operation
+// - mongocxx::collection
+// - bool (_onSession)
+// it may make sense to add a CollectionAwareBaseOperation
+// or something intermediate class to eliminate some
+// duplication.
 struct BaseOperation {
     ThrowMode throwMode;
 
@@ -295,6 +303,9 @@ auto createDocumentGenerator(YAML::Node source,
 
 }  // namespace
 
+// Not technically "crud" but it was easy to add and made
+// a few of the tests easier to write (by allowing inserts
+// to fail due to index constraint-violations.
 struct CreateIndexOperation : public BaseOperation {
     mongocxx::collection _collection;
     metrics::Operation _operation;
@@ -1113,7 +1124,6 @@ private:
  *            Level: majority
  */
 struct DropOperation : public BaseOperation {
-
     DropOperation(YAML::Node opNode,
                   bool onSession,
                   mongocxx::collection collection,
