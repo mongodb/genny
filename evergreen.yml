@@ -488,7 +488,7 @@ functions:
       working_dir: src
       shell: bash
       script: |
-        set -eou pipefail
+        set -eo pipefail
 
         export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
