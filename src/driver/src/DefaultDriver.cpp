@@ -303,10 +303,11 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     const auto reporter = genny::metrics::Reporter{metrics};
 
-    std::ofstream metricsOutput;
-    metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::trunc);
-    reporter.report(metricsOutput, options.metricsFormat);
-    metricsOutput.close();
+    {
+        std::ofstream metricsOutput;
+        metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::trunc);
+        reporter.report(metricsOutput, options.metricsFormat);
+    }
 
     return outcomeCode;
 }

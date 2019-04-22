@@ -17,6 +17,9 @@
 
 
 #include <cstdint>
+#include <iomanip>
+
+#include <canaries/tasks.hpp>
 
 namespace genny::canaries {
 
@@ -31,34 +34,86 @@ using Nanosecond = int64_t;
  *                  the overhead of Genny and the latter is useful for seeing
  *                  how this overhead changes over time.
  */
-template <bool WithPing>
+template <class Task, class... Args>
 class Loops {
 public:
     explicit Loops(int64_t iterations) : _iterations(iterations){};
 
     /**
-     * Run a basic for-loop, used as the baseline.
+     * Run native for-loop; used as the control group with no Genny code.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
-    Nanosecond simpleLoop();
+    Nanosecond simpleLoop(Args&&... args);
 
     /**
-     * Run just the phase loop.
+     * Run PhaseLoop.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
-    Nanosecond phaseLoop();
+    Nanosecond phaseLoop(Args&&... args);
 
     /**
-     * Run a basic for-loop and record one timer metric per loop.
+     *  Run native for-loop and record one timer metric per iteration.
+     *
+     *  @param args arguments forwarded to the workload being run.
+     *  @return the CPU time this function took, in nanoseconds.
      */
-    Nanosecond metricsLoop();
+    Nanosecond metricsLoop(Args&&... args);
 
     /**
-     * Run the phase loop and record one timer metric per loop.
+     * Run PhaseLoop and record one timer metric per iteration.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
      */
-    Nanosecond metricsPhaseLoop();
+    Nanosecond metricsPhaseLoop(Args&&... args);
 
 private:
     int64_t _iterations;
 };
+
+template <class Task, class... Args>
+std::vector<Nanosecond> runTest(std::vector<std::string>& loopNames,
+                                int64_t iterations,
+                                Args&&... args) {
+    Loops<Task, Args...> loops(iterations);
+
+    std::vector<Nanosecond> results;
+
+    int numIterations = 4;
+
+    for (auto& loopName : loopNames) {
+        Nanosecond time;
+
+        // Run each test 4 times, all but the last iteration are warm up and the
+        // results are discarded.
+        for (int i = 0; i < numIterations; i++) {
+            if (loopName == "simple") {
+                time = loops.simpleLoop(std::forward<Args>(args)...);
+            } else if (loopName == "phase") {
+                time = loops.phaseLoop(std::forward<Args>(args)...);
+            } else if (loopName == "metrics") {
+                time = loops.metricsLoop(std::forward<Args>(args)...);
+            } else if (loopName == "real") {
+                time = loops.metricsPhaseLoop(std::forward<Args>(args)...);
+            } else {
+                std::ostringstream stm;
+                stm << "Unknown loop type: " << loopName;
+                throw InvalidConfigurationException(stm.str());
+            }
+
+            if (i == numIterations - 1) {
+                results.push_back(time);
+            }
+        }
+    }
+
+    return results;
+}
+
 }  // namespace genny::canaries
 
 #endif  // HEADER_C8D12C92_7C08_4B7F_9857_8B25F7258BB9_INCLUDED

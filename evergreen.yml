@@ -104,6 +104,16 @@ buildvariants:
   - name: tg_compile
   - name: t_push
 
+- name: rhel7
+  display_name: RHEL 7 for Performance
+  modules: ~
+  expansions:
+    distro: rhel70
+  run_on:
+  - rhel70-perf-single
+  tasks:
+  - name: tg_compile_and_benchmark
+
 
 ##                ⚡️ Tasks ⚡️
 
@@ -139,6 +149,10 @@ tasks:
 - name: t_cmake_test
   commands:
   - func: f_cmake_test
+
+- name: t_benchmark_test
+  commands:
+  - func: f_benchmark_test
 
 - name: t_integration_test_standalone
   commands:
@@ -201,6 +215,12 @@ task_groups:
   - t_compile
   - t_python_test
   - t_cmake_test
+
+- <<: *a_compile_and_test
+  name: tg_compile_and_benchmark
+  tasks:
+  - t_compile
+  - t_benchmark_test
 
 - <<: *a_compile_and_test
   name: tg_compile_and_test_with_server
@@ -389,6 +409,20 @@ functions:
       script: |
         set -euo pipefail
         ./scripts/lamp cmake-test
+
+  ##
+  # Runs benchmarks via ctest.
+  # Requires f_compile to have been run first.
+  ##
+  f_benchmark_test:
+    - command: shell.exec
+      params:
+        continue_on_err: true
+        working_dir: src
+        shell: bash
+        script: |
+          set -euo pipefail
+          ./scripts/lamp benchmark-test
 
   ##
   # Runs tests via resmoke.

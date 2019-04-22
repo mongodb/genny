@@ -30,25 +30,6 @@
 
 #endif
 
-/**
- * Do something in each iteration of the loop.
- *
- * @tparam WithPing Template to dictate what to do. Right now there are only
- *                  two options, but this will be expanded over time to
- *                  support more action types.
- */
-template <bool WithPing>
-inline void doPingIfNeeded() {
-    if constexpr (WithPing) {
-        // TODO: call db.ping();
-    } else {
-        int x = 0;
-        // Ensure memory is flushed and instruct the compiler
-        // to not optimize this line out.
-        asm volatile("" : : "r,m"(x++) : "memory");
-    }
-}
-
 genny::TimeSpec operator""_ts(unsigned long long v) {
     return genny::TimeSpec(std::chrono::milliseconds{v});
 }
@@ -71,19 +52,21 @@ inline Nanosecond now() {
 #endif
 }
 
-template <bool WithPing>
-Nanosecond Loops<WithPing>::simpleLoop() {
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::simpleLoop(Args&&... args) {
+    auto task = Task(std::forward<Args>(args)...);
+
     int64_t before = now();
     for (int i = 0; i < _iterations; i++) {
-        doPingIfNeeded<WithPing>();
+        task.run();
     }
     int64_t after = now();
 
     return after - before;
 }
 
-template <bool WithPing>
-Nanosecond Loops<WithPing>::phaseLoop() {
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::phaseLoop(Args&&... args) {
 
     Orchestrator o{};
     v1::ActorPhase<int> loop{
@@ -95,27 +78,29 @@ Nanosecond Loops<WithPing>::phaseLoop() {
                                                0_ts,
                                                std::nullopt),
         1};
+    auto task = Task(std::forward<Args>(args)...);
 
     int64_t before = now();
     for (auto _ : loop)
-        doPingIfNeeded<WithPing>();
+        task.run();
     int64_t after = now();
 
     return after - before;
 }
 
-template <bool WithPing>
-Nanosecond Loops<WithPing>::metricsLoop() {
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::metricsLoop(Args&&... args) {
 
     auto metrics = genny::metrics::Registry{};
     metrics::Reporter reporter(metrics);
 
-    auto dummyOp = metrics.operation("metricsLoop", WithPing ? "db.ping()" : "Nop", 0u);
+    auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
+    auto task = Task(std::forward<Args>(args)...);
 
     int64_t before = now();
     for (int i = 0; i < _iterations; i++) {
         auto ctx = dummyOp.start();
-        doPingIfNeeded<WithPing>();
+        task.run();
         ctx.success();
     }
     int64_t after = now();
@@ -123,8 +108,8 @@ Nanosecond Loops<WithPing>::metricsLoop() {
     return after - before;
 }
 
-template <bool WithPing>
-Nanosecond Loops<WithPing>::metricsPhaseLoop() {
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::metricsPhaseLoop(Args&&... args) {
 
     // Copy/pasted from phaseLoop() and metricsLoop()
     Orchestrator o{};
@@ -137,16 +122,17 @@ Nanosecond Loops<WithPing>::metricsPhaseLoop() {
                                                0_ts,
                                                std::nullopt),
         1};
+    auto task = Task(std::forward<Args>(args)...);
 
     auto metrics = genny::metrics::Registry{};
     metrics::Reporter{metrics};
 
-    auto dummyOp = metrics.operation("metricsLoop", WithPing ? "db.ping()" : "Nop", 0u);
+    auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
 
     int64_t before = now();
     for (auto _ : loop) {
         auto ctx = dummyOp.start();
-        doPingIfNeeded<WithPing>();
+        task.run();
         ctx.success();
     }
     int64_t after = now();
@@ -157,7 +143,11 @@ Nanosecond Loops<WithPing>::metricsPhaseLoop() {
 // "The definition of ... a non-exported member function or static data member
 // of a class template shall be present in every translation unit in which it
 // is explicitly instantiated."
-template class Loops<true>;
+template class Loops<NopTask>;
+template class Loops<SleepTask>;
+template class Loops<CPUTask>;
+template class Loops<L2Task>;
+template class Loops<L3Task>;
+template class Loops<PingTask, std::string&>;
 
-template class Loops<false>;
 }  // namespace genny::canaries
