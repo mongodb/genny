@@ -20,6 +20,20 @@
 
 namespace genny::driver {
 
+enum class WorkloadParser::ParseMode {
+    kSmokeTest,
+    kNormal,
+};
+
+YAML::Node loadFile(const std::string& source) {
+    try {
+        return YAML::LoadFile(source);
+    } catch (const std::exception& ex) {
+        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
+        throw;
+    }
+}
+
 YAML::Node WorkloadParser::parse(const std::string& source,
                                  DefaultDriver::ProgramOptions::YamlSource sourceType) {
     YAML::Node workload;
@@ -37,15 +51,6 @@ YAML::Node WorkloadParser::parse(const std::string& source,
     }
 
     return parsedWorkload;
-}
-
-YAML::Node WorkloadParser::loadFile(const std::string& source) {
-    try {
-        return YAML::LoadFile(source);
-    } catch (const std::exception& ex) {
-        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
-        throw;
-    }
 }
 
 YAML::Node WorkloadParser::recursiveParse(YAML::Node node, ParseMode mode) {

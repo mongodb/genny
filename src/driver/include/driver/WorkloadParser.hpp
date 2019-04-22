@@ -35,16 +35,12 @@ public:
                          DefaultDriver::ProgramOptions::YamlSource::kFile);
 
 private:
-    enum class ParseMode {
-        kSmokeTest,
-        kNormal,
-    };
+    enum class ParseMode;
     YamlParameters _params;
     const fs::path _phaseConfigPath;
 
     const bool _isSmokeTest;
 
-    YAML::Node loadFile(const std::string& path);
     YAML::Node recursiveParse(YAML::Node, ParseMode parseMode);
 
     // Handle external configuration files.
