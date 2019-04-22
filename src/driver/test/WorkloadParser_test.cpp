@@ -16,7 +16,7 @@
 
 #include <testlib/helpers.hpp>
 
-namespace genny::driver {
+namespace genny::driver::v1 {
 namespace {
 
 TEST_CASE("WorkloadParser can run generate smoke test configurations") {
@@ -48,4 +48,4 @@ Actors:
 }
 
 }  // namespace
-}  // namespace genny::driver
+}  // namespace genny::driver::v1

@@ -18,7 +18,7 @@
 
 #include <gennylib/InvalidConfigurationException.hpp>
 
-namespace genny::driver {
+namespace genny::driver::v1 {
 
 enum class WorkloadParser::ParseMode {
     kSmokeTest,
@@ -35,7 +35,7 @@ YAML::Node loadFile(const std::string& source) {
 }
 
 YAML::Node WorkloadParser::parse(const std::string& source,
-                                 DefaultDriver::ProgramOptions::YamlSource sourceType) {
+                                 const DefaultDriver::ProgramOptions::YamlSource sourceType) {
     YAML::Node workload;
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         workload = YAML::Load(source);
@@ -192,4 +192,4 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
 
     return recursiveParse(replacement, ParseMode::kNormal);
 }
-}  // namespace genny::driver
+}  // namespace genny::driver::v1

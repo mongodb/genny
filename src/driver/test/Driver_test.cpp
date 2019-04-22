@@ -24,7 +24,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <driver/DefaultDriver.hpp>
+#include <driver/v1/DefaultDriver.hpp>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>

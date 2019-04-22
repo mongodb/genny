@@ -37,8 +37,8 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
-#include <driver/DefaultDriver.hpp>
 #include <driver/WorkloadParser.hpp>
+#include <driver/v1/DefaultDriver.hpp>
 
 namespace genny::driver {
 namespace {
@@ -100,7 +100,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         phaseConfigSource = fs::path(options.workloadSource).parent_path();
     }
 
-    WorkloadParser parser{phaseConfigSource, options.isSmokeTest};
+    v1::WorkloadParser parser{phaseConfigSource, options.isSmokeTest};
 
     auto yaml = parser.parse(options.workloadSource, options.workloadSourceType);
     auto orchestrator = Orchestrator{};

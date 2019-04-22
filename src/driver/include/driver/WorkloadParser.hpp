@@ -18,20 +18,23 @@
 #include <boost/filesystem.hpp>
 #include <yaml-cpp/yaml.h>
 
-#include <driver/DefaultDriver.hpp>
+#include <driver/v1/DefaultDriver.hpp>
 
-namespace genny::driver {
+namespace genny::driver::v1 {
 
 using YamlParameters = std::map<std::string, YAML::Node>;
 namespace fs = boost::filesystem;
 
+/**
+ * Parse user-defined workload files into shapes suitable for Genny.
+ */
 class WorkloadParser {
 public:
     explicit WorkloadParser(fs::path& phaseConfigPath, bool isSmokeTest = false)
         : _isSmokeTest{isSmokeTest}, _phaseConfigPath{phaseConfigPath} {};
 
     YAML::Node parse(const std::string& source,
-                     DefaultDriver::ProgramOptions::YamlSource =
+                     const DefaultDriver::ProgramOptions::YamlSource =
                          DefaultDriver::ProgramOptions::YamlSource::kFile);
 
 private:
@@ -43,16 +46,16 @@ private:
 
     YAML::Node recursiveParse(YAML::Node, ParseMode parseMode);
 
-    // Handle external configuration files.
+    // Handle workload files containing external configuration files.
     void convertExternal(std::string key, YAML::Node value, YAML::Node& out);
     YAML::Node parseExternal(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
 
-    // Handle smoke test mode.
+    // Handle converting workload files into smoke test versions.
     void convertToSmokeTest(std::string key, YAML::Node value, YAML::Node& out);
 };
 
-}  // namespace genny::driver
+}  // namespace genny::driver::v1
 
 
 #endif  // HEADER_0369D27D_9A68_4981_B344_4BAB3EE09A80_INCLUDED
