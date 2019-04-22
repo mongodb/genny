@@ -45,7 +45,7 @@
 ##                ⚡️ Variants ⚡️
 
 ignore:
-- "*.md" # don't schedule tests if a commit only changes markdown files
+- "*.md"  # don't schedule tests if a commit only changes markdown files
 
 buildvariants:
 
@@ -133,7 +133,7 @@ tasks:
 
 - name: t_push
   depends_on: t_compile
-  patchable: no
+  patchable: false
   commands:
   - func: f_push_official
     vars:
@@ -147,6 +147,10 @@ tasks:
 - name: t_python_test
   commands:
   - func: f_python_test
+
+- name: t_lint_workloads
+  commands:
+  - func: f_lint_workloads
 
 - name: t_cmake_test
   commands:
@@ -184,12 +188,12 @@ tasks:
 # by the new actor.
 - name: t_test_create_new_actor_script
   commands:
-    - func: f_run_create_new_actor_script
-    - func: f_compile
-    - func: f_dry_run_workloads  # Test the generated yaml file is valid.
-    - func: f_resmoke_test
-      vars:
-        resmoke_test_args: "--create-new-actor-test-suite"
+  - func: f_run_create_new_actor_script
+  - func: f_compile
+  - func: f_dry_run_workloads  # Test the generated yaml file is valid.
+  - func: f_resmoke_test
+    vars:
+      resmoke_test_args: "--create-new-actor-test-suite"
 
 
 ##                ⚡️ Task Groups ⚡️
@@ -216,6 +220,7 @@ task_groups:
   # run after t_compile.
   - t_compile
   - t_python_test
+  - t_lint_workloads
   - t_cmake_test
 
 - <<: *a_compile_and_test
@@ -266,7 +271,7 @@ functions:
       working_dir: src
       binary: /bin/bash
       args:
-        - "${workdir}/src/scripts/get-mongo-source.sh"
+      - "${workdir}/src/scripts/get-mongo-source.sh"
   - command: shell.exec
     params:
       working_dir: src/build/mongo
@@ -417,14 +422,14 @@ functions:
   # Requires f_compile to have been run first.
   ##
   f_benchmark_test:
-    - command: shell.exec
-      params:
-        continue_on_err: true
-        working_dir: src
-        shell: bash
-        script: |
-          set -euo pipefail
-          ./scripts/lamp benchmark-test
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      working_dir: src
+      shell: bash
+      script: |
+        set -euo pipefail
+        ./scripts/lamp benchmark-test
 
   ##
   # Runs tests via resmoke.
@@ -449,8 +454,8 @@ functions:
       working_dir: src
       binary: /bin/bash
       args:
-        - ${workdir}/src/scripts/create-new-actor.sh
-        - SelfTestActor
+      - ${workdir}/src/scripts/create-new-actor.sh
+      - SelfTestActor
 
   ##
   # Runs python unit tests.
@@ -467,13 +472,37 @@ functions:
         # for python3
         export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
-        # Run Genny result processor unit tests
+        # Run Genny Python unit tests
         pushd src/python
           python3 setup.py nosetests
         popd
 
         # Run Genny build scripts unit tests
         ./scripts/lamp self-test
+
+  ##
+  # Runs the YAML linter for Genny workloads
+  ##
+  f_lint_workloads:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      working_dir: src
+      shell: bash
+      script: |
+        set -eo pipefail
+
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        python3 -m virtualenv venv
+        source venv/bin/activate
+
+        # Install Genny python scripts into the virtualenv
+        pushd src/python
+          python3 setup.py install
+        popd
+
+        lint-workloads
 
   ##
   # Reports test results to evergreen API.

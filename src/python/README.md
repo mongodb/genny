@@ -34,6 +34,47 @@ you can use `setup.py develop` to avoid having to install after every change:
 python setup.py develop
 ```
 
+
+Script: `lint-yaml`
+---------------------
+
+```sh
+lint-yaml
+```
+
+Lint most of the YAML files in the Genny repository,
+including workloads, phases, and `evergreen.yml`.
+
+Make you run the script from the root of the Genny repository
+(so it can pick up on the `.yamllint` linter config file)
+
+
+Script: `genny-metrics-legacy-report`
+---------------------------------
+
+Produces a summary in JSON format given the 'csv' output format:
+
+```sh
+./genny run -o metrics.csv -m csv InsertRemove.yml
+genny-metrics-legacy-report metrics.csv
+```
+
+
+Script: `genny-metrics-report`
+---------------------------------
+
+Send metrics to Evergreen's metrics collection service (Cedar)
+given the 'cedar-csv' output format.
+
+This code snippet is provided for reference only as Cedar does
+not yet support local environments.
+
+```sh
+./genny run -o metrics.csv -m cedar-csv InsertRemove.yml
+genny-metrics-report metrics.csv
+```
+
+
 Running Self-Tests
 ------------------
 
@@ -59,13 +100,5 @@ yapf -i --recursive genny tests
 ```
 
 
-Script: `genny-metrics-summarize`
----------------------------------
 
-Produces a summary in JSON format given the 'csv' output format:
-
-```sh
-./genny -w InsertRemove.yml -o metrics.csv
-genny-metrics-summarize < metrics.csv
-```
 

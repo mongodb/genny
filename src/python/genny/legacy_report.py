@@ -5,8 +5,7 @@ import argparse
 import json
 import sys
 
-from genny import perf_json
-from genny.csv2 import CSV2, IntermediateCSVColumns
+from genny.parsers.csv2 import CSV2, IntermediateCSVColumns
 
 
 def build_parser():
@@ -39,6 +38,24 @@ class _LegacyReportIntermediateFormat(object):
             'mean': self.mean,
             'threads': self.threads
         }
+
+
+def _translate_to_perf_json(timers):
+    out = []
+    for name, timer in timers.items():
+        out.append({
+            'name': name,
+            'workload': name,
+            'start': timer['started'] / 100000,
+            'end': timer['ended'] / 100000,
+            'results': {
+                len(timer['threads']): {
+                    'ops_per_sec': timer['mean'],
+                    'ops_per_sec_values': [timer['mean']]
+                }
+            }
+        })
+    return {'results': out}
 
 
 def run(args):
@@ -75,7 +92,7 @@ def run(args):
             # pylint: disable=protected-access
             timers[metric_name] = report.finalize()._asdict()
 
-    result = perf_json.translate(timers)
+    result = _translate_to_perf_json(timers)
 
     with open(args.report_file, 'w') as f:
         json.dump(result, f)

@@ -61,6 +61,13 @@ should look something like this:
 If you run `./scripts/lamp -b make` it should set up everything for you.
 You just need to set the "Generation Path" to your `build` directory.
 
+
+## Lint Workload YAML Files and Generate Test Reports
+
+Please refer to `src/python/README.md` for more information on how to
+lint YAML files and generating test reports.
+
+
 ## Running Genny Self-Tests
 
 Genny has self-tests using Catch2. You can run them with the following command:

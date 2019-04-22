@@ -23,7 +23,7 @@ from os.path import join as pjoin
 
 from bson import BSON
 
-from genny.csv2 import CSV2, IntermediateCSVColumns
+from genny.parsers.csv2 import CSV2, IntermediateCSVColumns
 from third_party.csvsort import csvsort
 
 """
