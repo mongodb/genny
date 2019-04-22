@@ -55,9 +55,6 @@ public:
     void run() override;
 
 private:
-    /** record data about each iteration */
-    metrics::Operation _operation;
-
     /**
      * constructed from each `Phase:` block in the `Actor:` block
      * @private

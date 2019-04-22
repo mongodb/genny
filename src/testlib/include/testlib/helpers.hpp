@@ -22,6 +22,9 @@
 #include <bsoncxx/document/view_or_value.hpp>
 #include <bsoncxx/json.hpp>
 
+#include <mongocxx/client.hpp>
+#include <mongocxx/pool.hpp>
+
 #include <yaml-cpp/yaml.h>
 
 namespace genny {
@@ -38,6 +41,24 @@ inline std::string toString(const YAML::Node& node) {
     YAML::Emitter out;
     out << node;
     return std::string{out.c_str()};
+}
+
+inline std::string toString(int i) {
+    return std::to_string(i);
+}
+
+/**
+ * @tparam Client either mongocxx::client or *mongocxx::pool::entry
+ */
+template <typename Client>
+inline void dropAllDatabases(Client& client) {
+    for (auto&& dbDoc : client.list_databases()) {
+        const auto dbName = dbDoc["name"].get_utf8().value;
+        const auto dbNameString = std::string(dbName);
+        if (dbNameString != "admin" && dbNameString != "config" && dbNameString != "local") {
+            client.database(dbName).drop();
+        }
+    }
 }
 
 

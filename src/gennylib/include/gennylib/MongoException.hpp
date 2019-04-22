@@ -32,7 +32,7 @@ namespace genny {
  * Wrapper around exceptions thrown by the MongoDB CXX driver to provide more context.
  *
  * More information can be added to MongoException by creating a `typedef boost::error_info`
- * for your info and pasing it down from runCommandHelper to MongoException.
+ * for your info and passing it down from runCommandHelper to MongoException.
  */
 class MongoException : public boost::exception, public std::exception {
 

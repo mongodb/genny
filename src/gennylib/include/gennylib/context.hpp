@@ -18,6 +18,7 @@
 #include <cassert>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -234,6 +235,7 @@ public:
 
 private:
     friend class ActorContext;
+    friend class PhaseContext;
 
     // helper methods used during construction
     static ActorVector _constructActors(const Cast& cast,
@@ -386,7 +388,7 @@ public:
      * Convenience method for creating a metrics::Operation that's unique for this actor and thread.
      *
      * @param operationName the name of the operation being run.
-     * @param id the id of this Actor, if any.
+     * @param id the id of this Actor.
      */
     auto operation(const std::string& operationName, ActorId id) const {
         return this->_workload->_registry->operation(
@@ -485,10 +487,11 @@ private:
  * Represents each `Phase:` block in the YAML configuration.
  */
 class PhaseContext final : public v1::ConfigNode {
-
 public:
-    PhaseContext(const YAML::Node& node, ActorContext& actorContext)
-        : ConfigNode(node, std::addressof(actorContext)), _actor{std::addressof(actorContext)} {}
+    PhaseContext(const YAML::Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
+        : ConfigNode(node, std::addressof(actorContext)),
+          _actor{std::addressof(actorContext)},
+          _phaseNumber(phaseNumber) {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -518,11 +521,35 @@ public:
         return _actor->workload();
     }
 
+    /**
+     * Convenience method for creating a metrics::Operation that's unique for this phase and thread.
+     *
+     * If "MetricsName" is specified for a phase, it is used.
+     * Otherwise "[defaultMetricsName].[phaseNumber]" is used.
+     *
+     * @param defaultMetricName the default name of the metric if "MetricsName" is not specified
+     *                          for a phase in the workload YAML.
+     * @param id the id of this Actor.
+     */
+    auto operation(const std::string& defaultMetricsName, ActorId id) const {
+        std::ostringstream stm;
+        if (auto metricsName = this->get<std::string, false>("MetricsName")) {
+            stm << *metricsName;
+        } else {
+            stm << defaultMetricsName << "." << _phaseNumber;
+        }
+
+        return this->workload()._registry->operation(
+            this->_actor->get<std::string>("Name"), stm.str(), id);
+    }
+
+
 private:
     bool _isNop() const;
 
 private:
     ActorContext* _actor;
+    const PhaseNumber _phaseNumber;
 };
 
 namespace v1 {

@@ -25,14 +25,19 @@ namespace genny::actor {
 /** @private */
 struct HelloWorld::PhaseConfig {
     std::string message;
-    explicit PhaseConfig(PhaseContext& context)
-        : message{context.get<std::string, false>("Message").value_or("Hello, World!")} {}
+
+    /** record data about each iteration */
+    metrics::Operation operation;
+
+    explicit PhaseConfig(PhaseContext& context, ActorId actorId)
+        : message{context.get<std::string, false>("Message").value_or("Hello, World!")},
+          operation{context.operation("DefaultMetricsName", actorId)} {}
 };
 
 void HelloWorld::run() {
     for (auto&& config : _loop) {
         for (auto _ : config) {
-            auto ctx = this->_operation.start();
+            auto ctx = config->operation.start();
             BOOST_LOG_TRIVIAL(info) << config->message;
             ++_helloCounter;
             BOOST_LOG_TRIVIAL(info) << "Counter: " << _helloCounter;
@@ -45,9 +50,8 @@ void HelloWorld::run() {
 
 HelloWorld::HelloWorld(genny::ActorContext& context)
     : Actor(context),
-      _operation{context.operation("Op", HelloWorld::id())},
       _helloCounter{WorkloadContext::getActorSharedState<HelloWorld, HelloWorldCounter>()},
-      _loop{context} {}
+      _loop{context, HelloWorld::id()} {}
 
 namespace {
 auto registerHelloWorld = genny::Cast::registerDefault<genny::actor::HelloWorld>();

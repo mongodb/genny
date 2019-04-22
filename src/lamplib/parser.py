@@ -31,7 +31,7 @@ def parse_args(args, os_family):
                     'any subcommand first to initialize the environment')
     subparsers.add_parser(
         'cmake-test', help='run cmake unit tests that don\'t connect to a MongoDB cluster')
-
+    subparsers.add_parser('benchmark-test', help='run benchmark unit tests')
     resmoke_test_parser = subparsers.add_parser(
         'resmoke-test', help='run cmake unit tests that connect to a MongoDB cluster')
     group = resmoke_test_parser.add_mutually_exclusive_group()
