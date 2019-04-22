@@ -33,10 +33,10 @@ fi
     git checkout 8cdc51e7810f7fd8898a4c60b935e389f04659ee
 )
 
-virtualenv "${VENV_DIR}"
+virtualenv -p python3 "${VENV_DIR}"
 
 export VIRTUAL_ENV_DISABLE_PROMPT="yes"
 # shellcheck disable=SC1090
 . "${VENV_DIR}/bin/activate"
 
-python -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"
+python3 -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"
