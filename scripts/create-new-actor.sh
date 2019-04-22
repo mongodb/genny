@@ -378,11 +378,11 @@ void ${actor_name}::run() {
                                     << bsoncxx::to_json(document.view());
 
             //
-            // If your Actor throws any uncaught exceptions, the whole Workload will
+            // ⚠️ If your Actor throws any uncaught exceptions, the whole Workload will
             // attempt to end as quickly as possible. Every time this inner loop loops
             // around, it checks for any other Actors' exceptions and will stop iterating
             // if it sees any. Such failed workloads are considered "programmer error"
-            // and will mark the workload task as a system-failure in Evergreen.
+            // and will mark the workload task as a system-failure in Evergreen. ⚠️
             //
 
             //
@@ -522,8 +522,8 @@ using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 
 //
-// There is a "known" failure that you should find and fix as a bit of
-// an exercise in reading and testing your Actor.
+// ⚠️ There is a "known" failure that you should find and fix as a bit of
+// an exercise in reading and testing your Actor. ⚠️
 //
 
 TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a MongoDB instance.",
