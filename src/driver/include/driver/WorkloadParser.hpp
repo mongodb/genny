@@ -46,12 +46,12 @@ private:
 
     YAML::Node recursiveParse(YAML::Node, ParseMode parseMode);
 
-    // Handle workload files containing external configuration files.
+    // The following group of methods handle workload files containing external configuration files.
     void convertExternal(std::string key, YAML::Node value, YAML::Node& out);
     YAML::Node parseExternal(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
 
-    // Handle converting workload files into smoke test versions.
+    // The following method handles converting workload files into smoke test versions.
     void convertToSmokeTest(std::string key, YAML::Node value, YAML::Node& out);
 };
 
