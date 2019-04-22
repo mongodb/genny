@@ -322,6 +322,19 @@ Tests:
               ReadMode: badReadMode
     Error: '.*yaml-cpp: error at line.*bad conversion$'
 
+  - Description: estimatedDocumentCount can also specify ReadMode, MaxStaleness
+    Operations:
+      - OperationName: estimatedDocumentCount
+        OperationCommand:
+          Options:
+            ReadPreference:
+              ReadMode: nearest
+              MaxStaleness: 100 seconds
+    ExpectAllEvents:
+      $readPreference:
+        mode: nearest
+        maxStalenessSeconds: 100
+
   - Description: Delete a document in a collection.
     Operations:
       - OperationName: bulkWrite

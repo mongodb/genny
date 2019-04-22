@@ -143,6 +143,30 @@ struct convert<mongocxx::options::count> {
 };
 
 template <>
+struct convert<mongocxx::options::estimated_document_count> {
+    using CountOptions = mongocxx::options::estimated_document_count;
+    static Node encode(const CountOptions& rhs) {
+        return {};
+    }
+
+    static bool decode(const Node& node, CountOptions& rhs) {
+        if (!node.IsMap()) {
+            return false;
+        }
+        if (node["MaxTime"]) {
+            auto maxTime = node["MaxTime"].as<genny::TimeSpec>();
+            rhs.max_time(std::chrono::milliseconds{maxTime});
+        }
+        if (node["ReadPreference"]) {
+            auto readPref = node["ReadPreference"].as<mongocxx::read_preference>();
+            rhs.read_preference(readPref);
+        }
+        return true;
+    }
+};
+
+
+template <>
 struct convert<mongocxx::options::insert> {
     static Node encode(const mongocxx::options::insert& rhs) {
         return {};
@@ -718,6 +742,48 @@ private:
     metrics::Operation _operation;
 };
 
+struct EstimatedDocumentCountOperation : public BaseOperation {
+    EstimatedDocumentCountOperation(YAML::Node opNode,
+                                    bool onSession,
+                                    mongocxx::collection collection,
+                                    metrics::Operation operation,
+                                    PhaseContext& context,
+                                    ActorId id)
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation} {
+        if (opNode["Options"]) {
+            _options = opNode["Options"].as<mongocxx::options::estimated_document_count>();
+        }
+        if (onSession) {
+            // Technically the docs don't explicitly mention this but the C++ driver doesn't
+            // let you specify a session. In fact count operations operations don't work inside
+            // a transaction so maybe CountOperation should fail in the same way if _onSession
+            // is set?
+            //
+            // https://docs.mongodb.com/manual/reference/method/db.collection.estimatedDocumentCount/
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("Cannot run EstimatedDocumentCount on a session"));
+        }
+    }
+
+    void run(mongocxx::client_session& session) override {
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto count = _collection.estimated_document_count(_options);
+            ctx.addDocuments(count);
+            return std::nullopt;
+        });
+    }
+
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::estimated_document_count _options;
+    metrics::Operation _operation;
+};
+
 struct FindOperation : public BaseOperation {
     FindOperation(YAML::Node opNode,
                   bool onSession,
@@ -1085,6 +1151,8 @@ private:
 std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"bulkWrite", baseCallback<BaseOperation, OpCallback, BulkWriteOperation>},
     {"countDocuments", baseCallback<BaseOperation, OpCallback, CountDocumentsOperation>},
+    {"estimatedDocumentCount",
+     baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
     {"createIndex", baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
     {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
     {"findOneAndUpdate", baseCallback<BaseOperation, OpCallback, FindOneAndUpdateOperation>},
