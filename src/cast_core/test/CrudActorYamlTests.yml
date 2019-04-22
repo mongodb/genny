@@ -434,6 +434,18 @@ Tests:
       - Filter: {a: 113}
         Count: 1
 
+  - Description: simple findOneAndDelete
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: findOneAndDelete
+        OperationCommand:
+          Filter: {a: 100}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 0
+
   - Description: Simple createIndex
     Operations:
       - OperationName: createIndex

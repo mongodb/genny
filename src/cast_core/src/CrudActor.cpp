@@ -790,6 +790,40 @@ private:
     metrics::Operation _operation;
 };
 
+struct FindOneAndDeleteOperation : public BaseOperation {
+    FindOneAndDeleteOperation(YAML::Node opNode,
+                              bool onSession,
+                              mongocxx::collection collection,
+                              metrics::Operation operation,
+                              PhaseContext& context,
+                              ActorId id)
+            : BaseOperation(context, opNode),
+              _onSession{onSession},
+              _collection{std::move(collection)},
+              _operation{operation},
+              _filterExpr{createDocumentGenerator(opNode, "FindOneAndDelete", "Filter", context, id)} {}
+
+    void run(mongocxx::client_session& session) override {
+        auto filter = _filterExpr();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto result = (_onSession)
+                          ? _collection.find_one_and_delete(session, filter.view(), _options)
+                          : _collection.find_one_and_delete(filter.view(), _options);
+            if (result) {
+                ctx.addDocuments(1);
+                ctx.addBytes(result->view().length());
+            }
+            return std::make_optional(std::move(filter));
+        });
+    }
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::find_one_and_delete _options;
+    DocumentGenerator _filterExpr;
+    metrics::Operation _operation;
+};
 
 /**
  * Example usage:
@@ -1013,6 +1047,7 @@ std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"createIndex", baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
     {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
     {"findOneAndUpdate", baseCallback<BaseOperation, OpCallback, FindOneAndUpdateOperation>},
+    {"findOneAndDelete", baseCallback<BaseOperation, OpCallback, FindOneAndDeleteOperation>},
     {"insertMany", baseCallback<BaseOperation, OpCallback, InsertManyOperation>},
     {"startTransaction", baseCallback<BaseOperation, OpCallback, StartTransactionOperation>},
     {"commitTransaction", baseCallback<BaseOperation, OpCallback, CommitTransactionOperation>},
