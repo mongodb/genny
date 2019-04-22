@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from genny import csv2
+from genny.parsers import csv2
 
 
 class CSV2Test(unittest.TestCase):
