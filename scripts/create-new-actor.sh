@@ -25,7 +25,7 @@ Usage:
 
     $0 ActorName
 
-Create a new Actor header, implementaiton, documentation workload yaml,
+Create a new Actor header, implementation, documentation workload yaml,
 and integration-style automated-test.
 EOF
 }
@@ -67,8 +67,6 @@ create_header_text() {
 namespace genny::actor {
 
 /**
- * TODO: document me
- *
  * Indicate what the Actor does and give an example yaml configuration.
  * Markdown is supported in all docstrings so you could list an example here:
  *
@@ -120,7 +118,7 @@ public:
     //
     // This is how Genny knows that ${q}Type: $actor_name${q} in workload YAMLs
     // corresponds to this Actor class. It it also used by
-    // the${q}genny list-actors${q} command. Typically this should be the same as the
+    // the ${q}genny list-actors${q} command. Typically this should be the same as the
     // class name.
     //
     static std::string_view defaultName() {
@@ -144,9 +142,9 @@ private:
     // tracked by the ${q}metrics::Operation${q} type. This skeleton Actor does a
     // simple ${q}insert_one${q} operation so the name of this property corresponds
     // to that. Rename this and/or add additional ${q}metrics::Operation${q} types if
-    // you do more than one things. In addition, you may decide that you want
+    // you do more than one thing. In addition, you may decide that you want
     // to support recording different metrics in different Phases in which case
-    // you can remove this from the class and put it in the PhaseConfig,
+    // you can remove this from the class and put it in the ${q}PhaseConfig${q} struct,
     // discussed in the .cpp implementation.
     //
     genny::metrics::Operation _totalInserts;
@@ -157,7 +155,8 @@ private:
     //
     // Note that since ${q}PhaseLoop${q} uses pointers internally you don't need to
     // define anything about this type in this header, it just needs to be
-    // pre-declared.
+    // pre-declared. The ${q}@private${q} docstring is to prevent doxygen from
+    // showing your Actor's internals on the genny API docs website.
     //
     /** @private */
     struct PhaseConfig;
@@ -252,9 +251,9 @@ namespace genny::actor {
 // in ${q}context.hpp${q} - see full documentation there.)
 //
 // Within your Actor's ${q}run()${q} method, defined below, we iterate over the
-// ${q}PhaseLoop<PhaseConfig> _loop${q} variable and you can access the
+// ${q}PhaseLoop<PhaseConfig> _loop${q} variable, and you can access the
 // ${q}PhaseConfig${q} instance constructed for the current Phase via the
-// ${q}config${q} variable:
+// ${q}config${q} variable using ${q}->${q}:
 //
 //     for (auto&& config : _loop) {
 //         for (const auto&& _ : config) {
@@ -271,8 +270,9 @@ namespace genny::actor {
 // minute before it will signal to the Genny internals that it is done with
 // the current Phase. Once all Actors indicate that they are done with the
 // current Phase, Genny lets Actors proceed with the next Phase by
-// advancing to the next ${q}config${q} instance in the outer loop. See the full
-// documentation on ${q}PhaseLoop${q}.
+// advancing to the next ${q}config${q} instance in the outer loop.
+//
+// See the full documentation in ${q}PhaseLoop.hpp${q}.
 //
 
 struct ${actor_name}::PhaseConfig {
@@ -298,8 +298,8 @@ struct ${actor_name}::PhaseConfig {
     //     bsoncxx::document::value first = docGen();  // => {a: 27}
     //     bsoncxx::document::value second = docGen(); // => {a: 34}
     //
-    // All document-generators are deterministically seeded so all workloads
-    // produce the same set of documents.
+    // All document-generators are deterministically seeded so all runs of the
+    // same workload produce the same set of documents.
     //
     DocumentGenerator documentExpr;
 
@@ -317,8 +317,32 @@ struct ${actor_name}::PhaseConfig {
           documentExpr{phaseContext.createDocumentGenerator(id, "Document")} {}
 };
 
+
+//
+// Genny spins up a thread for each Actor instance. The ${q}Threads:${q} configuration
+// tells Genny how many such instances to create. See further documentation in
+// the ${q}Actor.hpp${q} file.
+//
 void ${actor_name}::run() {
+    //
+    // The ${q}config${q} variable is bound to the ${q}PhaseConfig${q} that was
+    // constructed for the current Phase at setup time. This loop will automatically
+    // block, wait, and repeat at the right times to gracefully coordinate with other
+    // Actors so that all Actors start and end at the right time.
+    //
     for (auto&& config : _loop) {
+        //
+        // This inner loop is run according to the Phase configuration for this
+        // Actor. If you have ${q}{Duration: 1 minute}${q} this loop will be run
+        // for one minute, etc. It also handles rate-limiting and error-handling
+        // as discussed below.
+        //
+        // The body of the below "inner" loop is where most of your logic should start. 
+        // Alternatively you may decide to put some logic in your ${q}PhaseConfig${q} type
+        // similarly to what the ${q}CrudActor${q} does. If your Actor is simple and
+        // only supports a single type of operation, it is easiest to put your logic in
+        // the body of the below loop.
+        //
         for (const auto&& _ : config) {
             //
             // Evaluate the DocumentGenerator template:
@@ -326,7 +350,7 @@ void ${actor_name}::run() {
             auto document = config->documentExpr();
 
             //
-            // The clock starts running only when you call ${q}.start()${q}. The return value
+            // The clock starts running only when you call ${q}.start()${q}. The returned object
             // from this lets you record how many bytes, documents, and actual
             // iterations (usually 1) your Actor completes while the clock is running. You then
             // must stop the clock by calling either ${q}.success()${q} if everything is okay
@@ -335,26 +359,39 @@ void ${actor_name}::run() {
             // exception). See the full documentation on ${q}OperationContext${q}.
             //
             // We don't care about how long the value-generator takes to run
-            // so we don't start the clock until after evaluating it.
+            // so we don't start the clock until after evaluating it. Purists
+            // would argue we even start until after we've done the below log
+            // statement. You decide.
             //
             auto inserts = _totalInserts.start();
 
             //
-            // You have the full power of boost logging which is rendered to stdout
+            // You have the full power of boost logging which is rendered to stdout.
+            // Convention is to log generated documents and "normal" events at the
+            // debug level.
             //
-            BOOST_LOG_TRIVIAL(info) << " ${actor_name} Inserting "
+            BOOST_LOG_TRIVIAL(debug) << " ${actor_name} Inserting "
                                     << bsoncxx::to_json(document.view());
 
             //
             // If your Actor throws any uncaught exceptions, the whole Workload will
             // attempt to end as quickly as possible. Every time this inner loop loops
-            // around it checks for any other Actors' exceptions and will stop iterating
+            // around, it checks for any other Actors' exceptions and will stop iterating
             // if it sees any. Such failed workloads are considered "programmer error"
-            // and will mark the workload task as a system-failure.
+            // and will mark the workload task as a system-failure in Evergreen.
             //
 
+            //
+            // Actually do the logic.
+            //
+            // We expect that this insert operation may actually fail sometimes and we
+            // wouldn't consider this to be programmer-error (or a configuration-
+            // error) so we catch try/catch with the expected exception types.
+            //
             try {
+
                 config->collection.insert_one(document.view());
+
                 inserts.addDocuments(1);
                 inserts.addBytes(document.view().length());
                 inserts.success();
@@ -374,6 +411,13 @@ ${actor_name}::${actor_name}(genny::ActorContext& context)
     : Actor{context},
       _totalInserts{context.operation("Insert", ${actor_name}::id())},
       _client{context.client()},
+      //
+      // Pass any additional constructor parameters that your ${q}PhaseConfig${q} needs.
+      //
+      // The first argument passed in here is actually the ${q}ActorContext${q} but the
+      // ${q}PhaseLoop${q} reads the ${q}PhaseContext${q}s from there and constructs one
+      // instance for each Phase.
+      //
       _loop{context, (*_client)[context.get<std::string>("Database")], ${actor_name}::id()} {}
 
 namespace {
@@ -422,7 +466,7 @@ Actors:
   Database: test
   Phases:
   - Phase: 0
-    Repeat: 10 # used by PhaesLoop
+    Repeat: 1e3 # used by PhaesLoop
     # below used by PhaseConfig in ${actor_name}.cpp
     Collection: test
     Document: {foo: {^RandomInt: {min: 0, max: 100}}}
@@ -470,10 +514,8 @@ using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
 
 //
-// There is a "known" failure that
-// you should find and fix as a bit of
-// an exercise in reading and testing
-// your Actor.
+// There is a "known" failure that you should find and fix as a bit of
+// an exercise in reading and testing your Actor.
 //
 
 TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a MongoDB instance.",
