@@ -247,6 +247,10 @@ namespace genny::actor {
 // constructor also requires a ${q}database&${q} and the ${q}ActorId${q} which we pass
 // along in the initializer.
 //
+// For more information on the Duration and Repeat keywords and how multiple Actors
+// coordinate across Phases, see the extended example workload
+// ${q}src/workloads/docs/HelloWorld-MultiplePhases.yml${q]}.
+//
 // (${q}WorkloadContext${q}, ${q}ActorContext${q}, and ${q}PhaseContext${q} are all defined
 // in ${q}context.hpp${q} - see full documentation there.)
 //
@@ -337,7 +341,7 @@ void ${actor_name}::run() {
         // for one minute, etc. It also handles rate-limiting and error-handling
         // as discussed below.
         //
-        // The body of the below "inner" loop is where most of your logic should start. 
+        // The body of the below "inner" loop is where most of your logic should start.
         // Alternatively you may decide to put some logic in your ${q}PhaseConfig${q} type
         // similarly to what the ${q}CrudActor${q} does. If your Actor is simple and
         // only supports a single type of operation, it is easiest to put your logic in
@@ -458,6 +462,10 @@ Owner: TODO put your github team name here e.g. @mongodb/stm
 
 # TODO: delete this file or add a meaningful workload using or
 #       demonstrating your Actor
+#
+# For more information on how to configure Repeat/Duration/*
+# see extended example file
+# ${q}src/workloads/docs/HelloWorld-MultiplePhases.yml${q]}
 
 Actors:
 - Name: ${actor_name}
