@@ -89,8 +89,7 @@ Actors:
   - keys: {int5: 1, int6: 1}
   Phases:
   - Repeat: 1
-  - Operation:
-    OperationName: Nop
+  - Operation: Nop
 - Name: MultiCollectionUpdate
   Type: MultiCollectionUpdate
   Threads: 100
@@ -99,8 +98,7 @@ Actors:
   UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
   Update: {$inc: {x: 1}}
   Phases:
-  - Operation:
-    OperationName: Nop
+  - Operation: Nop
   - Duration: &phase2_duration 10 minutes
     Rate: 100 per 31 milliseconds
 - Name: MultiCollectionQuery
@@ -111,7 +109,6 @@ Actors:
   Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
   Limit: 20
   Phases:
-  - Operation:
-    OperationName: Nop
+  - Operation: Nop
   - Duration: *phase2_duration
     Rate: 100 per 9 milliseconds

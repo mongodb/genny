@@ -22,15 +22,13 @@ Actors:
   - keys: {y: 1}
   Phases:
   - Repeat: 1
-  - Operation:
-    OperationName: Nop
+  - Operation: Nop
 - Name: CollScan
   Type: RunCommand
   Threads: 1
   Database: *DB
   Phases:
-  - Operation:
-      OperationName: Nop
+  - Operation: Nop
   - Repeat: 10
   Operations:
   - OperationName: RunCommand
