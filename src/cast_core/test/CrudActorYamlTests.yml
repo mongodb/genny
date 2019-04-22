@@ -500,7 +500,7 @@ Tests:
         OperationCommand:
           Document: {a: 100}
     Error: |
-      .*duplicate key error collection: mydb.test.*a_1 dup key: \{ : 100 \}.*
+      .*duplicate key error collection: mydb.test.*
 
   - Description: createIndex can swallow dupe errors
     Operations:
