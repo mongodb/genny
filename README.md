@@ -62,21 +62,10 @@ If you run `./scripts/lamp -b make` it should set up everything for you.
 You just need to set the "Generation Path" to your `build` directory.
 
 
-## Lint Workload YAML Files
-```bash
-# (Optional) Install Python virtualenv
-python3 -m pip install virtualenv
-python3 -m virtualenv venv
-source venv/bin/activate
+## Lint Workload YAML Files and Generate Test Reports
 
-# Install Genny Python packages
-cd src/python
-python setup.py install
-cd -
-
-# Run the linter script
-lint-workloads
-```
+Please refer to `src/python/README.md` for more information on how to
+lint YAML files and generating test reports.
 
 
 ## Running Genny Self-Tests
