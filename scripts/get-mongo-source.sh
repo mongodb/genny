@@ -31,8 +31,8 @@ fi
 
 (
     cd "${SOURCE_DIR}"
-    # Latest community dev version release as of 2019-04-19
-    git checkout 8cdc51e7810f7fd8898a4c60b935e389f04659ee
+    # See comment in evergreen.yml - mongodb_archive_url
+    git checkout cda363f65bde8d93a7c679757efd3edf7c6e8ad9
 )
 
 virtualenv -p python3 "${VENV_DIR}"
