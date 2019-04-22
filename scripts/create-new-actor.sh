@@ -174,7 +174,6 @@ create_impl_text() {
     local actor_name
     uuid_tag="$1"
     actor_name="$2"
-echo "year=${year}"
 
 cat << EOF
 // Copyright ${year}-present MongoDB Inc.
@@ -271,7 +270,7 @@ namespace genny::actor {
 // The inner loop ${q}for(const auto&& _ : config)${q} is how PhaseLoop keeps
 // running your code during the course of the current Phase. In the above
 // example, ${q}PhaseLoop${q} will see that Phase 0 is supposed to run for 1
-// minute so it will run continue running the body of the inner loop for 1
+// minute so it will continue running the body of the inner loop for 1
 // minute before it will signal to the Genny internals that it is done with
 // the current Phase. Once all Actors indicate that they are done with the
 // current Phase, Genny lets Actors proceed with the next Phase by
