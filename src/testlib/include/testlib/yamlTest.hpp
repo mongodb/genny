@@ -78,6 +78,9 @@ void runTestCaseYaml(const std::string& repoRelativePathToYaml) {
     } catch (const std::exception& ex) {
         WARN(boost::diagnostic_information(ex));
         throw;
+    } catch (const boost::exception& ex) {
+        WARN(boost::diagnostic_information(ex));
+        throw;
     }
 }
 
