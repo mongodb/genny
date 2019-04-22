@@ -23,6 +23,8 @@ ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
 VENV_DIR="${ROOT_DIR}/build/venv"
 
+export PATH="/opt/mongodbtoolchain/v3/bin:$PATH"
+
 if [ ! -d "${SOURCE_DIR}" ]; then
     git clone git@github.com:mongodb/mongo.git "${SOURCE_DIR}"
 fi
