@@ -26,7 +26,8 @@ setup(name='genny',
           'yapf==0.24.0',
           'pymongo==3.7.2',
           'PyYAML==5.1',
-          'requests==2.21.0'
+          'requests==2.21.0',
+          'yamllint==1.15.0'
       ],
       setup_requires=[
           'nose==1.3.7'
@@ -34,7 +35,8 @@ setup(name='genny',
       entry_points={
           'console_scripts': [
               'genny-metrics-report = genny.cedar_report:main__cedar_report',
-              'genny-metrics-legacy-report = genny.legacy_report:main__legacy_report'
+              'genny-metrics-legacy-report = genny.legacy_report:main__legacy_report',
+              'lint-workloads = genny.workload_linter:main'
           ]
       },
       )

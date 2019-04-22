@@ -61,6 +61,24 @@ should look something like this:
 If you run `./scripts/lamp -b make` it should set up everything for you.
 You just need to set the "Generation Path" to your `build` directory.
 
+
+## Lint Workload YAML Files
+```bash
+# (Optional) Install Python virtualenv
+python3 -m pip install virtualenv
+python3 -m virtualenv venv
+source venv/bin/activate
+
+# Install Genny Python packages
+cd src/python
+python setup.py install
+cd -
+
+# Run the linter script
+lint-workloads
+```
+
+
 ## Running Genny Self-Tests
 
 Genny has self-tests using Catch2. You can run them with the following command:

@@ -24,10 +24,10 @@ Actors:
       OperationCommand:
         WriteOperations:
         - WriteCommand: insertOne
-          Document: { a: 1 }
+          Document: {a: 1}
         - WriteCommand: updateOne
-          Filter: { a: 1 }
-          Update: { $set: { a: 5 } }
+          Filter: {a: 1}
+          Update: {$set: {a: 5}}
         Options:
           Ordered: true
         OnSession: true

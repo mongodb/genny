@@ -146,6 +146,10 @@ tasks:
   commands:
   - func: f_python_test
 
+- name: t_lint_workloads
+  commands:
+  - func: f_lint_workloads
+
 - name: t_cmake_test
   commands:
   - func: f_cmake_test
@@ -214,6 +218,7 @@ task_groups:
   # run after t_compile.
   - t_compile
   - t_python_test
+  - t_lint_workloads
   - t_cmake_test
 
 - <<: *a_compile_and_test
@@ -465,13 +470,37 @@ functions:
         # for python3
         export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
-        # Run Genny result processor unit tests
+        # Run Genny Python unit tests
         pushd src/python
           python3 setup.py nosetests
         popd
 
         # Run Genny build scripts unit tests
         ./scripts/lamp self-test
+
+  ##
+  # Runs the YAML linter for Genny workloads
+  ##
+  f_lint_workloads:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      working_dir: src
+      shell: bash
+      script: |
+        set -eou pipefail
+
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        python3 -m virtualenv venv
+        source venv/bin/activate
+
+        # Install Genny python scripts into the virtualenv
+        pushd src/python
+          python3 setup.py install
+        popd
+
+        lint-workloads
 
   ##
   # Reports test results to evergreen API.

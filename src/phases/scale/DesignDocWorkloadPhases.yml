@@ -1,6 +1,6 @@
 PhaseSchemaVersion: 2018-07-01
 
-Document: &Doc # Documents are approximately 1 KB in size
+Document: &Doc  # Documents are approximately 1 KB in size
   t: {^RandomInt: {min: 0, max: 10}}
   w: {^RandomInt: {distribution: geometric, p: 0.1}}
   x: 0
@@ -74,7 +74,7 @@ Loader:
 
 Update:
   Database: *DB
-  CollectionCount: 100 # This is specifically 1% of collections
+  CollectionCount: 100  # This is specifically 1% of collections
   UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
   Update: {$inc: {x: 1}}
 
@@ -87,17 +87,17 @@ Query:
 LargeQuery:
   Database: *DB
   CollectionCount: {^Parameter: {Default: *DefaultCollectionCount, Name: "CollectionCount"}}
-  Filter: {z: { "$gt": { ^RandomInt: {min: 0, max: 2147483647} } } }
+  Filter: {z: {"$gt": {^RandomInt: {min: 0, max: 2147483647}}}}
   # Documents are 1KB so we want to read 1024 documents over 2 minutes.
   Limit: {^Parameter: {Default: 0, Name: "Limit"}}
 #  Transactions: true
 #  ReadConcern: Snapshot
-  #  MinDelay: 117 milliseconds  # Sleep between next()
-  #  StaggerThreadStart: 1 minute # Second thread starts after 60 seconds
-  #  HardLimits:
-  #    Next: # Note, this refers to the next() operation of a cursor
-  #      Latency: 500 milliseconds
-  #      SLA: 99.5
+#  MinDelay: 117 milliseconds  # Sleep between next()
+#  StaggerThreadStart: 1 minute # Second thread starts after 60 seconds
+#  HardLimits:
+#    Next: # Note, this refers to the next() operation of a cursor
+#      Latency: 500 milliseconds
+#      SLA: 99.5
 
 CollScan:
   Database: *DB
