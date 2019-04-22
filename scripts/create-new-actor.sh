@@ -174,6 +174,7 @@ create_impl_text() {
     local actor_name
     uuid_tag="$1"
     actor_name="$2"
+echo "year=${year}"
 
 cat << EOF
 // Copyright ${year}-present MongoDB Inc.
@@ -249,7 +250,7 @@ namespace genny::actor {
 //
 // For more information on the Duration and Repeat keywords and how multiple Actors
 // coordinate across Phases, see the extended example workload
-// ${q}src/workloads/docs/HelloWorld-MultiplePhases.yml${q]}.
+// ${q}src/workloads/docs/HelloWorld-MultiplePhases.yml${q}.
 //
 // (${q}WorkloadContext${q}, ${q}ActorContext${q}, and ${q}PhaseContext${q} are all defined
 // in ${q}context.hpp${q} - see full documentation there.)
@@ -465,7 +466,7 @@ Owner: TODO put your github team name here e.g. @mongodb/stm
 #
 # For more information on how to configure Repeat/Duration/*
 # see extended example file
-# ${q}src/workloads/docs/HelloWorld-MultiplePhases.yml${q]}
+# ${q}src/workloads/docs/HelloWorld-MultiplePhases.yml${q}
 
 Actors:
 - Name: ${actor_name}
