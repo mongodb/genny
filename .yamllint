@@ -18,7 +18,7 @@ rules:
   document-start:
     level: error
     present: false
-  new-line-at-end-of-file: disable
+  new-line-at-end-of-file: enable
   empty-lines: disable
   trailing-spaces: enable
   truthy:
