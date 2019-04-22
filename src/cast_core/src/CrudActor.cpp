@@ -256,9 +256,9 @@ using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(
 namespace {
 
 auto createDocumentGenerator(YAML::Node source,
-                             const std::string &opType,
-                             const std::string &key,
-                             PhaseContext &context,
+                             const std::string& opType,
+                             const std::string& key,
+                             PhaseContext& context,
                              ActorId id) {
     auto doc = source[key];
     if (!doc) {
@@ -292,7 +292,7 @@ struct CreateIndexOperation : public BaseOperation {
           _onSession{onSession},
           _keysGenerator{createDocumentGenerator(opNode, "createIndex", "Keys", context, id)},
           _indexOptionsGenerator{
-                  createDocumentGenerator(opNode, "createIndex", "IndexOptions", context, id)} {}
+              createDocumentGenerator(opNode, "createIndex", "IndexOptions", context, id)} {}
 
 
     void run(mongocxx::client_session& session) override {
@@ -527,7 +527,8 @@ struct ReplaceOneOperation : public WriteOperation {
           _collection{std::move(collection)},
           _operation{operation},
           _filterExpr{createDocumentGenerator(opNode, "replaceOne", "Filter", context, id)},
-          _replacementExpr{createDocumentGenerator(opNode, "replaceOne", "Replacement", context, id)} {}
+          _replacementExpr{
+              createDocumentGenerator(opNode, "replaceOne", "Replacement", context, id)} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -797,18 +798,18 @@ struct FindOneAndDeleteOperation : public BaseOperation {
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
-            : BaseOperation(context, opNode),
-              _onSession{onSession},
-              _collection{std::move(collection)},
-              _operation{operation},
-              _filterExpr{createDocumentGenerator(opNode, "FindOneAndDelete", "Filter", context, id)} {}
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation},
+          _filterExpr{createDocumentGenerator(opNode, "FindOneAndDelete", "Filter", context, id)} {}
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
-                          ? _collection.find_one_and_delete(session, filter.view(), _options)
-                          : _collection.find_one_and_delete(filter.view(), _options);
+                ? _collection.find_one_and_delete(session, filter.view(), _options)
+                : _collection.find_one_and_delete(filter.view(), _options);
             if (result) {
                 ctx.addDocuments(1);
                 ctx.addBytes(result->view().length());
@@ -827,25 +828,27 @@ private:
 
 struct FindOneAndReplaceOperation : public BaseOperation {
     FindOneAndReplaceOperation(YAML::Node opNode,
-                              bool onSession,
-                              mongocxx::collection collection,
-                              metrics::Operation operation,
-                              PhaseContext& context,
-                              ActorId id)
-            : BaseOperation(context, opNode),
-              _onSession{onSession},
-              _collection{std::move(collection)},
-              _operation{operation},
-              _filterExpr{createDocumentGenerator(opNode, "FindOneAndReplace", "Filter", context, id)},
-              _replacementExpr{createDocumentGenerator(opNode, "FindOneAndReplace", "Replacement", context, id)} {}
+                               bool onSession,
+                               mongocxx::collection collection,
+                               metrics::Operation operation,
+                               PhaseContext& context,
+                               ActorId id)
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation},
+          _filterExpr{createDocumentGenerator(opNode, "FindOneAndReplace", "Filter", context, id)},
+          _replacementExpr{
+              createDocumentGenerator(opNode, "FindOneAndReplace", "Replacement", context, id)} {}
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
         auto replacement = _replacementExpr();
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
             auto result = (_onSession)
-                          ? _collection.find_one_and_replace(session, filter.view(), replacement.view(), _options)
-                          : _collection.find_one_and_replace(filter.view(), replacement.view(), _options);
+                ? _collection.find_one_and_replace(
+                      session, filter.view(), replacement.view(), _options)
+                : _collection.find_one_and_replace(filter.view(), replacement.view(), _options);
             if (result) {
                 ctx.addDocuments(1);
                 ctx.addBytes(result->view().length());
