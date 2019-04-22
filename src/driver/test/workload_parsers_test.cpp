@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <driver/WorkloadParser.hpp>
+#include <driver/workload_parsers.hpp>
 
 #include <testlib/helpers.hpp>
 
@@ -42,8 +42,10 @@ Actors:
 
     auto cwd = boost::filesystem::current_path();
 
-    WorkloadParser p{cwd, true};
+    WorkloadParser p{cwd};
     auto parsedConfig = p.parse(input, DefaultDriver::ProgramOptions::YamlSource::kString);
+    parsedConfig = SmokeTestConverter::convert(parsedConfig);
+
     REQUIRE(YAML::Dump(parsedConfig) == expected);
 }
 

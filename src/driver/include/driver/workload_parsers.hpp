@@ -30,29 +30,31 @@ namespace fs = boost::filesystem;
  */
 class WorkloadParser {
 public:
-    explicit WorkloadParser(fs::path& phaseConfigPath, bool isSmokeTest = false)
-        : _isSmokeTest{isSmokeTest}, _phaseConfigPath{phaseConfigPath} {};
+    explicit WorkloadParser(fs::path& phaseConfigPath)
+        : _phaseConfigPath{phaseConfigPath} {};
 
     YAML::Node parse(const std::string& source,
-                     const DefaultDriver::ProgramOptions::YamlSource =
-                         DefaultDriver::ProgramOptions::YamlSource::kFile);
+                     const DefaultDriver::ProgramOptions::YamlSource = DefaultDriver::ProgramOptions::YamlSource::kFile);
 
 private:
-    enum class ParseMode;
     YamlParameters _params;
     const fs::path _phaseConfigPath;
 
-    const bool _isSmokeTest;
-
-    YAML::Node recursiveParse(YAML::Node, ParseMode parseMode);
+    YAML::Node recursiveParse(YAML::Node);
 
     // The following group of methods handle workload files containing external configuration files.
     void convertExternal(std::string key, YAML::Node value, YAML::Node& out);
     YAML::Node parseExternal(YAML::Node);
     YAML::Node replaceParam(YAML::Node);
+};
 
-    // The following method handles converting workload files into smoke test versions.
-    void convertToSmokeTest(std::string key, YAML::Node value, YAML::Node& out);
+/**
+ * Convert a workload YAML into a version for smoke test where every phase
+ * of every actor runs with Repeat: 1
+ */
+class SmokeTestConverter {
+public:
+    static YAML::Node convert(YAML::Node workloadRoot);
 };
 
 }  // namespace genny::driver::v1

@@ -14,16 +14,11 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <driver/WorkloadParser.hpp>
+#include <driver/workload_parsers.hpp>
 
 #include <gennylib/InvalidConfigurationException.hpp>
 
 namespace genny::driver::v1 {
-
-enum class WorkloadParser::ParseMode {
-    kSmokeTest,
-    kNormal,
-};
 
 YAML::Node loadFile(const std::string& source) {
     try {
@@ -43,31 +38,21 @@ YAML::Node WorkloadParser::parse(const std::string& source,
         workload = loadFile(source);
     }
 
-    auto parsedWorkload = recursiveParse(workload, ParseMode::kNormal);
-
-    if (_isSmokeTest) {
-        // Do a second pass to convert config into the smoke test version.
-        parsedWorkload = recursiveParse(parsedWorkload, ParseMode::kSmokeTest);
-    }
-
-    return parsedWorkload;
+    return recursiveParse(workload);
 }
 
-YAML::Node WorkloadParser::recursiveParse(YAML::Node node, ParseMode mode) {
+YAML::Node WorkloadParser::recursiveParse(YAML::Node node) {
     YAML::Node out;
     switch (node.Type()) {
         case YAML::NodeType::Map: {
             for (auto kvp : node) {
-                if (mode == ParseMode::kSmokeTest)
-                    convertToSmokeTest(kvp.first.as<std::string>(), kvp.second, out);
-                else if (mode == ParseMode::kNormal)
-                    convertExternal(kvp.first.as<std::string>(), kvp.second, out);
+                convertExternal(kvp.first.as<std::string>(), kvp.second, out);
             }
             break;
         }
         case YAML::NodeType::Sequence: {
             for (auto val : node) {
-                out.push_back(recursiveParse(val, mode));
+                out.push_back(recursiveParse(val));
             }
             break;
         }
@@ -109,17 +94,7 @@ void WorkloadParser::convertExternal(std::string key, YAML::Node value, YAML::No
                 out[externalKvp.first] = externalKvp.second;
         }
     } else {
-        out[key] = recursiveParse(value, ParseMode::kNormal);
-    }
-}
-
-void WorkloadParser::convertToSmokeTest(std::string key, YAML::Node value, YAML::Node& out) {
-    if (key == "Duration" || key == "Repeat") {
-        out["Repeat"] = 1;
-    } else if (key == "Rate" || key == "SleepBefore" || key == "SleepAfter") {
-        // Ignore those keys in smoke tests.
-    } else {
-        out[key] = recursiveParse(value, ParseMode::kSmokeTest);
+        out[key] = recursiveParse(value);
     }
 }
 
@@ -190,6 +165,45 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
         throw InvalidConfigurationException(os.str());
     }
 
-    return recursiveParse(replacement, ParseMode::kNormal);
+    return recursiveParse(replacement);
+}
+
+YAML::Node convertObjForSmokeTest(YAML::Node inNode) {
+    YAML::Node out;
+    for (auto kvp: inNode) {
+        auto&& key = kvp.first.as<std::string>();
+        auto&& value = kvp.second;
+        if (key == "Duration" || key == "Repeat") {
+            out["Repeat"] = 1;
+        } else if (key == "Rate" || key == "SleepBefore" || key == "SleepAfter") {
+            // Ignore those keys in smoke tests.
+        } else {
+            out[key] = value;
+        }
+    }
+    return out;
+}
+
+
+YAML::Node SmokeTestConverter::convert(YAML::Node workloadRoot) {
+    YAML::Node actorsOut;
+
+    // Convert keywords in the "Actors" block.
+    for (auto actor : workloadRoot["Actors"]) {
+        YAML::Node actorOut = convertObjForSmokeTest(actor);
+        YAML::Node phasesOut;
+
+        // Convert keywords in the "Phases" block.
+        for (auto phase : actorOut["Phases"]) {
+            phasesOut.push_back(convertObjForSmokeTest(phase));
+        }
+
+        actorOut["Phases"] = phasesOut;
+        actorsOut.push_back(actorOut);
+    }
+
+    workloadRoot["Actors"] = actorsOut;
+
+    return workloadRoot;
 }
 }  // namespace genny::driver::v1
