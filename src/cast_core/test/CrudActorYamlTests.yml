@@ -446,6 +446,21 @@ Tests:
       - Filter: {a: 100}
         Count: 0
 
+  - Description: simple findOneAndReplace
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: findOneAndReplace
+        OperationCommand:
+          Filter: {a: 100}
+          Replacement: {a: 30}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 0
+      - Filter: {a: 30}
+        Count: 1
+
   - Description: Simple createIndex
     Operations:
       - OperationName: createIndex
