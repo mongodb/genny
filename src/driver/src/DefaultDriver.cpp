@@ -305,7 +305,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     {
         std::ofstream metricsOutput;
-        metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::trunc);
+        metricsOutput.open(options.metricsOutputFileName,
+                           std::ofstream::out | std::ofstream::trunc);
         reporter.report(metricsOutput, options.metricsFormat);
     }
 

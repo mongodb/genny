@@ -322,6 +322,19 @@ Tests:
               ReadMode: badReadMode
     Error: '.*yaml-cpp: error at line.*bad conversion$'
 
+  - Description: estimatedDocumentCount can also specify ReadMode, MaxStaleness
+    Operations:
+      - OperationName: estimatedDocumentCount
+        OperationCommand:
+          Options:
+            ReadPreference:
+              ReadMode: nearest
+              MaxStaleness: 100 seconds
+    ExpectAllEvents:
+      $readPreference:
+        mode: nearest
+        maxStalenessSeconds: 100
+
   - Description: Delete a document in a collection.
     Operations:
       - OperationName: bulkWrite
@@ -421,6 +434,105 @@ Tests:
       - Filter: {a: 1}
         Count: 0
 
-# TODO: add test for ReadConcern
-# TODO: add test for Find
-# TODO: add test for start and commit transaction.
+  - Description: simple findOneAndUpdate
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: findOneAndUpdate
+        OperationCommand:
+          Filter: {a: 100}
+          Update: {$inc: {a: 13}}
+    OutcomeCounts:
+      - Filter: {a: 113}
+        Count: 1
+
+  - Description: simple findOneAndDelete
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: findOneAndDelete
+        OperationCommand:
+          Filter: {a: 100}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 0
+
+  - Description: simple findOneAndReplace
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: findOneAndReplace
+        OperationCommand:
+          Filter: {a: 100}
+          Replacement: {a: 30}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 0
+      - Filter: {a: 30}
+        Count: 1
+
+  - Description: Simple createIndex
+    Operations:
+      - OperationName: createIndex
+        OperationCommand:
+          Keys: {a: 1}
+          IndexOptions: {}
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 1
+
+  - Description: createIndex and then throw on dupes
+    Operations:
+      - OperationName: createIndex
+        OperationCommand:
+          Keys: {a: 1}
+          IndexOptions: {unique: true}
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+    Error: |
+      .*duplicate key error collection: mydb.test.*
+
+  - Description: createIndex can swallow dupe errors
+    Operations:
+      - OperationName: createIndex
+        OperationCommand:
+          Keys: {a: 1}
+          IndexOptions: {unique: true}
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 100}
+      - OperationName: insertOne
+        OperationCommand:
+          ThrowOnFailure: false
+          Document: {a: 100}
+    OutcomeCounts:
+      - Filter: {a: 100}
+        Count: 1
+
+  - Description: set ReadConcern on a find in a transaction
+    Operations:
+      - OperationName: startTransaction
+      - OperationName: setReadConcern
+        OperationCommand:
+          ReadConcern:
+            Level: local
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 1}
+      - OperationName: find
+        OperationCommand:
+          Filter: {a: 1}
+      - OperationName: commitTransaction
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 1

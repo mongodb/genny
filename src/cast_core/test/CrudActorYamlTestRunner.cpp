@@ -17,7 +17,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/exception/detail/exception_ptr.hpp>
 #include <boost/exception/diagnostic_information.hpp>
-
+#include <boost/exception/exception.hpp>
 
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
@@ -213,17 +213,25 @@ struct CrudActorTestCase {
             } else {
                 requireAfterState(client, eventsCopy, tcase);
             }
+        } catch (const boost::exception& e) {
+            launderException(e);
         } catch (const std::exception& e) {
-            if (runMode == RunMode::kExpectedSetupException ||
-                runMode == RunMode::kExpectedRuntimeException) {
-                auto actual = boost::trim_copy(std::string{e.what()});
-                auto expect = boost::trim_copy(error.as<std::string>());
-                REQUIRE_THAT(actual, Catch::Matches(expect));
-            } else {
-                auto diagInfo = boost::diagnostic_information(e);
-                INFO(description << "CAUGHT " << diagInfo);
-                FAIL(diagInfo);
-            }
+            launderException(e);
+        }
+    }
+
+    template <typename X>
+    void launderException(const X& e) const {
+        auto diagInfo = boost::diagnostic_information(e);
+        if (runMode == RunMode::kExpectedSetupException ||
+            runMode == RunMode::kExpectedRuntimeException) {
+            auto actual = boost::trim_copy(diagInfo);
+            auto expect = boost::trim_copy(error.as<std::string>());
+            INFO("Actual exception message : [[" << actual << "]]");
+            REQUIRE_THAT(actual, MultilineMatch(expect));
+        } else {
+            INFO(description << " CAUGHT " << diagInfo);
+            FAIL(diagInfo);
         }
     }
 
@@ -262,6 +270,6 @@ TEST_CASE("CrudActor YAML Tests",
           "[standalone][single_node_replset][three_node_replset][CrudActor]") {
 
     genny::testing::runTestCaseYaml<genny::testing::CrudActorTestCase>(
-        "/src/cast_core/test/CrudActorYamlTests.yaml");
+        "/src/cast_core/test/CrudActorYamlTests.yml");
 }
 }  // namespace

@@ -25,6 +25,7 @@ CreateGennyTargets(
         Boost::boost
         Boost::filesystem
         Boost::log
+        Boost::regex
         catch2
         yaml-cpp
     TEST_DEPENDS
