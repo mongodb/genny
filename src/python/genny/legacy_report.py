@@ -51,7 +51,7 @@ def run(args):
         report = None
 
         for line, actor in data_reader:
-            cur_metric_name = '{}.{}'.format(actor, line[IntermediateCSVColumns.OPERATION])
+            cur_metric_name = '{}-{}'.format(actor, line[IntermediateCSVColumns.OPERATION])
 
             if cur_metric_name != metric_name:
                 if report:
