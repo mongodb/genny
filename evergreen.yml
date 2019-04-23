@@ -106,13 +106,13 @@ buildvariants:
   - name: tg_compile
   - name: t_push
 
-- name: rhel7
-  display_name: RHEL 7 for Performance
+- name: centos6-perf
+  display_name: CentOS 6 for Performance
   modules: ~
   expansions:
-    distro: rhel70
+    distro: rhel62
   run_on:
-  - rhel70-perf-single
+  - centos6-perf
   tasks:
   - name: tg_compile_and_benchmark
 
