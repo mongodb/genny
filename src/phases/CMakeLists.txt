@@ -14,7 +14,7 @@
 
 # Install all the phase config snippets.
 install(DIRECTORY .
-    DESTINATION etc/genny/phase_configs
+    DESTINATION etc/genny/phases
     COMPONENT PhaseConfigs
     FILES_MATCHING
     PATTERN "*.yml"
