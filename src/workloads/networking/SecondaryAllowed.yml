@@ -2,61 +2,63 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/service-architecture"
 
 Clients:
-    Default:
-      QueryOptions:
-          maxPoolSize: 1000
-          socketTimeoutMS: 5000
-          connectTimeoutMS: 5000
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+      socketTimeoutMS: 5000
+      connectTimeoutMS: 5000
 
 Actors:
-    - Name: StepdownCommand
-      Type: AdminCommand
-      Threads: 1
-      ThrowOnFailure: false
-      Phases:
-        - Phase: 0
-          NoOp: true
-        - Phase: 1
-          Repeat: 1
-          SleepBefore: 30 seconds
-          SleepAter: 30 seconds
-          Operation:
-              OperationMetricsName: "Stepdown"
-              OperationName: AdminCommand
-              OperationCommand:
-                  replSetStepDown: 60
-              OperationAwaitStepdown: yes
-    - Name: SecondaryPreferredRead
-      Type: RunCommand
-      Threads: 100
-      ThrowOnFailure: false
-      Database: test
-      Phases:
-        - Phase: 0
-          NoOp: true
-        - Phase: 1
-          Rate: 1 per 100 microseconds
-          # This should be how long the StepdownCommand Actor Phase 1 takes
-          Duration: 2 minutes
-          Operation: &find_one
-              OperationMetricsName: "Find"
-              OperationName: RunCommand
-              OperationIsQuiet: yes
-              OperationCommand:
-                  find: Collection0
-                  readConcern: { level: local }
-                  $readPreference: { mode: secondary }
-    - Name: Loader
-      Type: Loader
-      Threads: 1
-      Database: test
-      CollectionCount: 1
-      DocumentCount: 100
-      BatchSize: 100
-      Document:
-          x: {^RandomInt: {min: 0, max: 20}}
-      Indexes:
-        - keys: {x: 1}
-      Phases:
-        - Phase: 0
-        - NoOp: true
+- Name: StepdownCommand
+  Type: AdminCommand
+  Threads: 1
+  ThrowOnFailure: false
+  Phases:
+  - Phase: 0
+    NoOp: true
+  - Phase: 1
+    Repeat: 1
+    SleepBefore: 30 seconds
+    SleepAter: 30 seconds
+    Operation:
+      OperationMetricsName: "Stepdown"
+      OperationName: AdminCommand
+      OperationCommand:
+        replSetStepDown: 60
+      OperationAwaitStepdown: true
+
+- Name: SecondaryPreferredRead
+  Type: RunCommand
+  Threads: 100
+  ThrowOnFailure: false
+  Database: test
+  Phases:
+  - Phase: 0
+    NoOp: true
+  - Phase: 1
+    Rate: 1 per 100 microseconds
+    # This should be how long the StepdownCommand Actor Phase 1 takes
+    Duration: 2 minutes
+    Operation: &find_one
+      OperationMetricsName: "Find"
+      OperationName: RunCommand
+      OperationIsQuiet: true
+      OperationCommand:
+        find: Collection0
+        readConcern: {level: local}
+        $readPreference: {mode: secondary}
+
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Database: test
+  CollectionCount: 1
+  DocumentCount: 100
+  BatchSize: 100
+  Document:
+    x: {^RandomInt: {min: 0, max: 20}}
+  Indexes:
+  - keys: {x: 1}
+  Phases:
+  - Phase: 0
+  - NoOp: true

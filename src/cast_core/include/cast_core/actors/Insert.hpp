@@ -49,7 +49,6 @@ private:
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
-
 };
 
 }  // namespace genny::actor

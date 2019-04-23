@@ -168,7 +168,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     {
         std::ofstream metricsOutput;
-        metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::trunc);
+        metricsOutput.open(options.metricsOutputFileName,
+                           std::ofstream::out | std::ofstream::trunc);
         reporter.report(metricsOutput, options.metricsFormat);
     }
 
@@ -183,8 +184,10 @@ DefaultDriver::OutcomeCode DefaultDriver::run(const DefaultDriver::ProgramOption
         // Wrap doRunLogic in another catch block in case it throws an exception of its own e.g.
         // file not found or io errors etc - exceptions not thrown by ActorProducers.
         return doRunLogic(options);
+    } catch (const boost::exception& x) {
+        BOOST_LOG_TRIVIAL(error) << "Caught boost::exception " << boost::diagnostic_information(x, true);
     } catch (const std::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "Caught exception " << x.what();
+        BOOST_LOG_TRIVIAL(error) << "Caught std::exception " << x.what();
     }
     return DefaultDriver::OutcomeCode::kInternalException;
 }
