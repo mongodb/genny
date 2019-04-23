@@ -25,20 +25,28 @@ Actors:
 - Name: WorkloadParserTest
   Type: NonExistent
   Threads: 2.718281828   # This field is ignored for the purpose of this test.
+  Foo:
+    Repeat: "do-not-touch"
   Phases:
   - Duration: 4 scores        # Removed
     Repeat: 1e999             # Replaced with "1"
     Rate: 1 per 2 megannum    # Removed
     SleepBefore: 2 planks     # Removed
     SleepAfter: 1 longtime    # Removed
+    Bar:
+      Duration: "do-not-touch"
 )");
 
     const auto expected = (R"(Actors:
   - Name: WorkloadParserTest
     Type: NonExistent
     Threads: 2.718281828
+    Foo:
+      Repeat: do-not-touch
     Phases:
-      - Repeat: 1)");
+      - Repeat: 1
+        Bar:
+          Duration: do-not-touch)");
 
     auto cwd = boost::filesystem::current_path();
 

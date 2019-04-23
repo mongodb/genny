@@ -101,12 +101,13 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     }
 
     v1::WorkloadParser parser{phaseConfigSource};
-    auto yaml = parser.parse(options.workloadSource, options.workloadSourceType);
 
-    if (options.isSmokeTest) {
-        yaml = v1::SmokeTestConverter::convert(yaml);
-    }
-    
+    // Consider passing in whole options struct if we pass in more than 2-3 fields.
+    auto yaml = parser.parse(options.workloadSource,
+                             options.workloadSourceType,
+                             options.isSmokeTest ? v1::WorkloadParser::Mode::kSmokeTest
+                                                 : v1::WorkloadParser::Mode::kNormal);
+
     auto orchestrator = Orchestrator{};
 
     if (options.runMode == DefaultDriver::RunMode::kEvaluate) {

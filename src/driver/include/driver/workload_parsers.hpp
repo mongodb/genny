@@ -30,11 +30,16 @@ namespace fs = boost::filesystem;
  */
 class WorkloadParser {
 public:
-    explicit WorkloadParser(fs::path& phaseConfigPath)
-        : _phaseConfigPath{phaseConfigPath} {};
+    // Whether to parse the workload normally or for smoke test.
+    enum class Mode { kNormal, kSmokeTest };
+
+    explicit WorkloadParser(fs::path phaseConfigPath)
+        : _phaseConfigPath{std::move(phaseConfigPath)} {};
 
     YAML::Node parse(const std::string& source,
-                     const DefaultDriver::ProgramOptions::YamlSource = DefaultDriver::ProgramOptions::YamlSource::kFile);
+                     DefaultDriver::ProgramOptions::YamlSource =
+                         DefaultDriver::ProgramOptions::YamlSource::kFile,
+                     Mode mode = Mode::kNormal);
 
 private:
     YamlParameters _params;

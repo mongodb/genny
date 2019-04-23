@@ -30,7 +30,8 @@ YAML::Node loadFile(const std::string& source) {
 }
 
 YAML::Node WorkloadParser::parse(const std::string& source,
-                                 const DefaultDriver::ProgramOptions::YamlSource sourceType) {
+                                 const DefaultDriver::ProgramOptions::YamlSource sourceType,
+                                 const Mode mode) {
     YAML::Node workload;
     if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
         workload = YAML::Load(source);
@@ -38,7 +39,17 @@ YAML::Node WorkloadParser::parse(const std::string& source,
         workload = loadFile(source);
     }
 
-    return recursiveParse(workload);
+    auto parsed = recursiveParse(workload);
+
+    switch (mode) {
+        case Mode::kSmokeTest:
+            return SmokeTestConverter::convert(parsed);
+        case Mode::kNormal:
+            return parsed;
+        default:
+            // Getting here should be a compile error.
+            throw InvalidConfigurationException("Unknown workload parse mode");
+    }
 }
 
 YAML::Node WorkloadParser::recursiveParse(YAML::Node node) {
@@ -102,8 +113,10 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
     int keysSeen = 0;
 
     if (!external["Path"]) {
-        throw InvalidConfigurationException(
-            "Missing the `Path` to-level key in your external phase configuration");
+        std::ostringstream stm;
+        stm << "Missing the `Path` top-level key in your external phase configuration: ";
+        stm << YAML::Dump(external);
+        throw InvalidConfigurationException(stm.str());
     }
     fs::path path(external["Path"].as<std::string>());
     keysSeen++;
