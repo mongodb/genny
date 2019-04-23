@@ -15,8 +15,8 @@ class LegacyReportTest(unittest.TestCase):
     def test_legacy_report(self):
         expected_json = {
             'results': [{
-                'name': 'HelloWorld.Greetings',
-                'workload': 'HelloWorld.Greetings',
+                'name': 'HelloWorld-Greetings',
+                'workload': 'HelloWorld-Greetings',
                 'start': 419.99968,
                 'end': 419.99981,
                 'results': {
@@ -26,8 +26,8 @@ class LegacyReportTest(unittest.TestCase):
                     }
                 }
             }, {
-                'name': 'InsertRemove.Remove',
-                'workload': 'InsertRemove.Remove',
+                'name': 'InsertRemove-Remove',
+                'workload': 'InsertRemove-Remove',
                 'start': 419.99983,
                 'end': 420.0,
                 'results': {
@@ -37,8 +37,8 @@ class LegacyReportTest(unittest.TestCase):
                     }
                 }
             }, {
-                'name': 'InsertRemove.Insert',
-                'workload': 'InsertRemove.Insert',
+                'name': 'InsertRemove-Insert',
+                'workload': 'InsertRemove-Insert',
                 'start': 419.9996,
                 'end': 419.99985,
                 'results': {
