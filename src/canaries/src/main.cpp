@@ -94,7 +94,7 @@ struct ProgramOptions {
         ("metrics-output-file,o",
                 po::value<std::string>(),
                 "Write output to file in addition to stdout. The format ouf the output"
-                "file is [task-name],[loop-type],[average_duration_in_picoseconds]");
+                "file is [task-name]_[loop-type],[average_duration_in_picoseconds]");
         //clang-format on
 
         positional.add("task", 1);
