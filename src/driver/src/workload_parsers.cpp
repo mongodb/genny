@@ -183,7 +183,7 @@ YAML::Node WorkloadParser::parseExternal(YAML::Node external) {
 
 YAML::Node convertObjForSmokeTest(YAML::Node inNode) {
     YAML::Node out;
-    for (auto kvp: inNode) {
+    for (auto kvp : inNode) {
         auto&& key = kvp.first.as<std::string>();
         auto&& value = kvp.second;
         if (key == "Duration" || key == "Repeat") {

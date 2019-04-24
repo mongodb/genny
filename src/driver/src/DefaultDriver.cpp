@@ -37,8 +37,8 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
-#include <driver/workload_parsers.hpp>
 #include <driver/v1/DefaultDriver.hpp>
+#include <driver/workload_parsers.hpp>
 
 namespace genny::driver {
 namespace {
@@ -186,7 +186,8 @@ DefaultDriver::OutcomeCode DefaultDriver::run(const DefaultDriver::ProgramOption
         // file not found or io errors etc - exceptions not thrown by ActorProducers.
         return doRunLogic(options);
     } catch (const boost::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "Caught boost::exception " << boost::diagnostic_information(x, true);
+        BOOST_LOG_TRIVIAL(error) << "Caught boost::exception "
+                                 << boost::diagnostic_information(x, true);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(error) << "Caught std::exception " << x.what();
     }
