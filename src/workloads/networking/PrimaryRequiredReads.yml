@@ -40,7 +40,7 @@ Actors:
     NoOp: true
   - Phase: 1  # Run
     Duration: 180 seconds
-    Rate: 1 per 100 microseconds
+    Rate: 1 per 1 microseconds
     Operation: &find_one
       OperationMetricsName: "Find"
       OperationName: RunCommand

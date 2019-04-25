@@ -36,7 +36,7 @@ Actors:
   - Phase: 0
     NoOp: true
   - Phase: 1
-    Rate: 1 per 100 microseconds
+    Rate: 1 per 1 microseconds
     # This should be how long the StepdownCommand Actor Phase 1 takes
     Duration: 2 minutes
     Operation: &find_one
