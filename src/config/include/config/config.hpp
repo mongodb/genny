@@ -72,12 +72,15 @@ class NodeT {
             // wants the Actor name they can look up `node[..][Name]`.
             // TOOD: test that we can [..] past the root element by a bunch and not blow up
             if (key == "..") {
-                if (!_parent) {
-                    throw std::logic_error("TODO");  // TODO: better messaging
-                }
+                // this is...not the most succinct business-logic ever....
                 std::stringstream childKey;
-                childKey << _parent->_key << "/";
+                if (_parent) {
+                    childKey << _parent->_key << "/";
+                }
                 childKey << _key <<  "/..";
+                if (!_parent) {
+                    return NodeT{YAML::Node{}, nullptr, false, childKey.str()};
+                }
                 return NodeT{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
             }
         }
