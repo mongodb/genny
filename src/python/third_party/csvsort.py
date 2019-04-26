@@ -153,8 +153,11 @@ def decorated_csv(filename, columns, quoting):
             yield get_key(row, columns), row
 
 
-def mergesort(sorted_filenames, columns, quoting, nway=2):
+def mergesort(sorted_filenames, columns, quoting, nway=100):
     """Merge these 2 sorted csv files into a single output file
+
+    `nway` defaults to 100 to allow for 100MB * 100 = 10GB of files
+    to be read in at once with the default file size of 100MB.
     """
     merge_n = 0
     while len(sorted_filenames) > 1:

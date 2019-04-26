@@ -1,4 +1,3 @@
----
 # This workload is developed as a general stress test of the server. The original development of
 # this workload is described here:
 # https://docs.google.com/document/d/1Dz0KyB_Pf94km4cBSpQHTBD7GQ8b3LM4_J350ukWjZ4/edit?usp=sharing
@@ -15,104 +14,101 @@ Clients:
       maxPoolSize: 1000
 
 Actors:
-  - Name: Loader
-    Type: Loader
-    Threads: 10
-    Database: &DB test
-    CollectionCount: &CollectionCount 1000
-    DocumentCount: 1e4
-    BatchSize: 1000
-    Document:  # Documents are approximately 1 KiB in size
-      t: {^RandomInt: {min: 0, max: 10}}
-      w: {^RandomInt: {distribution: geometric, p: 0.1}}
-      x: 0
-      y: {^RandomInt: {min: 0, max: 1000}}
-      z: {^RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
-      int0: &int {^RandomInt: {distribution: binomial, t: 200, p: 0.5}}
-      int1: *int
-      int2: *int
-      int3: *int
-      int4: *int
-      int5: *int
-      int6: *int
-      int7: *int
-      int8: *int
-      int9: *int
-      # Note -- genny does not support value generation within lists
-      # yet. https://jira.mongodb.org/browse/TIG-1245
-      intArray:
-        - 1000
-        - 2000
-        - 3000
-        - 4000
-        - 5000
-        - 6000
-        - 7000
-        - 8000
-        - 9000
-      string0: &string {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}}}
-      string1: *string
-      string2: *string
-      string3: *string
-      string4: *string
-      string5: *string
-      string6: *string
-      string7: *string
-      string8: *string
-      string9: *string
-      stringShort: {^RandomString: {length: 1}}
-      stringLong: {^RandomString: {length: 100}}
-      compressibleStringArray:
-        - &cstring AAAAAAAAAAAAAAAAAAAA
-        - *cstring
-        - *cstring
-        - *cstring
-        - *cstring
-        - *cstring
-        - *cstring
-        - *cstring
-        - *cstring
-        - *cstring
-      some: {embedded: {document: {with: {some: {depth: *string}}}}}
-    # The Loader needs to be updated to take options to support unique, etc. I will do as a
-    # follow-up. PERF-1758
-    Indexes:
-      - keys: {t: 1, w: 1}
-      - keys: {y: 1}
-      - keys: {t: 1, stringShort: 1}
-      - keys: {string0: 1}
-      - keys: {stringLong: 1}
-        options: {unique: 1}
-      - keys: {stringShort: 1, y: 1}
-      - keys: {int0: 1, int1: 1, int2: 1}
-      - keys: {int3: 1}
-      - keys: {int4: 1}
-      - keys: {int5: 1, int6: 1}
-    Phases:
-      - Repeat: 1
-      - Operation:
-          OperationName: Nop
-  - Name: MultiCollectionUpdate
-    Type: MultiCollectionUpdate
-    Threads: 100
-    Database: *DB
-    CollectionCount: 10  # This is specifically 1% of collections
-    UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
-    Update: {$inc: {x: 1}}
-    Phases:
-      - Operation:
-        OperationName: Nop
-      - Duration: &phase2_duration 10 minutes
-        Rate: 100 per 31 milliseconds
-  - Name: MultiCollectionQuery
-    Type: MultiCollectionQuery
-    Threads: 100
-    Database: *DB
-    CollectionCount: 100  # This is specifically 10% of collections.
-    Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
-    Limit: 20
-    Phases:
-      - Operation:
-        OperationName: Nop
-      - Duration: *phase2_duration
-        Rate: 100 per 9 milliseconds
+- Name: Loader
+  Type: Loader
+  Threads: 10
+  Database: &DB test
+  CollectionCount: &CollectionCount 1000
+  DocumentCount: 1e4
+  BatchSize: 1000
+  Document:  # Documents are approximately 1 KiB in size
+    t: {^RandomInt: {min: 0, max: 10}}
+    w: {^RandomInt: {distribution: geometric, p: 0.1}}
+    x: 0
+    y: {^RandomInt: {min: 0, max: 1000}}
+    z: {^RandomInt: {min: 0, max: 2147483647}}  # This is for max int for low probability of conflicts
+    int0: &int {^RandomInt: {distribution: binomial, t: 200, p: 0.5}}
+    int1: *int
+    int2: *int
+    int3: *int
+    int4: *int
+    int5: *int
+    int6: *int
+    int7: *int
+    int8: *int
+    int9: *int
+    # Note -- genny does not support value generation within lists
+    # yet. https://jira.mongodb.org/browse/TIG-1245
+    intArray:
+    - 1000
+    - 2000
+    - 3000
+    - 4000
+    - 5000
+    - 6000
+    - 7000
+    - 8000
+    - 9000
+    string0: &string {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}}}
+    string1: *string
+    string2: *string
+    string3: *string
+    string4: *string
+    string5: *string
+    string6: *string
+    string7: *string
+    string8: *string
+    string9: *string
+    stringShort: {^RandomString: {length: 1}}
+    stringLong: {^RandomString: {length: 100}}
+    compressibleStringArray:
+    - &cstring AAAAAAAAAAAAAAAAAAAA
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    - *cstring
+    some: {embedded: {document: {with: {some: {depth: *string}}}}}
+  # The Loader needs to be updated to take options to support unique, etc. I will do as a
+  # follow-up. PERF-1758
+  Indexes:
+  - keys: {t: 1, w: 1}
+  - keys: {y: 1}
+  - keys: {t: 1, stringShort: 1}
+  - keys: {string0: 1}
+  - keys: {stringLong: 1}
+    options: {unique: 1}
+  - keys: {stringShort: 1, y: 1}
+  - keys: {int0: 1, int1: 1, int2: 1}
+  - keys: {int3: 1}
+  - keys: {int4: 1}
+  - keys: {int5: 1, int6: 1}
+  Phases:
+  - Repeat: 1
+  - Operation: Nop
+- Name: MultiCollectionUpdate
+  Type: MultiCollectionUpdate
+  Threads: 100
+  Database: *DB
+  CollectionCount: 10  # This is specifically 1% of collections
+  UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+  Update: {$inc: {x: 1}}
+  Phases:
+  - Operation: Nop
+  - Duration: &phase2_duration 10 minutes
+    Rate: 100 per 31 milliseconds
+- Name: MultiCollectionQuery
+  Type: MultiCollectionQuery
+  Threads: 100
+  Database: *DB
+  CollectionCount: 100  # This is specifically 10% of collections.
+  Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
+  Limit: 20
+  Phases:
+  - Operation: Nop
+  - Duration: *phase2_duration
+    Rate: 100 per 9 milliseconds

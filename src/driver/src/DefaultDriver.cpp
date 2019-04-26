@@ -37,154 +37,13 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 
-#include <driver/DefaultDriver.hpp>
+#include <driver/v1/DefaultDriver.hpp>
+#include <driver/workload_parsers.hpp>
 
 namespace genny::driver {
 namespace {
 
 namespace fs = boost::filesystem;
-
-using YamlParameters = std::map<std::string, YAML::Node>;
-
-YAML::Node recursiveParse(YAML::Node node, YamlParameters& params, const fs::path& phaseConfigPath);
-
-YAML::Node loadConfig(const std::string& source,
-                      DefaultDriver::ProgramOptions::YamlSource sourceType =
-                          DefaultDriver::ProgramOptions::YamlSource::kFile) {
-
-    if (sourceType == DefaultDriver::ProgramOptions::YamlSource::kString) {
-        return YAML::Load(source);
-    }
-    try {
-        return YAML::LoadFile(source);
-    } catch (const std::exception& ex) {
-        BOOST_LOG_TRIVIAL(error) << "Error loading yaml from " << source << ": " << ex.what();
-        throw;
-    }
-}
-
-YAML::Node parseExternal(YAML::Node external, YamlParameters& params, const fs::path& phaseConfig) {
-    int keysSeen = 0;
-
-    if (!external["Path"]) {
-        throw InvalidConfigurationException(
-            "Missing the `Path` to-level key in your external phase configuration");
-    }
-    fs::path path(external["Path"].as<std::string>());
-    keysSeen++;
-
-    path = fs::absolute(phaseConfig / path);
-
-    if (!fs::is_regular_file(path)) {
-        auto os = std::ostringstream();
-        os << "Invalid path to external PhaseConfig: " << path
-           << ". Please ensure your workload file is placed in 'workloads/[subdirectory]/' and the "
-              "'Path' parameter is relative to the 'phases/' directory";
-        throw InvalidConfigurationException(os.str());
-    }
-
-    auto replacement = loadConfig(path.string());
-
-    // Block of code for parsing the schema version.
-    {
-        if (!replacement["PhaseSchemaVersion"]) {
-            throw InvalidConfigurationException(
-                "Missing the `PhaseSchemaVersion` top-level key in your external phase "
-                "configuration");
-        }
-        auto phaseSchemaVersion = replacement["PhaseSchemaVersion"].as<std::string>();
-        if (phaseSchemaVersion != "2018-07-01") {
-            auto os = std::ostringstream();
-            os << "Invalid phase schema version: " << phaseSchemaVersion
-               << ". Please ensure the schema for your external phase config is valid and the "
-                  "`PhaseSchemaVersion` top-level key is set correctly";
-            throw InvalidConfigurationException(os.str());
-        }
-
-        // Delete the schema version instead of adding it to `keysSeen`.
-        replacement.remove("PhaseSchemaVersion");
-    }
-
-    if (external["Parameters"]) {
-        keysSeen++;
-        auto newParams = external["Parameters"].as<YamlParameters>();
-        params.insert(newParams.begin(), newParams.end());
-    }
-
-    if (external["Key"]) {
-        keysSeen++;
-        const auto key = external["Key"].as<std::string>();
-        if (!replacement[key]) {
-            auto os = std::ostringstream();
-            os << "Could not find top-level key: " << key << " in phase config YAML file: " << path;
-            throw InvalidConfigurationException(os.str());
-        }
-        replacement = replacement[key];
-    }
-
-    if (external.size() != keysSeen) {
-        auto os = std::ostringstream();
-        os << "Invalid keys for 'External'. Please set 'Path' and if any, 'Parameters' in the YAML "
-              "file: "
-           << path << " with the following content: " << YAML::Dump(external);
-        throw InvalidConfigurationException(os.str());
-    }
-
-    return recursiveParse(replacement, params, phaseConfig);
-}
-
-YAML::Node replaceParam(YAML::Node input, YamlParameters& params) {
-    if (!input["Name"] || !input["Default"]) {
-        auto os = std::ostringstream();
-        os << "Invalid keys for '^Parameter', please set 'Name' and 'Default' in following node"
-           << YAML::Dump(input);
-        throw InvalidConfigurationException(os.str());
-    }
-
-    auto name = input["Name"].as<std::string>();
-    // The default value is mandatory.
-    auto defaultVal = input["Default"];
-
-    // Nested params are ignored for simplicity.
-    if (auto paramVal = params.find(name); paramVal != params.end()) {
-        return paramVal->second;
-    } else {
-        return input["Default"];
-    }
-}
-
-YAML::Node recursiveParse(YAML::Node node, YamlParameters& params, const fs::path& phaseConfig) {
-    YAML::Node out;
-    switch (node.Type()) {
-        case YAML::NodeType::Map: {
-            for (auto kvp : node) {
-                if (kvp.first.as<std::string>() == "^Parameter") {
-                    out = replaceParam(kvp.second, params);
-                } else if (kvp.first.as<std::string>() == "ExternalPhaseConfig") {
-                    auto external = parseExternal(kvp.second, params, phaseConfig);
-                    // Merge the external node with the any other parameters specified
-                    // for this node like "Repeat" or "Duration".
-                    for (auto externalKvp : external) {
-                        if (!out[externalKvp.first])
-                            out[externalKvp.first] = externalKvp.second;
-                    }
-                } else {
-                    out[kvp.first] = recursiveParse(kvp.second, params, phaseConfig);
-                }
-            }
-            break;
-        }
-        case YAML::NodeType::Sequence: {
-            for (auto val : node) {
-                out.push_back(recursiveParse(val, params, phaseConfig));
-            }
-            break;
-        }
-        default:
-            return node;
-    }
-    return out;
-}
 
 template <typename Actor>
 void runActor(Actor&& actor,
@@ -241,9 +100,14 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         phaseConfigSource = fs::path(options.workloadSource).parent_path();
     }
 
-    YamlParameters params;
-    auto config = loadConfig(options.workloadSource, options.workloadSourceType);
-    auto yaml = recursiveParse(config, params, phaseConfigSource);
+    v1::WorkloadParser parser{phaseConfigSource};
+
+    // Consider passing in whole options struct if we pass in more than 2-3 fields.
+    auto yaml = parser.parse(options.workloadSource,
+                             options.workloadSourceType,
+                             options.isSmokeTest ? v1::WorkloadParser::Mode::kSmokeTest
+                                                 : v1::WorkloadParser::Mode::kNormal);
+
     auto orchestrator = Orchestrator{};
 
     if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
@@ -305,7 +169,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     {
         std::ofstream metricsOutput;
-        metricsOutput.open(options.metricsOutputFileName, std::ofstream::out | std::ofstream::trunc);
+        metricsOutput.open(options.metricsOutputFileName,
+                           std::ofstream::out | std::ofstream::trunc);
         reporter.report(metricsOutput, options.metricsFormat);
     }
 
@@ -320,8 +185,11 @@ DefaultDriver::OutcomeCode DefaultDriver::run(const DefaultDriver::ProgramOption
         // Wrap doRunLogic in another catch block in case it throws an exception of its own e.g.
         // file not found or io errors etc - exceptions not thrown by ActorProducers.
         return doRunLogic(options);
+    } catch (const boost::exception& x) {
+        BOOST_LOG_TRIVIAL(error) << "Caught boost::exception "
+                                 << boost::diagnostic_information(x, true);
     } catch (const std::exception& x) {
-        BOOST_LOG_TRIVIAL(error) << "Caught exception " << x.what();
+        BOOST_LOG_TRIVIAL(error) << "Caught std::exception " << x.what();
     }
     return DefaultDriver::OutcomeCode::kInternalException;
 }
@@ -386,7 +254,10 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
              "Can also specify as the last positional argument.")
             ("mongo-uri,u",
              po::value<std::string>()->default_value("mongodb://localhost:27017"),
-             "Mongo URI to use for the default connection-pool.");
+             "Mongo URI to use for the default connection-pool.")
+            ("smoke-test,s",
+             po::value<bool>()->default_value(false),
+             "Run a workload in smoke test mode where all phases are set to Repeat=1");
 
     positional.add("subcommand", 1);
     positional.add("workload-file", -1);
@@ -433,6 +304,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     if (vm.count("help") >= 1)
         this->runMode = RunMode::kHelp;
     this->metricsFormat = vm["metrics-format"].as<std::string>();
+    this->isSmokeTest = vm["smoke-test"].as<bool>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 

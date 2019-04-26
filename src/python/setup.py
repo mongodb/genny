@@ -16,23 +16,27 @@ from setuptools import setup
 
 setup(name='genny',
       version='1.0',
-      packages=['genny', 'third_party'],
+      packages=[
+          'genny',
+          'genny.parsers',
+          'third_party'
+      ],
       install_requires=[
           'nose==1.3.7',
           'yapf==0.24.0',
           'pymongo==3.7.2',
           'PyYAML==5.1',
-          'requests==2.21.0'
+          'requests==2.21.0',
+          'yamllint==1.15.0'
       ],
       setup_requires=[
           'nose==1.3.7'
       ],
       entry_points={
           'console_scripts': [
-              'genny-metrics-summarize = genny.metrics_output_parser:main__sumarize',
-              'genny-metrics-to-perf-json = genny.perf_json:main__summarize_translate',
               'genny-metrics-report = genny.cedar_report:main__cedar_report',
-              'genny-metrics-legacy-report = genny.legacy_report:main__legacy_report'
+              'genny-metrics-legacy-report = genny.legacy_report:main__legacy_report',
+              'lint-yaml = genny.workload_linter:main'
           ]
       },
       )

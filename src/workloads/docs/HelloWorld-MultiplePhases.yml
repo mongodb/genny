@@ -1,0 +1,117 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+
+Description: |
+
+  This workload illustrates how to think of Phases happening
+  simultaneously and how to configure Repeat and Duration
+  when you have more than one Actor in a Workload.
+
+  Start by quickly looking at the actual workload yaml below
+
+  Although we write workloads by listing each Actor and then
+  listing each Phase for that Actor, Genny workloads actually
+  operate in order of each Phase. We construct each Actor and
+  then start Phase 0. We wait until all Actors say that they
+  are done with Phase 0 and then we move on to Phase 1, etc.
+  Actors using PhaseLoop automatically do this.
+
+  It may help to think of the Actor yamls as being written in
+  parallel rather than in sequence
+
+      Actors:
+      - Type: HelloWorld             - Type: HelloWorld
+        Name: A                        Name: B
+        Threads: 10                    Threads: 2
+        Phases:                        Phases:
+
+        - Message: A.0                 - Message: B.0
+          Duration: 2 seconds            Repeat: 10
+
+        - Message: A.1                 - Message: B.1
+                                         Repeat: 1e3
+
+  The HelloWorld Actor echoes its "Message" parameter in a
+  loop.
+
+  There will be 10 threads running HelloWorld with name "A"
+  and 2 threads running with name "B".
+
+  == Phase 0 ==
+
+            A                          B
+        Message: A.0              Message: B.0
+        Duration: 2 seconds       Repeat: 10
+
+  The first phase (Phase 0) starts and all 12 threads (10 from
+  A and 2 from B) start echoing their respective messages. At
+  each iteration, the PhaseLoop checks to see if it should
+  iterate again.
+
+      Actor A is configured to run its iteration in Phase 0
+      for 2 seconds, so each of its 10 threads will loop and
+      echo "A.0" for 2 seconds.
+
+      Actor B is configured to run its iteration in Phase 1
+      only 10 times. So it will echo "B.0" 10 times. Almost
+      certainly this will take less than 2 seconds (the amount
+      of time Actor A requires to complete Phase 0). In this
+      case, Actor B is "done" with its actions in the current
+      Phase so its 2 threads will wait and do nothing until
+      the next Phase. Compare this with what Actor A does in
+      Phase 1 described next.
+
+  == Phase 1 ==
+
+  After Phase 0 comes Phase 1.
+
+          A                  B
+      Message: A.1      Message: B.1
+                        Repeat: 1e3
+
+  Notice how Actor A does not specify either a Repeat nor a
+  Duration. This means A is considered a "background" Actor
+  for this Phase. It will run as long as it can while other
+  Actors are doing their work. This is useful if you want to
+  have some "background" operation such as doing a db.ping()
+  or a collection.drop() etc.
+
+  Actor B's 2 threads will echo "B.1" 1e3 (1000) times and
+  Actor A's 10 threads will echo "A.1" for however long it
+  takes B to do this.
+
+  == Potential Gotchas ==
+
+  1. You can specify both `Repeat` and `Duration` for a Phase.
+     The larger of the two wins. If you specify `Repeat: 1e40`
+     and `Duration: 1ms` it will repeat 1e40 times even if it
+     takes much longer than 1ms.
+
+  2. It is undefined behavior if no Actors specify a Duration
+     or Repeat for a Phase. It does not currently cause an
+     infinite-loop, but we don't check for this situation
+     (which is almost certainly a mis-configuration) at setup
+     time.
+
+
+# Start by reading here:
+
+
+Actors:
+
+- Type: HelloWorld
+  Name: A
+  Threads: 10
+  Phases:
+  - Message: A.0
+    Duration: 2 seconds
+  - Message: A.1
+
+- Type: HelloWorld
+  Name: B
+  Threads: 2
+  Phases:
+  - Message: B.0
+    Repeat: 10
+  - Message: B.1
+    Repeat: 1e3

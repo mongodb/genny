@@ -23,17 +23,22 @@ ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
 VENV_DIR="${ROOT_DIR}/build/venv"
 
-git clone git@github.com:mongodb/mongo.git "${SOURCE_DIR}"
+export PATH="/opt/mongodbtoolchain/v3/bin:$PATH"
+
+if [ ! -d "${SOURCE_DIR}" ]; then
+    git clone git@github.com:mongodb/mongo.git "${SOURCE_DIR}"
+fi
 
 (
     cd "${SOURCE_DIR}"
-    git checkout 6734c12d17dd4c0e2738a47feb7114221d6ba66d
+    # See comment in evergreen.yml - mongodb_archive_url
+    git checkout cda363f65bde8d93a7c679757efd3edf7c6e8ad9
 )
 
-virtualenv -p python2 "${VENV_DIR}"
+virtualenv -p python3 "${VENV_DIR}"
 
 export VIRTUAL_ENV_DISABLE_PROMPT="yes"
 # shellcheck disable=SC1090
 . "${VENV_DIR}/bin/activate"
 
-python -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"
+python3 -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"

@@ -23,6 +23,7 @@
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
+#include <fstream>
 
 namespace {
 
@@ -472,7 +473,9 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
 template <bool Verbatim>
 std::unique_ptr<DocumentGenerator::Impl> documentGenerator(YAML::Node node, DefaultRandom& rng) {
     if (!node.IsMap()) {
-        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("Must be mapping type"));
+        std::ostringstream stm;
+        stm << "Node " << YAML::Dump(node) << " must be mapping type";
+        BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(stm.str()));
     }
     if constexpr (!Verbatim) {
         auto meta = getMetaKey(node);

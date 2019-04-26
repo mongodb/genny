@@ -24,7 +24,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <driver/DefaultDriver.hpp>
+#include <driver/v1/DefaultDriver.hpp>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
@@ -139,6 +139,7 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     opts.mongoUri = "mongodb://localhost:27017";
     opts.workloadSourceType = DefaultDriver::ProgramOptions::YamlSource::kString;
     opts.workloadSource = yaml;
+    opts.isSmokeTest = false;
 
     return opts;
 }

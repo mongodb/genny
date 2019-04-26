@@ -1,4 +1,3 @@
----
 # Test latencies for a classic transaction of money from one account to another,
 # using different write concern, read concern, sessions and transactions.
 # Based on http://henrikingo.github.io/presentations/Highload%202018%20-%20The%20cost%20of%20MongoDB%20ACID%20transactions%20in%20theory%20and%20practice/index.html#/step-24
@@ -28,8 +27,7 @@ Actors:
         insert: *Collection
         documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
   - &Nop
-    Operation:
-      OperationName: Nop
+    Operation: Nop
   - *DropCollection
   - *Load
   - *Nop
@@ -69,7 +67,7 @@ Actors:
   Repeat: 500
   Database: test
   Phases:
-  - *Nop # Load phase is different actor
+  - *Nop  # Load phase is different actor
   - *Nop
   - MetricsName: CommitLatency_w0_local
     WriteConcern:
@@ -152,7 +150,7 @@ Actors:
       Level: majority
     ReadPreference:
       ReadMode: primary
-    Session: True
+    Session: true
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_majority_sec_session
@@ -162,7 +160,7 @@ Actors:
       Level: majority
     ReadPreference:
       ReadMode: secondary
-    Session: True
+    Session: true
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_majority_trx
@@ -172,4 +170,4 @@ Actors:
       Level: snapshot
     ReadPreference:
       ReadMode: primary
-    Transaction: True         # Implies Session
+    Transaction: true  # Implies Session

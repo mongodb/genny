@@ -247,7 +247,7 @@ struct actor::RunCommand::PhaseConfig {
                 ActorContext& actorContext,
                 mongocxx::pool::entry& client,
                 ActorId id)
-                : throwOnFailure{context.get<bool, false>("ThrowOnFailure").value_or(true)} {
+        : throwOnFailure{context.get<bool, false>("ThrowOnFailure").value_or(true)} {
         auto actorType = context.get<std::string>("Type");
         auto database = context.get<std::string, false>("Database").value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
