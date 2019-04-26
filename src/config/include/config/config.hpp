@@ -64,33 +64,33 @@ class NodeT {
     static constexpr bool isNodeConstructible() {
         // TODO: test of constness
         return std::is_constructible_v<O, NodeT&, Args...> ||
-               std::is_constructible_v<O, const NodeT&, Args...>;
+            std::is_constructible_v<O, const NodeT&, Args...>;
     }
 
     template <typename O,
-            typename... Args,
-            typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
+              typename... Args,
+              typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
     std::optional<O> _maybeImpl(Args&&... args) const {
         return std::make_optional<O>(*this, std::forward<Args>(args)...);
     }
 
     template <typename O,
-            typename... Args,
-            typename = std::enable_if_t<!isNodeConstructible<O, Args...>() &&
-                                        std::is_same_v<O, typename NodeConvert<O>::type>>,
-            typename = void>
+              typename... Args,
+              typename = std::enable_if_t<!isNodeConstructible<O, Args...>() &&
+                                          std::is_same_v<O, typename NodeConvert<O>::type>>,
+              typename = void>
     std::optional<O> _maybeImpl(Args&&... args) const {
         return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
     }
 
     template <typename O,
-            typename... Args,
-            typename = std::enable_if_t<
-                    !isNodeConstructible<O, Args...>() &&
-                    // is there a better way to do this?
-                    std::is_same_v<decltype(YAML::convert<O>::encode(O{})), YAML::Node>>,
-            typename = void,
-            typename = void>
+              typename... Args,
+              typename = std::enable_if_t<
+                  !isNodeConstructible<O, Args...>() &&
+                  // is there a better way to do this?
+                  std::is_same_v<decltype(YAML::convert<O>::encode(O{})), YAML::Node>>,
+              typename = void,
+              typename = void>
     std::optional<O> _maybeImpl(Args&&... args) const {
         static_assert(sizeof...(args) == 0,
                       "Cannot pass additional args when using built-in YAML conversion");
