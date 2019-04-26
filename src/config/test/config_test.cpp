@@ -137,7 +137,9 @@ Two: {}
     REQUIRE(node.path() == "");
     REQUIRE(node[0].path() == "/0");
     REQUIRE(node["msg"].path() == "/msg");
+    REQUIRE(node["msg"][".."].path() == "/msg/..");
     REQUIRE(node["One"]["msg"].path() == "/One/msg");
+    REQUIRE(node["One"]["msg"][".."].path() == "/One/msg/..");
     REQUIRE(node["One"]["foo"][0][1]["bar"].path() == "/One/foo/0/1/bar");
     REQUIRE(node["One"]["foo"][0][1]["bar"][".."].path() == "/One/foo/0/1/bar/..");
 

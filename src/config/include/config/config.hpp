@@ -75,7 +75,10 @@ class NodeT {
                 if (!_parent) {
                     throw std::logic_error("TODO");  // TODO: better messaging
                 }
-                return *_parent;
+                std::ostringstream childKey;
+                this->appendKey(childKey);
+                childKey << "/..";
+                return NodeT{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
             }
         }
         std::optional<const YAML::Node> yaml = this->yamlGet(key);
