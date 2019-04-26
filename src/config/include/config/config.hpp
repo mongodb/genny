@@ -75,9 +75,9 @@ class NodeT {
                 if (!_parent) {
                     throw std::logic_error("TODO");  // TODO: better messaging
                 }
-                std::ostringstream childKey;
-                this->appendKey(childKey);
-                childKey << "/..";
+                std::stringstream childKey;
+                childKey << _parent->_key << "/";
+                childKey << _key <<  "/..";
                 return NodeT{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
             }
         }

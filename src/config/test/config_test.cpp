@@ -134,6 +134,7 @@ One: {msg: foo}
 Two: {}
 )");
     Node node(yaml, "");
+    REQUIRE(node["One"][".."].path() == "/One/..");
     REQUIRE(node.path() == "");
     REQUIRE(node[0].path() == "/0");
     REQUIRE(node["msg"].path() == "/msg");
