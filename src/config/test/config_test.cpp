@@ -5,7 +5,7 @@
 #include <map>
 #include <vector>
 
-using namespace config;
+using namespace genny;
 
 struct EmptyStruct {};
 

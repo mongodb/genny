@@ -58,14 +58,20 @@ public:
     NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid, std::string key)
         : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
 
+    auto size() const {
+        return _yaml.size();
+    }
+
+    explicit operator bool() const {
+        return _valid && _yaml;
+    }
+
     std::string path() const {
         std::ostringstream out;
         this->appendKey(out);
         return out.str();
     }
 
-    // TODO: this syntax-sugar could be too confusing versus when you should
-    // just do node.maybe<T>().value_or(T{})
     template <typename T>
     T value_or(T&& fallback) const {
         if (!_valid) {
@@ -78,13 +84,6 @@ public:
         }
     }
 
-    auto size() const {
-        return _yaml.size();
-    }
-
-    explicit operator bool() const {
-        return _valid && _yaml;
-    }
 
     template <typename O, typename... Args>
     O to(Args&&... args) const {
@@ -96,12 +95,6 @@ public:
             BOOST_THROW_EXCEPTION(std::logic_error(msg.str()));
         }
         return *out;
-    }
-
-    // synonym...do we actually want this? could allow for confusion...
-    template <typename... Args>
-    auto as(Args&&... args) const {
-        return to(std::forward<Args>(args)...);
     }
 
     template <typename O, typename... Args>
@@ -155,15 +148,11 @@ private:
 
     template <typename K>
     const NodeT get(const K& key) const {
-        const std::string keyStr = toString(key);
+        const std::string keyStr = v1::toString(key);
         if (!_valid) {
             return NodeT{YAML::Node{}, this, false, keyStr};
         }
         if constexpr (std::is_convertible_v<K, std::string>) {
-            // this lets us avoid having to repeat parent key names
-            // E.g. OperationName can now just be Name. If Actor
-            // wants the Actor name they can look up `node[..][Name]`.
-            // TOOD: test that we can [..] past the root element by a bunch and not blow up
             if (key == "..") {
                 // this is...not the most succinct business-logic ever....
                 std::stringstream childKey;
@@ -177,7 +166,7 @@ private:
                 return NodeT{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
             }
         }
-        std::optional<const YAML::Node> yaml = this->yamlGet(key);
+        auto yaml = this->yamlGet(key);
         if (yaml) {
             return NodeT{*yaml, this, true, keyStr};
         } else {
