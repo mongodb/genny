@@ -112,7 +112,7 @@ public:
     template <typename O,
               typename... Args,
               typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
-    std::optional<O> _maybeImpl(Args&&... args) {
+    std::optional<O> _maybeImpl(Args&&... args) const {
         return std::make_optional<O>(*this, std::forward<Args>(args)...);
     }
 
@@ -147,11 +147,7 @@ public:
         if (!*this) {
             return std::nullopt;
         }
-        if constexpr (isNodeConstructible<O, Args...>()) {
-            return std::make_optional<O>(*this, std::forward<Args>(args)...);
-        } else {
-            return _maybeImpl<O>(std::forward<Args>(args)...);
-        }
+        return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
     }
 
     template <typename K>
