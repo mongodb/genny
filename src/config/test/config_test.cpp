@@ -46,7 +46,7 @@ Children:
     SECTION("What does YAML::Node do?") {
         REQUIRE(yaml["does"]["not"]["exist"].as<int>(9) == 9);
         auto a = yaml["a"];
-        for(auto kvp : a) {
+        for (auto kvp : a) {
             FAIL("nothing to iterate");
         }
     }
@@ -146,8 +146,9 @@ Two: {}
     REQUIRE(node["One"]["foo"][0][1]["bar"].path() == "/One/foo/0/1/bar");
     REQUIRE(node["One"]["foo"][0][1]["bar"][".."].path() == "/One/foo/0/1/bar/..");
 
-    REQUIRE_THROWS_WITH(node["One"]["foo"].to<std::string>(),
-            Catch::Contains("Tried to access node that doesn't exist at path: /One/foo"));
+    REQUIRE_THROWS_WITH(
+        node["One"]["foo"].to<std::string>(),
+        Catch::Contains("Tried to access node that doesn't exist at path: /One/foo"));
 }
 
 TEST_CASE("ConfigNode iteration path") {
@@ -160,7 +161,7 @@ mapTwoDeep: {a: {A: aA}}
     Node node(yaml, "");
     {
         int seen = 0;
-        for(auto&& n : node["one"]) {
+        for (auto&& n : node["one"]) {
             REQUIRE(n.path() == "/one/0");
             ++seen;
         }
@@ -168,7 +169,7 @@ mapTwoDeep: {a: {A: aA}}
     }
     {
         int seen = 0;
-        for(auto&& n : node["two"]) {
+        for (auto&& n : node["two"]) {
             REQUIRE(n.path() == "/two/" + std::to_string(seen));
             ++seen;
         }
@@ -176,7 +177,7 @@ mapTwoDeep: {a: {A: aA}}
     }
     {
         int seen = 0;
-        for(auto&& kvp : node["mapOneDeep"]) {
+        for (auto&& kvp : node["mapOneDeep"]) {
             // this isn't super well-defined - what's the "path" for the key of a kvp?
             REQUIRE(kvp.first.path() == "/mapOneDeep/a$key");
             REQUIRE(kvp.first[".."].path() == "/mapOneDeep/a$key/..");
@@ -262,7 +263,7 @@ SingleItemList: [37]
     SECTION("Scalar") {
         auto a = node["Scalar"];
         REQUIRE(a);
-        for(auto kvp : a) {
+        for (auto kvp : a) {
             FAIL("nothing to iterate");
         }
     }
@@ -296,12 +297,12 @@ SingleItemList: [37]
         REQUIRE(lom);
         REQUIRE(lom.size() == 1);
         auto countMaps = 0;
-        for(auto m : lom) {
+        for (auto m : lom) {
             ++countMaps;
             REQUIRE(m.size() == 2);
 
             auto countEntries = 0;
-            for(auto kvp : m) {
+            for (auto kvp : m) {
                 ++countEntries;
             }
             REQUIRE(countEntries == 2);
@@ -323,7 +324,7 @@ SingleItemList: [37]
         REQUIRE(sil.size() == 1);
         REQUIRE(sil[0].to<int>() == 37);
         auto count = 0;
-        for(auto v : sil) {
+        for (auto v : sil) {
             REQUIRE(v.to<int>() == 37);
             // we still get parents
             REQUIRE(v[".."]["Scalar"].to<std::string>() == "foo");
@@ -332,15 +333,3 @@ SingleItemList: [37]
         REQUIRE(count == 1);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-

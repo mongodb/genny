@@ -1,3 +1,5 @@
+#include <utility>
+
 #pragma once
 // TODO: proper header
 
@@ -27,7 +29,7 @@ struct NodeConvert {
     }
 };
 
-template<typename T>
+template <typename T>
 std::string toString(const T& t) {
     std::ostringstream out;
     out << t;
@@ -39,10 +41,6 @@ class NodeT {
     const std::string _key;
     const NodeT* const _parent;
     const bool _valid;
-
-    // TODO: keep track of the key we came from so we can report it in error-messages
-    // using KeyType = std::optional<std::variant<std::string, int>>;
-    // KeyType _key;
 
     template <typename K>
     std::optional<const YAML::Node> yamlGet(const K& key) const {
@@ -77,7 +75,7 @@ class NodeT {
                 if (_parent) {
                     childKey << _parent->_key << "/";
                 }
-                childKey << _key <<  "/..";
+                childKey << _key << "/..";
                 if (!_parent) {
                     return NodeT{YAML::Node{}, nullptr, false, childKey.str()};
                 }
@@ -102,9 +100,10 @@ class NodeT {
 
 public:
     NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid, std::string key)
-        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{key} {}
+        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
 
-    explicit NodeT(const YAML::Node yaml, std::string key) : NodeT{yaml, nullptr, (bool)yaml, key} {}
+    NodeT(const YAML::Node yaml, std::string key)
+        : NodeT{yaml, nullptr, (bool)yaml, std::move(key)} {}
 
     std::string path() const {
         std::ostringstream out;
@@ -147,7 +146,7 @@ public:
     }
 
     // synonym...do we actually want this? could allow for confusion...
-    template<typename...Args>
+    template <typename... Args>
     auto as(Args&&... args) const {
         return to(std::forward<Args>(args)...);
     }
@@ -189,8 +188,15 @@ struct IteratorValue : public std::pair<NodeT, NodeT>, public NodeT {
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
     IteratorValue(const NodeT* parent, ITVal itVal, size_t index)
-        : NodePair{std::make_pair(NodeT{itVal.first, parent, itVal.first, itVal.first ? (itVal.first.template as<std::string>() + "$key"): ""},
-                                  NodeT{itVal.second, parent, itVal.second, itVal.first ? itVal.first.template as<std::string>() : toString(index)})},
+        : NodePair{std::make_pair(
+              NodeT{itVal.first,
+                    parent,
+                    itVal.first,
+                    itVal.first ? (itVal.first.template as<std::string>() + "$key") : ""},
+              NodeT{itVal.second,
+                    parent,
+                    itVal.second,
+                    itVal.first ? itVal.first.template as<std::string>() : toString(index)})},
           NodeT{itVal, parent, itVal, toString(index)} {}
 };
 
@@ -207,7 +213,7 @@ struct NodeT::iterator {
     const NodeT* parent;
     size_t index = 0;
 
-    iterator(IterType child, const NodeT* parent) : _child(child), parent(parent) {}
+    iterator(IterType child, const NodeT* parent) : _child(std::move(child)), parent(parent) {}
 
     auto operator++() {
         ++index;
