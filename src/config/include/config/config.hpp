@@ -86,11 +86,25 @@ class NodeT {
         }
     }
 
+    void appendKey(std::ostringstream& out) const {
+        if (_parent) {
+            _parent->appendKey(out);
+            out << "/";
+        }
+        out << _key;
+    }
+
 public:
     NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid, std::string key)
         : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{key} {}
 
     explicit NodeT(const YAML::Node yaml, std::string key) : NodeT{yaml, nullptr, (bool)yaml, key} {}
+
+    std::string path() const {
+        std::ostringstream out;
+        this->appendKey(out);
+        return out.str();
+    }
 
     // TODO: this syntax-sugar could be too confusing versus when you should
     // just do node.maybe<T>().value_or(T{})
@@ -116,7 +130,14 @@ public:
 
     template <typename O, typename... Args>
     O to(Args&&... args) const {
-        return *maybe<O, Args...>(std::forward<Args>(args)...);
+        auto out = maybe<O, Args...>(std::forward<Args>(args)...);
+        if (!out) {
+            std::ostringstream msg;
+            msg << "Tried to access node that doesn't exist at path: " << this->path();
+            // TODO: custom exception type
+            BOOST_THROW_EXCEPTION(std::logic_error(msg.str()));
+        }
+        return *out;
     }
 
     // synonym...do we actually want this? could allow for confusion...
@@ -162,7 +183,7 @@ struct IteratorValue : public std::pair<NodeT, NodeT>, public NodeT {
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
     IteratorValue(const NodeT* parent, ITVal itVal, size_t index)
-        : NodePair{std::make_pair(NodeT{itVal.first, parent, itVal.first, itVal.first.template as<std::string>()},
+        : NodePair{std::make_pair(NodeT{itVal.first, parent, itVal.first, itVal.first ? itVal.first.template as<std::string>() : ""},
                                   NodeT{itVal.second, parent, itVal.second, toString(index)})},
           NodeT{itVal, parent, itVal, toString(index)} {}
 };

@@ -40,7 +40,8 @@ Children:
     FourChild:
       a: 11
 )");
-    Node node(yaml);
+    // TODO: when using this in the Driver, use the file name or "<root>" or something more obvious
+    Node node(yaml, "");
 
     SECTION("What does YAML::Node do?") {
         REQUIRE(yaml["does"]["not"]["exist"].as<int>(9) == 9);
@@ -113,7 +114,7 @@ ListOfMapStringString:
 - {a: A}
 - {b: B}
 )");
-    Node node(yaml);
+    Node node(yaml, "");
 
     { REQUIRE(node["SomeString"].to<std::string>() == "some_string"); }
     { REQUIRE((node["IntList"].to<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
@@ -126,6 +127,20 @@ ListOfMapStringString:
     }
 }
 
+TEST_CASE("ConfigNode Paths") {
+    auto yaml = YAML::Load(R"(
+msg: bar
+One: {msg: foo}
+Two: {}
+)");
+    Node node(yaml, "");
+    REQUIRE(node.path() == "");
+    REQUIRE(node[0].path() == "/0");
+    REQUIRE(node["msg"].path() == "/msg");
+    REQUIRE(node["One"]["msg"].path() == "/One/msg");
+    REQUIRE(node["One"]["foo"][0][1]["bar"].path() == "/One/foo/0/1/bar");
+}
+
 
 TEST_CASE("ConfigNode Simple User-Defined Conversions") {
     EmptyStruct context;
@@ -135,7 +150,7 @@ msg: bar
 One: {msg: foo}
 Two: {}
 )");
-    Node node(yaml);
+    Node node(yaml, "");
 
     {
         TakesEmptyStructAndExtractsMsg one =
@@ -159,7 +174,7 @@ Children:
       can:
         still: {inherit: {}, override: {msg: deeply_overridden}}
 )");
-    Node node(yaml);
+    Node node(yaml, "");
 
     node["does"]["not"]["exist"].maybe<RequiresParamToEqualNodeX>(3);
     REQUIRE(!node["does"]["not"]["exist"].maybe<ExtractsMsg>());
@@ -179,7 +194,7 @@ x: 9
 a: {x: 7}
 b: {}
 )");
-    Node node(yaml);
+    Node node(yaml, "");
 
     node.to<RequiresParamToEqualNodeX>(9);
     node["a"].to<RequiresParamToEqualNodeX>(7);
@@ -196,7 +211,7 @@ ListOfMap:
 - {a: A, b: B}
 SingleItemList: [37]
 )");
-    Node node(yaml);
+    Node node(yaml, "");
 
     SECTION("Scalar") {
         auto a = node["Scalar"];
