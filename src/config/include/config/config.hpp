@@ -25,7 +25,16 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace config {
+namespace genny {
+
+namespace v1 {
+template <typename T>
+std::string toString(const T& t) {
+    std::ostringstream out;
+    out << t;
+    return out.str();
+}
+}  // namespace v1
 
 // We don't actually care about YAML::convert<T>
 // because we never go from T to YAML::Node just the
@@ -41,81 +50,13 @@ struct NodeConvert {
     }
 };
 
-template <typename T>
-std::string toString(const T& t) {
-    std::ostringstream out;
-    out << t;
-    return out.str();
-}
-
 class NodeT {
-    const YAML::Node _yaml;
-    const std::string _key;
-    const NodeT* const _parent;
-    const bool _valid;
-
-    template <typename K>
-    std::optional<const YAML::Node> yamlGet(const K& key) const {
-        if (!_valid) {
-            return std::nullopt;
-        }
-        const YAML::Node found = _yaml[key];
-        if (found) {
-            return std::make_optional<const YAML::Node>(found);
-        } else {
-            if (!_parent) {
-                return std::nullopt;
-            }
-            return _parent->yamlGet(key);
-        }
-    }
-
-    template <typename K>
-    const NodeT get(const K& key) const {
-        const std::string keyStr = toString(key);
-        if (!_valid) {
-            return NodeT{YAML::Node{}, this, false, keyStr};
-        }
-        if constexpr (std::is_convertible_v<K, std::string>) {
-            // this lets us avoid having to repeat parent key names
-            // E.g. OperationName can now just be Name. If Actor
-            // wants the Actor name they can look up `node[..][Name]`.
-            // TOOD: test that we can [..] past the root element by a bunch and not blow up
-            if (key == "..") {
-                // this is...not the most succinct business-logic ever....
-                std::stringstream childKey;
-                if (_parent) {
-                    childKey << _parent->_key << "/";
-                }
-                childKey << _key << "/..";
-                if (!_parent) {
-                    return NodeT{YAML::Node{}, nullptr, false, childKey.str()};
-                }
-                return NodeT{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
-            }
-        }
-        std::optional<const YAML::Node> yaml = this->yamlGet(key);
-        if (yaml) {
-            return NodeT{*yaml, this, true, keyStr};
-        } else {
-            return NodeT{YAML::Node{}, this, false, keyStr};
-        }
-    }
-
-    void appendKey(std::ostringstream& out) const {
-        if (_parent) {
-            _parent->appendKey(out);
-            out << "/";
-        }
-        out << _key;
-    }
-
 public:
-    NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid, std::string key)
-        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
-
     NodeT(const YAML::Node yaml, std::string key)
         : NodeT{yaml, nullptr, (bool)yaml, std::move(key)} {}
+
+    NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid, std::string key)
+        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
 
     std::string path() const {
         std::ostringstream out;
@@ -189,6 +130,68 @@ public:
     struct iterator;
     iterator begin() const;
     iterator end() const;
+
+private:
+    const YAML::Node _yaml;
+    const std::string _key;
+    const NodeT* const _parent;
+    const bool _valid;
+
+    template <typename K>
+    std::optional<const YAML::Node> yamlGet(const K& key) const {
+        if (!_valid) {
+            return std::nullopt;
+        }
+        const YAML::Node found = _yaml[key];
+        if (found) {
+            return std::make_optional<const YAML::Node>(found);
+        } else {
+            if (!_parent) {
+                return std::nullopt;
+            }
+            return _parent->yamlGet(key);
+        }
+    }
+
+    template <typename K>
+    const NodeT get(const K& key) const {
+        const std::string keyStr = toString(key);
+        if (!_valid) {
+            return NodeT{YAML::Node{}, this, false, keyStr};
+        }
+        if constexpr (std::is_convertible_v<K, std::string>) {
+            // this lets us avoid having to repeat parent key names
+            // E.g. OperationName can now just be Name. If Actor
+            // wants the Actor name they can look up `node[..][Name]`.
+            // TOOD: test that we can [..] past the root element by a bunch and not blow up
+            if (key == "..") {
+                // this is...not the most succinct business-logic ever....
+                std::stringstream childKey;
+                if (_parent) {
+                    childKey << _parent->_key << "/";
+                }
+                childKey << _key << "/..";
+                if (!_parent) {
+                    return NodeT{YAML::Node{}, nullptr, false, childKey.str()};
+                }
+                return NodeT{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
+            }
+        }
+        std::optional<const YAML::Node> yaml = this->yamlGet(key);
+        if (yaml) {
+            return NodeT{*yaml, this, true, keyStr};
+        } else {
+            return NodeT{YAML::Node{}, this, false, keyStr};
+        }
+    }
+
+    void appendKey(std::ostringstream& out) const {
+        if (_parent) {
+            _parent->appendKey(out);
+            out << "/";
+        }
+        out << _key;
+    }
 };
 
 
@@ -208,8 +211,8 @@ struct IteratorValue : public std::pair<NodeT, NodeT>, public NodeT {
               NodeT{itVal.second,
                     parent,
                     itVal.second,
-                    itVal.first ? itVal.first.template as<std::string>() : toString(index)})},
-          NodeT{itVal, parent, itVal, toString(index)} {}
+                    itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
+          NodeT{itVal, parent, itVal, v1::toString(index)} {}
 };
 
 // more hoops to avoid hard-coding to YAML::Node internals
@@ -264,6 +267,6 @@ inline NodeT::iterator NodeT::end() const {
 // TODO: rename NodeT to just node...not templated on ptr type anymore
 using Node = NodeT;
 
-}  // namespace config
+}  // namespace genny
 
 #endif  // HEADER_17681835_40A0_443E_939D_3679A1A6B5DD_INCLUDED
