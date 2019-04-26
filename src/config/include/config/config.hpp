@@ -59,6 +59,46 @@ class NodeT {
     NodeT(const YAML::Node yaml, const NodeT* const parent, std::string key)
         : NodeT{yaml, parent, yaml, std::move(key)} {}
 
+    // <yikes>
+    template <typename O, typename... Args>
+    static constexpr bool isNodeConstructible() {
+        // TODO: test of constness
+        return std::is_constructible_v<O, NodeT&, Args...> ||
+               std::is_constructible_v<O, const NodeT&, Args...>;
+    }
+
+    template <typename O,
+            typename... Args,
+            typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
+    std::optional<O> _maybeImpl(Args&&... args) const {
+        return std::make_optional<O>(*this, std::forward<Args>(args)...);
+    }
+
+    template <typename O,
+            typename... Args,
+            typename = std::enable_if_t<!isNodeConstructible<O, Args...>() &&
+                                        std::is_same_v<O, typename NodeConvert<O>::type>>,
+            typename = void>
+    std::optional<O> _maybeImpl(Args&&... args) const {
+        return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
+    }
+
+    template <typename O,
+            typename... Args,
+            typename = std::enable_if_t<
+                    !isNodeConstructible<O, Args...>() &&
+                    // is there a better way to do this?
+                    std::is_same_v<decltype(YAML::convert<O>::encode(O{})), YAML::Node>>,
+            typename = void,
+            typename = void>
+    std::optional<O> _maybeImpl(Args&&... args) const {
+        static_assert(sizeof...(args) == 0,
+                      "Cannot pass additional args when using built-in YAML conversion");
+        return std::make_optional<O>(_yaml.as<O>());
+    }
+    // </yikes>
+
+
 public:
     NodeT(const std::string& yaml, std::string key) : NodeT{parse(yaml), nullptr, std::move(key)} {}
 
@@ -100,45 +140,6 @@ public:
         }
         return *out;
     }
-
-    // <yikes>
-    template <typename O, typename... Args>
-    static constexpr bool isNodeConstructible() {
-        // TODO: test of constness
-        return std::is_constructible_v<O, NodeT&, Args...> ||
-            std::is_constructible_v<O, const NodeT&, Args...>;
-    }
-
-    template <typename O,
-              typename... Args,
-              typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
-    std::optional<O> _maybeImpl(Args&&... args) const {
-        return std::make_optional<O>(*this, std::forward<Args>(args)...);
-    }
-
-    template <typename O,
-              typename... Args,
-              typename = std::enable_if_t<!isNodeConstructible<O, Args...>() &&
-                                          std::is_same_v<O, typename NodeConvert<O>::type>>,
-              typename = void>
-    std::optional<O> _maybeImpl(Args&&... args) const {
-        return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
-    }
-
-    template <typename O,
-              typename... Args,
-              typename = std::enable_if_t<
-                  !isNodeConstructible<O, Args...>() &&
-                  // is there a better way to do this?
-                  std::is_same_v<decltype(YAML::convert<O>::encode(O{})), YAML::Node>>,
-              typename = void,
-              typename = void>
-    std::optional<O> _maybeImpl(Args&&... args) const {
-        static_assert(sizeof...(args) == 0,
-                      "Cannot pass additional args when using built-in YAML conversion");
-        return std::make_optional<O>(_yaml.as<O>());
-    }
-    // </yikes>
 
     template <typename O, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
