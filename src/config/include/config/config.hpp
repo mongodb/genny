@@ -189,8 +189,8 @@ struct IteratorValue : public std::pair<NodeT, NodeT>, public NodeT {
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
     IteratorValue(const NodeT* parent, ITVal itVal, size_t index)
-        : NodePair{std::make_pair(NodeT{itVal.first, parent, itVal.first, itVal.first ? itVal.first.template as<std::string>() : ""},
-                                  NodeT{itVal.second, parent, itVal.second, toString(index)})},
+        : NodePair{std::make_pair(NodeT{itVal.first, parent, itVal.first, itVal.first ? (itVal.first.template as<std::string>() + "$key"): ""},
+                                  NodeT{itVal.second, parent, itVal.second, itVal.first ? itVal.first.template as<std::string>() : toString(index)})},
           NodeT{itVal, parent, itVal, toString(index)} {}
 };
 

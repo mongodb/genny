@@ -150,6 +150,43 @@ Two: {}
             Catch::Contains("Tried to access node that doesn't exist at path: /One/foo"));
 }
 
+TEST_CASE("ConfigNode iteration path") {
+    auto yaml = YAML::Load(R"(
+one: [1]
+two: [1,2]
+mapOneDeep: {a: A}
+mapTwoDeep: {a: {A: aA}}
+)");
+    Node node(yaml, "");
+    {
+        int seen = 0;
+        for(auto&& n : node["one"]) {
+            REQUIRE(n.path() == "/one/0");
+            ++seen;
+        }
+        REQUIRE(seen == 1);
+    }
+    {
+        int seen = 0;
+        for(auto&& n : node["two"]) {
+            REQUIRE(n.path() == "/two/" + std::to_string(seen));
+            ++seen;
+        }
+        REQUIRE(seen == 2);
+    }
+    {
+        int seen = 0;
+        for(auto&& kvp : node["mapOneDeep"]) {
+            // this isn't super well-defined - what's the "path" for the key of a kvp?
+            REQUIRE(kvp.first.path() == "/mapOneDeep/a$key");
+            REQUIRE(kvp.first[".."].path() == "/mapOneDeep/a$key/..");
+            REQUIRE(kvp.second.path() == "/mapOneDeep/a");
+            REQUIRE(kvp.second[".."].path() == "/mapOneDeep/a/..");
+            ++seen;
+        }
+        REQUIRE(seen == 1);
+    }
+}
 
 TEST_CASE("ConfigNode Simple User-Defined Conversions") {
     EmptyStruct context;
