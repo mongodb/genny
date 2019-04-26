@@ -139,6 +139,10 @@ Two: {}
     REQUIRE(node["msg"].path() == "/msg");
     REQUIRE(node["One"]["msg"].path() == "/One/msg");
     REQUIRE(node["One"]["foo"][0][1]["bar"].path() == "/One/foo/0/1/bar");
+    REQUIRE(node["One"]["foo"][0][1]["bar"][".."].path() == "/One/foo/0/1/bar/..");
+
+    REQUIRE_THROWS_WITH(node["One"]["foo"].to<std::string>(),
+            Catch::Contains("Tried to access node that doesn't exist at path: /One/foo"));
 }
 
 
