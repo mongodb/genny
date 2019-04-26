@@ -60,6 +60,9 @@ class NodeT {
         : NodeT{yaml, parent, yaml, std::move(key)} {}
 
     // <yikes>
+    // TODO: static assert that at least one of these works out in the regular maybe impl
+    // to make the error-messages not a disaster
+
     template <typename O, typename... Args>
     static constexpr bool isNodeConstructible() {
         // TODO: test of constness
