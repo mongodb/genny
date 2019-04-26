@@ -27,8 +27,16 @@ struct NodeConvert {
     }
 };
 
+template<typename T>
+std::string toString(const T& t) {
+    std::ostringstream out;
+    out << t;
+    return out.str();
+}
+
 class NodeT {
     const YAML::Node _yaml;
+    const std::string _key;
     const NodeT* const _parent;
     const bool _valid;
 
@@ -54,8 +62,9 @@ class NodeT {
 
     template <typename K>
     const NodeT get(const K& key) const {
+        const std::string keyStr = toString(key);
         if (!_valid) {
-            return NodeT{YAML::Node{}, this, false};
+            return NodeT{YAML::Node{}, this, false, keyStr};
         }
         if constexpr (std::is_convertible_v<K, std::string>) {
             // this lets us avoid having to repeat parent key names
@@ -71,17 +80,17 @@ class NodeT {
         }
         std::optional<const YAML::Node> yaml = this->yamlGet(key);
         if (yaml) {
-            return NodeT{*yaml, this, true};
+            return NodeT{*yaml, this, true, keyStr};
         } else {
-            return NodeT{YAML::Node{}, this, false};
+            return NodeT{YAML::Node{}, this, false, keyStr};
         }
     }
 
 public:
-    NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid)
-        : _yaml{yaml}, _parent{parent}, _valid{valid} {}
+    NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid, std::string key)
+        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{key} {}
 
-    explicit NodeT(const YAML::Node yaml) : NodeT{yaml, nullptr, (bool)yaml} {}
+    explicit NodeT(const YAML::Node yaml, std::string key) : NodeT{yaml, nullptr, (bool)yaml, key} {}
 
     // TODO: this syntax-sugar could be too confusing versus when you should
     // just do node.maybe<T>().value_or(T{})
@@ -152,10 +161,10 @@ struct IteratorValue : public std::pair<NodeT, NodeT>, public NodeT {
     // jump through immense hoops to avoid knowing anything about the actual yaml iterator other
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
-    IteratorValue(const NodeT* parent, ITVal itVal)
-        : NodePair{std::make_pair(NodeT{itVal.first, parent, itVal.first},
-                                  NodeT{itVal.second, parent, itVal.second})},
-          NodeT{itVal, parent, itVal} {}
+    IteratorValue(const NodeT* parent, ITVal itVal, size_t index)
+        : NodePair{std::make_pair(NodeT{itVal.first, parent, itVal.first, itVal.first.template as<std::string>()},
+                                  NodeT{itVal.second, parent, itVal.second, toString(index)})},
+          NodeT{itVal, parent, itVal, toString(index)} {}
 };
 
 // more hoops to avoid hard-coding to YAML::Node internals
@@ -169,21 +178,23 @@ using IterType = decltype(iterType());
 struct NodeT::iterator {
     IterType _child;
     const NodeT* parent;
+    size_t index = 0;
 
     iterator(IterType child, const NodeT* parent) : _child(child), parent(parent) {}
 
     auto operator++() {
+        ++index;
         return _child.operator++();
     }
 
     auto operator*() const {
         auto out = _child.operator*();
-        return IteratorValue{parent, out};
+        return IteratorValue{parent, out, index};
     }
 
     auto operator-> () const {
         auto out = _child.operator*();
-        return IteratorValue{parent, out};
+        return IteratorValue{parent, out, index};
     }
 
     // TODO: just forward directly
