@@ -44,11 +44,7 @@ std::string toString(const T& t) {
 // they wish to do special post-processing (e.g. if
 // the O type is a ptr-type and want to do dynamic_cast)
 template <typename O>
-struct NodeConvert {
-    static O convert(YAML::Node node) {
-        return node.as<O>();
-    }
-};
+struct NodeConvert {};
 
 
 inline YAML::Node parse(const std::string& yaml) {
@@ -106,6 +102,46 @@ public:
         return *out;
     }
 
+
+    // <yikes>
+    template<typename O,
+             typename...Args,
+             typename = std::enable_if_t<
+            std::is_constructible_v<O, NodeT&, Args...> ||
+            std::is_constructible_v<O, const NodeT&, Args...>>
+            >
+    std::optional<O> _maybeImpl(Args&&...args) {
+        return std::make_optional<O>(*this, std::forward<Args>(args)...);
+    }
+
+    template<typename O,
+            typename...Args,
+            typename = std::enable_if_t<
+                    !std::is_constructible_v<O, NodeT&, Args...> &&
+                    !std::is_constructible_v<O, const NodeT&, Args...> &&
+                    std::is_same_v<O, typename NodeConvert<O>::type>>,
+            typename = void
+    >
+    std::optional<O> _maybeImpl(Args&&...args) const {
+        return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
+    }
+
+    template<typename O,
+            typename...Args,
+            typename = std::enable_if_t<
+                    !std::is_constructible_v<O, NodeT&, Args...> &&
+                    !std::is_constructible_v<O, const NodeT&, Args...> &&
+                    std::is_same_v<decltype(YAML::convert<O>::encode(O{})),YAML::Node>
+            >,
+            typename = void,
+            typename = void
+    >
+    std::optional<O> _maybeImpl(Args&&...args) const {
+        static_assert(sizeof...(args) == 0, "Cannot pass additional args when using built-in YAML conversion");
+        return std::make_optional<O>(_yaml.as<O>());
+    }
+    // </yikes>
+
     template <typename O, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
         // TODO: tests of this
@@ -118,9 +154,7 @@ public:
                       std::is_constructible_v<O, const NodeT&, Args...>) {
             return std::make_optional<O>(*this, std::forward<Args>(args)...);
         } else {
-            // TODO: tests the sizeof failure-case
-            static_assert(sizeof...(args) == 0, "Must be constructible from Node& and given args");
-            return std::make_optional<O>(NodeConvert<O>::convert(_yaml));
+            return _maybeImpl<O>(std::forward<Args>(args)...);
         }
     }
 

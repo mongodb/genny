@@ -27,6 +27,20 @@ struct RequiresParamToEqualNodeX {
     RequiresParamToEqualNodeX(int any) {}
 };
 
+struct HasConversionSpecialization {
+    int x;
+};
+
+namespace genny {
+template<>
+struct NodeConvert<HasConversionSpecialization> {
+    using type = HasConversionSpecialization;
+    static type convert(const NodeT& node, int delta) {
+        return {node["x"].to<int>() + delta};
+    }
+};
+}
+
 TEST_CASE("ConfigNode inheritance") {
     auto yaml = std::string(R"(
 a: 7
@@ -117,6 +131,11 @@ ListOfMapStringString:
 
         REQUIRE(expect == actual);
     }
+}
+
+TEST_CASE("Specialization") {
+    Node node("{x: 8}", "");
+    REQUIRE(node.to<HasConversionSpecialization>(3).x == 8);
 }
 
 TEST_CASE("ConfigNode Paths") {
