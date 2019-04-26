@@ -135,7 +135,7 @@ ListOfMapStringString:
 
 TEST_CASE("Specialization") {
     Node node("{x: 8}", "");
-    REQUIRE(node.to<HasConversionSpecialization>(3).x == 8);
+    REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
 }
 
 TEST_CASE("ConfigNode Paths") {

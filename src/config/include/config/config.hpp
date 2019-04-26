@@ -101,20 +101,23 @@ public:
         return *out;
     }
 
+    template <typename O, typename... Args>
+    static constexpr bool isNodeConstructible() {
+        return std::is_constructible_v<O, NodeT&, Args...> ||
+            std::is_constructible_v<O, const NodeT&, Args...>;
+    }
 
     // <yikes>
     template <typename O,
               typename... Args,
-              typename = std::enable_if_t<std::is_constructible_v<O, NodeT&, Args...> ||
-                                          std::is_constructible_v<O, const NodeT&, Args...>>>
+              typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
     std::optional<O> _maybeImpl(Args&&... args) {
         return std::make_optional<O>(*this, std::forward<Args>(args)...);
     }
 
     template <typename O,
               typename... Args,
-              typename = std::enable_if_t<!std::is_constructible_v<O, NodeT&, Args...> &&
-                                          !std::is_constructible_v<O, const NodeT&, Args...> &&
+              typename = std::enable_if_t<!isNodeConstructible<O, Args...>() &&
                                           std::is_same_v<O, typename NodeConvert<O>::type>>,
               typename = void>
     std::optional<O> _maybeImpl(Args&&... args) const {
@@ -124,8 +127,7 @@ public:
     template <typename O,
               typename... Args,
               typename = std::enable_if_t<
-                  !std::is_constructible_v<O, NodeT&, Args...> &&
-                  !std::is_constructible_v<O, const NodeT&, Args...> &&
+                  !isNodeConstructible<O, Args...>() &&
                   std::is_same_v<decltype(YAML::convert<O>::encode(O{})), YAML::Node>>,
               typename = void,
               typename = void>
