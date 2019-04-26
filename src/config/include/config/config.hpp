@@ -101,13 +101,14 @@ public:
         return *out;
     }
 
+    // <yikes>
     template <typename O, typename... Args>
     static constexpr bool isNodeConstructible() {
+        // TODO: test of constness
         return std::is_constructible_v<O, NodeT&, Args...> ||
             std::is_constructible_v<O, const NodeT&, Args...>;
     }
 
-    // <yikes>
     template <typename O,
               typename... Args,
               typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
@@ -128,6 +129,7 @@ public:
               typename... Args,
               typename = std::enable_if_t<
                   !isNodeConstructible<O, Args...>() &&
+                  // is there a better way to do this?
                   std::is_same_v<decltype(YAML::convert<O>::encode(O{})), YAML::Node>>,
               typename = void,
               typename = void>
@@ -145,9 +147,7 @@ public:
         if (!*this) {
             return std::nullopt;
         }
-        // TODO: tests of the const-ness
-        if constexpr (std::is_constructible_v<O, NodeT&, Args...> ||
-                      std::is_constructible_v<O, const NodeT&, Args...>) {
+        if constexpr (isNodeConstructible<O, Args...>()) {
             return std::make_optional<O>(*this, std::forward<Args>(args)...);
         } else {
             return _maybeImpl<O>(std::forward<Args>(args)...);
