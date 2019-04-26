@@ -272,12 +272,10 @@ struct NodeT::iterator {
         return IteratorValue{parent, out, index};
     }
 
-    // TODO: just forward directly
     auto operator==(const iterator& rhs) const {
         return _child == rhs._child;
     }
 
-    // TODO: just forward directly
     auto operator!=(const iterator& rhs) const {
         return _child != rhs._child;
     }
