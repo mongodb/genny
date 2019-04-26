@@ -28,7 +28,7 @@ struct RequiresParamToEqualNodeX {
 };
 
 TEST_CASE("ConfigNode inheritance") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = std::string(R"(
 a: 7
 b: 900
 Children:
@@ -42,14 +42,6 @@ Children:
 )");
     // TODO: when using this in the Driver, use the file name or "<root>" or something more obvious
     Node node(yaml, "");
-
-    SECTION("What does YAML::Node do?") {
-        REQUIRE(yaml["does"]["not"]["exist"].as<int>(9) == 9);
-        auto a = yaml["a"];
-        for (auto kvp : a) {
-            FAIL("nothing to iterate");
-        }
-    }
 
     SECTION("Parent traversal") {
         REQUIRE(node["a"].to<int>() == 7);
@@ -107,7 +99,7 @@ Children:
 }
 
 TEST_CASE("ConfigNode Built-Ins Construction") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = std::string(R"(
 SomeString: some_string
 IntList: [1,2,3]
 ListOfMapStringString:
@@ -128,7 +120,7 @@ ListOfMapStringString:
 }
 
 TEST_CASE("ConfigNode Paths") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = std::string(R"(
 msg: bar
 One: {msg: foo}
 Two: {}
@@ -152,7 +144,7 @@ Two: {}
 }
 
 TEST_CASE("ConfigNode iteration path") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = std::string(R"(
 one: [1]
 two: [1,2]
 mapOneDeep: {a: A}
@@ -192,7 +184,7 @@ mapTwoDeep: {a: {A: aA}}
 TEST_CASE("ConfigNode Simple User-Defined Conversions") {
     EmptyStruct context;
 
-    auto yaml = YAML::Load(R"(
+    auto yaml = std::string(R"(
 msg: bar
 One: {msg: foo}
 Two: {}
@@ -212,7 +204,7 @@ Two: {}
 }
 
 TEST_CASE("maybe") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = std::string(R"(
 Children:
   msg: inherited
   overrides: {msg: overridden}
@@ -236,7 +228,7 @@ Children:
 }
 
 TEST_CASE("Configurable additional-ctor-params Conversions") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = std::string(R"(
 x: 9
 a: {x: 7}
 b: {}
@@ -250,7 +242,7 @@ b: {}
 
 // TODO: how to handle iterating over inherited keys?
 TEST_CASE("Iteration") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = std::string(R"(
 Scalar: foo
 SimpleMap: {a: b}
 ListOfScalars: [1,2]

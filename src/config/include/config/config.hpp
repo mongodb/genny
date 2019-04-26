@@ -50,13 +50,22 @@ struct NodeConvert {
     }
 };
 
-class NodeT {
-public:
-    NodeT(const YAML::Node yaml, std::string key)
-        : NodeT{yaml, nullptr, (bool)yaml, std::move(key)} {}
 
+inline YAML::Node parse(const std::string& yaml) {
+    // TODO: better error message if this fails
+    return YAML::Load(yaml);
+}
+
+class NodeT {
     NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid, std::string key)
-        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
+            : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
+
+    NodeT(const YAML::Node yaml, const NodeT* const parent, std::string key)
+        : NodeT{yaml, parent, yaml, std::move(key)} {}
+
+public:
+    NodeT(const std::string& yaml, std::string key)
+        : NodeT{parse(yaml), nullptr, std::move(key)} {}
 
     auto size() const {
         return _yaml.size();
@@ -119,6 +128,8 @@ public:
     const NodeT operator[](const K& key) const {
         return this->get(key);
     }
+
+    friend class IteratorValue;
 
     struct iterator;
     iterator begin() const;
