@@ -52,12 +52,12 @@ inline YAML::Node parse(const std::string& yaml) {
     return YAML::Load(yaml);
 }
 
-class NodeT {
-    NodeT(const YAML::Node yaml, const NodeT* const parent, bool valid, std::string key)
+class Node {
+    Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
         : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
 
-    NodeT(const YAML::Node yaml, const NodeT* const parent, std::string key)
-        : NodeT{yaml, parent, yaml, std::move(key)} {}
+    Node(const YAML::Node yaml, const Node* const parent, std::string key)
+        : Node{yaml, parent, yaml, std::move(key)} {}
 
     // <yikes>
     // TODO: static assert that at least one of these works out in the regular maybe impl
@@ -66,8 +66,8 @@ class NodeT {
     template <typename O, typename... Args>
     static constexpr bool isNodeConstructible() {
         // TODO: test of constness
-        return std::is_constructible_v<O, NodeT&, Args...> ||
-            std::is_constructible_v<O, const NodeT&, Args...>;
+        return std::is_constructible_v<O, Node&, Args...> ||
+            std::is_constructible_v<O, const Node&, Args...>;
     }
 
     template <typename O,
@@ -103,7 +103,7 @@ class NodeT {
 
 
 public:
-    NodeT(const std::string& yaml, std::string key) : NodeT{parse(yaml), nullptr, std::move(key)} {}
+    Node(const std::string& yaml, std::string key) : Node{parse(yaml), nullptr, std::move(key)} {}
 
     auto size() const {
         return _yaml.size();
@@ -155,7 +155,7 @@ public:
     }
 
     template <typename K>
-    const NodeT operator[](const K& key) const {
+    const Node operator[](const K& key) const {
         return this->get(key);
     }
 
@@ -168,7 +168,7 @@ public:
 private:
     const YAML::Node _yaml;
     const std::string _key;
-    const NodeT* const _parent;
+    const Node* const _parent;
     const bool _valid;
 
     template <typename K>
@@ -188,10 +188,10 @@ private:
     }
 
     template <typename K>
-    const NodeT get(const K& key) const {
+    const Node get(const K& key) const {
         const std::string keyStr = v1::toString(key);
         if (!_valid) {
-            return NodeT{YAML::Node{}, this, false, keyStr};
+            return Node{YAML::Node{}, this, false, keyStr};
         }
         if constexpr (std::is_convertible_v<K, std::string>) {
             if (key == "..") {
@@ -202,16 +202,16 @@ private:
                 }
                 childKey << _key << "/..";
                 if (!_parent) {
-                    return NodeT{YAML::Node{}, nullptr, false, childKey.str()};
+                    return Node{YAML::Node{}, nullptr, false, childKey.str()};
                 }
-                return NodeT{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
+                return Node{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
             }
         }
         auto yaml = this->yamlGet(key);
         if (yaml) {
-            return NodeT{*yaml, this, true, keyStr};
+            return Node{*yaml, this, true, keyStr};
         } else {
-            return NodeT{YAML::Node{}, this, false, keyStr};
+            return Node{YAML::Node{}, this, false, keyStr};
         }
     }
 
@@ -225,24 +225,24 @@ private:
 };
 
 
-// we can act like a NodeT if iterated value is a scalar or
-// we can act like a pair of NodeTs if iterated value is a map entry
-struct IteratorValue : public std::pair<NodeT, NodeT>, public NodeT {
-    using NodePair = std::pair<NodeT, NodeT>;
+// we can act like a Node if iterated value is a scalar or
+// we can act like a pair of Nodes if iterated value is a map entry
+struct IteratorValue : public std::pair<Node, Node>, public Node {
+    using NodePair = std::pair<Node, Node>;
     // jump through immense hoops to avoid knowing anything about the actual yaml iterator other
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
-    IteratorValue(const NodeT* parent, ITVal itVal, size_t index)
+    IteratorValue(const Node* parent, ITVal itVal, size_t index)
         : NodePair{std::make_pair(
-              NodeT{itVal.first,
-                    parent,
-                    itVal.first,
-                    itVal.first ? (itVal.first.template as<std::string>() + "$key") : ""},
-              NodeT{itVal.second,
-                    parent,
-                    itVal.second,
-                    itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
-          NodeT{itVal, parent, itVal, v1::toString(index)} {}
+              Node{itVal.first,
+                   parent,
+                   itVal.first,
+                   itVal.first ? (itVal.first.template as<std::string>() + "$key") : ""},
+              Node{itVal.second,
+                   parent,
+                   itVal.second,
+                   itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
+          Node{itVal, parent, itVal, v1::toString(index)} {}
 };
 
 // more hoops to avoid hard-coding to YAML::Node internals
@@ -253,12 +253,12 @@ auto iterType() -> decltype(auto) {
 
 using IterType = decltype(iterType());
 
-struct NodeT::iterator {
+struct Node::iterator {
     IterType _child;
-    const NodeT* parent;
+    const Node* parent;
     size_t index = 0;
 
-    iterator(IterType child, const NodeT* parent) : _child(std::move(child)), parent(parent) {}
+    iterator(IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
 
     auto operator++() {
         ++index;
@@ -284,16 +284,13 @@ struct NodeT::iterator {
     }
 };
 
-inline NodeT::iterator NodeT::begin() const {
-    return NodeT::iterator{_yaml.begin(), this};
+inline Node::iterator Node::begin() const {
+    return Node::iterator{_yaml.begin(), this};
 }
 
-inline NodeT::iterator NodeT::end() const {
-    return NodeT::iterator{_yaml.end(), this};
+inline Node::iterator Node::end() const {
+    return Node::iterator{_yaml.end(), this};
 }
-
-// TODO: rename NodeT to just node...not templated on ptr type anymore
-using Node = NodeT;
 
 }  // namespace genny
 

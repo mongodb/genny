@@ -35,7 +35,7 @@ namespace genny {
 template<>
 struct NodeConvert<HasConversionSpecialization> {
     using type = HasConversionSpecialization;
-    static type convert(const NodeT& node, int delta) {
+    static type convert(const Node& node, int delta) {
         return {node["x"].to<int>() + delta};
     }
 };
