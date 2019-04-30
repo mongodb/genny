@@ -22,7 +22,7 @@ Description: |
   can't be reused en masse because YAML doesn't support merging lists.
 
 Actors:
-- Name: GennyOverhead1000T
+- Name: GennyOverhead100T
   Type: NopMetrics
   Threads: 100
   Phases:
@@ -39,14 +39,14 @@ Actors:
   - MetricsName: LoopNSleepAfter
     Repeat: 10000
     SleepAfter: 1 millisecond
-  - Phase: 6..10
+  - Phase: 5..9
     Nop: true
 
 - Name: GennyOverhead1T
   Type: NopMetrics
   Threads: 1
   Phases:
-  - Phase: 1..5
+  - Phase: 0..4
     Nop: true
   - MetricsName: LoopOnlyFixedTime
     Duration: 10 seconds
