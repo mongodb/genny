@@ -20,8 +20,9 @@
 #include <type_traits>
 #include <utility>
 #include <variant>
+#include <vector>
 
-#include <boost/log/trivial.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -46,6 +47,14 @@ std::string toString(const T& t) {
 template <typename O>
 struct NodeConvert {};
 
+
+/**
+ * Throw this to indicate a bad path
+ */
+class InvalidPathException : public std::invalid_argument {
+public:
+    using std::invalid_argument::invalid_argument;
+};
 
 class Node {
 public:
@@ -92,7 +101,7 @@ public:
         return *out;
     }
 
-    template <typename O, typename... Args>
+    template <typename O = Node, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
         // TODO: tests of this
         static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>, "🙈 YAML::Node");
