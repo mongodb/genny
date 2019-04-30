@@ -279,9 +279,7 @@ Actors:
         auto testFun = []() {
             auto nopProducer = std::make_shared<NopProducer>();
             auto cast = Cast{
-                {"Foo", nopProducer},
-                {"Bar", nopProducer},
-                {"Foo", nopProducer},
+                {"Foo", nopProducer}, {"Bar", nopProducer}, {"Foo", nopProducer},
             };
         };
         REQUIRE_THROWS_WITH(testFun(), StartsWith(R"(Failed to add 'Nop' as 'Foo')"));
@@ -293,8 +291,7 @@ void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
-        {"Op", std::make_shared<OpProducer>(op)},
-        {"Nop", std::make_shared<NopProducer>()},
+        {"Op", std::make_shared<OpProducer>(op)}, {"Nop", std::make_shared<NopProducer>()},
     };
 
     WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast};
