@@ -231,6 +231,10 @@ public:
             return n.to<T>();
         }) const;
 
+    friend std::ostream& operator<<(std::ostream& out, const Node& node) {
+        return out << YAML::Dump(node._yaml);
+    }
+
 private:
     Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
         : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
@@ -405,12 +409,15 @@ std::vector<T> Node::getPlural(const std::string& singular,
     auto singValue = (*this)[singular];
     if (pluralValue && singValue) {
         std::stringstream str;
-        str << "Can't have both '" << singular << "' and '" << plural << "'.";
+        str << "Can't have both '" << singular << "' and '" << plural << "'. ";
+        str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
         BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
     } else if (pluralValue) {
         if (!pluralValue.isSequence()) {
             std::stringstream str;
-            str << "'" << plural << "' must be a sequence type.";
+            str << "'" << plural << "' must be a sequence type. ";
+            str << "Got " << pluralValue << ". ";
+            str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
             BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
         }
         for (auto&& val : pluralValue) {
@@ -422,7 +429,9 @@ std::vector<T> Node::getPlural(const std::string& singular,
         out.emplace_back(std::move(created));
     } else if (!singValue && !pluralValue) {
         std::stringstream str;
-        str << "Either '" << singular << "' or '" << plural << "' required.";
+        str << "Either '" << singular << "' or '" << plural << "' required. ";
+        str << "Node: " << *this << ". ";
+        str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
         BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
     }
 

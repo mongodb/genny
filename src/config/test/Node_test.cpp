@@ -341,6 +341,22 @@ Two: {}
     }
 }
 
+TEST_CASE("operator-left-shift") {
+    {
+        Node node{"Foo: 7", ""};
+        std::stringstream str;
+        str << node;
+        REQUIRE(str.str() == "Foo: 7");
+    }
+    {
+        Node node{"Foo: {Bar: Baz}", ""};
+        std::stringstream str;
+        str << node;
+        REQUIRE(str.str() == "Foo: {Bar: Baz}");
+    }
+    // rely on YAML::Dump so don't need to enforce much beyond this
+}
+
 TEST_CASE("getPlural") {
     {
         Node node{"Foo: 7", ""};
@@ -383,19 +399,19 @@ TEST_CASE("getPlural") {
     {
         Node node{"{}", ""};
         REQUIRE_THROWS_WITH([&]() { node.getPlural<int>("Foo", "Foos"); }(),
-                            Catch::Matches("Either 'Foo' or 'Foos' required."));
+                            Catch::Matches("Either 'Foo' or 'Foos' required. Node: \\{\\}. Path: '\\$plural\\(Foo,Foos\\)'"));
     }
 
     {
         Node node{"{Foos: 7}", ""};
         REQUIRE_THROWS_WITH([&]() { node.getPlural<int>("Foo", "Foos"); }(),
-                            Catch::Matches("'Foos' must be a sequence type."));
+                            Catch::Matches("'Foos' must be a sequence type. Got 7. Path: '\\$plural\\(Foo,Foos\\)'"));
     }
 
     {
         Node node{"{Foo: 8, Foos: [1,2]}", ""};
         REQUIRE_THROWS_WITH([&]() { node.getPlural<int>("Foo", "Foos"); }(),
-                            Catch::Matches("Can't have both 'Foo' and 'Foos'."));
+                            Catch::Matches("Can't have both 'Foo' and 'Foos'. Path: '\\$plural\\(Foo,Foos\\)'"));
     }
 }
 
