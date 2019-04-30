@@ -237,8 +237,10 @@ private:
 
 // we can act like a Node if iterated value is a scalar or
 // we can act like a pair of Nodes if iterated value is a map entry
-struct IteratorValue : public std::pair<Node, Node>, public Node {
+class IteratorValue : public std::pair<Node, Node>, public Node {
     using NodePair = std::pair<Node, Node>;
+
+public:
     // jump through immense hoops to avoid knowing anything about the actual yaml iterator other
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
@@ -256,7 +258,7 @@ struct IteratorValue : public std::pair<Node, Node>, public Node {
 };
 
 
-struct Node::iterator {
+class Node::iterator {
     // Don't expose or assume the type of YAML::Node.begin()
     using IterType = decltype(std::declval<const YAML::Node>().begin());
 
@@ -266,6 +268,9 @@ struct Node::iterator {
 
     iterator(IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
 
+    friend Node;
+
+public:
     auto operator++() {
         ++index;
         return _child.operator++();
