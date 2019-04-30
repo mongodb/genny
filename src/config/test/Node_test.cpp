@@ -3,6 +3,7 @@
 #include <catch2/catch.hpp>
 
 #include <map>
+#include <map>
 #include <vector>
 
 using namespace genny;
@@ -50,11 +51,55 @@ TEST_CASE("Static Failures") {
 }
 
 TEST_CASE("YAML::Node") {
-    YAML::Node yaml = YAML::Load("foo: false");
-    REQUIRE(yaml);
-    REQUIRE(yaml["foo"]);
-    REQUIRE(yaml["foo"].IsScalar());
-    REQUIRE(yaml["foo"].as<bool>() == false);
+    {
+        YAML::Node yaml = YAML::Load("foo: false");
+        REQUIRE(yaml);
+        REQUIRE(yaml["foo"]);
+        REQUIRE(yaml["foo"].IsScalar());
+        REQUIRE(yaml["foo"].as<bool>() == false);
+    }
+
+    {
+        YAML::Node yaml = YAML::Load("{a: A, b: B}");
+        REQUIRE(yaml.as<std::map<std::string, std::string>>() ==
+                        std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
+    }
+
+    {
+        YAML::Node yaml = YAML::Load("a: null");
+        REQUIRE(yaml["a"].IsNull());
+        REQUIRE(yaml["a"].as<int>(7) == 7);
+    }
+
+}
+
+TEST_CASE("value_or") {
+    auto yaml = std::string(R"(
+seven: 7
+bee: b
+intList: [1,2,3]
+stringMap: {a: A, b: B}
+nothing: null
+sure: true
+nope: false
+)");
+    Node node{yaml, ""};
+    REQUIRE(node["seven"].value_or(8) == 7);
+    REQUIRE(node["eight"].value_or(8) == 8);
+    REQUIRE(node["intList"].value_or(std::vector<int>{}) == std::vector<int>{1, 2, 3});
+    REQUIRE(node["intList2"].value_or(std::vector<int>{1,2}) == std::vector<int>{1, 2});
+    REQUIRE(node["stringMap"].value_or(std::map<std::string, std::string>{}) ==
+            std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
+    REQUIRE(node["stringMap2"].value_or(std::map<std::string, std::string>{{"foo","bar"}}) ==
+            std::map<std::string, std::string>{{"foo","bar"}});
+    REQUIRE(node["nothing"].value_or(7) == 7);
+
+    REQUIRE(node["sure"].value_or(false) == true);
+    REQUIRE(node["sure"].value_or(true) == true);
+    REQUIRE(node["nope"].value_or(false) == false);
+    REQUIRE(node["nope"].value_or(true) == false);
+    REQUIRE(node["doesntExist"].value_or(true) == true);
+    REQUIRE(node["doesntExist"].value_or(false) == false);
 }
 
 TEST_CASE("Node Type") {

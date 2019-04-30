@@ -79,7 +79,7 @@ public:
 
     template <typename T>
     T value_or(T&& fallback) const {
-        if (!_valid) {
+        if (!(*this) || this->isNull()) {
             return fallback;
         }
         if (_yaml) {
