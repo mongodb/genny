@@ -46,61 +46,8 @@ std::string toString(const T& t) {
 template <typename O>
 struct NodeConvert {};
 
+
 class Node {
-
-private:
-    Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
-        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
-
-    Node(const YAML::Node yaml, const Node* const parent, std::string key)
-        : Node{yaml, parent, yaml, std::move(key)} {}
-
-    // <yikes>
-    // TODO: static assert that at least one of these works out in the regular maybe impl
-    // to make the error-messages not a disaster
-
-    template <typename O, typename... Args>
-    static constexpr bool isNodeConstructible() {
-        // TODO: test of constness
-        return std::is_constructible_v<O, Node&, Args...> ||
-            std::is_constructible_v<O, const Node&, Args...>;
-    }
-
-    template <typename O,
-              typename... Args,
-              typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
-    std::optional<O> _maybeImpl(Args&&... args) const {
-        return std::make_optional<O>(*this, std::forward<Args>(args)...);
-    }
-
-    template <typename O,
-              typename... Args,
-              typename = std::enable_if_t<!isNodeConstructible<O, Args...>() &&
-                                          std::is_same_v<O, typename NodeConvert<O>::type> &&
-                                          std::is_same_v<O, decltype(NodeConvert<O>::convert(std::declval<Node>(),std::declval<Args>()...))>>,
-              typename = void>
-    std::optional<O> _maybeImpl(Args&&... args) const {
-        return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
-    }
-
-    template <typename O,
-              typename... Args,
-              typename = std::enable_if_t<
-                  !isNodeConstructible<O, Args...>() &&
-                  // is there a better way to do this?
-                  std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())), YAML::Node>>,
-              typename = void,
-              typename = void>
-    std::optional<O> _maybeImpl(Args&&... args) const {
-        static_assert(sizeof...(args) == 0,
-                      "Cannot pass additional args when using built-in YAML conversion");
-        return std::make_optional<O>(_yaml.as<O>());
-    }
-    // </yikes>
-
-
-    static YAML::Node parse(std::string);
-
 public:
     Node(const std::string& yaml, std::string key) : Node{parse(yaml), nullptr, std::move(key)} {}
 
@@ -168,7 +115,6 @@ public:
         return this->get(key);
     }
 
-
     auto size() const {
         return _yaml.size();
     }
@@ -186,10 +132,55 @@ public:
     iterator end() const;
 
 private:
-    YAML::Node _yaml;
-    std::string _key;
-    const Node* _parent;
-    bool _valid;
+    Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
+        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
+
+    Node(const YAML::Node yaml, const Node* const parent, std::string key)
+        : Node{yaml, parent, yaml, std::move(key)} {}
+
+
+    template <typename O, typename... Args>
+    static constexpr bool isNodeConstructible() {
+        // TODO: test of constness
+        return std::is_constructible_v<O, Node&, Args...> ||
+            std::is_constructible_v<O, const Node&, Args...>;
+    }
+
+    template <typename O,
+              typename... Args,
+              typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
+    std::optional<O> _maybeImpl(Args&&... args) const {
+        return std::make_optional<O>(*this, std::forward<Args>(args)...);
+    }
+
+    template <typename O,
+              typename... Args,
+              typename = std::enable_if_t<
+                  !isNodeConstructible<O, Args...>() &&
+                  std::is_same_v<O, typename NodeConvert<O>::type> &&
+                  std::is_same_v<O,
+                                 decltype(NodeConvert<O>::convert(std::declval<Node>(),
+                                                                  std::declval<Args>()...))>>,
+              typename = void>
+    std::optional<O> _maybeImpl(Args&&... args) const {
+        return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
+    }
+
+    template <
+        typename O,
+        typename... Args,
+        typename = std::enable_if_t<
+            !isNodeConstructible<O, Args...>() &&
+            std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())), YAML::Node>>,
+        typename = void,
+        typename = void>
+    std::optional<O> _maybeImpl(Args&&... args) const {
+        static_assert(sizeof...(args) == 0,
+                      "Cannot pass additional args when using built-in YAML conversion");
+        return std::make_optional<O>(_yaml.as<O>());
+    }
+
+    static YAML::Node parse(std::string);
 
     template <typename K>
     std::optional<const YAML::Node> yamlGet(const K& key) const {
@@ -236,6 +227,11 @@ private:
     }
 
     void appendKey(std::ostringstream& out) const;
+
+    YAML::Node _yaml;
+    std::string _key;
+    const Node* _parent;
+    bool _valid;
 };
 
 
