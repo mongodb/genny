@@ -35,7 +35,7 @@ public:
     }
 
     static std::string_view defaultName() {
-        return "Nop";
+        return "NopActor";
     }
 
     static std::shared_ptr<ActorProducer> producer() {

@@ -13,7 +13,7 @@ Actors:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
     Repeat: 1
-  - &Nop {Operation: Nop}
+  - &Nop {Nop: true}
   - *Nop
 
 - Name: WarmupUpdate
