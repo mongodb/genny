@@ -1,4 +1,4 @@
-#include <config/config.hpp>
+#include <config/Node.hpp>
 
 #include <catch2/catch.hpp>
 
@@ -45,11 +45,10 @@ TEST_CASE("Static Failures") {
     Node node{"{}",""};
 
     STATIC_REQUIRE( std::is_same_v<decltype(node.to<int>()), int> );
-    // TODO: this is passing for some reason when it shouldn't be
     STATIC_REQUIRE( std::is_same_v<decltype(node.to<HasConversionSpecialization>()), HasConversionSpecialization> );
 }
 
-TEST_CASE("ConfigNode inheritance") {
+TEST_CASE("Node inheritance") {
     auto yaml = std::string(R"(
 a: 7
 b: 900
@@ -120,7 +119,7 @@ Children:
     }
 }
 
-TEST_CASE("ConfigNode Built-Ins Construction") {
+TEST_CASE("Node Built-Ins Construction") {
     auto yaml = std::string(R"(
 SomeString: some_string
 IntList: [1,2,3]
@@ -146,7 +145,7 @@ TEST_CASE("Specialization") {
     REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
 }
 
-TEST_CASE("ConfigNode Paths") {
+TEST_CASE("Node Paths") {
     auto yaml = std::string(R"(
 msg: bar
 One: {msg: foo}
@@ -170,7 +169,7 @@ Two: {}
         Catch::Contains("Tried to access node that doesn't exist at path: /One/foo"));
 }
 
-TEST_CASE("ConfigNode iteration path") {
+TEST_CASE("Node iteration path") {
     auto yaml = std::string(R"(
 one: [1]
 two: [1,2]
@@ -208,7 +207,7 @@ mapTwoDeep: {a: {A: aA}}
     }
 }
 
-TEST_CASE("ConfigNode Simple User-Defined Conversions") {
+TEST_CASE("Node Simple User-Defined Conversions") {
     EmptyStruct context;
 
     auto yaml = std::string(R"(
