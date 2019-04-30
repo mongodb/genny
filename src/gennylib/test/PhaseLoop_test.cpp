@@ -355,18 +355,14 @@ TEST_CASE("Actual Actor Example") {
             - Type: Inc
               Phases:
               - Phase: 0
-                Operation:
-                  OperationName: Nop
+                Nop: true
               - Repeat: 10
                 Key: 71
-              - Operation:
-                  OperationName: Nop
-              - Operation:
-                  OperationName: Nop
+              - Nop: true
+              - Nop: true
               - Repeat: 3
                 Key: 93
-              - Operation:
-                  OperationName: Nop
+              - Nop: true
         )");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
@@ -388,8 +384,7 @@ TEST_CASE("Actual Actor Example") {
             - Type: Nop
               Phases:
               - Phase: 0
-                Operation:
-                  OperationName: Nop
+                Nop: true
                 Duration: 7 minutes
         )");
         REQUIRE_THROWS_WITH(
