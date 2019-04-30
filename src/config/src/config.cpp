@@ -35,4 +35,13 @@ std::string Node::path() const {
     return out.str();
 }
 
+Node::iterator Node::begin() const {
+    return Node::iterator{_yaml.begin(), this};
+}
+
+Node::iterator Node::end() const {
+    return Node::iterator{_yaml.end(), this};
+}
+
+
 }

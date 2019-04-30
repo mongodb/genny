@@ -34,7 +34,6 @@ std::string toString(const T& t) {
     out << t;
     return out.str();
 }
-
 }  // namespace v1
 
 // We don't actually care about YAML::convert<T>
@@ -294,14 +293,6 @@ struct Node::iterator {
         return _child != rhs._child;
     }
 };
-
-inline Node::iterator Node::begin() const {
-    return Node::iterator{_yaml.begin(), this};
-}
-
-inline Node::iterator Node::end() const {
-    return Node::iterator{_yaml.end(), this};
-}
 
 }  // namespace genny
 
