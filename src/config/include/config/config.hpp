@@ -80,7 +80,8 @@ class Node {
     template <typename O,
               typename... Args,
               typename = std::enable_if_t<!isNodeConstructible<O, Args...>() &&
-                                          std::is_same_v<O, typename NodeConvert<O>::type>>,
+                                          std::is_same_v<O, typename NodeConvert<O>::type> &&
+                                          std::is_same_v<O, decltype(NodeConvert<O>::convert(std::declval<Node>(),std::declval<Args>()...))>>,
               typename = void>
     std::optional<O> _maybeImpl(Args&&... args) const {
         return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
@@ -91,7 +92,7 @@ class Node {
               typename = std::enable_if_t<
                   !isNodeConstructible<O, Args...>() &&
                   // is there a better way to do this?
-                  std::is_same_v<decltype(YAML::convert<O>::encode(O{})), YAML::Node>>,
+                  std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())), YAML::Node>>,
               typename = void,
               typename = void>
     std::optional<O> _maybeImpl(Args&&... args) const {
@@ -157,6 +158,22 @@ public:
     std::optional<O> maybe(Args&&... args) const {
         // TODO: tests of this
         static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>, "🙈 YAML::Node");
+        static_assert(
+            std::is_same_v<decltype(_maybeImpl<O, Args...>(std::forward<Args>(args)...)),
+                           std::optional<O>>,
+            "Destination type must satisfy at least one of the following:\n"
+            "\n"
+            "1.  is constructible from `Node&` and the given arguments\n"
+            "2.  has a `NodeConvert` struct like the following:\n"
+            "\n"
+            "        namespace genny {\n"
+            "        template<> struct NodeConvert<Foo> {\n"
+            "            using type = Foo;\n"
+            "            static Foo convert(const Node& node, other, args) { ... }\n"
+            "        };\n"
+            "        }  // namesace genny\n"
+            "\n"
+            "3.  is a type built into YAML::Node e.g. int, string, vector<built-in-type> etc.");
         if (!*this) {
             return std::nullopt;
         }

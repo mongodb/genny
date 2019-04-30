@@ -41,6 +41,14 @@ struct NodeConvert<HasConversionSpecialization> {
 };
 }
 
+TEST_CASE("Static Failures") {
+    Node node{"{}",""};
+
+    STATIC_REQUIRE( std::is_same_v<decltype(node.to<int>()), int> );
+    // TODO: this is passing for some reason when it shouldn't be
+    STATIC_REQUIRE( std::is_same_v<decltype(node.to<HasConversionSpecialization>()), HasConversionSpecialization> );
+}
+
 TEST_CASE("ConfigNode inheritance") {
     auto yaml = std::string(R"(
 a: 7
