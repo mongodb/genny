@@ -35,14 +35,6 @@ std::string toString(const T& t) {
     return out.str();
 }
 
-// more hoops to avoid hard-coding to YAML::Node internals
-inline auto iterType() -> decltype(auto) {
-    const YAML::Node node;
-    return node.begin();
-}
-
-using IterType = decltype(iterType());
-
 }  // namespace v1
 
 // We don't actually care about YAML::convert<T>
@@ -276,11 +268,14 @@ struct IteratorValue : public std::pair<Node, Node>, public Node {
 
 
 struct Node::iterator {
-    v1::IterType _child;
+    // Don't expose or assume the type of YAML::Node.begin()
+    using IterType = decltype(std::declval<const YAML::Node>().begin());
+
+    IterType _child;
     const Node* parent;
     size_t index = 0;
 
-    iterator(v1::IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
+    iterator(IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
 
     auto operator++() {
         ++index;
