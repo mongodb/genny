@@ -16,7 +16,7 @@ project(config VERSION 0.0.1 LANGUAGES CXX)
 
 CreateGennyTargets(
     NAME    config
-    TYPE    INTERFACE
+    TYPE    STATIC
     DEPENDS
         MongoCxx::bsoncxx
         yaml-cpp

@@ -34,6 +34,15 @@ std::string toString(const T& t) {
     out << t;
     return out.str();
 }
+
+// more hoops to avoid hard-coding to YAML::Node internals
+inline auto iterType() -> decltype(auto) {
+    const YAML::Node node;
+    return node.begin();
+}
+
+using IterType = decltype(iterType());
+
 }  // namespace v1
 
 // We don't actually care about YAML::convert<T>
@@ -46,13 +55,9 @@ std::string toString(const T& t) {
 template <typename O>
 struct NodeConvert {};
 
-
-inline YAML::Node parse(const std::string& yaml) {
-    // TODO: better error message if this fails
-    return YAML::Load(yaml);
-}
-
 class Node {
+
+private:
     Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
         : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
 
@@ -103,6 +108,8 @@ class Node {
     // </yikes>
 
 
+    static YAML::Node parse(std::string);
+
 public:
     Node(const std::string& yaml, std::string key) : Node{parse(yaml), nullptr, std::move(key)} {}
 
@@ -123,11 +130,7 @@ public:
         return _valid && _yaml;
     }
 
-    std::string path() const {
-        std::ostringstream out;
-        this->appendKey(out);
-        return out.str();
-    }
+    std::string path() const;
 
     template <typename T>
     T value_or(T&& fallback) const {
@@ -271,20 +274,13 @@ struct IteratorValue : public std::pair<Node, Node>, public Node {
           Node{itVal, parent, itVal, v1::toString(index)} {}
 };
 
-// more hoops to avoid hard-coding to YAML::Node internals
-auto iterType() -> decltype(auto) {
-    const YAML::Node node;
-    return node.begin();
-}
-
-using IterType = decltype(iterType());
 
 struct Node::iterator {
-    IterType _child;
+    v1::IterType _child;
     const Node* parent;
     size_t index = 0;
 
-    iterator(IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
+    iterator(v1::IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
 
     auto operator++() {
         ++index;
