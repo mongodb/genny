@@ -49,6 +49,14 @@ struct NodeConvert {};
 
 class Node {
 public:
+    enum class NodeType {
+        Invalid,
+        Null,
+        Scalar,
+        Sequence,
+        Map,
+    };
+
     Node(const std::string& yaml, std::string key) : Node{parse(yaml), nullptr, std::move(key)} {}
 
     // explicitly allow copy and move
@@ -121,6 +129,38 @@ public:
 
     explicit operator bool() const {
         return _valid && _yaml;
+    }
+
+    bool isNull() const {
+        return type() == NodeType::Null;
+    }
+    bool isScalar() const {
+        return type() == NodeType::Scalar;
+    }
+    bool isSequence() const {
+        return type() == NodeType::Sequence;
+    }
+    bool isMap() const {
+        return type() == NodeType::Map;
+    }
+
+    NodeType type() const {
+        if (!*this) {
+            return NodeType::Invalid;
+        }
+        auto yamlTyp = _yaml.Type();
+        switch (yamlTyp) {
+            case YAML::NodeType::Undefined:
+                return NodeType::Invalid;
+            case YAML::NodeType::Null:
+                return NodeType::Null;
+            case YAML::NodeType::Scalar:
+                return NodeType::Scalar;
+            case YAML::NodeType::Sequence:
+                return NodeType::Scalar;
+            case YAML::NodeType::Map:
+                return NodeType::Map;
+        }
     }
 
     std::string path() const;
