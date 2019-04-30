@@ -105,6 +105,15 @@ class Node {
 public:
     Node(const std::string& yaml, std::string key) : Node{parse(yaml), nullptr, std::move(key)} {}
 
+    // explicitly allow copy and move
+    // this is here to protect against regressions
+    // accidentally making this non-copy/move-able
+
+    Node(const Node&) = default;
+    Node(Node&&) = default;
+    Node& operator=(const Node&) = default;
+    Node& operator=(Node&&) = default;
+
     auto size() const {
         return _yaml.size();
     }
@@ -166,10 +175,10 @@ public:
     iterator end() const;
 
 private:
-    const YAML::Node _yaml;
-    const std::string _key;
-    const Node* const _parent;
-    const bool _valid;
+    YAML::Node _yaml;
+    std::string _key;
+    const Node* _parent;
+    bool _valid;
 
     template <typename K>
     std::optional<const YAML::Node> yamlGet(const K& key) const {
