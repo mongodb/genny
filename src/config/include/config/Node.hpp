@@ -180,6 +180,57 @@ public:
     iterator begin() const;
     iterator end() const;
 
+
+    /**
+     * Extract a vector of items by supporting both singular and plural keys.
+     *
+     * Example YAML that this supports:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Number","Numbers") returns [7]
+     * Foo:
+     *   Number: 7
+     *
+     * # Calling getPlural<int>("Number","Numbers") returns [1,2]
+     * Bar:
+     *   Numbers: [1,2]
+     * ```
+     *
+     * The node cannot have both keys present. The following
+     * will error:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Bad","Bads")
+     * # will throw because the node must have
+     * # exactly one of the keys
+     * BadExample:
+     *   Bad: 7
+     *   Bads: [1,2]
+     * ```
+     *
+     * If the value at the plural key isn't a sequence we also barf:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Bad","Bads") will fail
+     * # because Bads isn't a sequence.
+     * AnotherBadExample:
+     *   Bads: 3
+     * ```
+     *
+     * @tparam T the returned type. Must align with the return-type of F.
+     * @tparam F type of the callback/mapping function that maps from `Node` to `T`.
+     * @param singular the singular version of the key e.g. "Number"
+     * @param plural the plural version of the key e.g. "Numbers"
+     * @param f callback function mapping from the found node to a T instance. If not specified,
+     * will use `to<T>()`
+     * @return
+     */
+    template <typename T, typename F = std::function<T(const Node&)>>
+    std::vector<T> getPlural(
+        const std::string& singular, const std::string& plural, F&& f = [](const Node& n) {
+            return n.to<T>();
+        }) const;
+
 private:
     Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
         : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
@@ -344,6 +395,39 @@ public:
         return _child != rhs._child;
     }
 };
+
+template <typename T, typename F>
+std::vector<T> Node::getPlural(const std::string& singular,
+                               const std::string& plural,
+                               F&& f) const {
+    std::vector<T> out;
+    auto pluralValue = (*this)[plural];
+    auto singValue = (*this)[singular];
+    if (pluralValue && singValue) {
+        std::stringstream str;
+        str << "Can't have both '" << singular << "' and '" << plural << "'.";
+        BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+    } else if (pluralValue) {
+        if (!pluralValue.isSequence()) {
+            std::stringstream str;
+            str << "'" << plural << "' must be a sequence type.";
+            BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+        }
+        for (auto&& val : pluralValue) {
+            T created = std::invoke(f, val);
+            out.emplace_back(std::move(created));
+        }
+    } else if (singValue) {
+        T created = std::invoke(f, singValue);
+        out.emplace_back(std::move(created));
+    } else if (!singValue && !pluralValue) {
+        std::stringstream str;
+        str << "Either '" << singular << "' or '" << plural << "' required.";
+        BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+    }
+
+    return out;
+}
 
 }  // namespace genny
 
