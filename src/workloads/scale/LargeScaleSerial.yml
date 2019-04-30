@@ -13,8 +13,8 @@ Actors:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
     Repeat: 1
-  - &NoOp {Operation: Nop}
-  - *NoOp
+  - &Nop {Operation: Nop}
+  - *Nop
 
 - Name: WarmupUpdate
   Type: MultiCollectionUpdate
@@ -25,15 +25,15 @@ Actors:
       Key: Update
     Duration: &Duration 1 hour
     Rate: 10 per 1 millisecond  # Target is 10 operations on every millisecond.
-  - *NoOp
-  - *NoOp
+  - *Nop
+  - *Nop
 
 - Name: WarmupQuery
   Type: MultiCollectionQuery
   Threads: 10
   Phases:
-  - *NoOp
-  - *NoOp
+  - *Nop
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Query
@@ -43,8 +43,8 @@ Actors:
   Type: MultiCollectionQuery
   Threads: 2  # 2 threads for doing a two-minute query every minute.
   Phases:
-  - *NoOp
-  - *NoOp
+  - *Nop
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: LargeQuery
@@ -56,8 +56,8 @@ Actors:
   Type: MultiCollectionQuery
   Threads: 2  # 2 threads for doing a two-minute query every minute.
   Phases:
-  - *NoOp
-  - *NoOp
+  - *Nop
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: LargeQuery
@@ -71,8 +71,8 @@ Actors:
   Type: MultiCollectionQuery
   Threads: 1
   Phases:
-  - *NoOp
-  - *NoOp
+  - *Nop
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: CollScan
