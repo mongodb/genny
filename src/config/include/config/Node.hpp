@@ -15,6 +15,7 @@
 #ifndef HEADER_17681835_40A0_443E_939D_3679A1A6B5DD_INCLUDED
 #define HEADER_17681835_40A0_443E_939D_3679A1A6B5DD_INCLUDED
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <type_traits>
