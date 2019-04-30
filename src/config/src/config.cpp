@@ -16,6 +16,14 @@
 
 namespace genny {
 
+void Node::appendKey(std::ostringstream& out) const {
+    if (_parent) {
+        _parent->appendKey(out);
+        out << "/";
+    }
+    out << _key;
+}
+
 YAML::Node Node::parse(std::string yaml) {
     // TODO: better error message if this fails
     return YAML::Load(yaml);

@@ -114,16 +114,6 @@ public:
     Node& operator=(const Node&) = default;
     Node& operator=(Node&&) = default;
 
-    auto size() const {
-        return _yaml.size();
-    }
-
-    explicit operator bool() const {
-        return _valid && _yaml;
-    }
-
-    std::string path() const;
-
     template <typename T>
     T value_or(T&& fallback) const {
         if (!_valid) {
@@ -135,7 +125,6 @@ public:
             return fallback;
         }
     }
-
 
     template <typename O, typename... Args>
     O to(Args&&... args) const {
@@ -179,6 +168,17 @@ public:
     const Node operator[](const K& key) const {
         return this->get(key);
     }
+
+
+    auto size() const {
+        return _yaml.size();
+    }
+
+    explicit operator bool() const {
+        return _valid && _yaml;
+    }
+
+    std::string path() const;
 
     friend class IteratorValue;
 
@@ -236,13 +236,7 @@ private:
         }
     }
 
-    void appendKey(std::ostringstream& out) const {
-        if (_parent) {
-            _parent->appendKey(out);
-            out << "/";
-        }
-        out << _key;
-    }
+    void appendKey(std::ostringstream& out) const;
 };
 
 
