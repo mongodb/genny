@@ -50,7 +50,7 @@ struct NodeConvert {};
 class Node {
 public:
     enum class NodeType {
-        Invalid,
+        Undefined,
         Null,
         Scalar,
         Sequence,
@@ -146,18 +146,18 @@ public:
 
     NodeType type() const {
         if (!*this) {
-            return NodeType::Invalid;
+            return NodeType::Undefined;
         }
         auto yamlTyp = _yaml.Type();
         switch (yamlTyp) {
             case YAML::NodeType::Undefined:
-                return NodeType::Invalid;
+                return NodeType::Undefined;
             case YAML::NodeType::Null:
                 return NodeType::Null;
             case YAML::NodeType::Scalar:
                 return NodeType::Scalar;
             case YAML::NodeType::Sequence:
-                return NodeType::Scalar;
+                return NodeType::Sequence;
             case YAML::NodeType::Map:
                 return NodeType::Map;
         }
@@ -182,8 +182,9 @@ private:
     template <typename O, typename... Args>
     static constexpr bool isNodeConstructible() {
         // TODO: test of constness
-        return std::is_constructible_v<O, Node&, Args...> ||
-            std::is_constructible_v<O, const Node&, Args...>;
+        return !std::is_trivially_constructible_v<O> &&
+            (std::is_constructible_v<O, Node&, Args...> ||
+             std::is_constructible_v<O, const Node&, Args...>);
     }
 
     template <typename O,

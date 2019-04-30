@@ -32,20 +32,89 @@ struct HasConversionSpecialization {
 };
 
 namespace genny {
-template<>
+template <>
 struct NodeConvert<HasConversionSpecialization> {
     using type = HasConversionSpecialization;
     static type convert(const Node& node, int delta) {
         return {node["x"].to<int>() + delta};
     }
 };
-}
+}  // namespace genny
 
 TEST_CASE("Static Failures") {
-    Node node{"{}",""};
+    Node node{"{}", ""};
 
-    STATIC_REQUIRE( std::is_same_v<decltype(node.to<int>()), int> );
-    STATIC_REQUIRE( std::is_same_v<decltype(node.to<HasConversionSpecialization>()), HasConversionSpecialization> );
+    STATIC_REQUIRE(std::is_same_v<decltype(node.to<int>()), int>);
+    STATIC_REQUIRE(std::is_same_v<decltype(node.to<HasConversionSpecialization>()),
+                                  HasConversionSpecialization>);
+}
+
+TEST_CASE("YAML::Node") {
+    YAML::Node yaml = YAML::Load("foo: false");
+    REQUIRE(yaml);
+    REQUIRE(yaml["foo"]);
+    REQUIRE(yaml["foo"].IsScalar());
+    REQUIRE(yaml["foo"].as<bool>() == false);
+}
+
+TEST_CASE("Node Type") {
+    auto yaml = std::string(R"(
+seven: 7
+bee: b
+mixedList: [1,2,"a", [inner]]
+mixedMap: {seven: 7, bees: [b]}
+nothing: null
+sure: true
+nope: false
+)");
+    Node node{yaml, ""};
+    REQUIRE(node["nonexistant"].type() == Node::NodeType::Undefined);
+
+    REQUIRE(node.type() == Node::NodeType::Map);
+    REQUIRE(node.isMap());
+
+    REQUIRE(node["seven"].isScalar());
+    REQUIRE(node["seven"].type() == Node::NodeType::Scalar);
+
+    REQUIRE(node["bee"].isScalar());
+    REQUIRE(node["bee"].type() == Node::NodeType::Scalar);
+
+    REQUIRE(node["mixedList"].isSequence());
+    REQUIRE(node["mixedList"].type() == Node::NodeType::Sequence);
+
+    REQUIRE(node["mixedList"][0].isScalar());
+    REQUIRE(node["mixedList"][0].type() == Node::NodeType::Scalar);
+
+    REQUIRE(node["mixedList"][3].isSequence());
+    REQUIRE(node["mixedList"][3].type() == Node::NodeType::Sequence);
+
+    REQUIRE(node["mixedMap"].isMap());
+    REQUIRE(node["mixedMap"].type() == Node::NodeType::Map);
+
+    REQUIRE(node["mixedMap"]["seven"].isScalar());
+    REQUIRE(node["mixedMap"]["seven"].type() == Node::NodeType::Scalar);
+
+    REQUIRE(node["mixedMap"]["bees"].isSequence());
+    REQUIRE(node["mixedMap"]["bees"].type() == Node::NodeType::Sequence);
+
+    REQUIRE(node["nothing"].isNull());
+    REQUIRE(node["nothing"].type() == Node::NodeType::Null);
+
+    REQUIRE(node["sure"].isScalar());
+    REQUIRE(node["sure"]);
+    REQUIRE(!!node["sure"]);
+    REQUIRE(node["sure"].to<bool>());
+
+    auto sure = node["sure"].maybe<bool>();
+    REQUIRE(sure);
+    REQUIRE(*sure);
+    REQUIRE(node["sure"].to<bool>());
+
+    REQUIRE(node["nope"].isScalar());
+    auto foo = node["nope"].maybe<bool>();
+    REQUIRE(foo);
+    REQUIRE(*foo == false);
+    REQUIRE(node["nope"].to<bool>() == false);
 }
 
 TEST_CASE("Node inheritance") {
