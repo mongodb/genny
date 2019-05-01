@@ -118,6 +118,14 @@ REQUIRE(seen == 1);
 }
 
 {
+    // This is why we need to have Node::_valid
+    // We can't rely on our default-constructed nodes.
+    auto defaultConstructed = YAML::Node{};
+    REQUIRE(bool(defaultConstructed) == true);
+    REQUIRE(defaultConstructed.Type() == YAML::NodeType::Null);
+}
+
+{
     // we're equivalent to YAML::Node's handling of
     // null and missing values
     YAML::Node yaml = YAML::Load("foo: null");
