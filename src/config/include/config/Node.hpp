@@ -351,19 +351,20 @@ public:
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
     IteratorValue(const Node* parent, ITVal itVal, size_t index)
-        :   // API like kvp when itVal is being used in map context
-            NodePair{std::make_pair(
+        :  // API like kvp when itVal is being used in map context
+          NodePair{std::make_pair(
               Node{itVal.first,
                    parent,
-                   bool(itVal.first), // itVal.first will be falsy if we're iterating over a sequence.
-                   //
+                   bool(itVal.first),  // itVal.first will be falsy if we're iterating over a
+                                       // sequence.
                    // For map-iteration cases the path for the kvp may as well be the index.
                    // See the 'YAML::Node Equivalency' test-cases.
-                   (itVal.first ? (itVal.first.template as<std::string>()) : v1::toString(index)) + "$key"},
+                   (itVal.first ? (itVal.first.template as<std::string>()) : v1::toString(index)) +
+                       "$key"},
               Node{itVal.second,
                    parent,
-                   bool(itVal.second),  // itVal.second will be falsy if we're iterating over a sequence
-                   //
+                   bool(itVal.second),  // itVal.second will be falsy if we're iterating over a
+                                        // sequence
                    // The key for the value in map-iteration cases is itVal.first.
                    // And it's the index on sequence-iteration cases.
                    itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
@@ -373,17 +374,6 @@ public:
 
 
 class Node::iterator {
-    // Don't expose or assume the type of YAML::Node.begin()
-    using IterType = decltype(std::declval<const YAML::Node>().begin());
-
-    IterType _child;
-    const Node* parent;
-    size_t index = 0;
-
-    iterator(IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
-
-    friend Node;
-
 public:
     auto operator++() {
         ++index;
@@ -407,6 +397,18 @@ public:
     auto operator!=(const iterator& rhs) const {
         return _child != rhs._child;
     }
+
+private:
+    // Don't expose or assume the type of YAML::Node.begin()
+    using IterType = decltype(std::declval<const YAML::Node>().begin());
+
+    iterator(IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
+
+    friend Node;
+
+    IterType _child;
+    const Node* parent;
+    size_t index = 0;
 };
 
 template <typename T, typename F>
