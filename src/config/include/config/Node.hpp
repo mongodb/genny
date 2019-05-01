@@ -36,35 +36,120 @@ std::string toString(const T& t) {
 }
 }  // namespace v1
 
-// We don't actually care about YAML::convert<T>
-// because we never go from T to YAML::Node just the
-// other way around.
-//
-// This template *may* be specialized by the user if
-// they wish to do special post-processing (e.g. if
-// the O type is a ptr-type and want to do dynamic_cast)
+/**
+ * Specialize this type if you wish to provide
+ * a conversion function for `O` but you can't
+ * create a new constructor on `O` that takes in
+ * a `const Node&` as its first parameter.
+ */
 template <typename O>
 struct NodeConvert {};
 
 
 /**
- * Throw this to indicate a bad path
+ * Throw this to indicate a bad path.
  */
 class InvalidPathException : public std::invalid_argument {
 public:
     using std::invalid_argument::invalid_argument;
 };
 
+/**
+ * Access YAML configuration
+ *
+ * Example usage:
+ *
+ * ```c++
+ * // use [] to traverse
+ * auto bar = node["foo"]["bar"][0];
+ *
+ * // treat as boolean to see if the value
+ * // was specified in the yaml:
+ * if (bar) {
+ *   // use .to<T>() to convert
+ *   std::cout << "bar = " << bar.to<int>();
+ * }
+ *
+ * // or use value_or:
+ * int w = node["w"].value_or(1);
+ *
+ * // or use .maybe:
+ * optional<int> optW = node["w"].maybe<int>();
+ *
+ * // convert to built-in APIs like std::vector and std::map:
+ * auto ns = node["ns"].to<std::vector<int>>();
+ *
+ * // iterate over a sequence
+ * // e.g. given yaml "ns: [1,2,3]"
+ * for(auto n : node["ns"]) { ... }
+ *
+ * // or iterate over a map
+ * // e.g. given yaml "vals: {a: A, b: B}"
+ * for(auto kvp : node["vals"]) {
+ *     auto key = kvp.first.to<std::string>();
+ *     auto val = kvp.second.to<std::string>();
+ * }
+ *
+ * // Or support syntax-sugar for plural values:
+ * std::vector<int> nums = node.getPlural<int>("num", "nums");
+ * // this allows the user to specify either `num:7` or `nums:[1,2,3]`.
+ * // See docs on `getPlural` for more info.
+ * ```
+ *
+ * All values "inherit" from their parent nodes, so if you call
+ * `node["foo"]["bar"].to<int>()` it will fall back to
+ * `node["foo"].to<int>()` if `bar` isn't defined. If you wish
+ * to explicitly access a parent value, use the key `..`.
+ * So `node["foo"]["bar"][".."]` is roughly equivalent to `node["foo"]`.
+ * ("Roughly" only because we still report the ".." as part of the path
+ * in error-messages.)
+ *
+ * The API for `genny::Node` is strongly inspired by that of `YAML::Node`,
+ * but it provides better error-reporting in the case of invalid
+ * configuration and it allows conversion functions to pass in additional
+ * arguments.
+ *
+ * To convert to non-primitive/built-in types you have two options:
+ *
+ * 1.  Add a constructor to your type that takes a `const Node&` as the
+ *     first parameter. You can pass additional constructor-args in the
+ *     call to `.to<T>()` or `.maybe<T>()`:
+ *
+ *     ```c++
+ *     struct MyFoo {
+ *       MyFoo(const Node& n, int x) {...};
+ *     };
+ *     MyFoo mf = node["foo"].to<MyFoo>(7);
+ *     // calls MyFoo(node["foo"], 7)
+ *     ```
+ *
+ * 2.  Specialize the `genny::NodeConvert` struct for the type:
+ *
+ *     ```c++
+ *     namespace genny {
+ *     template<>
+ *     struct NodeConvert<MyFoo2> {
+ *       // required due to SFINAE
+ *       using type = MyFoo2;
+ *       static type convert(const Node& node, int x) {
+ *         ...
+ *       };
+ *     };
+ *     }  // namespace genny
+ *
+ *     MyFoo2 mf2 = node["foo2"].to<MyFoo2>(7);
+ *     // calls NodeConvert<MyFoo2>::convert(node["foo2"], 7);
+ *     ```
+ *
+ * Whenever possible, prefer the first method of creating a constructor.
+ * This allows you to keep all your logic for how to construct your type
+ * with your type itself.
+ *
+ * Note that it is intentionally impossible to convert `genny::Node` into
+ * `YAML::Node`.
+ */
 class Node {
 public:
-    enum class NodeType {
-        Undefined,
-        Null,
-        Scalar,
-        Sequence,
-        Map,
-    };
-
     Node(const std::string& yaml, std::string key) : Node{parse(yaml), nullptr, std::move(key)} {}
 
     // explicitly allow copy and move
@@ -75,6 +160,17 @@ public:
     Node(Node&&) = default;
     Node& operator=(const Node&) = default;
     Node& operator=(Node&&) = default;
+
+    /**
+     * What type of node we are.
+     */
+    enum class NodeType {
+        Undefined,
+        Null,
+        Scalar,
+        Sequence,
+        Map,
+    };
 
     template <typename T>
     T value_or(T&& fallback) const {
@@ -105,6 +201,8 @@ public:
         // TODO: tests of this
         static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>, "🙈 YAML::Node");
         static_assert(
+            // This isn't the most reliable static_assert but hopefully this block
+            // makes debugging compiler-errors easier.
             std::is_same_v<decltype(_maybeImpl<O, Args...>(std::forward<Args>(args)...)),
                            std::optional<O>>,
             "Destination type must satisfy at least one of the following:\n"
@@ -130,55 +228,6 @@ public:
     const Node operator[](const K& key) const {
         return this->get(key);
     }
-
-    auto size() const {
-        return _yaml.size();
-    }
-
-    explicit operator bool() const {
-        return _valid && _yaml;
-    }
-
-    bool isNull() const {
-        return type() == NodeType::Null;
-    }
-    bool isScalar() const {
-        return type() == NodeType::Scalar;
-    }
-    bool isSequence() const {
-        return type() == NodeType::Sequence;
-    }
-    bool isMap() const {
-        return type() == NodeType::Map;
-    }
-
-    NodeType type() const {
-        if (!*this) {
-            return NodeType::Undefined;
-        }
-        auto yamlTyp = _yaml.Type();
-        switch (yamlTyp) {
-            case YAML::NodeType::Undefined:
-                return NodeType::Undefined;
-            case YAML::NodeType::Null:
-                return NodeType::Null;
-            case YAML::NodeType::Scalar:
-                return NodeType::Scalar;
-            case YAML::NodeType::Sequence:
-                return NodeType::Sequence;
-            case YAML::NodeType::Map:
-                return NodeType::Map;
-        }
-    }
-
-    std::string path() const;
-
-    friend class IteratorValue;
-
-    struct iterator;
-    iterator begin() const;
-    iterator end() const;
-
 
     /**
      * Extract a vector of items by supporting both singular and plural keys.
@@ -224,15 +273,71 @@ public:
      * will use `to<T>()`
      * @return
      */
+    // The implementation is below because we require the full class definition
+    // within the implementation.
     template <typename T, typename F = std::function<T(const Node&)>>
     std::vector<T> getPlural(
-        const std::string& singular, const std::string& plural, F&& f = [](const Node& n) {
-            return n.to<T>();
-        }) const;
+        const std::string& singular,
+        const std::string& plural,
+        // Default conversion function is `node.to<T>()`.
+        F&& f = [](const Node& n) { return n.to<T>(); }) const;
 
     friend std::ostream& operator<<(std::ostream& out, const Node& node) {
         return out << YAML::Dump(node._yaml);
     }
+
+    auto size() const {
+        return _yaml.size();
+    }
+
+    explicit operator bool() const {
+        return _valid && _yaml;
+    }
+
+    bool isNull() const {
+        return type() == NodeType::Null;
+    }
+
+    bool isScalar() const {
+        return type() == NodeType::Scalar;
+    }
+
+    bool isSequence() const {
+        return type() == NodeType::Sequence;
+    }
+
+    bool isMap() const {
+        return type() == NodeType::Map;
+    }
+
+    NodeType type() const {
+        if (!*this) {
+            return NodeType::Undefined;
+        }
+        auto yamlTyp = _yaml.Type();
+        switch (yamlTyp) {
+            case YAML::NodeType::Undefined:
+                return NodeType::Undefined;
+            case YAML::NodeType::Null:
+                return NodeType::Null;
+            case YAML::NodeType::Scalar:
+                return NodeType::Scalar;
+            case YAML::NodeType::Sequence:
+                return NodeType::Sequence;
+            case YAML::NodeType::Map:
+                return NodeType::Map;
+        }
+    }
+
+    std::string path() const;
+
+    friend class IteratorValue;
+
+    struct iterator;
+
+    iterator begin() const;
+
+    iterator end() const;
 
 private:
     Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
@@ -353,16 +458,19 @@ public:
                    parent,
                    bool(itVal.first),  // itVal.first will be falsy if we're iterating over a
                                        // sequence.
-                   // For map-iteration cases the path for the kvp may as well be the index.
-                   // See the 'YAML::Node Equivalency' test-cases.
+                   //
+                   // For map-iteration cases the path for the kvp may as well
+                   // be the index. See the 'YAML::Node Equivalency' test-cases.
                    (itVal.first ? (itVal.first.template as<std::string>()) : v1::toString(index)) +
                        "$key"},
               Node{itVal.second,
                    parent,
                    bool(itVal.second),  // itVal.second will be falsy if we're iterating over a
                                         // sequence
-                   // The key for the value in map-iteration cases is itVal.first.
-                   // And it's the index on sequence-iteration cases.
+                   //
+                   // The key for the value in map-iteration cases is
+                   // itVal.first. And it's the index on sequence-iteration
+                   // cases.
                    itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
           // API like a value where it's being used in sequence context
           Node{itVal, parent, itVal, v1::toString(index)} {}
