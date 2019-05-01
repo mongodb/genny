@@ -178,6 +178,14 @@ nope: false
     REQUIRE(node["nope"].value_or(true) == false);
     REQUIRE(node["doesntExist"].value_or(true) == true);
     REQUIRE(node["doesntExist"].value_or(false) == false);
+
+    REQUIRE(node["bee"].value_or<std::string>("foo") == "b");
+    REQUIRE(node["baz"].value_or<std::string>("foo") == "foo");
+
+
+    REQUIRE(node["stringMap"]["a"].value_or<std::string>("7") == "A");
+    // inherits from parent
+    REQUIRE(node["stringMap"]["bee"].value_or<std::string>("7") == "b");
 }
 
 TEST_CASE("Node Type") {

@@ -150,15 +150,36 @@ public:
  */
 class Node {
 public:
+    /**
+     * @param yaml source yaml
+     * @param key string key to associate for this node
+     */
     Node(const std::string& yaml, std::string key) : Node{parse(yaml), nullptr, std::move(key)} {}
 
     // explicitly allow copy and move
     // this is here to protect against regressions
     // accidentally making this non-copy/move-able
 
+    /**
+     * Copy-construct.
+     */
     Node(const Node&) = default;
+
+    /**
+     * Move-construct.
+     */
     Node(Node&&) = default;
+
+    /**
+     * @return a copy of this node.
+     */
     Node& operator=(const Node&) = default;
+
+    /**
+     * Usage of this node in a moded-from state is undefined.
+     *
+     * @return a moved-to version of this node.
+     */
     Node& operator=(Node&&) = default;
 
     /**
@@ -172,6 +193,30 @@ public:
         Map,
     };
 
+    /**
+     * Extract the value via `.to<T>()` if the node
+     * is valid else return the fallback value.
+     *
+     * Deduction allows you to omit the `T` if it matches
+     * the `T` fallback:
+     *
+     * ```c++
+     * auto x = node.value_or(7); // int
+     * auto y = node.value_or(std::string{"foo"}); // std::string
+     *
+     * // or specify it the hard way
+     * auto z = node.value_or<std::string>("foo");
+     * ```
+     *
+     * Like `operator[]` this will "fall-back" to the parent node.
+     * So `node["foo"]["bar"].value_or(8)` will fall-back to
+     * `node["foo"].value_or(8)` if `node["foo"]["bar"]` isn't
+     * specified.
+     *
+     * @tparam T output type
+     * @param fallback value to use if this is undefined
+     * @return
+     */
     template <typename T>
     T value_or(T&& fallback) const {
         if (!(*this) || this->isNull()) {
