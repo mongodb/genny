@@ -351,15 +351,23 @@ public:
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
     IteratorValue(const Node* parent, ITVal itVal, size_t index)
-        : NodePair{std::make_pair(
+        :   // API like kvp when itVal is being used in map context
+            NodePair{std::make_pair(
               Node{itVal.first,
                    parent,
-                   itVal.first,
-                   itVal.first ? (itVal.first.template as<std::string>() + "$key") : ""},
+                   bool(itVal.first), // itVal.first will be falsy if we're iterating over a sequence.
+                   //
+                   // For map-iteration cases the path for the kvp may as well be the index.
+                   // See the 'YAML::Node Equivalency' test-cases.
+                   (itVal.first ? (itVal.first.template as<std::string>()) : v1::toString(index)) + "$key"},
               Node{itVal.second,
                    parent,
-                   itVal.second,
+                   bool(itVal.second),  // itVal.second will be falsy if we're iterating over a sequence
+                   //
+                   // The key for the value in map-iteration cases is itVal.first.
+                   // And it's the index on sequence-iteration cases.
                    itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
+          // API like a value where it's being used in sequence context
           Node{itVal, parent, itVal, v1::toString(index)} {}
 };
 

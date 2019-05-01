@@ -49,7 +49,12 @@ TEST_CASE("Static Failures") {
                                   HasConversionSpecialization>);
 }
 
-TEST_CASE("YAML::Node") {
+TEST_CASE("YAML::Node Equivalency") {
+
+    //
+    // The assertions on YAML::Node aren't strictly necessary, but
+    // having the API shown here justifies the behavior of genny::Node.
+    //
     {
         YAML::Node yaml = YAML::Load("foo: false");
         REQUIRE(yaml);
@@ -58,10 +63,67 @@ TEST_CASE("YAML::Node") {
         REQUIRE(yaml["foo"].as<bool>() == false);
     }
 
+    // iteration cases
+    {
+        // iteration over sequences
+        {
+            YAML::Node yaml = YAML::Load("ns: [1,2,3]");
+            int sum = 0;
+            for(auto n : yaml["ns"]) {
+                REQUIRE(n.first.IsDefined() == false);
+                REQUIRE(n.second.IsDefined() == false);
+                sum += n.as<int>();
+            }
+            REQUIRE(sum == 6);
+        }
+
+        {
+            Node node {"ns: [1,2,3]", ""};
+            int sum = 0;
+            for(auto n : node["ns"]) {
+                REQUIRE(bool(n.first) == false);
+                REQUIRE(bool(n.second) == false);
+                sum += n.to<int>();
+                if (sum == 1) {
+                    REQUIRE(n.first.path() == "/ns/0$key");
+                    REQUIRE(n.second.path() == "/ns/0");
+                }
+            }
+            REQUIRE(sum == 6);
+        }
+    }
+
+    {
+        // iteration over maps
+        {
+            YAML::Node yaml = YAML::Load("foo: bar");
+            int seen = 0;
+            for(auto kvp : yaml) {
+                ++seen;
+                REQUIRE(kvp.first.as<std::string>() == "foo");
+                REQUIRE(kvp.second.as<std::string>() == "bar");
+            }
+            REQUIRE(seen == 1);
+        }
+        {
+            Node node = Node("foo: bar", "");
+            int seen = 0;
+            for(auto kvp : node) {
+                ++seen;
+                REQUIRE(kvp.first.to<std::string>() == "foo");
+                REQUIRE(kvp.second.to<std::string>() == "bar");
+                // not super well-defined but what else can we do?
+                REQUIRE(kvp.path() == "/0");
+                REQUIRE(kvp.first.path() == "/foo$key");
+                REQUIRE(kvp.second.path() == "/foo");
+            }
+            REQUIRE(seen == 1);
+        }
+    }
+
     {
         // we're equivalent to YAML::Node's handling of
         // null and missing values
-        
         YAML::Node yaml = YAML::Load("foo: null");
 
         REQUIRE(yaml["foo"].IsDefined() == true);
