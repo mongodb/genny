@@ -256,6 +256,61 @@ nope: false
     REQUIRE(node["nope"].to<bool>() == false);
 }
 
+TEST_CASE("size") {
+    {
+        Node node{"foo: bar", ""};
+        REQUIRE(node.size() == 1);
+        // scalars have size 0
+        REQUIRE(node["foo"].size() == 0);
+    }
+    {
+        Node node{"{}", ""};
+        REQUIRE(node.size() == 0);
+    }
+    {
+        Node node{"a: null", ""};
+        REQUIRE(node["a"].size() == 0);
+    }
+    {
+        Node node{"[1,2,3]", ""};
+        REQUIRE(node.size() == 3);
+    }
+    {
+        Node node{"a: {b: {c: []}}", ""};
+        REQUIRE(node.size() == 1);
+        REQUIRE(node["a"].size() == 1);
+        REQUIRE(node["a"]["b"].size() == 1);
+        REQUIRE(node["a"]["b"]["c"].size() == 0);
+    }
+    {
+        Node node{"", ""};
+        REQUIRE(node.size() == 0);
+    }
+    {
+        Node node{
+            "foos: [1,2,3]\n"
+            "children: {a: 7}",
+            ""};
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["foos"].size() == 3);
+        // inheritance
+        REQUIRE(node["children"]["foos"].size() == 3);
+        REQUIRE(node["children"].size() == 1);
+        // scalars have size 0
+        REQUIRE(node["children"]["a"].size() == 0);
+    }
+    {
+        Node node{
+                "foos: [1,2,3]\n"
+                "children: {a: 7}",
+                ""};
+        REQUIRE(node["foos"][".."].size() == 2);
+        REQUIRE(node["foos"][".."][".."].size() == 0);
+        REQUIRE(node["foos"][".."][".."][".."].size() == 0);
+        REQUIRE(node["foos"][".."][".."][".."][".."].size() == 0);
+    }
+}
+
 TEST_CASE("Node inheritance") {
     auto yaml = std::string(R"(
 a: 7

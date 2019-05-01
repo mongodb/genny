@@ -327,34 +327,65 @@ public:
         // Default conversion function is `node.to<T>()`.
         F&& f = [](const Node& n) { return n.to<T>(); }) const;
 
+    /**
+     * @param out output stream to dump `node` to in YAML format
+     * @param node node to dump to `out`
+     * @return out
+     */
     friend std::ostream& operator<<(std::ostream& out, const Node& node) {
         return out << YAML::Dump(node._yaml);
     }
 
+    /**
+     * @return number of child elements. This is the number of
+     * elements in a sequence or (k,v) pairs in a map. The size
+     * of scalar and null nodes is zero as is the size of
+     * undefined/non-existant nodes.
+     */
     auto size() const {
         return _yaml.size();
     }
 
+    /**
+     * @return if this node **is defined**. Note that this is not the
+     * same as `.to<bool>()`! If you have YAML `foo: false`, the
+     * value of `bool(node["foo"])` is true.
+     */
     explicit operator bool() const {
         return _valid && _yaml;
     }
 
+    /**
+     * @return if we're specified as `null`
+     */
     bool isNull() const {
         return type() == NodeType::Null;
     }
 
+    /**
+     * @return if we're a scalar type (string, number, etc)
+     */
     bool isScalar() const {
         return type() == NodeType::Scalar;
     }
 
+    /**
+     * @return if we're a sequence (array) type
+     */
     bool isSequence() const {
         return type() == NodeType::Sequence;
     }
 
+    /**
+     * @return if we're a map type
+     */
     bool isMap() const {
         return type() == NodeType::Map;
     }
 
+    /**
+     * @return what type we are
+     */
     NodeType type() const {
         if (!*this) {
             return NodeType::Undefined;
@@ -374,15 +405,50 @@ public:
         }
     }
 
+    /**
+     * @return the path that we took to get here. Path elements are
+     * separated by slashes.
+     *
+     * Given the following yaml:
+     *
+     * ```yaml
+     * foo: [1, 2]
+     * bar: baz
+     * ```
+     *
+     * 1. The path to `1` is `/foo/0`.
+     * 2. The path to `2` is `/foo/1`.
+     * 3. The path to `baz` is `/foo/bar`.
+     *
+     * When iterating over maps the keys technically have their own paths
+     * as well.
+     *
+     * ```c++
+     * for(auto kvp : node) {
+     *   // first iter, kvp.first is the 'foo' key and its path is `/foo$key`
+     *   // and kvp.second is the `[1,2]` value and its path is `/foo`.
+     *   //
+     *   // second iter, kvp.first is the `bar` key and its path is `/bar$key`, etc.
+     * }
+     * ```
+     *
+     * This is more of a curiosity than a useful feature. It is used when giving
+     * error-messages.
+     */
     std::string path() const;
 
-    friend class IteratorValue;
-
+    /** used in iteration */
     struct iterator;
 
+    /** start iterating */
     iterator begin() const;
 
+    /** end iterator */
     iterator end() const;
+
+    /** the value-type of the iterator. */
+    // friends because we need to use private ctors
+    friend class IteratorValue;
 
 private:
     Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
