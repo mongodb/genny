@@ -64,95 +64,91 @@ TEST_CASE("YAML::Node Equivalency") {
     }
 
     // iteration cases
-    {
-        // iteration over sequences
-        {
-            YAML::Node yaml = YAML::Load("ns: [1,2,3]");
-            int sum = 0;
-            for(auto n : yaml["ns"]) {
-                REQUIRE(n.first.IsDefined() == false);
-                REQUIRE(n.second.IsDefined() == false);
-                sum += n.as<int>();
-            }
-            REQUIRE(sum == 6);
-        }
+    {// iteration over sequences
+     {YAML::Node yaml = YAML::Load("ns: [1,2,3]");
+    int sum = 0;
+    for (auto n : yaml["ns"]) {
+        REQUIRE(n.first.IsDefined() == false);
+        REQUIRE(n.second.IsDefined() == false);
+        sum += n.as<int>();
+    }
+    REQUIRE(sum == 6);
+}
 
-        {
-            Node node {"ns: [1,2,3]", ""};
-            int sum = 0;
-            for(auto n : node["ns"]) {
-                REQUIRE(bool(n.first) == false);
-                REQUIRE(bool(n.second) == false);
-                sum += n.to<int>();
-                if (sum == 1) {
-                    REQUIRE(n.first.path() == "/ns/0$key");
-                    REQUIRE(n.second.path() == "/ns/0");
-                }
-            }
-            REQUIRE(sum == 6);
+{
+    Node node{"ns: [1,2,3]", ""};
+    int sum = 0;
+    for (auto n : node["ns"]) {
+        REQUIRE(bool(n.first) == false);
+        REQUIRE(bool(n.second) == false);
+        sum += n.to<int>();
+        if (sum == 1) {
+            REQUIRE(n.first.path() == "/ns/0$key");
+            REQUIRE(n.second.path() == "/ns/0");
         }
     }
+    REQUIRE(sum == 6);
+}
+}
 
-    {
-        // iteration over maps
-        {
-            YAML::Node yaml = YAML::Load("foo: bar");
-            int seen = 0;
-            for(auto kvp : yaml) {
-                ++seen;
-                REQUIRE(kvp.first.as<std::string>() == "foo");
-                REQUIRE(kvp.second.as<std::string>() == "bar");
-            }
-            REQUIRE(seen == 1);
-        }
-        {
-            Node node = Node("foo: bar", "");
-            int seen = 0;
-            for(auto kvp : node) {
-                ++seen;
-                REQUIRE(kvp.first.to<std::string>() == "foo");
-                REQUIRE(kvp.second.to<std::string>() == "bar");
-                // not super well-defined but what else can we do?
-                REQUIRE(kvp.path() == "/0");
-                REQUIRE(kvp.first.path() == "/foo$key");
-                REQUIRE(kvp.second.path() == "/foo");
-            }
-            REQUIRE(seen == 1);
-        }
+{// iteration over maps
+ {YAML::Node yaml = YAML::Load("foo: bar");
+int seen = 0;
+for (auto kvp : yaml) {
+    ++seen;
+    REQUIRE(kvp.first.as<std::string>() == "foo");
+    REQUIRE(kvp.second.as<std::string>() == "bar");
+}
+REQUIRE(seen == 1);
+}
+{
+    Node node = Node("foo: bar", "");
+    int seen = 0;
+    for (auto kvp : node) {
+        ++seen;
+        REQUIRE(kvp.first.to<std::string>() == "foo");
+        REQUIRE(kvp.second.to<std::string>() == "bar");
+        // not super well-defined but what else can we do?
+        REQUIRE(kvp.path() == "/0");
+        REQUIRE(kvp.first.path() == "/foo$key");
+        REQUIRE(kvp.second.path() == "/foo");
     }
+    REQUIRE(seen == 1);
+}
+}
 
-    {
-        // we're equivalent to YAML::Node's handling of
-        // null and missing values
-        YAML::Node yaml = YAML::Load("foo: null");
+{
+    // we're equivalent to YAML::Node's handling of
+    // null and missing values
+    YAML::Node yaml = YAML::Load("foo: null");
 
-        REQUIRE(yaml["foo"].IsDefined() == true);
-        REQUIRE(yaml["foo"].IsNull() == true);
-        REQUIRE(bool(yaml["foo"]) == true);
+    REQUIRE(yaml["foo"].IsDefined() == true);
+    REQUIRE(yaml["foo"].IsNull() == true);
+    REQUIRE(bool(yaml["foo"]) == true);
 
-        REQUIRE(yaml["bar"].IsDefined() == false);
-        REQUIRE(yaml["bar"].IsNull() == false);
-        REQUIRE(bool(yaml["bar"]) == false);
+    REQUIRE(yaml["bar"].IsDefined() == false);
+    REQUIRE(yaml["bar"].IsNull() == false);
+    REQUIRE(bool(yaml["bar"]) == false);
 
-        Node node {"foo: null", ""};
-        REQUIRE(node["foo"].isNull() == true);
-        REQUIRE(bool(node["foo"]) == true);
+    Node node{"foo: null", ""};
+    REQUIRE(node["foo"].isNull() == true);
+    REQUIRE(bool(node["foo"]) == true);
 
-        REQUIRE(node["bar"].isNull() == false);
-        REQUIRE(bool(node["bar"]) == false);
-    }
+    REQUIRE(node["bar"].isNull() == false);
+    REQUIRE(bool(node["bar"]) == false);
+}
 
-    {
-        YAML::Node yaml = YAML::Load("{a: A, b: B}");
-        REQUIRE(yaml.as<std::map<std::string, std::string>>() ==
-                std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
-    }
+{
+    YAML::Node yaml = YAML::Load("{a: A, b: B}");
+    REQUIRE(yaml.as<std::map<std::string, std::string>>() ==
+            std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
+}
 
-    {
-        YAML::Node yaml = YAML::Load("a: null");
-        REQUIRE(yaml["a"].IsNull());
-        REQUIRE(yaml["a"].as<int>(7) == 7);
-    }
+{
+    YAML::Node yaml = YAML::Load("a: null");
+    REQUIRE(yaml["a"].IsNull());
+    REQUIRE(yaml["a"].as<int>(7) == 7);
+}
 }
 
 TEST_CASE("value_or") {
@@ -482,20 +478,25 @@ TEST_CASE("getPlural") {
 
     {
         Node node{"{}", ""};
-        REQUIRE_THROWS_WITH([&]() { node.getPlural<int>("Foo", "Foos"); }(),
-                            Catch::Matches("Either 'Foo' or 'Foos' required. Node: \\{\\}. Path: '\\$plural\\(Foo,Foos\\)'"));
+        REQUIRE_THROWS_WITH(
+            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
+            Catch::Matches(
+                "Either 'Foo' or 'Foos' required. Node: \\{\\}. Path: '\\$plural\\(Foo,Foos\\)'"));
     }
 
     {
         Node node{"{Foos: 7}", ""};
-        REQUIRE_THROWS_WITH([&]() { node.getPlural<int>("Foo", "Foos"); }(),
-                            Catch::Matches("'Foos' must be a sequence type. Got 7. Path: '\\$plural\\(Foo,Foos\\)'"));
+        REQUIRE_THROWS_WITH(
+            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
+            Catch::Matches(
+                "'Foos' must be a sequence type. Got 7. Path: '\\$plural\\(Foo,Foos\\)'"));
     }
 
     {
         Node node{"{Foo: 8, Foos: [1,2]}", ""};
-        REQUIRE_THROWS_WITH([&]() { node.getPlural<int>("Foo", "Foos"); }(),
-                            Catch::Matches("Can't have both 'Foo' and 'Foos'. Path: '\\$plural\\(Foo,Foos\\)'"));
+        REQUIRE_THROWS_WITH(
+            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
+            Catch::Matches("Can't have both 'Foo' and 'Foos'. Path: '\\$plural\\(Foo,Foos\\)'"));
     }
 }
 

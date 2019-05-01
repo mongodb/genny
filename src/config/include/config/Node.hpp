@@ -16,11 +16,9 @@
 #define HEADER_17681835_40A0_443E_939D_3679A1A6B5DD_INCLUDED
 
 #include <functional>
-#include <memory>
 #include <optional>
 #include <type_traits>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include <boost/throw_exception.hpp>
@@ -344,8 +342,6 @@ private:
 // we can act like a Node if iterated value is a scalar or
 // we can act like a pair of Nodes if iterated value is a map entry
 class IteratorValue : public std::pair<Node, Node>, public Node {
-    using NodePair = std::pair<Node, Node>;
-
 public:
     // jump through immense hoops to avoid knowing anything about the actual yaml iterator other
     // than its pair form is a pair of {YAML::Node, YAML::Node}
@@ -370,6 +366,9 @@ public:
                    itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
           // API like a value where it's being used in sequence context
           Node{itVal, parent, itVal, v1::toString(index)} {}
+
+private:
+    using NodePair = std::pair<Node, Node>;
 };
 
 
@@ -381,13 +380,11 @@ public:
     }
 
     auto operator*() const {
-        auto out = _child.operator*();
-        return IteratorValue{parent, out, index};
+        return IteratorValue{parent, (_child.operator*()), index};
     }
 
     auto operator-> () const {
-        auto out = _child.operator*();
-        return IteratorValue{parent, out, index};
+        return IteratorValue{parent, (_child.operator*()), index};
     }
 
     auto operator==(const iterator& rhs) const {
