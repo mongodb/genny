@@ -59,6 +59,28 @@ TEST_CASE("YAML::Node") {
     }
 
     {
+        // we're equivalent to YAML::Node's handling of
+        // null and missing values
+        
+        YAML::Node yaml = YAML::Load("foo: null");
+
+        REQUIRE(yaml["foo"].IsDefined() == true);
+        REQUIRE(yaml["foo"].IsNull() == true);
+        REQUIRE(bool(yaml["foo"]) == true);
+
+        REQUIRE(yaml["bar"].IsDefined() == false);
+        REQUIRE(yaml["bar"].IsNull() == false);
+        REQUIRE(bool(yaml["bar"]) == false);
+
+        Node node {"foo: null", ""};
+        REQUIRE(node["foo"].isNull() == true);
+        REQUIRE(bool(node["foo"]) == true);
+
+        REQUIRE(node["bar"].isNull() == false);
+        REQUIRE(bool(node["bar"]) == false);
+    }
+
+    {
         YAML::Node yaml = YAML::Load("{a: A, b: B}");
         REQUIRE(yaml.as<std::map<std::string, std::string>>() ==
                 std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
