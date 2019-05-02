@@ -543,10 +543,6 @@ public:
             this->_actor->get<std::string>("Name"), stm.str(), id);
     }
 
-
-private:
-    bool _isNop() const;
-
 private:
     ActorContext* _actor;
     const PhaseNumber _phaseNumber;

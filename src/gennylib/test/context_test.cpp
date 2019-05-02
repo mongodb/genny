@@ -72,8 +72,8 @@ void gives(const string& yaml, OutV expect, Args... args) {
     REQUIRE(test() == expect);
 }
 
-struct NoOpProducer : public ActorProducer {
-    NoOpProducer() : ActorProducer("NoOp") {}
+struct NopProducer : public ActorProducer {
+    NopProducer() : ActorProducer("Nop") {}
 
     ActorVector produce(ActorContext& context) override {
         return {};
@@ -96,7 +96,7 @@ TEST_CASE("loads configuration okay") {
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
-        {"NoOp", std::make_shared<NoOpProducer>()},
+        {"Nop", std::make_shared<NopProducer>()},
     };
 
     SECTION("Valid YAML") {
@@ -104,7 +104,7 @@ TEST_CASE("loads configuration okay") {
 SchemaVersion: 2018-07-01
 Actors:
 - Name: HelloWorld
-  Type: NoOp
+  Type: Nop
   Count: 7
         )");
 
@@ -277,14 +277,12 @@ Actors:
 
     SECTION("Will throw if Producer is defined again") {
         auto testFun = []() {
-            auto noOpProducer = std::make_shared<NoOpProducer>();
+            auto nopProducer = std::make_shared<NopProducer>();
             auto cast = Cast{
-                {"Foo", noOpProducer},
-                {"Bar", noOpProducer},
-                {"Foo", noOpProducer},
+                {"Foo", nopProducer}, {"Bar", nopProducer}, {"Foo", nopProducer},
             };
         };
-        REQUIRE_THROWS_WITH(testFun(), StartsWith(R"(Failed to add 'NoOp' as 'Foo')"));
+        REQUIRE_THROWS_WITH(testFun(), StartsWith(R"(Failed to add 'Nop' as 'Foo')"));
     }
 }
 
@@ -293,8 +291,7 @@ void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
-        {"Op", std::make_shared<OpProducer>(op)},
-        {"NoOp", std::make_shared<NoOpProducer>()},
+        {"Op", std::make_shared<OpProducer>(op)}, {"Nop", std::make_shared<NopProducer>()},
     };
 
     WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast};
@@ -412,7 +409,7 @@ TEST_CASE("Duplicate Phase Numbers") {
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
-        {"NoOp", std::make_shared<NoOpProducer>()},
+        {"Nop", std::make_shared<NopProducer>()},
     };
 
     SECTION("Phase Number syntax") {
@@ -420,7 +417,7 @@ TEST_CASE("Duplicate Phase Numbers") {
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://localhost:27017
         Actors:
-        - Type: NoOp
+        - Type: Nop
         Phases:
         - Phase: 0
         - Phase: 0
@@ -435,7 +432,7 @@ TEST_CASE("Duplicate Phase Numbers") {
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://localhost:27017
         Actors:
-        - Type: NoOp
+        - Type: Nop
         Phases:
         - Phase: 0
         - Phase: 0..11
@@ -452,7 +449,7 @@ TEST_CASE("No PhaseContexts") {
     MongoUri: mongodb://localhost:27017
     Actors:
     - Name: HelloWorld
-      Type: NoOp
+      Type: Nop
     )");
 
     SECTION("Empty PhaseContexts") {
@@ -470,7 +467,7 @@ TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
         MongoUri: mongodb://localhost:27017
         Actors:
         - Name: HelloWorld
-          Type: NoOp
+          Type: Nop
         Phases:
         - Phase: 0
         - Phase: 1..4
@@ -842,7 +839,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
-        {"Foo", std::make_shared<NoOpProducer>()},
+        {"Foo", std::make_shared<NopProducer>()},
     };
 
     auto yaml = YAML::Load(R"(

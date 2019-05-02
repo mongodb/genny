@@ -15,7 +15,7 @@ Actors:
   ThrowOnFailure: false
   Phases:
   - Phase: 0
-    NoOp: true
+    Nop: true
   - Phase: 1
     Repeat: 1
     SleepBefore: 30 seconds
@@ -34,7 +34,7 @@ Actors:
   Database: test
   Phases:
   - Phase: 0
-    NoOp: true
+    Nop: true
   - Phase: 1
     Rate: 1 per 100 microseconds
     # This should be how long the StepdownCommand Actor Phase 1 takes
@@ -61,4 +61,4 @@ Actors:
   - keys: {x: 1}
   Phases:
   - Phase: 0
-  - NoOp: true
+  - Nop: true

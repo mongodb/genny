@@ -13,13 +13,13 @@ Actors:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
     Repeat: 1
-  - &NoOp {Operation: Nop}
+  - &Nop {Nop: true}
 
 - Name: Update
   Type: MultiCollectionUpdate
   Threads: 10
   Phases:
-  - *NoOp
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Update
@@ -30,7 +30,7 @@ Actors:
   Type: MultiCollectionQuery
   Threads: 10
   Phases:
-  - *NoOp
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Query
@@ -40,7 +40,7 @@ Actors:
   Type: MultiCollectionQuery
   Threads: 2  # 2 threads for doing a two-minute query every minute.
   Phases:
-  - *NoOp
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: LargeQuery
