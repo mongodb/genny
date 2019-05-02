@@ -29,15 +29,15 @@ Actors:
   - MetricsName: LoopOnlyFixedTime
     Duration: 10 seconds
   - MetricsName: LoopOnly
-    Repeat: 1000000  # 1 million iterations.
+    Repeat: 1e6
   - MetricsName: LoopNRateLimit
-    Repeat: 10000
+    Repeat: 1e4
     Rate: 1 per 1 millisecond
   - MetricsName: LoopNSleepBefore
-    Repeat: 10000
+    Repeat: 1e4
     SleepBefore: 1 millisecond
   - MetricsName: LoopNSleepAfter
-    Repeat: 10000
+    Repeat: 1e4
     SleepAfter: 1 millisecond
   - Phase: 5..9
     Nop: true
@@ -51,13 +51,13 @@ Actors:
   - MetricsName: LoopOnlyFixedTime
     Duration: 10 seconds
   - MetricsName: LoopOnly
-    Repeat: 1000000  # 1 million iterations.
+    Repeat: 1e6
   - MetricsName: LoopNRateLimit
-    Repeat: 10000
+    Repeat: 1e4
     Rate: 1 per 1 millisecond
   - MetricsName: LoopNSleepBefore
-    Repeat: 10000
+    Repeat: 1e4
     SleepBefore: 1 millisecond
   - MetricsName: LoopNSleepAfter
-    Repeat: 10000
+    Repeat: 1e4
     SleepAfter: 1 millisecond

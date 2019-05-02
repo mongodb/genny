@@ -24,8 +24,6 @@ namespace genny::actor {
 
 /** @private */
 struct NopMetrics::PhaseConfig {
-    std::string message;
-
     /** record data about each iteration */
     metrics::Operation operation;
 

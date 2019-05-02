@@ -11,16 +11,16 @@ Actors:
   Threads: 100
   Database: "test2"
   Phases:
-  - &Nop {Nop: true}
+  - {Nop: true}
   - Collection: "inserts"
     Document: {"a": {^RandomInt: {min: 50, max: 60}}}
-  - *Nop
-  - *Nop
+  - {Nop: true}
+  - {Nop: true}
   - Collection: "inserts"
     Document: {"b": {^RandomString: {length: {^RandomInt: {min: 5, max: 15}}, alphabet: abcde}}}
   - Collection: "inserts"
     Document: {"a": {^RandomInt: {min: 63, max: 70}}}
-  - *Nop
+  - {Nop: true}
   - Collection: "inserts"
     Document: {"b": {^RandomString: {length: {^RandomInt: {min: 15, max: 25}}, alphabet: abcde}}}
-  - *Nop
+  - {Nop: true}
