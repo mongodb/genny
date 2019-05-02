@@ -45,13 +45,21 @@ std::string toString(const T& t) {
 template <typename O>
 struct NodeConvert {};
 
-
 /**
  * Throw this to indicate a bad path.
  */
-class InvalidPathException : public std::invalid_argument {
+class InvalidKeyException : public std::exception {
 public:
-    using std::invalid_argument::invalid_argument;
+    InvalidKeyException(const std::string& msg, const std::string& key, const class Node* node)
+        : _what{createWhat(msg, key, node)} {}
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    static std::string createWhat(const std::string& msg, const std::string& key, const class Node* node);
+    std::string _what;
 };
 
 /**
@@ -635,17 +643,16 @@ std::vector<T> Node::getPlural(const std::string& singular,
     auto pluralValue = (*this)[plural];
     auto singValue = (*this)[singular];
     if (pluralValue && singValue) {
-        std::stringstream str;
-        str << "Can't have both '" << singular << "' and '" << plural << "'. ";
-        str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
-        BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+        BOOST_THROW_EXCEPTION(
+            InvalidKeyException("Can't have both '" + singular + "' and '" + plural + "'.",
+                                "$plural(" + singular + "," + plural + ")",
+                                this));
     } else if (pluralValue) {
         if (!pluralValue.isSequence()) {
-            std::stringstream str;
-            str << "'" << plural << "' must be a sequence type. ";
-            str << "Got " << pluralValue << ". ";
-            str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
-            BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+            BOOST_THROW_EXCEPTION(
+                InvalidKeyException("Plural '" + plural + "' must be a sequence type.",
+                                    "$plural(" + singular + "," + plural + ")",
+                                    this));
         }
         for (auto&& val : pluralValue) {
             T created = std::invoke(f, val);
@@ -655,11 +662,10 @@ std::vector<T> Node::getPlural(const std::string& singular,
         T created = std::invoke(f, singValue);
         out.emplace_back(std::move(created));
     } else if (!singValue && !pluralValue) {
-        std::stringstream str;
-        str << "Either '" << singular << "' or '" << plural << "' required. ";
-        str << "Node: " << *this << ". ";
-        str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
-        BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+        BOOST_THROW_EXCEPTION(
+            InvalidKeyException("Either '" + singular + "' or '" + plural + "' required.",
+                                "$plural(" + singular + "," + plural + ")",
+                                this));
     }
 
     return out;

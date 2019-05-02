@@ -301,9 +301,9 @@ TEST_CASE("size") {
     }
     {
         Node node{
-                "foos: [1,2,3]\n"
-                "children: {a: 7}",
-                ""};
+            "foos: [1,2,3]\n"
+            "children: {a: 7}",
+            ""};
         REQUIRE(node["foos"][".."].size() == 2);
         REQUIRE(node["foos"][".."][".."].size() == 0);
         REQUIRE(node["foos"][".."][".."][".."].size() == 0);
@@ -552,7 +552,7 @@ TEST_CASE("getPlural") {
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
             Catch::Matches(
-                "Either 'Foo' or 'Foos' required. Node: \\{\\}. Path: '\\$plural\\(Foo,Foos\\)'"));
+                R"(Invalid key '\$plural\(Foo,Foos\)': Either 'Foo' or 'Foos' required. On node with path '': \{\})"));
     }
 
     {
@@ -560,14 +560,15 @@ TEST_CASE("getPlural") {
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
             Catch::Matches(
-                "'Foos' must be a sequence type. Got 7. Path: '\\$plural\\(Foo,Foos\\)'"));
+                R"(Invalid key '\$plural\(Foo,Foos\)': Plural 'Foos' must be a sequence type. On node with path '': \{Foos: 7\})"));
     }
 
     {
         Node node{"{Foo: 8, Foos: [1,2]}", ""};
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
-            Catch::Matches("Can't have both 'Foo' and 'Foos'. Path: '\\$plural\\(Foo,Foos\\)'"));
+            Catch::Matches(
+                R"(Invalid key '\$plural\(Foo,Foos\)': Can't have both 'Foo' and 'Foos'. On node with path '': \{Foo: 8, Foos: \[1, 2\]\})"));
     }
 }
 
