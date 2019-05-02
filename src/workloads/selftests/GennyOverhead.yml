@@ -27,9 +27,9 @@ Actors:
   Threads: 100
   Phases:
   - MetricsName: LoopOnlyFixedTime
-    Duration: 10 seconds
+    Duration: 10 milliseconds  # This test produces 20GB of metrics per second.
   - MetricsName: LoopOnly
-    Repeat: 1e6
+    Repeat: 1e4  # Repeat 10k times per thread for a total of 1e6 iterations.
   - MetricsName: LoopNRateLimit
     Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
     Rate: 1 per 1 millisecond
@@ -49,7 +49,7 @@ Actors:
   - Phase: 0..4
     Nop: true
   - MetricsName: LoopOnlyFixedTime
-    Duration: 10 seconds
+    Duration: 10 milliseconds
   - MetricsName: LoopOnly
     Repeat: 1e6
   - MetricsName: LoopNRateLimit
