@@ -65,15 +65,28 @@ TEST_CASE("YAML::Node Equivalency") {
 
     // invalid access
     {
+        {
         YAML::Node yaml = YAML::Load("foo: a");
+        // test of the test
+        REQUIRE(yaml["foo"].as<std::string>() == "a");
+        // YAML::Node doesn't barf when treating a map like a sequence
+        REQUIRE(bool(yaml[0]) == false);
+        // ...but it does barf when treating a scalar like a sequence
         REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
                             Catch::Matches("operator\\[\\] call on a scalar"));
+        }
 
+        {
         Node node{"foo: a", ""};
-        REQUIRE_THROWS_WITH(
-            [&]() { node["foo"][0]; }(),
-            Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
-                           "a sequence\\? On node with path '/foo': a"));
+            // test of the test
+            REQUIRE(node["foo"].to<std::string>() == "a");
+            // don't barf when treating a map like a sequence
+            REQUIRE(bool(node[0]) == false);
+            // ...but barf when treating a scalar like a sequence
+            REQUIRE_THROWS_WITH([&]() { node["foo"][0]; }(),
+                                Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
+                                               "a sequence\\? On node with path '/foo': a"));
+        }
     }
 
     // iteration cases
@@ -188,10 +201,13 @@ nope: false
         node[0].to<int>();
     }(), Catch::Matches("Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
     REQUIRE_THROWS_WITH([&](){
+        // debatable if this should have different error behavior than case above but YAML::Node has different
+        // behavior depending on accessing scalar[0] versus map[0]
         node["seven"][0].to<int>();
     }(), Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a sequence\\? On node with path '/seven': 7"));
     REQUIRE_THROWS_WITH([&](){
-        node["seven"][0][".."]["seven"].to<int>();
+        // Debatable if this should fail or not
+        node["seven"][0][".."];
     }(), Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a sequence\\? On node with path '/seven': 7"));
 }
 
