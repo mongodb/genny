@@ -58,7 +58,9 @@ public:
     }
 
 private:
-    static std::string createWhat(const std::string& msg, const std::string& key, const class Node* node);
+    static std::string createWhat(const std::string& msg,
+                                  const std::string& key,
+                                  const class Node* node);
     std::string _what;
 };
 
@@ -241,7 +243,8 @@ public:
     O to(Args&&... args) const {
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
-            BOOST_THROW_EXCEPTION(InvalidKeyException("Tried to access node that doesn't exist.", this->_key, this));
+            BOOST_THROW_EXCEPTION(
+                InvalidKeyException("Tried to access node that doesn't exist.", this->_key, this));
         }
         return *out;
     }
