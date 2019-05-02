@@ -55,134 +55,147 @@ TEST_CASE("YAML::Node Equivalency") {
     // The assertions on YAML::Node aren't strictly necessary, but
     // having the API shown here justifies the behavior of genny::Node.
     //
-    {
-        YAML::Node yaml = YAML::Load("foo: false");
-        REQUIRE(yaml);
-        REQUIRE(yaml["foo"]);
-        REQUIRE(yaml["foo"].IsScalar());
-        REQUIRE(yaml["foo"].as<bool>() == false);
+
+    SECTION("Boolean Conversions") {
+        {
+            YAML::Node yaml = YAML::Load("foo: false");
+            REQUIRE(yaml);
+            REQUIRE(yaml["foo"]);
+            REQUIRE(yaml["foo"].IsScalar());
+            REQUIRE(yaml["foo"].as<bool>() == false);
+        }
     }
 
-    // invalid access
-    {
+    SECTION("Invalid Access") {
         {
-        YAML::Node yaml = YAML::Load("foo: a");
-        // test of the test
-        REQUIRE(yaml["foo"].as<std::string>() == "a");
-        // YAML::Node doesn't barf when treating a map like a sequence
-        REQUIRE(bool(yaml[0]) == false);
-        // ...but it does barf when treating a scalar like a sequence
-        REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
-                            Catch::Matches("operator\\[\\] call on a scalar"));
+            YAML::Node yaml = YAML::Load("foo: a");
+            // test of the test
+            REQUIRE(yaml["foo"].as<std::string>() == "a");
+            // YAML::Node doesn't barf when treating a map like a sequence
+            REQUIRE(bool(yaml[0]) == false);
+            // ...but it does barf when treating a scalar like a sequence
+            REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
+                                Catch::Matches("operator\\[\\] call on a scalar"));
         }
 
         {
-        Node node{"foo: a", ""};
+            Node node{"foo: a", ""};
             // test of the test
             REQUIRE(node["foo"].to<std::string>() == "a");
             // don't barf when treating a map like a sequence
             REQUIRE(bool(node[0]) == false);
             // ...but barf when treating a scalar like a sequence
-            REQUIRE_THROWS_WITH([&]() { node["foo"][0]; }(),
-                                Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
-                                               "a sequence\\? On node with path '/foo': a"));
+            REQUIRE_THROWS_WITH(
+                [&]() { node["foo"][0]; }(),
+                Catch::Matches(
+                    "Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
+                    "a sequence\\? On node with path '/foo': a"));
         }
     }
 
-    // iteration cases
-    {// iteration over sequences
-     {YAML::Node yaml = YAML::Load("ns: [1,2,3]");
-    int sum = 0;
-    for (auto n : yaml["ns"]) {
-        REQUIRE(n.first.IsDefined() == false);
-        REQUIRE(n.second.IsDefined() == false);
-        sum += n.as<int>();
-    }
-    REQUIRE(sum == 6);
-}
+    SECTION("iteration over sequences") {
+        {
+            YAML::Node yaml = YAML::Load("ns: [1,2,3]");
+            int sum = 0;
+            for (auto n : yaml["ns"]) {
+                REQUIRE(n.first.IsDefined() == false);
+                REQUIRE(n.second.IsDefined() == false);
+                sum += n.as<int>();
+            }
+            REQUIRE(sum == 6);
+        }
 
-{
-    Node node{"ns: [1,2,3]", ""};
-    int sum = 0;
-    for (auto n : node["ns"]) {
-        REQUIRE(bool(n.first) == false);
-        REQUIRE(bool(n.second) == false);
-        sum += n.to<int>();
-        if (sum == 1) {
-            REQUIRE(n.first.path() == "/ns/0$key");
-            REQUIRE(n.second.path() == "/ns/0");
+        {
+            Node node{"ns: [1,2,3]", ""};
+            int sum = 0;
+            for (auto n : node["ns"]) {
+                REQUIRE(bool(n.first) == false);
+                REQUIRE(bool(n.second) == false);
+                sum += n.to<int>();
+                if (sum == 1) {
+                    REQUIRE(n.first.path() == "/ns/0$key");
+                    REQUIRE(n.second.path() == "/ns/0");
+                }
+            }
+            REQUIRE(sum == 6);
         }
     }
-    REQUIRE(sum == 6);
-}
-}
 
-{// iteration over maps
- {YAML::Node yaml = YAML::Load("foo: bar");
-int seen = 0;
-for (auto kvp : yaml) {
-    ++seen;
-    REQUIRE(kvp.first.as<std::string>() == "foo");
-    REQUIRE(kvp.second.as<std::string>() == "bar");
-}
-REQUIRE(seen == 1);
-}
-{
-    Node node = Node("foo: bar", "");
-    int seen = 0;
-    for (auto kvp : node) {
-        ++seen;
-        REQUIRE(kvp.first.to<std::string>() == "foo");
-        REQUIRE(kvp.second.to<std::string>() == "bar");
-        // not super well-defined but what else can we do?
-        REQUIRE(kvp.path() == "/0");
-        REQUIRE(kvp.first.path() == "/foo$key");
-        REQUIRE(kvp.second.path() == "/foo");
+    SECTION("iteration over maps") {
+        {
+            YAML::Node yaml = YAML::Load("foo: bar");
+            int seen = 0;
+            for (auto kvp : yaml) {
+                ++seen;
+                REQUIRE(kvp.first.as<std::string>() == "foo");
+                REQUIRE(kvp.second.as<std::string>() == "bar");
+            }
+            REQUIRE(seen == 1);
+        }
+        {
+            Node node = Node("foo: bar", "");
+            int seen = 0;
+            for (auto kvp : node) {
+                ++seen;
+                REQUIRE(kvp.first.to<std::string>() == "foo");
+                REQUIRE(kvp.second.to<std::string>() == "bar");
+                // not super well-defined but what else can we do?
+                REQUIRE(kvp.path() == "/0");
+                REQUIRE(kvp.first.path() == "/foo$key");
+                REQUIRE(kvp.second.path() == "/foo");
+            }
+            REQUIRE(seen == 1);
+        }
     }
-    REQUIRE(seen == 1);
-}
-}
 
-{
-    // This is why we need to have Node::_valid
-    // We can't rely on our default-constructed nodes.
-    auto defaultConstructed = YAML::Node{};
-    REQUIRE(bool(defaultConstructed) == true);
-    REQUIRE(defaultConstructed.Type() == YAML::NodeType::Null);
-}
+    SECTION("Default-constructed is valid") {
+        // This is why we need to have Node::_valid
+        // We can't rely on our default-constructed nodes.
+        {
+            auto defaultConstructed = YAML::Node{};
+            REQUIRE(bool(defaultConstructed) == true);
+            REQUIRE(defaultConstructed.Type() == YAML::NodeType::Null);
+        }
+    }
 
-{
-    // we're equivalent to YAML::Node's handling of
-    // null and missing values
-    YAML::Node yaml = YAML::Load("foo: null");
+    SECTION("we're equivalent to YAML::Node's handling of null and missing values") {
+        {
+            YAML::Node yaml = YAML::Load("foo: null");
 
-    REQUIRE(yaml["foo"].IsDefined() == true);
-    REQUIRE(yaml["foo"].IsNull() == true);
-    REQUIRE(bool(yaml["foo"]) == true);
+            REQUIRE(yaml["foo"].IsDefined() == true);
+            REQUIRE(yaml["foo"].IsNull() == true);
+            REQUIRE(bool(yaml["foo"]) == true);
 
-    REQUIRE(yaml["bar"].IsDefined() == false);
-    REQUIRE(yaml["bar"].IsNull() == false);
-    REQUIRE(bool(yaml["bar"]) == false);
+            REQUIRE(yaml["bar"].IsDefined() == false);
+            REQUIRE(yaml["bar"].IsNull() == false);
+            REQUIRE(bool(yaml["bar"]) == false);
+        }
 
-    Node node{"foo: null", ""};
-    REQUIRE(node["foo"].isNull() == true);
-    REQUIRE(bool(node["foo"]) == true);
+        {
+            Node node{"foo: null", ""};
+            REQUIRE(node["foo"].isNull() == true);
+            REQUIRE(bool(node["foo"]) == true);
 
-    REQUIRE(node["bar"].isNull() == false);
-    REQUIRE(bool(node["bar"]) == false);
-}
+            REQUIRE(node["bar"].isNull() == false);
+            REQUIRE(bool(node["bar"]) == false);
+        }
+    }
 
-{
-    YAML::Node yaml = YAML::Load("{a: A, b: B}");
-    REQUIRE(yaml.as<std::map<std::string, std::string>>() ==
-            std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
-}
+    SECTION("Can convert to map<str,str>") {
+        {
+            YAML::Node yaml = YAML::Load("{a: A, b: B}");
+            REQUIRE(yaml.as<std::map<std::string, std::string>>() ==
+                    std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
+        }
+    }
 
-{
-    YAML::Node yaml = YAML::Load("a: null");
-    REQUIRE(yaml["a"].IsNull());
-    REQUIRE(yaml["a"].as<int>(7) == 7);
-}
+    SECTION("isNull and fallback") {
+        {
+            YAML::Node yaml = YAML::Load("a: null");
+            REQUIRE(yaml["a"].IsNull());
+            REQUIRE(yaml["a"].as<int>(7) == 7);
+        }
+    }
 }
 
 TEST_CASE("invalid access") {
@@ -196,19 +209,26 @@ sure: true
 nope: false
 )");
     Node node{yaml, ""};
-//    REQUIRE_THROWS_WITH([&](){}(), Catch::Matches(""));
-    REQUIRE_THROWS_WITH([&](){
-        node[0].to<int>();
-    }(), Catch::Matches("Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
-    REQUIRE_THROWS_WITH([&](){
-        // debatable if this should have different error behavior than case above but YAML::Node has different
-        // behavior depending on accessing scalar[0] versus map[0]
-        node["seven"][0].to<int>();
-    }(), Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a sequence\\? On node with path '/seven': 7"));
-    REQUIRE_THROWS_WITH([&](){
-        // Debatable if this should fail or not
-        node["seven"][0][".."];
-    }(), Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a sequence\\? On node with path '/seven': 7"));
+    //    REQUIRE_THROWS_WITH([&](){}(), Catch::Matches(""));
+    REQUIRE_THROWS_WITH(
+        [&]() { node[0].to<int>(); }(),
+        Catch::Matches(
+            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
+    REQUIRE_THROWS_WITH(
+        [&]() {
+            // debatable if this should have different error behavior than case above but YAML::Node
+            // has different behavior depending on accessing scalar[0] versus map[0]
+            node["seven"][0].to<int>();
+        }(),
+        Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a "
+                       "sequence\\? On node with path '/seven': 7"));
+    REQUIRE_THROWS_WITH(
+        [&]() {
+            // Debatable if this should fail or not
+            node["seven"][0][".."];
+        }(),
+        Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a "
+                       "sequence\\? On node with path '/seven': 7"));
 }
 
 TEST_CASE("value_or") {
