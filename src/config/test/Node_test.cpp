@@ -429,7 +429,8 @@ Two: {}
 
     REQUIRE_THROWS_WITH(
         node["One"]["foo"].to<std::string>(),
-        Catch::Contains("Tried to access node that doesn't exist at path: /One/foo"));
+        Catch::Matches(
+            R"(Invalid key 'foo': Tried to access node that doesn't exist. On node with path '/One/foo': )"));
 }
 
 TEST_CASE("Node iteration path") {

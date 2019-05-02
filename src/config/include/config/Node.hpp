@@ -241,10 +241,7 @@ public:
     O to(Args&&... args) const {
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
-            std::ostringstream msg;
-            msg << "Tried to access node that doesn't exist at path: " << this->path();
-            // TODO: custom exception type
-            BOOST_THROW_EXCEPTION(std::logic_error(msg.str()));
+            BOOST_THROW_EXCEPTION(InvalidKeyException("Tried to access node that doesn't exist.", this->_key, this));
         }
         return *out;
     }
