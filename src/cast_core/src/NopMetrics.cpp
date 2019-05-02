@@ -28,14 +28,21 @@ struct NopMetrics::PhaseConfig {
     metrics::Operation operation;
 
     explicit PhaseConfig(PhaseContext& context, ActorId actorId)
-        : operation{context.operation("Iterations", actorId)} {}
+        : operation{context.operation("Iterate", actorId)} {}
 };
 
 void NopMetrics::run() {
+
     for (auto&& config : _loop) {
+        auto prev_ctx = std::unique_ptr<metrics::OperationContext>();
         for (auto _ : config) {
-            auto ctx = config->operation.start();
-            ctx.success();
+            if (prev_ctx) {
+                prev_ctx->success();
+            }
+            prev_ctx = std::make_unique<metrics::OperationContext>(config->operation.start());
+        }
+        if (prev_ctx) {
+            prev_ctx->success();
         }
     }
 }
