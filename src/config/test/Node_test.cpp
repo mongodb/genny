@@ -172,6 +172,29 @@ REQUIRE(seen == 1);
 }
 }
 
+TEST_CASE("invalid access") {
+    auto yaml = std::string(R"(
+seven: 7
+bee: b
+intList: [1,2,3]
+stringMap: {a: A, b: B}
+nothing: null
+sure: true
+nope: false
+)");
+    Node node{yaml, ""};
+//    REQUIRE_THROWS_WITH([&](){}(), Catch::Matches(""));
+    REQUIRE_THROWS_WITH([&](){
+        node[0].to<int>();
+    }(), Catch::Matches("Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
+    REQUIRE_THROWS_WITH([&](){
+        node["seven"][0].to<int>();
+    }(), Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a sequence\\? On node with path '/seven': 7"));
+    REQUIRE_THROWS_WITH([&](){
+        node["seven"][0][".."]["seven"].to<int>();
+    }(), Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a sequence\\? On node with path '/seven': 7"));
+}
+
 TEST_CASE("value_or") {
     auto yaml = std::string(R"(
 seven: 7

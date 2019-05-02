@@ -510,31 +510,24 @@ private:
 
     static YAML::Node parse(std::string);
 
+    template<typename K>
+    std::optional<const YAML::Node> parentGet(const K& key) const {
+        if (!_parent) {
+            return std::nullopt;
+        }
+        return _parent->yamlGet(key);
+    }
+
     template <typename K>
     std::optional<const YAML::Node> yamlGet(const K& key) const {
         if (!_valid) {
-            if (!_parent) {
-                return std::nullopt;
-            } else {
-                return _parent->yamlGet(key);
-            }
+            return parentGet(key);
         }
-        try {
-            const YAML::Node found = _yaml[key];
-            if (found) {
-                return std::make_optional<const YAML::Node>(found);
-            } else {
-                if (!_parent) {
-                    return std::nullopt;
-                }
-                return _parent->yamlGet(key);
-            }
-        } catch (const YAML::Exception& x) {
-            BOOST_THROW_EXCEPTION(InvalidKeyException(
-                "Invalid YAML access. Perhaps trying to treat a map as a sequence?",
-                v1::toString(key),
-                this));
+        const YAML::Node found = _yaml[key];
+        if (found) {
+            return std::make_optional<const YAML::Node>(found);
         }
+        return parentGet(key);
     }
 
     template <typename K>
@@ -554,11 +547,14 @@ private:
                 return Node{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
             }
         }
-        auto yaml = this->yamlGet(key);
-        if (yaml) {
-            return Node{*yaml, this, true, keyStr};
-        } else {
-            return Node{YAML::Node{}, this, false, keyStr};
+        try {
+            auto yaml = this->yamlGet(key);
+            return yaml ? Node{*yaml, this, true, keyStr} : Node{YAML::Node{}, this, false, keyStr};
+        } catch (const YAML::Exception& x) {
+            BOOST_THROW_EXCEPTION(InvalidKeyException(
+                "Invalid YAML access. Perhaps trying to treat a map as a sequence?",
+                v1::toString(key),
+                this));
         }
     }
 
