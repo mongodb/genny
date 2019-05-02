@@ -63,6 +63,19 @@ TEST_CASE("YAML::Node Equivalency") {
         REQUIRE(yaml["foo"].as<bool>() == false);
     }
 
+    // invalid access
+    {
+        YAML::Node yaml = YAML::Load("foo: a");
+        REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
+                            Catch::Matches("operator\\[\\] call on a scalar"));
+
+        Node node{"foo: a", ""};
+        REQUIRE_THROWS_WITH(
+            [&]() { node["foo"][0]; }(),
+            Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
+                           "a sequence\\? On node with path '/foo': a"));
+    }
+
     // iteration cases
     {// iteration over sequences
      {YAML::Node yaml = YAML::Load("ns: [1,2,3]");
@@ -179,6 +192,15 @@ nope: false
     REQUIRE(node["stringMap2"].value_or(std::map<std::string, std::string>{{"foo", "bar"}}) ==
             std::map<std::string, std::string>{{"foo", "bar"}});
     REQUIRE(node["nothing"].value_or(7) == 7);
+
+    REQUIRE(node["stringMap"][0].value_or(7) == 7);
+    // we went to an "invalid" node stringMap[0] (because stringMap is a map) but then we went to ..
+    // so we're okay
+    REQUIRE(node["stringMap"][0][".."]["a"].value_or<std::string>("orVal") == "A");
+    // even invalid nodes can value_or
+    REQUIRE(node["stringMap"][0]["a"].value_or<std::string>("orVal") == "A");
+    // same thing for root level
+    REQUIRE(node[0][".."]["bee"].value_or<std::string>("x") == "b");
 
     REQUIRE(node["sure"].value_or(false) == true);
     REQUIRE(node["sure"].value_or(true) == true);

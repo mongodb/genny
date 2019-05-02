@@ -513,25 +513,33 @@ private:
     template <typename K>
     std::optional<const YAML::Node> yamlGet(const K& key) const {
         if (!_valid) {
-            return std::nullopt;
-        }
-        const YAML::Node found = _yaml[key];
-        if (found) {
-            return std::make_optional<const YAML::Node>(found);
-        } else {
             if (!_parent) {
                 return std::nullopt;
+            } else {
+                return _parent->yamlGet(key);
             }
-            return _parent->yamlGet(key);
+        }
+        try {
+            const YAML::Node found = _yaml[key];
+            if (found) {
+                return std::make_optional<const YAML::Node>(found);
+            } else {
+                if (!_parent) {
+                    return std::nullopt;
+                }
+                return _parent->yamlGet(key);
+            }
+        } catch (const YAML::Exception& x) {
+            BOOST_THROW_EXCEPTION(InvalidKeyException(
+                "Invalid YAML access. Perhaps trying to treat a map as a sequence?",
+                v1::toString(key),
+                this));
         }
     }
 
     template <typename K>
     const Node get(const K& key) const {
         const std::string keyStr = v1::toString(key);
-        if (!_valid) {
-            return Node{YAML::Node{}, this, false, keyStr};
-        }
         if constexpr (std::is_convertible_v<K, std::string>) {
             if (key == "..") {
                 // this is...not the most succinct business-logic ever....
