@@ -53,7 +53,7 @@ std::string InvalidKeyException::createWhat(const std::string& msg,
     return out.str();
 }
 
-void Node::buildPath(std::ostringstream &out) const {
+void Node::buildPath(std::stringstream &out) const {
     if (_parent) {
         _parent->buildPath(out);
         out << "/";
@@ -70,7 +70,7 @@ YAML::Node Node::parse(std::string yaml, std::string path) {
 }
 
 std::string Node::path() const {
-    std::ostringstream out;
+    std::stringstream out;
     this->buildPath(out);
     return out.str();
 }

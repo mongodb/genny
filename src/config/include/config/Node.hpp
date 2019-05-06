@@ -32,7 +32,7 @@ namespace v1 {
 // This is used to build up paths when calling `node["foo"]` and `node[0]` etc.
 template <typename T>
 std::string toString(const T& t) {
-    std::ostringstream out;
+    std::stringstream out;
     out << t;
     return out.str();
 }
@@ -716,7 +716,7 @@ private:
         }
     }
 
-    void buildPath(std::ostringstream &out) const;
+    void buildPath(std::stringstream &out) const;
 
     YAML::Node _yaml;
     std::string _key;
