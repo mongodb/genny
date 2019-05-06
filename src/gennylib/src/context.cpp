@@ -129,7 +129,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     }
     PhaseNumber lastPhaseNumber = 0;
     for (const auto& phase : *phases) {
-        // If we don't have a node or we are a null type, then we are a NoOp
+        // If we don't have a node or we are a null type, then we are a Nop
         if (!phase || phase.isNull()) {
             std::ostringstream ss;
             ss << "Encountered a null/empty phase. "
@@ -154,57 +154,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     return out;
 }
 
-// this could probably be made into a free-function rather than an
-// instance method
-bool PhaseContext::_isNop() const {
-    auto hasNoOp = get<bool, false>("Nop").value_or(false)  //
-        || get<bool, false>("nop").value_or(false)          //
-        || get<bool, false>("NoOp").value_or(false)         //
-        || get<bool, false>("noop").value_or(false);
-
-    // If we had the simple Nop key, just exit out now
-    if (hasNoOp)
-        return true;
-
-    // If we don't have an operation or our operation isn't a map, then we're not a NoOp
-    auto maybeOperation = get<YAML::Node, false>("Operation");
-    if (!maybeOperation)
-        return false;
-
-    // If we have a simple string, use that
-    // If we have a full object, get "OperationName"
-    // Otherwise, we're null
-    auto yamlOpName = YAML::Node{};
-    if (maybeOperation->IsScalar())
-        yamlOpName = *maybeOperation;
-    else if (maybeOperation->IsMap())
-        yamlOpName = (*maybeOperation)["OperationName"];
-
-    // At this stage, we should have a string scalar
-    if (!yamlOpName.IsScalar())
-        return false;
-
-    // Fall back to an empty string in case we cannot convert to string
-    const auto& opName = yamlOpName.as<std::string>("");
-    return (opName == "Nop")   //
-        || (opName == "nop")   //
-        || (opName == "NoOp")  //
-        || (opName == "noop");
-}
-
 bool PhaseContext::isNop() const {
-    auto isNop = _isNop();
-
-    // Check to make sure we haven't broken our rules
-    if (isNop && _node.size() > 1) {
-        if (_node.size() != 2 || !_node["Phase"]) {
-            throw InvalidConfigurationException(
-                "'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
-                "configuration.");
-        }
-    }
-
-    return isNop;
+    return get<bool, false>("Nop").value_or(false);
 }
-
 }  // namespace genny

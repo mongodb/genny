@@ -575,10 +575,6 @@ public:
             this->_actor->operator[]("Name").to<std::string>(), stm.str(), id);
     }
 
-
-private:
-    bool _isNop() const;
-
 private:
     const Node& _node;
     ActorContext* _actor;
