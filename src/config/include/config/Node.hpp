@@ -716,7 +716,7 @@ private:
         }
     }
 
-    void appendKey(std::ostringstream& out) const;
+    void buildPath(std::ostringstream &out) const;
 
     YAML::Node _yaml;
     std::string _key;
