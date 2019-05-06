@@ -250,9 +250,9 @@ public:
             // makes debugging compiler-errors easier.
             std::is_same_v<decltype(_maybeImpl<O, Args...>(std::forward<Args>(args)...)),
                            std::optional<O>>,
-            "Destination type must satisfy at least one of the following:\n"
+            "Destination type must satisfy at least *one* of the following:\n"
             "\n"
-            "1.  is constructible from `Node&` and the given arguments\n"
+            "1.  is constructible from `const Node&` and the given arguments\n"
             "2.  has a `NodeConvert` struct like the following:\n"
             "\n"
             "        namespace genny {\n"
@@ -468,10 +468,8 @@ private:
 
     template <typename O, typename... Args>
     static constexpr bool isNodeConstructible() {
-        // TODO: test of constness
         return !std::is_trivially_constructible_v<O> &&
-            (std::is_constructible_v<O, Node&, Args...> ||
-             std::is_constructible_v<O, const Node&, Args...>);
+            std::is_constructible_v<O, const Node&, Args...>;
     }
 
     template <typename O,
