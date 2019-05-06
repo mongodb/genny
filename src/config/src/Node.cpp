@@ -16,6 +16,19 @@
 
 namespace genny {
 
+std::string InvalidConversionException::createWhat(const Node& node,
+                                                   const YAML::BadConversion& yamlException,
+                                                   const std::type_info& destType) {
+    std::stringstream out;
+    out << "Couldn't convert to '" << destType.name() << "': ";
+    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
+        << yamlException.mark.column << "). ";
+    out << "On node with path '" << node.path() << "': ";
+    out << node;
+
+    return out.str();
+}
+
 std::string InvalidKeyException::createWhat(const std::string& msg,
                                             const std::string& key,
                                             const Node* node) {

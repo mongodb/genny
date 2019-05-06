@@ -65,6 +65,28 @@ private:
 };
 
 /**
+ * Throw this to indicate a bad path.
+ */
+class InvalidConversionException : public std::exception {
+public:
+    InvalidConversionException(const Node& node,
+                               const YAML::BadConversion& yamlException,
+                               const std::type_info& destType)
+        : _what{createWhat(node, yamlException, destType)} {}
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    static std::string createWhat(const Node& node,
+                                  const YAML::BadConversion& yamlException,
+                                  const std::type_info& destType);
+    std::string _what;
+};
+
+
+/**
  * Access YAML configuration
  *
  * Example usage:
@@ -253,7 +275,8 @@ public:
     std::optional<O> maybe(Args&&... args) const {
         // Doesn't seem possible to test these static asserts since you'd get a compiler error
         // (by design) when trying to call node.to<YAML::Node>().
-        static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>, "Cannot convert to YAML::Node");
+        static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>,
+                      "Cannot convert to YAML::Node");
         static_assert(
             // This isn't the most reliable static_assert but hopefully this block
             // makes debugging compiler-errors easier.
@@ -275,7 +298,11 @@ public:
         if (!*this) {
             return std::nullopt;
         }
-        return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
+        try {
+            return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
+        } catch (const YAML::BadConversion& x) {
+            BOOST_THROW_EXCEPTION(InvalidConversionException(*this, x, typeid(O)));
+        }
     }
 
     template <typename K>
@@ -520,7 +547,7 @@ private:
 
     static YAML::Node parse(std::string);
 
-    template<typename K>
+    template <typename K>
     std::optional<const YAML::Node> parentGet(const K& key) const {
         if (!_parent) {
             return std::nullopt;
