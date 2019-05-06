@@ -14,6 +14,8 @@
 
 #include <config/Node.hpp>
 
+#include <boost/core/demangle.hpp>
+
 namespace genny {
 
 std::string InvalidYAMLException::createWhat(const std::string& path,
@@ -32,7 +34,7 @@ std::string InvalidConversionException::createWhat(const Node& node,
                                                    const YAML::BadConversion& yamlException,
                                                    const std::type_info& destType) {
     std::stringstream out;
-    out << "Couldn't convert to '" << destType.name() << "': ";
+    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
     out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
         << yamlException.mark.column << "). ";
     out << "On node with path '" << node.path() << "': ";

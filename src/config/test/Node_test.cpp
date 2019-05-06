@@ -230,7 +230,7 @@ nope: false
         Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a "
                        "sequence\\? On node with path '/seven': 7"));
     REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
-                        Catch::Matches("Couldn't convert to '.*': 'bad conversion' at "
+                        Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
                                        "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
 }
 
