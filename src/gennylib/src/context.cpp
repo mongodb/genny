@@ -155,6 +155,6 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
 }
 
 bool PhaseContext::isNop() const {
-    return get<bool, false>("Nop").value_or(false);
+    return get("Nop").value_or(false);
 }
 }  // namespace genny
