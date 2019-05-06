@@ -541,6 +541,11 @@ public:
         return this->_node[key];
     }
 
+    template<typename...Args>
+    auto getPlural(Args&&...args) const {
+        return this->_node.getPlural<Args...>(std::forward<Args>(args)...);
+    }
+
     /**
      * Called in PhaseLoop during the IterationCompletionCheck constructor.
      */

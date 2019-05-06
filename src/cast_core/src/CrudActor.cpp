@@ -18,8 +18,6 @@
 #include <memory>
 #include <utility>
 
-#include <yaml-cpp/yaml.h>
-
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 
@@ -226,12 +224,12 @@ enum class ThrowMode {
     kRethrow,
 };
 
-ThrowMode decodeThrowMode(YAML::Node operation, PhaseContext& phaseContext) {
+ThrowMode decodeThrowMode(const Node& operation, PhaseContext& phaseContext) {
     static const char* key = "ThrowOnFailure";
 
     // look in operation otherwise fallback to phasecontext
-    // we really need to kill YAML::Node and only use ConfigNode...
-    bool throwOnFailure = operation[key] ? operation[key].as<bool>()
+    // we really need to kill const Node& and only use ConfigNode...
+    bool throwOnFailure = operation[key] ? operation[key].to<bool>()
                                          : phaseContext[key].value_or(true);
     return throwOnFailure ? ThrowMode::kRethrow : ThrowMode::kSwallow;
 }
@@ -251,7 +249,7 @@ struct BaseOperation {
 
     using MaybeDoc = std::optional<bsoncxx::document::value>;
 
-    explicit BaseOperation(PhaseContext& phaseContext, YAML::Node operation)
+    explicit BaseOperation(PhaseContext& phaseContext, const Node& operation)
         : throwMode{decodeThrowMode(operation, phaseContext)} {}
 
     template <typename F>
@@ -274,20 +272,20 @@ struct BaseOperation {
 };
 
 using OpCallback = std::function<std::unique_ptr<BaseOperation>(
-    YAML::Node, bool, mongocxx::collection, metrics::Operation, PhaseContext& context, ActorId id)>;
+    const Node&, bool, mongocxx::collection, metrics::Operation, PhaseContext& context, ActorId id)>;
 
 struct WriteOperation : public BaseOperation {
-    WriteOperation(PhaseContext& phaseContext, YAML::Node operation)
+    WriteOperation(PhaseContext& phaseContext, const Node& operation)
         : BaseOperation(phaseContext, operation) {}
     virtual mongocxx::model::write getModel() = 0;
 };
 
 using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(
-    YAML::Node, bool, mongocxx::collection, metrics::Operation, PhaseContext&, ActorId)>;
+    const Node&, bool, mongocxx::collection, metrics::Operation, PhaseContext&, ActorId)>;
 
 namespace {
 
-auto createDocumentGenerator(YAML::Node source,
+auto createDocumentGenerator(const Node& source,
                              const std::string& opType,
                              const std::string& key,
                              PhaseContext& context,
@@ -315,7 +313,7 @@ struct CreateIndexOperation : public BaseOperation {
 
     bool _onSession;
 
-    CreateIndexOperation(YAML::Node opNode,
+    CreateIndexOperation(const Node& opNode,
                          bool onSession,
                          mongocxx::collection collection,
                          metrics::Operation operation,
@@ -345,7 +343,7 @@ struct CreateIndexOperation : public BaseOperation {
 };
 
 struct InsertOneOperation : public WriteOperation {
-    InsertOneOperation(YAML::Node opNode,
+    InsertOneOperation(const Node& opNode,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
@@ -355,7 +353,7 @@ struct InsertOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _options{opNode["OperationOptions"].as<mongocxx::options::insert>(
+          _options{opNode["OperationOptions"].value_or<mongocxx::options::insert>(
               mongocxx::options::insert{})},
           _docExpr{createDocumentGenerator(opNode, "insertOne", "Document", context, id)} {}
 
@@ -387,7 +385,7 @@ private:
 
 
 struct UpdateOneOperation : public WriteOperation {
-    UpdateOneOperation(YAML::Node opNode,
+    UpdateOneOperation(const Node& opNode,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
@@ -431,7 +429,7 @@ private:
 };
 
 struct UpdateManyOperation : public WriteOperation {
-    UpdateManyOperation(YAML::Node opNode,
+    UpdateManyOperation(const Node& opNode,
                         bool onSession,
                         mongocxx::collection collection,
                         metrics::Operation operation,
@@ -475,7 +473,7 @@ private:
 };
 
 struct DeleteOneOperation : public WriteOperation {
-    DeleteOneOperation(YAML::Node opNode,
+    DeleteOneOperation(const Node& opNode,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
@@ -513,7 +511,7 @@ private:
 };
 
 struct DeleteManyOperation : public WriteOperation {
-    DeleteManyOperation(YAML::Node opNode,
+    DeleteManyOperation(const Node& opNode,
                         bool onSession,
                         mongocxx::collection collection,
                         metrics::Operation operation,
@@ -551,7 +549,7 @@ private:
 };
 
 struct ReplaceOneOperation : public WriteOperation {
-    ReplaceOneOperation(YAML::Node opNode,
+    ReplaceOneOperation(const Node& opNode,
                         bool onSession,
                         mongocxx::collection collection,
                         metrics::Operation operation,
@@ -600,7 +598,7 @@ private:
 };
 
 template <class P, class C, class O>
-C baseCallback = [](YAML::Node opNode,
+C baseCallback = [](const Node& opNode,
                     bool onSession,
                     mongocxx::collection collection,
                     metrics::Operation operation,
@@ -638,7 +636,7 @@ std::unordered_map<std::string, WriteOpCallback&> bulkWriteConstructors = {
  */
 struct BulkWriteOperation : public BaseOperation {
 
-    BulkWriteOperation(YAML::Node opNode,
+    BulkWriteOperation(const Node& opNode,
                        bool onSession,
                        mongocxx::collection collection,
                        metrics::Operation operation,
@@ -649,20 +647,20 @@ struct BulkWriteOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation} {
         auto writeOpsYaml = opNode["WriteOperations"];
-        if (!writeOpsYaml.IsSequence()) {
+        if (!writeOpsYaml.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'bulkWrite' requires a 'WriteOperations' node of sequence type."));
         }
-        for (auto&& writeOp : writeOpsYaml) {
+        for (const auto& writeOp : writeOpsYaml) {
             createOps(writeOp, context, id);
         }
         if (opNode["Options"]) {
-            _options = opNode["Options"].as<mongocxx::options::bulk_write>();
+            _options = opNode["Options"].to<mongocxx::options::bulk_write>();
         }
     }
 
-    void createOps(const YAML::Node& writeOp, PhaseContext& context, ActorId id) {
-        auto writeCommand = writeOp["WriteCommand"].as<std::string>();
+    void createOps(const Node& writeOp, PhaseContext& context, ActorId id) {
+        auto writeCommand = writeOp["WriteCommand"].to<std::string>();
         auto writeOpConstructor = bulkWriteConstructors.find(writeCommand);
         if (writeOpConstructor == bulkWriteConstructors.end()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
@@ -716,7 +714,7 @@ private:
  *        OnSession: false
  */
 struct CountDocumentsOperation : public BaseOperation {
-    CountDocumentsOperation(YAML::Node opNode,
+    CountDocumentsOperation(const Node& opNode,
                             bool onSession,
                             mongocxx::collection collection,
                             metrics::Operation operation,
@@ -728,7 +726,7 @@ struct CountDocumentsOperation : public BaseOperation {
           _operation{operation},
           _filterExpr{createDocumentGenerator(opNode, "Count", "Filter", context, id)} {
         if (opNode["Options"]) {
-            _options = opNode["Options"].as<mongocxx::options::count>();
+            _options = opNode["Options"].to<mongocxx::options::count>();
         }
     }
 
@@ -754,7 +752,7 @@ private:
 };
 
 struct EstimatedDocumentCountOperation : public BaseOperation {
-    EstimatedDocumentCountOperation(YAML::Node opNode,
+    EstimatedDocumentCountOperation(const Node& opNode,
                                     bool onSession,
                                     mongocxx::collection collection,
                                     metrics::Operation operation,
@@ -765,7 +763,7 @@ struct EstimatedDocumentCountOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation} {
         if (opNode["Options"]) {
-            _options = opNode["Options"].as<mongocxx::options::estimated_document_count>();
+            _options = opNode["Options"].to<mongocxx::options::estimated_document_count>();
         }
         if (onSession) {
             // Technically the docs don't explicitly mention this but the C++ driver doesn't
@@ -796,7 +794,7 @@ private:
 };
 
 struct FindOperation : public BaseOperation {
-    FindOperation(YAML::Node opNode,
+    FindOperation(const Node& opNode,
                   bool onSession,
                   mongocxx::collection collection,
                   metrics::Operation operation,
@@ -831,7 +829,7 @@ private:
 };
 
 struct FindOneAndUpdateOperation : public BaseOperation {
-    FindOneAndUpdateOperation(YAML::Node opNode,
+    FindOneAndUpdateOperation(const Node& opNode,
                               bool onSession,
                               mongocxx::collection collection,
                               metrics::Operation operation,
@@ -869,7 +867,7 @@ private:
 };
 
 struct FindOneAndDeleteOperation : public BaseOperation {
-    FindOneAndDeleteOperation(YAML::Node opNode,
+    FindOneAndDeleteOperation(const Node& opNode,
                               bool onSession,
                               mongocxx::collection collection,
                               metrics::Operation operation,
@@ -904,7 +902,7 @@ private:
 };
 
 struct FindOneAndReplaceOperation : public BaseOperation {
-    FindOneAndReplaceOperation(YAML::Node opNode,
+    FindOneAndReplaceOperation(const Node& opNode,
                                bool onSession,
                                mongocxx::collection collection,
                                metrics::Operation operation,
@@ -954,7 +952,7 @@ private:
  */
 struct InsertManyOperation : public BaseOperation {
 
-    InsertManyOperation(YAML::Node opNode,
+    InsertManyOperation(const Node& opNode,
                         bool onSession,
                         mongocxx::collection collection,
                         metrics::Operation operation,
@@ -965,7 +963,7 @@ struct InsertManyOperation : public BaseOperation {
           _collection{std::move(collection)},
           _operation{operation} {
         auto documents = opNode["Documents"];
-        if (!documents && !documents.IsSequence()) {
+        if (!documents && !documents.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'insertMany' expects a 'Documents' field of sequence type."));
         }
@@ -1021,17 +1019,17 @@ private:
 
 struct StartTransactionOperation : public BaseOperation {
 
-    StartTransactionOperation(YAML::Node opNode,
+    StartTransactionOperation(const Node& opNode,
                               bool onSession,
                               mongocxx::collection collection,
                               metrics::Operation operation,
                               PhaseContext& context,
                               ActorId id)
         : BaseOperation(context, opNode), _operation{operation} {
-        if (!opNode.IsMap())
+        if (!opNode.isMap())
             return;
         if (opNode["Options"]) {
-            _options = opNode["Options"].as<mongocxx::options::transaction>();
+            _options = opNode["Options"].to<mongocxx::options::transaction>();
         }
     }
 
@@ -1055,7 +1053,7 @@ private:
 
 struct CommitTransactionOperation : public BaseOperation {
 
-    CommitTransactionOperation(YAML::Node opNode,
+    CommitTransactionOperation(const Node& opNode,
                                bool onSession,
                                mongocxx::collection collection,
                                metrics::Operation operation,
@@ -1084,7 +1082,7 @@ private:
  */
 
 struct SetReadConcernOperation : public BaseOperation {
-    SetReadConcernOperation(YAML::Node opNode,
+    SetReadConcernOperation(const Node& opNode,
                             bool onSession,
                             mongocxx::collection collection,
                             metrics::Operation operation,
@@ -1097,7 +1095,7 @@ struct SetReadConcernOperation : public BaseOperation {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'setReadConcern' operation expects a 'ReadConcern' field."));
         }
-        _readConcern = opNode["ReadConcern"].as<mongocxx::read_concern>();
+        _readConcern = opNode["ReadConcern"].to<mongocxx::read_concern>();
     }
 
     void run(mongocxx::client_session& session) override {
@@ -1124,7 +1122,7 @@ private:
  *            Level: majority
  */
 struct DropOperation : public BaseOperation {
-    DropOperation(YAML::Node opNode,
+    DropOperation(const Node& opNode,
                   bool onSession,
                   mongocxx::collection collection,
                   metrics::Operation operation,
@@ -1137,7 +1135,7 @@ struct DropOperation : public BaseOperation {
         if (!opNode)
             return;
         if (opNode["Options"] && opNode["Options"]["WriteConcern"]) {
-            _wc = opNode["Options"]["WriteConcern"].as<mongocxx::write_concern>();
+            _wc = opNode["Options"]["WriteConcern"].to<mongocxx::write_concern>();
         }
     }
 
@@ -1192,14 +1190,14 @@ struct CrudActor::PhaseConfig {
                 const mongocxx::database& db,
                 ActorContext& actorContext,
                 ActorId id)
-        : collection{db[phaseContext.get<std::string>("Collection")]},
+        : collection{db[phaseContext["Collection"].to<std::string>()]},
           metrics{actorContext.operation("Crud", id)} {
-        auto addOperation = [&](YAML::Node node) {
+        auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             auto yamlCommand = node["OperationCommand"];
-            auto opName = node["OperationName"].as<std::string>();
+            auto opName = node["OperationName"].to<std::string>();
             auto onSession = false;
             if (yamlCommand) {
-                onSession = yamlCommand["OnSession"] && yamlCommand["OnSession"].as<bool>();
+                onSession = yamlCommand["OnSession"] && yamlCommand["OnSession"].to<bool>();
             }
 
             // Grab the appropriate Operation struct defined by 'OperationName'.
@@ -1217,7 +1215,7 @@ struct CrudActor::PhaseConfig {
                                    id);
         };
 
-        operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
+        operations = phaseContext.getPlural(
             "Operation", "Operations", addOperation);
     }
 };
@@ -1240,7 +1238,7 @@ void CrudActor::run() {
 CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context.get<std::string>("Database")], context, CrudActor::id()} {}
+      _loop{context, (*_client)[context["Database"].to<std::string>()], context, CrudActor::id()} {}
 
 namespace {
 auto registerCrudActor = Cast::registerDefault<CrudActor>();
