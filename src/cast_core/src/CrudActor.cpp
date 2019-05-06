@@ -232,7 +232,7 @@ ThrowMode decodeThrowMode(YAML::Node operation, PhaseContext& phaseContext) {
     // look in operation otherwise fallback to phasecontext
     // we really need to kill YAML::Node and only use ConfigNode...
     bool throwOnFailure = operation[key] ? operation[key].as<bool>()
-                                         : phaseContext.get<bool, false>(key).value_or(true);
+                                         : phaseContext[key].value_or(true);
     return throwOnFailure ? ThrowMode::kRethrow : ThrowMode::kSwallow;
 }
 

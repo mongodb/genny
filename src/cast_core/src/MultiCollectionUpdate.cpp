@@ -38,8 +38,8 @@ namespace genny::actor {
 /** @private */
 struct MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId id)
-        : database{(*client)[context.get<std::string>("Database")]},
-          numCollections{context.get<IntegerSpec, true>("CollectionCount")},
+        : database{(*client)[context["Database"].to<std::string>()]},
+          numCollections{context["CollectionCount"].to<IntegerSpec>()},
           queryExpr{context.createDocumentGenerator(id, "UpdateFilter")},
           updateExpr{context.createDocumentGenerator(id, "Update")},
           uniformDistribution{0, numCollections} {}

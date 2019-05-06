@@ -137,7 +137,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
             throw InvalidConfigurationException(ss.str());
         }
         PhaseRangeSpec configuredRange =
-            phase["Phase"].to<PhaseRangeSpec>(PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
+            phase["Phase"].maybe<PhaseRangeSpec>().value_or(PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
         for (PhaseNumber rangeIndex = configuredRange.start; rangeIndex <= configuredRange.end;
              rangeIndex++) {
             auto [it, success] = out.try_emplace(

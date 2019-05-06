@@ -54,15 +54,15 @@ struct CommitLatency::PhaseConfig {
     metrics::Operation op;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId actorId)
-        : collection{db[phaseContext.get<std::string>("Collection")]},
-          wc{phaseContext.get<mongocxx::write_concern>("WriteConcern")},
-          rc{phaseContext.get<mongocxx::read_concern>("ReadConcern")},
-          rp{phaseContext.get<mongocxx::read_preference>("ReadPreference")},
-          readModeString{phaseContext.get("ReadPreference")["ReadMode"].as<std::string>()},
-          useSession{phaseContext.get<bool, false>("Session").value_or(false)},
-          useTransaction{phaseContext.get<bool, false>("Transaction").value_or(false)},
-          repeat{phaseContext.get<IntegerSpec>("Repeat")},
-          threads{phaseContext.get<IntegerSpec>("Threads")},
+        : collection{db[phaseContext["Collection"].to<std::string>()]},
+          wc{phaseContext["WriteConcern"].to<mongocxx::write_concern>()},
+          rc{phaseContext["ReadConcern"].to<mongocxx::read_concern>()},
+          rp{phaseContext["ReadPreference"].to<mongocxx::read_preference>()},
+          readModeString{phaseContext["ReadPreference"]["ReadMode"].to<std::string>()},
+          useSession{phaseContext["Session"].value_or(false)},
+          useTransaction{phaseContext["Transaction"].value_or(false)},
+          repeat{phaseContext["Repeat"].to<IntegerSpec>()},
+          threads{phaseContext["Threads"].to<IntegerSpec>()},
           amountDistribution{-100, 100},
           op{phaseContext.operation("Insert", actorId)} {
         if (useTransaction) {
@@ -179,7 +179,7 @@ CommitLatency::CommitLatency(genny::ActorContext& context)
     : Actor(context),
       _rng{context.workload().getRNGForThread(CommitLatency::id())},
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context.get<std::string>("Database")], CommitLatency::id()} {}
+      _loop{context, (*_client)[context["Database"].to<std::string>()], CommitLatency::id()} {}
 
 namespace {
 auto registerCommitLatency = Cast::registerDefault<CommitLatency>();
