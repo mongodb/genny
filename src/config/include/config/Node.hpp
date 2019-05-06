@@ -520,6 +520,13 @@ public:
     }
 
     /**
+     * @return the YAML tag
+     */
+    const std::string& tag() const {
+        return _yaml.Tag();
+    }
+
+    /**
      * @return
      *   what type we are.
      */

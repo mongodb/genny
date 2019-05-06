@@ -404,35 +404,35 @@ Out valueGenerator(const Node& node,
         return std::make_unique<ConstantAppender<bsoncxx::types::b_null>>();
     }
     if (node.isScalar()) {
-        if (node.Tag() != "!") {
+        if (node.tag() != "!") {
             try {
-                return std::make_unique<ConstantAppender<int32_t>>(node.as<int32_t>());
-            } catch (const YAML::BadConversion& e) {
+                return std::make_unique<ConstantAppender<int32_t>>(node.to<int32_t>());
+            } catch (const InvalidConversionException& e) {
             }
             try {
-                return std::make_unique<ConstantAppender<int64_t>>(node.as<int64_t>());
-            } catch (const YAML::BadConversion& e) {
+                return std::make_unique<ConstantAppender<int64_t>>(node.to<int64_t>());
+            } catch (const InvalidConversionException& e) {
             }
             try {
-                return std::make_unique<ConstantAppender<double>>(node.as<double>());
-            } catch (const YAML::BadConversion& e) {
+                return std::make_unique<ConstantAppender<double>>(node.to<double>());
+            } catch (const InvalidConversionException& e) {
             }
             try {
-                return std::make_unique<ConstantAppender<bool>>(node.as<bool>());
+                return std::make_unique<ConstantAppender<bool>>(node.to<bool>());
             } catch (const YAML::BadConversion& e) {
             }
         }
-        return std::make_unique<ConstantAppender<std::string>>(node.as<std::string>());
+        return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
     }
-    if (node.IsSequence()) {
+    if (node.isSequence()) {
         return arrayGenerator<Verbatim>(node, rng);
     }
-    if (node.IsMap()) {
+    if (node.isMap()) {
         return documentGenerator<Verbatim>(node, rng);
     }
 
     std::stringstream msg;
-    msg << "Malformed node " << toString(node);
+    msg << "Malformed node " << node;
     BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(msg.str()));
 }
 
@@ -460,9 +460,9 @@ const static std::map<std::string, Parser<UniqueAppendable>> allParsers{
  */
 template <bool Verbatim>
 std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, DefaultRandom& rng) {
-    if (!node.IsMap()) {
+    if (!node.isMap()) {
         std::ostringstream stm;
-        stm << "Node " << YAML::Dump(node) << " must be mapping type";
+        stm << "Node " << node << " must be mapping type";
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax(stm.str()));
     }
     if constexpr (!Verbatim) {
@@ -479,7 +479,7 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
 
     DocumentGenerator::Impl::Entries entries;
     for (const auto&& ent : node) {
-        auto key = ent.first.as<std::string>();
+        auto key = ent.first.to<std::string>();
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent.second, rng, allParsers);
         entries.emplace_back(key, std::move(valgen));
     }
@@ -516,10 +516,10 @@ UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultR
 // An alternative would have been to have ^RandomIntUniform etc.
 //
 UniqueGenerator<int64_t> int64GeneratorBasedOnDistribution(const Node& node, DefaultRandom& rng) {
-    if (!node.IsMap()) {
+    if (!node.isMap()) {
         BOOST_THROW_EXCEPTION(InvalidValueGeneratorSyntax("random int must be given mapping type"));
     }
-    auto distribution = node["distribution"].as<std::string>("uniform");
+    auto distribution = node["distribution"].maybe<std::string>().value_or("uniform");
 
     if (distribution == "uniform") {
         return std::make_unique<UniformInt64Generator>(node, rng);
@@ -556,7 +556,7 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng) {
         // known parser type
         return parserPair->first(node[parserPair->second], rng);
     }
-    return std::make_unique<ConstantAppender<int64_t>>(node.as<int64_t>());
+    return std::make_unique<ConstantAppender<int64_t>>(node.to<int64_t>());
 }
 
 }  // namespace
