@@ -241,6 +241,11 @@ TEST_CASE("Invalid YAML") {
                        "On node with path 'foo.yaml'."));
 }
 
+TEST_CASE("value_or from pr") {
+    Node node{"seven: 7", ""};
+    REQUIRE(node["foo"]["bar"][0]["seven"].value_or(8) == 7);
+}
+
 TEST_CASE("value_or") {
     auto yaml = std::string(R"(
 seven: 7
@@ -256,6 +261,8 @@ nope: false
     REQUIRE(node["eight"].value_or(8) == 8);
     REQUIRE(node["intList"].value_or(std::vector<int>{}) == std::vector<int>{1, 2, 3});
     REQUIRE(node["intList2"].value_or(std::vector<int>{1, 2}) == std::vector<int>{1, 2});
+    // similar check to TEST_CASE above
+    REQUIRE(node["stringMap"]["seven"].value_or(8) == 7);
     REQUIRE(node["stringMap"].value_or(std::map<std::string, std::string>{}) ==
             std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
     REQUIRE(node["stringMap2"].value_or(std::map<std::string, std::string>{{"foo", "bar"}}) ==
