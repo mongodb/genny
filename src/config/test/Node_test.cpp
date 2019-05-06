@@ -234,6 +234,13 @@ nope: false
                                        "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
 }
 
+TEST_CASE("Invalid YAML") {
+    REQUIRE_THROWS_WITH(
+        [&]() { Node n("foo: {", "foo.yaml"); }(),
+        Catch::Matches("Invalid YAML: 'end of map flow not found' at \\(Line:Column\\)=\\(0:0\\). "
+                       "On node with path 'foo.yaml'."));
+}
+
 TEST_CASE("value_or") {
     auto yaml = std::string(R"(
 seven: 7

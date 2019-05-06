@@ -16,6 +16,18 @@
 
 namespace genny {
 
+std::string InvalidYAMLException::createWhat(const std::string& path,
+                                             const YAML::ParserException& yamlException) {
+    std::stringstream out;
+    out << "Invalid YAML: ";
+    out << "'" << yamlException.msg << "' ";
+    out << "at (Line:Column)=(" << yamlException.mark.line << ":"
+        << yamlException.mark.column << "). ";
+    out << "On node with path '" << path << "'.";
+
+    return out.str();
+}
+
 std::string InvalidConversionException::createWhat(const Node& node,
                                                    const YAML::BadConversion& yamlException,
                                                    const std::type_info& destType) {
@@ -49,9 +61,12 @@ void Node::appendKey(std::ostringstream& out) const {
     out << _key;
 }
 
-YAML::Node Node::parse(std::string yaml) {
-    // TODO: better error message if this fails
-    return YAML::Load(yaml);
+YAML::Node Node::parse(std::string yaml, std::string path) {
+    try {
+        return YAML::Load(yaml);
+    } catch (const YAML::ParserException& x) {
+        BOOST_THROW_EXCEPTION(InvalidYAMLException(path, x));
+    }
 }
 
 std::string Node::path() const {

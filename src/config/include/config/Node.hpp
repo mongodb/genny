@@ -65,7 +65,7 @@ private:
 };
 
 /**
- * Throw this to indicate a bad path.
+ * Throw this to indicate a bad conversion.
  */
 class InvalidConversionException : public std::exception {
 public:
@@ -82,6 +82,24 @@ private:
     static std::string createWhat(const Node& node,
                                   const YAML::BadConversion& yamlException,
                                   const std::type_info& destType);
+    std::string _what;
+};
+
+/**
+ * Throw this to indicate bad input yaml syntax.
+ */
+class InvalidYAMLException : public std::exception {
+public:
+    InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException)
+        : _what{createWhat(path, yamlException)} {}
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    static std::string createWhat(const std::string& node,
+                                  const YAML::ParserException& yamlException);
     std::string _what;
 };
 
@@ -186,7 +204,8 @@ public:
      * @param yaml source yaml
      * @param key string key to associate for this node
      */
-    Node(const std::string& yaml, std::string key) : Node{parse(yaml), nullptr, std::move(key)} {}
+    Node(const std::string& yaml, std::string key)
+        : Node{parse(yaml, key), nullptr, std::move(key)} {}
 
     // explicitly allow copy and move
     // this is here to protect against regressions
@@ -545,7 +564,7 @@ private:
         return std::make_optional<O>(_yaml.as<O>());
     }
 
-    static YAML::Node parse(std::string);
+    static YAML::Node parse(std::string yaml, std::string path);
 
     template <typename K>
     std::optional<const YAML::Node> parentGet(const K& key) const {
