@@ -176,7 +176,7 @@ public:
     Node& operator=(const Node&) = default;
 
     /**
-     * Usage of this node in a moded-from state is undefined.
+     * Usage of this node in a moved-from state is undefined.
      *
      * @return a moved-to version of this node.
      */
@@ -421,14 +421,22 @@ public:
      * 3. The path to `baz` is `/foo/bar`.
      *
      * When iterating over maps the keys technically have their own paths
-     * as well.
+     * as well. For example:
      *
      * ```c++
+     * Node node {
+     *   "foo: [1, 2]\n"
+     *   "bar: baz", ""
+     * };
+     *
      * for(auto kvp : node) {
-     *   // first iter, kvp.first is the 'foo' key and its path is `/foo$key`
-     *   // and kvp.second is the `[1,2]` value and its path is `/foo`.
+     *   // First iteration:
+     *   // - kvp.first is the 'foo' key and its path is `/foo$key`
+     *   // - kvp.second is the `[1,2]` value and its path is `/foo`.
      *   //
-     *   // second iter, kvp.first is the `bar` key and its path is `/bar$key`, etc.
+     *   // Second iteration:
+     *   // - kvp.first is the `bar` key and its path is `/bar$key`
+     *   // - kvp.second is the `baz` value and its path is `/bar`.
      * }
      * ```
      *
