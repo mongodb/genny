@@ -23,7 +23,7 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <gennylib/v1/ConfigNode.hpp>
+#include <config/Node.hpp>
 
 namespace genny::v1 {
 
@@ -72,7 +72,7 @@ public:
      */
     mongocxx::pool::entry client(const std::string& name,
                                  size_t instance,
-                                 const ConfigNode& context);
+                                 const Node& context);
 
     // Only used for testing
     /** @private */

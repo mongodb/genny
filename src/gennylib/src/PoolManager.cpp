@@ -14,6 +14,7 @@
 
 #include <gennylib/v1/PoolFactory.hpp>
 #include <gennylib/v1/PoolManager.hpp>
+#include <gennylib/InvalidConfigurationException.hpp>
 
 namespace genny::v1 {
 namespace {
@@ -21,17 +22,15 @@ namespace {
 auto createPool(const std::string& mongoUri,
                 const std::string& name,
                 PoolManager::OnCommandStartCallback& apmCallback,
-                const ConfigNode& context) {
+                const Node& context) {
     auto poolFactory = PoolFactory(mongoUri, apmCallback);
 
-    auto queryOpts = context.get_noinherit<std::map<std::string, std::string>, false>(
-        "Clients", name, "QueryOptions");
+    auto queryOpts = context["Clients"][name]["QueryOptions"].maybe<std::map<std::string, std::string>>();
     if (queryOpts) {
         poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
     }
 
-    auto accessOpts = context.get_noinherit<std::map<std::string, std::string>, false>(
-        "Clients", name, "AccessOptions");
+    auto accessOpts = context["Clients"][name]["AccessOptions"].maybe<std::map<std::string, std::string>>();
     if (accessOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }
@@ -46,7 +45,7 @@ auto createPool(const std::string& mongoUri,
 
 mongocxx::pool::entry genny::v1::PoolManager::client(const std::string& name,
                                                      size_t instance,
-                                                     const genny::v1::ConfigNode& context) {
+                                                     const Node& context) {
     // Only one thread can access pools.operator[] at a time...
     std::unique_lock<std::mutex> getLock{this->_poolsLock};
     LockAndPools& lap = this->_pools[name];

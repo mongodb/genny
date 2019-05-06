@@ -30,7 +30,7 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <yaml-cpp/yaml.h>
+#include <config/Node.hpp>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
@@ -39,7 +39,6 @@
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
-#include <gennylib/v1/ConfigNode.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
 #include <gennylib/v1/PoolManager.hpp>
 
@@ -65,7 +64,7 @@ namespace v1 {
 // See documentation on ActorContext::createDocumentGenerator
 template <typename PathOrNode, typename... Args>
 DocumentGenerator createDocumentGeneratorImpl(WorkloadContext& workloadContext,
-                                              const ConfigNode& configNode,
+                                              const Node& configNode,
                                               ActorId id,
                                               PathOrNode&& pathOrNode,
                                               Args&&... args);
@@ -110,7 +109,7 @@ DocumentGenerator createDocumentGeneratorImpl(WorkloadContext& workloadContext,
  *     std::optional<int> maybeInt = context.get<int,false>("Actors", 0, "Count");
  * ```
  */
-class WorkloadContext : public v1::ConfigNode {
+class WorkloadContext {
 public:
     /**
      * @param node top-level (file-level) YAML node
@@ -120,7 +119,7 @@ public:
      * @param cast source of Actors to use. Actors are constructed
      * from the cast at construction-time.
      */
-    WorkloadContext(const YAML::Node& node,
+    WorkloadContext(const Node& node,
                     metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
@@ -132,6 +131,16 @@ public:
     void operator=(WorkloadContext&) = delete;
     WorkloadContext(WorkloadContext&&) = delete;
     void operator=(WorkloadContext&&) = delete;
+
+    template<typename K>
+    auto operator[](K& key) const {
+        return this->_node[key];
+    }
+
+    template<typename K>
+    auto get(K& key) const {
+        return this->_node[key];
+    }
 
     /**
      * @return all the actors produced. This should only be called by workload drivers.
@@ -241,6 +250,8 @@ private:
     static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
+    const Node& _node;
+
     metrics::Registry* _registry;
     Orchestrator* _orchestrator;
 
@@ -297,10 +308,10 @@ class PhaseContext;
  * auto name = cx.get<std::string>("Name");
  * ```
  */
-class ActorContext final : public v1::ConfigNode {
+class ActorContext final {
 public:
-    ActorContext(const YAML::Node& node, WorkloadContext& workloadContext)
-        : ConfigNode(node, std::addressof(workloadContext)),
+    ActorContext(const Node& node, WorkloadContext& workloadContext)
+        : _node{node},
           _workload{&workloadContext},
           _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
@@ -324,6 +335,16 @@ public:
      */
     constexpr Orchestrator& orchestrator() const {
         return *this->workload()._orchestrator;
+    }
+
+    template<typename K>
+    auto operator[](K& key) const {
+        return this->_node[key];
+    }
+
+    template<typename K>
+    auto get(K& key) const {
+        return this->_node[key];
     }
 
     /**
@@ -392,7 +413,7 @@ public:
      */
     auto operation(const std::string& operationName, ActorId id) const {
         return this->_workload->_registry->operation(
-            this->get<std::string>("Name"), operationName, id);
+            this->_node["Name"].to<std::string>(), operationName, id);
     }
 
     /**
@@ -477,8 +498,9 @@ public:
 private:
     static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
 
-    constructPhaseContexts(const YAML::Node&, ActorContext*);
+    constructPhaseContexts(const Node&, ActorContext*);
 
+    const Node& _node;
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
@@ -486,10 +508,10 @@ private:
 /**
  * Represents each `Phase:` block in the YAML configuration.
  */
-class PhaseContext final : public v1::ConfigNode {
+class PhaseContext final {
 public:
-    PhaseContext(const YAML::Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
-        : ConfigNode(node, std::addressof(actorContext)),
+    PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
+        : _node{node},
           _actor{std::addressof(actorContext)},
           _phaseNumber(phaseNumber) {}
 
@@ -507,6 +529,16 @@ public:
                                                id,
                                                std::forward<PathOrNode>(pathOrNode),
                                                std::forward<Args>(args)...);
+    }
+
+    template<typename K>
+    auto operator[](K& key) const {
+        return this->_node[key];
+    }
+
+    template<typename K>
+    auto get(K& key) const {
+        return this->_node[key];
     }
 
     /**
@@ -533,14 +565,14 @@ public:
      */
     auto operation(const std::string& defaultMetricsName, ActorId id) const {
         std::ostringstream stm;
-        if (auto metricsName = this->get<std::string, false>("MetricsName")) {
+        if (auto metricsName = this->_node["MetricsName"].maybe<std::string>()) {
             stm << *metricsName;
         } else {
             stm << defaultMetricsName << "." << _phaseNumber;
         }
 
         return this->workload()._registry->operation(
-            this->_actor->get<std::string>("Name"), stm.str(), id);
+            this->_actor->operator[]("Name").to<std::string>(), stm.str(), id);
     }
 
 
@@ -548,6 +580,7 @@ private:
     bool _isNop() const;
 
 private:
+    const Node& _node;
     ActorContext* _actor;
     const PhaseNumber _phaseNumber;
 };
@@ -563,7 +596,7 @@ using IsLooselyConvertible = std::is_convertible<std::remove_reference_t<std::re
 
 template <typename PathOrNode, typename... Args>
 DocumentGenerator createDocumentGeneratorImpl(genny::WorkloadContext& workloadContext,
-                                              const ConfigNode& configNode,
+                                              const Node& configNode,
                                               ActorId id,
                                               PathOrNode&& pathOrNode,
                                               Args&&... args) {
