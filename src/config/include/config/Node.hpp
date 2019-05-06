@@ -692,15 +692,15 @@ private:
         if constexpr (std::is_convertible_v<K, std::string>) {
             if (key == "..") {
                 // this is...not the most succinct business-logic ever....
-                std::stringstream childKey;
+                std::stringstream prefix;
                 if (_parent) {
-                    childKey << _parent->_key << "/";
+                    prefix << _parent->_key << "/";
                 }
-                childKey << _key << "/..";
+                prefix << _key << "/..";
                 if (!_parent) {
-                    return Node{YAML::Node{}, nullptr, false, childKey.str()};
+                    return Node{YAML::Node{}, nullptr, false, prefix.str()};
                 }
-                return Node{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
+                return Node{_parent->_yaml, _parent->_parent, _parent->_valid, prefix.str()};
             }
         }
         try {
