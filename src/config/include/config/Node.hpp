@@ -251,8 +251,9 @@ public:
 
     template <typename O = Node, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
-        // TODO: tests of this
-        static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>, "🙈 YAML::Node");
+        // Doesn't seem possible to test these static asserts since you'd get a compiler error
+        // (by design) when trying to call node.to<YAML::Node>().
+        static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>, "Cannot convert to YAML::Node");
         static_assert(
             // This isn't the most reliable static_assert but hopefully this block
             // makes debugging compiler-errors easier.
@@ -484,6 +485,7 @@ private:
               typename... Args,
               typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
     std::optional<O> _maybeImpl(Args&&... args) const {
+        // If you get compiler errors in _maybeImpl, see the note on the public maybe() function.
         return std::make_optional<O>(*this, std::forward<Args>(args)...);
     }
 
@@ -497,6 +499,7 @@ private:
                                                                   std::declval<Args>()...))>>,
               typename = void>
     std::optional<O> _maybeImpl(Args&&... args) const {
+        // If you get compiler errors in _maybeImpl, see the note on the public maybe() function.
         return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
     }
 
@@ -511,6 +514,7 @@ private:
     std::optional<O> _maybeImpl(Args&&... args) const {
         static_assert(sizeof...(args) == 0,
                       "Cannot pass additional args when using built-in YAML conversion");
+        // If you get compiler errors in _maybeImpl, see the note on the public maybe() function.
         return std::make_optional<O>(_yaml.as<O>());
     }
 
