@@ -201,8 +201,11 @@ private:
 class Node {
 public:
     /**
-     * @param yaml source yaml
-     * @param key string key to associate for this node
+     * @param yaml
+     *   source yaml
+     * @param key
+     *   key to associate for this node. This could be a file-name or a meaningful way
+     *   of telling the user where the yaml came from. This is used primarily for error-reporting.
      */
     Node(const std::string& yaml, std::string key)
         : Node{parse(yaml, key), nullptr, std::move(key)} {}
@@ -264,9 +267,13 @@ public:
      * `node["foo"].value_or(8)` if `node["foo"]["bar"]` isn't
      * specified.
      *
-     * @tparam T output type
-     * @param fallback value to use if this is undefined
+     * @tparam T
+     *   output type
+     * @param fallback
+     *   value to use if this is undefined
      * @return
+     *   result of converting to `T` (via `::to<T>()`) or `fallback` if this node isn't valid
+     *   or is null.
      */
     template <typename T>
     T value_or(T&& fallback) const {
@@ -280,6 +287,27 @@ public:
         }
     }
 
+    /**
+     * @tparam O
+     *   output type
+     * @tparam Args
+     *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
+     * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
+     *   genny::Node& node, Args...) {...} };` impl.
+     * @param args
+     *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
+     * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
+     *   genny::Node& node, Args...) {...} };` impl.
+     * @return
+     *   the result of converting this node to O either via its constructor or via the
+     *   `NodeConvert<O>::convert` function.
+     *   Like `operator[]` and other methods on `Node`, we "fallback" to the parent node
+     *   if this node doesn't have a value specified.
+     * @throws InvalidKeyException
+     *   if key not found
+     * @throws InvalidConversionException
+     *   if cannot convert to O
+     */
     template <typename O, typename... Args>
     O to(Args&&... args) const {
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
@@ -290,6 +318,24 @@ public:
         return *out;
     }
 
+    /**
+     * @tparam O
+     *   output type. Cannot convert to `YAML::Node` (we enforce this at compile-time).
+     * @tparam Args
+     *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
+     * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
+     *   genny::Node& node, Args...) {...} };` impl.
+     * @param args
+     *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
+     * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
+     *   genny::Node& node, Args...) {...} };` impl.
+     * @return
+     *   A `nullopt` if this (or parent) node isn't defined.
+     *   Else the result of converting this node to O either via its constructor or via the
+     *   `NodeConvert<O>::convert` function.
+     *   Like `operator[]` and other methods on `Node`, we "fallback" to the parent node
+     *   if this node doesn't have a value specified.
+     */
     template <typename O = Node, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
         // Doesn't seem possible to test these static asserts since you'd get a compiler error
@@ -324,6 +370,20 @@ public:
         }
     }
 
+    /**
+     * @tparam K
+     *   key type (either a string for maps or an int for sequences)
+     * @param key
+     *   key to access. Can use the special key ".." to explicitly access a value from the parent
+     *   node.
+     * @return
+     *   Node at the given key.
+     *
+     *   This does *not* throw if the key isn't present. If they key isn't present in the parent
+     *   node it will try to find it in the parent node recursively. If it can't be found,
+     *   the node will be 'invalid' (and return false to `operator bool()` and the calls to
+     * `.maybe()` will return a `nullopt`. Calls to `.to<>()` will fail for invalid nodes.
+     */
     template <typename K>
     const Node operator[](const K& key) const {
         return this->get(key);
@@ -365,13 +425,21 @@ public:
      *   Bads: 3
      * ```
      *
-     * @tparam T the returned type. Must align with the return-type of F.
-     * @tparam F type of the callback/mapping function that maps from `Node` to `T`.
-     * @param singular the singular version of the key e.g. "Number"
-     * @param plural the plural version of the key e.g. "Numbers"
-     * @param f callback function mapping from the found node to a T instance. If not specified,
-     * will use `to<T>()`
+     * @tparam T
+     *   the returned type. Must align with the return-type of `F`.
+     * @tparam F
+     *   type of the callback/mapping function that maps from `Node` to `T`.
+     * @param singular
+     *   the singular version of the key e.g. "Number"
+     * @param plural
+     *   the plural version of the key e.g. "Numbers"
+     * @param f
+     *   callback function mapping from the found node to a `T` instance. If not specified,
+     *   will use `to<T>()`
      * @return
+     *   a `vector<T>()` formed by applying `f` to each item in the sequence found at `this[plural]`
+     *   or, if that is not defined, by applying `f` to the single-item sequence `[ this[singular]
+     * ]`.
      */
     // The implementation is below because we require the full class definition
     // within the implementation.
@@ -383,8 +451,10 @@ public:
         F&& f = [](const Node& n) { return n.to<T>(); }) const;
 
     /**
-     * @param out output stream to dump `node` to in YAML format
-     * @param node node to dump to `out`
+     * @param out
+     *   output stream to dump `node` to in YAML format
+     * @param node
+     *   node to dump to `out`
      * @return out
      */
     friend std::ostream& operator<<(std::ostream& out, const Node& node) {
@@ -392,54 +462,64 @@ public:
     }
 
     /**
-     * @return number of child elements. This is the number of
-     * elements in a sequence or (k,v) pairs in a map. The size
-     * of scalar and null nodes is zero as is the size of
-     * undefined/non-existant nodes.
+     * @return
+     *   number of child elements. This is the number of
+     *   elements in a sequence or (k,v) pairs in a map. The size
+     *   of scalar and null nodes is zero as is the size of
+     *   undefined/non-existant nodes.
      */
     auto size() const {
         return _yaml.size();
     }
 
     /**
-     * @return if this node **is defined**. Note that this is not the
-     * same as `.to<bool>()`! If you have YAML `foo: false`, the
-     * value of `bool(node["foo"])` is true.
+     * @return
+     *   if this node **is defined**.
+     *
+     *   Note that this is not the same as `.to<bool>()`!
+     *
+     *   If you have YAML `foo: false`, the value of `bool(node["foo"])` is true.
      */
     explicit operator bool() const {
         return _valid && _yaml;
     }
 
     /**
-     * @return if we're specified as `null`
+     * @return
+     *   if we're specified as `null`.
+     *   This is not the same as not being defined.
      */
     bool isNull() const {
         return type() == NodeType::Null;
     }
 
     /**
-     * @return if we're a scalar type (string, number, etc)
+     * @return
+     *   if we're a scalar type (string, number, etc).
      */
     bool isScalar() const {
         return type() == NodeType::Scalar;
     }
 
     /**
-     * @return if we're a sequence (array) type
+     * @return
+     *   if we're a sequence (array) type.
      */
     bool isSequence() const {
         return type() == NodeType::Sequence;
     }
 
     /**
-     * @return if we're a map type
+     * @return
+     *   if we're a map type.
      */
     bool isMap() const {
         return type() == NodeType::Map;
     }
 
     /**
-     * @return what type we are
+     * @return
+     *   what type we are.
      */
     NodeType type() const {
         if (!*this) {
@@ -461,8 +541,9 @@ public:
     }
 
     /**
-     * @return the path that we took to get here. Path elements are
-     * separated by slashes.
+     * @return
+     *   the path that we took to get here. Path elements are
+     *   separated by slashes.
      *
      * Given the following yaml:
      *
@@ -475,7 +556,9 @@ public:
      * 2. The path to `2` is `/foo/1`.
      * 3. The path to `baz` is `/foo/bar`.
      *
-     * When iterating over maps the keys technically have their own paths
+     * **Paths for Keys in Sequences and Maps**:
+     *
+     * When iterating over maps, the keys technically have their own paths
      * as well. For example:
      *
      * ```c++
@@ -521,12 +604,17 @@ private:
         : Node{yaml, parent, yaml, std::move(key)} {}
 
 
+    // helper type-function
     template <typename O, typename... Args>
     static constexpr bool isNodeConstructible() {
+        // exclude is_trivially_constructible_v values because
+        // for some reason `int` and other primitives report as is_constructible here for some
+        // reason.
         return !std::is_trivially_constructible_v<O> &&
             std::is_constructible_v<O, const Node&, Args...>;
     }
 
+    // Simple case where we have `O(const Node&,Args...)` constructor.
     template <typename O,
               typename... Args,
               typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
@@ -538,8 +626,12 @@ private:
     template <typename O,
               typename... Args,
               typename = std::enable_if_t<
+                  // don't have an `O(const Node&, Args...)` constructor
                   !isNodeConstructible<O, Args...>() &&
+                  // rely on sfinae to determine if we have a `NodeConvert<O>` definition.
                   std::is_same_v<O, typename NodeConvert<O>::type> &&
+                  // a bit pedantic but also require that we can call
+                  // `NodeConvert<O>::convert` and get back an O.
                   std::is_same_v<O,
                                  decltype(NodeConvert<O>::convert(std::declval<Node>(),
                                                                   std::declval<Args>()...))>>,
@@ -549,11 +641,14 @@ private:
         return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
     }
 
+    // This will get used if the ↑ fails to instantiate due to SFINAE.
     template <
         typename O,
         typename... Args,
         typename = std::enable_if_t<
+            // don't have an `O(const Node&, Args...)` constructor
             !isNodeConstructible<O, Args...>() &&
+            // and the `YAML::convert<O>` struct has been defined.
             std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())), YAML::Node>>,
         typename = void,
         typename = void>
@@ -564,8 +659,10 @@ private:
         return std::make_optional<O>(_yaml.as<O>());
     }
 
+    // Helper to parse yaml string and throw a useful error message if parsing fails
     static YAML::Node parse(std::string yaml, std::string path);
 
+    // helper for yamlGet that returns nullopt if no parent
     template <typename K>
     std::optional<const YAML::Node> parentGet(const K& key) const {
         if (!_parent) {
@@ -574,6 +671,7 @@ private:
         return _parent->yamlGet(key);
     }
 
+    // Forward to _yaml[key] if we're a valid node else forward to the parent
     template <typename K>
     std::optional<const YAML::Node> yamlGet(const K& key) const {
         if (!_valid) {
@@ -607,6 +705,8 @@ private:
             auto yaml = this->yamlGet(key);
             return yaml ? Node{*yaml, this, true, keyStr} : Node{YAML::Node{}, this, false, keyStr};
         } catch (const YAML::Exception& x) {
+            // YAML::Node is inconsitent about where it throws exceptions for `node[0]` versus
+            // `node["foo"]`.
             BOOST_THROW_EXCEPTION(InvalidKeyException(
                 "Invalid YAML access. Perhaps trying to treat a map as a sequence?",
                 v1::toString(key),
