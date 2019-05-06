@@ -16,6 +16,18 @@
 
 namespace genny {
 
+std::string InvalidKeyException::createWhat(const std::string& msg,
+                                            const std::string& key,
+                                            const Node* node) {
+    std::stringstream out;
+    out << "Invalid key '" << key << "': ";
+    out << msg << " ";
+    out << "On node with path '" << node->path() << "': ";
+    out << *node;
+
+    return out.str();
+}
+
 void Node::appendKey(std::ostringstream& out) const {
     if (_parent) {
         _parent->appendKey(out);

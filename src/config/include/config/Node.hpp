@@ -45,13 +45,23 @@ std::string toString(const T& t) {
 template <typename O>
 struct NodeConvert {};
 
-
 /**
  * Throw this to indicate a bad path.
  */
-class InvalidPathException : public std::invalid_argument {
+class InvalidKeyException : public std::exception {
 public:
-    using std::invalid_argument::invalid_argument;
+    InvalidKeyException(const std::string& msg, const std::string& key, const class Node* node)
+        : _what{createWhat(msg, key, node)} {}
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    static std::string createWhat(const std::string& msg,
+                                  const std::string& key,
+                                  const class Node* node);
+    std::string _what;
 };
 
 /**
@@ -233,10 +243,8 @@ public:
     O to(Args&&... args) const {
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
-            std::ostringstream msg;
-            msg << "Tried to access node that doesn't exist at path: " << this->path();
-            // TODO: custom exception type
-            BOOST_THROW_EXCEPTION(std::logic_error(msg.str()));
+            BOOST_THROW_EXCEPTION(
+                InvalidKeyException("Tried to access node that doesn't exist.", this->_key, this));
         }
         return *out;
     }
@@ -508,28 +516,29 @@ private:
 
     static YAML::Node parse(std::string);
 
+    template<typename K>
+    std::optional<const YAML::Node> parentGet(const K& key) const {
+        if (!_parent) {
+            return std::nullopt;
+        }
+        return _parent->yamlGet(key);
+    }
+
     template <typename K>
     std::optional<const YAML::Node> yamlGet(const K& key) const {
         if (!_valid) {
-            return std::nullopt;
+            return parentGet(key);
         }
         const YAML::Node found = _yaml[key];
         if (found) {
             return std::make_optional<const YAML::Node>(found);
-        } else {
-            if (!_parent) {
-                return std::nullopt;
-            }
-            return _parent->yamlGet(key);
         }
+        return parentGet(key);
     }
 
     template <typename K>
     const Node get(const K& key) const {
         const std::string keyStr = v1::toString(key);
-        if (!_valid) {
-            return Node{YAML::Node{}, this, false, keyStr};
-        }
         if constexpr (std::is_convertible_v<K, std::string>) {
             if (key == "..") {
                 // this is...not the most succinct business-logic ever....
@@ -544,11 +553,14 @@ private:
                 return Node{_parent->_yaml, _parent->_parent, _parent->_valid, childKey.str()};
             }
         }
-        auto yaml = this->yamlGet(key);
-        if (yaml) {
-            return Node{*yaml, this, true, keyStr};
-        } else {
-            return Node{YAML::Node{}, this, false, keyStr};
+        try {
+            auto yaml = this->yamlGet(key);
+            return yaml ? Node{*yaml, this, true, keyStr} : Node{YAML::Node{}, this, false, keyStr};
+        } catch (const YAML::Exception& x) {
+            BOOST_THROW_EXCEPTION(InvalidKeyException(
+                "Invalid YAML access. Perhaps trying to treat a map as a sequence?",
+                v1::toString(key),
+                this));
         }
     }
 
@@ -641,17 +653,16 @@ std::vector<T> Node::getPlural(const std::string& singular,
     auto pluralValue = (*this)[plural];
     auto singValue = (*this)[singular];
     if (pluralValue && singValue) {
-        std::stringstream str;
-        str << "Can't have both '" << singular << "' and '" << plural << "'. ";
-        str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
-        BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+        BOOST_THROW_EXCEPTION(
+            InvalidKeyException("Can't have both '" + singular + "' and '" + plural + "'.",
+                                "$plural(" + singular + "," + plural + ")",
+                                this));
     } else if (pluralValue) {
         if (!pluralValue.isSequence()) {
-            std::stringstream str;
-            str << "'" << plural << "' must be a sequence type. ";
-            str << "Got " << pluralValue << ". ";
-            str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
-            BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+            BOOST_THROW_EXCEPTION(
+                InvalidKeyException("Plural '" + plural + "' must be a sequence type.",
+                                    "$plural(" + singular + "," + plural + ")",
+                                    this));
         }
         for (auto&& val : pluralValue) {
             T created = std::invoke(f, val);
@@ -661,11 +672,10 @@ std::vector<T> Node::getPlural(const std::string& singular,
         T created = std::invoke(f, singValue);
         out.emplace_back(std::move(created));
     } else if (!singValue && !pluralValue) {
-        std::stringstream str;
-        str << "Either '" << singular << "' or '" << plural << "' required. ";
-        str << "Node: " << *this << ". ";
-        str << "Path: '" << this->path() << "$plural(" << singular << "," << plural << ")'";
-        BOOST_THROW_EXCEPTION(InvalidPathException(str.str()));
+        BOOST_THROW_EXCEPTION(
+            InvalidKeyException("Either '" + singular + "' or '" + plural + "' required.",
+                                "$plural(" + singular + "," + plural + ")",
+                                this));
     }
 
     return out;
