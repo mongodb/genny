@@ -713,7 +713,7 @@ private:
         }
     }
 
-    void buildPath(std::stringstream &out) const;
+    void buildPath(std::stringstream& out) const;
 
     YAML::Node _yaml;
     std::string _key;

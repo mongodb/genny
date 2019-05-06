@@ -23,8 +23,8 @@ std::string InvalidYAMLException::createWhat(const std::string& path,
     std::stringstream out;
     out << "Invalid YAML: ";
     out << "'" << yamlException.msg << "' ";
-    out << "at (Line:Column)=(" << yamlException.mark.line << ":"
-        << yamlException.mark.column << "). ";
+    out << "at (Line:Column)=(" << yamlException.mark.line << ":" << yamlException.mark.column
+        << "). ";
     out << "On node with path '" << path << "'.";
 
     return out.str();
@@ -55,7 +55,7 @@ std::string InvalidKeyException::createWhat(const std::string& msg,
     return out.str();
 }
 
-void Node::buildPath(std::stringstream &out) const {
+void Node::buildPath(std::stringstream& out) const {
     if (_parent) {
         _parent->buildPath(out);
         out << "/";
