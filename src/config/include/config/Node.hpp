@@ -28,6 +28,8 @@
 namespace genny {
 
 namespace v1 {
+// Helper to convert arbitrary types to strings if they have operator<<(ostream&) defined.
+// This is used to build up paths when calling `node["foo"]` and `node[0]` etc.
 template <typename T>
 std::string toString(const T& t) {
     std::ostringstream out;
@@ -759,6 +761,8 @@ private:
 };
 
 
+// Wrap a YAML iterator and also keep track of
+// the index on sequences for use in error-messaging.
 class Node::iterator {
 public:
     auto operator++() {
@@ -795,6 +799,9 @@ private:
     size_t index = 0;
 };
 
+// Need to define this out-of-line because we need the
+// full class definition in order to iterate over
+// all the nodes in the plural case.
 template <typename T, typename F>
 std::vector<T> Node::getPlural(const std::string& singular,
                                const std::string& plural,
@@ -804,6 +811,8 @@ std::vector<T> Node::getPlural(const std::string& singular,
     auto singValue = (*this)[singular];
     if (pluralValue && singValue) {
         BOOST_THROW_EXCEPTION(
+            // the `$plural(singular,plural)` key is kinda cheeky but hopefully
+            // it helps to explain what the code tried to do in error-messages.
             InvalidKeyException("Can't have both '" + singular + "' and '" + plural + "'.",
                                 "$plural(" + singular + "," + plural + ")",
                                 this));
