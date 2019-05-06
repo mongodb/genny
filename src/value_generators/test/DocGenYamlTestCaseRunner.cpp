@@ -9,8 +9,6 @@
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types/value.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <testlib/ActorHelper.hpp>
 #include <testlib/yamlTest.hpp>
 #include <testlib/yamlToBson.hpp>

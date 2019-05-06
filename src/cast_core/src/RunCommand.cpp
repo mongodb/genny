@@ -247,9 +247,9 @@ struct actor::RunCommand::PhaseConfig {
                 ActorContext& actorContext,
                 mongocxx::pool::entry& client,
                 ActorId id)
-        : throwOnFailure{context.get<bool, false>("ThrowOnFailure").value_or(true)} {
-        auto actorType = context.get<std::string>("Type");
-        auto database = context.get<std::string, false>("Database").value_or("admin");
+        : throwOnFailure{context["ThrowOnFailure"].value_or(true)} {
+        auto actorType = context["Type"].to<std::string>();
+        auto database = context["Database"].value_or<std::string>("admin");
         if (actorType == "AdminCommand" && database != "admin") {
             throw InvalidConfigurationException(
                 "AdminCommands can only be run on the 'admin' database.");
@@ -259,7 +259,8 @@ struct actor::RunCommand::PhaseConfig {
             return DatabaseOperation::create(node, context, actorContext, id, client, database);
         };
 
-        operations = context.getPlural<std::unique_ptr<DatabaseOperation>>(
+        // TODO: better design for .node()
+        operations = context.node().getPlural<std::unique_ptr<DatabaseOperation>>(
             "Operation", "Operations", createOperation);
     }
 

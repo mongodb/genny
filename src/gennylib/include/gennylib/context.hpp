@@ -59,17 +59,6 @@ namespace genny {
 
 class WorkloadContext;
 
-namespace v1 {
-// pre-declared because compilers are hateful.
-// See documentation on ActorContext::createDocumentGenerator
-template <typename PathOrNode, typename... Args>
-DocumentGenerator createDocumentGeneratorImpl(WorkloadContext& workloadContext,
-                                              const Node& configNode,
-                                              ActorId id,
-                                              PathOrNode&& pathOrNode,
-                                              Args&&... args);
-}  // namespace v1
-
 /**
  * Represents the top-level/"global" configuration and context for configuring actors.
  * Call `.get()` to access top-level yaml configs.
@@ -416,85 +405,6 @@ public:
             this->_node["Name"].to<std::string>(), operationName, id);
     }
 
-    /**
-     * Construct a DocumentGenerator from a given path or YAML::Node.
-     *
-     * Example usage:
-     *
-     * ```yaml
-     * SchemaVersion: 2018-07-01
-     * Actors:
-     * - Type: Foo
-     *   Documents: [{a: {^RandomInt: {min: 7, max: 100}}}]
-     *   ...
-     * ```
-     *
-     * This could be used via:
-     *
-     * ```c++
-     * DocumentGenerator docGen =
-     *     actorContext.createDocumentGenerator(FooActor::id(), "Document", 0);
-     * auto document = docGen(); // => {a: random-between-7-and-10}
-     * ```
-     *
-     * The 2nd and 3rd arguments (`"Document",0`) indicate the path to the
-     * DocumentGenerator "template" to use.
-     *
-     * The second argument, `pathOrNode`, can be either a `YAML::Node` or an argument
-     * that could be passed to `get()` (i.e. a string or int part of a YAML path as
-     * in the example above). If it is a `YAML::Node`, no additional arguments
-     * may be given.
-     *
-     * Example with `YAML::Node` as the second argument:
-     *
-     * ```c++
-     * auto node = YAML::Load("{a: {^RandomInt: {min: 0, max: 5}}}");
-     * DocumentGenerator docGen =
-     *     actorContext.createDocumentGenerator(MyActor::id(), node);
-     * auto document = docGen(); // => {a: random-between-0-and-5}
-     * ```
-     *
-     * In this second example it would be a compiler error to pass
-     * additional arguments after `node`:
-     *
-     * ```c++
-     * auto node = YAML::Load("{}");
-     * //                                       ☣️ Compiler Error ↓ ☣
-     * actorContext.createDocumentGenerator(MyActor::id(), node, "foo");
-     * ```
-     *
-     * Important notes:
-     *
-     * 1. DocumentGenerators constructed with the same `ActorId`
-     *    (the first parameter) will share the same random number
-     *    generator and should not be used at the same time on
-     *    different threads.
-     *
-     * 2. This can only be called during workload setup (not within
-     *    the `run()` method of Actors).
-     *
-     * @param id
-     *   the ActorId that will own this DocumentGenerator.
-     *   In general use YourActorClass::id()
-     * @param pathOrNode
-     *   Either a `YAML::Node` or the first part of the path
-     *   to the structure to use for the document template.
-     *   See `get()`.
-     * @param args
-     *   Remaining path elements. Can only be given if
-     *   `pathOrNode` is *not* a `YAML::Node`.
-     * @return
-     *   A hot and fresh DocumentGenerator
-     */
-    template <typename PathOrNode, typename... Args>
-    DocumentGenerator createDocumentGenerator(ActorId id, PathOrNode&& pathOrNode, Args&&... args) {
-        return v1::createDocumentGeneratorImpl(this->workload(),
-                                               *this,
-                                               id,
-                                               std::forward<PathOrNode>(pathOrNode),
-                                               std::forward<Args>(args)...);
-    }
-
 private:
     static std::unordered_map<genny::PhaseNumber, std::unique_ptr<PhaseContext>>
 
@@ -521,16 +431,6 @@ public:
     PhaseContext(PhaseContext&&) = delete;
     void operator=(PhaseContext&&) = delete;
 
-    /** See documentation on ActorContext::createDocumentGenerator() */
-    template <typename PathOrNode, typename... Args>
-    DocumentGenerator createDocumentGenerator(ActorId id, PathOrNode&& pathOrNode, Args&&... args) {
-        return v1::createDocumentGeneratorImpl(this->workload(),
-                                               *this,
-                                               id,
-                                               std::forward<PathOrNode>(pathOrNode),
-                                               std::forward<Args>(args)...);
-    }
-
     template<typename K>
     auto operator[](K& key) const {
         return this->_node[key];
@@ -541,9 +441,8 @@ public:
         return this->_node[key];
     }
 
-    template<typename...Args>
-    auto getPlural(Args&&...args) const {
-        return this->_node.getPlural<Args...>(std::forward<Args>(args)...);
+    auto node() const {
+        return this->_node;
     }
 
     /**
@@ -585,55 +484,6 @@ private:
     ActorContext* _actor;
     const PhaseNumber _phaseNumber;
 };
-
-namespace v1 {
-
-
-/**
- * Can we convert A to B ignoring cv qualification and ref-ness of A?
- */
-template <typename A, typename B>
-using IsLooselyConvertible = std::is_convertible<std::remove_reference_t<std::remove_cv_t<A>>, B>;
-
-template <typename PathOrNode, typename... Args>
-DocumentGenerator createDocumentGeneratorImpl(genny::WorkloadContext& workloadContext,
-                                              const Node& configNode,
-                                              ActorId id,
-                                              PathOrNode&& pathOrNode,
-                                              Args&&... args) {
-    if (workloadContext.isDone()) {
-        std::stringstream msg;
-        msg << "Tried to create DocumentGenerator";
-        if constexpr (!IsLooselyConvertible<PathOrNode, YAML::Node>::value) {
-            msg << " [";
-            msg << pathOrNode;
-            (msg << ... << args) << "]";
-        }
-        msg << " after workload setup completed.";
-        BOOST_THROW_EXCEPTION(std::logic_error(msg.str()));
-    }
-
-    DefaultRandom& rng = workloadContext.getRNGForThread(id);
-
-    if constexpr (IsLooselyConvertible<PathOrNode, YAML::Node>::value) {
-        // If we're calling via context.createDocGen(id, YAML::Node)
-
-        // It's undefined what this would even mean so may as well
-        // protect against bad usage.
-        static_assert(sizeof...(args) == 0,
-                      "When calling createDocumentGenerator(id,YAML::Node) "
-                      "there cannot be additional arguments");
-
-        return DocumentGenerator{pathOrNode, rng};
-    } else {
-        auto node =
-            configNode.get(std::forward<PathOrNode>(pathOrNode), std::forward<Args>(args)...);
-        return DocumentGenerator{node, rng};
-    }
-}
-
-}  // namespace v1
-
 
 }  // namespace genny
 

@@ -30,7 +30,7 @@ struct HelloWorld::PhaseConfig {
     metrics::Operation operation;
 
     explicit PhaseConfig(PhaseContext& context, ActorId actorId)
-        : message{context["Message"].value_or("Hello, World!")},
+        : message{context["Message"].value_or<std::string>("Hello, World!")},
           operation{context.operation("DefaultMetricsName", actorId)} {}
 };
 

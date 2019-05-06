@@ -106,7 +106,7 @@ public:
         const auto rateSpec = phaseContext["Rate"].maybe<RateSpec>();
 
         const auto rateLimiterName =
-            phaseContext["RateLimiterName"].value_or("defaultRateLimiter");
+            phaseContext["RateLimiterName"].value_or<std::string>("defaultRateLimiter");
 
         if (rateSpec) {
             if (!_doesBlock) {
