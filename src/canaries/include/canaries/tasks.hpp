@@ -23,7 +23,6 @@
 
 #include <mongocxx/client.hpp>
 
-#include <gennylib/v1/ConfigNode.hpp>
 #include <gennylib/v1/PoolManager.hpp>
 
 namespace genny::canaries {

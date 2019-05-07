@@ -25,7 +25,7 @@ using namespace genny;
 // Possibly extract this section to a ContextHelper if it seems useful elsewhere
 namespace genny {
 
-inline YAML::Node createWorkloadYaml(const std::string& type, const std::string& actorYaml) {
+inline Node createWorkloadYaml(const std::string& type, const std::string& actorYaml) {
     auto base = YAML::Load(R"(
 SchemaVersion: 2018-07-01
 Actors: []
@@ -34,7 +34,8 @@ Actors: []
     actor["Type"] = type;
 
     base["Actors"].push_back(actor);
-    return base;
+    auto str = YAML::Dump(base);
+    return Node{str, ""};
 }
 
 template <class ProducerT>
@@ -63,7 +64,7 @@ public:
 private:
     std::shared_ptr<ProducerT> _producer;
     Cast::Registration _registration;
-    YAML::Node _node;
+    Node _node;
     metrics::Registry _registry;
     Orchestrator _orchestrator;
     WorkloadContext _workloadContext;

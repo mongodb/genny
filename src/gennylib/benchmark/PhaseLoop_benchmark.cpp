@@ -138,7 +138,7 @@ auto runActors(int threads, long iterations) {
       - Repeat: %i
     )") %
         threads % iterations;
-    auto config = YAML::Load(configString.str());
+    auto config = Node(configString.str(), "");
 
     auto incProducer = std::make_shared<DefaultActorProducer<IncrementsActor>>("Increments");
 

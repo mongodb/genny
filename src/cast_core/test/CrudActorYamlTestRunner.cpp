@@ -147,7 +147,7 @@ void requireOutcomeCounts(mongocxx::pool::entry& client, YAML::Node outcomeCount
     }
 }
 
-YAML::Node createConfigurationYaml(YAML::Node operations) {
+Node createConfigurationYaml(YAML::Node operations) {
     YAML::Node config = YAML::Load(R"(
           SchemaVersion: 2018-07-01
           Actors:
@@ -159,7 +159,7 @@ YAML::Node createConfigurationYaml(YAML::Node operations) {
     config["Actors"][0]["Database"] = DEFAULT_DB;
     config["Actors"][0]["Phases"][0]["Collection"] = DEFAULT_COLLECTION;
     config["Actors"][0]["Phases"][0]["Operations"] = operations;
-    return config;
+    return Node{YAML::Dump(config), "operationsConfig"};
 }
 
 void requireAfterState(mongocxx::pool::entry& client, ApmEvents& events, YAML::Node tcase) {

@@ -41,7 +41,7 @@ TEST_CASE("Actor Helper") {
     };
 
     SECTION("Barfs on invalid YAML") {
-        YAML::Node badConfig = YAML::Load("{i-am-json-not-yaml}");
+        genny::Node badConfig("{i-am-json-not-yaml}", "");
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 
@@ -50,12 +50,12 @@ TEST_CASE("Actor Helper") {
     }
 
     SECTION("Barfs on invalid thread count (aka token)") {
-        YAML::Node config = YAML::Load(R"(
+        genny::Node config (R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: DummyActor
-)");
+)", "");
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 
@@ -71,12 +71,12 @@ Actors:
     };
 
     SECTION("Barfs if Actor Ctor barfs") {
-        YAML::Node config = YAML::Load(R"(
+        genny::Node config (R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: DummyActor
-)");
+)", "");
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<CtorThrowingActor>>("DummyActor");
 
@@ -85,12 +85,12 @@ Actors:
     }
 
     SECTION("Barfs if Actor runAndVerify() barfs") {
-        YAML::Node config = YAML::Load(R"(
+        genny::Node config (R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: DummyActor
-)");
+)", "");
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 

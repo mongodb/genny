@@ -35,7 +35,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     dropAllDatabases();
     auto db = client.database("mydb");
 
-    YAML::Node config = YAML::Load(R"(
+    genny::Node config (R"(
         SchemaVersion: 2018-07-01
         Database: mydb
         Collection: &Collection CommitLatency
@@ -60,7 +60,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                ReadMode: primary
              Transaction: True         # Implies Session
 
-    )");
+    )", "");
 
 
     SECTION("With and without transactions.") {

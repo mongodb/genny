@@ -59,11 +59,15 @@ public:
         }
     }
 
+    static Node toNode(YAML::Node node) {
+        return Node{YAML::Dump(node), ""};
+    }
+
     void run() const {
         DYNAMIC_SECTION("DocGenYamlTestCaseRunner " << name()) {
             if (_runMode == RunMode::kExpectException) {
                 try {
-                    genny::DocumentGenerator(this->_givenTemplate, rng);
+                    genny::DocumentGenerator(toNode(this->_givenTemplate), rng);
                     FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
                                                << " but none occurred");
                 } catch (const std::exception& x) {
@@ -73,7 +77,7 @@ public:
                 return;
             }
 
-            auto docGen = genny::DocumentGenerator(this->_givenTemplate, rng);
+            auto docGen = genny::DocumentGenerator(toNode(this->_givenTemplate), rng);
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
                 auto actual = docGen();

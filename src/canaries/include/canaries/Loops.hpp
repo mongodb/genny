@@ -21,6 +21,8 @@
 
 #include <canaries/tasks.hpp>
 
+#include <gennylib/InvalidConfigurationException.hpp>
+
 namespace genny::canaries {
 
 using Nanosecond = int64_t;

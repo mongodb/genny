@@ -111,7 +111,7 @@ TEST_CASE("Global rate limiter can be used by phase loop") {
     };
 
     SECTION("Fail if no Repeat or Duration") {
-        YAML::Node config = YAML::Load(R"(
+        Node config (R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -119,7 +119,7 @@ Actors:
   Threads: 1
   Phases:
     - Rate: 5 per 4 seconds
-)");
+)", "");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 2;
 
@@ -132,7 +132,7 @@ Actors:
     // The rate interval needs to be large enough to avoid sporadic failures, which makes
     // this test take longer. It therefore has the "[slow]" label.
     SECTION("Prevents execution when the rate is exceeded") {
-        YAML::Node config = YAML::Load(R"(
+        Node config (R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -141,7 +141,7 @@ Actors:
   Phases:
     - Repeat: 7
       Rate: 3 per 200 milliseconds
-)");
+)", "");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 2;
         int rate = 3;

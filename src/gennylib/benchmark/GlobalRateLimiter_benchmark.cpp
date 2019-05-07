@@ -56,7 +56,7 @@ TEST_CASE("Find max performance of rate limiter", "[benchmark]") {
         PhaseLoop<PhaseConfig> _loop;
     };
 
-    YAML::Node config = YAML::Load(R"(
+    Node config(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -65,7 +65,7 @@ Actors:
   Phases:
     - Duration: 10 seconds
       Rate: 1 per 100 microseconds
-    )");
+    )", "");
 
     auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
     int num_threads = 50;
