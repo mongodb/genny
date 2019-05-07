@@ -187,7 +187,11 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(yaml.as<std::map<std::string, std::string>>() ==
                     std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
         }
-        // TODO: genny::Node equivalent
+        {
+            Node yaml ("{a: A, b: B}", "");
+            REQUIRE(yaml.to<std::map<std::string, std::string>>() ==
+                    std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
+        }
     }
 
     SECTION("isNull and fallback") {
@@ -196,7 +200,18 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(yaml["a"].IsNull());
             REQUIRE(yaml["a"].as<int>(7) == 7);
         }
-        // TODO: genny::Node equivalent
+        {
+            Node yaml ("a: null", "");
+            REQUIRE(yaml["a"].isNull());
+            // .maybe and .to provide stronger guarantees:
+            // we throw rather than returning the fallback if the conversion fails
+            REQUIRE_THROWS_WITH([&](){
+                yaml["a"].maybe<int>();
+            }(), Catch::Matches("Couldn't convert to 'int': 'bad conversion' at \\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+            REQUIRE_THROWS_WITH([&](){
+                yaml["a"].to<int>();
+            }(), Catch::Matches("Couldn't convert to 'int': 'bad conversion' at \\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+        }
     }
 
     SECTION("Missing values are boolean false") {
@@ -512,7 +527,6 @@ Children:
     FourChild:
       a: 11
 )");
-    // TODO: when using this in the Driver, use the file name or "<root>" or something more obvious
     Node node(yaml, "");
 
     SECTION("Parent traversal") {
@@ -528,12 +542,6 @@ Children:
             REQUIRE(node["a"].maybe<int>().value_or(100) == 7);
             REQUIRE(node["Children"]["a"].maybe<int>().value_or(42) == 100);
             REQUIRE(node["does"]["not"]["exist"].maybe<int>().value_or(90) == 90);
-            {
-                EmptyStruct ctx;
-                // TODO: what should this syntax look like?
-                //                REQUIRE(node["foo"].to<MyType>(&ctx).value_or("from_other_ctor").msg
-                //                == "from_other_ctor");
-            }
         }
     }
 
@@ -798,7 +806,6 @@ b: {}
     node["b"].to<RequiresParamToEqualNodeX>(9);
 }
 
-// TODO: how to handle iterating over inherited keys?
 TEST_CASE("Iteration") {
     auto yaml = std::string(R"(
 Scalar: foo
