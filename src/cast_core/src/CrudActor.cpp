@@ -230,7 +230,7 @@ ThrowMode decodeThrowMode(const Node& operation, PhaseContext& phaseContext) {
     // look in operation otherwise fallback to phasecontext
     // we really need to kill const Node& and only use ConfigNode...
     bool throwOnFailure = operation[key] ? operation[key].to<bool>()
-                                         : phaseContext[key].value_or(true);
+                                         : phaseContext[key].maybe<bool>().value_or(true);
     return throwOnFailure ? ThrowMode::kRethrow : ThrowMode::kSwallow;
 }
 
@@ -296,7 +296,7 @@ auto createDocumentGenerator(const Node& source,
         msg << "'" << opType << "' expects a '" << key << "' field.";
         BOOST_THROW_EXCEPTION(InvalidConfigurationException(msg.str()));
     }
-    return context.createDocumentGenerator(id, doc);
+    return doc.to<DocumentGenerator>(id);
 }
 
 }  // namespace
@@ -353,7 +353,7 @@ struct InsertOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _options{opNode["OperationOptions"].value_or<mongocxx::options::insert>(
+          _options{opNode["OperationOptions"].maybe<mongocxx::options::insert>().value_or(
               mongocxx::options::insert{})},
           _docExpr{createDocumentGenerator(opNode, "insertOne", "Document", context, id)} {}
 
@@ -968,7 +968,7 @@ struct InsertManyOperation : public BaseOperation {
                 "'insertMany' expects a 'Documents' field of sequence type."));
         }
         for (auto&& document : documents) {
-            _docExprs.push_back(context.createDocumentGenerator(id, document));
+            _docExprs.push_back(document.to<DocumentGenerator>(id));
         }
     }
 

@@ -275,7 +275,7 @@ public:
             BOOST_THROW_EXCEPTION(
                 InvalidKeyException("Tried to access node that doesn't exist.", this->_key, this));
         }
-        return *out;
+        return std::move(*out);
     }
 
     /**

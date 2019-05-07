@@ -100,13 +100,13 @@ public:
         : IterationChecker(phaseContext["Duration"].maybe<TimeSpec>(),
                            phaseContext["Repeat"].maybe<IntegerSpec>(),
                            phaseContext.isNop(),
-                           phaseContext["SleepBefore"].value_or(TimeSpec{}),
-                           phaseContext["SleepAfter"].value_or(TimeSpec{}),
+                           phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}),
+                           phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["Rate"].maybe<RateSpec>()) {
         const auto rateSpec = phaseContext["Rate"].maybe<RateSpec>();
 
         const auto rateLimiterName =
-            phaseContext["RateLimiterName"].value_or<std::string>("defaultRateLimiter");
+            phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter");
 
         if (rateSpec) {
             if (!_doesBlock) {

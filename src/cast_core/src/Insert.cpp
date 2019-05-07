@@ -40,7 +40,7 @@ struct Insert::PhaseConfig {
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
         : collection{db[phaseContext["Collection"].to<std::string>()]},
-          documentExpr{phaseContext.createDocumentGenerator(id, "Document")} {}
+          documentExpr{phaseContext["Document"].to<DocumentGenerator>(id)} {}
 };
 
 void Insert::run() {

@@ -42,16 +42,16 @@ struct MultiCollectionQuery::PhaseConfig {
         : database{(*client)[context["Database"].to<std::string>()]},
           numCollections{context["CollectionCount"].to<IntegerSpec>()},
           readConcern{context["ReadConcern"].to<mongocxx::read_concern>()},
-          filterExpr{context.createDocumentGenerator(id, "Filter")},
+          filterExpr{std::move(context["Filter"].to<DocumentGenerator>(id))},
           uniformDistribution{0, numCollections} {
         const auto limit = context["Limit"].maybe<int64_t>();
         if (limit) {
             options.limit(*limit);
         }
 
-        const auto sort = context["Sort"].maybe();
+        std::optional<DocumentGenerator> sort = context["Sort"].maybe<DocumentGenerator>(id);
         if (sort) {
-            options.sort(context.createDocumentGenerator(id, *sort)());
+            options.sort((*sort)());
         }
     }
 

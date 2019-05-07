@@ -59,7 +59,7 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     // Default value selected from random.org, by selecting 2 random numbers
     // between 1 and 10^9 and concatenating.
-    _rng.seed(this->get("RandomSeed").value_or(269849313357703264));
+    _rng.seed(this->get("RandomSeed").maybe<long>().value_or(269849313357703264));
 
     for (auto& actorContext : _actorContexts) {
         for (auto&& actor : _constructActors(cast, actorContext)) {
@@ -155,6 +155,6 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
 }
 
 bool PhaseContext::isNop() const {
-    return get("Nop").value_or(false);
+    return get("Nop").maybe<bool>().value_or(false);
 }
 }  // namespace genny

@@ -45,15 +45,13 @@ struct Loader::PhaseConfig {
                          context["Threads"].to<IntegerSpec>()},
           numDocuments{context["DocumentCount"].to<IntegerSpec>()},
           batchSize{context["BatchSize"].to<IntegerSpec>()},
-          documentExpr{context.createDocumentGenerator(id, "Document")},
+          documentExpr{context["Document"].to<DocumentGenerator>()},
           collectionOffset{numCollections * thread} {
         auto indexNodes = context.get("Indexes");
         for (auto indexNode : indexNodes) {
             indexes.emplace_back(
-                context.createDocumentGenerator(id, indexNode["keys"]),
-                indexNode["options"]
-                    ? std::make_optional(context.createDocumentGenerator(id, indexNode["options"]))
-                    : std::nullopt);
+                indexNode["keys"].to<DocumentGenerator>(id),
+                indexNode["options"].maybe<DocumentGenerator>(id));
         }
         if (thread == context["Threads"].to<int>() - 1) {
             // Pick up any extra collections left over by the division
