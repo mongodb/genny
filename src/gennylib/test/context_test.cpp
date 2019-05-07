@@ -33,8 +33,6 @@
 #include <testlib/helpers.hpp>
 #include <testlib/yamlToBson.hpp>
 
-/*
-TODO: come back here
 using namespace genny;
 using namespace std;
 
@@ -46,34 +44,42 @@ using Catch::Matchers::StartsWith;
 // the connection-pool
 static constexpr std::string_view mongoUri = "mongodb://localhost:27017";
 
-template <class Out, typename F>
-void errors(const string& yaml, string message, F&& callback) {
+template<typename T, typename Arg, typename... Rest>
+auto applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
+    if constexpr(sizeof...(rest) == 0) {
+        return t[std::forward<Arg>(arg)];
+    } else {
+        return applyBracket(t[std::forward<Arg>(arg)], std::forward<Rest>(rest)...);
+    }
+}
+
+template <class Out, class... Args>
+void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = genny::Node{modified, "errors-testcase"};
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
-        return callback(context);
+        return applyBracket(context, std::forward<Args>(args)...).template to<Out>();
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
 }
 template <class Out,
           bool Required = true,
           class OutV = typename std::conditional<Required, Out, std::optional<Out>>::type,
-          typename F>
-void gives(const string& yaml, OutV expect, F&& f) {
+          class... Args>
+void gives(const string& yaml, OutV expect, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     auto read = Node{modified, "gives-test"};
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
-        const Node result = f(context);
-        if constexpr(Required) {
-            return result.to<Out>();
+        if constexpr (Required) {
+            return applyBracket(context, std::forward<Args>(args)...).template to<Out>();
         } else {
-            return result.maybe<Out>();
+            return applyBracket(context, std::forward<Args>(args)...).template maybe<Out>();
         }
     };
     REQUIRE(test() == expect);
@@ -120,7 +126,7 @@ Actors:
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = Node("SchemaVersion: 2018-06-27\nActors: []");
+        auto yaml = Node("SchemaVersion: 2018-06-27\nActors: []", "");
 
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
@@ -128,12 +134,13 @@ Actors:
         REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
     }
 
+    /* TODO
     SECTION("Can Construct RNG") {
         std::atomic_int calls = 0;
-        YAML::Node templ = Node("foo: bar", "");
+        auto templ = Node("foo: bar", "");
 
         auto fromYaml = std::make_shared<OpProducer>([&](ActorContext& a) {
-            auto docgen = a.createDocumentGenerator(0, templ);
+            auto docgen = a(0, templ);
             REQUIRE(docgen().view() ==
                     genny::testing::toDocumentBson(Node("foo: bar", "")).view());
             ++calls;
@@ -171,7 +178,7 @@ Actors:
 
         REQUIRE(calls == 3);
     }
-
+    */
 
     SECTION("Invalid config accesses") {
         // key not found
@@ -214,14 +221,14 @@ Actors:
     }
 
     SECTION("Empty Yaml") {
-        auto yaml = Node("Actors: []");
+        auto yaml = Node("Actors: []", "");
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
     }
     SECTION("No Actors") {
-        auto yaml = Node("SchemaVersion: 2018-07-01");
+        auto yaml = Node("SchemaVersion: 2018-07-01", "");
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
@@ -239,14 +246,14 @@ Actors:
   Type: Count
   Count: 7
   SomeList: [2]
-        )");
+        )", "");
 
         struct SomeListProducer : public ActorProducer {
             using ActorProducer::ActorProducer;
 
             ActorVector produce(ActorContext& context) override {
-                REQUIRE(context.workload().get<int>("Actors", 0, "SomeList", 0) == 100);
-                REQUIRE(context.get<int>("SomeList", 0) == 100);
+                REQUIRE(context.workload()["Actors"][0]["SomeList"][0].to<int>() == 100);
+                REQUIRE(context["SomeList"][0].to<int>() == 100);
                 ++calls;
                 return ActorVector{};
             }
@@ -258,8 +265,8 @@ Actors:
             using ActorProducer::ActorProducer;
 
             ActorVector produce(ActorContext& context) override {
-                REQUIRE(context.workload().get<int>("Actors", 1, "Count") == 7);
-                REQUIRE(context.get<int>("Count") == 7);
+                REQUIRE(context.workload()["Actors"][1]["Count"].to<int>() == 7);
+                REQUIRE(context["Count"].to<int>() == 7);
                 ++calls;
                 return ActorVector{};
             }
@@ -293,7 +300,7 @@ Actors:
     }
 }
 
-void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
+void onContext(Node yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
 
@@ -326,7 +333,7 @@ TEST_CASE("PhaseContexts constructed as expected") {
       - Operation: Five
         Phase: 6..7
         Foo2: Bar3
-    )");
+    )", "");
 
     SECTION("Loads Phases") {
         // "test of the test"
@@ -345,67 +352,67 @@ TEST_CASE("PhaseContexts constructed as expected") {
     }
     SECTION("Phase index is defaulted") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(ctx.phases().at(0)->get<std::string>("Operation") == "One");
-            REQUIRE(ctx.phases().at(1)->get<std::string>("Operation") == "Three");
-            REQUIRE(ctx.phases().at(2)->get<std::string>("Operation") == "Two");
-            REQUIRE(ctx.phases().at(3)->get<std::string>("Operation") == "Four");
-            REQUIRE(ctx.phases().at(4)->get<std::string>("Operation") == "Four");
-            REQUIRE(ctx.phases().at(5)->get<std::string>("Operation") == "Four");
-            REQUIRE(ctx.phases().at(6)->get<std::string>("Operation") == "Five");
-            REQUIRE(ctx.phases().at(7)->get<std::string>("Operation") == "Five");
+            REQUIRE((*ctx.phases().at(0))["Operation"].to<std::string>() == "One");
+            REQUIRE((*ctx.phases().at(1))["Operation"].to<std::string>() == "Three");
+            REQUIRE((*ctx.phases().at(2))["Operation"].to<std::string>() == "Two");
+            REQUIRE((*ctx.phases().at(3))["Operation"].to<std::string>() == "Four");
+            REQUIRE((*ctx.phases().at(4))["Operation"].to<std::string>() == "Four");
+            REQUIRE((*ctx.phases().at(5))["Operation"].to<std::string>() == "Four");
+            REQUIRE((*ctx.phases().at(6))["Operation"].to<std::string>() == "Five");
+            REQUIRE((*ctx.phases().at(7))["Operation"].to<std::string>() == "Five");
         };
         onContext(yaml, op);
     }
     SECTION("Phase values can override parent values") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(ctx.phases().at(0)->get<std::string>("Foo") == "Baz");
-            REQUIRE(ctx.phases().at(1)->get<std::string>("Foo") == "Bar");
-            REQUIRE(ctx.phases().at(2)->get<std::string>("Foo") == "Bar");
-            REQUIRE(ctx.phases().at(3)->get<std::string>("Foo") == "Bar");
-            REQUIRE(ctx.phases().at(4)->get<std::string>("Foo") == "Bar");
-            REQUIRE(ctx.phases().at(5)->get<std::string>("Foo") == "Bar");
-            REQUIRE(ctx.phases().at(6)->get<std::string>("Foo") == "Bar");
-            REQUIRE(ctx.phases().at(7)->get<std::string>("Foo") == "Bar");
+            REQUIRE((*ctx.phases().at(0))["Foo"].to<std::string>() == "Baz");
+            REQUIRE((*ctx.phases().at(1))["Foo"].to<std::string>() == "Bar");
+            REQUIRE((*ctx.phases().at(2))["Foo"].to<std::string>() == "Bar");
+            REQUIRE((*ctx.phases().at(3))["Foo"].to<std::string>() == "Bar");
+            REQUIRE((*ctx.phases().at(4))["Foo"].to<std::string>() == "Bar");
+            REQUIRE((*ctx.phases().at(5))["Foo"].to<std::string>() == "Bar");
+            REQUIRE((*ctx.phases().at(6))["Foo"].to<std::string>() == "Bar");
+            REQUIRE((*ctx.phases().at(7))["Foo"].to<std::string>() == "Bar");
         };
         onContext(yaml, op);
     }
     SECTION("Optional values also override") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(*(ctx.phases().at(0)->get<std::string, false>("Foo")) == "Baz");
-            REQUIRE(*(ctx.phases().at(1)->get<std::string, false>("Foo")) == "Bar");
-            REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo")) == "Bar");
-            REQUIRE(*(ctx.phases().at(3)->get<std::string, false>("Foo")) == "Bar");
-            REQUIRE(*(ctx.phases().at(4)->get<std::string, false>("Foo")) == "Bar");
-            REQUIRE(*(ctx.phases().at(5)->get<std::string, false>("Foo")) == "Bar");
-            REQUIRE(*(ctx.phases().at(6)->get<std::string, false>("Foo")) == "Bar");
-            REQUIRE(*(ctx.phases().at(7)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*((*ctx.phases().at(0))["Foo"].maybe<std::string>()) == "Baz");
+            REQUIRE(*((*ctx.phases().at(1))["Foo"].maybe<std::string>()) == "Bar");
+            REQUIRE(*((*ctx.phases().at(2))["Foo"].maybe<std::string>()) == "Bar");
+            REQUIRE(*((*ctx.phases().at(3))["Foo"].maybe<std::string>()) == "Bar");
+            REQUIRE(*((*ctx.phases().at(4))["Foo"].maybe<std::string>()) == "Bar");
+            REQUIRE(*((*ctx.phases().at(5))["Foo"].maybe<std::string>()) == "Bar");
+            REQUIRE(*((*ctx.phases().at(6))["Foo"].maybe<std::string>()) == "Bar");
+            REQUIRE(*((*ctx.phases().at(7))["Foo"].maybe<std::string>()) == "Bar");
             // call twice just for funsies
-            REQUIRE(*(ctx.phases().at(7)->get<std::string, false>("Foo")) == "Bar");
+            REQUIRE(*((*ctx.phases().at(7))["Foo"].maybe<std::string>()) == "Bar");
         };
         onContext(yaml, op);
     }
     SECTION("Optional values can be found from parent") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(*(ctx.phases().at(0)->get<std::string, false>("Foo2")) == "Bar2");
-            REQUIRE(*(ctx.phases().at(1)->get<std::string, false>("Foo2")) == "Bar2");
-            REQUIRE(*(ctx.phases().at(2)->get<std::string, false>("Foo2")) == "Bar2");
-            REQUIRE(*(ctx.phases().at(3)->get<std::string, false>("Foo2")) == "Bar2");
-            REQUIRE(*(ctx.phases().at(4)->get<std::string, false>("Foo2")) == "Bar2");
-            REQUIRE(*(ctx.phases().at(5)->get<std::string, false>("Foo2")) == "Bar2");
-            REQUIRE(*(ctx.phases().at(6)->get<std::string, false>("Foo2")) == "Bar3");
-            REQUIRE(*(ctx.phases().at(7)->get<std::string, false>("Foo2")) == "Bar3");
+            REQUIRE(*((*ctx.phases().at(0))["Foo2"].maybe<std::string>()) == "Bar2");
+            REQUIRE(*((*ctx.phases().at(1))["Foo2"].maybe<std::string>()) == "Bar2");
+            REQUIRE(*((*ctx.phases().at(2))["Foo2"].maybe<std::string>()) == "Bar2");
+            REQUIRE(*((*ctx.phases().at(3))["Foo2"].maybe<std::string>()) == "Bar2");
+            REQUIRE(*((*ctx.phases().at(4))["Foo2"].maybe<std::string>()) == "Bar2");
+            REQUIRE(*((*ctx.phases().at(5))["Foo2"].maybe<std::string>()) == "Bar2");
+            REQUIRE(*((*ctx.phases().at(6))["Foo2"].maybe<std::string>()) == "Bar3");
+            REQUIRE(*((*ctx.phases().at(7))["Foo2"].maybe<std::string>()) == "Bar3");
         };
         onContext(yaml, op);
     }
     SECTION("Phases can have extra configs") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(ctx.phases().at(1)->get<int>("Extra", 0) == 1);
+            REQUIRE((*ctx.phases().at(1))["Extra"][0].to<int>() == 1);
         };
         onContext(yaml, op);
     }
     SECTION("Missing require values throw") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE_THROWS(ctx.phases().at(1)->get<int>("Extra", 100));
+            REQUIRE_THROWS((*ctx.phases().at(1))["Extra"]["100"].to<int>());
         };
         onContext(yaml, op);
     }
@@ -428,7 +435,7 @@ TEST_CASE("Duplicate Phase Numbers") {
         Phases:
         - Phase: 0
         - Phase: 0
-        )");
+        )", "");
 
         REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
                             Catch::Matches("Duplicate phase 0"));
@@ -443,7 +450,7 @@ TEST_CASE("Duplicate Phase Numbers") {
         Phases:
         - Phase: 0
         - Phase: 0..11
-        )");
+        )", "");
 
         REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
                             Catch::Matches("Duplicate phase 0"));
@@ -457,7 +464,7 @@ TEST_CASE("No PhaseContexts") {
     Actors:
     - Name: HelloWorld
       Type: Nop
-    )");
+    )", "");
 
     SECTION("Empty PhaseContexts") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
@@ -483,7 +490,7 @@ TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
         - Phase: 7..1e1
         - Phase: 11..11
         - Phase: 12
-        )");
+        )", "");
 
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE(ctx.phases().size() == 13);
@@ -554,7 +561,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
     auto insertProducer = std::make_shared<DefaultActorProducer<DummyInsert>>("DummyInsert");
     auto findProducer = std::make_shared<DefaultActorProducer<DummyFind>>("DummyFind");
 
-    YAML::Node config = Node(R"(
+    Node config(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Name: DummyInsert
@@ -567,7 +574,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
           Threads: 10
           Phases:
           - Repeat: 10
-    )");
+    )", "");
 
     ActorHelper ah(config, 20, {{"DummyInsert", insertProducer}, {"DummyFind", findProducer}});
     ah.run();
@@ -606,14 +613,15 @@ struct convert<AnotherInt> {
 
 }  // namespace YAML
 
+/*
 TEST_CASE("getPlural") {
     auto createYaml = [](std::string actorYaml) {
         auto doc = Node(R"(
 SchemaVersion: 2018-07-01
 Numbers: [1,2,3]
 Actors: [{}]
-)");
-        auto actor = Node(actorYaml);
+)", "");
+        auto actor = YAML::Load(actorYaml);
         actor["Type"] = "Op";
         doc["Actors"][0] = actor;
         return doc;
@@ -784,7 +792,7 @@ Actors:
   MiscField: c
   Phases:
   - MiscField: [1, 2, 3]
-    )");
+    )", "");
 
         onContext(yaml, [](ActorContext& actorContext) {
             const auto& workloadContext = actorContext.workload();
@@ -855,7 +863,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
     Actors:
     - Name: Actor1
       Type: Bar
-    )");
+    )", "");
 
     SECTION("Incorrect type value inputted") {
         auto test = [&]() {

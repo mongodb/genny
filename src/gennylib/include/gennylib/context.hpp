@@ -122,7 +122,7 @@ public:
     void operator=(WorkloadContext&&) = delete;
 
     template<typename K>
-    auto operator[](K& key) const {
+    auto operator[](K key) const {
         return this->_node[key];
     }
 
@@ -326,8 +326,9 @@ public:
         return *this->workload()._orchestrator;
     }
 
+    // TODO: forward instead
     template<typename K>
-    auto operator[](K& key) const {
+    auto operator[](K key) const {
         return this->_node[key];
     }
 
@@ -432,7 +433,7 @@ public:
     void operator=(PhaseContext&&) = delete;
 
     template<typename K>
-    auto operator[](K& key) const {
+    auto operator[](K&& key) const {
         return this->_node[key];
     }
 
