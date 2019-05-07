@@ -633,7 +633,7 @@ private:
     // helper for yamlGet that returns nullopt if no parent
     template <typename K>
     std::optional<const YAML::Node> parentGet(const K& key) const {
-        if (!_parent) {
+        if (_parent == nullptr) {
             return std::nullopt;
         }
         return _parent->yamlGet(key);
@@ -683,7 +683,8 @@ private:
 
     YAML::Node _yaml;
     std::string _key;
-    const Node* _parent;
+    // TODO: there's a bug here for iterations
+    std::unique_ptr<Node> _parent;
     bool _valid;
 };
 

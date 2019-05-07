@@ -428,26 +428,26 @@ TEST_CASE("Operation with threshold") {
 }
 
 TEST_CASE("Phases can set metrics") {
-
-    SECTION("With MetricsName") {
-        Node yaml (R"(
-    SchemaVersion: 2018-07-01
-    Database: test
-    Actors:
-    - Name: MetricsNameTest
-      Type: HelloWorld
-      Threads: 1
-      Phases:
-      - Repeat: 1
-        MetricsName: Phase1Metrics
-    )", "");
-
-        ActorHelper ah{yaml, 1};
-        ah.run();
-
-        const auto metrics = ah.getMetricsOutput();
-        REQUIRE_THAT(std::string(metrics), Catch::Contains("Phase1Metrics_bytes,13"));
-    }
+//
+//    SECTION("With MetricsName") {
+//        Node yaml (R"(
+//    SchemaVersion: 2018-07-01
+//    Database: test
+//    Actors:
+//    - Name: MetricsNameTest
+//      Type: HelloWorld
+//      Threads: 1
+//      Phases:
+//      - Repeat: 1
+//        MetricsName: Phase1Metrics
+//    )", "");
+//
+//        ActorHelper ah{yaml, 1};
+//        ah.run();
+//
+//        const auto metrics = ah.getMetricsOutput();
+//        REQUIRE_THAT(std::string(metrics), Catch::Contains("Phase1Metrics_bytes,13"));
+//    }
 
     SECTION("With default metrics name") {
         Node yaml (R"(

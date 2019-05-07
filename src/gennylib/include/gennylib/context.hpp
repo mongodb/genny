@@ -121,14 +121,9 @@ public:
     WorkloadContext(WorkloadContext&&) = delete;
     void operator=(WorkloadContext&&) = delete;
 
-    template<typename K>
-    auto operator[](K key) const {
-        return this->_node[key];
-    }
-
-    template<typename K>
-    auto get(K& key) const {
-        return this->_node[key];
+    template<typename...Args>
+    auto operator[](Args&&... args) const {
+        return this->_node.operator[](std::forward<Args>(args)...);
     }
 
     /**
@@ -239,7 +234,7 @@ private:
     static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
-    const Node& _node;
+    Node _node;
 
     metrics::Registry* _registry;
     Orchestrator* _orchestrator;
@@ -299,7 +294,7 @@ class PhaseContext;
  */
 class ActorContext final {
 public:
-    ActorContext(const Node& node, WorkloadContext& workloadContext)
+    ActorContext(Node node, WorkloadContext& workloadContext)
         : _node{node},
           _workload{&workloadContext},
           _phaseContexts{} {
@@ -411,7 +406,7 @@ private:
 
     constructPhaseContexts(const Node&, ActorContext*);
 
-    const Node& _node;
+    Node _node;
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
@@ -421,10 +416,12 @@ private:
  */
 class PhaseContext final {
 public:
-    PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
+    PhaseContext(Node node, PhaseNumber phaseNumber, ActorContext& actorContext)
         : _node{node},
           _actor{std::addressof(actorContext)},
-          _phaseNumber(phaseNumber) {}
+          _phaseNumber(phaseNumber) {
+          BOOST_LOG_TRIVIAL(info) << "Constructed phase " << phaseNumber << " from node " << node;
+    }
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;
@@ -432,14 +429,9 @@ public:
     PhaseContext(PhaseContext&&) = delete;
     void operator=(PhaseContext&&) = delete;
 
-    template<typename K>
-    auto operator[](K&& key) const {
-        return this->_node[key];
-    }
-
-    template<typename K>
-    auto get(K& key) const {
-        return this->_node[key];
+    template<typename...Args>
+    auto operator[](Args&&... args) const {
+        return this->_node.operator[](std::forward<Args>(args)...);
     }
 
     auto node() const {
@@ -485,7 +477,7 @@ public:
     }
 
 private:
-    const Node& _node;
+    Node _node;
     ActorContext* _actor;
     const PhaseNumber _phaseNumber;
 };

@@ -122,7 +122,7 @@ Actors:
         )", "");
 
         WorkloadContext w{yaml, metrics, orchestrator, mongoUri.data(), cast};
-        auto actors = w.get("Actors");
+        auto actors = w["Actors"];
     }
 
     SECTION("Invalid Schema Version") {

@@ -42,7 +42,7 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
-    if (const std::string schemaVersion = this->get("SchemaVersion").to<std::string>();
+    if (const std::string schemaVersion = (*this)["SchemaVersion"].to<std::string>();
         validSchemaVersions.count(schemaVersion) != 1) {
         std::ostringstream errMsg;
         errMsg << "Invalid Schema Version: " << schemaVersion;
@@ -53,13 +53,13 @@ WorkloadContext::WorkloadContext(const Node& node,
     mongocxx::instance::current();
 
     // Make a bunch of actor contexts
-    for (const auto& actor : this->get("Actors")) {
+    for (const auto& actor : (*this)["Actors"]) {
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
     // Default value selected from random.org, by selecting 2 random numbers
     // between 1 and 10^9 and concatenating.
-    _rng.seed(this->get("RandomSeed").maybe<long>().value_or(269849313357703264));
+    _rng.seed((*this)["RandomSeed"].maybe<long>().value_or(269849313357703264));
 
     for (auto& actorContext : _actorContexts) {
         for (auto&& actor : _constructActors(cast, actorContext)) {
@@ -72,7 +72,7 @@ WorkloadContext::WorkloadContext(const Node& node,
 ActorVector WorkloadContext::_constructActors(const Cast& cast,
                                               const std::unique_ptr<ActorContext>& actorContext) {
     auto actors = ActorVector{};
-    auto name = actorContext->get("Type").to<std::string>();
+    auto name = (*actorContext)["Type"].to<std::string>();
 
     std::shared_ptr<ActorProducer> producer;
     try {
@@ -123,12 +123,12 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
 std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::constructPhaseContexts(
     const Node&, ActorContext* actorContext) {
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> out;
-    auto phases = actorContext->get("Phases").maybe<Node>();
+    auto phases = (*actorContext)["Phases"];
     if (!phases) {
         return out;
     }
     PhaseNumber lastPhaseNumber = 0;
-    for (const auto& phase : *phases) {
+    for (const auto& phase : phases) {
         // If we don't have a node or we are a null type, then we are a Nop
         if (!phase || phase.isNull()) {
             std::ostringstream ss;
@@ -155,6 +155,10 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
 }
 
 bool PhaseContext::isNop() const {
-    return get("Nop").maybe<bool>().value_or(false);
+    BOOST_LOG_TRIVIAL(info) << "Checking isNop from node " << this->_node;
+    BOOST_LOG_TRIVIAL(info) << "Checking isNop parent = " << this->_node[".."];
+    BOOST_LOG_TRIVIAL(info) << "Checking isNop parent path =  " << this->_node[".."].path();
+    auto nop = (*this)["Nop"];
+    return nop.maybe<bool>().value_or(false);
 }
 }  // namespace genny
