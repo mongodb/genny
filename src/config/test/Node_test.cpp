@@ -223,6 +223,38 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(dne.maybe<int>().value_or(9) == 9);
         }
     }
+
+    SECTION("Accessing a Sequence like a Map") {
+        {
+            YAML::Node yaml = YAML::Load("a: [0,1]");
+            REQUIRE(yaml["a"][0].as<int>() == 0);
+            REQUIRE(bool(yaml["a"]) == true);
+            REQUIRE(bool(yaml["a"][0]) == true);
+            // out of range
+            REQUIRE(bool(yaml["a"][2]) == false);
+
+            REQUIRE(bool(yaml["a"]["wtf"]) == false);
+            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+            REQUIRE_THROWS_WITH([&](){
+                yaml["a"]["wtf"]["even_deeper"].as<int>();
+            }(), Catch::Matches("bad conversion"));
+        }
+        {
+            Node yaml ("a: [0,1]", "");
+            REQUIRE(yaml["a"][0].to<int>() == 0);
+            REQUIRE(bool(yaml["a"]) == true);
+            REQUIRE(bool(yaml["a"][0]) == true);
+            // out of range
+            REQUIRE(bool(yaml["a"][2]) == false);
+
+            REQUIRE(bool(yaml["a"]["wtf"]) == false);
+            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+            REQUIRE_THROWS_WITH([&](){
+                yaml["a"]["wtf"]["even_deeper"].to<int>();
+                // We could do a better job at reporting that 'a' is a sequence
+            }(), Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't exist. On node with path '/a/wtf/even_deeper': "));
+        }
+    }
 }
 
 TEST_CASE("invalid access") {
@@ -268,12 +300,45 @@ TEST_CASE("Invalid YAML") {
                        "On node with path 'foo.yaml'."));
 }
 
-TEST_CASE("value_or from pr") {
-    Node node{"seven: 7", ""};
-    REQUIRE(node["foo"]["bar"][0]["seven"].maybe<int>().value_or(8) == 7);
+TEST_CASE("inheritance from pr") {
+    {
+        Node node{"seven: 7", ""};
+        REQUIRE(node["foo"]["bar"][0]["seven"].maybe<int>().value_or(8) == 7);
+    }
+
+    Node node{R"(
+Coll: Test
+Phases:
+- Doc: foo
+- Coll: Bar
+- Another:
+  - Nested: {Coll: Baz}
+)", ""};
+
+    REQUIRE(node["Coll"].to<std::string>() == "Test");
+    REQUIRE(node["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    // Arguably this should throw? we're treating a sequence like a map
+    REQUIRE(node["Phases"]["Coll"].to<std::string>() == "Test");
+    REQUIRE(node["Phases"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    REQUIRE(node["Phases"][0]["Coll"].to<std::string>() == "Test");
+    REQUIRE(node["Phases"][0]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    REQUIRE(node["Phases"][1]["Coll"].to<std::string>() == "Bar");
+    REQUIRE(node["Phases"][1]["Coll"].maybe<std::string>().value_or("Or") == "Bar");
+
+    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") == "Baz");
+    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") == "Baz");
 }
 
-TEST_CASE("value_or") {
+TEST_CASE(".maybe and value_or") {
     auto yaml = std::string(R"(
 seven: 7
 bee: b
