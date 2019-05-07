@@ -122,11 +122,8 @@ private:
  *   std::cout << "bar = " << bar.to<int>();
  * }
  *
- * // or use value_or:
- * int w = node["w"].value_or(1);
- *
- * // or use .maybe:
- * optional<int> optW = node["w"].maybe<int>();
+ * // or use .maybe<int>().value_or:
+ * int w = node["w"].maybe<int>().value_or(1);
  *
  * // convert to built-in APIs like std::vector and std::map:
  * auto ns = node["ns"].to<std::vector<int>>();
@@ -148,11 +145,10 @@ private:
  * // See docs on `getPlural` for more info.
  * ```
  *
- * All values "inherit" from their parent nodes, so if you call
- * `node["foo"]["bar"].to<int>()` it will fall back to
- * `node["foo"].to<int>()` if `bar` isn't defined. If you wish
- * to explicitly access a parent value, use the key `..`.
- * So `node["foo"]["bar"][".."]` is roughly equivalent to `node["foo"]`.
+ * All values "inherit" from their parent nodes, so if you call `node["foo"]["bar"].to<int>()` the
+ * 'bar' node will check its chain of parent nodes and inherit the value if it exists anywhere in
+ * the chain. If you wish to explicitly access a parent value, use the key `..`. So
+ * `node["foo"]["bar"][".."]` is roughly equivalent to `node["foo"]`.
  * ("Roughly" only because we still report the ".." as part of the path
  * in error-messages.)
  *
@@ -250,46 +246,6 @@ public:
     };
 
     /**
-     * Extract the value via `.to<T>()` if the node
-     * is valid else return the fallback value.
-     *
-     * Deduction allows you to omit the `T` if it matches
-     * the `T` fallback:
-     *
-     * ```c++
-     * auto x = node.value_or(7); // int
-     * auto y = node.value_or(std::string{"foo"}); // std::string
-     *
-     * // or specify it the hard way
-     * auto z = node.value_or<std::string>("foo");
-     * ```
-     *
-     * Like `operator[]` this will "fall-back" to the parent node.
-     * So `node["foo"]["bar"].value_or(8)` will fall-back to
-     * `node["foo"].value_or(8)` if `node["foo"]["bar"]` isn't
-     * specified.
-     *
-     * @tparam T
-     *   output type
-     * @param fallback
-     *   value to use if this is undefined
-     * @return
-     *   result of converting to `T` (via `::to<T>()`) or `fallback` if this node isn't valid
-     *   or is null.
-     */
-    template <typename T>
-    T value_or(T&& fallback) const {
-        if (!(*this) || this->isNull()) {
-            return fallback;
-        }
-        if (_yaml) {
-            return to<T>();
-        } else {
-            return fallback;
-        }
-    }
-
-    /**
      * @tparam O
      *   output type
      * @tparam Args
@@ -303,12 +259,14 @@ public:
      * @return
      *   the result of converting this node to O either via its constructor or via the
      *   `NodeConvert<O>::convert` function.
-     *   Like `operator[]` and other methods on `Node`, we "fallback" to the parent node
-     *   if this node doesn't have a value specified.
+     *   Like `operation[]`, this will check its chain of parent nodes and inherit the value if it
+     *   exists anywhere in the chain. If the value is not specified in any parent node, it will
+     *   throw an `InvalidKeyException`. If you want to allow a value to be missing, use
+     *   `.maybe<O>()`.
      * @throws InvalidKeyException
      *   if key not found
      * @throws InvalidConversionException
-     *   if cannot convert to O
+     *   if cannot convert to O or if value is not specified
      */
     template <typename O, typename... Args>
     O to(Args&&... args) const {
@@ -335,8 +293,9 @@ public:
      *   A `nullopt` if this (or parent) node isn't defined.
      *   Else the result of converting this node to O either via its constructor or via the
      *   `NodeConvert<O>::convert` function.
-     *   Like `operator[]` and other methods on `Node`, we "fallback" to the parent node
-     *   if this node doesn't have a value specified.
+     *   Like `operation[]`, this will check its chain of parent nodes and inherit the value if it
+     *   exists anywhere in the chain. If the value is not specified in any parent node, it will
+     *   return an empty optional (`std::nullopt`).
      */
     template <typename O = Node, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
@@ -711,7 +670,7 @@ private:
             auto yaml = this->yamlGet(key);
             return yaml ? Node{*yaml, this, true, keyStr} : Node{YAML::Node{}, this, false, keyStr};
         } catch (const YAML::Exception& x) {
-            // YAML::Node is inconsitent about where it throws exceptions for `node[0]` versus
+            // YAML::Node is inconsistent about where it throws exceptions for `node[0]` versus
             // `node["foo"]`.
             BOOST_THROW_EXCEPTION(InvalidKeyException(
                 "Invalid YAML access. Perhaps trying to treat a map as a sequence?",
