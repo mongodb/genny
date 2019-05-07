@@ -25,7 +25,7 @@
 
 namespace genny {
 
-ActorHelper::ActorHelper(const YAML::Node& config,
+ActorHelper::ActorHelper(const Node& config,
                          int tokenCount,
                          Cast::List castInitializer,
                          const std::string& uri,
@@ -44,7 +44,7 @@ ActorHelper::ActorHelper(const YAML::Node& config,
         config, *_registry, *_orchestrator, uri, *_cast, apmCallback);
 }
 
-ActorHelper::ActorHelper(const YAML::Node& config,
+ActorHelper::ActorHelper(const Node& config,
                          int tokenCount,
                          const std::string& uri,
                          v1::PoolManager::OnCommandStartCallback apmCallback) {

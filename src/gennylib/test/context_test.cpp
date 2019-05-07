@@ -44,30 +44,35 @@ using Catch::Matchers::StartsWith;
 // the connection-pool
 static constexpr std::string_view mongoUri = "mongodb://localhost:27017";
 
-template <class Out, class... Args>
-void errors(const string& yaml, string message, Args... args) {
+template <class Out, typename F>
+void errors(const string& yaml, string message, F&& callback) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
-    auto read = YAML::Load(modified);
+    auto read = genny::Node{modified, "errors-testcase"};
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
-        return context.get<Out>(std::forward<Args>(args)...);
+        return callback(context);
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
 }
 template <class Out,
           bool Required = true,
           class OutV = typename std::conditional<Required, Out, std::optional<Out>>::type,
-          class... Args>
-void gives(const string& yaml, OutV expect, Args... args) {
+          typename F>
+void gives(const string& yaml, OutV expect, F&& f) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
-    auto read = YAML::Load(modified);
+    auto read = Node{modified, "gives-test"};
     auto test = [&]() {
         auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
-        return context.get<Out, Required>(std::forward<Args>(args)...);
+        const Node result = f(context);
+        if constexpr(Required) {
+            return result.to<Out>();
+        } else {
+            return result.maybe<Out>();
+        }
     };
     REQUIRE(test() == expect);
 }
@@ -100,20 +105,20 @@ TEST_CASE("loads configuration okay") {
     };
 
     SECTION("Valid YAML") {
-        auto yaml = YAML::Load(R"(
+        auto yaml = Node(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: HelloWorld
   Type: Nop
   Count: 7
-        )");
+        )", "");
 
         WorkloadContext w{yaml, metrics, orchestrator, mongoUri.data(), cast};
         auto actors = w.get("Actors");
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-06-27\nActors: []");
+        auto yaml = Node("SchemaVersion: 2018-06-27\nActors: []");
 
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
@@ -123,12 +128,12 @@ Actors:
 
     SECTION("Can Construct RNG") {
         std::atomic_int calls = 0;
-        YAML::Node templ = YAML::Load("foo: bar");
+        YAML::Node templ = Node("foo: bar", "");
 
         auto fromYaml = std::make_shared<OpProducer>([&](ActorContext& a) {
             auto docgen = a.createDocumentGenerator(0, templ);
             REQUIRE(docgen().view() ==
-                    genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+                    genny::testing::toDocumentBson(Node("foo: bar", "")).view());
             ++calls;
         });
 
@@ -136,26 +141,26 @@ Actors:
             for (const auto&& doc : a.get("docs")) {
                 auto docgen = a.createDocumentGenerator(0, templ);
                 REQUIRE(docgen().view() ==
-                        genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+                        genny::testing::toDocumentBson(Node("foo: bar")).view());
                 ++calls;
             }
         });
         auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
             auto docgen = a.createDocumentGenerator(0, "doc");
             REQUIRE(docgen().view() ==
-                    genny::testing::toDocumentBson(YAML::Load("foo: bar")).view());
+                    genny::testing::toDocumentBson(Node("foo: bar")).view());
             ++calls;
         });
 
         auto cast2 =
             Cast{{{"fromYaml", fromYaml}, {"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
-        auto yaml = YAML::Load(
+        auto yaml = Node(
             "SchemaVersion: 2018-07-01\n"
             "Actors: [ "
             "  {Type: fromYaml}, "
             "  {Type: fromDocList, docs: [{foo: bar}]}, "
             "  {Type: fromDoc,     doc:   {foo: bar}} "
-            "]");
+            "]", "");
 
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast2);
@@ -207,14 +212,14 @@ Actors:
     }
 
     SECTION("Empty Yaml") {
-        auto yaml = YAML::Load("Actors: []");
+        auto yaml = Node("Actors: []");
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
     }
     SECTION("No Actors") {
-        auto yaml = YAML::Load("SchemaVersion: 2018-07-01");
+        auto yaml = Node("SchemaVersion: 2018-07-01");
         auto test = [&]() {
             WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
         };
@@ -222,7 +227,7 @@ Actors:
     }
 
     SECTION("Can call two actor producers") {
-        auto yaml = YAML::Load(R"(
+        auto yaml = Node(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -298,7 +303,7 @@ void onContext(YAML::Node yaml, std::function<void(ActorContext&)> op) {
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = Node(R"(
     SchemaVersion: 2018-07-01
     MongoUri: mongodb://localhost:27017
     Actors:
@@ -413,7 +418,7 @@ TEST_CASE("Duplicate Phase Numbers") {
     };
 
     SECTION("Phase Number syntax") {
-        auto yaml = YAML::Load(R"(
+        auto yaml = Node(R"(
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://localhost:27017
         Actors:
@@ -428,7 +433,7 @@ TEST_CASE("Duplicate Phase Numbers") {
     }
 
     SECTION("PhaseRange syntax") {
-        auto yaml = YAML::Load(R"(
+        auto yaml = Node(R"(
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://localhost:27017
         Actors:
@@ -444,7 +449,7 @@ TEST_CASE("Duplicate Phase Numbers") {
 }
 
 TEST_CASE("No PhaseContexts") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = Node(R"(
     SchemaVersion: 2018-07-01
     MongoUri: mongodb://localhost:27017
     Actors:
@@ -462,7 +467,7 @@ TEST_CASE("No PhaseContexts") {
 
 TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
     SECTION("One Phase per block") {
-        auto yaml = YAML::Load(R"(
+        auto yaml = Node(R"(
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://localhost:27017
         Actors:
@@ -547,7 +552,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
     auto insertProducer = std::make_shared<DefaultActorProducer<DummyInsert>>("DummyInsert");
     auto findProducer = std::make_shared<DefaultActorProducer<DummyFind>>("DummyFind");
 
-    YAML::Node config = YAML::Load(R"(
+    YAML::Node config = Node(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Name: DummyInsert
@@ -601,12 +606,12 @@ struct convert<AnotherInt> {
 
 TEST_CASE("getPlural") {
     auto createYaml = [](std::string actorYaml) {
-        auto doc = YAML::Load(R"(
+        auto doc = Node(R"(
 SchemaVersion: 2018-07-01
 Numbers: [1,2,3]
 Actors: [{}]
 )");
-        auto actor = YAML::Load(actorYaml);
+        auto actor = Node(actorYaml);
         actor["Type"] = "Op";
         doc["Actors"][0] = actor;
         return doc;
@@ -663,7 +668,7 @@ Actors: [{}]
 }
 
 TEST_CASE("Configuration cascades to nested context types") {
-    auto yaml = YAML::Load(R"(
+    auto yaml = Node(R"(
 SchemaVersion: 2018-07-01
 Database: test
 Actors:
@@ -768,7 +773,7 @@ Actors:
     }
 
     SECTION("Nested contexts can have different types for the same named key") {
-        auto yaml = YAML::Load(R"(
+        auto yaml = Node(R"(
 SchemaVersion: 2018-07-01
 MiscField: {a: b}
 Actors:
@@ -842,7 +847,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
         {"Foo", std::make_shared<NopProducer>()},
     };
 
-    auto yaml = YAML::Load(R"(
+    auto yaml = Node(R"(
     SchemaVersion: 2018-07-01
     Database: test
     Actors:

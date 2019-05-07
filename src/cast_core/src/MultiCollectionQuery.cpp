@@ -42,14 +42,14 @@ struct MultiCollectionQuery::PhaseConfig {
         : database{(*client)[context["Database"].to<std::string>()]},
           numCollections{context["CollectionCount"].to<IntegerSpec>()},
           readConcern{context["ReadConcern"].to<mongocxx::read_concern>()},
-          filterExpr{std::move(context["Filter"].to<DocumentGenerator>(id))},
+          filterExpr{std::move(context["Filter"].to<DocumentGenerator>(context.rng(id)))},
           uniformDistribution{0, numCollections} {
         const auto limit = context["Limit"].maybe<int64_t>();
         if (limit) {
             options.limit(*limit);
         }
 
-        std::optional<DocumentGenerator> sort = context["Sort"].maybe<DocumentGenerator>(id);
+        std::optional<DocumentGenerator> sort = context["Sort"].maybe<DocumentGenerator>(context.rng(id));
         if (sort) {
             options.sort((*sort)());
         }

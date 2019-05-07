@@ -445,6 +445,10 @@ public:
         return this->_node;
     }
 
+    DefaultRandom& rng(ActorId id) {
+        return this->_actor->workload().getRNGForThread(id);
+    }
+
     /**
      * Called in PhaseLoop during the IterationCompletionCheck constructor.
      */

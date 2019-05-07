@@ -232,7 +232,7 @@ TEST_CASE("PoolFactory behavior") {
 
     SECTION("PoolManager can construct multiple pools") {
         genny::v1::PoolManager manager{"mongodb:://localhost:27017", {}};
-        genny::v1::ConfigNode config{YAML::Load(R"()")};
+        genny::Node config{"",""};
 
         auto foo0 = manager.client("Foo", 0, config);
         auto foo0again = manager.client("Foo", 0, config);

@@ -179,16 +179,16 @@ public:
                                actorContext.operation(_options.metricsName, id))
                          : phaseContext.operation("DatabaseOperation", id)} {}
 
-    static std::unique_ptr<DatabaseOperation> create(YAML::Node node,
+    static std::unique_ptr<DatabaseOperation> create(const Node& node,
                                                      PhaseContext& context,
                                                      ActorContext& actorContext,
                                                      ActorId id,
                                                      mongocxx::pool::entry& client,
                                                      const std::string& database) {
         auto yamlCommand = node["OperationCommand"];
-        auto commandExpr = context.createDocumentGenerator(id, yamlCommand);
+        auto commandExpr = yamlCommand.to<DocumentGenerator>(context.rng(id));
 
-        auto options = node.as<DatabaseOperation::OpConfig>(DatabaseOperation::OpConfig{});
+        auto options = node.maybe<DatabaseOperation::OpConfig>().value_or(DatabaseOperation::OpConfig{});
         return std::make_unique<DatabaseOperation>(context,
                                                    actorContext,
                                                    id,
@@ -247,15 +247,15 @@ struct actor::RunCommand::PhaseConfig {
                 ActorContext& actorContext,
                 mongocxx::pool::entry& client,
                 ActorId id)
-        : throwOnFailure{context["ThrowOnFailure"].value_or(true)} {
+        : throwOnFailure{context["ThrowOnFailure"].maybe<bool>().value_or(true)} {
         auto actorType = context["Type"].to<std::string>();
-        auto database = context["Database"].value_or<std::string>("admin");
+        auto database = context["Database"].maybe<std::string>().value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
             throw InvalidConfigurationException(
                 "AdminCommands can only be run on the 'admin' database.");
         }
 
-        auto createOperation = [&](YAML::Node node) {
+        auto createOperation = [&](const Node& node) {
             return DatabaseOperation::create(node, context, actorContext, id, client, database);
         };
 

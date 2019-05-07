@@ -262,7 +262,7 @@ TEST_CASE("Actual Actor Example") {
         struct IncrPhaseConfig {
             int _key;
             IncrPhaseConfig(PhaseContext& ctx, int keyOffset)
-                : _key{ctx.get<int>("Key") + keyOffset} {}
+                : _key{ctx["Key"].to<int>() + keyOffset} {}
         };
 
         PhaseLoop<IncrPhaseConfig> _loop;
@@ -286,7 +286,7 @@ TEST_CASE("Actual Actor Example") {
     SECTION("Simple Actor") {
         // ////////
         // setup and run (bypass the driver)
-        YAML::Node config = YAML::Load(R"(
+        genny::Node config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -295,7 +295,7 @@ TEST_CASE("Actual Actor Example") {
                 Key: 71
               - Repeat: 3
                 Key: 93
-        )");
+        )", "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
         ActorHelper ah(config, 1, {{"Inc", imvProducer}});

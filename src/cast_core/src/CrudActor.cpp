@@ -296,7 +296,7 @@ auto createDocumentGenerator(const Node& source,
         msg << "'" << opType << "' expects a '" << key << "' field.";
         BOOST_THROW_EXCEPTION(InvalidConfigurationException(msg.str()));
     }
-    return doc.to<DocumentGenerator>(id);
+    return doc.to<DocumentGenerator>(context.rng(id));
 }
 
 }  // namespace
@@ -968,7 +968,7 @@ struct InsertManyOperation : public BaseOperation {
                 "'insertMany' expects a 'Documents' field of sequence type."));
         }
         for (auto&& document : documents) {
-            _docExprs.push_back(document.to<DocumentGenerator>(id));
+            _docExprs.push_back(document.to<DocumentGenerator>(context.rng(id)));
         }
     }
 
