@@ -18,7 +18,7 @@ Actors:
   ThrowOnFailure: false
   Phases:
   - Phase: 0  # Load
-    NoOp: true
+    Nop: true
   - Phase: 1  # Run
     Repeat: 1
     SleepBefore: 60 seconds
@@ -37,7 +37,7 @@ Actors:
   Database: test
   Phases:
   - Phase: 0  # Load
-    NoOp: true
+    Nop: true
   - Phase: 1  # Run
     Duration: 180 seconds
     Rate: 1 per 100 microseconds
@@ -63,4 +63,4 @@ Actors:
   Phases:
   - Phase: 0  # Load
   - Phase: 1  # Run
-    NoOp: true
+    Nop: true
