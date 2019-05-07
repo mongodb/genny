@@ -91,6 +91,24 @@ TEST_CASE("YAML::Node Equivalency") {
                     "Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
                     "a sequence\\? On node with path '/foo': a"));
         }
+
+        {
+            YAML::Node yaml = YAML::Load("foos: [{a: 1}]");
+            // YAML::Node doesn't barf when treating a map like a sequence
+            REQUIRE(bool(yaml["foos"]["a"]) == false);
+            // ...but it does barf when treating a scalar like a sequence
+            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].as<int>(); }(),
+                                Catch::Matches("bad conversion"));
+        }
+        {
+            Node yaml("foos: [{a: 1}]", "");
+            REQUIRE(bool(yaml["foos"]["a"]) == false);
+            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
+                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
+                                               "exist. On node with path '/foos/a': "));
+            // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
+            REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
+        }
     }
 
     SECTION("iteration over sequences") {
@@ -188,7 +206,7 @@ TEST_CASE("YAML::Node Equivalency") {
                     std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
         }
         {
-            Node yaml ("{a: A, b: B}", "");
+            Node yaml("{a: A, b: B}", "");
             REQUIRE(yaml.to<std::map<std::string, std::string>>() ==
                     std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
         }
@@ -201,16 +219,18 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(yaml["a"].as<int>(7) == 7);
         }
         {
-            Node yaml ("a: null", "");
+            Node yaml("a: null", "");
             REQUIRE(yaml["a"].isNull());
             // .maybe and .to provide stronger guarantees:
             // we throw rather than returning the fallback if the conversion fails
-            REQUIRE_THROWS_WITH([&](){
-                yaml["a"].maybe<int>();
-            }(), Catch::Matches("Couldn't convert to 'int': 'bad conversion' at \\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
-            REQUIRE_THROWS_WITH([&](){
-                yaml["a"].to<int>();
-            }(), Catch::Matches("Couldn't convert to 'int': 'bad conversion' at \\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+            REQUIRE_THROWS_WITH(
+                [&]() { yaml["a"].maybe<int>(); }(),
+                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+            REQUIRE_THROWS_WITH(
+                [&]() { yaml["a"].to<int>(); }(),
+                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
         }
     }
 
@@ -226,7 +246,7 @@ TEST_CASE("YAML::Node Equivalency") {
             }
         }
         {
-            Node node ("{}", "");
+            Node node("{}", "");
             REQUIRE(bool(node) == true);
             auto dne = node["doesntexist"];
             REQUIRE(bool(dne) == false);
@@ -250,12 +270,11 @@ TEST_CASE("YAML::Node Equivalency") {
 
             REQUIRE(bool(yaml["a"]["wtf"]) == false);
             REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
-            REQUIRE_THROWS_WITH([&](){
-                yaml["a"]["wtf"]["even_deeper"].as<int>();
-            }(), Catch::Matches("bad conversion"));
+            REQUIRE_THROWS_WITH([&]() { yaml["a"]["wtf"]["even_deeper"].as<int>(); }(),
+                                Catch::Matches("bad conversion"));
         }
         {
-            Node yaml ("a: [0,1]", "");
+            Node yaml("a: [0,1]", "");
             REQUIRE(yaml["a"][0].to<int>() == 0);
             REQUIRE(bool(yaml["a"]) == true);
             REQUIRE(bool(yaml["a"][0]) == true);
@@ -264,10 +283,13 @@ TEST_CASE("YAML::Node Equivalency") {
 
             REQUIRE(bool(yaml["a"]["wtf"]) == false);
             REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
-            REQUIRE_THROWS_WITH([&](){
-                yaml["a"]["wtf"]["even_deeper"].to<int>();
-                // We could do a better job at reporting that 'a' is a sequence
-            }(), Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't exist. On node with path '/a/wtf/even_deeper': "));
+            REQUIRE_THROWS_WITH(
+                [&]() {
+                    yaml["a"]["wtf"]["even_deeper"].to<int>();
+                    // We could do a better job at reporting that 'a' is a sequence
+                }(),
+                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
+                               "exist. On node with path '/a/wtf/even_deeper': "));
         }
     }
 }
@@ -328,7 +350,8 @@ Phases:
 - Coll: Bar
 - Another:
   - Nested: {Coll: Baz}
-)", ""};
+)",
+              ""};
 
     REQUIRE(node["Coll"].to<std::string>() == "Test");
     REQUIRE(node["Coll"].maybe<std::string>().value_or("Or") == "Test");
@@ -349,8 +372,10 @@ Phases:
     REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
     REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
 
-    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") == "Baz");
-    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") == "Baz");
+    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
+            "Baz");
+    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
+            "Baz");
 }
 
 TEST_CASE(".maybe and value_or") {
@@ -366,18 +391,23 @@ nope: false
     Node node{yaml, ""};
     REQUIRE(node["seven"].maybe<int>().value_or(8) == 7);
     REQUIRE(node["eight"].maybe<int>().value_or(8) == 8);
-    REQUIRE(node["intList"].maybe<std::vector<int>>().value_or(std::vector<int>{}) == std::vector<int>{1, 2, 3});
-    REQUIRE(node["intList2"].maybe<std::vector<int>>().value_or(std::vector<int>{1, 2}) == std::vector<int>{1, 2});
+    REQUIRE(node["intList"].maybe<std::vector<int>>().value_or(std::vector<int>{}) ==
+            std::vector<int>{1, 2, 3});
+    REQUIRE(node["intList2"].maybe<std::vector<int>>().value_or(std::vector<int>{1, 2}) ==
+            std::vector<int>{1, 2});
     // similar check to TEST_CASE above
     REQUIRE(node["stringMap"]["seven"].maybe<int>().value_or(8) == 7);
-    REQUIRE(node["stringMap"].maybe<std::map<std::string, std::string>>().value_or(std::map<std::string, std::string>{}) ==
+    REQUIRE(node["stringMap"].maybe<std::map<std::string, std::string>>().value_or(
+                std::map<std::string, std::string>{}) ==
             std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
-    REQUIRE(node["stringMap2"].maybe<std::map<std::string, std::string>>().value_or(std::map<std::string, std::string>{{"foo", "bar"}}) ==
+    REQUIRE(node["stringMap2"].maybe<std::map<std::string, std::string>>().value_or(
+                std::map<std::string, std::string>{{"foo", "bar"}}) ==
             std::map<std::string, std::string>{{"foo", "bar"}});
     REQUIRE(node["stringMap"][0].maybe<int>().value_or(7) == 7);
     // we went to an "invalid" node stringMap[0] (because stringMap is a map) but then we went to ..
     // so we're okay
-    REQUIRE(node["stringMap"][0][".."]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
+    REQUIRE(node["stringMap"][0][".."]["a"].maybe<std::string>().value_or<std::string>("orVal") ==
+            "A");
     // even invalid nodes can value_or
     REQUIRE(node["stringMap"][0]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
     // same thing for root level
