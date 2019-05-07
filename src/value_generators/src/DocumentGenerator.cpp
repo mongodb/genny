@@ -419,7 +419,7 @@ Out valueGenerator(const Node& node,
             }
             try {
                 return std::make_unique<ConstantAppender<bool>>(node.to<bool>());
-            } catch (const YAML::BadConversion& e) {
+            } catch (const InvalidConversionException& e) {
             }
         }
         return std::make_unique<ConstantAppender<std::string>>(node.to<std::string>());
