@@ -145,11 +145,10 @@ private:
  * // See docs on `getPlural` for more info.
  * ```
  *
- * All values "inherit" from their parent nodes, so if you call
- * `node["foo"]["bar"].to<int>()` it will fall back to
- * `node["foo"].to<int>()` if `bar` isn't defined. If you wish
- * to explicitly access a parent value, use the key `..`.
- * So `node["foo"]["bar"][".."]` is roughly equivalent to `node["foo"]`.
+ * All values "inherit" from their parent nodes, so if you call `node["foo"]["bar"].to<int>()` the
+ * 'bar' node will check its chain of parent nodes and inherit the value if it exists anywhere in
+ * the chain. If you wish to explicitly access a parent value, use the key `..`. So
+ * `node["foo"]["bar"][".."]` is roughly equivalent to `node["foo"]`.
  * ("Roughly" only because we still report the ".." as part of the path
  * in error-messages.)
  *
@@ -260,12 +259,14 @@ public:
      * @return
      *   the result of converting this node to O either via its constructor or via the
      *   `NodeConvert<O>::convert` function.
-     *   Like `operator[]` and other methods on `Node`, we "fallback" to the parent node
-     *   if this node doesn't have a value specified.
+     *   Like `operation[]`, this will check its chain of parent nodes and inherit the value if it
+     *   exists anywhere in the chain. If the value is not specified in any parent node, it will
+     *   throw an `InvalidKeyException`. If you want to allow a value to be missing, use
+     *   `.maybe<O>()`.
      * @throws InvalidKeyException
      *   if key not found
      * @throws InvalidConversionException
-     *   if cannot convert to O
+     *   if cannot convert to O or if value is not specified
      */
     template <typename O, typename... Args>
     O to(Args&&... args) const {
@@ -292,8 +293,9 @@ public:
      *   A `nullopt` if this (or parent) node isn't defined.
      *   Else the result of converting this node to O either via its constructor or via the
      *   `NodeConvert<O>::convert` function.
-     *   Like `operator[]` and other methods on `Node`, we "fallback" to the parent node
-     *   if this node doesn't have a value specified.
+     *   Like `operation[]`, this will check its chain of parent nodes and inherit the value if it
+     *   exists anywhere in the chain. If the value is not specified in any parent node, it will
+     *   return an empty optional (`std::nullopt`).
      */
     template <typename O = Node, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
