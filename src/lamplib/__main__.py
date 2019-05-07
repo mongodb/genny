@@ -22,7 +22,7 @@ def run_self_test():
 def main():
     # Check Python version
     if not sys.version_info >= (3, 7):
-        logging.error('Please install Python 3.7 or newer')
+        logging.error('Please run this script with Python 3.7 or newer')
         sys.exit(1)
 
     # Initialize the global context.
