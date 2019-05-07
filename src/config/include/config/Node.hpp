@@ -663,7 +663,7 @@ private:
             auto yaml = this->yamlGet(key);
             return yaml ? Node{*yaml, this, true, keyStr} : Node{YAML::Node{}, this, false, keyStr};
         } catch (const YAML::Exception& x) {
-            // YAML::Node is inconsitent about where it throws exceptions for `node[0]` versus
+            // YAML::Node is inconsistent about where it throws exceptions for `node[0]` versus
             // `node["foo"]`.
             BOOST_THROW_EXCEPTION(InvalidKeyException(
                 "Invalid YAML access. Perhaps trying to treat a map as a sequence?",
