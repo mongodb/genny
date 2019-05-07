@@ -122,11 +122,8 @@ private:
  *   std::cout << "bar = " << bar.to<int>();
  * }
  *
- * // or use value_or:
- * int w = node["w"].value_or(1);
- *
- * // or use .maybe:
- * optional<int> optW = node["w"].maybe<int>();
+ * // or use .maybe<int>().value_or:
+ * int w = node["w"].maybe<int>().value_or(1);
  *
  * // convert to built-in APIs like std::vector and std::map:
  * auto ns = node["ns"].to<std::vector<int>>();
@@ -248,46 +245,6 @@ public:
         Sequence,
         Map,
     };
-
-    /**
-     * Extract the value via `.to<T>()` if the node
-     * is valid else return the fallback value.
-     *
-     * Deduction allows you to omit the `T` if it matches
-     * the `T` fallback:
-     *
-     * ```c++
-     * auto x = node.value_or(7); // int
-     * auto y = node.value_or(std::string{"foo"}); // std::string
-     *
-     * // or specify it the hard way
-     * auto z = node.value_or<std::string>("foo");
-     * ```
-     *
-     * Like `operator[]` this will "fall-back" to the parent node.
-     * So `node["foo"]["bar"].value_or(8)` will fall-back to
-     * `node["foo"].value_or(8)` if `node["foo"]["bar"]` isn't
-     * specified.
-     *
-     * @tparam T
-     *   output type
-     * @param fallback
-     *   value to use if this is undefined
-     * @return
-     *   result of converting to `T` (via `::to<T>()`) or `fallback` if this node isn't valid
-     *   or is null.
-     */
-    template <typename T>
-    T value_or(T&& fallback) const {
-        if (!(*this) || this->isNull()) {
-            return fallback;
-        }
-        if (_yaml) {
-            return to<T>();
-        } else {
-            return fallback;
-        }
-    }
 
     /**
      * @tparam O

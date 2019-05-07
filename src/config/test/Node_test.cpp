@@ -187,6 +187,7 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(yaml.as<std::map<std::string, std::string>>() ==
                     std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
         }
+        // TODO: genny::Node equivalent
     }
 
     SECTION("isNull and fallback") {
@@ -194,6 +195,32 @@ TEST_CASE("YAML::Node Equivalency") {
             YAML::Node yaml = YAML::Load("a: null");
             REQUIRE(yaml["a"].IsNull());
             REQUIRE(yaml["a"].as<int>(7) == 7);
+        }
+        // TODO: genny::Node equivalent
+    }
+
+    SECTION("Missing values are boolean false") {
+        {
+            YAML::Node yaml = YAML::Load("{}");
+            REQUIRE(bool(yaml) == true);
+            auto dne = yaml["doesntexist"];
+            REQUIRE(bool(dne) == false);
+            REQUIRE((!dne) == true);
+            if (dne) {
+                FAIL("doesn't exist is boolean false");
+            }
+        }
+        {
+            Node node ("{}", "");
+            REQUIRE(bool(node) == true);
+            auto dne = node["doesntexist"];
+            REQUIRE(bool(dne) == false);
+            REQUIRE((!dne) == true);
+            if (dne) {
+                FAIL("doesn't exist is boolean false");
+            }
+            REQUIRE(dne.maybe<int>() == std::nullopt);
+            REQUIRE(dne.maybe<int>().value_or(9) == 9);
         }
     }
 }
@@ -243,7 +270,7 @@ TEST_CASE("Invalid YAML") {
 
 TEST_CASE("value_or from pr") {
     Node node{"seven: 7", ""};
-    REQUIRE(node["foo"]["bar"][0]["seven"].value_or(8) == 7);
+    REQUIRE(node["foo"]["bar"][0]["seven"].maybe<int>().value_or(8) == 7);
 }
 
 TEST_CASE("value_or") {
@@ -257,41 +284,39 @@ sure: true
 nope: false
 )");
     Node node{yaml, ""};
-    REQUIRE(node["seven"].value_or(8) == 7);
-    REQUIRE(node["eight"].value_or(8) == 8);
-    REQUIRE(node["intList"].value_or(std::vector<int>{}) == std::vector<int>{1, 2, 3});
-    REQUIRE(node["intList2"].value_or(std::vector<int>{1, 2}) == std::vector<int>{1, 2});
+    REQUIRE(node["seven"].maybe<int>().value_or(8) == 7);
+    REQUIRE(node["eight"].maybe<int>().value_or(8) == 8);
+    REQUIRE(node["intList"].maybe<std::vector<int>>().value_or(std::vector<int>{}) == std::vector<int>{1, 2, 3});
+    REQUIRE(node["intList2"].maybe<std::vector<int>>().value_or(std::vector<int>{1, 2}) == std::vector<int>{1, 2});
     // similar check to TEST_CASE above
-    REQUIRE(node["stringMap"]["seven"].value_or(8) == 7);
-    REQUIRE(node["stringMap"].value_or(std::map<std::string, std::string>{}) ==
+    REQUIRE(node["stringMap"]["seven"].maybe<int>().value_or(8) == 7);
+    REQUIRE(node["stringMap"].maybe<std::map<std::string, std::string>>().value_or(std::map<std::string, std::string>{}) ==
             std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
-    REQUIRE(node["stringMap2"].value_or(std::map<std::string, std::string>{{"foo", "bar"}}) ==
+    REQUIRE(node["stringMap2"].maybe<std::map<std::string, std::string>>().value_or(std::map<std::string, std::string>{{"foo", "bar"}}) ==
             std::map<std::string, std::string>{{"foo", "bar"}});
-    REQUIRE(node["nothing"].value_or(7) == 7);
-
-    REQUIRE(node["stringMap"][0].value_or(7) == 7);
+    REQUIRE(node["stringMap"][0].maybe<int>().value_or(7) == 7);
     // we went to an "invalid" node stringMap[0] (because stringMap is a map) but then we went to ..
     // so we're okay
-    REQUIRE(node["stringMap"][0][".."]["a"].value_or<std::string>("orVal") == "A");
+    REQUIRE(node["stringMap"][0][".."]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
     // even invalid nodes can value_or
-    REQUIRE(node["stringMap"][0]["a"].value_or<std::string>("orVal") == "A");
+    REQUIRE(node["stringMap"][0]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
     // same thing for root level
-    REQUIRE(node[0][".."]["bee"].value_or<std::string>("x") == "b");
+    REQUIRE(node[0][".."]["bee"].maybe<std::string>().value_or<std::string>("x") == "b");
 
-    REQUIRE(node["sure"].value_or(false) == true);
-    REQUIRE(node["sure"].value_or(true) == true);
-    REQUIRE(node["nope"].value_or(false) == false);
-    REQUIRE(node["nope"].value_or(true) == false);
-    REQUIRE(node["doesntExist"].value_or(true) == true);
-    REQUIRE(node["doesntExist"].value_or(false) == false);
+    REQUIRE(node["sure"].maybe<bool>().value_or(false) == true);
+    REQUIRE(node["sure"].maybe<bool>().value_or(true) == true);
+    REQUIRE(node["nope"].maybe<bool>().value_or(false) == false);
+    REQUIRE(node["nope"].maybe<bool>().value_or(true) == false);
+    REQUIRE(node["doesntExist"].maybe<bool>().value_or(true) == true);
+    REQUIRE(node["doesntExist"].maybe<bool>().value_or(false) == false);
 
-    REQUIRE(node["bee"].value_or<std::string>("foo") == "b");
-    REQUIRE(node["baz"].value_or<std::string>("foo") == "foo");
+    REQUIRE(node["bee"].maybe<std::string>().value_or<std::string>("foo") == "b");
+    REQUIRE(node["baz"].maybe<std::string>().value_or<std::string>("foo") == "foo");
 
 
-    REQUIRE(node["stringMap"]["a"].value_or<std::string>("7") == "A");
+    REQUIRE(node["stringMap"]["a"].maybe<std::string>().value_or<std::string>("7") == "A");
     // inherits from parent
-    REQUIRE(node["stringMap"]["bee"].value_or<std::string>("7") == "b");
+    REQUIRE(node["stringMap"]["bee"].maybe<std::string>().value_or<std::string>("7") == "b");
 }
 
 TEST_CASE("Node Type") {
@@ -434,10 +459,10 @@ Children:
     SECTION("value_or") {
         {
             auto c = node["c"];
-            REQUIRE(c.value_or(1) == 1);
-            REQUIRE(node["a"].value_or(100) == 7);
-            REQUIRE(node["Children"]["a"].value_or(42) == 100);
-            REQUIRE(node["does"]["not"]["exist"].value_or(90) == 90);
+            REQUIRE(c.maybe<int>().value_or(1) == 1);
+            REQUIRE(node["a"].maybe<int>().value_or(100) == 7);
+            REQUIRE(node["Children"]["a"].maybe<int>().value_or(42) == 100);
+            REQUIRE(node["does"]["not"]["exist"].maybe<int>().value_or(90) == 90);
             {
                 EmptyStruct ctx;
                 // TODO: what should this syntax look like?
