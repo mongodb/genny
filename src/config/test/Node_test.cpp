@@ -489,6 +489,35 @@ nope: false
     REQUIRE(node["nope"].to<bool>() == false);
 }
 
+
+TEST_CASE("use values from iteration") {
+
+    Node node {R"(
+Actors:
+- Name: Foo
+  Phases:
+  - Repeat: 1
+)", ""};
+
+    std::optional<Node> phase0;
+    {
+        unsigned seen = 0;
+        for(auto&& actor : node["Actors"]) {
+            for(auto&& phase : actor["Phases"]) {
+                phase0 = phase;
+                ++seen;
+            }
+        }
+        REQUIRE(seen == 1);
+    }
+
+    REQUIRE((*phase0)["Repeat"].to<int>() == 1);
+    REQUIRE((*phase0)["Repeat"].path() == "/Actors/0/Phases/0/Repeat");
+    REQUIRE((*phase0)["Repeat"][".."].path() == "/Actors/0/Phases/0/Repeat/..");
+    REQUIRE((*phase0)["Name"].to<std::string>() == "Foo");
+    REQUIRE((*phase0)["Nop"].maybe<bool>().value_or(false) == false);
+}
+
 TEST_CASE("size") {
     {
         Node node{"foo: bar", ""};
