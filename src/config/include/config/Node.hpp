@@ -213,9 +213,9 @@ public:
     // accidentally making this non-copy/move-able
 
     /**
-     * Copy-construct.
+     * can't copy
      */
-    Node(const Node&) = default;
+    Node(const Node&) = delete;
 
     /**
      * Move-construct.
@@ -223,9 +223,9 @@ public:
     Node(Node&&) = default;
 
     /**
-     * @return a copy of this node.
+     * can't copy
      */
-    Node& operator=(const Node&) = default;
+    void operator=(const Node&) = delete;
 
     /**
      * Usage of this node in a moved-from state is undefined.
@@ -683,8 +683,7 @@ private:
 
     YAML::Node _yaml;
     std::string _key;
-    // TODO: there's a bug here for iterations
-    std::unique_ptr<Node> _parent;
+    const Node* _parent;
     bool _valid;
 };
 

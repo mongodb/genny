@@ -499,12 +499,12 @@ Actors:
   - Repeat: 1
 )", ""};
 
-    std::optional<Node> phase0;
+    Node* phase0;
     {
         unsigned seen = 0;
         for(auto&& actor : node["Actors"]) {
             for(auto&& phase : actor["Phases"]) {
-                phase0 = phase;
+                phase0 = &phase;
                 ++seen;
             }
         }
@@ -888,8 +888,8 @@ SingleItemList: [37]
         REQUIRE(mp);
         int seen = 0;
         for (auto kvp : mp) {
-            Node k = kvp.first;
-            Node v = kvp.second;
+            Node& k = kvp.first;
+            Node& v = kvp.second;
             REQUIRE(k.to<std::string>() == "a");
             REQUIRE(v.to<std::string>() == "b");
             ++seen;

@@ -234,7 +234,7 @@ private:
     static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
-    Node _node;
+    const Node& _node;
 
     metrics::Registry* _registry;
     Orchestrator* _orchestrator;
@@ -294,7 +294,7 @@ class PhaseContext;
  */
 class ActorContext final {
 public:
-    ActorContext(Node node, WorkloadContext& workloadContext)
+    ActorContext(const Node& node, WorkloadContext& workloadContext)
         : _node{node},
           _workload{&workloadContext},
           _phaseContexts{} {
@@ -406,7 +406,7 @@ private:
 
     constructPhaseContexts(const Node&, ActorContext*);
 
-    Node _node;
+    const Node& _node;
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
@@ -416,7 +416,7 @@ private:
  */
 class PhaseContext final {
 public:
-    PhaseContext(Node node, PhaseNumber phaseNumber, ActorContext& actorContext)
+    PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
         : _node{node},
           _actor{std::addressof(actorContext)},
           _phaseNumber(phaseNumber) {
@@ -434,7 +434,7 @@ public:
         return this->_node.operator[](std::forward<Args>(args)...);
     }
 
-    auto node() const {
+    const Node& node() const {
         return this->_node;
     }
 
@@ -477,7 +477,7 @@ public:
     }
 
 private:
-    Node _node;
+    const Node& _node;
     ActorContext* _actor;
     const PhaseNumber _phaseNumber;
 };
