@@ -290,6 +290,7 @@ TEST_CASE("Actual Actor Example") {
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 100
                 Key: 71
@@ -353,6 +354,7 @@ TEST_CASE("Actual Actor Example") {
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Phase: 0
                 Nop: true
@@ -382,6 +384,7 @@ TEST_CASE("Actual Actor Example") {
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 3
                 SleepBefore: 50 milliseconds
@@ -407,6 +410,7 @@ TEST_CASE("Actual Actor Example") {
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 3
                 SleepBefore: -10 milliseconds
@@ -430,6 +434,7 @@ TEST_CASE("Actual Actor Example") {
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 3
                 SleepBefore: 10 milliseconds
@@ -453,6 +458,7 @@ TEST_CASE("Actual Actor Example") {
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 3
                 SleepBefore: 0 milliseconds
