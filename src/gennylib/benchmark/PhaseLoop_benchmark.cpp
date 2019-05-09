@@ -133,6 +133,7 @@ auto runActors(int threads, long iterations) {
     SchemaVersion: 2018-07-01
     Actors:
     - Type: Increments
+      Name: Increments
       Threads: %i
       Phases:
       - Repeat: %i
