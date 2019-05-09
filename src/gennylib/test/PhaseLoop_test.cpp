@@ -424,7 +424,7 @@ TEST_CASE("Actual Actor Example") {
             Catch::Matches("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
     }
 
-    SECTION("SleepAfter and Rate") {
+    SECTION("SleepAfter and GlobalRate") {
         using namespace std::literals::chrono_literals;
         YAML::Node config = YAML::Load(R"(
             SchemaVersion: 2018-07-01
@@ -434,7 +434,7 @@ TEST_CASE("Actual Actor Example") {
               - Repeat: 3
                 SleepBefore: 10 milliseconds
                 SleepAfter: 100 milliseconds
-                Rate: 20 per 30 milliseconds
+                GlobalRate: 20 per 30 milliseconds
                 Key: 71
         )");
 
@@ -444,7 +444,7 @@ TEST_CASE("Actual Actor Example") {
                                 ActorHelper ah(config, 1, {{"Inc", imvProducer}});
                                 ah.run();
                             }()),
-                            Catch::Matches(R"(Rate must \*not\* be specified alongside .*)"));
+                            Catch::Matches(R"(GlobalRate must \*not\* be specified alongside .*)"));
     }
 
     SECTION("SleepBefore = 0") {

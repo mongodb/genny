@@ -32,7 +32,7 @@ Actors:
     Repeat: 1e4  # Repeat 10k times per thread for a total of 1e6 iterations.
   - MetricsName: LoopNRateLimit
     Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
-    Rate: 1 per 1 millisecond
+    GlobalRate: 1 per 1 millisecond
   - MetricsName: LoopNSleepBefore
     Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
     SleepBefore: 1 millisecond
@@ -54,7 +54,7 @@ Actors:
     Repeat: 1e6
   - MetricsName: LoopNRateLimit
     Repeat: 1e4
-    Rate: 1 per 1 millisecond
+    GlobalRate: 1 per 1 millisecond
   - MetricsName: LoopNSleepBefore
     Repeat: 1e4
     SleepBefore: 1 millisecond

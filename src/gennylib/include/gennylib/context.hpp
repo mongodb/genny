@@ -218,7 +218,7 @@ public:
      *
      * @warning
      *   This is intended to only be used internally. It is called
-     *   by PhaseLoop in response to the `Rate:` yaml keyword.
+     *   by PhaseLoop in response to the `GlobalRate:` yaml keyword.
      *
      * @param name
      *   name/id to use
@@ -541,6 +541,10 @@ public:
 
         return this->workload()._registry->operation(
             this->_actor->get<std::string>("Name"), stm.str(), id);
+    }
+
+    const auto getPhaseNumber() const {
+        return _phaseNumber;
     }
 
 private:

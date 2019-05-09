@@ -188,7 +188,7 @@ YAML::Node convertObjForSmokeTest(YAML::Node inNode) {
         auto&& value = kvp.second;
         if (key == "Duration" || key == "Repeat") {
             out["Repeat"] = 1;
-        } else if (key == "Rate" || key == "SleepBefore" || key == "SleepAfter") {
+        } else if (key == "GlobalRate" || key == "SleepBefore" || key == "SleepAfter") {
             // Ignore those keys in smoke tests.
         } else {
             out[key] = value;

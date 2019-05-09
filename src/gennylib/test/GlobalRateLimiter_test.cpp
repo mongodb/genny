@@ -118,7 +118,7 @@ Actors:
   Type: IncActor
   Threads: 1
   Phases:
-    - Rate: 5 per 4 seconds
+    - GlobalRate: 5 per 4 seconds
 )");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 2;
@@ -140,7 +140,7 @@ Actors:
   Threads: 2
   Phases:
     - Repeat: 7
-      Rate: 3 per 200 milliseconds
+      GlobalRate: 3 per 200 milliseconds
 )");
         auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 2;

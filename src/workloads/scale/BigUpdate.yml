@@ -100,7 +100,7 @@ Actors:
   Phases:
   - *Nop
   - Duration: &phase2_duration 10 minutes
-    Rate: 100 per 31 milliseconds
+    GlobalRate: 100 per 31 milliseconds
 - Name: MultiCollectionQuery
   Type: MultiCollectionQuery
   Threads: 100
@@ -111,4 +111,4 @@ Actors:
   Phases:
   - *Nop
   - Duration: *phase2_duration
-    Rate: 100 per 9 milliseconds
+    GlobalRate: 100 per 9 milliseconds

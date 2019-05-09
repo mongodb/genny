@@ -116,7 +116,7 @@ inline bool operator==(const TimeSpec& lhs, const TimeSpec& rhs) {
 using Duration = typename TimeSpec::ValueT;
 
 /**
- * Rate defined as X operations per Y duration.
+ * RateSpec defined as X operations per Y duration.
  */
 struct RateSpec {
     RateSpec() = default;
@@ -380,7 +380,7 @@ struct convert<genny::PhaseRangeSpec> {
 };
 
 /**
- * Convert between YAML and genny::Rate
+ * Convert between YAML and genny::RateSpec
  *
  * The YAML syntax accepts [genny::Integer] per [genny::Time]
  * The syntax is interpreted as operations per unit of time.
