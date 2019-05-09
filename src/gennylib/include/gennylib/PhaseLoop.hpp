@@ -108,8 +108,8 @@ public:
 
         std::ostringstream defaultRLName;
         defaultRLName << phaseContext.get<std::string>("Name") << phaseContext.getPhaseNumber();
-        const auto rateLimiterName = phaseContext.get<std::string, false>("RateLimiterName")
-                                         .value_or(defaultRLName.str());
+        const auto rateLimiterName =
+            phaseContext.get<std::string, false>("RateLimiterName").value_or(defaultRLName.str());
 
         if (rateSpec) {
             if (!_doesBlock) {
