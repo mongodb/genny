@@ -489,6 +489,75 @@ nope: false
     REQUIRE(node["nope"].to<bool>() == false);
 }
 
+// Mickey-mouse versions of structs from context.hpp
+struct WLCtx;
+struct ACtx;
+struct PCtx;
+struct Actr;
+
+struct WLCtx {
+    Node node;
+    std::vector<std::unique_ptr<ACtx>> actxs;
+    std::vector<std::unique_ptr<Actr>> actrs;
+    explicit WLCtx(Node node)
+            : node{node} {
+        // Make a bunch of actor contexts
+        for (const auto& actor : node["Actors"]) {
+            actxs.emplace_back(std::make_unique<ACtx>(actor, *this));
+        }
+        for(auto& actx : actxs) {
+            // don't go thru a "ActorProducer" it shouldn't matter
+            // cuz it just passes in the ActorContext& to the ctor
+            actrs.push_back(std::make_unique<Actr>(*actx));
+        }
+    }
+};
+struct ACtx {
+    Node node;
+    std::unique_ptr<WLCtx> wlc;
+    std::vector<std::unique_ptr<PCtx>> pcs;
+    ACtx(Node node, WLCtx& wlctx)
+            : node{node} {
+        pcs = constructPhaseContexts(node, this);
+    }
+    static std::vector<std::unique_ptr<PCtx>> constructPhaseContexts(Node node, ACtx* actx) {
+        std::vector<std::unique_ptr<PCtx>> out;
+        auto phases = (*actx).node["Phases"];
+        for(const auto& phase : phases) {
+            out.emplace_back(std::make_unique<PCtx>(phase, *actx));
+        }
+        return out;
+    }
+};
+struct PCtx {
+    Node node;
+    ACtx* actx;
+    bool isNop() {
+        return node["Nop"].maybe<bool>().value_or(false);
+    }
+    PCtx(Node node, ACtx& actx)
+            : node{node}, actx{std::addressof(actx)} {}
+};
+struct Actr {
+    explicit Actr(ACtx& ctx) {
+        REQUIRE(ctx.node["Nop"].maybe<bool>().value_or(false) == false);
+    }
+};
+
+TEST_CASE("Mickey-mouse Use From context.hpp") {
+    Node yaml (R"(
+    SchemaVersion: 2018-07-01
+    Database: test
+    Actors:
+    - Name: MetricsNameTest
+      Type: HelloWorld
+      Threads: 1
+      Phases:
+      - Repeat: 1
+    )", "");
+    WLCtx ctx{yaml};
+}
+
 TEST_CASE("size") {
     {
         Node node{"foo: bar", ""};

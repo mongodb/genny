@@ -208,35 +208,11 @@ public:
     Node(const std::string& yaml, std::string key)
         : Node{parse(yaml, key), nullptr, std::move(key)} {}
 
-    // explicitly allow copy and move
-    // this is here to protect against regressions
-    // accidentally making this non-copy/move-able
+    Node(const Node&) = delete;
+    Node(Node&&) = delete;
+    void operator=(const Node&) = delete;
+    void operator=(Node&&) = delete;
 
-    /**
-     * Copy-construct.
-     */
-    Node(const Node&) = default;
-
-    /**
-     * Move-construct.
-     */
-    Node(Node&&) = default;
-
-    /**
-     * @return a copy of this node.
-     */
-    Node& operator=(const Node&) = default;
-
-    /**
-     * Usage of this node in a moved-from state is undefined.
-     *
-     * @return a moved-to version of this node.
-     */
-    Node& operator=(Node&&) = default;
-
-    /**
-     * What type of node we are.
-     */
     enum class NodeType {
         Undefined,
         Null,
@@ -478,28 +454,14 @@ public:
         return type() == NodeType::Map;
     }
 
+
     /**
      * @return
      *   what type we are.
      */
-    NodeType type() const {
-        if (!*this) {
-            return NodeType::Undefined;
-        }
-        auto yamlTyp = _yaml.Type();
-        switch (yamlTyp) {
-            case YAML::NodeType::Undefined:
-                return NodeType::Undefined;
-            case YAML::NodeType::Null:
-                return NodeType::Null;
-            case YAML::NodeType::Scalar:
-                return NodeType::Scalar;
-            case YAML::NodeType::Sequence:
-                return NodeType::Sequence;
-            case YAML::NodeType::Map:
-                return NodeType::Map;
-        }
-    }
+     NodeType type() const {
+        return _type;
+     }
 
     /**
      * @return
@@ -558,11 +520,53 @@ public:
     friend class IteratorValue;
 
 private:
+    const YAML::Node _yaml;
+    const std::string _key;
+
+    using Child = std::unique_ptr<Node>;
+    using ChildSequence = std::vector<Child>;
+    using ChildMap = std::map<std::string, Child>;
+
+    const Node* _parent;
+
+    const NodeType _type;
+
+    const ChildSequence _sequenceChildren;
+    const ChildMap _mapChildren;
+
+    bool _valid;
+
     Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
-        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
+        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)}, _type{determineType(yaml)},
+          _mapChildren{constructMapChildren(yaml)}, _sequenceChildren(constructSequenceChildren(yaml)) {}
 
     Node(const YAML::Node yaml, const Node* const parent, std::string key)
         : Node{yaml, parent, yaml, std::move(key)} {}
+
+    static NodeType determineType(YAML::Node node) {
+        auto yamlTyp = node.Type();
+        switch (yamlTyp) {
+            case YAML::NodeType::Undefined:
+                return NodeType::Undefined;
+            case YAML::NodeType::Null:
+                return NodeType::Null;
+            case YAML::NodeType::Scalar:
+                return NodeType::Scalar;
+            case YAML::NodeType::Sequence:
+                return NodeType::Sequence;
+            case YAML::NodeType::Map:
+                return NodeType::Map;
+        }
+    }
+
+    static ChildSequence constructSequenceChildren(YAML::Node node) {
+        ChildSequence out;
+        return out;
+    }
+    static ChildMap constructMapChildren(YAML::Node node) {
+        ChildMap out;
+        return out;
+    }
 
 
     // helper type-function
@@ -646,12 +650,12 @@ private:
     }
 
     template <typename K>
-    const Node get(const K& key) const {
+    const Node& get(const K& key) const {
         const std::string keyStr = v1::toString(key);
         if constexpr (std::is_convertible_v<K, std::string>) {
             if (key == "..") {
                 if (!_parent) {
-                    return Node{YAML::Node{}, nullptr, false, _key + "/.."};
+                    return 
                 }
 
                 std::ostringstream parentKey;
@@ -674,10 +678,6 @@ private:
 
     void buildPath(std::stringstream& out) const;
 
-    YAML::Node _yaml;
-    std::string _key;
-    const Node* _parent;
-    bool _valid;
 };
 
 
