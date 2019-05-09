@@ -78,11 +78,11 @@ std::string Node::path() const {
 }
 
 Node::iterator Node::begin() const {
-    return Node::iterator{_yaml.begin(), std::make_unique<Node>(this)};
+    return Node::iterator{_yaml.begin(), v1::CopyablePtr<Node>(std::make_unique<Node>(*this))};
 }
 
 Node::iterator Node::end() const {
-    return Node::iterator{_yaml.end(), std::make_unique<Node>(this)};
+    return Node::iterator{_yaml.end(), v1::CopyablePtr<Node>(std::make_unique<Node>(*this))};
 }
 
 

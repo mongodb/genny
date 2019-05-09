@@ -40,11 +40,39 @@ std::string toString(const T& t) {
 
 template<typename T>
 class CopyablePtr {
-    static_assert(std::is_copy_constructible_v<T>);
-    template<typename...Args>
-    explicit CopyablePtr(Args&&...args)
-    : _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
-    CopyablePtr<T>()
+//    static_assert(std::is_copy_constructible_v<T>);
+    public:
+    explicit CopyablePtr(std::unique_ptr<T> value)
+    : _value{std::move(value)} {}
+    CopyablePtr(const CopyablePtr& other)
+    : CopyablePtr(std::make_unique<T>(*(other._value))) {}
+    CopyablePtr(CopyablePtr&& other) noexcept
+    : _value{std::move(other._value)} {}
+
+    CopyablePtr& operator=(CopyablePtr&& other) noexcept {
+        _value = std::move(other._value);
+        return *this;
+    }
+    CopyablePtr& operator=(const CopyablePtr& other) {
+        _value.release();
+        _value = std::make_unique<T>(*(other._value));
+        return *this;
+    }
+    explicit operator bool() const {
+        return bool(_value);
+    }
+    auto operator->() {
+        return _value.operator->();
+    }
+    auto operator->() const {
+        return _value.operator->();
+    }
+    auto operator*() {
+        return _value.operator*();
+    }
+    auto operator*() const {
+        return _value.operator*();
+    }
 private:
     std::unique_ptr<T> _value;
 };
@@ -219,7 +247,7 @@ public:
      *   of telling the user where the yaml came from. This is used primarily for error-reporting.
      */
     Node(const std::string& yaml, std::string key)
-        : Node{parse(yaml, key), nullptr, std::move(key)} {}
+        : Node{parse(yaml, key), v1::CopyablePtr<Node>{nullptr}, std::move(key)} {}
 
     // explicitly allow copy and move
     // this is here to protect against regressions
@@ -238,9 +266,7 @@ public:
     /**
      * Copy assign
      */
-    Node& operator=(const Node&) {
-
-    }
+    Node& operator=(const Node&) = default;
 
     /**
      * Usage of this node in a moved-from state is undefined.
@@ -580,10 +606,10 @@ public:
     friend class IteratorValue;
 
 private:
-    Node(const YAML::Node yaml, std::unique_ptr<Node> parent, bool valid, std::string key)
+    Node(const YAML::Node yaml, v1::CopyablePtr<Node> parent, bool valid, std::string key)
         : _yaml{yaml}, _parent{std::move(parent)}, _valid{valid}, _key{std::move(key)} {}
 
-    Node(const YAML::Node yaml, std::unique_ptr<Node> parent, std::string key)
+    Node(const YAML::Node yaml, v1::CopyablePtr<Node> parent, std::string key)
         : Node{yaml, std::move(parent), yaml, std::move(key)} {}
 
 
@@ -648,7 +674,7 @@ private:
     // helper for yamlGet that returns nullopt if no parent
     template <typename K>
     std::optional<const YAML::Node> parentGet(const K& key) const {
-        if (_parent == nullptr) {
+        if (!_parent) {
             return std::nullopt;
         }
         return _parent->yamlGet(key);
@@ -673,17 +699,18 @@ private:
         if constexpr (std::is_convertible_v<K, std::string>) {
             if (key == "..") {
                 if (!_parent) {
-                    return Node{YAML::Node{}, nullptr, false, _key + "/.."};
+                    return Node{YAML::Node{}, v1::CopyablePtr<Node>{nullptr}, false, _key + "/.."};
                 }
 
                 std::ostringstream parentKey;
                 parentKey << _parent->_key << "/" << _key << "/..";
-                return Node{_parent->_yaml, std::make_unique<Node>(_parent->_parent), _parent->_valid, parentKey.str()};
+                return Node{_parent->_yaml, _parent->_parent, _parent->_valid, parentKey.str()};
             }
         }
         try {
             auto yaml = this->yamlGet(key);
-            return yaml ? Node{*yaml, std::make_unique<Node>(this), true, keyStr} : Node{YAML::Node{}, std::make_unique<Node>(this), false, keyStr};
+            auto nparent = v1::CopyablePtr{std::make_unique<Node>(*this)};
+            return yaml ? Node{*yaml, std::move(nparent), true, keyStr} : Node{YAML::Node{}, std::move(nparent), false, keyStr};
         } catch (const YAML::Exception& x) {
             // YAML::Node is inconsistent about where it throws exceptions for `node[0]` versus
             // `node["foo"]`.
@@ -699,7 +726,7 @@ private:
     YAML::Node _yaml;
     std::string _key;
     bool _valid;
-    std::unique_ptr<Node> _parent;
+    v1::CopyablePtr<Node> _parent;
 };
 
 
@@ -710,11 +737,11 @@ public:
     // jump through immense hoops to avoid knowing anything about the actual yaml iterator other
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
-    IteratorValue(std::unique_ptr<Node> parent, ITVal itVal, size_t index)
+    IteratorValue(v1::CopyablePtr<Node> parent, ITVal itVal, size_t index)
         :  // API like kvp when itVal is being used in map context
           NodePair{std::make_pair(
               Node{itVal.first,
-                   std::make_unique<Node>(*parent),
+                   parent,
                    bool(itVal.first),  // itVal.first will be falsy if we're iterating over a
                                        // sequence.
                    //
@@ -723,7 +750,7 @@ public:
                    (itVal.first ? (itVal.first.template as<std::string>()) : v1::toString(index)) +
                        "$key"},
               Node{itVal.second,
-                   std::make_unique<Node>(*parent),
+                   parent,
                    bool(itVal.second),  // itVal.second will be falsy if we're iterating over a
                                         // sequence
                    //
@@ -732,7 +759,7 @@ public:
                    // cases.
                    itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
           // API like a value where it's being used in sequence context
-          Node{itVal, std::make_unique<Node>(*parent), itVal, v1::toString(index)} {}
+          Node{itVal, parent, itVal, v1::toString(index)} {}
 
 private:
     using NodePair = std::pair<Node, Node>;
@@ -749,11 +776,11 @@ public:
     }
 
     auto operator*() const {
-        return IteratorValue{std::make_unique<Node>(*parent), (_child.operator*()), index};
+        return IteratorValue{parent, (_child.operator*()), index};
     }
 
     auto operator-> () const {
-        return IteratorValue{std::make_unique<Node>(*parent), (_child.operator*()), index};
+        return IteratorValue{parent, (_child.operator*()), index};
     }
 
     auto operator==(const iterator& rhs) const {
@@ -768,12 +795,12 @@ private:
     // Don't expose or assume the type of YAML::Node.begin()
     using IterType = decltype(std::declval<const YAML::Node>().begin());
 
-    iterator(IterType child, std::unique_ptr<Node> parent) : _child(std::move(child)), parent(std::move(parent)) {}
+    iterator(IterType child, v1::CopyablePtr<Node> parent) : _child(std::move(child)), parent(parent) {}
 
     friend Node;
 
     IterType _child;
-    std::unique_ptr<Node> parent;
+    v1::CopyablePtr<Node> parent;
     size_t index = 0;
 };
 
