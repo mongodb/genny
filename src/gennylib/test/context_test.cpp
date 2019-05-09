@@ -300,7 +300,7 @@ Actors:
     }
 }
 
-void onContext(Node yaml, std::function<void(ActorContext&)> op) {
+void onContext(const Node& yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
 

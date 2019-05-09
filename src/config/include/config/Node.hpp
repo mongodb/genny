@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <yaml-cpp/yaml.h>
@@ -36,6 +37,18 @@ std::string toString(const T& t) {
     out << t;
     return out.str();
 }
+
+template<typename T>
+class CopyablePtr {
+    static_assert(std::is_copy_constructible_v<T>);
+    template<typename...Args>
+    explicit CopyablePtr(Args&&...args)
+    : _value{std::make_unique<T>(std::forward<Args>(args)...)} {}
+    CopyablePtr<T>()
+private:
+    std::unique_ptr<T> _value;
+};
+
 }  // namespace v1
 
 /**
@@ -213,9 +226,9 @@ public:
     // accidentally making this non-copy/move-able
 
     /**
-     * can't copy
+     * Copy-construct
      */
-    Node(const Node&) = delete;
+    Node(const Node&) = default;
 
     /**
      * Move-construct.
@@ -223,9 +236,11 @@ public:
     Node(Node&&) = default;
 
     /**
-     * can't copy
+     * Copy assign
      */
-    void operator=(const Node&) = delete;
+    Node& operator=(const Node&) {
+
+    }
 
     /**
      * Usage of this node in a moved-from state is undefined.
@@ -565,11 +580,11 @@ public:
     friend class IteratorValue;
 
 private:
-    Node(const YAML::Node yaml, const Node* const parent, bool valid, std::string key)
-        : _yaml{yaml}, _parent{parent}, _valid{valid}, _key{std::move(key)} {}
+    Node(const YAML::Node yaml, std::unique_ptr<Node> parent, bool valid, std::string key)
+        : _yaml{yaml}, _parent{std::move(parent)}, _valid{valid}, _key{std::move(key)} {}
 
-    Node(const YAML::Node yaml, const Node* const parent, std::string key)
-        : Node{yaml, parent, yaml, std::move(key)} {}
+    Node(const YAML::Node yaml, std::unique_ptr<Node> parent, std::string key)
+        : Node{yaml, std::move(parent), yaml, std::move(key)} {}
 
 
     // helper type-function
@@ -663,12 +678,12 @@ private:
 
                 std::ostringstream parentKey;
                 parentKey << _parent->_key << "/" << _key << "/..";
-                return Node{_parent->_yaml, _parent->_parent, _parent->_valid, parentKey.str()};
+                return Node{_parent->_yaml, std::make_unique<Node>(_parent->_parent), _parent->_valid, parentKey.str()};
             }
         }
         try {
             auto yaml = this->yamlGet(key);
-            return yaml ? Node{*yaml, this, true, keyStr} : Node{YAML::Node{}, this, false, keyStr};
+            return yaml ? Node{*yaml, std::make_unique<Node>(this), true, keyStr} : Node{YAML::Node{}, std::make_unique<Node>(this), false, keyStr};
         } catch (const YAML::Exception& x) {
             // YAML::Node is inconsistent about where it throws exceptions for `node[0]` versus
             // `node["foo"]`.
@@ -683,8 +698,8 @@ private:
 
     YAML::Node _yaml;
     std::string _key;
-    const Node* _parent;
     bool _valid;
+    std::unique_ptr<Node> _parent;
 };
 
 
@@ -695,11 +710,11 @@ public:
     // jump through immense hoops to avoid knowing anything about the actual yaml iterator other
     // than its pair form is a pair of {YAML::Node, YAML::Node}
     template <typename ITVal>
-    IteratorValue(const Node* parent, ITVal itVal, size_t index)
+    IteratorValue(std::unique_ptr<Node> parent, ITVal itVal, size_t index)
         :  // API like kvp when itVal is being used in map context
           NodePair{std::make_pair(
               Node{itVal.first,
-                   parent,
+                   std::make_unique<Node>(*parent),
                    bool(itVal.first),  // itVal.first will be falsy if we're iterating over a
                                        // sequence.
                    //
@@ -708,7 +723,7 @@ public:
                    (itVal.first ? (itVal.first.template as<std::string>()) : v1::toString(index)) +
                        "$key"},
               Node{itVal.second,
-                   parent,
+                   std::make_unique<Node>(*parent),
                    bool(itVal.second),  // itVal.second will be falsy if we're iterating over a
                                         // sequence
                    //
@@ -717,7 +732,7 @@ public:
                    // cases.
                    itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
           // API like a value where it's being used in sequence context
-          Node{itVal, parent, itVal, v1::toString(index)} {}
+          Node{itVal, std::make_unique<Node>(*parent), itVal, v1::toString(index)} {}
 
 private:
     using NodePair = std::pair<Node, Node>;
@@ -734,11 +749,11 @@ public:
     }
 
     auto operator*() const {
-        return IteratorValue{parent, (_child.operator*()), index};
+        return IteratorValue{std::make_unique<Node>(*parent), (_child.operator*()), index};
     }
 
     auto operator-> () const {
-        return IteratorValue{parent, (_child.operator*()), index};
+        return IteratorValue{std::make_unique<Node>(*parent), (_child.operator*()), index};
     }
 
     auto operator==(const iterator& rhs) const {
@@ -753,12 +768,12 @@ private:
     // Don't expose or assume the type of YAML::Node.begin()
     using IterType = decltype(std::declval<const YAML::Node>().begin());
 
-    iterator(IterType child, const Node* parent) : _child(std::move(child)), parent(parent) {}
+    iterator(IterType child, std::unique_ptr<Node> parent) : _child(std::move(child)), parent(std::move(parent)) {}
 
     friend Node;
 
     IterType _child;
-    const Node* parent;
+    std::unique_ptr<Node> parent;
     size_t index = 0;
 };
 
@@ -770,8 +785,8 @@ std::vector<T> Node::getPlural(const std::string& singular,
                                const std::string& plural,
                                F&& f) const {
     std::vector<T> out;
-    auto pluralValue = (*this)[plural];
-    auto singValue = (*this)[singular];
+    auto pluralValue = this->get(plural);
+    auto singValue = this->get(singular);
     if (pluralValue && singValue) {
         BOOST_THROW_EXCEPTION(
             // the `$plural(singular,plural)` key is kinda cheeky but hopefully

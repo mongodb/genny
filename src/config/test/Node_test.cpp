@@ -226,11 +226,11 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE_THROWS_WITH(
                 [&]() { yaml["a"].maybe<int>(); }(),
                 Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+                               "\\(Line:Column\\)=\\(0:0\\). On node with path '/a': ~"));
             REQUIRE_THROWS_WITH(
                 [&]() { yaml["a"].to<int>(); }(),
                 Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+                               "\\(Line:Column\\)=\\(0:0\\). On node with path '/a': ~"));
         }
     }
 
@@ -497,10 +497,10 @@ struct PCtx;
 struct Actr;
 
 struct WLCtx {
-    const Node& node;
+    Node node;
     std::vector<std::unique_ptr<ACtx>> actxs;
     std::vector<std::unique_ptr<Actr>> actrs;
-    explicit WLCtx(const Node& node)
+    explicit WLCtx(Node node)
     : node{node} {
         // Make a bunch of actor contexts
         for (const auto& actor : node["Actors"]) {
@@ -514,14 +514,14 @@ struct WLCtx {
     }
 };
 struct ACtx {
-    const Node& node;
+    Node node;
     std::unique_ptr<WLCtx> wlc;
     std::vector<std::unique_ptr<PCtx>> pcs;
-    ACtx(const Node& node, WLCtx& wlctx)
+    ACtx(Node node, WLCtx& wlctx)
     : node{node} {
         pcs = constructPhaseContexts(node, this);
     }
-    static std::vector<std::unique_ptr<PCtx>> constructPhaseContexts(const Node& node, ACtx* actx) {
+    static std::vector<std::unique_ptr<PCtx>> constructPhaseContexts(Node node, ACtx* actx) {
         std::vector<std::unique_ptr<PCtx>> out;
         auto phases = (*actx).node["Phases"];
         for(const auto& phase : phases) {
@@ -531,12 +531,12 @@ struct ACtx {
     }
 };
 struct PCtx {
-    const Node& node;
+    Node node;
     ACtx* actx;
     bool isNop() {
         return node["Nop"].maybe<bool>().value_or(false);
     }
-    PCtx(const Node& node, ACtx& actx)
+    PCtx(Node node, ACtx& actx)
     : node{node}, actx{std::addressof(actx)} {}
 };
 struct Actr {
