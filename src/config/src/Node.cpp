@@ -55,15 +55,7 @@ std::string InvalidKeyException::createWhat(const std::string& msg,
     return out.str();
 }
 
-void Node::buildPath(std::stringstream& out) const {
-    if (_parent) {
-        _parent->buildPath(out);
-        out << "/";
-    }
-    out << _key;
-}
-
-YAML::Node Node::parse(std::string yaml, std::string path) {
+YAML::Node Node::parse(std::string yaml, const std::string& path) {
     try {
         return YAML::Load(yaml);
     } catch (const YAML::ParserException& x) {
