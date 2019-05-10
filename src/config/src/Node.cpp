@@ -174,5 +174,92 @@ const NodeImpl* NodeImpl::longGet(long key) const {
     return &*(child);
 }
 
+NodeImpl::NodeImpl(YAML::Node node, const NodeImpl *parent)    : _node{node},
+                                                                 _parent{parent},
+                                                                 _nodeType{determineType(_node)},
+                                                                 _childSequence(childSequence(node, this)),
+                                                                 _childMap(childMap(node, this)) {}
+
+bool NodeImpl::isNull() const  {
+    return type() == NodeType::Null;
+}
+
+NodeType NodeImpl::determineType(YAML::Node node)  {
+    auto yamlTyp = node.Type();
+    switch (yamlTyp) {
+        case YAML::NodeType::Undefined:
+            return NodeType::Undefined;
+        case YAML::NodeType::Null:
+            return NodeType::Null;
+        case YAML::NodeType::Scalar:
+            return NodeType::Scalar;
+        case YAML::NodeType::Sequence:
+            return NodeType::Sequence;
+        case YAML::NodeType::Map:
+            return NodeType::Map;
+    }
+}
+
+NodeImpl::ChildMap NodeImpl::childMap(YAML::Node node, const NodeImpl *parent)  {
+    ChildMap out;
+    if (node.Type() != YAML::NodeType::Map) {
+        return out;
+    }
+    for(const auto& kvp : node) {
+        auto childKey = kvp.first.as<std::string>();
+        out.emplace(childKey, std::make_unique<NodeImpl>(kvp.second, parent));
+    }
+    return out;
+}
+
+NodeImpl::ChildSequence NodeImpl::childSequence(YAML::Node node, const NodeImpl *parent)  {
+    ChildSequence out;
+    if (node.Type() != YAML::NodeType::Sequence) {
+        return out;
+    }
+    for(const auto& kvp : node) {
+        out.emplace_back(std::make_unique<NodeImpl>(kvp, parent));
+    }
+    return out;
+}
+
+const NodeImpl &NodeImpl::childSequenceGet(const long key) const  {
+    if (!isSequence()) {
+        // TODO: handle bad type
+        BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
+    }
+    assert(_nodeType == NodeType::Sequence);
+    return *(_childSequence.at(key));
+    // TODO: handle std::out_of_range
+}
+
+const NodeImpl &NodeImpl::childMapGet(const std::string &key) const  {
+    if (!isMap()) {
+        // TODO: handle bad type
+        BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
+    }
+    if (auto found = _childMap.find(key); found != _childMap.end()) {
+        return *(found->second);
+    }
+    // TODO: handle out of range
+    BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
+}
+
+bool NodeImpl::isScalar() const  {
+    return type() == NodeType::Scalar;
+}
+
+bool NodeImpl::isSequence() const  {
+    return type() == NodeType::Sequence;
+}
+
+bool NodeImpl::isMap() const {
+    return type() == NodeType::Map;
+}
+
+NodeType NodeImpl::type() const  {
+    return _nodeType;
+}
+
 
 }  // namespace genny

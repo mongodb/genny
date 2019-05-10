@@ -77,10 +77,34 @@ class NodeImpl;
 class Node {
 public:
 
+    /**
+     * @return
+     *   what type we are.
+     */
     NodeType type() const;
+
+    /**
+     * @return
+     *   if we're a scalar type (string, number, etc).
+     */
     bool isScalar() const;
+    /**
+     * @return
+     *   if we're a sequence (array) type.
+     */
     bool isSequence() const;
+
+    /**
+     * @return
+     *   if we're a map type.
+     */
     bool isMap() const;
+
+    /**
+     * @return
+     *   if we're specified as `null`.
+     *   This is not the same as not being defined.
+     */
     bool isNull() const;
 
     size_t size() const;
@@ -118,73 +142,27 @@ public:
     using ChildSequence = std::vector<Child>;
     using ChildMap = std::map<std::string, Child>;
 
-    NodeImpl(YAML::Node node, const NodeImpl* parent)
-    : _node{node},
-      _parent{parent},
-      _nodeType{determineType(_node)},
-      _childSequence(childSequence(node, this)),
-      _childMap(childMap(node, this)) {}
+    NodeImpl(YAML::Node node, const NodeImpl* parent);
 
-    /**
-     * @return
-     *   if we're specified as `null`.
-     *   This is not the same as not being defined.
-     */
-    bool isNull() const {
-        return type() == NodeType::Null;
-    }
+    bool isNull() const;
 
-    /**
-     * @return
-     *   if we're a scalar type (string, number, etc).
-     */
-    bool isScalar() const {
-        return type() == NodeType::Scalar;
-    }
+    bool isScalar() const;
 
-    /**
-     * @return
-     *   if we're a sequence (array) type.
-     */
-    bool isSequence() const {
-        return type() == NodeType::Sequence;
-    }
+    bool isSequence() const;
 
-    /**
-     * @return
-     *   if we're a map type.
-     */
-    bool isMap() const {
-        return type() == NodeType::Map;
-    }
+    bool isMap() const;
 
-    /**
-     * @return
-     *   what type we are.
-     */
-     NodeType type() const {
-        return _nodeType;
-     }
+     NodeType type() const;
 
     size_t size() const;
 
     template<typename K>
     const NodeImpl& get(K&& key) const {
         if constexpr (std::is_convertible_v<K, std::string>) {
-            if(_nodeType == NodeType::Map) {
-                return childMapGet(std::forward<K>(key));
-            } else {
-                // TODO: better error-messaging
-                BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
-            }
+            return childMapGet(std::forward<K>(key));
         } else {
             static_assert(std::is_constructible_v<K, size_t>);
-            if (_nodeType == NodeType::Sequence) {
-                return childSequenceGet(std::forward<K>(key));
-            } else {
-                // TODO: better error-messaging
-                BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
-            }
+            return childSequenceGet(std::forward<K>(key));
         }
     }
 
@@ -199,62 +177,11 @@ private:
     const ChildSequence _childSequence;
     const ChildMap _childMap;
 
-    template<typename K>
-    const NodeImpl& childMapGet(K&& key) const {
-        assert(_nodeType == NodeType::Map);
-        if (auto found = _childMap.find(key); found != _childMap.end()) {
-            return *(found->second);
-        }
-        // TOOD
-        BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
-    }
-
-    template<typename K>
-    const NodeImpl& childSequenceGet(K&& key) const {
-        assert(_nodeType == NodeType::Sequence);
-        return *(_childSequence.at(key));
-        // TODO: handle std::out_of_range
-//        BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
-    }
-
-    static ChildSequence childSequence(YAML::Node node, const NodeImpl* parent) {
-        ChildSequence out;
-        if (node.Type() != YAML::NodeType::Sequence) {
-            return out;
-        }
-        for(const auto& kvp : node) {
-            out.emplace_back(std::make_unique<NodeImpl>(kvp, parent));
-        }
-        return out;
-    }
-
-    static ChildMap childMap(YAML::Node node, const NodeImpl* parent) {
-        ChildMap out;
-        if (node.Type() != YAML::NodeType::Map) {
-            return out;
-        }
-        for(const auto& kvp : node) {
-            auto childKey = kvp.first.as<std::string>();
-            out.emplace(childKey, std::make_unique<NodeImpl>(kvp.second, parent));
-        }
-        return out;
-    }
-
-    static NodeType determineType(YAML::Node node) {
-        auto yamlTyp = node.Type();
-        switch (yamlTyp) {
-            case YAML::NodeType::Undefined:
-                return NodeType::Undefined;
-            case YAML::NodeType::Null:
-                return NodeType::Null;
-            case YAML::NodeType::Scalar:
-                return NodeType::Scalar;
-            case YAML::NodeType::Sequence:
-                return NodeType::Sequence;
-            case YAML::NodeType::Map:
-                return NodeType::Map;
-        }
-    }
+    const NodeImpl& childMapGet(const std::string& key) const;
+    const NodeImpl& childSequenceGet(const long key) const;
+    static ChildSequence childSequence(YAML::Node node, const NodeImpl* parent);
+    static ChildMap childMap(YAML::Node node, const NodeImpl* parent);
+    static NodeType determineType(YAML::Node node);
 };
 
 
