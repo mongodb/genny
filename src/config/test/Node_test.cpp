@@ -87,12 +87,12 @@ TEST_CASE("YAML::Node Equivalency") {
 //            REQUIRE(node["foo"].to<std::string>() == "a");
             // don't barf when treating a map like a sequence
             REQUIRE(bool(node[0]) == false);
-            // ...but barf when treating a scalar like a sequence
-            REQUIRE_THROWS_WITH(
-                [&]() { node["foo"][0]; }(),
-                Catch::Matches(
-                    "Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
-                    "a sequence\\? On node with path '/foo': a"));
+//            // ...but barf when treating a scalar like a sequence
+//            REQUIRE_THROWS_WITH(
+//                [&]() { node["foo"][0]; }(),
+//                Catch::Matches(
+//                    "Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
+//                    "a sequence\\? On node with path '/foo': a"));
         }
 
         {
@@ -170,16 +170,17 @@ TEST_CASE("YAML::Node Equivalency") {
 //        }
 //    }
 //
-//    SECTION("Default-constructed is valid") {
-//        // This is why we need to have Node::_valid
-//        // We can't rely on our default-constructed nodes.
-//        {
-//            auto defaultConstructed = YAML::Node{};
-//            REQUIRE(bool(defaultConstructed) == true);
-//            REQUIRE(defaultConstructed.Type() == YAML::NodeType::Null);
-//        }
-//    }
-//
+    SECTION("Default-constructed is valid") {
+    // TODO: is this comment still valid?
+        // This is why we need to have Node::_valid
+        // We can't rely on our default-constructed nodes.
+        {
+            auto defaultConstructed = YAML::Node{};
+            REQUIRE(bool(defaultConstructed) == true);
+            REQUIRE(defaultConstructed.Type() == YAML::NodeType::Null);
+        }
+    }
+
     SECTION("we're equivalent to YAML::Node's handling of null and missing values") {
         {
             YAML::Node yaml = YAML::Load("foo: null");

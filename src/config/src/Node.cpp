@@ -99,7 +99,8 @@ bool Node::isNull() const {
 }
 
 Node::operator bool() const {
-    return bool(_impl);
+    auto out = bool(_impl);
+    return out;
 }
 //
 //std::string Node::path() const {
@@ -130,6 +131,9 @@ Node Node::longGet(long key) const {
 }
 
 const NodeImpl* NodeImpl::stringGet(const std::string &key) const {
+    if (!isMap()) {
+        return nullptr;
+    }
     if(const auto& found = _childMap.find(key); found != _childMap.end()) {
         return &*(found->second);
     } else {
@@ -138,7 +142,7 @@ const NodeImpl* NodeImpl::stringGet(const std::string &key) const {
 }
 
 const NodeImpl* NodeImpl::longGet(long key) const {
-    if (key < 0 || key > _childSequence.size()) {
+    if (key < 0 || key > _childSequence.size() || !isSequence()) {
         return nullptr;
     }
     const auto& child = _childSequence.at(key);
