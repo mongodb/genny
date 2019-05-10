@@ -18,43 +18,6 @@
 
 namespace genny {
 
-std::string InvalidYAMLException::createWhat(const std::string& path,
-                                             const YAML::ParserException& yamlException) {
-    std::stringstream out;
-    out << "Invalid YAML: ";
-    out << "'" << yamlException.msg << "' ";
-    out << "at (Line:Column)=(" << yamlException.mark.line << ":" << yamlException.mark.column
-        << "). ";
-    out << "On node with path '" << path << "'.";
-
-    return out.str();
-}
-//
-//std::string InvalidConversionException::createWhat(const Node& node,
-//                                                   const YAML::BadConversion& yamlException,
-//                                                   const std::type_info& destType) {
-//    std::stringstream out;
-//    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
-//    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
-//        << yamlException.mark.column << "). ";
-//    out << "On node with path '" << node.path() << "': ";
-//    out << node;
-//
-//    return out.str();
-//}
-//
-//std::string InvalidKeyException::createWhat(const std::string& msg,
-//                                            const std::string& key,
-//                                            const Node* node) {
-//    std::stringstream out;
-//    out << "Invalid key '" << key << "': ";
-//    out << msg << " ";
-//    out << "On node with path '" << node->path() << "': ";
-//    out << *node;
-//
-//    return out.str();
-//}
-//
 namespace {
 
 // Helper to parse yaml string and throw a useful error message if parsing fails
@@ -66,7 +29,7 @@ YAML::Node parse(std::string yaml, const std::string& path) {
     }
 }
 
-NodeType determineType(YAML::Node node)  {
+NodeType determineType(YAML::Node node) {
     auto yamlTyp = node.Type();
     switch (yamlTyp) {
         case YAML::NodeType::Undefined:
@@ -89,25 +52,24 @@ using ChildMap = std::map<std::string, Child>;
 }  // namespace
 
 
-// Always owned by NodeSource (below)
 class NodeImpl {
 public:
     NodeImpl(YAML::Node node, const NodeImpl* parent)
-            : _node{node},
-              _parent{parent},
-              _nodeType{determineType(_node)},
-              _childSequence(childSequence(node, this)),
-              _childMap(childMap(node, this)) {}
+        : _node{node},
+          _parent{parent},
+          _nodeType{determineType(_node)},
+          _childSequence(childSequence(node, this)),
+          _childMap(childMap(node, this)) {}
 
-    bool isNull() const  {
+    bool isNull() const {
         return type() == NodeType::Null;
     }
 
-    bool isScalar() const  {
+    bool isScalar() const {
         return type() == NodeType::Scalar;
     }
 
-    bool isSequence() const  {
+    bool isSequence() const {
         return type() == NodeType::Sequence;
     }
 
@@ -130,7 +92,7 @@ public:
         }
     }
 
-    template<typename K>
+    template <typename K>
     const NodeImpl& get(K&& key) const {
         if constexpr (std::is_convertible_v<K, std::string>) {
             return childMapGet(std::forward<K>(key));
@@ -140,18 +102,18 @@ public:
         }
     }
 
-    const NodeImpl* stringGet(const std::string &key) const {
+    const NodeImpl* stringGet(const std::string& key) const {
         if (!isMap()) {
             return nullptr;
         }
-        if(const auto& found = _childMap.find(key); found != _childMap.end()) {
+        if (const auto& found = _childMap.find(key); found != _childMap.end()) {
             return &*(found->second);
         } else {
             return nullptr;
         }
     }
 
-    const NodeImpl* longGet(long key) const{
+    const NodeImpl* longGet(long key) const {
         if (key < 0 || key >= _childSequence.size() || !isSequence()) {
             return nullptr;
         }
@@ -167,7 +129,7 @@ private:
     const ChildSequence _childSequence;
     const ChildMap _childMap;
 
-    const NodeImpl& childMapGet(const std::string &key) const  {
+    const NodeImpl& childMapGet(const std::string& key) const {
         if (!isMap()) {
             // TODO: handle bad type
             BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
@@ -179,7 +141,7 @@ private:
         BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
     }
 
-    const NodeImpl& childSequenceGet(const long key) const  {
+    const NodeImpl& childSequenceGet(const long key) const {
         if (!isSequence()) {
             // TODO: handle bad type
             BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
@@ -189,23 +151,23 @@ private:
         // TODO: handle std::out_of_range
     }
 
-    static ChildSequence childSequence(YAML::Node node, const NodeImpl *parent)  {
+    static ChildSequence childSequence(YAML::Node node, const NodeImpl* parent) {
         ChildSequence out;
         if (node.Type() != YAML::NodeType::Sequence) {
             return out;
         }
-        for(const auto& kvp : node) {
+        for (const auto& kvp : node) {
             out.emplace_back(std::make_unique<NodeImpl>(kvp, parent));
         }
         return out;
     }
 
-    static ChildMap childMap(YAML::Node node, const NodeImpl *parent)  {
+    static ChildMap childMap(YAML::Node node, const NodeImpl* parent) {
         ChildMap out;
         if (node.Type() != YAML::NodeType::Map) {
             return out;
         }
-        for(const auto& kvp : node) {
+        for (const auto& kvp : node) {
             auto childKey = kvp.first.as<std::string>();
             out.emplace(childKey, std::make_unique<NodeImpl>(kvp.second, parent));
         }
@@ -213,15 +175,18 @@ private:
     }
 };
 
-NodeSource::NodeSource(std::string yaml, std::string path)
-: _root{std::make_unique<NodeImpl>(parse(yaml, path), nullptr)},
-  _path{std::move(path)} {}
+// NodeSource
 
-Node NodeSource::root() const  {
+NodeSource::NodeSource(std::string yaml, std::string path)
+    : _root{std::make_unique<NodeImpl>(parse(yaml, path), nullptr)}, _path{std::move(path)} {}
+
+Node NodeSource::root() const {
     return {&*_root, _path};
 }
 
 NodeSource::~NodeSource() = default;
+
+// Node
 
 bool Node::isScalar() const {
     if (!_impl) {
@@ -262,22 +227,7 @@ Node::operator bool() const {
     auto out = bool(_impl);
     return out;
 }
-//
-//std::string Node::path() const {
-//    std::stringstream out;
-//    this->buildPath(out);
-//    return out.str();
-//}
-//
-//Node::iterator Node::begin() const {
-//    return Node::iterator{_yaml.begin(), this};
-//}
-//
-//Node::iterator Node::end() const {
-//    return Node::iterator{_yaml.end(), this};
-//}
-//
-//
+
 Node Node::stringGet(std::string key) const {
     if (!_impl) {
         return {nullptr, key};
@@ -305,7 +255,64 @@ size_t Node::size() const {
     return _impl->size();
 }
 
-Node::Node(const NodeImpl *impl, std::string path)
-        : _impl{impl}, _path{path} {}
+Node::Node(const NodeImpl* impl, std::string path) : _impl{impl}, _path{path} {}
+
+
+//
+// std::string Node::path() const {
+//    std::stringstream out;
+//    this->buildPath(out);
+//    return out.str();
+//}
+//
+// Node::iterator Node::begin() const {
+//    return Node::iterator{_yaml.begin(), this};
+//}
+//
+// Node::iterator Node::end() const {
+//    return Node::iterator{_yaml.end(), this};
+//}
+//
+//
+
+// Exception Types
+
+std::string InvalidYAMLException::createWhat(const std::string& path,
+                                             const YAML::ParserException& yamlException) {
+    std::stringstream out;
+    out << "Invalid YAML: ";
+    out << "'" << yamlException.msg << "' ";
+    out << "at (Line:Column)=(" << yamlException.mark.line << ":" << yamlException.mark.column
+        << "). ";
+    out << "On node with path '" << path << "'.";
+
+    return out.str();
+}
+//
+// std::string InvalidConversionException::createWhat(const Node& node,
+//                                                   const YAML::BadConversion& yamlException,
+//                                                   const std::type_info& destType) {
+//    std::stringstream out;
+//    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
+//    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
+//        << yamlException.mark.column << "). ";
+//    out << "On node with path '" << node.path() << "': ";
+//    out << node;
+//
+//    return out.str();
+//}
+//
+// std::string InvalidKeyException::createWhat(const std::string& msg,
+//                                            const std::string& key,
+//                                            const Node* node) {
+//    std::stringstream out;
+//    out << "Invalid key '" << key << "': ";
+//    out << msg << " ";
+//    out << "On node with path '" << node->path() << "': ";
+//    out << *node;
+//
+//    return out.str();
+//}
+//
 
 }  // namespace genny

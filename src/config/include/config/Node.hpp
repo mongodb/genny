@@ -23,8 +23,8 @@
 #include <utility>
 #include <vector>
 
-#include <boost/throw_exception.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -69,7 +69,6 @@ enum class NodeType {
 
 class Node {
 public:
-
     /**
      * @return
      *   what type we are.
@@ -104,12 +103,12 @@ public:
 
     explicit operator bool() const;
 
-    template<typename K>
+    template <typename K>
     Node operator[](K&& key) const {
-        if constexpr (std::is_convertible_v<K,std::string>) {
+        if constexpr (std::is_convertible_v<K, std::string>) {
             return stringGet(key);
         } else {
-            static_assert(std::is_convertible_v<K,long>);
+            static_assert(std::is_convertible_v<K, long>);
             return longGet(long(key));
         }
     }
@@ -121,7 +120,7 @@ private:
     friend class NodeImpl;
     friend class NodeSource;
 
-    Node(const class NodeImpl* impl, std::string  path);
+    Node(const class NodeImpl* impl, std::string path);
 
     Node stringGet(std::string key) const;
     Node longGet(long key) const;
@@ -133,6 +132,7 @@ public:
     ~NodeSource();
     NodeSource(std::string yaml, std::string path);
     Node root() const;
+
 private:
     const std::unique_ptr<class NodeImpl> _root;
     std::string _path;
@@ -142,8 +142,7 @@ private:
 }  // namespace genny
 
 
-
-//namespace genny {
+// namespace genny {
 //
 ///**
 // * Specialize this type if you wish to provide
@@ -151,14 +150,14 @@ private:
 // * create a new constructor on `O` that takes in
 // * a `const Node&` as its first parameter.
 // */
-//template <typename O>
-//struct NodeConvert {};
+// template <typename O>
+// struct NodeConvert {};
 //
 ///**
 // * Throw this to indicate a bad path.
 // */
-//class InvalidKeyException : public std::exception {
-//public:
+// class InvalidKeyException : public std::exception {
+// public:
 //    InvalidKeyException(const std::string& msg, const std::string& key, const class Node* node)
 //        : _what{createWhat(msg, key, node)} {}
 //
@@ -166,7 +165,7 @@ private:
 //        return _what.c_str();
 //    }
 //
-//private:
+// private:
 //    static std::string createWhat(const std::string& msg,
 //                                  const std::string& key,
 //                                  const class Node* node);
@@ -176,8 +175,8 @@ private:
 ///**
 // * Throw this to indicate a bad conversion.
 // */
-//class InvalidConversionException : public std::exception {
-//public:
+// class InvalidConversionException : public std::exception {
+// public:
 //    InvalidConversionException(const Node& node,
 //                               const YAML::BadConversion& yamlException,
 //                               const std::type_info& destType)
@@ -187,7 +186,7 @@ private:
 //        return _what.c_str();
 //    }
 //
-//private:
+// private:
 //    static std::string createWhat(const Node& node,
 //                                  const YAML::BadConversion& yamlException,
 //                                  const std::type_info& destType);
@@ -288,8 +287,8 @@ private:
 // * Note that it is intentionally impossible to convert `genny::Node` into
 // * `YAML::Node`.
 // */
-//class Node {
-//public:
+// class Node {
+// public:
 //    /**
 //     * @param yaml
 //     *   source yaml
@@ -416,7 +415,7 @@ private:
 //    friend class IteratorValue;
 //    friend class RNode;
 //
-//private:
+// private:
 //    const YAML::Node _yaml;
 //
 //    using Child = std::unique_ptr<Node>;
@@ -434,7 +433,8 @@ private:
 //
 //    Node(const YAML::Node yaml, const Node* const parent, bool valid)
 //        : _yaml{yaml}, _parent{parent}, _valid{valid}, _type{determineType(yaml)},
-//          _mapChildren{constructMapChildren(yaml)}, _sequenceChildren(constructSequenceChildren(yaml)) {}
+//          _mapChildren{constructMapChildren(yaml)},
+//          _sequenceChildren(constructSequenceChildren(yaml)) {}
 //
 //    Node(const YAML::Node yaml, const Node* const parent)
 //        : Node{yaml, parent, yaml} {}
@@ -495,7 +495,7 @@ private:
 //
 //// "Real" Node
 //// TODO: rename this to Node and existing Node to NodeImpl
-//struct RNode {
+// struct RNode {
 //    const Node* node;
 //    std::string path;
 //
@@ -554,7 +554,8 @@ private:
 //                "        };\n"
 //                "        }  // namesace genny\n"
 //                "\n"
-//                "3.  is a type built into YAML::Node e.g. int, string, vector<built-in-type> etc.");
+//                "3.  is a type built into YAML::Node e.g. int, string, vector<built-in-type>
+//                etc.");
 //        if (!*this) {
 //            return std::nullopt;
 //        }
@@ -593,7 +594,8 @@ private:
 //        auto out = maybe<O, Args...>(std::forward<Args>(args)...);
 //        if (!out) {
 //            BOOST_THROW_EXCEPTION(
-//                    InvalidKeyException("Tried to access node that doesn't exist.", this->path, this->node));
+//                    InvalidKeyException("Tried to access node that doesn't exist.", this->path,
+//                    this->node));
 //        }
 //        return *out;
 //    }
@@ -633,7 +635,8 @@ private:
 //                    // don't have an `O(const Node&, Args...)` constructor
 //                    !isNodeConstructible<O, Args...>() &&
 //                    // and the `YAML::convert<O>` struct has been defined.
-//                    std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())), YAML::Node>>,
+//                    std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())),
+//                    YAML::Node>>,
 //            typename = void,
 //            typename = void>
 //    std::optional<O> _maybeImpl(Args&&... args) const;
@@ -686,7 +689,8 @@ private:
 //     *   callback function mapping from the found node to a `T` instance. If not specified,
 //     *   will use `to<T>()`
 //     * @return
-//     *   a `vector<T>()` formed by applying `f` to each item in the sequence found at `this[plural]`
+//     *   a `vector<T>()` formed by applying `f` to each item in the sequence found at
+//     `this[plural]`
 //     *   or, if that is not defined, by applying `f` to the single-item sequence `[ this[singular]
 //     * ]`.
 //     */
@@ -711,8 +715,8 @@ private:
 //
 //// we can act like a Node if iterated value is a scalar or
 //// we can act like a pair of Nodes if iterated value is a map entry
-//class IteratorValue : public std::pair<const RNode, const RNode>, public RNode {
-//public:
+// class IteratorValue : public std::pair<const RNode, const RNode>, public RNode {
+// public:
 //    template <typename K>
 //    IteratorValue(const RNode parent, K itVal, size_t index)
 //        :  // API like kvp when itVal is being used in map context
@@ -720,15 +724,15 @@ private:
 //           // API like a value where it's being used in sequence context
 //           RNode{parent} {}
 //
-//private:
+// private:
 //    using RNodePair = std::pair<const RNode, const RNode>;
 //};
 //
 //
 //// Wrap a YAML iterator and also keep track of
 //// the index on sequences for use in error-messaging.
-//class Node::iterator {
-//public:
+// class Node::iterator {
+// public:
 //    auto operator++() {
 //        ++index;
 //        return _child.operator++();
@@ -750,7 +754,7 @@ private:
 //        return _child != rhs._child;
 //    }
 //
-//private:
+// private:
 //    // Don't expose or assume the type of YAML::Node.begin()
 //    using IterType = decltype(std::declval<const YAML::Node>().begin());
 //
@@ -763,29 +767,30 @@ private:
 //    size_t index = 0;
 //};
 //
-//template <
+// template <
 //        typename O,
 //        typename... Args,
 //        typename = std::enable_if_t<
 //                // don't have an `O(const Node&, Args...)` constructor
 //                !RNode::isNodeConstructible<O, Args...>() &&
 //                // and the `YAML::convert<O>` struct has been defined.
-//                std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())), YAML::Node>>,
+//                std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())),
+//                YAML::Node>>,
 //        typename = void,
 //        typename = void>
-//std::optional<O> RNode::_maybeImpl(Args&&... args) const {
-//static_assert(sizeof...(args) == 0,
+// std::optional<O> RNode::_maybeImpl(Args&&... args) const {
+// static_assert(sizeof...(args) == 0,
 //              "Cannot pass additional args when using built-in YAML conversion");
 //// If you get compiler errors in _maybeImpl, see the note on the public maybe() function.
-//return std::make_optional<O>(node->_yaml.as<O>());
+// return std::make_optional<O>(node->_yaml.as<O>());
 //}
 //
 //
 //// Need to define this out-of-line because we need the
 //// full class definition in order to iterate over
 //// all the nodes in the plural case.
-//template <typename T, typename F>
-//std::vector<T> Node::getPlural(const std::string& singular,
+// template <typename T, typename F>
+// std::vector<T> Node::getPlural(const std::string& singular,
 //                               const std::string& plural,
 //                               F&& f) const {
 //    std::vector<T> out;
