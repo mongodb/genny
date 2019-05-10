@@ -142,7 +142,7 @@ const NodeImpl* NodeImpl::stringGet(const std::string &key) const {
 }
 
 const NodeImpl* NodeImpl::longGet(long key) const {
-    if (key < 0 || key > _childSequence.size() || !isSequence()) {
+    if (key < 0 || key >= _childSequence.size() || !isSequence()) {
         return nullptr;
     }
     const auto& child = _childSequence.at(key);

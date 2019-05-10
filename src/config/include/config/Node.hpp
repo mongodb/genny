@@ -84,7 +84,7 @@ public:
     bool isMap() const;
     bool isNull() const;
 
-    operator bool() const;
+    explicit operator bool() const;
 
     template<typename K>
     Node operator[](K&& key) const {

@@ -33,6 +33,18 @@ struct HasConversionSpecialization {
 
 namespace genny {
 
+TEST_CASE("Out of Range") {
+    SECTION("Out of list bounds") {
+        NodeSource ns{"[100]", ""};
+        Node node = ns.root();
+        REQUIRE(node);
+        REQUIRE(node.isSequence());
+        REQUIRE(node[0]);
+        REQUIRE(bool(node[1]) == false);
+        REQUIRE(bool(node[-1]) == false);
+    }
+}
+
 
 //template <>
 //struct NodeConvert<HasConversionSpecialization> {
@@ -265,31 +277,31 @@ TEST_CASE("YAML::Node Equivalency") {
 //            REQUIRE(dne.maybe<int>().value_or(9) == 9);
         }
     }
-//
-//    SECTION("Accessing a Sequence like a Map") {
-//        {
-//            YAML::Node yaml = YAML::Load("a: [0,1]");
-//            REQUIRE(yaml["a"][0].as<int>() == 0);
-//            REQUIRE(bool(yaml["a"]) == true);
-//            REQUIRE(bool(yaml["a"][0]) == true);
-//            // out of range
-//            REQUIRE(bool(yaml["a"][2]) == false);
-//
-//            REQUIRE(bool(yaml["a"]["wtf"]) == false);
-//            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
-//            REQUIRE_THROWS_WITH([&]() { yaml["a"]["wtf"]["even_deeper"].as<int>(); }(),
-//                                Catch::Matches("bad conversion"));
-//        }
-//        {
-//            Node yaml("a: [0,1]", "");
+
+    SECTION("Accessing a Sequence like a Map") {
+        {
+            YAML::Node yaml = YAML::Load("a: [0,1]");
+            REQUIRE(yaml["a"][0].as<int>() == 0);
+            REQUIRE(bool(yaml["a"]) == true);
+            REQUIRE(bool(yaml["a"][0]) == true);
+            // out of range
+            REQUIRE(bool(yaml["a"][2]) == false);
+
+            REQUIRE(bool(yaml["a"]["wtf"]) == false);
+            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+            REQUIRE_THROWS_WITH([&]() { yaml["a"]["wtf"]["even_deeper"].as<int>(); }(),
+                                Catch::Matches("bad conversion"));
+        }
+        {
+            NodeSource nodeSource("a: [0,1]", "");
+            auto yaml = nodeSource.root();
 //            REQUIRE(yaml["a"][0].to<int>() == 0);
-//            REQUIRE(bool(yaml["a"]) == true);
-//            REQUIRE(bool(yaml["a"][0]) == true);
-//            // out of range
-//            REQUIRE(bool(yaml["a"][2]) == false);
-//
-//            REQUIRE(bool(yaml["a"]["wtf"]) == false);
-//            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+            REQUIRE(bool(yaml["a"]) == true);
+            REQUIRE(bool(yaml["a"][0]) == true);
+            // out of range
+            REQUIRE(bool(yaml["a"][2]) == false);
+            REQUIRE(bool(yaml["a"]["wtf"]) == false);
+            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
 //            REQUIRE_THROWS_WITH(
 //                [&]() {
 //                    yaml["a"]["wtf"]["even_deeper"].to<int>();
@@ -297,8 +309,8 @@ TEST_CASE("YAML::Node Equivalency") {
 //                }(),
 //                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
 //                               "exist. On node with path '/a/wtf/even_deeper': "));
-//        }
-//    }
+        }
+    }
 }
 //
 //TEST_CASE("invalid access") {
@@ -448,7 +460,6 @@ nope: false
 )");
     NodeSource nodeSource{yaml, ""};
     Node node{nodeSource.root()};
-    // TODO: this throws now
     REQUIRE(node["nonexistant"].type() == NodeType::Undefined);
 
     REQUIRE(node.type() == NodeType::Map);
