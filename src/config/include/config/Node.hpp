@@ -1,3 +1,5 @@
+#include <utility>
+
 // Copyright 2019-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,8 +24,230 @@
 #include <vector>
 
 #include <boost/throw_exception.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <yaml-cpp/yaml.h>
+
+namespace genny {
+
+/**
+ * Throw this to indicate bad input yaml syntax.
+ */
+class InvalidYAMLException : public std::exception {
+public:
+    InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException)
+        : _what{createWhat(path, yamlException)} {}
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    static std::string createWhat(const std::string& node,
+                                  const YAML::ParserException& yamlException);
+    std::string _what;
+};
+
+enum class NodeType {
+    Undefined,
+    Null,
+    Scalar,
+    Sequence,
+    Map,
+};
+
+class NodeImpl {
+public:
+    using Child = std::unique_ptr<NodeImpl>;
+    using ChildSequence = std::vector<Child>;
+    using ChildMap = std::map<std::string, Child>;
+
+    NodeImpl(YAML::Node node, const NodeImpl* parent)
+    : _node{node},
+      _parent{parent},
+      _nodeType{determineType(_node)},
+      _childSequence(childSequence(node, this)),
+      _childMap(childMap(node, this)) {}
+
+    template<typename K>
+    const NodeImpl& operator[](K&& k) const {
+        return get(std::forward<K>(k));
+    }
+
+    /**
+     * @return
+     *   if we're specified as `null`.
+     *   This is not the same as not being defined.
+     */
+    bool isNull() const {
+        return type() == NodeType::Null;
+    }
+
+    /**
+     * @return
+     *   if we're a scalar type (string, number, etc).
+     */
+    bool isScalar() const {
+        return type() == NodeType::Scalar;
+    }
+
+    /**
+     * @return
+     *   if we're a sequence (array) type.
+     */
+    bool isSequence() const {
+        return type() == NodeType::Sequence;
+    }
+
+    /**
+     * @return
+     *   if we're a map type.
+     */
+    bool isMap() const {
+        return type() == NodeType::Map;
+    }
+
+
+    /**
+     * @return
+     *   what type we are.
+     */
+     NodeType type() const {
+        return _nodeType;
+     }
+
+private:
+    const YAML::Node _node;
+    const NodeImpl* _parent;
+    const NodeType _nodeType;
+
+    const ChildSequence _childSequence;
+    const ChildMap _childMap;
+
+    // Helpers
+
+    template<typename K>
+    const NodeImpl& get(K&& key) const {
+        if constexpr (std::is_convertible_v<K, std::string>) {
+            if(_nodeType == NodeType::Map) {
+                return childMapGet(std::forward<K>(key));
+            } else {
+                // TODO: better error-messaging
+                BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
+            }
+        } else {
+            static_assert(std::is_constructible_v<K, size_t>);
+            if (_nodeType == NodeType::Sequence) {
+                return childSequenceGet(std::forward<K>(key));
+            } else {
+                // TODO: better error-messaging
+                BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
+            }
+        }
+    }
+
+    template<typename K>
+    const NodeImpl& childMapGet(K&& key) const {
+        assert(_nodeType == NodeType::Map);
+        if (auto found = _childMap.find(key); found != _childMap.end()) {
+            return *(found->second);
+        }
+        // TOOD
+        BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
+    }
+
+    template<typename K>
+    const NodeImpl& childSequenceGet(K&& key) const {
+        assert(_nodeType == NodeType::Sequence);
+        return *(_childSequence.at(key));
+        // TODO: handle std::out_of_range
+//        BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
+    }
+
+    static ChildSequence childSequence(YAML::Node node, const NodeImpl* parent) {
+        ChildSequence out;
+        if (node.Type() != YAML::NodeType::Sequence) {
+            return out;
+        }
+        for(const auto& kvp : node) {
+            out.emplace_back(std::make_unique<NodeImpl>(kvp, parent));
+        }
+        return out;
+    }
+
+    static ChildMap childMap(YAML::Node node, const NodeImpl* parent) {
+        ChildMap out;
+        if (node.Type() != YAML::NodeType::Map) {
+            return out;
+        }
+        for(const auto& kvp : node) {
+            auto childKey = kvp.first.as<std::string>();
+            out.emplace(childKey, std::make_unique<NodeImpl>(kvp.second, parent));
+        }
+        return out;
+    }
+
+    static NodeType determineType(YAML::Node node) {
+        auto yamlTyp = node.Type();
+        switch (yamlTyp) {
+            case YAML::NodeType::Undefined:
+                return NodeType::Undefined;
+            case YAML::NodeType::Null:
+                return NodeType::Null;
+            case YAML::NodeType::Scalar:
+                return NodeType::Scalar;
+            case YAML::NodeType::Sequence:
+                return NodeType::Sequence;
+            case YAML::NodeType::Map:
+                return NodeType::Map;
+        }
+    }
+};
+
+////////////////////////////////
+// Node
+
+class Node {
+private:
+    Node(std::string  path, const NodeImpl& impl)
+    : _path{std::move(path)}, _impl{impl} {}
+    const std::string _path;
+    const NodeImpl& _impl;
+};
+
+
+//////////////////////////////////
+// NodeSource
+
+class NodeSource {
+public:
+    NodeSource(std::string yaml, std::string path)
+    : _root{parse(yaml, path), nullptr}, _path{std::move(path)} {}
+
+    template<typename K>
+    const NodeImpl& operator[](K&& k) const {
+        return _root.operator[](std::forward<K>(k));
+    }
+
+    auto type() const {
+        return _root.type();
+    }
+
+    auto isMap() const {
+        return _root.isMap();
+    }
+
+private:
+    const NodeImpl _root;
+    std::string _path;
+
+    // Helper to parse yaml string and throw a useful error message if parsing fails
+    static YAML::Node parse(std::string yaml, const std::string& path);
+};
+
+}  // namespace genny
+
+
 
 //namespace genny {
 //
@@ -87,32 +311,9 @@
 //    std::string _what;
 //};
 //
-///**
-// * Throw this to indicate bad input yaml syntax.
-// */
-//class InvalidYAMLException : public std::exception {
-//public:
-//    InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException)
-//        : _what{createWhat(path, yamlException)} {}
-//
-//    const char* what() const noexcept override {
-//        return _what.c_str();
-//    }
-//
-//private:
-//    static std::string createWhat(const std::string& node,
-//                                  const YAML::ParserException& yamlException);
-//    std::string _what;
-//};
 //
 //
-//enum class NodeType {
-//    Undefined,
-//    Null,
-//    Scalar,
-//    Sequence,
-//    Map,
-//};
+
 //
 ///**
 // * Access YAML configuration
@@ -274,47 +475,6 @@
 //        return _valid && _yaml;
 //    }
 //
-//    /**
-//     * @return
-//     *   if we're specified as `null`.
-//     *   This is not the same as not being defined.
-//     */
-//    bool isNull() const {
-//        return type() == NodeType::Null;
-//    }
-//
-//    /**
-//     * @return
-//     *   if we're a scalar type (string, number, etc).
-//     */
-//    bool isScalar() const {
-//        return type() == NodeType::Scalar;
-//    }
-//
-//    /**
-//     * @return
-//     *   if we're a sequence (array) type.
-//     */
-//    bool isSequence() const {
-//        return type() == NodeType::Sequence;
-//    }
-//
-//    /**
-//     * @return
-//     *   if we're a map type.
-//     */
-//    bool isMap() const {
-//        return type() == NodeType::Map;
-//    }
-//
-//
-//    /**
-//     * @return
-//     *   what type we are.
-//     */
-//     NodeType type() const {
-//        return _type;
-//     }
 //
 //    /**
 //     * @return
@@ -396,22 +556,6 @@
 //    Node(const YAML::Node yaml, const Node* const parent)
 //        : Node{yaml, parent, yaml} {}
 //
-//    static NodeType determineType(YAML::Node node) {
-//        auto yamlTyp = node.Type();
-//        switch (yamlTyp) {
-//            case YAML::NodeType::Undefined:
-//                return NodeType::Undefined;
-//            case YAML::NodeType::Null:
-//                return NodeType::Null;
-//            case YAML::NodeType::Scalar:
-//                return NodeType::Scalar;
-//            case YAML::NodeType::Sequence:
-//                return NodeType::Sequence;
-//            case YAML::NodeType::Map:
-//                return NodeType::Map;
-//        }
-//    }
-//
 //    static ChildSequence constructSequenceChildren(YAML::Node node) {
 //        ChildSequence out;
 //        return out;
@@ -421,8 +565,6 @@
 //        return out;
 //    }
 //
-//    // Helper to parse yaml string and throw a useful error message if parsing fails
-//    static YAML::Node parse(std::string yaml, const std::string& path);
 //
 //    // helper for yamlGet that returns nullopt if no parent
 //    template <typename K>

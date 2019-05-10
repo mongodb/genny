@@ -1,14 +1,14 @@
-//#include <config/Node.hpp>
-//
-//#include <catch2/catch.hpp>
-//
-//#include <map>
-//#include <vector>
-//
-//using namespace genny;
-//
-//struct EmptyStruct {};
-//
+#include <config/Node.hpp>
+
+#include <catch2/catch.hpp>
+
+#include <map>
+#include <vector>
+
+using namespace genny;
+
+struct EmptyStruct {};
+
 //struct ExtractsMsg {
 //    std::string msg;
 //    ExtractsMsg(const Node& node) : msg{node["msg"].to<std::string>()} {}
@@ -26,12 +26,14 @@
 //    }
 //    RequiresParamToEqualNodeX(int any) {}
 //};
-//
-//struct HasConversionSpecialization {
-//    int x;
-//};
-//
-//namespace genny {
+
+struct HasConversionSpecialization {
+    int x;
+};
+
+namespace genny {
+
+
 //template <>
 //struct NodeConvert<HasConversionSpecialization> {
 //    using type = HasConversionSpecialization;
@@ -332,7 +334,7 @@
 //
 //TEST_CASE("Invalid YAML") {
 //    REQUIRE_THROWS_WITH(
-//        [&]() { Node n("foo: {", "foo.yaml"); }(),
+//        [&]() { NodeSource n("foo: {", "foo.yaml"); }(),
 //        Catch::Matches("Invalid YAML: 'end of map flow not found' at \\(Line:Column\\)=\\(0:0\\). "
 //                       "On node with path 'foo.yaml'."));
 //}
@@ -429,50 +431,51 @@
 //    REQUIRE(node["stringMap"]["bee"].maybe<std::string>().value_or<std::string>("7") == "b");
 //}
 //
-//TEST_CASE("Node Type") {
-//    auto yaml = std::string(R"(
-//seven: 7
-//bee: b
-//mixedList: [1,2,"a", [inner]]
-//mixedMap: {seven: 7, bees: [b]}
-//nothing: null
-//sure: true
-//nope: false
-//)");
-//    Node node{yaml, ""};
-//    REQUIRE(node["nonexistant"].type() == Node::NodeType::Undefined);
-//
-//    REQUIRE(node.type() == Node::NodeType::Map);
-//    REQUIRE(node.isMap());
-//
-//    REQUIRE(node["seven"].isScalar());
-//    REQUIRE(node["seven"].type() == Node::NodeType::Scalar);
-//
-//    REQUIRE(node["bee"].isScalar());
-//    REQUIRE(node["bee"].type() == Node::NodeType::Scalar);
-//
-//    REQUIRE(node["mixedList"].isSequence());
-//    REQUIRE(node["mixedList"].type() == Node::NodeType::Sequence);
-//
-//    REQUIRE(node["mixedList"][0].isScalar());
-//    REQUIRE(node["mixedList"][0].type() == Node::NodeType::Scalar);
-//
-//    REQUIRE(node["mixedList"][3].isSequence());
-//    REQUIRE(node["mixedList"][3].type() == Node::NodeType::Sequence);
-//
-//    REQUIRE(node["mixedMap"].isMap());
-//    REQUIRE(node["mixedMap"].type() == Node::NodeType::Map);
-//
-//    REQUIRE(node["mixedMap"]["seven"].isScalar());
-//    REQUIRE(node["mixedMap"]["seven"].type() == Node::NodeType::Scalar);
-//
-//    REQUIRE(node["mixedMap"]["bees"].isSequence());
-//    REQUIRE(node["mixedMap"]["bees"].type() == Node::NodeType::Sequence);
-//
-//    REQUIRE(node["nothing"].isNull());
-//    REQUIRE(node["nothing"].type() == Node::NodeType::Null);
-//
-//    REQUIRE(node["sure"].isScalar());
+TEST_CASE("Node Type") {
+    auto yaml = std::string(R"(
+seven: 7
+bee: b
+mixedList: [1,2,"a", [inner]]
+mixedMap: {seven: 7, bees: [b]}
+nothing: null
+sure: true
+nope: false
+)");
+    NodeSource node{yaml, ""};
+    // TODO: this throws now
+//    REQUIRE(node["nonexistant"].type() == NodeType::Undefined);
+
+    REQUIRE(node.type() == NodeType::Map);
+    REQUIRE(node.isMap());
+
+    REQUIRE(node["seven"].isScalar());
+    REQUIRE(node["seven"].type() == NodeType::Scalar);
+
+    REQUIRE(node["bee"].isScalar());
+    REQUIRE(node["bee"].type() == NodeType::Scalar);
+
+    REQUIRE(node["mixedList"].isSequence());
+    REQUIRE(node["mixedList"].type() == NodeType::Sequence);
+
+    REQUIRE(node["mixedList"][0].isScalar());
+    REQUIRE(node["mixedList"][0].type() == NodeType::Scalar);
+
+    REQUIRE(node["mixedList"][3].isSequence());
+    REQUIRE(node["mixedList"][3].type() == NodeType::Sequence);
+
+    REQUIRE(node["mixedMap"].isMap());
+    REQUIRE(node["mixedMap"].type() == NodeType::Map);
+
+    REQUIRE(node["mixedMap"]["seven"].isScalar());
+    REQUIRE(node["mixedMap"]["seven"].type() == NodeType::Scalar);
+
+    REQUIRE(node["mixedMap"]["bees"].isSequence());
+    REQUIRE(node["mixedMap"]["bees"].type() == NodeType::Sequence);
+
+    REQUIRE(node["nothing"].isNull());
+    REQUIRE(node["nothing"].type() == NodeType::Null);
+
+    REQUIRE(node["sure"].isScalar());
 //    REQUIRE(node["sure"]);
 //    REQUIRE(!!node["sure"]);
 //    REQUIRE(node["sure"].to<bool>());
@@ -487,7 +490,7 @@
 //    REQUIRE(foo);
 //    REQUIRE(*foo == false);
 //    REQUIRE(node["nope"].to<bool>() == false);
-//}
+}
 //
 //// Mickey-mouse versions of structs from context.hpp
 //struct WLCtx;
@@ -988,4 +991,4 @@
 //        }
 //        REQUIRE(count == 1);
 //    }
-//}
+}
