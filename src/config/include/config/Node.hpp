@@ -264,17 +264,8 @@ public:
     NodeSource(std::string yaml, std::string path)
     : _root{parse(yaml, path), nullptr}, _path{std::move(path)} {}
 
-    template<typename K>
-    const Node operator[](K&& key) const {
-        return Node{std::addressof(_root.get(std::forward<K>(key))), v1::toString(key)};
-    }
-
-    auto type() const {
-        return _root.type();
-    }
-
-    auto isMap() const {
-        return _root.isMap();
+    Node root() const {
+        return {&_root, _path};
     }
 
 private:

@@ -64,22 +64,37 @@ YAML::Node NodeSource::parse(std::string yaml, const std::string& path) {
 }
 
 bool Node::isScalar() const {
+    if (!_impl) {
+        return false;
+    }
     return _impl->isScalar();
 }
 
 NodeType Node::type() const {
+    if (!_impl) {
+        return NodeType::Undefined;
+    }
     return _impl->type();
 }
 
 bool Node::isSequence() const {
+    if (!_impl) {
+        return false;
+    }
     return _impl->isSequence();
 }
 
 bool Node::isMap() const {
+    if (!_impl) {
+        return false;
+    }
     return _impl->isMap();
 }
 
 bool Node::isNull() const {
+    if (!_impl) {
+        return false;
+    }
     return _impl->isNull();
 }
 
@@ -102,29 +117,32 @@ Node::operator bool() const {
 //}
 //
 //
-const NodeImpl* NodeImpl::stringGet(const std::string &key) const {
-    // TODO: handle not found
-    return &*(_childMap.find(key)->second);
-}
-
-const NodeImpl* NodeImpl::longGet(long key) const {
-    // TODO: handle out range exception
-    return &*(_childSequence.at(key));
-}
-
-
 Node Node::stringGet(const std::string &key) const {
     const NodeImpl* childImpl = _impl->stringGet(key);
-    // TODO: handle nullptr
     // TODO: append path better
     return {childImpl, key};
 }
 
 Node Node::longGet(long key) const {
     const NodeImpl* childImpl = _impl->longGet(key);
-    // TODO: handle nullptr
     // TODO: append path better
     return {childImpl, std::to_string(key)};
+}
+
+const NodeImpl* NodeImpl::stringGet(const std::string &key) const {
+    if(const auto& found = _childMap.find(key); found != _childMap.end()) {
+        return &*(found->second);
+    } else {
+        return nullptr;
+    }
+}
+
+const NodeImpl* NodeImpl::longGet(long key) const {
+    if (key < 0 || key > _childSequence.size()) {
+        return nullptr;
+    }
+    const auto& child = _childSequence.at(key);
+    return &*(child);
 }
 
 

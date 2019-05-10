@@ -51,67 +51,69 @@ namespace genny {
 //                                  HasConversionSpecialization>);
 //}
 //
-//TEST_CASE("YAML::Node Equivalency") {
-//
-//    //
-//    // The assertions on YAML::Node aren't strictly necessary, but
-//    // having the API shown here justifies the behavior of genny::Node.
-//    //
-//
-//    SECTION("Boolean Conversions") {
-//        {
-//            YAML::Node yaml = YAML::Load("foo: false");
-//            REQUIRE(yaml);
-//            REQUIRE(yaml["foo"]);
-//            REQUIRE(yaml["foo"].IsScalar());
-//            REQUIRE(yaml["foo"].as<bool>() == false);
-//        }
-//    }
-//
-//    SECTION("Invalid Access") {
-//        {
-//            YAML::Node yaml = YAML::Load("foo: a");
-//            // test of the test
-//            REQUIRE(yaml["foo"].as<std::string>() == "a");
-//            // YAML::Node doesn't barf when treating a map like a sequence
-//            REQUIRE(bool(yaml[0]) == false);
-//            // ...but it does barf when treating a scalar like a sequence
-//            REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
-//                                Catch::Matches("operator\\[\\] call on a scalar"));
-//        }
-//
-//        {
-//            Node node{"foo: a", ""};
-//            // test of the test
+TEST_CASE("YAML::Node Equivalency") {
+
+    //
+    // The assertions on YAML::Node aren't strictly necessary, but
+    // having the API shown here justifies the behavior of genny::Node.
+    //
+
+    SECTION("Boolean Conversions") {
+        {
+            YAML::Node yaml = YAML::Load("foo: false");
+            REQUIRE(yaml);
+            REQUIRE(yaml["foo"]);
+            REQUIRE(yaml["foo"].IsScalar());
+            REQUIRE(yaml["foo"].as<bool>() == false);
+        }
+    }
+
+    SECTION("Invalid Access") {
+        {
+            YAML::Node yaml = YAML::Load("foo: a");
+            // test of the test
+            REQUIRE(yaml["foo"].as<std::string>() == "a");
+            // YAML::Node doesn't barf when treating a map like a sequence
+            REQUIRE(bool(yaml[0]) == false);
+            // ...but it does barf when treating a scalar like a sequence
+            REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
+                                Catch::Matches("operator\\[\\] call on a scalar"));
+        }
+
+        {
+            NodeSource nodeSource{"foo: a", ""};
+            Node node {nodeSource.root()};
+            // test of the test
 //            REQUIRE(node["foo"].to<std::string>() == "a");
-//            // don't barf when treating a map like a sequence
-//            REQUIRE(bool(node[0]) == false);
-//            // ...but barf when treating a scalar like a sequence
-//            REQUIRE_THROWS_WITH(
-//                [&]() { node["foo"][0]; }(),
-//                Catch::Matches(
-//                    "Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
-//                    "a sequence\\? On node with path '/foo': a"));
-//        }
-//
-//        {
-//            YAML::Node yaml = YAML::Load("foos: [{a: 1}]");
-//            // YAML::Node doesn't barf when treating a map like a sequence
-//            REQUIRE(bool(yaml["foos"]["a"]) == false);
-//            // ...but it does barf when treating a scalar like a sequence
-//            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].as<int>(); }(),
-//                                Catch::Matches("bad conversion"));
-//        }
-//        {
-//            Node yaml("foos: [{a: 1}]", "");
-//            REQUIRE(bool(yaml["foos"]["a"]) == false);
+            // don't barf when treating a map like a sequence
+            REQUIRE(bool(node[0]) == false);
+            // ...but barf when treating a scalar like a sequence
+            REQUIRE_THROWS_WITH(
+                [&]() { node["foo"][0]; }(),
+                Catch::Matches(
+                    "Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
+                    "a sequence\\? On node with path '/foo': a"));
+        }
+
+        {
+            YAML::Node yaml = YAML::Load("foos: [{a: 1}]");
+            // YAML::Node doesn't barf when treating a map like a sequence
+            REQUIRE(bool(yaml["foos"]["a"]) == false);
+            // ...but it does barf when treating a scalar like a sequence
+            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].as<int>(); }(),
+                                Catch::Matches("bad conversion"));
+        }
+        {
+            NodeSource nodeSource("foos: [{a: 1}]", "");
+            Node yaml {nodeSource.root()};
+            REQUIRE(bool(yaml["foos"]["a"]) == false);
 //            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
 //                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
 //                                               "exist. On node with path '/foos/a': "));
 //            // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
 //            REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
-//        }
-//    }
+        }
+    }
 //
 //    SECTION("iteration over sequences") {
 //        {
@@ -178,28 +180,29 @@ namespace genny {
 //        }
 //    }
 //
-//    SECTION("we're equivalent to YAML::Node's handling of null and missing values") {
-//        {
-//            YAML::Node yaml = YAML::Load("foo: null");
-//
-//            REQUIRE(yaml["foo"].IsDefined() == true);
-//            REQUIRE(yaml["foo"].IsNull() == true);
-//            REQUIRE(bool(yaml["foo"]) == true);
-//
-//            REQUIRE(yaml["bar"].IsDefined() == false);
-//            REQUIRE(yaml["bar"].IsNull() == false);
-//            REQUIRE(bool(yaml["bar"]) == false);
-//        }
-//
-//        {
-//            Node node{"foo: null", ""};
-//            REQUIRE(node["foo"].isNull() == true);
-//            REQUIRE(bool(node["foo"]) == true);
-//
-//            REQUIRE(node["bar"].isNull() == false);
-//            REQUIRE(bool(node["bar"]) == false);
-//        }
-//    }
+    SECTION("we're equivalent to YAML::Node's handling of null and missing values") {
+        {
+            YAML::Node yaml = YAML::Load("foo: null");
+
+            REQUIRE(yaml["foo"].IsDefined() == true);
+            REQUIRE(yaml["foo"].IsNull() == true);
+            REQUIRE(bool(yaml["foo"]) == true);
+
+            REQUIRE(yaml["bar"].IsDefined() == false);
+            REQUIRE(yaml["bar"].IsNull() == false);
+            REQUIRE(bool(yaml["bar"]) == false);
+        }
+
+        {
+            NodeSource nodeSource{"foo: null", ""};
+            Node node{nodeSource.root()};
+            REQUIRE(node["foo"].isNull() == true);
+            REQUIRE(bool(node["foo"]) == true);
+
+            REQUIRE(node["bar"].isNull() == false);
+            REQUIRE(bool(node["bar"]) == false);
+        }
+    }
 //
 //    SECTION("Can convert to map<str,str>") {
 //        {
@@ -236,30 +239,31 @@ namespace genny {
 //        }
 //    }
 //
-//    SECTION("Missing values are boolean false") {
-//        {
-//            YAML::Node yaml = YAML::Load("{}");
-//            REQUIRE(bool(yaml) == true);
-//            auto dne = yaml["doesntexist"];
-//            REQUIRE(bool(dne) == false);
-//            REQUIRE((!dne) == true);
-//            if (dne) {
-//                FAIL("doesn't exist is boolean false");
-//            }
-//        }
-//        {
-//            Node node("{}", "");
-//            REQUIRE(bool(node) == true);
-//            auto dne = node["doesntexist"];
-//            REQUIRE(bool(dne) == false);
-//            REQUIRE((!dne) == true);
-//            if (dne) {
-//                FAIL("doesn't exist is boolean false");
-//            }
+    SECTION("Missing values are boolean false") {
+        {
+            YAML::Node yaml = YAML::Load("{}");
+            REQUIRE(bool(yaml) == true);
+            auto dne = yaml["doesntexist"];
+            REQUIRE(bool(dne) == false);
+            REQUIRE((!dne) == true);
+            if (dne) {
+                FAIL("doesn't exist is boolean false");
+            }
+        }
+        {
+            NodeSource nodeSource("{}", "");
+            Node node {nodeSource.root()};
+            REQUIRE(bool(node) == true);
+            auto dne = node["doesntexist"];
+            REQUIRE(bool(dne) == false);
+            REQUIRE((!dne) == true);
+            if (dne) {
+                FAIL("doesn't exist is boolean false");
+            }
 //            REQUIRE(dne.maybe<int>() == std::nullopt);
 //            REQUIRE(dne.maybe<int>().value_or(9) == 9);
-//        }
-//    }
+        }
+    }
 //
 //    SECTION("Accessing a Sequence like a Map") {
 //        {
@@ -294,7 +298,7 @@ namespace genny {
 //                               "exist. On node with path '/a/wtf/even_deeper': "));
 //        }
 //    }
-//}
+}
 //
 //TEST_CASE("invalid access") {
 //    auto yaml = std::string(R"(
@@ -441,9 +445,10 @@ nothing: null
 sure: true
 nope: false
 )");
-    NodeSource node{yaml, ""};
+    NodeSource nodeSource{yaml, ""};
+    Node node{nodeSource.root()};
     // TODO: this throws now
-//    REQUIRE(node["nonexistant"].type() == NodeType::Undefined);
+    REQUIRE(node["nonexistant"].type() == NodeType::Undefined);
 
     REQUIRE(node.type() == NodeType::Map);
     REQUIRE(node.isMap());
@@ -485,7 +490,7 @@ nope: false
 //    REQUIRE(*sure);
 //    REQUIRE(node["sure"].to<bool>());
 //
-//    REQUIRE(node["nope"].isScalar());
+    REQUIRE(node["nope"].isScalar());
 //    auto foo = node["nope"].maybe<bool>();
 //    REQUIRE(foo);
 //    REQUIRE(*foo == false);
