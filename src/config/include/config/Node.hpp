@@ -67,13 +67,6 @@ enum class NodeType {
     Map,
 };
 
-class NodeImpl;
-
-////////////////////////////////
-// Node
-
-// allowed to be stack-allocated
-// may not have pointers to objects other than NodeImpls
 class Node {
 public:
 
@@ -122,75 +115,22 @@ public:
     }
 
 private:
+    const class NodeImpl* _impl;
+    const std::string _path;
+
     friend class NodeImpl;
     friend class NodeSource;
 
-    Node(const NodeImpl* impl, std::string  path)
-    : _impl{impl}, _path{path} {}
-    const NodeImpl* _impl;
-    const std::string _path;
+    Node(const class NodeImpl* impl, std::string  path);
 
     Node stringGet(std::string key) const;
     Node longGet(long key) const;
 };
 
 
-// Always owned by NodeSource (below)
-class NodeImpl {
-public:
-    using Child = std::unique_ptr<NodeImpl>;
-    using ChildSequence = std::vector<Child>;
-    using ChildMap = std::map<std::string, Child>;
-
-    NodeImpl(YAML::Node node, const NodeImpl* parent);
-
-    bool isNull() const;
-
-    bool isScalar() const;
-
-    bool isSequence() const;
-
-    bool isMap() const;
-
-     NodeType type() const;
-
-    size_t size() const;
-
-    template<typename K>
-    const NodeImpl& get(K&& key) const {
-        if constexpr (std::is_convertible_v<K, std::string>) {
-            return childMapGet(std::forward<K>(key));
-        } else {
-            static_assert(std::is_constructible_v<K, size_t>);
-            return childSequenceGet(std::forward<K>(key));
-        }
-    }
-
-    const NodeImpl* stringGet(const std::string &key) const;
-    const NodeImpl* longGet(long key) const;
-
-private:
-    const YAML::Node _node;
-    const NodeImpl* _parent;
-    const NodeType _nodeType;
-
-    const ChildSequence _childSequence;
-    const ChildMap _childMap;
-
-    const NodeImpl& childMapGet(const std::string& key) const;
-    const NodeImpl& childSequenceGet(const long key) const;
-    static ChildSequence childSequence(YAML::Node node, const NodeImpl* parent);
-    static ChildMap childMap(YAML::Node node, const NodeImpl* parent);
-    static NodeType determineType(YAML::Node node);
-};
-
-
-//////////////////////////////////
-// NodeSource
-
-// the owner of the root yaml node
 class NodeSource {
 public:
+    ~NodeSource();
     NodeSource(std::string yaml, std::string path);
     Node root() const;
 private:
