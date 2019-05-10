@@ -128,13 +128,19 @@ private:
         if (const auto& found = _childMap.find(key); found != _childMap.end()) {
             return &*(found->second);
         } else {
-            return this->_self;
+            if (!this->_parent) {
+                return nullptr;
+            }
+            return this->_parent->rest->get(key);
         }
     }
 
     const BaseNodeImpl* longGet(long key) const {
-        if (key < 0 || key >= _childSequence.size() || !isSequence()) {
-            return this->_self;
+        if (!isSequence()) {
+            return nullptr;
+        }
+        if (key < 0 || key >= _childSequence.size()) {
+            return nullptr;
         }
         const auto& child = _childSequence.at(key);
         return &*(child);

@@ -360,6 +360,22 @@ nope: false
 //                       "On node with path 'foo.yaml'."));
 //}
 //
+TEST_CASE("inheritance sequence-val can inherit") {
+    NodeSource ns{R"(
+Coll: Test
+Phases:
+- Doc: foo
+)", ""};
+    auto node = ns.root();
+    {
+        auto phases = node["Phases"];
+        auto zero = phases[0];
+        auto coll = zero["Coll"];
+        REQUIRE(coll.to<std::string>() == "Test");
+    }
+    REQUIRE(node["Phases"][0]["Coll"].to<std::string>() == "Test");
+}
+
 TEST_CASE("inheritance from pr") {
     {
         NodeSource ns{"seven: 7", ""};
