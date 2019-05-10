@@ -118,16 +118,41 @@ Node::operator bool() const {
 //}
 //
 //
-Node Node::stringGet(const std::string &key) const {
+Node Node::stringGet(std::string key) const {
+    if (!_impl) {
+        return {nullptr, key};
+    }
     const NodeImpl* childImpl = _impl->stringGet(key);
     // TODO: append path better
     return {childImpl, key};
 }
 
 Node Node::longGet(long key) const {
+    std::string keyStr = std::to_string(key);
+    if (!_impl) {
+        return {nullptr, keyStr};
+    }
+
     const NodeImpl* childImpl = _impl->longGet(key);
     // TODO: append path better
-    return {childImpl, std::to_string(key)};
+    return {childImpl, keyStr};
+}
+
+size_t Node::size() const {
+    if (!_impl) {
+        return 0;
+    }
+    return _impl->size();
+}
+
+size_t NodeImpl::size() const {
+    if (isMap()) {
+        return _childMap.size();
+    } else if (isSequence()) {
+        return _childSequence.size();
+    } else {
+        return 0;
+    }
 }
 
 const NodeImpl* NodeImpl::stringGet(const std::string &key) const {

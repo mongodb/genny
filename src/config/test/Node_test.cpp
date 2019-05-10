@@ -33,6 +33,13 @@ struct HasConversionSpecialization {
 
 namespace genny {
 
+TEST_CASE("Nested sequence like map") {
+    NodeSource nodeSource("a: []", "");
+    auto yaml = nodeSource.root();
+    yaml["a"]["wtf"]["even_deeper"];
+//    REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+}
+
 TEST_CASE("Out of Range") {
     SECTION("Out of list bounds") {
         NodeSource ns{"[100]", ""};
@@ -578,60 +585,68 @@ nope: false
 //    WLCtx ctx{yaml};
 //}
 //
-//TEST_CASE("size") {
-//    {
-//        Node node{"foo: bar", ""};
-//        REQUIRE(node.size() == 1);
-//        // scalars have size 0
-//        REQUIRE(node["foo"].size() == 0);
-//    }
-//    {
-//        Node node{"{}", ""};
-//        REQUIRE(node.size() == 0);
-//    }
-//    {
-//        Node node{"a: null", ""};
-//        REQUIRE(node["a"].size() == 0);
-//    }
-//    {
-//        Node node{"[1,2,3]", ""};
-//        REQUIRE(node.size() == 3);
-//    }
-//    {
-//        Node node{"a: {b: {c: []}}", ""};
-//        REQUIRE(node.size() == 1);
-//        REQUIRE(node["a"].size() == 1);
-//        REQUIRE(node["a"]["b"].size() == 1);
-//        REQUIRE(node["a"]["b"]["c"].size() == 0);
-//    }
-//    {
-//        Node node{"", ""};
-//        REQUIRE(node.size() == 0);
-//    }
-//    {
-//        Node node{
-//            "foos: [1,2,3]\n"
-//            "children: {a: 7}",
-//            ""};
-//        REQUIRE(node.size() == 2);
-//        REQUIRE(node["foos"].size() == 3);
-//        // inheritance
+TEST_CASE("size") {
+    {
+        NodeSource ns{"foo: bar", ""};
+        Node node = ns.root();
+        REQUIRE(node.size() == 1);
+        // scalars have size 0
+        REQUIRE(node["foo"].size() == 0);
+    }
+    {
+        NodeSource ns{"{}", ""};
+        Node node = ns.root();
+        REQUIRE(node.size() == 0);
+    }
+    {
+        NodeSource ns{"a: null", ""};
+        Node node = ns.root();
+        REQUIRE(node["a"].size() == 0);
+    }
+    {
+        NodeSource ns{"[1,2,3]", ""};
+        Node node = ns.root();
+        REQUIRE(node.size() == 3);
+    }
+    {
+        NodeSource ns{"a: {b: {c: []}}", ""};
+        Node node = ns.root();
+        REQUIRE(node.size() == 1);
+        REQUIRE(node["a"].size() == 1);
+        REQUIRE(node["a"]["b"].size() == 1);
+        REQUIRE(node["a"]["b"]["c"].size() == 0);
+    }
+    {
+        NodeSource ns{"", ""};
+        Node node = ns.root();
+        REQUIRE(node.size() == 0);
+    }
+    {
+        NodeSource ns{
+            "foos: [1,2,3]\n"
+            "children: {a: 7}",
+            ""};
+        Node node = ns.root();
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["foos"].size() == 3);
+        // inheritance
 //        REQUIRE(node["children"]["foos"].size() == 3);
-//        REQUIRE(node["children"].size() == 1);
-//        // scalars have size 0
-//        REQUIRE(node["children"]["a"].size() == 0);
-//    }
-//    {
-//        Node node{
-//            "foos: [1,2,3]\n"
-//            "children: {a: 7}",
-//            ""};
+        REQUIRE(node["children"].size() == 1);
+        // scalars have size 0
+        REQUIRE(node["children"]["a"].size() == 0);
+    }
+    {
+        NodeSource ns{
+            "foos: [1,2,3]\n"
+            "children: {a: 7}",
+            ""};
+        Node node = ns.root();
 //        REQUIRE(node["foos"][".."].size() == 2);
 //        REQUIRE(node["foos"][".."][".."].size() == 0);
 //        REQUIRE(node["foos"][".."][".."][".."].size() == 0);
 //        REQUIRE(node["foos"][".."][".."][".."][".."].size() == 0);
-//    }
-//}
+    }
+}
 //
 //TEST_CASE("Node inheritance") {
 //    auto yaml = std::string(R"(

@@ -77,12 +77,13 @@ class NodeImpl;
 class Node {
 public:
 
-
     NodeType type() const;
     bool isScalar() const;
     bool isSequence() const;
     bool isMap() const;
     bool isNull() const;
+
+    size_t size() const;
 
     explicit operator bool() const;
 
@@ -105,7 +106,7 @@ private:
     const NodeImpl* _impl;
     const std::string _path;
 
-    Node stringGet(const std::string& key) const;
+    Node stringGet(std::string key) const;
     Node longGet(long key) const;
 };
 
@@ -164,6 +165,8 @@ public:
      NodeType type() const {
         return _nodeType;
      }
+
+    size_t size() const;
 
     template<typename K>
     const NodeImpl& get(K&& key) const {
