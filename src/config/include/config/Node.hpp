@@ -191,20 +191,13 @@ private:
 // the owner of the root yaml node
 class NodeSource {
 public:
-    NodeSource(std::string yaml, std::string path)
-    : _root{parse(yaml, path), nullptr}, _path{std::move(path)} {}
-
-    Node root() const {
-        return {&_root, _path};
-    }
-
+    NodeSource(std::string yaml, std::string path);
+    Node root() const;
 private:
-    const NodeImpl _root;
+    const std::unique_ptr<class NodeImpl> _root;
     std::string _path;
-
-    // Helper to parse yaml string and throw a useful error message if parsing fails
-    static YAML::Node parse(std::string yaml, const std::string& path);
 };
+
 
 }  // namespace genny
 

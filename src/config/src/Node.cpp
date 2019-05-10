@@ -55,12 +55,25 @@ std::string InvalidYAMLException::createWhat(const std::string& path,
 //    return out.str();
 //}
 //
-YAML::Node NodeSource::parse(std::string yaml, const std::string& path) {
+namespace {
+
+// Helper to parse yaml string and throw a useful error message if parsing fails
+YAML::Node parse(std::string yaml, const std::string& path) {
     try {
         return YAML::Load(yaml);
     } catch (const YAML::ParserException& x) {
         BOOST_THROW_EXCEPTION(InvalidYAMLException(path, x));
     }
+}
+
+}  // namespace
+
+NodeSource::NodeSource(std::string yaml, std::string path)
+: _root{std::make_unique<NodeImpl>(parse(yaml, path), nullptr)},
+  _path{std::move(path)} {}
+
+Node NodeSource::root() const  {
+    return {&*_root, _path};
 }
 
 bool Node::isScalar() const {
