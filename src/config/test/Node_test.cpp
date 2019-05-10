@@ -9,23 +9,23 @@ using namespace genny;
 
 struct EmptyStruct {};
 
-//struct ExtractsMsg {
-//    std::string msg;
-//    ExtractsMsg(const Node& node) : msg{node["msg"].to<std::string>()} {}
-//};
-//
-//struct TakesEmptyStructAndExtractsMsg {
-//    std::string msg;
-//    TakesEmptyStructAndExtractsMsg(const Node& node, EmptyStruct*)
-//        : msg{node["msg"].to<std::string>()} {}
-//};
-//
-//struct RequiresParamToEqualNodeX {
-//    RequiresParamToEqualNodeX(const Node& node, int x) {
-//        REQUIRE(node["x"].to<int>() == x);
-//    }
-//    RequiresParamToEqualNodeX(int any) {}
-//};
+struct ExtractsMsg {
+    std::string msg;
+    ExtractsMsg(const Node& node) : msg{node["msg"].to<std::string>()} {}
+};
+
+struct TakesEmptyStructAndExtractsMsg {
+    std::string msg;
+    TakesEmptyStructAndExtractsMsg(const Node& node, EmptyStruct*)
+        : msg{node["msg"].to<std::string>()} {}
+};
+
+struct RequiresParamToEqualNodeX {
+    RequiresParamToEqualNodeX(const Node& node, int x) {
+        REQUIRE(node["x"].to<int>() == x);
+    }
+    RequiresParamToEqualNodeX(int any) {}
+};
 
 struct HasConversionSpecialization {
     int x;
@@ -57,7 +57,7 @@ template <>
 struct NodeConvert<HasConversionSpecialization> {
     using type = HasConversionSpecialization;
     static type convert(const Node& node, int delta) {
-        return {node["x"].to<int>() + delta + 2};
+        return {node["x"].to<int>() + delta};
     }
 };
 
@@ -719,32 +719,34 @@ TEST_CASE("size") {
 //    }
 //}
 //
-//TEST_CASE("Node Built-Ins Construction") {
-//    auto yaml = std::string(R"(
-//SomeString: some_string
-//IntList: [1,2,3]
-//ListOfMapStringString:
-//- {a: A}
-//- {b: B}
-//)");
-//    Node node(yaml, "");
-//
-//    { REQUIRE(node["SomeString"].to<std::string>() == "some_string"); }
-//    { REQUIRE((node["IntList"].to<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
-//    {
-//        using ListMapStrStr = std::vector<std::map<std::string, std::string>>;
-//        auto expect = ListMapStrStr{{{"a", "A"}}, {{"b", "B"}}};
-//        auto actual = node["ListOfMapStringString"].to<ListMapStrStr>();
-//
-//        REQUIRE(expect == actual);
-//    }
-//}
-//
-//TEST_CASE("Specialization") {
-//    Node node("{x: 8}", "");
-//    REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
-//}
-//
+TEST_CASE("Node Built-Ins Construction") {
+    auto yaml = std::string(R"(
+SomeString: some_string
+IntList: [1,2,3]
+ListOfMapStringString:
+- {a: A}
+- {b: B}
+)");
+    NodeSource ns(yaml, "");
+    Node node = ns.root();
+
+    { REQUIRE(node["SomeString"].to<std::string>() == "some_string"); }
+    { REQUIRE((node["IntList"].to<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
+    {
+        using ListMapStrStr = std::vector<std::map<std::string, std::string>>;
+        auto expect = ListMapStrStr{{{"a", "A"}}, {{"b", "B"}}};
+        auto actual = node["ListOfMapStringString"].to<ListMapStrStr>();
+
+        REQUIRE(expect == actual);
+    }
+}
+
+TEST_CASE("Specialization") {
+    NodeSource ns("{x: 8}", "");
+    Node node = ns.root();
+    REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
+}
+
 //TEST_CASE("Node Paths") {
 //    auto yaml = std::string(R"(
 //msg: bar
@@ -808,28 +810,30 @@ TEST_CASE("size") {
 //    }
 //}
 //
-//TEST_CASE("Node Simple User-Defined Conversions") {
-//    EmptyStruct context;
-//
-//    auto yaml = std::string(R"(
-//msg: bar
-//One: {msg: foo}
-//Two: {}
-//)");
-//    Node node(yaml, "");
-//
-//    {
-//        TakesEmptyStructAndExtractsMsg one =
-//            node["One"].to<TakesEmptyStructAndExtractsMsg>(&context);
-//        REQUIRE(one.msg == "foo");
-//    }
+TEST_CASE("Node Simple User-Defined Conversions") {
+    EmptyStruct context;
+
+    auto yaml = std::string(R"(
+msg: bar
+One: {msg: foo}
+Two: {}
+)");
+    NodeSource ns(yaml, "");
+    auto node = ns.root();
+
+    {
+        TakesEmptyStructAndExtractsMsg one =
+            node["One"].to<TakesEmptyStructAndExtractsMsg>(&context);
+        REQUIRE(one.msg == "foo");
+    }
+// inheritance
 //    {
 //        TakesEmptyStructAndExtractsMsg one =
 //            node["Two"].to<TakesEmptyStructAndExtractsMsg>(&context);
 //        REQUIRE(one.msg == "bar");
 //    }
-//}
-//
+}
+
 //TEST_CASE("operator-left-shift") {
 //    {
 //        Node node{"Foo: 7", ""};
@@ -910,43 +914,45 @@ TEST_CASE("size") {
 //    }
 //}
 //
-//TEST_CASE("maybe") {
-//    auto yaml = std::string(R"(
-//Children:
-//  msg: inherited
-//  overrides: {msg: overridden}
-//  deep:
-//    nesting:
-//      can:
-//        still: {inherit: {}, override: {msg: deeply_overridden}}
-//)");
-//    Node node(yaml, "");
-//
-//    node["does"]["not"]["exist"].maybe<RequiresParamToEqualNodeX>(3);
-//    REQUIRE(!node["does"]["not"]["exist"].maybe<ExtractsMsg>());
-//    REQUIRE(node["Children"].maybe<ExtractsMsg>()->msg == "inherited");
-//    REQUIRE(node["Children"]["overrides"].maybe<ExtractsMsg>()->msg == "overridden");
+TEST_CASE("maybe") {
+    auto yaml = std::string(R"(
+Children:
+  msg: inherited
+  overrides: {msg: overridden}
+  deep:
+    nesting:
+      can:
+        still: {inherit: {}, override: {msg: deeply_overridden}}
+)");
+    NodeSource ns(yaml, "");
+    auto node = ns.root();
+
+    node["does"]["not"]["exist"].maybe<RequiresParamToEqualNodeX>(3);
+    REQUIRE(!node["does"]["not"]["exist"].maybe<ExtractsMsg>());
+    REQUIRE(node["Children"].maybe<ExtractsMsg>()->msg == "inherited");
+    REQUIRE(node["Children"]["overrides"].maybe<ExtractsMsg>()->msg == "overridden");
 //    REQUIRE(
 //        node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg ==
 //        "inherited");
-//    REQUIRE(
-//        node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsMsg>()->msg ==
-//        "deeply_overridden");
-//}
-//
-//TEST_CASE("Configurable additional-ctor-params Conversions") {
-//    auto yaml = std::string(R"(
-//x: 9
-//a: {x: 7}
-//b: {}
-//)");
-//    Node node(yaml, "");
-//
-//    node.to<RequiresParamToEqualNodeX>(9);
-//    node["a"].to<RequiresParamToEqualNodeX>(7);
+    REQUIRE(
+        node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsMsg>()->msg ==
+        "deeply_overridden");
+}
+
+TEST_CASE("Configurable additional-ctor-params Conversions") {
+    auto yaml = std::string(R"(
+x: 9
+a: {x: 7}
+b: {}
+)");
+    NodeSource ns(yaml, "");
+    auto node = ns.root();
+
+    node.to<RequiresParamToEqualNodeX>(9);
+    node["a"].to<RequiresParamToEqualNodeX>(7);
 //    node["b"].to<RequiresParamToEqualNodeX>(9);
-//}
-//
+}
+
 //TEST_CASE("Iteration") {
 //    auto yaml = std::string(R"(
 //Scalar: foo
