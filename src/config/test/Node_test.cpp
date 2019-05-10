@@ -126,11 +126,11 @@ TEST_CASE("YAML::Node Equivalency") {
             NodeSource nodeSource("foos: [{a: 1}]", "");
             Node yaml {nodeSource.root()};
             REQUIRE(bool(yaml["foos"]["a"]) == false);
-//            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
-//                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
-//                                               "exist. On node with path '/foos/a': "));
-//            // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
-//            REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
+            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
+                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
+                                               "exist. On node with path '/foos/a': "));
+            // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
+            REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
         }
     }
 //
@@ -312,13 +312,13 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(bool(yaml["a"][2]) == false);
             REQUIRE(bool(yaml["a"]["wtf"]) == false);
             REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
-//            REQUIRE_THROWS_WITH(
-//                [&]() {
-//                    yaml["a"]["wtf"]["even_deeper"].to<int>();
-//                    // We could do a better job at reporting that 'a' is a sequence
-//                }(),
-//                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
-//                               "exist. On node with path '/a/wtf/even_deeper': "));
+            REQUIRE_THROWS_WITH(
+                [&]() {
+                    yaml["a"]["wtf"]["even_deeper"].to<int>();
+                    // We could do a better job at reporting that 'a' is a sequence
+                }(),
+                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
+                               "exist. On node with path '/a/wtf/even_deeper': "));
         }
     }
 }
@@ -337,10 +337,10 @@ nope: false
     Node node = ns.root();
 
 //    //    REQUIRE_THROWS_WITH([&](){}(), Catch::Matches(""));
-//    REQUIRE_THROWS_WITH(
-//        [&]() { node[0].to<int>(); }(),
-//        Catch::Matches(
-//            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
+    REQUIRE_THROWS_WITH(
+        [&]() { node[0].to<int>(); }(),
+        Catch::Matches(
+            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
 //    REQUIRE_THROWS_WITH(
 //        [&]() {
 //            // debatable if this should have different error behavior than case above but YAML::Node

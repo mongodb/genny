@@ -49,6 +49,10 @@ using Child = std::unique_ptr<BaseNodeImpl>;
 using ChildSequence = std::vector<Child>;
 using ChildMap = std::map<std::string, Child>;
 
+std::string appendPath(std::string path, std::string key) {
+    return path + "/" + key;
+}
+
 }  // namespace
 
 
@@ -182,7 +186,7 @@ NodeSource::NodeSource(std::string yaml, std::string path)
       _path{std::move(path)} {}
 
 Node NodeSource::root() const {
-    return {&*_root, _path};
+    return {&*_root, _path, ""};
 }
 
 NodeSource::~NodeSource() = default;
@@ -194,6 +198,14 @@ bool Node::isScalar() const {
         return false;
     }
     return _impl->rest->isScalar();
+}
+
+std::string Node::path() const {
+    return _path;
+}
+
+std::string Node::key() const {
+    return _key;
 }
 
 NodeType Node::type() const {
@@ -231,22 +243,21 @@ Node::operator bool() const {
 
 Node Node::stringGet(std::string key) const {
     if (!_impl) {
-        return {nullptr, key};
+        return {nullptr, appendPath(_path, key), key};
     }
     const BaseNodeImpl* childImpl = _impl->rest->stringGet(key);
-    // TODO: append path better
-    return {childImpl, key};
+    return {childImpl, appendPath(_path, key), key};
 }
 
 Node Node::longGet(long key) const {
     std::string keyStr = std::to_string(key);
     if (!_impl) {
-        return {nullptr, keyStr};
+        return {nullptr, appendPath(_path, keyStr), keyStr};
     }
 
     const BaseNodeImpl* childImpl = _impl->rest->longGet(key);
     // TODO: append path better
-    return {childImpl, keyStr};
+    return {childImpl, appendPath(_path, keyStr), keyStr};
 }
 
 size_t Node::size() const {
@@ -256,7 +267,7 @@ size_t Node::size() const {
     return _impl->rest->size();
 }
 
-Node::Node(const BaseNodeImpl* impl, std::string path) : _impl{impl}, _path{path} {}
+Node::Node(const BaseNodeImpl* impl, std::string path, std::string key) : _impl{impl}, _path{path}, _key{key} {}
 
 
 //
@@ -303,18 +314,14 @@ std::string InvalidYAMLException::createWhat(const std::string& path,
 //    return out.str();
 //}
 //
-// std::string InvalidKeyException::createWhat(const std::string& msg,
-//                                            const std::string& key,
-//                                            const Node* node) {
-//    std::stringstream out;
-//    out << "Invalid key '" << key << "': ";
-//    out << msg << " ";
-//    out << "On node with path '" << node->path() << "': ";
+InvalidKeyException::InvalidKeyException(const std::string &msg, const genny::Node* node) {
+    std::stringstream out;
+    out << "Invalid key '" << node->key() << "': ";
+    out << msg << " ";
+    out << "On node with path '" << node->path() << "': ";
 //    out << *node;
-//
-//    return out.str();
-//}
-//
+    _what = out.str();
+}
 
 BaseNodeImpl::BaseNodeImpl(YAML::Node node, const BaseNodeImpl* parent)
 : node{node}, rest{std::make_unique<NodeFields>(this, parent)} {}

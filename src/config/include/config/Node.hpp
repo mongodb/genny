@@ -70,6 +70,21 @@ private:
     std::string _what;
 };
 
+/**
+ * Throw this to indicate a bad path.
+ */
+class InvalidKeyException : public std::exception {
+public:
+    InvalidKeyException(const std::string& msg, const class Node* node);
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    std::string _what;
+};
+
 enum class NodeType {
     Undefined,
     Null,
@@ -118,6 +133,10 @@ public:
     bool isNull() const;
 
     size_t size() const;
+
+    std::string path() const;
+
+    std::string key() const;
 
     explicit operator bool() const;
 
@@ -182,7 +201,7 @@ public:
             return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
         } catch (const YAML::BadConversion& x) {
             // TODO: better error-handling
-            BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
+            BOOST_THROW_EXCEPTION(std::invalid_argument("TODO" + std::to_string(__LINE__)));
 //            BOOST_THROW_EXCEPTION(InvalidConversionException(*this->node, x, typeid(O)));
         }
     }
@@ -215,11 +234,8 @@ public:
     O to(Args&&... args) const {
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
-            // TODO: exception logic
-            BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
-//            BOOST_THROW_EXCEPTION(
-//                    InvalidKeyException("Tried to access node that doesn't exist.", this->path,
-//                    this->node));
+            BOOST_THROW_EXCEPTION(
+                    InvalidKeyException("Tried to access node that doesn't exist.", this));
         }
         return *out;
     }
@@ -228,11 +244,12 @@ public:
 private:
     const class BaseNodeImpl* _impl;
     const std::string _path;
+    const std::string _key;
 
     friend class NodeImpl;
     friend class NodeSource;
 
-    Node(const BaseNodeImpl* impl, std::string path);
+    Node(const BaseNodeImpl* impl, std::string path, std::string key);
 
     Node stringGet(std::string key) const;
     Node longGet(long key) const;
@@ -304,29 +321,8 @@ private:
 };
 
 
-}  // namespace genny
 
 
-// namespace genny {
-//
-///**
-// * Throw this to indicate a bad path.
-// */
-// class InvalidKeyException : public std::exception {
-// public:
-//    InvalidKeyException(const std::string& msg, const std::string& key, const class Node* node)
-//        : _what{createWhat(msg, key, node)} {}
-//
-//    const char* what() const noexcept override {
-//        return _what.c_str();
-//    }
-//
-// private:
-//    static std::string createWhat(const std::string& msg,
-//                                  const std::string& key,
-//                                  const class Node* node);
-//    std::string _what;
-//};
 //
 ///**
 // * Throw this to indicate a bad conversion.
@@ -351,6 +347,8 @@ private:
 //
 //
 //
+
+}  // namespace genny
 
 //
 ///**
