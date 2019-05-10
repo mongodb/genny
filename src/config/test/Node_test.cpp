@@ -37,7 +37,7 @@ TEST_CASE("Nested sequence like map") {
     NodeSource nodeSource("a: []", "");
     auto yaml = nodeSource.root();
     yaml["a"]["wtf"]["even_deeper"];
-//    REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+    REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
 }
 
 TEST_CASE("Out of Range") {
