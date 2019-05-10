@@ -105,13 +105,12 @@ public:
                            phaseContext.get<RateSpec, false>("GlobalRate")) {
         const auto rateSpec = phaseContext.get<RateSpec, false>("GlobalRate");
 
-
-        std::ostringstream defaultRLName;
-        defaultRLName << phaseContext.get<std::string>("Name") << phaseContext.getPhaseNumber();
-        const auto rateLimiterName =
-            phaseContext.get<std::string, false>("RateLimiterName").value_or(defaultRLName.str());
-
         if (rateSpec) {
+            std::ostringstream defaultRLName;
+            defaultRLName << phaseContext.get<std::string>("Name") << phaseContext.getPhaseNumber();
+            const auto rateLimiterName =
+                    phaseContext.get<std::string, false>("RateLimiterName").value_or(defaultRLName.str());
+
             if (!_doesBlock) {
                 throw InvalidConfigurationException(
                     "GlobalRate must be specified alongside either Duration or Repeat, otherwise "
