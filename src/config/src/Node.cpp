@@ -45,21 +45,21 @@ NodeType determineType(YAML::Node node) {
     }
 }
 
-using Child = std::unique_ptr<NodeImpl>;
+using Child = std::unique_ptr<BaseNodeImpl>;
 using ChildSequence = std::vector<Child>;
 using ChildMap = std::map<std::string, Child>;
 
 }  // namespace
 
 
-class NodeImpl {
+class NodeFields {
 public:
-    NodeImpl(YAML::Node node, const NodeImpl* parent)
-        : _node{node},
+    explicit NodeFields(const BaseNodeImpl* self, const BaseNodeImpl* parent)
+        : _self{self},
           _parent{parent},
-          _nodeType{determineType(_node)},
-          _childSequence(childSequence(node, this)),
-          _childMap(childMap(node, this)) {}
+          _nodeType{determineType(self->node)},
+          _childSequence(childSequence(self->node, self)),
+          _childMap(childMap(self->node, self)) {}
 
     bool isNull() const {
         return type() == NodeType::Null;
@@ -93,7 +93,7 @@ public:
     }
 
     template <typename K>
-    const NodeImpl& get(K&& key) const {
+    const BaseNodeImpl& get(K&& key) const {
         if constexpr (std::is_convertible_v<K, std::string>) {
             return childMapGet(std::forward<K>(key));
         } else {
@@ -102,7 +102,7 @@ public:
         }
     }
 
-    const NodeImpl* stringGet(const std::string& key) const {
+    const BaseNodeImpl* stringGet(const std::string& key) const {
         if (!isMap()) {
             return nullptr;
         }
@@ -113,7 +113,7 @@ public:
         }
     }
 
-    const NodeImpl* longGet(long key) const {
+    const BaseNodeImpl* longGet(long key) const {
         if (key < 0 || key >= _childSequence.size() || !isSequence()) {
             return nullptr;
         }
@@ -121,15 +121,15 @@ public:
         return &*(child);
     }
 
+    const BaseNodeImpl* _self;
+    const BaseNodeImpl* _parent;
 private:
-    const YAML::Node _node;
-    const NodeImpl* _parent;
     const NodeType _nodeType;
 
     const ChildSequence _childSequence;
     const ChildMap _childMap;
 
-    const NodeImpl& childMapGet(const std::string& key) const {
+    const BaseNodeImpl& childMapGet(const std::string& key) const {
         if (!isMap()) {
             // TODO: handle bad type
             BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
@@ -141,7 +141,7 @@ private:
         BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
     }
 
-    const NodeImpl& childSequenceGet(const long key) const {
+    const BaseNodeImpl& childSequenceGet(const long key) const {
         if (!isSequence()) {
             // TODO: handle bad type
             BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
@@ -151,25 +151,25 @@ private:
         // TODO: handle std::out_of_range
     }
 
-    static ChildSequence childSequence(YAML::Node node, const NodeImpl* parent) {
+    static ChildSequence childSequence(const YAML::Node node, const BaseNodeImpl* self) {
         ChildSequence out;
         if (node.Type() != YAML::NodeType::Sequence) {
             return out;
         }
-        for (const auto& kvp : node) {
-            out.emplace_back(std::make_unique<NodeImpl>(kvp, parent));
+        for (YAML::Node kvp : node) {
+            out.emplace_back(std::make_unique<BaseNodeImpl>(kvp, self));
         }
         return out;
     }
 
-    static ChildMap childMap(YAML::Node node, const NodeImpl* parent) {
+    static ChildMap childMap(YAML::Node node, const BaseNodeImpl* self) {
         ChildMap out;
         if (node.Type() != YAML::NodeType::Map) {
             return out;
         }
         for (const auto& kvp : node) {
             auto childKey = kvp.first.as<std::string>();
-            out.emplace(childKey, std::make_unique<NodeImpl>(kvp.second, parent));
+            out.emplace(childKey, std::make_unique<BaseNodeImpl>(kvp.second, self));
         }
         return out;
     }
@@ -178,7 +178,8 @@ private:
 // NodeSource
 
 NodeSource::NodeSource(std::string yaml, std::string path)
-    : _root{std::make_unique<NodeImpl>(parse(yaml, path), nullptr)}, _path{std::move(path)} {}
+    : _root{std::make_unique<BaseNodeImpl>(parse(yaml, path), nullptr)},
+      _path{std::move(path)} {}
 
 Node NodeSource::root() const {
     return {&*_root, _path};
@@ -192,35 +193,35 @@ bool Node::isScalar() const {
     if (!_impl) {
         return false;
     }
-    return _impl->isScalar();
+    return _impl->rest->isScalar();
 }
 
 NodeType Node::type() const {
     if (!_impl) {
         return NodeType::Undefined;
     }
-    return _impl->type();
+    return _impl->rest->type();
 }
 
 bool Node::isSequence() const {
     if (!_impl) {
         return false;
     }
-    return _impl->isSequence();
+    return _impl->rest->isSequence();
 }
 
 bool Node::isMap() const {
     if (!_impl) {
         return false;
     }
-    return _impl->isMap();
+    return _impl->rest->isMap();
 }
 
 bool Node::isNull() const {
     if (!_impl) {
         return false;
     }
-    return _impl->isNull();
+    return _impl->rest->isNull();
 }
 
 Node::operator bool() const {
@@ -232,7 +233,7 @@ Node Node::stringGet(std::string key) const {
     if (!_impl) {
         return {nullptr, key};
     }
-    const NodeImpl* childImpl = _impl->stringGet(key);
+    const BaseNodeImpl* childImpl = _impl->rest->stringGet(key);
     // TODO: append path better
     return {childImpl, key};
 }
@@ -243,7 +244,7 @@ Node Node::longGet(long key) const {
         return {nullptr, keyStr};
     }
 
-    const NodeImpl* childImpl = _impl->longGet(key);
+    const BaseNodeImpl* childImpl = _impl->rest->longGet(key);
     // TODO: append path better
     return {childImpl, keyStr};
 }
@@ -252,10 +253,10 @@ size_t Node::size() const {
     if (!_impl) {
         return 0;
     }
-    return _impl->size();
+    return _impl->rest->size();
 }
 
-Node::Node(const NodeImpl* impl, std::string path) : _impl{impl}, _path{path} {}
+Node::Node(const BaseNodeImpl* impl, std::string path) : _impl{impl}, _path{path} {}
 
 
 //
@@ -314,5 +315,8 @@ std::string InvalidYAMLException::createWhat(const std::string& path,
 //    return out.str();
 //}
 //
+
+BaseNodeImpl::BaseNodeImpl(YAML::Node node, const BaseNodeImpl* parent)
+: node{node}, rest{std::make_unique<NodeFields>(this, parent)} {}
 
 }  // namespace genny
