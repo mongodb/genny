@@ -106,12 +106,8 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(node["foo"].to<std::string>() == "a");
             // don't barf when treating a map like a sequence
             REQUIRE(bool(node[0]) == false);
-//            // ...but barf when treating a scalar like a sequence
-//            REQUIRE_THROWS_WITH(
-//                [&]() { node["foo"][0]; }(),
-//                Catch::Matches(
-//                    "Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as "
-//                    "a sequence\\? On node with path '/foo': a"));
+            // ...or when treating a scalar like a sequence (this is arguably incorrect)
+            REQUIRE(bool(node["foo"][0]) == false);
         }
 
         {
