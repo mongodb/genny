@@ -98,12 +98,19 @@ public:
 
     template <typename K>
     const BaseNodeImpl* get(K&& key) const {
+        const BaseNodeImpl* out = nullptr;
         if constexpr (std::is_convertible_v<K, std::string>) {
-            return stringGet(std::forward<K>(key));
+            out = stringGet(std::forward<K>(key));
         } else {
             static_assert(std::is_convertible_v<K, size_t>);
-            return longGet(std::forward<K>(key));
+            out = longGet(std::forward<K>(key));
         }
+        if (out != nullptr) {
+            return out;
+        } else if (_parent == nullptr) {
+            return nullptr;
+        }
+        return _parent->rest->get(key);
     }
 
     const BaseNodeImpl* _self;
@@ -121,13 +128,13 @@ private:
         if (const auto& found = _childMap.find(key); found != _childMap.end()) {
             return &*(found->second);
         } else {
-            return nullptr;
+            return this->_self;
         }
     }
 
     const BaseNodeImpl* longGet(long key) const {
         if (key < 0 || key >= _childSequence.size() || !isSequence()) {
-            return nullptr;
+            return this->_self;
         }
         const auto& child = _childSequence.at(key);
         return &*(child);
