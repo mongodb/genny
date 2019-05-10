@@ -15,67 +15,67 @@
 #include <config/Node.hpp>
 
 #include <boost/core/demangle.hpp>
-
-namespace genny {
-
-std::string InvalidYAMLException::createWhat(const std::string& path,
-                                             const YAML::ParserException& yamlException) {
-    std::stringstream out;
-    out << "Invalid YAML: ";
-    out << "'" << yamlException.msg << "' ";
-    out << "at (Line:Column)=(" << yamlException.mark.line << ":" << yamlException.mark.column
-        << "). ";
-    out << "On node with path '" << path << "'.";
-
-    return out.str();
-}
-
-std::string InvalidConversionException::createWhat(const Node& node,
-                                                   const YAML::BadConversion& yamlException,
-                                                   const std::type_info& destType) {
-    std::stringstream out;
-    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
-    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
-        << yamlException.mark.column << "). ";
-    out << "On node with path '" << node.path() << "': ";
-    out << node;
-
-    return out.str();
-}
-
-std::string InvalidKeyException::createWhat(const std::string& msg,
-                                            const std::string& key,
-                                            const Node* node) {
-    std::stringstream out;
-    out << "Invalid key '" << key << "': ";
-    out << msg << " ";
-    out << "On node with path '" << node->path() << "': ";
-    out << *node;
-
-    return out.str();
-}
-
-YAML::Node Node::parse(std::string yaml, const std::string& path) {
-    try {
-        return YAML::Load(yaml);
-    } catch (const YAML::ParserException& x) {
-        BOOST_THROW_EXCEPTION(InvalidYAMLException(path, x));
-    }
-}
-
-std::string Node::path() const {
-    std::stringstream out;
-    this->buildPath(out);
-    return out.str();
-}
-
-Node::iterator Node::begin() const {
-    return Node::iterator{_yaml.begin(), this};
-}
-
-Node::iterator Node::end() const {
-    return Node::iterator{_yaml.end(), this};
-}
-
-
-}  // namespace genny
+//
+//namespace genny {
+//
+//std::string InvalidYAMLException::createWhat(const std::string& path,
+//                                             const YAML::ParserException& yamlException) {
+//    std::stringstream out;
+//    out << "Invalid YAML: ";
+//    out << "'" << yamlException.msg << "' ";
+//    out << "at (Line:Column)=(" << yamlException.mark.line << ":" << yamlException.mark.column
+//        << "). ";
+//    out << "On node with path '" << path << "'.";
+//
+//    return out.str();
+//}
+//
+//std::string InvalidConversionException::createWhat(const Node& node,
+//                                                   const YAML::BadConversion& yamlException,
+//                                                   const std::type_info& destType) {
+//    std::stringstream out;
+//    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
+//    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
+//        << yamlException.mark.column << "). ";
+//    out << "On node with path '" << node.path() << "': ";
+//    out << node;
+//
+//    return out.str();
+//}
+//
+//std::string InvalidKeyException::createWhat(const std::string& msg,
+//                                            const std::string& key,
+//                                            const Node* node) {
+//    std::stringstream out;
+//    out << "Invalid key '" << key << "': ";
+//    out << msg << " ";
+//    out << "On node with path '" << node->path() << "': ";
+//    out << *node;
+//
+//    return out.str();
+//}
+//
+//YAML::Node Node::parse(std::string yaml, const std::string& path) {
+//    try {
+//        return YAML::Load(yaml);
+//    } catch (const YAML::ParserException& x) {
+//        BOOST_THROW_EXCEPTION(InvalidYAMLException(path, x));
+//    }
+//}
+//
+//std::string Node::path() const {
+//    std::stringstream out;
+//    this->buildPath(out);
+//    return out.str();
+//}
+//
+//Node::iterator Node::begin() const {
+//    return Node::iterator{_yaml.begin(), this};
+//}
+//
+//Node::iterator Node::end() const {
+//    return Node::iterator{_yaml.end(), this};
+//}
+//
+//
+//}  // namespace genny
