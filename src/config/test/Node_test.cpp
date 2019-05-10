@@ -337,14 +337,10 @@ nope: false
         [&]() { node[0].to<int>(); }(),
         Catch::Matches(
             "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
-//    REQUIRE_THROWS_WITH(
-//        [&]() {
-//            // debatable if this should have different error behavior than case above but YAML::Node
-//            // has different behavior depending on accessing scalar[0] versus map[0]
-//            node["seven"][0].to<int>();
-//        }(),
-//        Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a "
-//                       "sequence\\? On node with path '/seven': 7"));
+    REQUIRE_THROWS_WITH(
+        [&]() { node["seven"][0].to<int>(); }(),
+        Catch::Matches(
+            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/seven/0': "));
 //    REQUIRE_THROWS_WITH(
 //        [&]() {
 //            // Debatable if this should fail or not
