@@ -97,14 +97,22 @@ public:
     }
 
     template <typename K>
-    const BaseNodeImpl& get(K&& key) const {
+    const BaseNodeImpl* get(K&& key) const {
         if constexpr (std::is_convertible_v<K, std::string>) {
-            return childMapGet(std::forward<K>(key));
+            return stringGet(std::forward<K>(key));
         } else {
-            static_assert(std::is_constructible_v<K, size_t>);
-            return childSequenceGet(std::forward<K>(key));
+            static_assert(std::is_convertible_v<K, size_t>);
+            return longGet(std::forward<K>(key));
         }
     }
+
+    const BaseNodeImpl* _self;
+    const BaseNodeImpl* _parent;
+private:
+    const NodeType _nodeType;
+
+    const ChildSequence _childSequence;
+    const ChildMap _childMap;
 
     const BaseNodeImpl* stringGet(const std::string& key) const {
         if (!isMap()) {
@@ -124,14 +132,6 @@ public:
         const auto& child = _childSequence.at(key);
         return &*(child);
     }
-
-    const BaseNodeImpl* _self;
-    const BaseNodeImpl* _parent;
-private:
-    const NodeType _nodeType;
-
-    const ChildSequence _childSequence;
-    const ChildMap _childMap;
 
     static ChildSequence childSequence(const YAML::Node node, const BaseNodeImpl* self) {
         ChildSequence out;
@@ -222,7 +222,7 @@ Node Node::stringGet(std::string key) const {
     if (!_impl) {
         return {nullptr, appendPath(_path, key), key};
     }
-    const BaseNodeImpl* childImpl = _impl->rest->stringGet(key);
+    const BaseNodeImpl* childImpl = _impl->rest->get(key);
     return {childImpl, appendPath(_path, key), key};
 }
 
@@ -232,8 +232,7 @@ Node Node::longGet(long key) const {
         return {nullptr, appendPath(_path, keyStr), keyStr};
     }
 
-    const BaseNodeImpl* childImpl = _impl->rest->longGet(key);
-    // TODO: append path better
+    const BaseNodeImpl* childImpl = _impl->rest->get(key);
     return {childImpl, appendPath(_path, keyStr), keyStr};
 }
 

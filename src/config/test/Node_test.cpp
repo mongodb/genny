@@ -365,6 +365,8 @@ TEST_CASE("inheritance from pr") {
         NodeSource ns{"seven: 7", ""};
         auto node = ns.root();
         REQUIRE(node["foo"]["bar"][0]["seven"].maybe<int>().value_or(8) == 7);
+        REQUIRE(node["seven"].to<int>() == 7);
+        REQUIRE(node["foo"]["bar"][0]["seven"].to<int>() == 7);
     }
 
     NodeSource ns{R"(
