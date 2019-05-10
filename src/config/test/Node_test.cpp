@@ -360,47 +360,49 @@ nope: false
 //                       "On node with path 'foo.yaml'."));
 //}
 //
-//TEST_CASE("inheritance from pr") {
-//    {
-//        Node node{"seven: 7", ""};
-//        REQUIRE(node["foo"]["bar"][0]["seven"].maybe<int>().value_or(8) == 7);
-//    }
-//
-//    Node node{R"(
-//Coll: Test
-//Phases:
-//- Doc: foo
-//- Coll: Bar
-//- Another:
-//  - Nested: {Coll: Baz}
-//)",
-//              ""};
-//
-//    REQUIRE(node["Coll"].to<std::string>() == "Test");
-//    REQUIRE(node["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    // Arguably this should throw? we're treating a sequence like a map
-//    REQUIRE(node["Phases"]["Coll"].to<std::string>() == "Test");
-//    REQUIRE(node["Phases"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    REQUIRE(node["Phases"][0]["Coll"].to<std::string>() == "Test");
-//    REQUIRE(node["Phases"][0]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    REQUIRE(node["Phases"][1]["Coll"].to<std::string>() == "Bar");
-//    REQUIRE(node["Phases"][1]["Coll"].maybe<std::string>().value_or("Or") == "Bar");
-//
-//    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
-//            "Baz");
-//    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
-//            "Baz");
-//}
-//
+TEST_CASE("inheritance from pr") {
+    {
+        NodeSource ns{"seven: 7", ""};
+        auto node = ns.root();
+        REQUIRE(node["foo"]["bar"][0]["seven"].maybe<int>().value_or(8) == 7);
+    }
+
+    NodeSource ns{R"(
+Coll: Test
+Phases:
+- Doc: foo
+- Coll: Bar
+- Another:
+  - Nested: {Coll: Baz}
+)",
+              ""};
+    auto node = ns.root();
+
+    REQUIRE(node["Coll"].to<std::string>() == "Test");
+    REQUIRE(node["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    // Arguably this should throw? we're treating a sequence like a map
+    REQUIRE(node["Phases"]["Coll"].to<std::string>() == "Test");
+    REQUIRE(node["Phases"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    REQUIRE(node["Phases"][0]["Coll"].to<std::string>() == "Test");
+    REQUIRE(node["Phases"][0]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    REQUIRE(node["Phases"][1]["Coll"].to<std::string>() == "Bar");
+    REQUIRE(node["Phases"][1]["Coll"].maybe<std::string>().value_or("Or") == "Bar");
+
+    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
+            "Baz");
+    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
+            "Baz");
+}
+
 TEST_CASE(".maybe and value_or") {
     auto yaml = std::string(R"(
 seven: 7
