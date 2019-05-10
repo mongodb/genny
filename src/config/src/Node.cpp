@@ -133,28 +133,6 @@ private:
     const ChildSequence _childSequence;
     const ChildMap _childMap;
 
-    const BaseNodeImpl& childMapGet(const std::string& key) const {
-        if (!isMap()) {
-            // TODO: handle bad type
-            BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
-        }
-        if (auto found = _childMap.find(key); found != _childMap.end()) {
-            return *(found->second);
-        }
-        // TODO: handle out of range
-        BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
-    }
-
-    const BaseNodeImpl& childSequenceGet(const long key) const {
-        if (!isSequence()) {
-            // TODO: handle bad type
-            BOOST_THROW_EXCEPTION(std::invalid_argument("TODO"));
-        }
-        assert(_nodeType == NodeType::Sequence);
-        return *(_childSequence.at(key));
-        // TODO: handle std::out_of_range
-    }
-
     static ChildSequence childSequence(const YAML::Node node, const BaseNodeImpl* self) {
         ChildSequence out;
         if (node.Type() != YAML::NodeType::Sequence) {
@@ -237,8 +215,7 @@ bool Node::isNull() const {
 }
 
 Node::operator bool() const {
-    auto out = bool(_impl);
-    return out;
+    return bool(_impl);
 }
 
 Node Node::stringGet(std::string key) const {

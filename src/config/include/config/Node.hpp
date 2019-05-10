@@ -216,7 +216,6 @@ public:
         try {
             return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
         } catch (const YAML::BadConversion& x) {
-            // TODO: better error-handling
             BOOST_THROW_EXCEPTION(InvalidConversionException(this, x, typeid(O)));
         }
     }
@@ -268,6 +267,7 @@ public:
 
 
 private:
+    // This will point to the actual instance which may be resolved via inheritance and/or .. lookups
     const class BaseNodeImpl* _impl;
     const std::string _path;
     const std::string _key;
