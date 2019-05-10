@@ -50,13 +50,29 @@ std::string toString(const T& t) {
  template <typename O>
  struct NodeConvert {};
 
+/**
+ * Throw this to indicate a bad conversion.
+ */
+ class InvalidConversionException : public std::exception {
+ public:
+    InvalidConversionException(const class Node* node,
+                               const YAML::BadConversion& yamlException,
+                               const std::type_info& destType);
 
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+ private:
+    std::string _what;
+};
 
 /**
  * Throw this to indicate bad input yaml syntax.
  */
 class InvalidYAMLException : public std::exception {
 public:
+    // TODO: do this in ctor in cpp
     InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException)
         : _what{createWhat(path, yamlException)} {}
 
@@ -201,8 +217,7 @@ public:
             return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
         } catch (const YAML::BadConversion& x) {
             // TODO: better error-handling
-            BOOST_THROW_EXCEPTION(std::invalid_argument("TODO" + std::to_string(__LINE__)));
-//            BOOST_THROW_EXCEPTION(InvalidConversionException(*this->node, x, typeid(O)));
+            BOOST_THROW_EXCEPTION(InvalidConversionException(this, x, typeid(O)));
         }
     }
 
@@ -238,6 +253,17 @@ public:
                     InvalidKeyException("Tried to access node that doesn't exist.", this));
         }
         return *out;
+    }
+
+    /**
+     * @param out
+     *   output stream to dump `node` to in YAML format
+     * @param node
+     *   node to dump to `out`
+     * @return out
+     */
+    friend std::ostream& operator<<(std::ostream& out, const Node& node) {
+        return out << YAML::Dump(node._impl->node);
     }
 
 
@@ -322,31 +348,6 @@ private:
 
 
 
-
-//
-///**
-// * Throw this to indicate a bad conversion.
-// */
-// class InvalidConversionException : public std::exception {
-// public:
-//    InvalidConversionException(const Node& node,
-//                               const YAML::BadConversion& yamlException,
-//                               const std::type_info& destType)
-//        : _what{createWhat(node, yamlException, destType)} {}
-//
-//    const char* what() const noexcept override {
-//        return _what.c_str();
-//    }
-//
-// private:
-//    static std::string createWhat(const Node& node,
-//                                  const YAML::BadConversion& yamlException,
-//                                  const std::type_info& destType);
-//    std::string _what;
-//};
-//
-//
-//
 
 }  // namespace genny
 
@@ -477,16 +478,6 @@ private:
 //        return this->get(key);
 //    }
 //
-//    /**
-//     * @param out
-//     *   output stream to dump `node` to in YAML format
-//     * @param node
-//     *   node to dump to `out`
-//     * @return out
-//     */
-//    friend std::ostream& operator<<(std::ostream& out, const Node& node) {
-//        return out << YAML::Dump(node._yaml);
-//    }
 //
 //    /**
 //     * @return

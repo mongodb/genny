@@ -300,20 +300,19 @@ std::string InvalidYAMLException::createWhat(const std::string& path,
 
     return out.str();
 }
-//
-// std::string InvalidConversionException::createWhat(const Node& node,
-//                                                   const YAML::BadConversion& yamlException,
-//                                                   const std::type_info& destType) {
-//    std::stringstream out;
-//    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
-//    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
-//        << yamlException.mark.column << "). ";
-//    out << "On node with path '" << node.path() << "': ";
-//    out << node;
-//
-//    return out.str();
-//}
-//
+
+InvalidConversionException::InvalidConversionException(const struct Node *node,
+                                                       const YAML::BadConversion &yamlException,
+                                                       const std::type_info &destType) {
+    std::stringstream out;
+    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
+    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
+        << yamlException.mark.column << "). ";
+    out << "On node with path '" << node->path() << "': ";
+    out << *node;
+    this->_what = out.str();
+}
+
 InvalidKeyException::InvalidKeyException(const std::string &msg, const genny::Node* node) {
     std::stringstream out;
     out << "Invalid key '" << node->key() << "': ";
@@ -325,5 +324,6 @@ InvalidKeyException::InvalidKeyException(const std::string &msg, const genny::No
 
 BaseNodeImpl::BaseNodeImpl(YAML::Node node, const BaseNodeImpl* parent)
 : node{node}, rest{std::make_unique<NodeFields>(this, parent)} {}
+
 
 }  // namespace genny

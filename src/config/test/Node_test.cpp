@@ -247,14 +247,14 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(yaml["a"].isNull());
             // .maybe and .to provide stronger guarantees:
             // we throw rather than returning the fallback if the conversion fails
-//            REQUIRE_THROWS_WITH(
-//                [&]() { yaml["a"].maybe<int>(); }(),
-//                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-//                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
-//            REQUIRE_THROWS_WITH(
-//                [&]() { yaml["a"].to<int>(); }(),
-//                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-//                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+            REQUIRE_THROWS_WITH(
+                [&]() { yaml["a"].maybe<int>(); }(),
+                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+            REQUIRE_THROWS_WITH(
+                [&]() { yaml["a"].to<int>(); }(),
+                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
         }
     }
 
@@ -352,9 +352,9 @@ nope: false
 //        }(),
 //        Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a "
 //                       "sequence\\? On node with path '/seven': 7"));
-//    REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
-//                        Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-//                                       "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
+    REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
+                        Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                                       "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
 }
 
 //TEST_CASE("Invalid YAML") {
