@@ -30,6 +30,17 @@
 
 namespace genny {
 
+namespace v1 {
+// Helper to convert arbitrary types to strings if they have operator<<(ostream&) defined.
+// This is used to build up paths when calling `node["foo"]` and `node[0]` etc.
+template <typename T>
+std::string toString(const T& t) {
+    std::stringstream out;
+    out << t;
+    return out.str();
+}
+}  // namespace v1
+
 /**
  * Throw this to indicate bad input yaml syntax.
  */
@@ -56,6 +67,50 @@ enum class NodeType {
     Map,
 };
 
+class NodeImpl;
+
+////////////////////////////////
+// Node
+
+// allowed to be stack-allocated
+// may not have pointers to objects other than NodeImpls
+class Node {
+public:
+
+
+    NodeType type() const;
+    bool isScalar() const;
+    bool isSequence() const;
+    bool isMap() const;
+    bool isNull() const;
+
+    operator bool() const;
+
+    template<typename K>
+    Node operator[](K&& key) const {
+        if constexpr (std::is_convertible_v<K,std::string>) {
+            return stringGet(key);
+        } else {
+            static_assert(std::is_convertible_v<K,long>);
+            return longGet(long(key));
+        }
+    }
+
+private:
+    friend class NodeImpl;
+    friend class NodeSource;
+
+    Node(const NodeImpl* impl, std::string  path)
+    : _impl{impl}, _path{path} {}
+    const NodeImpl* _impl;
+    const std::string _path;
+
+    Node stringGet(const std::string& key) const;
+    Node longGet(long key) const;
+};
+
+
+// Always owned by NodeSource (below)
 class NodeImpl {
 public:
     using Child = std::unique_ptr<NodeImpl>;
@@ -68,11 +123,6 @@ public:
       _nodeType{determineType(_node)},
       _childSequence(childSequence(node, this)),
       _childMap(childMap(node, this)) {}
-
-    template<typename K>
-    const NodeImpl& operator[](K&& k) const {
-        return get(std::forward<K>(k));
-    }
 
     /**
      * @return
@@ -107,7 +157,6 @@ public:
         return type() == NodeType::Map;
     }
 
-
     /**
      * @return
      *   what type we are.
@@ -115,16 +164,6 @@ public:
      NodeType type() const {
         return _nodeType;
      }
-
-private:
-    const YAML::Node _node;
-    const NodeImpl* _parent;
-    const NodeType _nodeType;
-
-    const ChildSequence _childSequence;
-    const ChildMap _childMap;
-
-    // Helpers
 
     template<typename K>
     const NodeImpl& get(K&& key) const {
@@ -145,6 +184,17 @@ private:
             }
         }
     }
+
+    const NodeImpl* stringGet(const std::string &key) const;
+    const NodeImpl* longGet(long key) const;
+
+private:
+    const YAML::Node _node;
+    const NodeImpl* _parent;
+    const NodeType _nodeType;
+
+    const ChildSequence _childSequence;
+    const ChildMap _childMap;
 
     template<typename K>
     const NodeImpl& childMapGet(K&& key) const {
@@ -204,29 +254,19 @@ private:
     }
 };
 
-////////////////////////////////
-// Node
-
-class Node {
-private:
-    Node(std::string  path, const NodeImpl& impl)
-    : _path{std::move(path)}, _impl{impl} {}
-    const std::string _path;
-    const NodeImpl& _impl;
-};
-
 
 //////////////////////////////////
 // NodeSource
 
+// the owner of the root yaml node
 class NodeSource {
 public:
     NodeSource(std::string yaml, std::string path)
     : _root{parse(yaml, path), nullptr}, _path{std::move(path)} {}
 
     template<typename K>
-    const NodeImpl& operator[](K&& k) const {
-        return _root.operator[](std::forward<K>(k));
+    const Node operator[](K&& key) const {
+        return Node{std::addressof(_root.get(std::forward<K>(key))), v1::toString(key)};
     }
 
     auto type() const {
@@ -250,17 +290,6 @@ private:
 
 
 //namespace genny {
-//
-//namespace v1 {
-//// Helper to convert arbitrary types to strings if they have operator<<(ostream&) defined.
-//// This is used to build up paths when calling `node["foo"]` and `node[0]` etc.
-//template <typename T>
-//std::string toString(const T& t) {
-//    std::stringstream out;
-//    out << t;
-//    return out.str();
-//}
-//}  // namespace v1
 //
 ///**
 // * Specialize this type if you wish to provide

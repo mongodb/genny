@@ -476,8 +476,8 @@ nope: false
     REQUIRE(node["nothing"].type() == NodeType::Null);
 
     REQUIRE(node["sure"].isScalar());
-//    REQUIRE(node["sure"]);
-//    REQUIRE(!!node["sure"]);
+    REQUIRE(node["sure"]);
+    REQUIRE(!!node["sure"]);
 //    REQUIRE(node["sure"].to<bool>());
 //
 //    auto sure = node["sure"].maybe<bool>();
