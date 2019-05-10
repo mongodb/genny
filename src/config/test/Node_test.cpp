@@ -739,30 +739,31 @@ TEST_CASE("Specialization") {
     REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
 }
 
-//TEST_CASE("Node Paths") {
-//    auto yaml = std::string(R"(
-//msg: bar
-//One: {msg: foo}
-//Two: {}
-//)");
-//    Node node(yaml, "");
-//    REQUIRE(node["One"][".."].path() == "/One/..");
-//    REQUIRE(node.path() == "");
-//    REQUIRE(node[0].path() == "/0");
-//    REQUIRE(node["msg"].path() == "/msg");
-//    REQUIRE(node["msg"][".."].path() == "/msg/..");
-//    REQUIRE(node["msg"][".."][".."][".."][".."].path() == "/msg/../../../..");
-//    REQUIRE(node["One"]["msg"].path() == "/One/msg");
-//    REQUIRE(node["One"]["msg"][".."].path() == "/One/msg/..");
-//    REQUIRE(node["One"]["msg"][".."]["msg"][".."]["msg"].path() == "/One/msg/../msg/../msg");
-//    REQUIRE(node["One"]["foo"][0][1]["bar"].path() == "/One/foo/0/1/bar");
-//    REQUIRE(node["One"]["foo"][0][1]["bar"][".."].path() == "/One/foo/0/1/bar/..");
-//
-//    REQUIRE_THROWS_WITH(
-//        node["One"]["foo"].to<std::string>(),
-//        Catch::Matches(
-//            R"(Invalid key 'foo': Tried to access node that doesn't exist. On node with path '/One/foo': )"));
-//}
+TEST_CASE("Node Paths") {
+    auto yaml = std::string(R"(
+msg: bar
+One: {msg: foo}
+Two: {}
+)");
+    NodeSource ns(yaml, "");
+    auto node = ns.root();
+    REQUIRE(node["One"][".."].path() == "/One/..");
+    REQUIRE(node.path() == "");
+    REQUIRE(node[0].path() == "/0");
+    REQUIRE(node["msg"].path() == "/msg");
+    REQUIRE(node["msg"][".."].path() == "/msg/..");
+    REQUIRE(node["msg"][".."][".."][".."][".."].path() == "/msg/../../../..");
+    REQUIRE(node["One"]["msg"].path() == "/One/msg");
+    REQUIRE(node["One"]["msg"][".."].path() == "/One/msg/..");
+    REQUIRE(node["One"]["msg"][".."]["msg"][".."]["msg"].path() == "/One/msg/../msg/../msg");
+    REQUIRE(node["One"]["foo"][0][1]["bar"].path() == "/One/foo/0/1/bar");
+    REQUIRE(node["One"]["foo"][0][1]["bar"][".."].path() == "/One/foo/0/1/bar/..");
+
+    REQUIRE_THROWS_WITH(
+        node["One"]["foo"].to<std::string>(),
+        Catch::Matches(
+            R"(Invalid key 'foo': Tried to access node that doesn't exist. On node with path '/One/foo': )"));
+}
 //
 //TEST_CASE("Node iteration path") {
 //    auto yaml = std::string(R"(
@@ -826,22 +827,24 @@ Two: {}
 //    }
 }
 
-//TEST_CASE("operator-left-shift") {
-//    {
-//        Node node{"Foo: 7", ""};
-//        std::stringstream str;
-//        str << node;
-//        REQUIRE(str.str() == "Foo: 7");
-//    }
-//    {
-//        Node node{"Foo: {Bar: Baz}", ""};
-//        std::stringstream str;
-//        str << node;
-//        REQUIRE(str.str() == "Foo: {Bar: Baz}");
-//    }
-//    // rely on YAML::Dump so don't need to enforce much beyond this
-//}
-//
+TEST_CASE("operator-left-shift") {
+    {
+        NodeSource ns{"Foo: 7", ""};
+        auto node = ns.root();
+        std::stringstream str;
+        str << node;
+        REQUIRE(str.str() == "Foo: 7");
+    }
+    {
+        NodeSource ns{"Foo: {Bar: Baz}", ""};
+        auto node = ns.root();
+        std::stringstream str;
+        str << node;
+        REQUIRE(str.str() == "Foo: {Bar: Baz}");
+    }
+    // rely on YAML::Dump so don't need to enforce much beyond this
+}
+
 //TEST_CASE("getPlural") {
 //    {
 //        Node node{"Foo: 7", ""};
@@ -942,6 +945,7 @@ b: {}
 
     node.to<RequiresParamToEqualNodeX>(9);
     node["a"].to<RequiresParamToEqualNodeX>(7);
+    // inheritance
 //    node["b"].to<RequiresParamToEqualNodeX>(9);
 }
 
