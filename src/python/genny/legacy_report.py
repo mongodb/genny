@@ -24,6 +24,7 @@ class _LegacyReportIntermediateFormat(object):
         self.threads = set()
         self.started = sys.maxsize
         self.ended = 0
+        self.ops_per_ns = 0
 
     def finalize(self):
         self.ops_per_ns = self.n / (self.ended - self.started)
