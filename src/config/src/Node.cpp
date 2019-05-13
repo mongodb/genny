@@ -118,7 +118,7 @@ public:
 
     ~NodeImpl() = default;
 
-    operator bool() const {
+    explicit operator bool() const {
         return bool(getNode());
     }
 
@@ -209,7 +209,7 @@ Node NodeSource::root() const {
 NodeSource::~NodeSource() = default;
 
 Node NodeSourceImpl::root() const  {
-    return Node{"", &*_root};
+    return Node{"", _root ? &*_root : nullptr};
 }
 // Node
 
