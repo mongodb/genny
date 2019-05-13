@@ -1,5 +1,3 @@
-#include <utility>
-
 // Copyright 2019-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -72,17 +70,13 @@ std::string toString(const T& t) {
  */
 class InvalidYAMLException : public std::exception {
 public:
-    // TODO: do this in ctor in cpp
-    InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException)
-        : _what{createWhat(path, yamlException)} {}
+    InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException);
 
     const char* what() const noexcept override {
         return _what.c_str();
     }
 
 private:
-    static std::string createWhat(const std::string& node,
-                                  const YAML::ParserException& yamlException);
     std::string _what;
 };
 

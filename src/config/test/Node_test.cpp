@@ -448,7 +448,7 @@ nope: false
     REQUIRE(node["intList2"].maybe<std::vector<int>>().value_or(std::vector<int>{1, 2}) ==
             std::vector<int>{1, 2});
     // similar check to TEST_CASE above
-//    REQUIRE(node["stringMap"]["seven"].maybe<int>().value_or(8) == 7);
+    REQUIRE(node["stringMap"]["seven"].maybe<int>().value_or(8) == 7);
     REQUIRE(node["stringMap"].maybe<std::map<std::string, std::string>>().value_or(
                 std::map<std::string, std::string>{}) ==
             std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
@@ -477,8 +477,8 @@ nope: false
 
 
     REQUIRE(node["stringMap"]["a"].maybe<std::string>().value_or<std::string>("7") == "A");
-//    // inherits from parent
-//    REQUIRE(node["stringMap"]["bee"].maybe<std::string>().value_or<std::string>("7") == "b");
+    // inherits from parent
+    REQUIRE(node["stringMap"]["bee"].maybe<std::string>().value_or<std::string>("7") == "b");
 }
 
 TEST_CASE("Node Type") {
@@ -656,7 +656,7 @@ TEST_CASE("size") {
         REQUIRE(node.size() == 2);
         REQUIRE(node["foos"].size() == 3);
         // inheritance
-//        REQUIRE(node["children"]["foos"].size() == 3);
+        REQUIRE(node["children"]["foos"].size() == 3);
         REQUIRE(node["children"].size() == 1);
         // scalars have size 0
         REQUIRE(node["children"]["a"].size() == 0);

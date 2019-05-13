@@ -115,30 +115,21 @@ public:
 
     const BaseNodeImpl* _self;
     const BaseNodeImpl* _parent;
-private:
-    const NodeType _nodeType;
 
+private:
+
+    const NodeType _nodeType;
     const ChildSequence _childSequence;
     const ChildMap _childMap;
 
     const BaseNodeImpl* stringGet(const std::string& key) const {
-        if (!isMap()) {
-            return nullptr;
-        }
         if (const auto& found = _childMap.find(key); found != _childMap.end()) {
             return &*(found->second);
-        } else {
-            if (!this->_parent) {
-                return nullptr;
-            }
-            return this->_parent->rest->get(key);
         }
+        return nullptr;
     }
 
     const BaseNodeImpl* longGet(long key) const {
-        if (!isSequence()) {
-            return nullptr;
-        }
         if (key < 0 || key >= _childSequence.size()) {
             return nullptr;
         }
@@ -278,8 +269,9 @@ Node::Node(const BaseNodeImpl* impl, std::string path, std::string key) : _impl{
 
 // Exception Types
 
-std::string InvalidYAMLException::createWhat(const std::string& path,
-                                             const YAML::ParserException& yamlException) {
+namespace {
+std::string createInvalidYamlExceptionWhat(const std::string& path,
+                                           const YAML::ParserException& yamlException) {
     std::stringstream out;
     out << "Invalid YAML: ";
     out << "'" << yamlException.msg << "' ";
@@ -289,6 +281,10 @@ std::string InvalidYAMLException::createWhat(const std::string& path,
 
     return out.str();
 }
+}
+
+InvalidYAMLException::InvalidYAMLException(const std::string &path, const YAML::ParserException &yamlException)
+        : _what{createInvalidYamlExceptionWhat(path, yamlException)} {}
 
 InvalidConversionException::InvalidConversionException(const struct Node *node,
                                                        const YAML::BadConversion &yamlException,
