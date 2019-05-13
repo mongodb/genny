@@ -400,7 +400,6 @@ TEST_CASE("nested inheritance") {
     auto childrenfoosevenmaybe = childrenfooseven.maybe<int>();
     REQUIRE(childrenfoosevenmaybe.value_or(8) == 7);
     REQUIRE(childrenfooseven.to<int>() == 7);
-
 }
 
 TEST_CASE("inheritance from pr") {
@@ -482,18 +481,17 @@ TEST_CASE(".. recovers from unknown key") {
     NodeSource ns("stringMap: {a: A}", "");
     auto node = ns.root();
 
+    auto stringMapB = node["stringMap"]["b"];
+    REQUIRE(bool(stringMapB) == false);
+    auto stringMap = stringMapB[".."];
+    REQUIRE(bool(stringMap) == true);
+
+    REQUIRE(bool(stringMap["a"]) == true);
+
     auto foo = node["foo"];
     REQUIRE(bool(foo) == false);
     auto fooParent = foo[".."];
     REQUIRE(bool(fooParent) == true);
-
-
-    auto stringMapB = node["stringMap"]["b"];
-    REQUIRE(bool(stringMapB) == false);
-    auto parent = stringMapB[".."];
-    REQUIRE(bool(parent) == true);
-
-    REQUIRE(bool(parent["a"]) == true);
 }
 
 TEST_CASE(".maybe and value_or") {

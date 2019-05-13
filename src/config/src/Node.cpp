@@ -58,13 +58,14 @@ std::string appendPath(std::string path, std::string key) {
 
 class NodeFields {
 public:
-    explicit NodeFields(const BaseNodeImpl* self, const BaseNodeImpl* parent)
-        : _self{self},
+    explicit NodeFields(YAML::Node yaml, const BaseNodeImpl* self, const BaseNodeImpl* parent)
+        : _yaml{yaml},
+          _self{self},
           _parent{parent},
-          _nodeType{determineType(self->node)},
-          _childSequence(childSequence(self->node, self)),
-          _childMap(childMap(self->node, self)),
-          _repr{YAML::Dump(self->node)} {}
+          _nodeType{determineType(_yaml)},
+          _childSequence(childSequence(_yaml, self)),
+          _childMap(childMap(_yaml, self)),
+          _repr{YAML::Dump(_yaml)} {}
 
     bool isNull() const {
         return type() == NodeType::Null;
@@ -82,7 +83,6 @@ public:
         return type() == NodeType::Map;
     }
 
-
     NodeType type() const {
         return _nodeType;
     }
@@ -97,16 +97,19 @@ public:
         }
     }
 
+    YAML::Node getNode() {
+        return _yaml;
+    }
+
     template <typename K>
-    std::pair<ValidParentDepth,const BaseNodeImpl*> get(ValidParentDepth depth, K&& key) const {
+    const BaseNodeImpl* get(K&& key, const Node& node) const {
         const BaseNodeImpl* out = nullptr;
 
         if constexpr (std::is_convertible_v<K, std::string>) {
             if (key != "..") {
                 out = stringGet(std::forward<K>(key));
             } else {
-                return _parent ? std::pair{depth.pop(), _parent}
-                               : std::pair{depth.pop(), _self};
+
             }
         } else {
             // not a string
@@ -116,15 +119,7 @@ public:
 
         if (out) {
             // we found an exact match
-            return {ValidParentDepth{}, out};
         }
-
-        if (!_parent) {
-            // can't look in parent so indicate we're one step away
-            return {depth.push(), _self};
-        }
-
-        return _parent->rest->get(depth, key);
     }
 
     // TODO: make private
@@ -135,6 +130,8 @@ private:
 
     // TODO: kill
     const std::string _repr;
+
+    YAML::Node _yaml;
 
     const NodeType _nodeType;
     const ChildSequence _childSequence;
@@ -179,6 +176,10 @@ private:
     }
 };
 
+const YAML::Node BaseNodeImpl::getNode() const {
+    return this->rest->getNode();
+}
+
 // NodeSource
 
 NodeSource::NodeSource(std::string yaml, std::string path)
@@ -186,7 +187,7 @@ NodeSource::NodeSource(std::string yaml, std::string path)
       _path{std::move(path)} {}
 
 Node NodeSource::root() const {
-    return {&*_root, ValidParentDepth{}, _path, ""};
+    return {&*_root, _path, ""};
 }
 
 NodeSource::~NodeSource() = default;
@@ -237,18 +238,18 @@ bool Node::isNull() const {
 }
 
 Node::operator bool() const {
-    return bool(_impl) && _validParentDepth.selfValid();
+    return bool(_impl);
 }
 
 Node Node::stringGet(std::string key) const {
-    const auto [ndepth, childImpl] = _impl->rest->get(this->_validParentDepth, key);
-    return {childImpl, ndepth, appendPath(_path, key), key};
+    const BaseNodeImpl* child = _impl->rest->get(key, *this);
+    return {child, appendPath(_path, key), key};
 }
 
 Node Node::longGet(long key) const {
     std::string keyStr = std::to_string(key);
-    const auto [ndepth, childImpl] = _impl->rest->get(this->_validParentDepth, key);
-    return {childImpl, ndepth, appendPath(_path, keyStr), keyStr};
+    const auto self = _impl->rest->get(key, *this);
+    return {self, appendPath(_path, keyStr), keyStr};
 }
 
 size_t Node::size() const {
@@ -258,7 +259,8 @@ size_t Node::size() const {
     return _impl->rest->size();
 }
 
-Node::Node(const BaseNodeImpl* impl, ValidParentDepth validParentDepth, std::string path, std::string key) : _impl{impl}, _validParentDepth{validParentDepth}, _path{path}, _key{key} {}
+Node::Node(const BaseNodeImpl* impl, std::string path, std::string key)
+: _impl{impl}, _path{path}, _key{key} {}
 
 
 //
@@ -318,8 +320,8 @@ InvalidKeyException::InvalidKeyException(const std::string &msg, const genny::No
     _what = out.str();
 }
 
-BaseNodeImpl::BaseNodeImpl(YAML::Node node, const BaseNodeImpl* parent)
-: node{node}, rest{std::make_unique<NodeFields>(this, parent)} {}
+BaseNodeImpl::BaseNodeImpl(YAML::Node yaml, const BaseNodeImpl* parent)
+: rest{std::make_unique<NodeFields>(yaml, this, parent)} {}
 
 
 }  // namespace genny

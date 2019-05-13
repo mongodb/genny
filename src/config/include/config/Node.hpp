@@ -105,39 +105,41 @@ enum class NodeType {
 
 struct BaseNodeImpl {
     BaseNodeImpl(YAML::Node node, const BaseNodeImpl *parent);
-
-    YAML::Node node;
+    const YAML::Node getNode() const;
     const std::unique_ptr<class NodeFields> rest;
 };
 
-struct ValidParentDepth {
-    explicit ValidParentDepth()
-    : ValidParentDepth{0} {}
-
-    ValidParentDepth pop() const {
-        return ValidParentDepth{depth - 1};
-    }
-    ValidParentDepth push() const {
-        return ValidParentDepth{depth + 1};
-    }
-    bool selfValid() const {
-        return depth == 0;
-    }
-    bool parentValid() {
-        return depth >= 0;
-    }
-
-//    bool hasValidParent() const {
-//        return depth >= 0;
+//struct ValidParentDepth {
+//    explicit ValidParentDepth()
+//    : ValidParentDepth{0} {}
+//
+//    ValidParentDepth pop() const {
+//        return ValidParentDepth{depth - 1};
 //    }
-//    bool isSelfValid() const {
+//    ValidParentDepth push() const {
+//        return ValidParentDepth{depth + 1};
+//    }
+//    bool useParent() const {
+//        return depth == 1;
+//    }
+//    bool selfValid() const {
 //        return depth == 0;
 //    }
-private:
-    explicit ValidParentDepth(int depth)
-    : depth{depth} {}
-    int depth;
-};
+//    bool parentValid() {
+//        return depth >= 0;
+//    }
+//
+////    bool hasValidParent() const {
+////        return depth >= 0;
+////    }
+////    bool isSelfValid() const {
+////        return depth == 0;
+////    }
+//private:
+//    explicit ValidParentDepth(int depth)
+//    : depth{depth} {}
+//    int depth;
+//};
 
 class Node {
 public:
@@ -285,20 +287,19 @@ public:
      * @return out
      */
     friend std::ostream& operator<<(std::ostream& out, const Node& node) {
-        return out << YAML::Dump(node._impl->node);
+        return out << YAML::Dump(node._impl->getNode());
     }
 
 
 private:
     // This will point to the actual instance which may be resolved via inheritance and/or .. lookups
-    const class BaseNodeImpl* _impl;
-    const ValidParentDepth _validParentDepth;
+    const BaseNodeImpl* _impl;
     const std::string _path;
     const std::string _key;
 
     friend class NodeSource;
 
-    Node(const BaseNodeImpl* impl, ValidParentDepth validParentDepth, std::string path, std::string key);
+    Node(const BaseNodeImpl* impl, std::string path, std::string key);
 
     Node stringGet(std::string key) const;
     Node longGet(long key) const;
@@ -354,7 +355,7 @@ private:
     std::optional<O> _maybeImpl(Args&&... args) const {
         static_assert(sizeof...(args) == 0,
                       "Cannot pass additional args when using built-in YAML conversion");
-        return std::make_optional<O>(_impl->node.as<O>());
+        return std::make_optional<O>(_impl->getNode().as<O>());
     }
 };
 
