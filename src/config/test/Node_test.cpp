@@ -466,6 +466,18 @@ TEST_CASE(".. recovers from invalid access") {
     REQUIRE(stringMap0pa.to<std::string>() == "A");
 }
 
+TEST_CASE(".. recovers from unknown key") {
+    NodeSource ns("stringMap: {a: A}", "");
+    auto node = ns.root();
+
+    auto stringMapB = node["stringMap"]["b"];
+    REQUIRE(bool(stringMapB) == false);
+    auto parent = stringMapB[".."];
+    REQUIRE(bool(parent) == true);
+
+    REQUIRE(bool(parent["a"]) == true);
+}
+
 TEST_CASE(".maybe and value_or") {
     auto yaml = std::string(R"(
 seven: 7
