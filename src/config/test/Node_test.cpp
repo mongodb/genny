@@ -673,71 +673,72 @@ TEST_CASE("size") {
 //        REQUIRE(node["foos"][".."][".."][".."][".."].size() == 0);
     }
 }
-//
-//TEST_CASE("Node inheritance") {
-//    auto yaml = std::string(R"(
-//a: 7
-//b: 900
-//Children:
-//  a: 100
-//  One: {}
-//  Two: {a: 9}
-//  Three: {b: 70}
-//  Four:
-//    FourChild:
-//      a: 11
-//)");
-//    Node node(yaml, "");
-//
-//    SECTION("Parent traversal") {
-//        REQUIRE(node["a"].to<int>() == 7);
-//        REQUIRE(node["Children"]["a"].to<int>() == 100);
+
+TEST_CASE("Node inheritance") {
+    auto yaml = std::string(R"(
+a: 7
+b: 900
+Children:
+  a: 100
+  One: {}
+  Two: {a: 9}
+  Three: {b: 70}
+  Four:
+    FourChild:
+      a: 11
+)");
+    NodeSource ns(yaml, "");
+    auto node = ns.root();
+
+    SECTION("Parent traversal") {
+        REQUIRE(node["a"].to<int>() == 7);
+        REQUIRE(node["Children"]["a"].to<int>() == 100);
 //        REQUIRE(node["Children"][".."]["a"].to<int>() == 7);
-//    }
-//
-//    SECTION("value_or") {
-//        {
-//            auto c = node["c"];
-//            REQUIRE(c.maybe<int>().value_or(1) == 1);
-//            REQUIRE(node["a"].maybe<int>().value_or(100) == 7);
-//            REQUIRE(node["Children"]["a"].maybe<int>().value_or(42) == 100);
-//            REQUIRE(node["does"]["not"]["exist"].maybe<int>().value_or(90) == 90);
-//        }
-//    }
-//
-//    SECTION("Inheritance") {
-//        {
-//            int b = node["Children"]["b"].to<int>();
-//            REQUIRE(b == 900);
-//        }
-//        {
-//            int b = node["Children"]["One"]["b"].to<int>();
-//            REQUIRE(b == 900);
-//        }
-//        {
-//            int b = node["Children"]["Three"]["b"].to<int>();
-//            REQUIRE(b == 70);
-//        }
-//    }
-//
-//    SECTION("No inheritance") {
-//        {
-//            int a = node["a"].to<int>();
-//            REQUIRE(a == 7);
-//        }
-//
-//        {
-//            int a = node["Children"]["a"].to<int>();
-//            REQUIRE(a == 100);
-//        }
-//
-//        {
-//            int b = node["Children"]["Three"]["b"].to<int>();
-//            REQUIRE(b == 70);
-//        }
-//    }
-//}
-//
+    }
+
+    SECTION("value_or") {
+        {
+            auto c = node["c"];
+            REQUIRE(c.maybe<int>().value_or(1) == 1);
+            REQUIRE(node["a"].maybe<int>().value_or(100) == 7);
+            REQUIRE(node["Children"]["a"].maybe<int>().value_or(42) == 100);
+            REQUIRE(node["does"]["not"]["exist"].maybe<int>().value_or(90) == 90);
+        }
+    }
+
+    SECTION("Inheritance") {
+        {
+            int b = node["Children"]["b"].to<int>();
+            REQUIRE(b == 900);
+        }
+        {
+            int b = node["Children"]["One"]["b"].to<int>();
+            REQUIRE(b == 900);
+        }
+        {
+            int b = node["Children"]["Three"]["b"].to<int>();
+            REQUIRE(b == 70);
+        }
+    }
+
+    SECTION("No inheritance") {
+        {
+            int a = node["a"].to<int>();
+            REQUIRE(a == 7);
+        }
+
+        {
+            int a = node["Children"]["a"].to<int>();
+            REQUIRE(a == 100);
+        }
+
+        {
+            int b = node["Children"]["Three"]["b"].to<int>();
+            REQUIRE(b == 70);
+        }
+    }
+}
+
 TEST_CASE("Node Built-Ins Construction") {
     auto yaml = std::string(R"(
 SomeString: some_string
@@ -846,12 +847,12 @@ Two: {}
             node["One"].to<TakesEmptyStructAndExtractsMsg>(&context);
         REQUIRE(one.msg == "foo");
     }
-// inheritance
-//    {
-//        TakesEmptyStructAndExtractsMsg one =
-//            node["Two"].to<TakesEmptyStructAndExtractsMsg>(&context);
-//        REQUIRE(one.msg == "bar");
-//    }
+
+    {
+        TakesEmptyStructAndExtractsMsg one =
+            node["Two"].to<TakesEmptyStructAndExtractsMsg>(&context);
+        REQUIRE(one.msg == "bar");
+    }
 }
 
 TEST_CASE("operator-left-shift") {
@@ -953,9 +954,9 @@ Children:
     REQUIRE(!node["does"]["not"]["exist"].maybe<ExtractsMsg>());
     REQUIRE(node["Children"].maybe<ExtractsMsg>()->msg == "inherited");
     REQUIRE(node["Children"]["overrides"].maybe<ExtractsMsg>()->msg == "overridden");
-//    REQUIRE(
-//        node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg ==
-//        "inherited");
+    REQUIRE(
+        node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg ==
+        "inherited");
     REQUIRE(
         node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsMsg>()->msg ==
         "deeply_overridden");
@@ -973,7 +974,7 @@ b: {}
     node.to<RequiresParamToEqualNodeX>(9);
     node["a"].to<RequiresParamToEqualNodeX>(7);
     // inheritance
-//    node["b"].to<RequiresParamToEqualNodeX>(9);
+    node["b"].to<RequiresParamToEqualNodeX>(9);
 }
 
 //TEST_CASE("Iteration") {
