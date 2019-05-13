@@ -387,12 +387,11 @@ TEST_CASE("nested inheritance") {
     auto node = ns.root();
 
     auto children = node["children"];
-
-    auto foo = children["foo"];
-    auto seven = foo["seven"];
-    auto maybeSeven = seven.maybe<int>();
-    REQUIRE(maybeSeven.value_or(8) == 7);
-    REQUIRE(seven.to<int>() == 7);
+    auto childrenfoo = children["foo"];
+    auto childrenfooseven = childrenfoo["seven"];
+    auto childrenfoosevenmaybe = childrenfooseven.maybe<int>();
+    REQUIRE(childrenfoosevenmaybe.value_or(8) == 7);
+    REQUIRE(childrenfooseven.to<int>() == 7);
 
 }
 
