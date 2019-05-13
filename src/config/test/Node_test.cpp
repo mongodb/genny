@@ -325,6 +325,17 @@ TEST_CASE("value_or") {
     REQUIRE(node["foo"].maybe<int>() == std::nullopt);
 }
 
+TEST_CASE("simple inehritance") {
+    NodeSource ns{"a: 7", ""};
+    auto node = ns.root();
+
+    auto a = node["foo"]["bar"]["a"];
+    REQUIRE(a.to<int>() == 7);
+
+    REQUIRE(node[0][".."]["a"].to<int>() == 7);
+    REQUIRE(node[0][".."]["a"].maybe<int>().value_or(8) == 7);
+}
+
 TEST_CASE("invalid access") {
     auto yaml = std::string(R"(
 seven: 7
@@ -466,9 +477,16 @@ TEST_CASE(".. recovers from invalid access") {
     REQUIRE(stringMap0pa.to<std::string>() == "A");
 }
 
+
 TEST_CASE(".. recovers from unknown key") {
     NodeSource ns("stringMap: {a: A}", "");
     auto node = ns.root();
+
+    auto foo = node["foo"];
+    REQUIRE(bool(foo) == false);
+    auto fooParent = foo[".."];
+    REQUIRE(bool(fooParent) == true);
+
 
     auto stringMapB = node["stringMap"]["b"];
     REQUIRE(bool(stringMapB) == false);

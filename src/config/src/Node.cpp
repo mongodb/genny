@@ -98,32 +98,33 @@ public:
     }
 
     template <typename K>
-    std::pair<bool,const BaseNodeImpl*> get(K&& key) const {
+    std::pair<ValidParentDepth,const BaseNodeImpl*> get(ValidParentDepth depth, K&& key) const {
         const BaseNodeImpl* out = nullptr;
+
         if constexpr (std::is_convertible_v<K, std::string>) {
-            if (key == "..") {
-                if (!_parent) {
-                    return {false, this->_self};
-                }
-                return {true, _parent};
-            } else {
+            if (key != "..") {
                 out = stringGet(std::forward<K>(key));
+            } else {
+                return _parent ? std::pair{depth.pop(), _parent}
+                               : std::pair{depth.pop(), _self};
             }
         } else {
+            // not a string
             static_assert(std::is_convertible_v<K, size_t>);
             out = longGet(std::forward<K>(key));
         }
-        if (out != nullptr) {
-            return {true, out};
-        } else if (_parent == nullptr) {
-            return {false, this->_self};
+
+        if (out) {
+            // we found an exact match
+            return {ValidParentDepth{}, out};
         }
-        const auto [isValidInParent, foundInParent] = _parent->rest->get(key);
-        if (isValidInParent) {
-            return {true, foundInParent};
-        } else {
-            return {false, this->_self};
+
+        if (!_parent) {
+            // can't look in parent so indicate we're one step away
+            return {depth.push(), _self};
         }
+
+        return _parent->rest->get(depth, key);
     }
 
     // TODO: make private
@@ -185,7 +186,7 @@ NodeSource::NodeSource(std::string yaml, std::string path)
       _path{std::move(path)} {}
 
 Node NodeSource::root() const {
-    return {&*_root, true, _path, ""};
+    return {&*_root, ValidParentDepth{}, _path, ""};
 }
 
 NodeSource::~NodeSource() = default;
@@ -236,18 +237,18 @@ bool Node::isNull() const {
 }
 
 Node::operator bool() const {
-    return _valid && bool(_impl);
+    return bool(_impl) && _validParentDepth.selfValid();
 }
 
 Node Node::stringGet(std::string key) const {
-    const auto [valid, childImpl] = _impl->rest->get(key);
-    return {childImpl, valid, appendPath(_path, key), key};
+    const auto [ndepth, childImpl] = _impl->rest->get(this->_validParentDepth, key);
+    return {childImpl, ndepth, appendPath(_path, key), key};
 }
 
 Node Node::longGet(long key) const {
     std::string keyStr = std::to_string(key);
-    const auto [valid, childImpl] = _impl->rest->get(key);
-    return {childImpl, valid, appendPath(_path, keyStr), keyStr};
+    const auto [ndepth, childImpl] = _impl->rest->get(this->_validParentDepth, key);
+    return {childImpl, ndepth, appendPath(_path, keyStr), keyStr};
 }
 
 size_t Node::size() const {
@@ -257,7 +258,7 @@ size_t Node::size() const {
     return _impl->rest->size();
 }
 
-Node::Node(const BaseNodeImpl* impl, bool valid, std::string path, std::string key) : _impl{impl}, _valid{valid}, _path{path}, _key{key} {}
+Node::Node(const BaseNodeImpl* impl, ValidParentDepth validParentDepth, std::string path, std::string key) : _impl{impl}, _validParentDepth{validParentDepth}, _path{path}, _key{key} {}
 
 
 //
