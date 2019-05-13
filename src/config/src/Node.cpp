@@ -108,7 +108,7 @@ public:
         if (out != nullptr) {
             return out;
         } else if (_parent == nullptr) {
-            return nullptr;
+            return this->_self;
         }
         return _parent->rest->get(key);
     }
@@ -224,7 +224,7 @@ Node::operator bool() const {
 
 Node Node::stringGet(std::string key) const {
     if (!_impl) {
-        return {nullptr, appendPath(_path, key), key};
+        return {_impl, appendPath(_path, key), key};
     }
     const BaseNodeImpl* childImpl = _impl->rest->get(key);
     return {childImpl, appendPath(_path, key), key};
@@ -233,7 +233,7 @@ Node Node::stringGet(std::string key) const {
 Node Node::longGet(long key) const {
     std::string keyStr = std::to_string(key);
     if (!_impl) {
-        return {nullptr, appendPath(_path, keyStr), keyStr};
+        return {_impl, appendPath(_path, keyStr), keyStr};
     }
 
     const BaseNodeImpl* childImpl = _impl->rest->get(key);

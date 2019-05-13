@@ -266,7 +266,6 @@ private:
     const std::string _path;
     const std::string _key;
 
-    friend class NodeImpl;
     friend class NodeSource;
 
     Node(const BaseNodeImpl* impl, std::string path, std::string key);

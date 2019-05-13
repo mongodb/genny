@@ -319,6 +319,12 @@ TEST_CASE("YAML::Node Equivalency") {
     }
 }
 
+TEST_CASE("value_or") {
+    NodeSource ns{"{}", ""};
+    auto node = ns.root();
+    REQUIRE(node["foo"].maybe<int>() == std::nullopt);
+}
+
 TEST_CASE("invalid access") {
     auto yaml = std::string(R"(
 seven: 7
