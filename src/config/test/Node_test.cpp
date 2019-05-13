@@ -376,6 +376,20 @@ Phases:
     REQUIRE(node["Phases"][0]["Coll"].to<std::string>() == "Test");
 }
 
+TEST_CASE("nested inheritance") {
+    NodeSource ns{"children: {seven: 7}", ""};
+    auto node = ns.root();
+
+    auto children = node["children"];
+
+    auto foo = children["foo"];
+    auto seven = foo["seven"];
+    auto maybeSeven = seven.maybe<int>();
+    REQUIRE(maybeSeven.value_or(8) == 7);
+    REQUIRE(seven.to<int>() == 7);
+
+}
+
 TEST_CASE("inheritance from pr") {
     {
         NodeSource ns{"seven: 7", ""};
@@ -384,6 +398,8 @@ TEST_CASE("inheritance from pr") {
         {
             auto foo = node["foo"];
             auto seven = foo["seven"];
+            auto maybeSeven = seven.maybe<int>();
+            REQUIRE(maybeSeven.value_or(8) == 7);
             REQUIRE(seven.to<int>() == 7);
         }
 
