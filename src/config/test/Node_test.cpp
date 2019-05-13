@@ -347,13 +347,10 @@ nope: false
         [&]() { node["seven"][0].to<int>(); }(),
         Catch::Matches(
             "Invalid key '0': Tried to access node that doesn't exist. On node with path '/seven/0': "));
-//    REQUIRE_THROWS_WITH(
-//        [&]() {
-//            // Debatable if this should fail or not
-//            node["seven"][0][".."];
-//        }(),
-//        Catch::Matches("Invalid key '0': Invalid YAML access. Perhaps trying to treat a map as a "
-//                       "sequence\\? On node with path '/seven': 7"));
+
+    // Debatable if this should barf or not
+    REQUIRE(node["seven"][0][".."]["sure"].to<bool>() == true);
+
     REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
                         Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
                                        "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
@@ -449,6 +446,26 @@ Phases:
             "Baz");
 }
 
+TEST_CASE(".. recovers from invalid access") {
+    NodeSource ns("stringMap: {a: A}", "");
+    auto node = ns.root();
+
+    auto stringMap = node["stringMap"];
+    REQUIRE(stringMap);
+
+
+        auto stringMapa = stringMap["a"];
+        REQUIRE(stringMapa);
+        REQUIRE(stringMapa.to<std::string>() == "A");
+
+
+    auto stringMap0 = stringMap[0];
+    auto stringMap0p = stringMap0[".."];
+    auto stringMap0pa = stringMap0p["a"];
+    REQUIRE(stringMap0pa);
+    REQUIRE(stringMap0pa.to<std::string>() == "A");
+}
+
 TEST_CASE(".maybe and value_or") {
     auto yaml = std::string(R"(
 seven: 7
@@ -477,14 +494,14 @@ nope: false
                 std::map<std::string, std::string>{{"foo", "bar"}}) ==
             std::map<std::string, std::string>{{"foo", "bar"}});
     REQUIRE(node["stringMap"][0].maybe<int>().value_or(7) == 7);
-//    // we went to an "invalid" node stringMap[0] (because stringMap is a map) but then we went to ..
-//    // so we're okay
-//    REQUIRE(node["stringMap"][0][".."]["a"].maybe<std::string>().value_or<std::string>("orVal") ==
-//            "A");
-//    // even invalid nodes can value_or
-//    REQUIRE(node["stringMap"][0]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
-//    // same thing for root level
-//    REQUIRE(node[0][".."]["bee"].maybe<std::string>().value_or<std::string>("x") == "b");
+    // we went to an "invalid" node stringMap[0] (because stringMap is a map) but then we went to ..
+    // so we're okay
+    REQUIRE(node["stringMap"][0][".."]["a"].maybe<std::string>().value_or<std::string>("orVal") ==
+            "A");
+    // even invalid nodes can value_or
+    REQUIRE(node["stringMap"][0]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
+    // same thing for root level
+    REQUIRE(node[0][".."]["bee"].maybe<std::string>().value_or<std::string>("x") == "b");
 
     REQUIRE(node["sure"].maybe<bool>().value_or(false) == true);
     REQUIRE(node["sure"].maybe<bool>().value_or(true) == true);
@@ -682,17 +699,17 @@ TEST_CASE("size") {
         // scalars have size 0
         REQUIRE(node["children"]["a"].size() == 0);
     }
-    {
-        NodeSource ns{
-            "foos: [1,2,3]\n"
-            "children: {a: 7}",
+}
+
+TEST_CASE("Parent .. traversal") {
+    NodeSource ns{
+            "a: {b: { c: {d: D, e: E} } }",
             ""};
-        Node node = ns.root();
-//        REQUIRE(node["foos"][".."].size() == 2);
-//        REQUIRE(node["foos"][".."][".."].size() == 0);
-//        REQUIRE(node["foos"][".."][".."][".."].size() == 0);
-//        REQUIRE(node["foos"][".."][".."][".."][".."].size() == 0);
-    }
+    Node node = ns.root();
+    REQUIRE(node["a"]["b"]["c"]["d"].to<std::string>() == "D");
+    REQUIRE(node["a"]["b"]["c"]["e"].to<std::string>() == "E");
+    REQUIRE(node["a"]["b"]["c"]["d"][".."]["e"].to<std::string>() == "E");
+    REQUIRE(node["a"]["b"]["c"]["d"][".."]["e"][".."]["d"].to<std::string>() == "D");
 }
 
 TEST_CASE("Node inheritance") {
@@ -714,7 +731,7 @@ Children:
     SECTION("Parent traversal") {
         REQUIRE(node["a"].to<int>() == 7);
         REQUIRE(node["Children"]["a"].to<int>() == 100);
-//        REQUIRE(node["Children"][".."]["a"].to<int>() == 7);
+        REQUIRE(node["Children"][".."]["a"].to<int>() == 7);
     }
 
     SECTION("value_or") {

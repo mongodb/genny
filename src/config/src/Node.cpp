@@ -63,7 +63,8 @@ public:
           _parent{parent},
           _nodeType{determineType(self->node)},
           _childSequence(childSequence(self->node, self)),
-          _childMap(childMap(self->node, self)) {}
+          _childMap(childMap(self->node, self)),
+          _repr{YAML::Dump(self->node)} {}
 
     bool isNull() const {
         return type() == NodeType::Null;
@@ -100,7 +101,14 @@ public:
     std::pair<bool,const BaseNodeImpl*> get(K&& key) const {
         const BaseNodeImpl* out = nullptr;
         if constexpr (std::is_convertible_v<K, std::string>) {
-            out = stringGet(std::forward<K>(key));
+            if (key == "..") {
+                if (!_parent) {
+                    return {false, this->_self};
+                }
+                return {true, _parent};
+            } else {
+                out = stringGet(std::forward<K>(key));
+            }
         } else {
             static_assert(std::is_convertible_v<K, size_t>);
             out = longGet(std::forward<K>(key));
@@ -118,10 +126,14 @@ public:
         }
     }
 
+    // TODO: make private
     const BaseNodeImpl* _self;
     const BaseNodeImpl* _parent;
 
 private:
+
+    // TODO: kill
+    const std::string _repr;
 
     const NodeType _nodeType;
     const ChildSequence _childSequence;
