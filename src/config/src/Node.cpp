@@ -110,7 +110,12 @@ public:
         } else if (_parent == nullptr) {
             return {false, this->_self};
         }
-        return _parent->rest->get(key);
+        const auto [isValidInParent, foundInParent] = _parent->rest->get(key);
+        if (isValidInParent) {
+            return {true, foundInParent};
+        } else {
+            return {false, this->_self};
+        }
     }
 
     const BaseNodeImpl* _self;
@@ -223,19 +228,12 @@ Node::operator bool() const {
 }
 
 Node Node::stringGet(std::string key) const {
-    if (!_impl) {
-        return {_impl, false, appendPath(_path, key), key};
-    }
     const auto [valid, childImpl] = _impl->rest->get(key);
     return {childImpl, valid, appendPath(_path, key), key};
 }
 
 Node Node::longGet(long key) const {
     std::string keyStr = std::to_string(key);
-    if (!_impl) {
-        return {_impl, false, appendPath(_path, keyStr), keyStr};
-    }
-
     const auto [valid, childImpl] = _impl->rest->get(key);
     return {childImpl, valid, appendPath(_path, keyStr), keyStr};
 }
