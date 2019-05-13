@@ -97,7 +97,7 @@ public:
     }
 
     template <typename K>
-    const BaseNodeImpl* get(K&& key) const {
+    std::pair<bool,const BaseNodeImpl*> get(K&& key) const {
         const BaseNodeImpl* out = nullptr;
         if constexpr (std::is_convertible_v<K, std::string>) {
             out = stringGet(std::forward<K>(key));
@@ -106,9 +106,9 @@ public:
             out = longGet(std::forward<K>(key));
         }
         if (out != nullptr) {
-            return out;
+            return {true, out};
         } else if (_parent == nullptr) {
-            return this->_self;
+            return {false, this->_self};
         }
         return _parent->rest->get(key);
     }
@@ -168,7 +168,7 @@ NodeSource::NodeSource(std::string yaml, std::string path)
       _path{std::move(path)} {}
 
 Node NodeSource::root() const {
-    return {&*_root, _path, ""};
+    return {&*_root, true, _path, ""};
 }
 
 NodeSource::~NodeSource() = default;
@@ -191,7 +191,7 @@ std::string Node::key() const {
 }
 
 NodeType Node::type() const {
-    if (!_impl) {
+    if (!*this) {
         return NodeType::Undefined;
     }
     return _impl->rest->type();
@@ -219,25 +219,25 @@ bool Node::isNull() const {
 }
 
 Node::operator bool() const {
-    return bool(_impl);
+    return _valid && bool(_impl);
 }
 
 Node Node::stringGet(std::string key) const {
     if (!_impl) {
-        return {_impl, appendPath(_path, key), key};
+        return {_impl, false, appendPath(_path, key), key};
     }
-    const BaseNodeImpl* childImpl = _impl->rest->get(key);
-    return {childImpl, appendPath(_path, key), key};
+    const auto [valid, childImpl] = _impl->rest->get(key);
+    return {childImpl, valid, appendPath(_path, key), key};
 }
 
 Node Node::longGet(long key) const {
     std::string keyStr = std::to_string(key);
     if (!_impl) {
-        return {_impl, appendPath(_path, keyStr), keyStr};
+        return {_impl, false, appendPath(_path, keyStr), keyStr};
     }
 
-    const BaseNodeImpl* childImpl = _impl->rest->get(key);
-    return {childImpl, appendPath(_path, keyStr), keyStr};
+    const auto [valid, childImpl] = _impl->rest->get(key);
+    return {childImpl, valid, appendPath(_path, keyStr), keyStr};
 }
 
 size_t Node::size() const {
@@ -247,7 +247,7 @@ size_t Node::size() const {
     return _impl->rest->size();
 }
 
-Node::Node(const BaseNodeImpl* impl, std::string path, std::string key) : _impl{impl}, _path{path}, _key{key} {}
+Node::Node(const BaseNodeImpl* impl, bool valid, std::string path, std::string key) : _impl{impl}, _valid{valid}, _path{path}, _key{key} {}
 
 
 //

@@ -263,12 +263,13 @@ public:
 private:
     // This will point to the actual instance which may be resolved via inheritance and/or .. lookups
     const class BaseNodeImpl* _impl;
+    const bool _valid;
     const std::string _path;
     const std::string _key;
 
     friend class NodeSource;
 
-    Node(const BaseNodeImpl* impl, std::string path, std::string key);
+    Node(const BaseNodeImpl* impl, bool valid, std::string path, std::string key);
 
     Node stringGet(std::string key) const;
     Node longGet(long key) const;
