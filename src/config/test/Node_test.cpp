@@ -150,12 +150,11 @@ TEST_CASE("More YAML::Node Equivalency") {
             NodeSource ns{"ns: [1,2,3]", ""};
             auto& node = ns.root();
             int sum = 0;
-            for(auto& n : node["ns"]) {
-//                REQUIRE(bool(n.first) == false);
-                REQUIRE(bool(n.second) == false);
-                sum += n.second.to<int>();
+            for(auto& [k,v] : node["ns"]) {
+                REQUIRE(bool(v) == false);
+                sum += v.to<int>();
                 if (sum == 1) {
-                    REQUIRE(n.second.path() == "/ns/0");
+                    REQUIRE(v.path() == "/ns/0");
                 }
             }
             REQUIRE(sum == 6);
@@ -177,14 +176,11 @@ TEST_CASE("More YAML::Node Equivalency") {
             NodeSource ns("foo: bar", "");
             auto& node = ns.root();
             int seen = 0;
-            for (auto& kvp : node) {
+            for (auto& [k,v]: node) {
                 ++seen;
-                REQUIRE(kvp.first.to<std::string>() == "foo");
-                REQUIRE(kvp.second.to<std::string>() == "bar");
-                // not super well-defined but what else can we do?
-                REQUIRE(kvp.path() == "/0");
-                REQUIRE(kvp.first.path() == "/foo$key");
-                REQUIRE(kvp.second.path() == "/foo");
+                REQUIRE(k.toString() == "foo");
+                REQUIRE(v.to<std::string>() == "bar");
+                REQUIRE(v.path() == "/foo");
             }
             REQUIRE(seen == 1);
         }
@@ -602,7 +598,7 @@ struct WLCtx {
     explicit WLCtx(const Node& node)
             : node{node} {
         // Make a bunch of actor contexts
-        for (const auto& actor : node["Actors"]) {
+        for (auto& [k,actor] : node["Actors"]) {
             actxs.emplace_back(std::make_unique<ACtx>(actor, *this));
         }
         for(auto& actx : actxs) {
@@ -623,7 +619,7 @@ struct ACtx {
     static std::vector<std::unique_ptr<PCtx>> constructPhaseContexts(const Node& node, ACtx* actx) {
         std::vector<std::unique_ptr<PCtx>> out;
         auto& phases = (*actx).node["Phases"];
-        for(const auto& phase : phases) {
+        for(const auto& [k,phase] : phases) {
             out.emplace_back(std::make_unique<PCtx>(phase, *actx));
         }
         return out;
@@ -851,28 +847,24 @@ mapTwoDeep: {a: {A: aA}}
     auto& node = ns.root();
     {
         int seen = 0;
-        for (auto&& n : node["one"]) {
-            REQUIRE(n.path() == "/one/0");
+        for (auto&& [k,v] : node["one"]) {
+            REQUIRE(v.path() == "/one/0");
             ++seen;
         }
         REQUIRE(seen == 1);
     }
     {
         int seen = 0;
-        for (auto&& n : node["two"]) {
-            REQUIRE(n.path() == "/two/" + std::to_string(seen));
+        for (auto& [k,v] : node["two"]) {
+            REQUIRE(v.path() == "/two/" + std::to_string(seen));
             ++seen;
         }
         REQUIRE(seen == 2);
     }
     {
         int seen = 0;
-        for (auto&& kvp : node["mapOneDeep"]) {
-            // this isn't super well-defined - what's the "path" for the key of a kvp?
-            REQUIRE(kvp.first.path() == "/mapOneDeep/a$key");
-            REQUIRE(kvp.first[".."].path() == "/mapOneDeep/a$key/..");
-            REQUIRE(kvp.second.path() == "/mapOneDeep/a");
-            REQUIRE(kvp.second[".."].path() == "/mapOneDeep/a/..");
+        for (auto&& [k,v] : node["mapOneDeep"]) {
+            REQUIRE(v.path() == "/mapOneDeep/a");
             ++seen;
         }
         REQUIRE(seen == 1);
@@ -1046,10 +1038,8 @@ SingleItemList: [37]
         auto& mp = node["SimpleMap"];
         REQUIRE(mp);
         int seen = 0;
-        for (auto& kvp : mp) {
-            auto& k = kvp.first;
-            auto& v = kvp.second;
-            REQUIRE(k.to<std::string>() == "a");
+        for (auto& [k,v] : mp) {
+            REQUIRE(k.toString() == "a");
             REQUIRE(v.to<std::string>() == "b");
             ++seen;
         }
@@ -1060,7 +1050,7 @@ SingleItemList: [37]
         auto& lst = node["ListOfScalars"];
         REQUIRE(lst);
         int i = 1;
-        for (auto& v : lst) {
+        for (auto& [k,v] : lst) {
             REQUIRE(v.to<int>() == i);
             ++i;
         }
@@ -1072,12 +1062,12 @@ SingleItemList: [37]
         REQUIRE(lom);
 //        REQUIRE(lom.size() == 1);
         auto countMaps = 0;
-        for (auto& m : lom) {
+        for (auto& [k,m] : lom) {
             ++countMaps;
 //            REQUIRE(m.size() == 2);
 
             auto countEntries = 0;
-            for (auto& kvp : m) {
+            for (auto& _ : m) {
                 ++countEntries;
             }
             REQUIRE(countEntries == 2);
@@ -1099,7 +1089,7 @@ SingleItemList: [37]
         REQUIRE(sil.size() == 1);
         REQUIRE(sil[0].to<int>() == 37);
         auto count = 0;
-        for (auto& v : sil) {
+        for (auto& [k,v] : sil) {
             REQUIRE(v.to<int>() == 37);
             // we still get parents
             REQUIRE(v[".."]["Scalar"].to<std::string>() == "foo");
