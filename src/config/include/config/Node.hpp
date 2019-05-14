@@ -241,6 +241,7 @@ class iterator {
 public:
     ~iterator();
     bool operator!=(const iterator&) const;
+    bool operator==(const iterator&) const;
     void operator++();
     const iterator_value operator*() const;
 private:

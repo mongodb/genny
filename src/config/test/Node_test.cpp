@@ -810,6 +810,29 @@ TEST_CASE("Specialization") {
     REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
 }
 
+TEST_CASE("Basic Sequence Node Iteration") {
+    NodeSource ns("foo: [1]", "");
+    auto& node = ns.root();
+    REQUIRE(node.size() == 1);
+    auto& foo = node["foo"];
+    REQUIRE(foo.size() == 1);
+    REQUIRE(foo.begin() != foo.end());
+    REQUIRE(foo.begin() == foo.begin());
+    REQUIRE(foo.end() == foo.end());
+
+    {
+        auto it = foo.begin();
+        REQUIRE(it != foo.end());
+        auto& [k,v] = *it;
+        REQUIRE(k.toString() == "0");
+        REQUIRE(v.to<long>() == 1);
+        REQUIRE(it != foo.end());
+        ++it;
+        REQUIRE(it == foo.end());
+    }
+}
+
+
 TEST_CASE("Node Paths") {
     auto yaml = std::string(R"(
 msg: bar

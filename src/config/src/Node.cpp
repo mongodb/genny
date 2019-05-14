@@ -175,8 +175,11 @@ public:
     void increment() {
         ++_children;
     }
-    bool notEqual(const IteratorImpl& rhs) const {
+    bool equal(const IteratorImpl& rhs) const {
         return _children == rhs._children;
+    }
+    bool notEqual(const IteratorImpl& rhs) const {
+        return _children != rhs._children;
     }
     const iterator_value getValue() const {
         auto& [key, implPtr] = *_children;
@@ -197,14 +200,18 @@ void iterator::operator++() {
 bool iterator::operator!=(const iterator& rhs) const {
     return _impl->notEqual(*rhs._impl);
 }
+bool iterator::operator==(const iterator &rhs) const {
+    return _impl->equal(*rhs._impl);
+}
 
 const iterator_value iterator::operator*() const {
     return _impl->getValue();
 }
 
 iterator::iterator(const NodeImpl* nodeImpl, bool end)
-: _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_children.begin() : nodeImpl->_children.end())}
+: _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_children.end() : nodeImpl->_children.begin())}
 {}
+
 
 
 
