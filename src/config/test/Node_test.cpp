@@ -5,69 +5,69 @@
 #include <map>
 #include <vector>
 
-//struct EmptyStruct {};
-//
-//struct ExtractsMsg {
-//    std::string msg;
-//    ExtractsMsg(const Node& node) : msg{node["msg"].to<std::string>()} {}
-//};
-//
-//struct TakesEmptyStructAndExtractsMsg {
-//    std::string msg;
-//    TakesEmptyStructAndExtractsMsg(const Node& node, EmptyStruct*)
-//        : msg{node["msg"].to<std::string>()} {}
-//};
-//
-//struct RequiresParamToEqualNodeX {
-//    RequiresParamToEqualNodeX(const Node& node, int x) {
-//        REQUIRE(node["x"].to<int>() == x);
-//    }
-//    RequiresParamToEqualNodeX(int any) {}
-//};
-//
-//struct HasConversionSpecialization {
-//    int x;
-//};
-//
+struct EmptyStruct {};
+
+struct ExtractsMsg {
+    std::string msg;
+    ExtractsMsg(const Node& node) : msg{node["msg"].to<std::string>()} {}
+};
+
+struct TakesEmptyStructAndExtractsMsg {
+    std::string msg;
+    TakesEmptyStructAndExtractsMsg(const Node& node, EmptyStruct*)
+        : msg{node["msg"].to<std::string>()} {}
+};
+
+struct RequiresParamToEqualNodeX {
+    RequiresParamToEqualNodeX(const Node& node, int x) {
+        REQUIRE(node["x"].to<int>() == x);
+    }
+    RequiresParamToEqualNodeX(int any) {}
+};
+
+struct HasConversionSpecialization {
+    int x;
+};
+
 //namespace genny {
-//
-//TEST_CASE("Nested sequence like map") {
-//    NodeSource nodeSource("a: []", "");
-//    auto yaml = nodeSource.root();
+
+TEST_CASE("Nested sequence like map") {
+    NodeSource nodeSource("a: []", "");
+    const auto& yaml = nodeSource.root();
 //    yaml["a"]["wtf"]["even_deeper"];
 //    REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
-//}
-//
-//TEST_CASE("Out of Range") {
-//    SECTION("Out of list bounds") {
-//        NodeSource ns{"[100]", ""};
-//        Node node = ns.root();
-//        REQUIRE(node);
+}
+
+TEST_CASE("Out of Range") {
+    SECTION("Out of list bounds") {
+        NodeSource ns{"[100]", ""};
+        const auto& node = ns.root();
+        REQUIRE(node);
 //        REQUIRE(node.isSequence());
-//        REQUIRE(node[0]);
-//        REQUIRE(bool(node[1]) == false);
-//        REQUIRE(bool(node[-1]) == false);
-//    }
-//}
-//
-//
-//template <>
-//struct NodeConvert<HasConversionSpecialization> {
-//    using type = HasConversionSpecialization;
-//    static type convert(const Node& node, int delta) {
-//        return {node["x"].to<int>() + delta};
-//    }
-//};
-//
-//TEST_CASE("Static Failures") {
-//    NodeSource ns{"{}", ""};
-//    Node node = ns.root();
-//
-//    STATIC_REQUIRE(std::is_same_v<decltype(node.to<int>()), int>);
-//    STATIC_REQUIRE(std::is_same_v<decltype(node.to<HasConversionSpecialization>()),
-//                                  HasConversionSpecialization>);
-//}
-//
+        REQUIRE(node[0]);
+        REQUIRE(bool(node[1]) == false);
+        REQUIRE(bool(node[-1]) == false);
+    }
+}
+
+
+template <>
+struct NodeConvert<HasConversionSpecialization> {
+    using type = HasConversionSpecialization;
+    static type convert(const Node& node, int delta) {
+        return {node["x"].to<int>() + delta};
+    }
+};
+
+TEST_CASE("Static Failures") {
+    NodeSource ns{"{}", ""};
+    const Node& node = ns.root();
+
+    STATIC_REQUIRE(std::is_same_v<decltype(node.to<int>()), int>);
+    STATIC_REQUIRE(std::is_same_v<decltype(node.to<HasConversionSpecialization>()),
+                                  HasConversionSpecialization>);
+}
+
 
 TEST_CASE("Construct") {
     NodeSource ns("foo: bar\nbat: [1,2,3]", "");
@@ -80,58 +80,60 @@ TEST_CASE("YAML::Node Equivalency") {
     // having the API shown here justifies the behavior of genny::Node.
     //
 
-//    SECTION("Boolean Conversions") {
-////        {
-////            YAML::Node yaml = YAML::Load("foo: false");
-////            REQUIRE(yaml);
-////            REQUIRE(yaml["foo"]);
-////            REQUIRE(yaml["foo"].IsScalar());
-////            REQUIRE(yaml["foo"].as<bool>() == false);
-////        }
-////    }
+    SECTION("Boolean Conversions") {
+        {
+            YAML::Node yaml = YAML::Load("foo: false");
+            REQUIRE(yaml);
+            REQUIRE(yaml["foo"]);
+            REQUIRE(yaml["foo"].IsScalar());
+            REQUIRE(yaml["foo"].as<bool>() == false);
+        }
+    }
 
     SECTION("Invalid Access") {
         {
             YAML::Node yaml = YAML::Load("foo: a");
             // test of the test
-//            REQUIRE(yaml["foo"].as<std::string>() == "a");
+            REQUIRE(yaml["foo"].as<std::string>() == "a");
             // YAML::Node doesn't barf when treating a map like a sequence
-//            REQUIRE(bool(yaml[0]) == false);
+            REQUIRE(bool(yaml[0]) == false);
             // ...but it does barf when treating a scalar like a sequence
-//            REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
-//                                Catch::Matches("operator\\[\\] call on a scalar"));
+            REQUIRE_THROWS_WITH([&]() { yaml["foo"][0]; }(),
+                                Catch::Matches("operator\\[\\] call on a scalar"));
         }
 
         {
-//            NodeSource nodeSource{"foo: a", ""};
-//            const Node& node {nodeSource.root()};
+            NodeSource nodeSource{"foo: a", ""};
+            const Node& node {nodeSource.root()};
             // test of the test
-//            REQUIRE(node["foo"].to<std::string>() == "a");
+            REQUIRE(node["foo"].to<std::string>() == "a");
             // don't barf when treating a map like a sequence
-//            REQUIRE(bool(node[0]) == false);
+            REQUIRE(bool(node[0]) == false);
             // ...or when treating a scalar like a sequence (this is arguably incorrect)
-//            REQUIRE(bool(node["foo"][0]) == false);
+            REQUIRE(bool(node["foo"][0]) == false);
         }
 
         {
             YAML::Node yaml = YAML::Load("foos: [{a: 1}]");
             // YAML::Node doesn't barf when treating a map like a sequence
-//            REQUIRE(bool(yaml["foos"]["a"]) == false);
+            REQUIRE(bool(yaml["foos"]["a"]) == false);
             // ...but it does barf when treating a scalar like a sequence
-//            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].as<int>(); }(),
-//                                Catch::Matches("bad conversion"));
+            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].as<int>(); }(),
+                                Catch::Matches("bad conversion"));
         }
         {
-//            NodeSource nodeSource("foos: [{a: 1}]", "");
-//            auto& yaml {nodeSource.root()};
-//            REQUIRE(bool(yaml["foos"]["a"]) == false);
-//            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
-//                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
-//                                               "exist. On node with path '/foos/a': "));
-//            // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
-//            REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
+            NodeSource nodeSource("foos: [{a: 1}]", "");
+            auto& yaml {nodeSource.root()};
+            REQUIRE(bool(yaml["foos"]["a"]) == false);
+            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
+                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
+                                               "exist. On node with path '/foos/a': "));
+            // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
+            REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
         }
     }
+}
+TEST_CASE("More YAML::Node Equivalency") {
 //
 //    SECTION("iteration over sequences") {
 //        {
@@ -216,7 +218,7 @@ TEST_CASE("YAML::Node Equivalency") {
             NodeSource nodeSource{"foo: null", ""};
             auto& node{nodeSource.root()};
 //            REQUIRE(node["foo"].isNull() == true);
-//            REQUIRE(bool(node["foo"]) == true);
+            REQUIRE(bool(node["foo"]) == true);
 //
 //            REQUIRE(node["bar"].isNull() == false);
 //            REQUIRE(bool(node["bar"]) == false);
@@ -232,24 +234,24 @@ TEST_CASE("YAML::Node Equivalency") {
         {
             NodeSource ns("{a: A, b: B}", "");
             auto& yaml = ns.root();
-//            REQUIRE(yaml.to<std::map<std::string, std::string>>() ==
-//                    std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
+            REQUIRE(yaml.to<std::map<std::string, std::string>>() ==
+                    std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
         }
     }
 
     SECTION("isNull and fallback") {
-//        {
-//            YAML::Node yaml = YAML::Load("a: null");
-//            REQUIRE(yaml["a"].IsNull());
-//            REQUIRE(yaml["a"].as<int>(7) == 7);
-//        }
+        {
+            YAML::Node yaml = YAML::Load("a: null");
+            REQUIRE(yaml["a"].IsNull());
+            REQUIRE(yaml["a"].as<int>(7) == 7);
+        }
         {
             NodeSource ns("a: null", "");
-//            Node yaml = ns.root();
-//
+            const Node& yaml = ns.root();
+
 //            REQUIRE(yaml["a"].isNull());
-//            // .maybe and .to provide stronger guarantees:
-//            // we throw rather than returning the fallback if the conversion fails
+            // .maybe and .to provide stronger guarantees:
+            // we throw rather than returning the fallback if the conversion fails
 //            REQUIRE_THROWS_WITH(
 //                [&]() { yaml["a"].maybe<int>(); }(),
 //                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
@@ -262,21 +264,21 @@ TEST_CASE("YAML::Node Equivalency") {
     }
 
     SECTION("Missing values are boolean false") {
-//        {
-//            YAML::Node yaml = YAML::Load("{}");
-//            REQUIRE(bool(yaml) == true);
-//            auto dne = yaml["doesntexist"];
-//            REQUIRE(bool(dne) == false);
-//            REQUIRE((!dne) == true);
-//            if (dne) {
-//                FAIL("doesn't exist is boolean false");
-//            }
-//        }
+        {
+            YAML::Node yaml = YAML::Load("{}");
+            REQUIRE(bool(yaml) == true);
+            auto dne = yaml["doesntexist"];
+            REQUIRE(bool(dne) == false);
+            REQUIRE((!dne) == true);
+            if (dne) {
+                FAIL("doesn't exist is boolean false");
+            }
+        }
         {
             NodeSource nodeSource("{}", "");
-//            Node node {nodeSource.root()};
-//            REQUIRE(bool(node) == true);
-//            auto dne = node["doesntexist"];
+            auto& node {nodeSource.root()};
+            REQUIRE(bool(node) == true);
+//            auto& dne = node["doesntexist"];
 //            REQUIRE(bool(dne) == false);
 //            REQUIRE((!dne) == true);
 //            if (dne) {
@@ -289,45 +291,45 @@ TEST_CASE("YAML::Node Equivalency") {
 
     SECTION("Accessing a Sequence like a Map") {
         {
-//            YAML::Node yaml = YAML::Load("a: [0,1]");
-//            REQUIRE(yaml["a"][0].as<int>() == 0);
-//            REQUIRE(bool(yaml["a"]) == true);
-//            REQUIRE(bool(yaml["a"][0]) == true);
-//            // out of range
-//            REQUIRE(bool(yaml["a"][2]) == false);
-//
-//            REQUIRE(bool(yaml["a"]["wtf"]) == false);
-//            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
-//            REQUIRE_THROWS_WITH([&]() { yaml["a"]["wtf"]["even_deeper"].as<int>(); }(),
-//                                Catch::Matches("bad conversion"));
+            YAML::Node yaml = YAML::Load("a: [0,1]");
+            REQUIRE(yaml["a"][0].as<int>() == 0);
+            REQUIRE(bool(yaml["a"]) == true);
+            REQUIRE(bool(yaml["a"][0]) == true);
+            // out of range
+            REQUIRE(bool(yaml["a"][2]) == false);
+
+            REQUIRE(bool(yaml["a"]["wtf"]) == false);
+            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+            REQUIRE_THROWS_WITH([&]() { yaml["a"]["wtf"]["even_deeper"].as<int>(); }(),
+                                Catch::Matches("bad conversion"));
         }
         {
             NodeSource nodeSource("a: [0,1]", "");
-//            auto yaml = nodeSource.root();
-//            REQUIRE(yaml["a"][0].to<int>() == 0);
-//            REQUIRE(bool(yaml["a"]) == true);
-//            REQUIRE(bool(yaml["a"][0]) == true);
-//            // out of range
-//            REQUIRE(bool(yaml["a"][2]) == false);
-//            REQUIRE(bool(yaml["a"]["wtf"]) == false);
-//            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
-//            REQUIRE_THROWS_WITH(
-//                [&]() {
-//                    yaml["a"]["wtf"]["even_deeper"].to<int>();
-//                    // We could do a better job at reporting that 'a' is a sequence
-//                }(),
-//                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
-//                               "exist. On node with path '/a/wtf/even_deeper': "));
+            auto& yaml = nodeSource.root();
+            REQUIRE(yaml["a"][0].to<int>() == 0);
+            REQUIRE(bool(yaml["a"]) == true);
+            REQUIRE(bool(yaml["a"][0]) == true);
+            // out of range
+            REQUIRE(bool(yaml["a"][2]) == false);
+            REQUIRE(bool(yaml["a"]["wtf"]) == false);
+            REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+            REQUIRE_THROWS_WITH(
+                [&]() {
+                    yaml["a"]["wtf"]["even_deeper"].to<int>();
+                    // We could do a better job at reporting that 'a' is a sequence
+                }(),
+                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
+                               "exist. On node with path '/a/wtf/even_deeper': "));
         }
     }
 }
-//
-//TEST_CASE("value_or") {
-//    NodeSource ns{"{}", ""};
-//    auto node = ns.root();
-//    REQUIRE(node["foo"].maybe<int>() == std::nullopt);
-//}
-//
+
+TEST_CASE("value_or") {
+    NodeSource ns{"{}", ""};
+    auto& node = ns.root();
+    REQUIRE(node["foo"].maybe<int>() == std::nullopt);
+}
+
 //TEST_CASE("simple inehritance") {
 //    NodeSource ns{"a: 7", ""};
 //    auto node = ns.root();
@@ -339,37 +341,37 @@ TEST_CASE("YAML::Node Equivalency") {
 //    REQUIRE(node[0][".."]["a"].maybe<int>().value_or(8) == 7);
 //}
 //
-//TEST_CASE("invalid access") {
-//    auto yaml = std::string(R"(
-//seven: 7
-//bee: b
-//intList: [1,2,3]
-//stringMap: {a: A, b: B}
-//nothing: null
-//sure: true
-//nope: false
-//)");
-//    NodeSource ns{yaml, ""};
-//    Node node = ns.root();
-//
-////    //    REQUIRE_THROWS_WITH([&](){}(), Catch::Matches(""));
-//    REQUIRE_THROWS_WITH(
-//        [&]() { node[0].to<int>(); }(),
-//        Catch::Matches(
-//            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
-//    REQUIRE_THROWS_WITH(
-//        [&]() { node["seven"][0].to<int>(); }(),
-//        Catch::Matches(
-//            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/seven/0': "));
-//
-//    // Debatable if this should barf or not
-//    REQUIRE(node["seven"][0][".."]["sure"].to<bool>() == true);
-//
-//    REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
-//                        Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-//                                       "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
-//}
-//
+TEST_CASE("invalid access") {
+    auto yaml = std::string(R"(
+seven: 7
+bee: b
+intList: [1,2,3]
+stringMap: {a: A, b: B}
+nothing: null
+sure: true
+nope: false
+)");
+    NodeSource ns{yaml, ""};
+    auto& node = ns.root();
+
+    //    REQUIRE_THROWS_WITH([&](){}(), Catch::Matches(""));
+    REQUIRE_THROWS_WITH(
+        [&]() { node[0].to<int>(); }(),
+        Catch::Matches(
+            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
+    REQUIRE_THROWS_WITH(
+        [&]() { node["seven"][0].to<int>(); }(),
+        Catch::Matches(
+            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/seven/0': "));
+
+    // Debatable if this should barf or not
+    REQUIRE(node["seven"][0][".."]["sure"].to<bool>() == true);
+
+    REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
+                        Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                                       "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
+}
+
 ////TEST_CASE("Invalid YAML") {
 ////    REQUIRE_THROWS_WITH(
 ////        [&]() { NodeSource n("foo: {", "foo.yaml"); }(),
@@ -497,58 +499,58 @@ TEST_CASE("YAML::Node Equivalency") {
 //    REQUIRE(bool(fooParent) == true);
 //}
 //
-//TEST_CASE(".maybe and value_or") {
-//    auto yaml = std::string(R"(
-//seven: 7
-//bee: b
-//intList: [1,2,3]
-//stringMap: {a: A, b: B}
-//nothing: null
-//sure: true
-//nope: false
-//)");
-//    NodeSource ns{yaml, ""};
-//    Node node = ns.root();
-//
-//    REQUIRE(node["seven"].maybe<int>().value_or(8) == 7);
-//    REQUIRE(node["eight"].maybe<int>().value_or(8) == 8);
-//    REQUIRE(node["intList"].maybe<std::vector<int>>().value_or(std::vector<int>{}) ==
-//            std::vector<int>{1, 2, 3});
-//    REQUIRE(node["intList2"].maybe<std::vector<int>>().value_or(std::vector<int>{1, 2}) ==
-//            std::vector<int>{1, 2});
-//    // similar check to TEST_CASE above
-//    REQUIRE(node["stringMap"]["seven"].maybe<int>().value_or(8) == 7);
-//    REQUIRE(node["stringMap"].maybe<std::map<std::string, std::string>>().value_or(
-//                std::map<std::string, std::string>{}) ==
-//            std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
-//    REQUIRE(node["stringMap2"].maybe<std::map<std::string, std::string>>().value_or(
-//                std::map<std::string, std::string>{{"foo", "bar"}}) ==
-//            std::map<std::string, std::string>{{"foo", "bar"}});
-//    REQUIRE(node["stringMap"][0].maybe<int>().value_or(7) == 7);
-//    // we went to an "invalid" node stringMap[0] (because stringMap is a map) but then we went to ..
-//    // so we're okay
-//    REQUIRE(node["stringMap"][0][".."]["a"].maybe<std::string>().value_or<std::string>("orVal") ==
-//            "A");
-//    // even invalid nodes can value_or
-//    REQUIRE(node["stringMap"][0]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
-//    // same thing for root level
-//    REQUIRE(node[0][".."]["bee"].maybe<std::string>().value_or<std::string>("x") == "b");
-//
-//    REQUIRE(node["sure"].maybe<bool>().value_or(false) == true);
-//    REQUIRE(node["sure"].maybe<bool>().value_or(true) == true);
-//    REQUIRE(node["nope"].maybe<bool>().value_or(false) == false);
-//    REQUIRE(node["nope"].maybe<bool>().value_or(true) == false);
-//    REQUIRE(node["doesntExist"].maybe<bool>().value_or(true) == true);
-//    REQUIRE(node["doesntExist"].maybe<bool>().value_or(false) == false);
-//
-//    REQUIRE(node["bee"].maybe<std::string>().value_or<std::string>("foo") == "b");
-//    REQUIRE(node["baz"].maybe<std::string>().value_or<std::string>("foo") == "foo");
-//
-//
-//    REQUIRE(node["stringMap"]["a"].maybe<std::string>().value_or<std::string>("7") == "A");
-//    // inherits from parent
-//    REQUIRE(node["stringMap"]["bee"].maybe<std::string>().value_or<std::string>("7") == "b");
-//}
+TEST_CASE(".maybe and value_or") {
+    auto yaml = std::string(R"(
+seven: 7
+bee: b
+intList: [1,2,3]
+stringMap: {a: A, b: B}
+nothing: null
+sure: true
+nope: false
+)");
+    NodeSource ns{yaml, ""};
+    const auto& node = ns.root();
+
+    REQUIRE(node["seven"].maybe<int>().value_or(8) == 7);
+    REQUIRE(node["eight"].maybe<int>().value_or(8) == 8);
+    REQUIRE(node["intList"].maybe<std::vector<int>>().value_or(std::vector<int>{}) ==
+            std::vector<int>{1, 2, 3});
+    REQUIRE(node["intList2"].maybe<std::vector<int>>().value_or(std::vector<int>{1, 2}) ==
+            std::vector<int>{1, 2});
+    // similar check to TEST_CASE above
+    REQUIRE(node["stringMap"]["seven"].maybe<int>().value_or(8) == 7);
+    REQUIRE(node["stringMap"].maybe<std::map<std::string, std::string>>().value_or(
+                std::map<std::string, std::string>{}) ==
+            std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
+    REQUIRE(node["stringMap2"].maybe<std::map<std::string, std::string>>().value_or(
+                std::map<std::string, std::string>{{"foo", "bar"}}) ==
+            std::map<std::string, std::string>{{"foo", "bar"}});
+    REQUIRE(node["stringMap"][0].maybe<int>().value_or(7) == 7);
+    // we went to an "invalid" node stringMap[0] (because stringMap is a map) but then we went to ..
+    // so we're okay
+    REQUIRE(node["stringMap"][0][".."]["a"].maybe<std::string>().value_or<std::string>("orVal") ==
+            "A");
+    // even invalid nodes can value_or
+    REQUIRE(node["stringMap"][0]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
+    // same thing for root level
+    REQUIRE(node[0][".."]["bee"].maybe<std::string>().value_or<std::string>("x") == "b");
+
+    REQUIRE(node["sure"].maybe<bool>().value_or(false) == true);
+    REQUIRE(node["sure"].maybe<bool>().value_or(true) == true);
+    REQUIRE(node["nope"].maybe<bool>().value_or(false) == false);
+    REQUIRE(node["nope"].maybe<bool>().value_or(true) == false);
+    REQUIRE(node["doesntExist"].maybe<bool>().value_or(true) == true);
+    REQUIRE(node["doesntExist"].maybe<bool>().value_or(false) == false);
+
+    REQUIRE(node["bee"].maybe<std::string>().value_or<std::string>("foo") == "b");
+    REQUIRE(node["baz"].maybe<std::string>().value_or<std::string>("foo") == "foo");
+
+
+    REQUIRE(node["stringMap"]["a"].maybe<std::string>().value_or<std::string>("7") == "A");
+    // inherits from parent
+    REQUIRE(node["stringMap"]["bee"].maybe<std::string>().value_or<std::string>("7") == "b");
+}
 //
 //TEST_CASE("Node Type") {
 //    auto yaml = std::string(R"(
@@ -808,34 +810,34 @@ TEST_CASE("YAML::Node Equivalency") {
 //    }
 //}
 //
-//TEST_CASE("Node Built-Ins Construction") {
-//    auto yaml = std::string(R"(
-//SomeString: some_string
-//IntList: [1,2,3]
-//ListOfMapStringString:
-//- {a: A}
-//- {b: B}
-//)");
-//    NodeSource ns(yaml, "");
-//    Node node = ns.root();
-//
-//    { REQUIRE(node["SomeString"].to<std::string>() == "some_string"); }
-//    { REQUIRE((node["IntList"].to<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
-//    {
-//        using ListMapStrStr = std::vector<std::map<std::string, std::string>>;
-//        auto expect = ListMapStrStr{{{"a", "A"}}, {{"b", "B"}}};
-//        auto actual = node["ListOfMapStringString"].to<ListMapStrStr>();
-//
-//        REQUIRE(expect == actual);
-//    }
-//}
-//
-//TEST_CASE("Specialization") {
-//    NodeSource ns("{x: 8}", "");
-//    Node node = ns.root();
-//    REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
-//}
-//
+TEST_CASE("Node Built-Ins Construction") {
+    auto yaml = std::string(R"(
+SomeString: some_string
+IntList: [1,2,3]
+ListOfMapStringString:
+- {a: A}
+- {b: B}
+)");
+    NodeSource ns(yaml, "");
+    const auto& node = ns.root();
+
+    { REQUIRE(node["SomeString"].to<std::string>() == "some_string"); }
+    { REQUIRE((node["IntList"].to<std::vector<int>>() == std::vector<int>{1, 2, 3})); }
+    {
+        using ListMapStrStr = std::vector<std::map<std::string, std::string>>;
+        auto expect = ListMapStrStr{{{"a", "A"}}, {{"b", "B"}}};
+        auto actual = node["ListOfMapStringString"].to<ListMapStrStr>();
+
+        REQUIRE(expect == actual);
+    }
+}
+
+TEST_CASE("Specialization") {
+    NodeSource ns("{x: 8}", "");
+    const auto& node = ns.root();
+    REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
+}
+
 //TEST_CASE("Node Paths") {
 //    auto yaml = std::string(R"(
 //msg: bar
@@ -900,48 +902,48 @@ TEST_CASE("YAML::Node Equivalency") {
 ////    }
 ////}
 ////
-//TEST_CASE("Node Simple User-Defined Conversions") {
-//    EmptyStruct context;
-//
-//    auto yaml = std::string(R"(
-//msg: bar
-//One: {msg: foo}
-//Two: {}
-//)");
-//    NodeSource ns(yaml, "");
-//    auto node = ns.root();
-//
-//    {
-//        TakesEmptyStructAndExtractsMsg one =
-//            node["One"].to<TakesEmptyStructAndExtractsMsg>(&context);
-//        REQUIRE(one.msg == "foo");
-//    }
-//
-//    {
-//        TakesEmptyStructAndExtractsMsg one =
-//            node["Two"].to<TakesEmptyStructAndExtractsMsg>(&context);
-//        REQUIRE(one.msg == "bar");
-//    }
-//}
-//
-//TEST_CASE("operator-left-shift") {
-//    {
-//        NodeSource ns{"Foo: 7", ""};
-//        auto node = ns.root();
-//        std::stringstream str;
+TEST_CASE("Node Simple User-Defined Conversions") {
+    EmptyStruct context;
+
+    auto yaml = std::string(R"(
+msg: bar
+One: {msg: foo}
+Two: {}
+)");
+    NodeSource ns(yaml, "");
+    const auto& node = ns.root();
+
+    {
+        TakesEmptyStructAndExtractsMsg one =
+            node["One"].to<TakesEmptyStructAndExtractsMsg>(&context);
+        REQUIRE(one.msg == "foo");
+    }
+
+    {
+        TakesEmptyStructAndExtractsMsg one =
+            node["Two"].to<TakesEmptyStructAndExtractsMsg>(&context);
+        REQUIRE(one.msg == "bar");
+    }
+}
+
+TEST_CASE("operator-left-shift") {
+    {
+        NodeSource ns{"Foo: 7", ""};
+        const auto& node = ns.root();
+        std::stringstream str;
 //        str << node;
 //        REQUIRE(str.str() == "Foo: 7");
-//    }
-//    {
-//        NodeSource ns{"Foo: {Bar: Baz}", ""};
-//        auto node = ns.root();
-//        std::stringstream str;
+    }
+    {
+        NodeSource ns{"Foo: {Bar: Baz}", ""};
+        const auto&  node = ns.root();
+        std::stringstream str;
 //        str << node;
 //        REQUIRE(str.str() == "Foo: {Bar: Baz}");
-//    }
-//    // rely on YAML::Dump so don't need to enforce much beyond this
-//}
-//
+    }
+    // rely on YAML::Dump so don't need to enforce much beyond this
+}
+
 ////TEST_CASE("getPlural") {
 ////    {
 ////        Node node{"Foo: 7", ""};
@@ -1006,46 +1008,46 @@ TEST_CASE("YAML::Node Equivalency") {
 ////    }
 ////}
 ////
-//TEST_CASE("maybe") {
-//    auto yaml = std::string(R"(
-//Children:
-//  msg: inherited
-//  overrides: {msg: overridden}
-//  deep:
-//    nesting:
-//      can:
-//        still: {inherit: {}, override: {msg: deeply_overridden}}
-//)");
-//    NodeSource ns(yaml, "");
-//    auto node = ns.root();
-//
-//    node["does"]["not"]["exist"].maybe<RequiresParamToEqualNodeX>(3);
-//    REQUIRE(!node["does"]["not"]["exist"].maybe<ExtractsMsg>());
-//    REQUIRE(node["Children"].maybe<ExtractsMsg>()->msg == "inherited");
-//    REQUIRE(node["Children"]["overrides"].maybe<ExtractsMsg>()->msg == "overridden");
-//    REQUIRE(
-//        node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg ==
-//        "inherited");
-//    REQUIRE(
-//        node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsMsg>()->msg ==
-//        "deeply_overridden");
-//}
-//
-//TEST_CASE("Configurable additional-ctor-params Conversions") {
-//    auto yaml = std::string(R"(
-//x: 9
-//a: {x: 7}
-//b: {}
-//)");
-//    NodeSource ns(yaml, "");
-//    auto node = ns.root();
-//
-//    node.to<RequiresParamToEqualNodeX>(9);
-//    node["a"].to<RequiresParamToEqualNodeX>(7);
-//    // inheritance
+TEST_CASE("maybe") {
+    auto yaml = std::string(R"(
+Children:
+  msg: inherited
+  overrides: {msg: overridden}
+  deep:
+    nesting:
+      can:
+        still: {inherit: {}, override: {msg: deeply_overridden}}
+)");
+    NodeSource ns(yaml, "");
+    const auto& node = ns.root();
+
+    node["does"]["not"]["exist"].maybe<RequiresParamToEqualNodeX>(3);
+    REQUIRE(!node["does"]["not"]["exist"].maybe<ExtractsMsg>());
+    REQUIRE(node["Children"].maybe<ExtractsMsg>()->msg == "inherited");
+    REQUIRE(node["Children"]["overrides"].maybe<ExtractsMsg>()->msg == "overridden");
+    REQUIRE(
+        node["Children"]["deep"]["nesting"]["can"]["still"]["inherit"].maybe<ExtractsMsg>()->msg ==
+        "inherited");
+    REQUIRE(
+        node["Children"]["deep"]["nesting"]["can"]["still"]["override"].maybe<ExtractsMsg>()->msg ==
+        "deeply_overridden");
+}
+
+TEST_CASE("Configurable additional-ctor-params Conversions") {
+    auto yaml = std::string(R"(
+x: 9
+a: {x: 7}
+b: {}
+)");
+    NodeSource ns(yaml, "");
+    const auto& node = ns.root();
+
+    node.to<RequiresParamToEqualNodeX>(9);
+    node["a"].to<RequiresParamToEqualNodeX>(7);
+    // inheritance
 //    node["b"].to<RequiresParamToEqualNodeX>(9);
-//}
-//
+}
+
 ////TEST_CASE("Iteration") {
 ////    auto yaml = std::string(R"(
 ////Scalar: foo
@@ -1129,4 +1131,4 @@ TEST_CASE("YAML::Node Equivalency") {
 ////        }
 ////        REQUIRE(count == 1);
 ////    }
-//}
+

@@ -36,6 +36,14 @@ public:
         return *_map.at(key);
     }
 
+    const YAML::Node yaml() const {
+        return _yaml;
+    }
+
+    explicit operator bool() const {
+        return bool(_yaml);
+    }
+
 private:
     ChildrenMap _map;
     ChildrenSeq _seq;
@@ -71,6 +79,14 @@ private:
 
         return out;
     }};
+
+const YAML::Node Node::yaml() const {
+    return _impl->yaml();
+}
+
+Node::operator bool() const {
+    return _impl->operator bool();
+}
 
 Node::~Node() = default;
 
