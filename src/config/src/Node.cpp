@@ -142,3 +142,32 @@ NodeSource::NodeSource(std::string yaml, std::string path)
   _root{std::make_unique<Node>(nullptr, YamlKey{""}, _yaml)},
   _path{path} {}
 
+NodeSource::~NodeSource() = default;
+
+iterator_value::~iterator_value() = default;
+
+class IteratorImpl {
+public:
+    void increment();
+    bool notEqual(const IteratorImpl& rhs) const;
+    const iterator_value& getValue() const {
+        return _current;
+    }
+private:
+    iterator_value _current;
+};
+
+void iterator::operator++() {
+    return _impl->increment();
+}
+
+bool iterator::operator!=(const iterator& rhs) const {
+    return _impl->notEqual(*rhs._impl);
+}
+
+const iterator_value& iterator::operator*() const {
+    return _impl->getValue();
+}
+
+iterator::~iterator() = default;
+

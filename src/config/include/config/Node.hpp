@@ -236,8 +236,6 @@ public:
     explicit iterator_value(YamlKey key, const Node& node);
 private:
     friend Node;
-    friend class IteratorValueImpl;
-    std::unique_ptr<class IteratorValueImpl> _impl;
 };
 
 class iterator {
@@ -245,7 +243,7 @@ public:
     ~iterator();
     bool operator!=(const iterator&) const;
     void operator++();
-    const iterator_value operator*() const;
+    const iterator_value& operator*() const;
 private:
     friend Node;
     friend class IteratorImpl;
@@ -254,6 +252,7 @@ private:
 
 class NodeSource {
 public:
+    ~NodeSource();
     const Node& root() const {
         return *_root;
     }

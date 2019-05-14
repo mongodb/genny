@@ -178,7 +178,7 @@ TEST_CASE("More YAML::Node Equivalency") {
             NodeSource ns("foo: bar", "");
             auto& node = ns.root();
             int seen = 0;
-            for (auto kvp : node) {
+            for (auto& kvp : node) {
                 ++seen;
                 REQUIRE(kvp.first.to<std::string>() == "foo");
                 REQUIRE(kvp.second.to<std::string>() == "bar");
@@ -1039,7 +1039,7 @@ SingleItemList: [37]
     SECTION("Scalar") {
         auto& a = node["Scalar"];
         REQUIRE(a);
-        for (auto kvp : a) {
+        for (auto& kvp : a) {
             FAIL("nothing to iterate");
         }
     }
@@ -1047,7 +1047,7 @@ SingleItemList: [37]
         auto& mp = node["SimpleMap"];
         REQUIRE(mp);
         int seen = 0;
-        for (auto kvp : mp) {
+        for (auto& kvp : mp) {
             auto& k = kvp.first;
             auto& v = kvp.second;
             REQUIRE(k.to<std::string>() == "a");
@@ -1061,7 +1061,7 @@ SingleItemList: [37]
         auto& lst = node["ListOfScalars"];
         REQUIRE(lst);
         int i = 1;
-        for (auto v : lst) {
+        for (auto& v : lst) {
             REQUIRE(v.to<int>() == i);
             ++i;
         }
@@ -1073,12 +1073,12 @@ SingleItemList: [37]
         REQUIRE(lom);
 //        REQUIRE(lom.size() == 1);
         auto countMaps = 0;
-        for (auto m : lom) {
+        for (auto& m : lom) {
             ++countMaps;
 //            REQUIRE(m.size() == 2);
 
             auto countEntries = 0;
-            for (auto kvp : m) {
+            for (auto& kvp : m) {
                 ++countEntries;
             }
             REQUIRE(countEntries == 2);
@@ -1100,7 +1100,7 @@ SingleItemList: [37]
         REQUIRE(sil.size() == 1);
         REQUIRE(sil[0].to<int>() == 37);
         auto count = 0;
-        for (auto v : sil) {
+        for (auto& v : sil) {
             REQUIRE(v.to<int>() == 37);
             // we still get parents
             REQUIRE(v[".."]["Scalar"].to<std::string>() == "foo");
