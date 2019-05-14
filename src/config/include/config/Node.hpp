@@ -242,8 +242,9 @@ public:
     ~iterator();
     bool operator!=(const iterator&) const;
     void operator++();
-    const iterator_value& operator*() const;
+    const iterator_value operator*() const;
 private:
+    iterator(const class NodeImpl*, bool end);
     friend Node;
     friend class IteratorImpl;
     std::unique_ptr<class IteratorImpl> _impl;

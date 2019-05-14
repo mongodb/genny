@@ -45,8 +45,17 @@ public:
         return _yaml.size();
     }
 
+    std::string path() const {
+        return _path.toString();
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const NodeImpl& impl) {
+        return out << YAML::Dump(impl._yaml);
+    }
+
 private:
     static YAML::Node _zombie;
+    friend iterator;
 
     // Needs to be mutable to generate placeholder nodes for non-existent keys.
     mutable Children _children;
@@ -85,6 +94,20 @@ private:
     }
 };
 
+std::string Node::path() const {
+    return this->_impl->path();
+}
+
+class iterator Node::begin() const {
+    return iterator{&*this->_impl, false};
+}
+class iterator Node::end() const {
+    return iterator{&*this->_impl, true};
+}
+
+std::ostream& operator<<(std::ostream& out, const Node& node) {
+    return out << *(node._impl);
+}
 
 std::ostream& operator<<(std::ostream& out, const YamlKey& key)  {
     try {
@@ -144,16 +167,27 @@ NodeSource::NodeSource(std::string yaml, std::string path)
 
 NodeSource::~NodeSource() = default;
 
+template<typename T>
+class TD;
+
 class IteratorImpl {
 public:
-    void increment();
-    bool notEqual(const IteratorImpl& rhs) const;
-    const iterator_value& getValue() const {
-        return _current;
+    void increment() {
+        ++_children;
     }
+    bool notEqual(const IteratorImpl& rhs) const {
+        return _children == rhs._children;
+    }
+    const iterator_value getValue() const {
+        auto& [key, implPtr] = *_children;
+        return {key, *implPtr};
+    }
+
+    IteratorImpl(Children::const_iterator children)
+            : _children(children) {}
+
 private:
     Children::const_iterator _children;
-    iterator_value _current;
 };
 
 void iterator::operator++() {
@@ -164,9 +198,15 @@ bool iterator::operator!=(const iterator& rhs) const {
     return _impl->notEqual(*rhs._impl);
 }
 
-const iterator_value& iterator::operator*() const {
+const iterator_value iterator::operator*() const {
     return _impl->getValue();
 }
+
+iterator::iterator(const NodeImpl* nodeImpl, bool end)
+: _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_children.begin() : nodeImpl->_children.end())}
+{}
+
+
 
 iterator::~iterator() = default;
 
