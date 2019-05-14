@@ -1060,11 +1060,11 @@ SingleItemList: [37]
     SECTION("ListOfMap") {
         auto& lom = node["ListOfMap"];
         REQUIRE(lom);
-//        REQUIRE(lom.size() == 1);
+        REQUIRE(lom.size() == 1);
         auto countMaps = 0;
         for (auto& [k,m] : lom) {
             ++countMaps;
-//            REQUIRE(m.size() == 2);
+            REQUIRE(m.size() == 2);
 
             auto countEntries = 0;
             for (auto& _ : m) {
