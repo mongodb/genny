@@ -40,20 +40,17 @@ public:
     bool operator<(const YamlKey& rhs) const {
         return _value < rhs._value;
     }
-    friend std::ostream& operator<<(std::ostream& out, const YamlKey& key) {
-        try {
-            return out << std::get<std::string>(key._value);
-        } catch(const std::bad_variant_access&) {
-            return out << std::get<long>(key._value);
-        }
-    }
+
+    std::string toString() const;
+
+    friend std::ostream& operator<<(std::ostream& out, const YamlKey& key);
+
 private:
     using Type = std::variant<long, std::string>;
     const Type _value;
 };
 
 class Node {
-// TODO: disable copy/move
 public:
     Node(const Node&) = delete;
     void operator=(const Node&) = delete;

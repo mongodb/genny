@@ -85,6 +85,20 @@ private:
     }
 };
 
+
+std::ostream& operator<<(std::ostream& out, const YamlKey& key)  {
+    try {
+        return out << std::get<std::string>(key._value);
+    } catch(const std::bad_variant_access&) {
+        return out << std::get<long>(key._value);
+    }
+}
+std::string YamlKey::toString() const  {
+    std::stringstream out;
+    out << *this;
+    return out.str();
+}
+
 bool Node::isNull() const {
     return _impl->isNull();
 }
