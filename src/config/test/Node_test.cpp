@@ -146,21 +146,21 @@ TEST_CASE("More YAML::Node Equivalency") {
             REQUIRE(sum == 6);
         }
 
-//        {
-//            NodeSource ns{"ns: [1,2,3]", ""};
-//            auto& node = ns.root();
-//            int sum = 0;
-//            for(auto& n : node["ns"]) {
-//                REQUIRE(bool(n.first) == false);
-//                REQUIRE(bool(n.second) == false);
-//                sum += n.to<int>();
-//                if (sum == 1) {
-//                    REQUIRE(n.first.path() == "/ns/0$key");
-//                    REQUIRE(n.second.path() == "/ns/0");
-//                }
-//            }
-//            REQUIRE(sum == 6);
-//        }
+        {
+            NodeSource ns{"ns: [1,2,3]", ""};
+            auto& node = ns.root();
+            int sum = 0;
+            for(auto& n : node["ns"]) {
+                REQUIRE(bool(n.first) == false);
+                REQUIRE(bool(n.second) == false);
+                sum += n.to<int>();
+                if (sum == 1) {
+                    REQUIRE(n.first.path() == "/ns/0$key");
+                    REQUIRE(n.second.path() == "/ns/0");
+                }
+            }
+            REQUIRE(sum == 6);
+        }
     }
 //
 //    SECTION("iteration over maps") {

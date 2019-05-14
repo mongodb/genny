@@ -149,11 +149,13 @@ public:
         return *out;
     }
 
-//    class iterator begin() const;
-//    class iterator end() const;
+    std::string path() const;
 
+    class iterator begin() const;
+    class iterator end() const;
 
 private:
+    friend class iterator;
     friend class NodeImpl;
     friend class NodeSource;
     std::unique_ptr<class NodeImpl> _impl;
@@ -215,6 +217,18 @@ private:
                       "Cannot pass additional args when using built-in YAML conversion");
         return std::make_optional<O>(yaml().as<O>());
     }
+};
+
+class iterator_value : public std::pair<const Node&,const Node&>, public Node {
+public:
+    explicit iterator_value(YamlKey key, const Node& node);
+};
+
+class iterator {
+public:
+    bool operator!=(const iterator&) const;
+    void operator++();
+    const iterator_value operator*() const;
 };
 
 class NodeSource {
