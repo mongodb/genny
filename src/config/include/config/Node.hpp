@@ -55,6 +55,11 @@ private:
 class Node {
 // TODO: disable copy/move
 public:
+    Node(const Node&) = delete;
+    void operator=(const Node&) = delete;
+    Node(Node&&) = delete;
+    void operator=(Node&&) = delete;
+
     const Node& operator[](long key) const;
     const Node& operator[](std::string key) const;
     ~Node();

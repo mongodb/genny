@@ -29,6 +29,22 @@ public:
         return bool(_yaml);
     }
 
+    bool isMap() const {
+        return _yaml.IsMap();
+    }
+
+    bool isSequence() const {
+        return _yaml.IsSequence();
+    }
+
+    bool isNull() const {
+        return _yaml.IsNull();
+    }
+
+    size_t size() const {
+        return _yaml.size();
+    }
+
 private:
     static YAML::Node _zombie;
 
@@ -68,6 +84,20 @@ private:
         return out;
     }
 };
+
+bool Node::isNull() const {
+    return _impl->isNull();
+}
+
+bool Node::isMap() const {
+    return _impl->isMap();
+}
+bool Node::isSequence() const {
+    return _impl->isSequence();
+}
+size_t Node::size() const {
+    return _impl->size();
+}
 
 YAML::Node NodeImpl::_zombie = YAML::Load("")["zombie"];
 
