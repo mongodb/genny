@@ -151,7 +151,7 @@ TEST_CASE("More YAML::Node Equivalency") {
             auto& node = ns.root();
             int sum = 0;
             for(auto& [k,v] : node["ns"]) {
-                REQUIRE(bool(v) == false);
+                REQUIRE(bool(v) == true);
                 sum += v.to<int>();
                 if (sum == 1) {
                     REQUIRE(v.path() == "/ns/0");
@@ -1097,12 +1097,6 @@ SingleItemList: [37]
 
             REQUIRE(m["a"].to<std::string>() == "A");
             REQUIRE(m["b"].to<std::string>() == "B");
-
-            // still get inheritance
-            REQUIRE(m["Scalar"].to<std::string>() == "foo");
-            // still get parent relationship:s
-            REQUIRE(m[".."]["Scalar"].to<std::string>() == "foo");
-            REQUIRE(m[".."]["SimpleMap"]["a"][".."]["Scalar"].to<std::string>() == "foo");
         }
         REQUIRE(countMaps == 1);
     }
@@ -1114,8 +1108,6 @@ SingleItemList: [37]
         auto count = 0;
         for (auto& [k,v] : sil) {
             REQUIRE(v.to<int>() == 37);
-            // we still get parents
-            REQUIRE(v[".."]["Scalar"].to<std::string>() == "foo");
             ++count;
         }
         REQUIRE(count == 1);
