@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stack>
+#include <memory>
+
 #include <config/Node.hpp>
 
 #include <boost/core/demangle.hpp>
@@ -29,7 +32,7 @@ YAML::Node parse(std::string yaml, const std::string& path) {
     }
 }
 
-NodeType determineType(YAML::Node node) {
+NodeType determineType(const YAML::Node node) {
     auto yamlTyp = node.Type();
     switch (yamlTyp) {
         case YAML::NodeType::Undefined:
@@ -45,7 +48,41 @@ NodeType determineType(YAML::Node node) {
     }
 }
 
-using Child = std::unique_ptr<BaseNodeImpl>;
+class YamlKey {
+public:
+    explicit YamlKey(std::string key)
+            : _key{key} {}
+    explicit YamlKey(long key)
+            : _key{key} {}
+    const YAML::Node apply(const YAML::Node n) const {
+        try {
+            return n[std::get<std::string>(_key)];
+        } catch(const std::bad_variant_access&) {
+            return n[std::get<long>(_key)];
+        }
+    }
+    bool isParent() const {
+        try {
+            return std::get<std::string>(_key) == "..";
+        } catch(const std::bad_variant_access&) {
+            return false;
+        }
+    }
+    friend std::ostream& operator<<(std::ostream& out, const YamlKey& key) {
+        try {
+            out << std::get<std::string>(key._key);
+        } catch(const std::bad_variant_access&) {
+            out << std::get<long>(key._key);
+        }
+        return out;
+    }
+private:
+    using type = std::variant<std::string, long>;
+    type _key;
+};
+
+
+using Child = std::unique_ptr<NodeImpl>;
 using ChildSequence = std::vector<Child>;
 using ChildMap = std::map<std::string, Child>;
 
@@ -56,16 +93,62 @@ std::string appendPath(std::string path, std::string key) {
 }  // namespace
 
 
-class NodeFields {
+// NodeSource PiMPL
+class NodeSourceImpl {
 public:
-    explicit NodeFields(YAML::Node yaml, const BaseNodeImpl* self, const BaseNodeImpl* parent)
-        : _yaml{yaml},
-          _self{self},
-          _parent{parent},
-          _nodeType{determineType(_yaml)},
-          _childSequence(childSequence(_yaml, self)),
-          _childMap(childMap(_yaml, self)),
-          _repr{YAML::Dump(_yaml)} {}
+    NodeSourceImpl(std::string yaml, std::string path)
+    : _rootYaml(parse(yaml, path)), _path{path} {}
+
+    Node root() const;
+    YAML::Node rootYaml() const {
+        return _rootYaml;
+    }
+private:
+    YAML::Node _rootYaml;
+    std::unique_ptr<const NodeImpl> _root;
+    std::string _path;
+};
+
+class NodeImpl {
+public:
+    NodeImpl(const NodeImpl& parent, YamlKey key)
+            : _source{parent._source}, _path{parent._path} {
+        _path.push_back(key);
+    }
+
+    ~NodeImpl() = default;
+
+    explicit operator bool() const {
+        return bool(getNode());
+    }
+
+    std::string path() const;
+
+    const YAML::Node getNode() const {
+        std::stack<YAML::Node> out;
+
+        out.push(_source->rootYaml());
+        for(const auto& key : _path) {
+            if (key.isParent()) {
+                if (out.empty()) {
+                    return YAML::Node{};
+                }
+                out.pop();
+                continue;
+            }
+            out.push(key.apply(out.top()));
+        }
+
+        return out.top();
+    }
+
+    Node stringGet(std::string key) const {
+        return Node{key, this};
+    }
+
+    Node longGet(long key) const {
+        return Node{key, this};
+    }
 
     bool isNull() const {
         return type() == NodeType::Null;
@@ -84,17 +167,11 @@ public:
     }
 
     NodeType type() const {
-        return _nodeType;
+        return determineType(getNode());
     }
 
     size_t size() const {
-        if (isMap()) {
-            return _childMap.size();
-        } else if (isSequence()) {
-            return _childSequence.size();
-        } else {
-            return 0;
-        }
+        return this->getNode().size();
     }
 
     YAML::Node getNode() {
@@ -102,183 +179,103 @@ public:
     }
 
     template <typename K>
-    const BaseNodeImpl* get(K&& key, const Node& node) const {
-        const BaseNodeImpl* out = nullptr;
-
+    const NodeImpl* get(K&& key) const {
         if constexpr (std::is_convertible_v<K, std::string>) {
-            if (key != "..") {
-                out = stringGet(std::forward<K>(key));
-            } else {
-
-            }
+            return stringGet(std::forward<K>(key));
         } else {
             // not a string
             static_assert(std::is_convertible_v<K, size_t>);
-            out = longGet(std::forward<K>(key));
-        }
-
-        if (out) {
-            // we found an exact match
+            return longGet(std::forward<K>(key));
         }
     }
-
-    // TODO: make private
-    const BaseNodeImpl* _self;
-    const BaseNodeImpl* _parent;
 
 private:
-
-    // TODO: kill
-    const std::string _repr;
-
-    YAML::Node _yaml;
-
-    const NodeType _nodeType;
-    const ChildSequence _childSequence;
-    const ChildMap _childMap;
-
-    const BaseNodeImpl* stringGet(const std::string& key) const {
-        if (const auto& found = _childMap.find(key); found != _childMap.end()) {
-            return &*(found->second);
-        }
-        return nullptr;
-    }
-
-    const BaseNodeImpl* longGet(long key) const {
-        if (key < 0 || key >= _childSequence.size()) {
-            return nullptr;
-        }
-        const auto& child = _childSequence.at(key);
-        return &*(child);
-    }
-
-    static ChildSequence childSequence(const YAML::Node node, const BaseNodeImpl* self) {
-        ChildSequence out;
-        if (node.Type() != YAML::NodeType::Sequence) {
-            return out;
-        }
-        for (YAML::Node kvp : node) {
-            out.emplace_back(std::make_unique<BaseNodeImpl>(kvp, self));
-        }
-        return out;
-    }
-
-    static ChildMap childMap(YAML::Node node, const BaseNodeImpl* self) {
-        ChildMap out;
-        if (node.Type() != YAML::NodeType::Map) {
-            return out;
-        }
-        for (const auto& kvp : node) {
-            auto childKey = kvp.first.as<std::string>();
-            out.emplace(childKey, std::make_unique<BaseNodeImpl>(kvp.second, self));
-        }
-        return out;
-    }
+    std::vector<YamlKey> _path;
+    const NodeSourceImpl* _source;
 };
+
+std::string NodeImpl::path() const {
+    std::stringstream out;
+    for(const auto& key : _path) {
+        out << key;
+    }
+    return out.str();
+}
 
 const YAML::Node BaseNodeImpl::getNode() const {
     return this->rest->getNode();
 }
 
 // NodeSource
-
 NodeSource::NodeSource(std::string yaml, std::string path)
-    : _root{std::make_unique<BaseNodeImpl>(parse(yaml, path), nullptr)},
-      _path{std::move(path)} {}
+    : _impl{std::make_unique<NodeSourceImpl>(yaml, path)} {}
 
 Node NodeSource::root() const {
-    return {&*_root, _path, ""};
+    return _impl->root();
 }
 
 NodeSource::~NodeSource() = default;
 
+Node NodeSourceImpl::root() const  {
+    return Node{"", _root ? &*_root : nullptr};
+}
 // Node
 
 bool Node::isScalar() const {
     if (!_impl) {
         return false;
     }
-    return _impl->rest->isScalar();
+    return _impl->isScalar();
 }
 
 std::string Node::path() const {
-    return _path;
-}
-
-std::string Node::key() const {
-    return _key;
+    return _impl->path();
 }
 
 NodeType Node::type() const {
-    if (!*this) {
-        return NodeType::Undefined;
-    }
-    return _impl->rest->type();
+    return _impl->type();
 }
 
 bool Node::isSequence() const {
-    if (!_impl) {
-        return false;
-    }
-    return _impl->rest->isSequence();
+    return _impl->isSequence();
 }
 
 bool Node::isMap() const {
-    if (!_impl) {
-        return false;
-    }
-    return _impl->rest->isMap();
+    return _impl->isMap();
 }
 
 bool Node::isNull() const {
-    if (!_impl) {
-        return false;
-    }
-    return _impl->rest->isNull();
+    return _impl->isNull();
 }
 
 Node::operator bool() const {
-    return bool(_impl);
+    return _impl->operator bool();
 }
 
 Node Node::stringGet(std::string key) const {
-    const BaseNodeImpl* child = _impl->rest->get(key, *this);
-    return {child, appendPath(_path, key), key};
+    return _impl->stringGet(key);
 }
 
 Node Node::longGet(long key) const {
-    std::string keyStr = std::to_string(key);
-    const auto self = _impl->rest->get(key, *this);
-    return {self, appendPath(_path, keyStr), keyStr};
+    return _impl->longGet(key);
 }
 
 size_t Node::size() const {
-    if (!_impl) {
-        return 0;
-    }
-    return _impl->rest->size();
+    return _impl->size();
 }
 
-Node::Node(const BaseNodeImpl* impl, std::string path, std::string key)
-: _impl{impl}, _path{path}, _key{key} {}
+YAML::Node Node::yaml() const {
+    return _impl->getNode();
+}
 
+Node::Node(std::string key, const NodeImpl *parent)
+        : _impl{std::make_unique<NodeImpl>(*parent, YamlKey{key})} {}
 
-//
-// std::string Node::path() const {
-//    std::stringstream out;
-//    this->buildPath(out);
-//    return out.str();
-//}
-//
-// Node::iterator Node::begin() const {
-//    return Node::iterator{_yaml.begin(), this};
-//}
-//
-// Node::iterator Node::end() const {
-//    return Node::iterator{_yaml.end(), this};
-//}
-//
-//
+Node::Node(long key, const NodeImpl *parent)
+        : _impl{std::make_unique<NodeImpl>(*parent, YamlKey{key})} {}
+
+Node::~Node() = default;
+
 
 // Exception Types
 
@@ -313,15 +310,11 @@ InvalidConversionException::InvalidConversionException(const struct Node *node,
 
 InvalidKeyException::InvalidKeyException(const std::string &msg, const genny::Node* node) {
     std::stringstream out;
-    out << "Invalid key '" << node->key() << "': ";
+//    out << "Invalid key 'key" << node->key() << "': ";
     out << msg << " ";
     out << "On node with path '" << node->path() << "': ";
 //    out << *node;
     _what = out.str();
 }
-
-BaseNodeImpl::BaseNodeImpl(YAML::Node yaml, const BaseNodeImpl* parent)
-: rest{std::make_unique<NodeFields>(yaml, this, parent)} {}
-
 
 }  // namespace genny
