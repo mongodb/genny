@@ -43,7 +43,7 @@ TEST_CASE("Out of Range") {
         NodeSource ns{"[100]", ""};
         const auto& node = ns.root();
         REQUIRE(node);
-//        REQUIRE(node.isSequence());
+        REQUIRE(node.isSequence());
         REQUIRE(node[0]);
         REQUIRE(bool(node[1]) == false);
         REQUIRE(bool(node[-1]) == false);
@@ -121,16 +121,16 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].as<int>(); }(),
                                 Catch::Matches("bad conversion"));
         }
-//        {
-//            NodeSource nodeSource("foos: [{a: 1}]", "");
-//            auto& yaml {nodeSource.root()};
-//            REQUIRE(bool(yaml["foos"]["a"]) == false);
-//            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
-//                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
-//                                               "exist. On node with path '/foos/a': "));
-//            // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
-//            REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
-//        }
+        {
+            NodeSource nodeSource("foos: [{a: 1}]", "");
+            auto& yaml {nodeSource.root()};
+            REQUIRE(bool(yaml["foos"]["a"]) == false);
+            REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
+                                Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
+                                               "exist. On node with path '/foos/a': "));
+            // this is arguably "incorrect" but it's at least consistent with YAML::Node's behavior
+            REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
+        }
     }
 }
 TEST_CASE("More YAML::Node Equivalency") {
@@ -162,34 +162,35 @@ TEST_CASE("More YAML::Node Equivalency") {
             REQUIRE(sum == 6);
         }
     }
-//
-//    SECTION("iteration over maps") {
-//        {
-//            YAML::Node yaml = YAML::Load("foo: bar");
-//            int seen = 0;
-//            for (auto kvp : yaml) {
-//                ++seen;
-//                REQUIRE(kvp.first.as<std::string>() == "foo");
-//                REQUIRE(kvp.second.as<std::string>() == "bar");
-//            }
-//            REQUIRE(seen == 1);
-//        }
-//        {
-//            Node node = Node("foo: bar", "");
-//            int seen = 0;
-//            for (auto kvp : node) {
-//                ++seen;
-//                REQUIRE(kvp.first.to<std::string>() == "foo");
-//                REQUIRE(kvp.second.to<std::string>() == "bar");
-//                // not super well-defined but what else can we do?
-//                REQUIRE(kvp.path() == "/0");
-//                REQUIRE(kvp.first.path() == "/foo$key");
-//                REQUIRE(kvp.second.path() == "/foo");
-//            }
-//            REQUIRE(seen == 1);
-//        }
-//    }
-//
+
+    SECTION("iteration over maps") {
+        {
+            YAML::Node yaml = YAML::Load("foo: bar");
+            int seen = 0;
+            for (auto kvp : yaml) {
+                ++seen;
+                REQUIRE(kvp.first.as<std::string>() == "foo");
+                REQUIRE(kvp.second.as<std::string>() == "bar");
+            }
+            REQUIRE(seen == 1);
+        }
+        {
+            NodeSource ns("foo: bar", "");
+            auto& node = ns.root();
+            int seen = 0;
+            for (auto kvp : node) {
+                ++seen;
+                REQUIRE(kvp.first.to<std::string>() == "foo");
+                REQUIRE(kvp.second.to<std::string>() == "bar");
+                // not super well-defined but what else can we do?
+                REQUIRE(kvp.path() == "/0");
+                REQUIRE(kvp.first.path() == "/foo$key");
+                REQUIRE(kvp.second.path() == "/foo");
+            }
+            REQUIRE(seen == 1);
+        }
+    }
+
     SECTION("Default-constructed is valid") {
     // TODO: is this comment still valid?
         // This is why we need to have Node::_valid
@@ -217,11 +218,11 @@ TEST_CASE("More YAML::Node Equivalency") {
         {
             NodeSource nodeSource{"foo: null", ""};
             auto& node{nodeSource.root()};
-//            REQUIRE(node["foo"].isNull() == true);
+            REQUIRE(node["foo"].isNull() == true);
             REQUIRE(bool(node["foo"]) == true);
-//
-//            REQUIRE(node["bar"].isNull() == false);
-//            REQUIRE(bool(node["bar"]) == false);
+
+            REQUIRE(node["bar"].isNull() == false);
+            REQUIRE(bool(node["bar"]) == false);
         }
     }
 
@@ -249,17 +250,17 @@ TEST_CASE("More YAML::Node Equivalency") {
             NodeSource ns("a: null", "");
             const Node& yaml = ns.root();
 
-//            REQUIRE(yaml["a"].isNull());
+            REQUIRE(yaml["a"].isNull());
             // .maybe and .to provide stronger guarantees:
             // we throw rather than returning the fallback if the conversion fails
-//            REQUIRE_THROWS_WITH(
-//                [&]() { yaml["a"].maybe<int>(); }(),
-//                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-//                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
-//            REQUIRE_THROWS_WITH(
-//                [&]() { yaml["a"].to<int>(); }(),
-//                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-//                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+            REQUIRE_THROWS_WITH(
+                [&]() { yaml["a"].maybe<int>(); }(),
+                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
+            REQUIRE_THROWS_WITH(
+                [&]() { yaml["a"].to<int>(); }(),
+                Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                               "\\(Line:Column\\)=\\(0:3\\). On node with path '/a': ~"));
         }
     }
 
@@ -278,14 +279,14 @@ TEST_CASE("More YAML::Node Equivalency") {
             NodeSource nodeSource("{}", "");
             auto& node {nodeSource.root()};
             REQUIRE(bool(node) == true);
-//            auto& dne = node["doesntexist"];
-//            REQUIRE(bool(dne) == false);
-//            REQUIRE((!dne) == true);
-//            if (dne) {
-//                FAIL("doesn't exist is boolean false");
-//            }
-//            REQUIRE(dne.maybe<int>() == std::nullopt);
-//            REQUIRE(dne.maybe<int>().value_or(9) == 9);
+            auto& dne = node["doesntexist"];
+            REQUIRE(bool(dne) == false);
+            REQUIRE((!dne) == true);
+            if (dne) {
+                FAIL("doesn't exist is boolean false");
+            }
+            REQUIRE(dne.maybe<int>() == std::nullopt);
+            REQUIRE(dne.maybe<int>().value_or(9) == 9);
         }
     }
 
@@ -316,13 +317,13 @@ TEST_CASE("More YAML::Node Equivalency") {
 
             REQUIRE(bool(yaml["a"]["wtf"]) == false);
             REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
-//            REQUIRE_THROWS_WITH(
-//                [&]() {
-//                    yaml["a"]["wtf"]["even_deeper"].to<int>();
-//                    // We could do a better job at reporting that 'a' is a sequence
-//                }(),
-//                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
-//                               "exist. On node with path '/a/wtf/even_deeper': "));
+            REQUIRE_THROWS_WITH(
+                [&]() {
+                    yaml["a"]["wtf"]["even_deeper"].to<int>();
+                    // We could do a better job at reporting that 'a' is a sequence
+                }(),
+                Catch::Matches("Invalid key 'even_deeper': Tried to access node that doesn't "
+                               "exist. On node with path '/a/wtf/even_deeper': "));
         }
     }
 }
@@ -370,17 +371,6 @@ TEST_CASE("value_or") {
     REQUIRE(node["foo"].maybe<int>() == std::nullopt);
 }
 
-//TEST_CASE("simple inehritance") {
-//    NodeSource ns{"a: 7", ""};
-//    auto node = ns.root();
-//
-//    auto a = node["foo"]["bar"]["a"];
-//    REQUIRE(a.to<int>() == 7);
-//
-//    REQUIRE(node[0][".."]["a"].to<int>() == 7);
-//    REQUIRE(node[0][".."]["a"].maybe<int>().value_or(8) == 7);
-//}
-//
 TEST_CASE("invalid access") {
     auto yaml = std::string(R"(
 seven: 7
@@ -395,30 +385,28 @@ nope: false
     auto& node = ns.root();
 
     //    REQUIRE_THROWS_WITH([&](){}(), Catch::Matches(""));
-//    REQUIRE_THROWS_WITH(
-//        [&]() { node[0].to<int>(); }(),
-//        Catch::Matches(
-//            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
-//    REQUIRE_THROWS_WITH(
-//        [&]() { node["seven"][0].to<int>(); }(),
-//        Catch::Matches(
-//            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/seven/0': "));
-//
-//    // Debatable if this should barf or not
-//    REQUIRE(node["seven"][0][".."]["sure"].to<bool>() == true);
-//
-//    REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
-//                        Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
-//                                       "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
+    REQUIRE_THROWS_WITH(
+        [&]() { node[0].to<int>(); }(),
+        Catch::Matches(
+            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
+    REQUIRE_THROWS_WITH(
+        [&]() { node["seven"][0].to<int>(); }(),
+        Catch::Matches(
+            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/seven/0': "));
+
+    REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
+                        Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
+                                       "\\(Line:Column\\)=\\(2:5\\). On node with path '/bee': b"));
 }
 
-////TEST_CASE("Invalid YAML") {
-////    REQUIRE_THROWS_WITH(
-////        [&]() { NodeSource n("foo: {", "foo.yaml"); }(),
-////        Catch::Matches("Invalid YAML: 'end of map flow not found' at \\(Line:Column\\)=\\(0:0\\). "
-////                       "On node with path 'foo.yaml'."));
-////}
-////
+TEST_CASE("Invalid YAML") {
+    REQUIRE_THROWS_WITH(
+        [&]() { NodeSource n("foo: {", "foo.yaml"); }(),
+        Catch::Matches("Invalid YAML: 'end of map flow not found' at \\(Line:Column\\)=\\(0:0\\). "
+                       "On node with path 'foo.yaml'."));
+}
+
+
 //TEST_CASE("inheritance sequence-val can inherit") {
 //    NodeSource ns{R"(
 //Coll: Test
@@ -501,44 +489,7 @@ nope: false
 //            "Baz");
 //}
 //
-//TEST_CASE(".. recovers from invalid access") {
-//    NodeSource ns("stringMap: {a: A}", "");
-//    auto node = ns.root();
-//
-//    auto stringMap = node["stringMap"];
-//    REQUIRE(stringMap);
-//
-//
-//        auto stringMapa = stringMap["a"];
-//        REQUIRE(stringMapa);
-//        REQUIRE(stringMapa.to<std::string>() == "A");
-//
-//
-//    auto stringMap0 = stringMap[0];
-//    auto stringMap0p = stringMap0[".."];
-//    auto stringMap0pa = stringMap0p["a"];
-//    REQUIRE(stringMap0pa);
-//    REQUIRE(stringMap0pa.to<std::string>() == "A");
-//}
-//
-//
-//TEST_CASE(".. recovers from unknown key") {
-//    NodeSource ns("stringMap: {a: A}", "");
-//    auto node = ns.root();
-//
-//    auto stringMapB = node["stringMap"]["b"];
-//    REQUIRE(bool(stringMapB) == false);
-//    auto stringMap = stringMapB[".."];
-//    REQUIRE(bool(stringMap) == true);
-//
-//    REQUIRE(bool(stringMap["a"]) == true);
-//
-//    auto foo = node["foo"];
-//    REQUIRE(bool(foo) == false);
-//    auto fooParent = foo[".."];
-//    REQUIRE(bool(fooParent) == true);
-//}
-//
+
 TEST_CASE(".maybe and value_or") {
     auto yaml = std::string(R"(
 seven: 7
@@ -559,23 +510,10 @@ nope: false
             std::vector<int>{1, 2, 3});
     REQUIRE(node["intList2"].maybe<std::vector<int>>().value_or(std::vector<int>{1, 2}) ==
             std::vector<int>{1, 2});
-    // similar check to TEST_CASE above
-//    REQUIRE(node["stringMap"]["seven"].maybe<int>().value_or(8) == 7);
     REQUIRE(node["stringMap"].maybe<std::map<std::string, std::string>>().value_or(
                 std::map<std::string, std::string>{}) ==
             std::map<std::string, std::string>{{"a", "A"}, {"b", "B"}});
-//    REQUIRE(node["stringMap2"].maybe<std::map<std::string, std::string>>().value_or(
-//                std::map<std::string, std::string>{{"foo", "bar"}}) ==
-//            std::map<std::string, std::string>{{"foo", "bar"}});
-//    REQUIRE(node["stringMap"][0].maybe<int>().value_or(7) == 7);
-    // we went to an "invalid" node stringMap[0] (because stringMap is a map) but then we went to ..
-    // so we're okay
-//    REQUIRE(node["stringMap"][0][".."]["a"].maybe<std::string>().value_or<std::string>("orVal") ==
-//            "A");
-    // even invalid nodes can value_or
-//    REQUIRE(node["stringMap"][0]["a"].maybe<std::string>().value_or<std::string>("orVal") == "A");
-    // same thing for root level
-//    REQUIRE(node[0][".."]["bee"].maybe<std::string>().value_or<std::string>("x") == "b");
+    REQUIRE(node["stringMap"][0].maybe<int>().value_or(7) == 7);
 
     REQUIRE(node["sure"].maybe<bool>().value_or(false) == true);
     REQUIRE(node["sure"].maybe<bool>().value_or(true) == true);
@@ -589,8 +527,6 @@ nope: false
 
 
     REQUIRE(node["stringMap"]["a"].maybe<std::string>().value_or<std::string>("7") == "A");
-    // inherits from parent
-//    REQUIRE(node["stringMap"]["bee"].maybe<std::string>().value_or<std::string>("7") == "b");
 }
 //
 //TEST_CASE("Node Type") {
@@ -653,127 +589,127 @@ nope: false
 //    REQUIRE(*foo == false);
 //    REQUIRE(node["nope"].to<bool>() == false);
 //}
-////
-////// Mickey-mouse versions of structs from context.hpp
-////struct WLCtx;
-////struct ACtx;
-////struct PCtx;
-////struct Actr;
-////
-////struct WLCtx {
-////    Node node;
-////    std::vector<std::unique_ptr<ACtx>> actxs;
-////    std::vector<std::unique_ptr<Actr>> actrs;
-////    explicit WLCtx(Node node)
-////            : node{node} {
-////        // Make a bunch of actor contexts
-////        for (const auto& actor : node["Actors"]) {
-////            actxs.emplace_back(std::make_unique<ACtx>(actor, *this));
-////        }
-////        for(auto& actx : actxs) {
-////            // don't go thru a "ActorProducer" it shouldn't matter
-////            // cuz it just passes in the ActorContext& to the ctor
-////            actrs.push_back(std::make_unique<Actr>(*actx));
-////        }
-////    }
-////};
-////struct ACtx {
-////    Node node;
-////    std::unique_ptr<WLCtx> wlc;
-////    std::vector<std::unique_ptr<PCtx>> pcs;
-////    ACtx(Node node, WLCtx& wlctx)
-////            : node{node} {
-////        pcs = constructPhaseContexts(node, this);
-////    }
-////    static std::vector<std::unique_ptr<PCtx>> constructPhaseContexts(Node node, ACtx* actx) {
-////        std::vector<std::unique_ptr<PCtx>> out;
-////        auto phases = (*actx).node["Phases"];
-////        for(const auto& phase : phases) {
-////            out.emplace_back(std::make_unique<PCtx>(phase, *actx));
-////        }
-////        return out;
-////    }
-////};
-////struct PCtx {
-////    Node node;
-////    ACtx* actx;
-////    bool isNop() {
-////        return node["Nop"].maybe<bool>().value_or(false);
-////    }
-////    PCtx(Node node, ACtx& actx)
-////            : node{node}, actx{std::addressof(actx)} {}
-////};
-////struct Actr {
-////    explicit Actr(ACtx& ctx) {
-////        REQUIRE(ctx.node["Nop"].maybe<bool>().value_or(false) == false);
-////    }
-////};
-////
-////TEST_CASE("Mickey-mouse Use From context.hpp") {
-////    Node yaml (R"(
-////    SchemaVersion: 2018-07-01
-////    Database: test
-////    Actors:
-////    - Name: MetricsNameTest
-////      Type: HelloWorld
-////      Threads: 1
-////      Phases:
-////      - Repeat: 1
-////    )", "");
-////    WLCtx ctx{yaml};
-////}
-////
-//TEST_CASE("size") {
-//    {
-//        NodeSource ns{"foo: bar", ""};
-//        Node node = ns.root();
-//        REQUIRE(node.size() == 1);
-//        // scalars have size 0
-//        REQUIRE(node["foo"].size() == 0);
-//    }
-//    {
-//        NodeSource ns{"{}", ""};
-//        Node node = ns.root();
-//        REQUIRE(node.size() == 0);
-//    }
-//    {
-//        NodeSource ns{"a: null", ""};
-//        Node node = ns.root();
-//        REQUIRE(node["a"].size() == 0);
-//    }
-//    {
-//        NodeSource ns{"[1,2,3]", ""};
-//        Node node = ns.root();
-//        REQUIRE(node.size() == 3);
-//    }
-//    {
-//        NodeSource ns{"a: {b: {c: []}}", ""};
-//        Node node = ns.root();
-//        REQUIRE(node.size() == 1);
-//        REQUIRE(node["a"].size() == 1);
-//        REQUIRE(node["a"]["b"].size() == 1);
-//        REQUIRE(node["a"]["b"]["c"].size() == 0);
-//    }
-//    {
-//        NodeSource ns{"", ""};
-//        Node node = ns.root();
-//        REQUIRE(node.size() == 0);
-//    }
-//    {
-//        NodeSource ns{
-//            "foos: [1,2,3]\n"
-//            "children: {a: 7}",
-//            ""};
-//        Node node = ns.root();
-//        REQUIRE(node.size() == 2);
-//        REQUIRE(node["foos"].size() == 3);
-//        // inheritance
-//        REQUIRE(node["children"]["foos"].size() == 3);
-//        REQUIRE(node["children"].size() == 1);
-//        // scalars have size 0
-//        REQUIRE(node["children"]["a"].size() == 0);
-//    }
-//}
+
+// Mickey-mouse versions of structs from context.hpp
+struct WLCtx;
+struct ACtx;
+struct PCtx;
+struct Actr;
+
+struct WLCtx {
+    const Node& node;
+    std::vector<std::unique_ptr<ACtx>> actxs;
+    std::vector<std::unique_ptr<Actr>> actrs;
+    explicit WLCtx(const Node& node)
+            : node{node} {
+        // Make a bunch of actor contexts
+        for (const auto& actor : node["Actors"]) {
+            actxs.emplace_back(std::make_unique<ACtx>(actor, *this));
+        }
+        for(auto& actx : actxs) {
+            // don't go thru a "ActorProducer" it shouldn't matter
+            // cuz it just passes in the ActorContext& to the ctor
+            actrs.push_back(std::make_unique<Actr>(*actx));
+        }
+    }
+};
+struct ACtx {
+    const Node& node;
+    std::unique_ptr<WLCtx> wlc;
+    std::vector<std::unique_ptr<PCtx>> pcs;
+    ACtx(const Node& node, WLCtx& wlctx)
+            : node{node} {
+        pcs = constructPhaseContexts(node, this);
+    }
+    static std::vector<std::unique_ptr<PCtx>> constructPhaseContexts(const Node& node, ACtx* actx) {
+        std::vector<std::unique_ptr<PCtx>> out;
+        auto& phases = (*actx).node["Phases"];
+        for(const auto& phase : phases) {
+            out.emplace_back(std::make_unique<PCtx>(phase, *actx));
+        }
+        return out;
+    }
+};
+struct PCtx {
+    const Node& node;
+    ACtx* actx;
+    bool isNop() {
+        return node["Nop"].maybe<bool>().value_or(false);
+    }
+    PCtx(const Node& node, ACtx& actx)
+            : node{node}, actx{std::addressof(actx)} {}
+};
+struct Actr {
+    explicit Actr(ACtx& ctx) {
+        REQUIRE(ctx.node["Nop"].maybe<bool>().value_or(false) == false);
+    }
+};
+
+TEST_CASE("Mickey-mouse Use From context.hpp") {
+    NodeSource yaml (R"(
+    SchemaVersion: 2018-07-01
+    Database: test
+    Actors:
+    - Name: MetricsNameTest
+      Type: HelloWorld
+      Threads: 1
+      Phases:
+      - Repeat: 1
+    )", "");
+    WLCtx ctx{yaml.root()};
+}
+
+TEST_CASE("size") {
+    {
+        NodeSource ns{"foo: bar", ""};
+        auto& node = ns.root();
+        REQUIRE(node.size() == 1);
+        // scalars have size 0
+        REQUIRE(node["foo"].size() == 0);
+    }
+    {
+        NodeSource ns{"{}", ""};
+        auto& node = ns.root();
+        REQUIRE(node.size() == 0);
+    }
+    {
+        NodeSource ns{"a: null", ""};
+        auto& node = ns.root();
+        REQUIRE(node["a"].size() == 0);
+    }
+    {
+        NodeSource ns{"[1,2,3]", ""};
+        auto& node = ns.root();
+        REQUIRE(node.size() == 3);
+    }
+    {
+        NodeSource ns{"a: {b: {c: []}}", ""};
+        auto& node = ns.root();
+        REQUIRE(node.size() == 1);
+        REQUIRE(node["a"].size() == 1);
+        REQUIRE(node["a"]["b"].size() == 1);
+        REQUIRE(node["a"]["b"]["c"].size() == 0);
+    }
+    {
+        NodeSource ns{"", ""};
+        auto& node = ns.root();
+        REQUIRE(node.size() == 0);
+    }
+    {
+        NodeSource ns{
+            "foos: [1,2,3]\n"
+            "children: {a: 7}",
+            ""};
+        auto& node = ns.root();
+        REQUIRE(node.size() == 2);
+        REQUIRE(node["foos"].size() == 3);
+        // inheritance
+        REQUIRE(node["children"]["foos"].size() == 3);
+        REQUIRE(node["children"].size() == 1);
+        // scalars have size 0
+        REQUIRE(node["children"]["a"].size() == 0);
+    }
+}
 //
 //TEST_CASE("Parent .. traversal") {
 //    NodeSource ns{
@@ -879,70 +815,71 @@ TEST_CASE("Specialization") {
     REQUIRE(node.to<HasConversionSpecialization>(3).x == 11);
 }
 
-//TEST_CASE("Node Paths") {
-//    auto yaml = std::string(R"(
-//msg: bar
-//One: {msg: foo}
-//Two: {}
-//)");
-//    NodeSource ns(yaml, "");
-//    auto node = ns.root();
-//    REQUIRE(node["One"][".."].path() == "/One/..");
-//    REQUIRE(node.path() == "");
-//    REQUIRE(node[0].path() == "/0");
-//    REQUIRE(node["msg"].path() == "/msg");
-//    REQUIRE(node["msg"][".."].path() == "/msg/..");
-//    REQUIRE(node["msg"][".."][".."][".."][".."].path() == "/msg/../../../..");
-//    REQUIRE(node["One"]["msg"].path() == "/One/msg");
-//    REQUIRE(node["One"]["msg"][".."].path() == "/One/msg/..");
-//    REQUIRE(node["One"]["msg"][".."]["msg"][".."]["msg"].path() == "/One/msg/../msg/../msg");
-//    REQUIRE(node["One"]["foo"][0][1]["bar"].path() == "/One/foo/0/1/bar");
-//    REQUIRE(node["One"]["foo"][0][1]["bar"][".."].path() == "/One/foo/0/1/bar/..");
-//
-//    REQUIRE_THROWS_WITH(
-//        node["One"]["foo"].to<std::string>(),
-//        Catch::Matches(
-//            R"(Invalid key 'foo': Tried to access node that doesn't exist. On node with path '/One/foo': )"));
-//}
-////
-////TEST_CASE("Node iteration path") {
-////    auto yaml = std::string(R"(
-////one: [1]
-////two: [1,2]
-////mapOneDeep: {a: A}
-////mapTwoDeep: {a: {A: aA}}
-////)");
-////    Node node(yaml, "");
-////    {
-////        int seen = 0;
-////        for (auto&& n : node["one"]) {
-////            REQUIRE(n.path() == "/one/0");
-////            ++seen;
-////        }
-////        REQUIRE(seen == 1);
-////    }
-////    {
-////        int seen = 0;
-////        for (auto&& n : node["two"]) {
-////            REQUIRE(n.path() == "/two/" + std::to_string(seen));
-////            ++seen;
-////        }
-////        REQUIRE(seen == 2);
-////    }
-////    {
-////        int seen = 0;
-////        for (auto&& kvp : node["mapOneDeep"]) {
-////            // this isn't super well-defined - what's the "path" for the key of a kvp?
-////            REQUIRE(kvp.first.path() == "/mapOneDeep/a$key");
-////            REQUIRE(kvp.first[".."].path() == "/mapOneDeep/a$key/..");
-////            REQUIRE(kvp.second.path() == "/mapOneDeep/a");
-////            REQUIRE(kvp.second[".."].path() == "/mapOneDeep/a/..");
-////            ++seen;
-////        }
-////        REQUIRE(seen == 1);
-////    }
-////}
-////
+TEST_CASE("Node Paths") {
+    auto yaml = std::string(R"(
+msg: bar
+One: {msg: foo}
+Two: {}
+)");
+    NodeSource ns(yaml, "");
+    auto& node = ns.root();
+    REQUIRE(node["One"][".."].path() == "/One/..");
+    REQUIRE(node.path() == "");
+    REQUIRE(node[0].path() == "/0");
+    REQUIRE(node["msg"].path() == "/msg");
+    REQUIRE(node["msg"][".."].path() == "/msg/..");
+    REQUIRE(node["msg"][".."][".."][".."][".."].path() == "/msg/../../../..");
+    REQUIRE(node["One"]["msg"].path() == "/One/msg");
+    REQUIRE(node["One"]["msg"][".."].path() == "/One/msg/..");
+    REQUIRE(node["One"]["msg"][".."]["msg"][".."]["msg"].path() == "/One/msg/../msg/../msg");
+    REQUIRE(node["One"]["foo"][0][1]["bar"].path() == "/One/foo/0/1/bar");
+    REQUIRE(node["One"]["foo"][0][1]["bar"][".."].path() == "/One/foo/0/1/bar/..");
+
+    REQUIRE_THROWS_WITH(
+        node["One"]["foo"].to<std::string>(),
+        Catch::Matches(
+            R"(Invalid key 'foo': Tried to access node that doesn't exist. On node with path '/One/foo': )"));
+}
+
+TEST_CASE("Node iteration path") {
+    auto yaml = std::string(R"(
+one: [1]
+two: [1,2]
+mapOneDeep: {a: A}
+mapTwoDeep: {a: {A: aA}}
+)");
+    NodeSource ns(yaml, "");
+    auto& node = ns.root();
+    {
+        int seen = 0;
+        for (auto&& n : node["one"]) {
+            REQUIRE(n.path() == "/one/0");
+            ++seen;
+        }
+        REQUIRE(seen == 1);
+    }
+    {
+        int seen = 0;
+        for (auto&& n : node["two"]) {
+            REQUIRE(n.path() == "/two/" + std::to_string(seen));
+            ++seen;
+        }
+        REQUIRE(seen == 2);
+    }
+    {
+        int seen = 0;
+        for (auto&& kvp : node["mapOneDeep"]) {
+            // this isn't super well-defined - what's the "path" for the key of a kvp?
+            REQUIRE(kvp.first.path() == "/mapOneDeep/a$key");
+            REQUIRE(kvp.first[".."].path() == "/mapOneDeep/a$key/..");
+            REQUIRE(kvp.second.path() == "/mapOneDeep/a");
+            REQUIRE(kvp.second[".."].path() == "/mapOneDeep/a/..");
+            ++seen;
+        }
+        REQUIRE(seen == 1);
+    }
+}
+
 TEST_CASE("Node Simple User-Defined Conversions") {
     EmptyStruct context;
 
@@ -972,15 +909,15 @@ TEST_CASE("operator-left-shift") {
         NodeSource ns{"Foo: 7", ""};
         const auto& node = ns.root();
         std::stringstream str;
-//        str << node;
-//        REQUIRE(str.str() == "Foo: 7");
+        str << node;
+        REQUIRE(str.str() == "Foo: 7");
     }
     {
         NodeSource ns{"Foo: {Bar: Baz}", ""};
         const auto&  node = ns.root();
         std::stringstream str;
-//        str << node;
-//        REQUIRE(str.str() == "Foo: {Bar: Baz}");
+        str << node;
+        REQUIRE(str.str() == "Foo: {Bar: Baz}");
     }
     // rely on YAML::Dump so don't need to enforce much beyond this
 }
@@ -1087,87 +1024,88 @@ b: {}
 //    node["b"].to<RequiresParamToEqualNodeX>(9);
 }
 
-////TEST_CASE("Iteration") {
-////    auto yaml = std::string(R"(
-////Scalar: foo
-////SimpleMap: {a: b}
-////ListOfScalars: [1,2]
-////ListOfMap:
-////- {a: A, b: B}
-////SingleItemList: [37]
-////)");
-////    Node node(yaml, "");
-////
-////    SECTION("Scalar") {
-////        auto a = node["Scalar"];
-////        REQUIRE(a);
-////        for (auto kvp : a) {
-////            FAIL("nothing to iterate");
-////        }
-////    }
-////    SECTION("SimpleMap") {
-////        auto mp = node["SimpleMap"];
-////        REQUIRE(mp);
-////        int seen = 0;
-////        for (auto kvp : mp) {
-////            Node k = kvp.first;
-////            Node v = kvp.second;
-////            REQUIRE(k.to<std::string>() == "a");
-////            REQUIRE(v.to<std::string>() == "b");
-////            ++seen;
-////        }
-////        REQUIRE(seen == 1);
-////    }
-////
-////    SECTION("ListOfScalars") {
-////        auto lst = node["ListOfScalars"];
-////        REQUIRE(lst);
-////        int i = 1;
-////        for (auto v : lst) {
-////            REQUIRE(v.to<int>() == i);
-////            ++i;
-////        }
-////        REQUIRE(i == 3);
-////    }
-////
-////    SECTION("ListOfMap") {
-////        auto lom = node["ListOfMap"];
-////        REQUIRE(lom);
-////        REQUIRE(lom.size() == 1);
-////        auto countMaps = 0;
-////        for (auto m : lom) {
-////            ++countMaps;
-////            REQUIRE(m.size() == 2);
-////
-////            auto countEntries = 0;
-////            for (auto kvp : m) {
-////                ++countEntries;
-////            }
-////            REQUIRE(countEntries == 2);
-////
-////            REQUIRE(m["a"].to<std::string>() == "A");
-////            REQUIRE(m["b"].to<std::string>() == "B");
-////
-////            // still get inheritance
-////            REQUIRE(m["Scalar"].to<std::string>() == "foo");
-////            // still get parent relationship:s
-////            REQUIRE(m[".."]["Scalar"].to<std::string>() == "foo");
-////            REQUIRE(m[".."]["SimpleMap"]["a"][".."]["Scalar"].to<std::string>() == "foo");
-////        }
-////        REQUIRE(countMaps == 1);
-////    }
-////
-////    SECTION("SingleItemList") {
-////        auto sil = node["SingleItemList"];
-////        REQUIRE(sil.size() == 1);
-////        REQUIRE(sil[0].to<int>() == 37);
-////        auto count = 0;
-////        for (auto v : sil) {
-////            REQUIRE(v.to<int>() == 37);
-////            // we still get parents
-////            REQUIRE(v[".."]["Scalar"].to<std::string>() == "foo");
-////            ++count;
-////        }
-////        REQUIRE(count == 1);
-////    }
+TEST_CASE("Iteration") {
+    auto yaml = std::string(R"(
+Scalar: foo
+SimpleMap: {a: b}
+ListOfScalars: [1,2]
+ListOfMap:
+- {a: A, b: B}
+SingleItemList: [37]
+)");
+    NodeSource ns(yaml, "");
+    auto& node = ns.root();
 
+    SECTION("Scalar") {
+        auto& a = node["Scalar"];
+        REQUIRE(a);
+        for (auto kvp : a) {
+            FAIL("nothing to iterate");
+        }
+    }
+    SECTION("SimpleMap") {
+        auto& mp = node["SimpleMap"];
+        REQUIRE(mp);
+        int seen = 0;
+        for (auto kvp : mp) {
+            auto& k = kvp.first;
+            auto& v = kvp.second;
+            REQUIRE(k.to<std::string>() == "a");
+            REQUIRE(v.to<std::string>() == "b");
+            ++seen;
+        }
+        REQUIRE(seen == 1);
+    }
+
+    SECTION("ListOfScalars") {
+        auto& lst = node["ListOfScalars"];
+        REQUIRE(lst);
+        int i = 1;
+        for (auto v : lst) {
+            REQUIRE(v.to<int>() == i);
+            ++i;
+        }
+        REQUIRE(i == 3);
+    }
+
+    SECTION("ListOfMap") {
+        auto& lom = node["ListOfMap"];
+        REQUIRE(lom);
+//        REQUIRE(lom.size() == 1);
+        auto countMaps = 0;
+        for (auto m : lom) {
+            ++countMaps;
+//            REQUIRE(m.size() == 2);
+
+            auto countEntries = 0;
+            for (auto kvp : m) {
+                ++countEntries;
+            }
+            REQUIRE(countEntries == 2);
+
+            REQUIRE(m["a"].to<std::string>() == "A");
+            REQUIRE(m["b"].to<std::string>() == "B");
+
+            // still get inheritance
+            REQUIRE(m["Scalar"].to<std::string>() == "foo");
+            // still get parent relationship:s
+            REQUIRE(m[".."]["Scalar"].to<std::string>() == "foo");
+            REQUIRE(m[".."]["SimpleMap"]["a"][".."]["Scalar"].to<std::string>() == "foo");
+        }
+        REQUIRE(countMaps == 1);
+    }
+
+    SECTION("SingleItemList") {
+        auto& sil = node["SingleItemList"];
+        REQUIRE(sil.size() == 1);
+        REQUIRE(sil[0].to<int>() == 37);
+        auto count = 0;
+        for (auto v : sil) {
+            REQUIRE(v.to<int>() == 37);
+            // we still get parents
+            REQUIRE(v[".."]["Scalar"].to<std::string>() == "foo");
+            ++count;
+        }
+        REQUIRE(count == 1);
+    }
+}

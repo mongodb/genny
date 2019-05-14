@@ -53,6 +53,7 @@ private:
 };
 
 class Node {
+// TODO: disable copy/move
 public:
     const Node& operator[](long key) const;
     const Node& operator[](std::string key) const;
@@ -149,10 +150,18 @@ public:
         return *out;
     }
 
+    bool isNull() const;
+    bool isMap() const;
+    bool isSequence() const;
+
+    size_t size() const;
+
     std::string path() const;
 
     class iterator begin() const;
     class iterator end() const;
+
+    friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
 private:
     friend class iterator;
