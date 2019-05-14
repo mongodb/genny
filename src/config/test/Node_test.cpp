@@ -327,6 +327,43 @@ TEST_CASE("More YAML::Node Equivalency") {
     }
 }
 
+TEST_CASE("YamlKey") {
+    SECTION("Comparison") {
+        YamlKey a{"a"};
+        YamlKey m1{-1};
+        REQUIRE(m1 < a);
+        REQUIRE(!(m1 < m1));
+        REQUIRE(!(a < a));
+    }
+    SECTION("As Map Key") {
+        std::map<YamlKey, long> actual {
+                {YamlKey{1}, 7},
+                {YamlKey{2}, 17},
+                {YamlKey{-1}, 100}
+        };
+        REQUIRE(actual.find(YamlKey{1}) != actual.end());
+        REQUIRE(actual.find(YamlKey{1})->second == 7);
+        REQUIRE(actual.find(YamlKey{-1})->second == 100);
+    }
+    SECTION("When missing") {
+        std::map<YamlKey, long> actual {
+                {YamlKey{1}, 7},
+        };
+        REQUIRE(actual.find(YamlKey{-1}) == actual.end());
+    }
+}
+
+TEST_CASE("List out of bounds") {
+    NodeSource nodeSource("a: [0,1]", "");
+    auto& node = nodeSource.root();
+    auto& a = node["a"];
+    REQUIRE(bool(a) == true);
+    auto& two = a[2];
+    REQUIRE(bool(two) == false);
+    auto& minusOne = a[-1];
+    REQUIRE(bool(minusOne) == false);
+}
+
 TEST_CASE("value_or") {
     NodeSource ns{"{}", ""};
     auto& node = ns.root();

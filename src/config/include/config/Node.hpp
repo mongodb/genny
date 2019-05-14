@@ -20,6 +20,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <variant>
 
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
@@ -38,6 +39,13 @@ public:
 
     bool operator<(const YamlKey& rhs) const {
         return _value < rhs._value;
+    }
+    friend std::ostream& operator<<(std::ostream& out, const YamlKey& key) {
+        try {
+            return out << std::get<std::string>(key._value);
+        } catch(const std::bad_variant_access&) {
+            return out << std::get<long>(key._value);
+        }
     }
 private:
     using Type = std::variant<long, std::string>;

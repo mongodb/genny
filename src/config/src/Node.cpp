@@ -14,7 +14,8 @@ public:
         : _children{constructChildren(self, yaml)}, _yaml{yaml}, _path{path}, _self{self} {}
 
     const Node& get(YamlKey key) const {
-        if (auto&& node = _children.find(key); node == _children.end()) {
+        auto&& it = _children.find(key);
+        if (it == _children.end()) {
             _children.emplace(key, std::make_unique<Node>(_self, key, _zombie));
         }
         return *_children.at(key);
