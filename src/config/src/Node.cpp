@@ -144,8 +144,6 @@ NodeSource::NodeSource(std::string yaml, std::string path)
 
 NodeSource::~NodeSource() = default;
 
-iterator_value::~iterator_value() = default;
-
 class IteratorImpl {
 public:
     void increment();
@@ -154,6 +152,7 @@ public:
         return _current;
     }
 private:
+    Children::const_iterator _children;
     iterator_value _current;
 };
 
@@ -170,4 +169,7 @@ const iterator_value& iterator::operator*() const {
 }
 
 iterator::~iterator() = default;
+
+iterator_value::iterator_value(const YamlKey key, const Node &node)
+: std::pair<const YamlKey, const Node&>{key, node} {}
 

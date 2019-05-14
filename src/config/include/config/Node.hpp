@@ -230,10 +230,9 @@ private:
     }
 };
 
-class iterator_value : public std::pair<const Node&,const Node&>, public Node {
+class iterator_value : public std::pair<const YamlKey,const Node&> {
 public:
-    ~iterator_value();
-    explicit iterator_value(YamlKey key, const Node& node);
+    iterator_value(YamlKey key, const Node& node);
 private:
     friend Node;
 };
