@@ -134,23 +134,23 @@ TEST_CASE("YAML::Node Equivalency") {
     }
 }
 TEST_CASE("More YAML::Node Equivalency") {
-//
-//    SECTION("iteration over sequences") {
+    SECTION("iteration over sequences") {
+        {
+            YAML::Node yaml = YAML::Load("ns: [1,2,3]");
+            int sum = 0;
+            for (auto n : yaml["ns"]) {
+                REQUIRE(n.first.IsDefined() == false);
+                REQUIRE(n.second.IsDefined() == false);
+                sum += n.as<int>();
+            }
+            REQUIRE(sum == 6);
+        }
+
 //        {
-//            YAML::Node yaml = YAML::Load("ns: [1,2,3]");
+//            NodeSource ns{"ns: [1,2,3]", ""};
+//            auto& node = ns.root();
 //            int sum = 0;
-//            for (auto n : yaml["ns"]) {
-//                REQUIRE(n.first.IsDefined() == false);
-//                REQUIRE(n.second.IsDefined() == false);
-//                sum += n.as<int>();
-//            }
-//            REQUIRE(sum == 6);
-//        }
-//
-//        {
-//            Node node{"ns: [1,2,3]", ""};
-//            int sum = 0;
-//            for (auto n : node["ns"]) {
+//            for(auto& n : node["ns"]) {
 //                REQUIRE(bool(n.first) == false);
 //                REQUIRE(bool(n.second) == false);
 //                sum += n.to<int>();
@@ -161,7 +161,7 @@ TEST_CASE("More YAML::Node Equivalency") {
 //            }
 //            REQUIRE(sum == 6);
 //        }
-//    }
+    }
 //
 //    SECTION("iteration over maps") {
 //        {

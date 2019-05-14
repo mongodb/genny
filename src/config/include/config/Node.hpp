@@ -29,6 +29,21 @@
 template<typename T>
 struct NodeConvert{};
 
+class YamlKey {
+public:
+    explicit YamlKey(std::string key)
+            : _value{key} {};
+    explicit YamlKey(long key)
+            : _value{key} {};
+
+    bool operator<(const YamlKey& rhs) const {
+        return _value < rhs._value;
+    }
+private:
+    using Type = std::variant<long, std::string>;
+    const Type _value;
+};
+
 class Node {
 public:
     const Node& operator[](long key) const;
@@ -126,13 +141,16 @@ public:
         return *out;
     }
 
+//    class iterator begin() const;
+//    class iterator end() const;
+
+
 private:
     friend class NodeImpl;
     friend class NodeSource;
     std::unique_ptr<class NodeImpl> _impl;
 public:
-    explicit Node(const Node* parent, long key, YAML::Node yaml);
-    explicit Node(const Node* parent, std::string key, YAML::Node yaml);
+    explicit Node(const Node* parent, YamlKey key, YAML::Node yaml);
 private:
     const YAML::Node yaml() const;
 

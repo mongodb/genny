@@ -1,43 +1,23 @@
 #include <config/Node.hpp>
+#include <map>
 
 namespace {
+
 using Child = std::unique_ptr<class Node>;
-using ChildrenMap = std::map<std::string, Child>;
-using ChildrenSeq = std::map<long, Child>;
-
-class YamlKey {
-public:
-    explicit YamlKey(std::string key)
-    : _value{key} {};
-    explicit YamlKey(long key)
-    : _value{key} {};
-
-private:
-    using Type = std::variant<long, std::string>;
-    Type _value;
-};
+using Children = std::map<YamlKey, Child>;
 
 }  // namespace
 
 class NodeImpl {
 public:
     explicit NodeImpl(const Node* self, YamlKey path, YAML::Node yaml)
-        : _map{constructMap(self, yaml)}, _seq{constructSeq(self, yaml)}, _yaml{yaml}, _path{path}, _self{self} {}
+        : _children{constructChildren(self, yaml)}, _yaml{yaml}, _path{path}, _self{self} {}
 
-    const Node& get(long key) const {
-        if (auto&& node = _seq.find(key); node == _seq.end()) {
-            _seq.emplace(key, std::make_unique<Node>(_self, key, YAML::Node()["yeah"]));
+    const Node& get(YamlKey key) const {
+        if (auto&& node = _children.find(key); node == _children.end()) {
+            _children.emplace(key, std::make_unique<Node>(_self, key, _zombie));
         }
-        return *_seq.at(key);
-    }
-
-    const Node& get(std::string key) const {
-        // TODO: error-handling
-        if (auto&& node = _map.find(key); node == _map.end()) {
-            _map.emplace(key, std::make_unique<Node>(_self, key, YAML::Node()["yeah"]));
-        }
-        return *_map.at(key);
-
+        return *_children.at(key);
     }
 
     const YAML::Node yaml() const {
@@ -49,41 +29,46 @@ public:
     }
 
 private:
+    static YAML::Node _zombie;
+
     // Needs to be mutable to generate placeholder nodes for non-existent keys.
-    mutable ChildrenMap _map;
-    mutable ChildrenSeq _seq;
+    mutable Children _children;
     YAML::Node _yaml;
     YamlKey _path;
     const Node* _self;
 
-    static ChildrenMap constructMap(const Node* parent, YAML::Node node) {
-        ChildrenMap out;
-        if (!node.IsMap()) {
+    static Children constructChildren(const Node *parent, YAML::Node node) {
+        Children out;
+        if (!node.IsMap() && !node.IsSequence()) {
             return out;
         }
 
+        int index = 0;
+        auto extractKey = [&](auto& kvp, YAML::Node iteratee) -> YamlKey {
+            if (iteratee.IsMap()) {
+                return YamlKey{kvp.first.template as<std::string>()};
+            } else {
+                return YamlKey{index++};
+            }
+        };
+        auto extractValue = [&](auto& kvp, YAML::Node iteratee) -> YAML::Node {
+            if (iteratee.IsMap()) {
+                return kvp.second;
+            } else {
+                return kvp;
+            }
+        };
+
         for (const auto kvp: node) {
-            const auto key = kvp.first.as<std::string>();
-            out.emplace(kvp.first.as<std::string>(), std::make_unique<Node>(parent, key, kvp.second));
+            const auto key = extractKey(kvp, node);
+            out.emplace(key, std::make_unique<Node>(parent, key, extractValue(kvp, node)));
         }
 
         return out;
     }
+};
 
-    static ChildrenSeq constructSeq(const Node* parent, YAML::Node node) {
-        ChildrenSeq out;
-        if (!node.IsSequence()) {
-            return out;
-        }
-
-        long index = 0;
-        for (const auto child: node) {
-            out.emplace(index, std::make_unique<Node>(parent, index, child));
-            index++;
-        }
-
-        return out;
-    }};
+YAML::Node NodeImpl::_zombie = YAML::Load("")["zombie"];
 
 const YAML::Node Node::yaml() const {
     return _impl->yaml();
@@ -96,23 +81,19 @@ Node::operator bool() const {
 Node::~Node() = default;
 
 // TODO: parent unused
-Node::Node(const Node* parent, std::string path, YAML::Node yaml)
-    : _impl{std::make_unique<NodeImpl>(this, YamlKey{path}, yaml)} {}
-
-// TODO: parent unused
-Node::Node(const Node* parent, long path, YAML::Node yaml)
-    : _impl{std::make_unique<NodeImpl>(this, YamlKey{path}, yaml)} {}
+Node::Node(const Node* parent, YamlKey path, YAML::Node yaml)
+    : _impl{std::make_unique<NodeImpl>(this, path, yaml)} {}
 
 const Node& Node::operator[](long key) const {
-    return _impl->get(key);
+    return _impl->get(YamlKey{key});
 }
 
 const Node& Node::operator[](std::string key) const {
-    return _impl->get(key);
+    return _impl->get(YamlKey{key});
 }
 
 NodeSource::NodeSource(std::string yaml, std::string path)
 : _yaml{YAML::Load(yaml)},
-  _root{std::make_unique<Node>(nullptr, "", _yaml)},
+  _root{std::make_unique<Node>(nullptr, YamlKey{""}, _yaml)},
   _path{path} {}
 
