@@ -26,7 +26,7 @@ public:
 
     const Node& get(long key) const {
         if (key < 0 || key >= _seq.size()) {
-            // TODO: throw
+            // TODO
         }
         return *_seq[key];
     }
@@ -49,7 +49,6 @@ private:
     ChildrenSeq _seq;
     YAML::Node _yaml;
     YamlKey _path;
-    //    bool _isValid;  -- call isDefined instead
 
     static ChildrenMap constructMap(const Node* parent, YAML::Node node) {
         ChildrenMap out;
@@ -90,16 +89,18 @@ Node::operator bool() const {
 
 Node::~Node() = default;
 
+// TODO: parent unused
 Node::Node(const Node* parent, std::string path, YAML::Node yaml)
     : _impl{std::make_unique<NodeImpl>(this, YamlKey{path}, yaml)} {}
 
-
+// TODO: parent unused
 Node::Node(const Node* parent, long path, YAML::Node yaml)
     : _impl{std::make_unique<NodeImpl>(this, YamlKey{path}, yaml)} {}
 
 const Node& Node::operator[](long key) const {
     return _impl->get(key);
 }
+
 const Node& Node::operator[](std::string key) const {
     return _impl->get(key);
 }
