@@ -232,14 +232,24 @@ private:
 
 class iterator_value : public std::pair<const Node&,const Node&>, public Node {
 public:
+    ~iterator_value();
     explicit iterator_value(YamlKey key, const Node& node);
+private:
+    friend Node;
+    friend class IteratorValueImpl;
+    std::unique_ptr<class IteratorValueImpl> _impl;
 };
 
 class iterator {
 public:
+    ~iterator();
     bool operator!=(const iterator&) const;
     void operator++();
     const iterator_value operator*() const;
+private:
+    friend Node;
+    friend class IteratorImpl;
+    std::unique_ptr<class IteratorImpl> _impl;
 };
 
 class NodeSource {
