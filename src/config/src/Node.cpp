@@ -174,10 +174,6 @@ public:
         return this->getNode().size();
     }
 
-    YAML::Node getNode() {
-        return _yaml;
-    }
-
     template <typename K>
     const NodeImpl* get(K&& key) const {
         if constexpr (std::is_convertible_v<K, std::string>) {
@@ -200,10 +196,6 @@ std::string NodeImpl::path() const {
         out << key;
     }
     return out.str();
-}
-
-const YAML::Node BaseNodeImpl::getNode() const {
-    return this->rest->getNode();
 }
 
 // NodeSource
