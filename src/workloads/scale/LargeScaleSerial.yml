@@ -9,7 +9,8 @@ Actors:
   Type: Loader
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - Threads: 1
+    ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
     Repeat: 1
@@ -18,7 +19,6 @@ Actors:
 
 - Name: WarmupUpdate
   Type: MultiCollectionUpdate
-  Threads: 10
   Phases:
   - ExternalPhaseConfig:
       Path: *PhasePath
