@@ -833,12 +833,20 @@ TEST_CASE("Basic Sequence Node Iteration") {
 }
 
 
-TEST_CASE("Simple Path") {
+TEST_CASE("Simple Path 1") {
+    NodeSource ns {"", "f.yml"};
+    auto& node = ns.root();
+    REQUIRE(node.path() == "f.yml");
+    REQUIRE(node[0].path() == "f.yml/0");
+}
+
+TEST_CASE("Simple Path 2") {
     NodeSource ns {"", ""};
     auto& node = ns.root();
-    REQUIRE(node.path() == "/");
-    REQUIRE(node[0].path() == "/0");
+    REQUIRE(node.path() == "");
+    REQUIRE(node["a"]["b"].path() == "/a/b");
 }
+
 
 TEST_CASE("Node Paths") {
     auto yaml = std::string(R"(
@@ -849,7 +857,7 @@ Two: {}
     NodeSource ns(yaml, "");
     auto& node = ns.root();
     REQUIRE(node["One"][".."].path() == "/One/..");
-    REQUIRE(node.path() == "/");
+    REQUIRE(node.path() == "");
     REQUIRE(node[0].path() == "/0");
     REQUIRE(node["msg"].path() == "/msg");
     REQUIRE(node["msg"][".."].path() == "/msg/..");

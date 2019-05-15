@@ -8,9 +8,12 @@ using Children = std::map<YamlKey, Child>;
 
 std::string joinPath(const KeyPath& path) {
     std::stringstream out;
-    for(const auto& elt : path) {
-        out << "/";
-        out << elt.toString();
+    for(size_t i=0; i < path.size(); ++i) {
+        auto key = path[i].toString();
+        out << key;
+        if (i < path.size() - 1) {
+            out << "/";
+        }
     }
     return out.str();
 }
