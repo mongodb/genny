@@ -259,8 +259,7 @@ struct actor::RunCommand::PhaseConfig {
             return DatabaseOperation::create(node, context, actorContext, id, client, database);
         };
 
-        // TODO: better design for .node()
-        operations = context.node().getPlural<std::unique_ptr<DatabaseOperation>>(
+        operations = context.getPlural<std::unique_ptr<DatabaseOperation>>(
             "Operation", "Operations", createOperation);
     }
 

@@ -57,6 +57,29 @@
  */
 namespace genny {
 
+namespace v1 {
+class HasNode {
+public:
+    explicit HasNode(const Node& node) : _node{node} {}
+
+    template<typename...Args>
+    auto& operator[](Args&&... args) const {
+        return this->_node.operator[](std::forward<Args>(args)...);
+    }
+
+    template <typename T, typename F = std::function<T(const Node&)>>
+    auto getPlural(const std::string& singular,
+                    const std::string& plural,
+                    F&& f) const {
+        return std::move(this->_node.getPlural<T,F>(singular, plural, std::forward<F>(f)));
+    }
+
+protected:
+    const Node& _node;
+};
+
+}
+
 class WorkloadContext;
 
 /**
@@ -98,7 +121,7 @@ class WorkloadContext;
  *     std::optional<int> maybeInt = context.get<int,false>("Actors", 0, "Count");
  * ```
  */
-class WorkloadContext {
+class WorkloadContext : public v1::HasNode {
 public:
     /**
      * @param node top-level (file-level) YAML node
@@ -120,11 +143,6 @@ public:
     void operator=(WorkloadContext&) = delete;
     WorkloadContext(WorkloadContext&&) = delete;
     void operator=(WorkloadContext&&) = delete;
-
-    template<typename...Args>
-    auto& operator[](Args&&... args) const {
-        return this->_node.operator[](std::forward<Args>(args)...);
-    }
 
     /**
      * @return all the actors produced. This should only be called by workload drivers.
@@ -234,8 +252,6 @@ private:
     static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
-    const Node& _node;
-
     metrics::Registry* _registry;
     Orchestrator* _orchestrator;
 
@@ -292,10 +308,10 @@ class PhaseContext;
  * auto name = cx.get<std::string>("Name");
  * ```
  */
-class ActorContext final {
+class ActorContext final : public v1::HasNode {
 public:
     ActorContext(const Node& node, WorkloadContext& workloadContext)
-        : _node{node},
+        : v1::HasNode{node},
           _workload{&workloadContext},
           _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
@@ -319,17 +335,6 @@ public:
      */
     constexpr Orchestrator& orchestrator() const {
         return *this->workload()._orchestrator;
-    }
-
-    // TODO: forward instead
-    template<typename K>
-    const Node& operator[](K key) const {
-        return this->_node[key];
-    }
-
-    template<typename K>
-    auto get(K& key) const {
-        return this->_node[key];
     }
 
     /**
@@ -406,7 +411,6 @@ private:
 
     constructPhaseContexts(const Node&, ActorContext*);
 
-    const Node& _node;
     WorkloadContext* _workload;
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> _phaseContexts;
 };
@@ -414,10 +418,10 @@ private:
 /**
  * Represents each `Phase:` block in the YAML configuration.
  */
-class PhaseContext final {
+class PhaseContext final : public v1::HasNode {
 public:
     PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
-        : _node{node},
+        : v1::HasNode{node},
           _actor{std::addressof(actorContext)},
           _phaseNumber(phaseNumber) {}
 
@@ -426,15 +430,6 @@ public:
     void operator=(PhaseContext&) = delete;
     PhaseContext(PhaseContext&&) = delete;
     void operator=(PhaseContext&&) = delete;
-
-    template<typename...Args>
-    auto& operator[](Args&&... args) const {
-        return this->_node.operator[](std::forward<Args>(args)...);
-    }
-
-    const Node& node() const {
-        return this->_node;
-    }
 
     DefaultRandom& rng(ActorId id) {
         return this->_actor->workload().getRNGForThread(id);
@@ -475,7 +470,6 @@ public:
     }
 
 private:
-    const Node& _node;
     ActorContext* _actor;
     const PhaseNumber _phaseNumber;
 };

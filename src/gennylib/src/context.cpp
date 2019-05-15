@@ -32,7 +32,7 @@ WorkloadContext::WorkloadContext(const Node& node,
                                  const std::string& mongoUri,
                                  const Cast& cast,
                                  v1::PoolManager::OnCommandStartCallback apmCallback)
-    : _node{node},
+    : v1::HasNode{node},
       _registry{&registry},
       _orchestrator{&orchestrator},
       _rateLimiters{10},

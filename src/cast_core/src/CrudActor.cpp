@@ -1215,7 +1215,7 @@ struct CrudActor::PhaseConfig {
                                    id);
         };
 
-        operations = phaseContext.node().getPlural<std::unique_ptr<BaseOperation>>(
+        operations = phaseContext.getPlural<std::unique_ptr<BaseOperation>>(
             "Operation", "Operations", addOperation);
     }
 };
