@@ -453,9 +453,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: AdminCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operation:
                   OperationName: AdminCommand
                   OperationCommand:
@@ -482,9 +482,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: AdminCommand
                   OperationCommand:
@@ -540,9 +540,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operation:
                   OperationName: RunCommand
                   OperationCommand:
@@ -574,9 +574,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
@@ -589,11 +589,11 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto verifyFn = [&db, &ah](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
 
-            std::string_view metricsOutput = ah.getMetricsOutput();
+            std::string metricsOutput = ah.getMetricsOutput();
             auto metricNamePos = metricsOutput.rfind("InsertMetric");
 
             // Naive check that the metrics output contains the substring equal to the metric name.
-            REQUIRE(metricNamePos != std::string_view::npos);
+            REQUIRE(metricNamePos != std::string::npos);
         };
         ah.runDefaultAndVerify(verifyFn);
     }
@@ -605,9 +605,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
@@ -621,12 +621,12 @@ TEST_CASE_METHOD(MongoTestFixture,
         };
         ah.runDefaultAndVerify(verifyFn);
 
-        std::string_view metricsOutput = ah.getMetricsOutput();
+        std::string metricsOutput = ah.getMetricsOutput();
         auto metricNamePos = metricsOutput.rfind("InsertMetric");
 
         // Naive check that the metrics output doesn't contain the substring equal to the metric
         // name.
-        REQUIRE(metricNamePos == std::string_view::npos);
+        REQUIRE(metricNamePos == std::string::npos);
     }
 
     SECTION("Have multiple operation metrics reported.") {
@@ -637,9 +637,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
@@ -657,13 +657,13 @@ TEST_CASE_METHOD(MongoTestFixture,
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection2"));
 
-            std::string_view metricsOutput = ah.getMetricsOutput();
+            std::string metricsOutput = ah.getMetricsOutput();
             auto insertMetricNamePos = metricsOutput.rfind("InsertMetric");
             auto createCollMetricNamePos = metricsOutput.rfind("CreateCollectionMetric");
 
             // Naive check that the metrics output contains the substring equal to the metric name.
-            REQUIRE(insertMetricNamePos != std::string_view::npos);
-            REQUIRE(createCollMetricNamePos != std::string_view::npos);
+            REQUIRE(insertMetricNamePos != std::string::npos);
+            REQUIRE(createCollMetricNamePos != std::string::npos);
         };
         ah.runDefaultAndVerify(verifyFn);
     }
@@ -676,9 +676,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
@@ -695,13 +695,13 @@ TEST_CASE_METHOD(MongoTestFixture,
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection2"));
 
-            std::string_view metricsOutput = ah.getMetricsOutput();
+            std::string metricsOutput = ah.getMetricsOutput();
             auto insertMetricNamePos = metricsOutput.rfind("InsertMetric");
             auto createCollMetricNamePos = metricsOutput.rfind("CreateCollectionMetric");
 
             // Naive check that the metrics output contains the substring equal to the metric name.
-            REQUIRE(insertMetricNamePos == std::string_view::npos);
-            REQUIRE(createCollMetricNamePos != std::string_view::npos);
+            REQUIRE(insertMetricNamePos == std::string ::npos);
+            REQUIRE(createCollMetricNamePos != std::string::npos);
         };
         ah.runDefaultAndVerify(verifyFn);
     }

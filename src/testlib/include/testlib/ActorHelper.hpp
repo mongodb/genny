@@ -72,7 +72,7 @@ public:
 
     void doRunThreaded(const WorkloadContext& wl);
 
-    const std::string_view getMetricsOutput() {
+    const std::string getMetricsOutput() {
         return _metricsOutput.str();
     }
 
