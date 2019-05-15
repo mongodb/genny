@@ -226,6 +226,67 @@ public:
     class iterator begin() const;
     class iterator end() const;
 
+
+    /**
+     * Extract a vector of items by supporting both singular and plural keys.
+     *
+     * Example YAML that this supports:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Number","Numbers") returns [7]
+     * Foo:
+     *   Number: 7
+     *
+     * # Calling getPlural<int>("Number","Numbers") returns [1,2]
+     * Bar:
+     *   Numbers: [1,2]
+     * ```
+     *
+     * The node cannot have both keys present. The following
+     * will error:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Bad","Bads")
+     * # will throw because the node must have
+     * # exactly one of the keys
+     * BadExample:
+     *   Bad: 7
+     *   Bads: [1,2]
+     * ```
+     *
+     * If the value at the plural key isn't a sequence we also barf:
+     *
+     * ```yaml
+     * # Calling getPlural<int>("Bad","Bads") will fail
+     * # because Bads isn't a sequence.
+     * AnotherBadExample:
+     *   Bads: 3
+     * ```
+     *
+     * @tparam T
+     *   the returned type. Must align with the return-type of `F`.
+     * @tparam F
+     *   type of the callback/mapping function that maps from `Node` to `T`.
+     * @param singular
+     *   the singular version of the key e.g. "Number"
+     * @param plural
+     *   the plural version of the key e.g. "Numbers"
+     * @param f
+     *   callback function mapping from the found node to a `T` instance. If not specified,
+     *   will use `to<T>()`
+     * @return
+     *   a `vector<T>()` formed by applying `f` to each item in the sequence found at `this[plural]`
+     *   or, if that is not defined, by applying `f` to the single-item sequence `[ this[singular]
+     * ]`.
+     */
+    // The implementation is below because we require the full class definition
+    // within the implementation.
+    template <typename T, typename F = std::function<T(const Node&)>>
+    std::vector<T> getPlural(const std::string& singular,
+                                   const std::string& plural,
+                                    // Default conversion function is `node.to<T>()`.
+                             F&& f = [](const Node& n) { return n.to<T>(); }) const;
+
     friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
 private:
@@ -330,6 +391,43 @@ private:
     std::unique_ptr<Node> _root;
     std::string _path;
 };
+
+// A bulk of this could probably be moved to the PiMPL version
+// in Node.cpp. Would just need `vector<const Node&> Node::getPlural(s,p)`
+// and then map f over the result.
+template <typename T, typename F>
+std::vector<T> Node::getPlural(const std::string& singular,
+                               const std::string& plural,
+                               F&& f) const {
+    std::vector<T> out;
+    const auto& pluralValue = (*this)[plural];
+    const auto& singValue = (*this)[singular];
+    if (pluralValue && singValue) {
+        BOOST_THROW_EXCEPTION(
+        // the `$plural(singular,plural)` key is kinda cheeky but hopefully
+        // it helps to explain what the code tried to do in error-messages.
+                InvalidKeyException("Can't have both '" + singular + "' and '" + plural + "'.",
+                                    this));
+    } else if (pluralValue) {
+        if (!pluralValue.isSequence()) {
+            BOOST_THROW_EXCEPTION(
+                    InvalidKeyException("Plural '" + plural + "' must be a sequence type.",
+                                        this));
+        }
+        for (auto&& [k,v] : pluralValue) {
+            auto&& created = std::invoke(f, v);
+            out.emplace_back(std::move(created));
+        }
+    } else if (singValue) {
+        auto&& created = std::invoke(f, singValue);
+        out.emplace_back(std::move(created));
+    } else if (!singValue && !pluralValue) {
+        BOOST_THROW_EXCEPTION(
+                InvalidKeyException("Either '" + singular + "' or '" + plural + "' required.",
+                                    this));
+    }
+    return out;
+}
 
 
 #endif  // HEADER_17681835_40A0_443E_939D_3679A1A6B5DD_INCLUDED

@@ -918,70 +918,84 @@ TEST_CASE("operator-left-shift") {
     // rely on YAML::Dump so don't need to enforce much beyond this
 }
 
-////TEST_CASE("getPlural") {
-////    {
-////        Node node{"Foo: 7", ""};
-////        REQUIRE(node.getPlural<int>("Foo", "Foos") == std::vector<int>{7});
-////    }
-////    {
-////        Node node{"Foos: [1,2,3]", ""};
-////        REQUIRE(node.getPlural<int>("Foo", "Foos") == std::vector<int>{1, 2, 3});
-////    }
-////    {
-////        Node node{"Foo: 712", ""};
-////        int calls = 0;
-////        REQUIRE(node.getPlural<HasConversionSpecialization>("Foo",
-////                                                            "Foos",
-////                                                            [&](const Node& node) {
-////                                                                ++calls;
-////                                                                // add one to the node value
-////                                                                return HasConversionSpecialization{
-////                                                                    node.to<int>() + 1};
-////                                                            })[0]
-////                    .x == 713);
-////        REQUIRE(calls == 1);
-////    }
-////
-////    {
-////        Node node{"Foos: [1,2,3]", ""};
-////        int calls = 0;
-////        REQUIRE(node.getPlural<HasConversionSpecialization>("Foo",
-////                                                            "Foos",
-////                                                            [&](const Node& node) {
-////                                                                ++calls;
-////                                                                // subtract 1 from the node value
-////                                                                return HasConversionSpecialization{
-////                                                                    node.to<int>() - 1};
-////                                                            })[2]
-////                    .x == 2);
-////        REQUIRE(calls == 3);
-////    }
-////
-////    {
-////        Node node{"{}", ""};
-////        REQUIRE_THROWS_WITH(
-////            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
-////            Catch::Matches(
-////                R"(Invalid key '\$plural\(Foo,Foos\)': Either 'Foo' or 'Foos' required. On node with path '': \{\})"));
-////    }
-////
-////    {
-////        Node node{"{Foos: 7}", ""};
-////        REQUIRE_THROWS_WITH(
-////            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
-////            Catch::Matches(
-////                R"(Invalid key '\$plural\(Foo,Foos\)': Plural 'Foos' must be a sequence type. On node with path '': \{Foos: 7\})"));
-////    }
-////
-////    {
-////        Node node{"{Foo: 8, Foos: [1,2]}", ""};
-////        REQUIRE_THROWS_WITH(
-////            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
-////            Catch::Matches(
-////                R"(Invalid key '\$plural\(Foo,Foos\)': Can't have both 'Foo' and 'Foos'. On node with path '': \{Foo: 8, Foos: \[1, 2\]\})"));
-////    }
-////}
-////
+TEST_CASE("getPlural") {
+    {
+        NodeSource ns{"Foo: 7", ""};
+        auto& node = ns.root();
+
+        REQUIRE(node.getPlural<int>("Foo", "Foos") == std::vector<int>{7});
+    }
+    {
+        NodeSource ns{"Foos: [1,2,3]", ""};
+        auto& node = ns.root();
+
+        REQUIRE(node.getPlural<int>("Foo", "Foos") == std::vector<int>{1, 2, 3});
+    }
+    {
+        NodeSource ns{"Foo: 712", ""};
+        auto& node = ns.root();
+
+        int calls = 0;
+        REQUIRE(node.getPlural<HasConversionSpecialization>("Foo",
+                                                            "Foos",
+                                                            [&](const Node& node) -> HasConversionSpecialization {
+                                                                ++calls;
+                                                                // add one to the node value
+                                                                return HasConversionSpecialization{
+                                                                    node.to<int>() + 1};
+                                                            })[0]
+                    .x == 713);
+        REQUIRE(calls == 1);
+    }
+
+    {
+        NodeSource ns{"Foos: [1,2,3]", ""};
+        auto& node = ns.root();
+
+        int calls = 0;
+        REQUIRE(node.getPlural<HasConversionSpecialization>("Foo",
+                                                            "Foos",
+                                                            [&](const Node& node) {
+                                                                ++calls;
+                                                                // subtract 1 from the node value
+                                                                return HasConversionSpecialization{
+                                                                    node.to<int>() - 1};
+                                                            })[2]
+                    .x == 2);
+        REQUIRE(calls == 3);
+    }
+
+    {
+        NodeSource ns{"{}", ""};
+        auto& node = ns.root();
+
+        REQUIRE_THROWS_WITH(
+            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
+            Catch::Matches(
+                R"(Invalid key '\$plural\(Foo,Foos\)': Either 'Foo' or 'Foos' required. On node with path '': \{\})"));
+    }
+
+    {
+        NodeSource ns{"{Foos: 7}", ""};
+        auto& node = ns.root();
+
+        REQUIRE_THROWS_WITH(
+            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
+            Catch::Matches(
+                R"(Invalid key '\$plural\(Foo,Foos\)': Plural 'Foos' must be a sequence type. On node with path '': \{Foos: 7\})"));
+    }
+
+    {
+        NodeSource ns{"{Foo: 8, Foos: [1,2]}", ""};
+        auto& node = ns.root();
+
+        REQUIRE_THROWS_WITH(
+            [&]() { node.getPlural<int>("Foo", "Foos"); }(),
+            Catch::Matches(
+                R"(Invalid key '\$plural\(Foo,Foos\)': Can't have both 'Foo' and 'Foos'. On node with path '': \{Foo: 8, Foos: \[1, 2\]\})"));
+    }
+}
+
 TEST_CASE("maybe") {
     auto yaml = std::string(R"(
 Children:
