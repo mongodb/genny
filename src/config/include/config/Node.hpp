@@ -98,7 +98,7 @@ private:
     std::string _what;
 };
 
-
+using KeyPath = std::vector<YamlKey>;
 
 class Node {
 public:
@@ -223,7 +223,7 @@ private:
     friend class NodeSource;
     std::unique_ptr<class NodeImpl> _impl;
 public:
-    explicit Node(YamlKey key, std::string path, YAML::Node yaml);
+    explicit Node(KeyPath path, YAML::Node yaml);
 private:
     const YAML::Node yaml() const;
 

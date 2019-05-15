@@ -6,21 +6,29 @@ namespace {
 using Child = std::unique_ptr<class Node>;
 using Children = std::map<YamlKey, Child>;
 
-std::string appendPath(std::string parentPath, YamlKey key) {
-    return parentPath + "/" + key.toString();
+std::string joinPath(const KeyPath& path) {
+    std::stringstream out;
+    for(const auto& elt : path) {
+        out << "/";
+        out << elt.toString();
+    }
+    return out.str();
 }
+
 
 }  // namespace
 
 class NodeImpl {
 public:
-    explicit NodeImpl(const Node* self, YamlKey key, std::string parentPath, YAML::Node yaml)
-        : _children{constructChildren(parentPath, yaml)}, _yaml{yaml}, _path{appendPath(parentPath, key)}, _key{key}, _self{self} {}
+    explicit NodeImpl(const Node* self, KeyPath path, YAML::Node yaml)
+        : _children{constructChildren(path, yaml)}, _yaml{yaml}, _path{path}, _self{self} {}
 
     const Node& get(YamlKey key) const {
         auto&& it = _children.find(key);
         if (it == _children.end()) {
-            _children.emplace(key, std::make_unique<Node>(key, _self->path(), _zombie));
+            KeyPath childPath = _self->_impl->_path;
+            childPath.push_back(key);
+            _children.emplace(key, std::make_unique<Node>(std::move(childPath), _zombie));
         }
         return *_children.at(key);
     }
@@ -50,11 +58,11 @@ public:
     }
 
     std::string key() const {
-        return _key.toString();
+        return _path.empty() ? "/" : _path.back().toString();
     }
 
     std::string path() const {
-        return _path;
+        return joinPath(_path);
     }
 
     friend std::ostream& operator<<(std::ostream& out, const NodeImpl& impl) {
@@ -68,11 +76,10 @@ private:
     // Needs to be mutable to generate placeholder nodes for non-existent keys.
     mutable Children _children;
     YAML::Node _yaml;
-    YamlKey _key;
-    std::string _path;
+    KeyPath _path;
     const Node* _self;
 
-    static Children constructChildren(std::string parentPath, YAML::Node node) {
+    static Children constructChildren(const KeyPath& path, YAML::Node node) {
         Children out;
         if (!node.IsMap() && !node.IsSequence()) {
             return out;
@@ -96,7 +103,9 @@ private:
 
         for (const auto kvp: node) {
             const auto key = extractKey(kvp, node);
-            out.emplace(key, std::make_unique<Node>(key, parentPath, extractValue(kvp, node)));
+            KeyPath childPath = path;
+            childPath.push_back(key);
+            out.emplace(key, std::make_unique<Node>(std::move(childPath), extractValue(kvp, node)));
         }
 
         return out;
@@ -163,9 +172,8 @@ Node::operator bool() const {
 
 Node::~Node() = default;
 
-// TODO: parent unused
-Node::Node(YamlKey key, std::string path, YAML::Node yaml)
-    : _impl{std::make_unique<NodeImpl>(this, key, path, yaml)} {}
+Node::Node(KeyPath path, YAML::Node yaml)
+    : _impl{std::make_unique<NodeImpl>(this, path, yaml)} {}
 
 const Node& Node::operator[](long key) const {
     return _impl->get(YamlKey{key});
@@ -177,7 +185,7 @@ const Node& Node::operator[](std::string key) const {
 
 NodeSource::NodeSource(std::string yaml, std::string path)
 : _yaml{YAML::Load(yaml)},
-  _root{std::make_unique<Node>(YamlKey{""}, path, _yaml)},
+  _root{std::make_unique<Node>(KeyPath{YamlKey{path}}, _yaml)},
   _path{path} {}
 
 NodeSource::~NodeSource() = default;

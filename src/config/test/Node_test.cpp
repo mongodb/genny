@@ -833,6 +833,13 @@ TEST_CASE("Basic Sequence Node Iteration") {
 }
 
 
+TEST_CASE("Simple Path") {
+    NodeSource ns {"", ""};
+    auto& node = ns.root();
+    REQUIRE(node.path() == "/");
+    REQUIRE(node[0].path() == "/0");
+}
+
 TEST_CASE("Node Paths") {
     auto yaml = std::string(R"(
 msg: bar
