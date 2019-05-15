@@ -19,6 +19,7 @@
 #include <optional>
 #include <type_traits>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <boost/log/trivial.hpp>
@@ -28,104 +29,110 @@
 
 namespace genny {
 
-namespace v1 {
-// Helper to convert arbitrary types to strings if they have operator<<(ostream&) defined.
-// This is used to build up paths when calling `node["foo"]` and `node[0]` etc.
-template <typename T>
-std::string toString(const T& t) {
-    std::stringstream out;
-    out << t;
-    return out.str();
-}
+/**
+ * Source of all `genny::Node` instances.
+ * This must outlive all `Node&`s handed out.
+ */
+class NodeSource final {
+public:
+    ~NodeSource();
 
-template<typename T>
-class CopyablePtr {
-//    static_assert(std::is_copy_constructible_v<T>);
-    public:
-    explicit CopyablePtr(std::unique_ptr<T> value)
-    : _value{std::move(value)} {}
-    CopyablePtr(const CopyablePtr& other)
-    : CopyablePtr(std::make_unique<T>(*(other._value))) {}
-    CopyablePtr(CopyablePtr&& other) noexcept
-    : _value{std::move(other._value)} {}
+    /**
+     * @return
+     *   The root node that represents the whole YAML file/document.
+     */
+    const class Node& root() const& {
+        return *_root;
+    }
 
-    CopyablePtr& operator=(CopyablePtr&& other) noexcept {
-        _value = std::move(other._value);
-        return *this;
-    }
-    CopyablePtr& operator=(const CopyablePtr& other) {
-        _value.release();
-        _value = std::make_unique<T>(*(other._value));
-        return *this;
-    }
-    explicit operator bool() const {
-        return bool(_value);
-    }
-    auto operator->() {
-        return _value.operator->();
-    }
-    auto operator->() const {
-        return _value.operator->();
-    }
-    auto operator*() {
-        return _value.operator*();
-    }
-    auto operator*() const {
-        return _value.operator*();
-    }
+    // disallow `NodeSource{"",""}.root();`
+    void root() const&& = delete;
+
+    /**
+     * @param yaml
+     *   The full yaml document
+     * @param path
+     *   Path information. Used in error messages.
+     *   Likely a file-path from where the yaml was loaded.
+     */
+    NodeSource(std::string yaml, std::string path);
+
 private:
-    std::unique_ptr<T> _value;
+    const YAML::Node _yaml;
+    const std::string _path;
+    const std::unique_ptr<class Node> _root;
 };
-
-}  // namespace v1
 
 /**
  * Specialize this type if you wish to provide
  * a conversion function for `O` but you can't
  * create a new constructor on `O` that takes in
  * a `const Node&` as its first parameter.
+ *
+ * See documentation on `genny::Node`.
  */
-template <typename O>
+template <typename T>
 struct NodeConvert {};
 
 /**
- * Throw this to indicate a bad path.
+ * @namespace v1
+ *   This is not intended to be used directly you should never be typing `v1::`
+ *   in Actor or test code.
  */
-class InvalidKeyException : public std::exception {
-public:
-    InvalidKeyException(const std::string& msg, const std::string& key, const class Node* node)
-        : _what{createWhat(msg, key, node)} {}
+namespace v1 {
 
-    const char* what() const noexcept override {
-        return _what.c_str();
+/**
+ * The key of a node in the YAML.
+ *
+ * If you have `const Node& foo = node["Foo"]`, then
+ * the key for `foo` is `Foo`. Can be a `long` for
+ * sequence types.
+ */
+class NodeKey final {
+public:
+    using Path = std::vector<NodeKey>;
+
+    explicit NodeKey(std::string key) : _value{std::move(key)} {};
+
+    explicit NodeKey(long key) : _value{key} {};
+
+    // Needed for storage in std::map
+    bool operator<(const NodeKey& rhs) const {
+        return _value < rhs._value;
+    }
+
+    std::string toString() const;
+
+    friend std::ostream& operator<<(std::ostream& out, const ::genny::v1::NodeKey& key) {
+        try {
+            return out << std::get<std::string>(key._value);
+        } catch (const std::bad_variant_access&) {
+            return out << std::get<long>(key._value);
+        }
     }
 
 private:
-    static std::string createWhat(const std::string& msg,
-                                  const std::string& key,
-                                  const class Node* node);
-    std::string _what;
+    using ValueType = std::variant<long, std::string>;
+    const ValueType _value;
 };
+}  // namespace v1
+
 
 /**
  * Throw this to indicate a bad conversion.
  */
 class InvalidConversionException : public std::exception {
 public:
-    InvalidConversionException(const Node& node,
+    InvalidConversionException(const class Node* node,
                                const YAML::BadConversion& yamlException,
-                               const std::type_info& destType)
-        : _what{createWhat(node, yamlException, destType)} {}
+                               const std::type_info& destType);
 
     const char* what() const noexcept override {
         return _what.c_str();
     }
 
 private:
-    static std::string createWhat(const Node& node,
-                                  const YAML::BadConversion& yamlException,
-                                  const std::type_info& destType);
-    std::string _what;
+    const std::string _what;
 };
 
 /**
@@ -133,17 +140,29 @@ private:
  */
 class InvalidYAMLException : public std::exception {
 public:
-    InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException)
-        : _what{createWhat(path, yamlException)} {}
+    InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException);
 
     const char* what() const noexcept override {
         return _what.c_str();
     }
 
 private:
-    static std::string createWhat(const std::string& node,
-                                  const YAML::ParserException& yamlException);
-    std::string _what;
+    const std::string _what;
+};
+
+/**
+ * Throw this to indicate a bad path.
+ */
+class InvalidKeyException : public std::exception {
+public:
+    InvalidKeyException(const std::string& msg, const std::string& key, const class Node* node);
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    const std::string _what;
 };
 
 
@@ -171,13 +190,13 @@ private:
  *
  * // iterate over a sequence
  * // e.g. given yaml "ns: [1,2,3]"
- * for(auto n : node["ns"]) { ... }
+ * for(auto [k,v] : node["ns"]) { ... }
  *
  * // or iterate over a map
  * // e.g. given yaml "vals: {a: A, b: B}"
- * for(auto kvp : node["vals"]) {
- *     auto key = kvp.first.to<std::string>();
- *     auto val = kvp.second.to<std::string>();
+ * for(auto [k,v] : node["vals"]) {
+ *     auto key = k.toString();
+ *     auto val = v.to<std::string>();
  * }
  *
  * // Or support syntax-sugar for plural values:
@@ -185,13 +204,6 @@ private:
  * // this allows the user to specify either `num:7` or `nums:[1,2,3]`.
  * // See docs on `getPlural` for more info.
  * ```
- *
- * All values "inherit" from their parent nodes, so if you call `node["foo"]["bar"].to<int>()` the
- * 'bar' node will check its chain of parent nodes and inherit the value if it exists anywhere in
- * the chain. If you wish to explicitly access a parent value, use the key `..`. So
- * `node["foo"]["bar"][".."]` is roughly equivalent to `node["foo"]`.
- * ("Roughly" only because we still report the ".." as part of the path
- * in error-messages.)
  *
  * The API for `genny::Node` is strongly inspired by that of `YAML::Node`,
  * but it provides better error-reporting in the case of invalid
@@ -237,48 +249,19 @@ private:
  * Note that it is intentionally impossible to convert `genny::Node` into
  * `YAML::Node`.
  */
-class Node {
+class Node final {
 public:
-    /**
-     * @param yaml
-     *   source yaml
-     * @param key
-     *   key to associate for this node. This could be a file-name or a meaningful way
-     *   of telling the user where the yaml came from. This is used primarily for error-reporting.
-     */
-    Node(const std::string& yaml, std::string key)
-        : Node{parse(yaml, key), v1::CopyablePtr<Node>{nullptr}, std::move(key)} {}
+    // No move or copy
+    Node(const Node&) = delete;
+    void operator=(const Node&) = delete;
+    Node(Node&&) = delete;
+    void operator=(Node&&) = delete;
 
-    // explicitly allow copy and move
-    // this is here to protect against regressions
-    // accidentally making this non-copy/move-able
+    /** Destruct */
+    ~Node();
 
-    /**
-     * Copy-construct
-     */
-    Node(const Node&) = default;
-
-    /**
-     * Move-construct.
-     */
-    Node(Node&&) = default;
-
-    /**
-     * Copy assign
-     */
-    Node& operator=(const Node&) = default;
-
-    /**
-     * Usage of this node in a moved-from state is undefined.
-     *
-     * @return a moved-to version of this node.
-     */
-    Node& operator=(Node&&) = default;
-
-    /**
-     * What type of node we are.
-     */
-    enum class NodeType {
+    /** What type of node are we */
+    enum class Type {
         Undefined,
         Null,
         Scalar,
@@ -287,37 +270,114 @@ public:
     };
 
     /**
-     * @tparam O
-     *   output type
-     * @tparam Args
-     *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
-     * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
-     *   genny::Node& node, Args...) {...} };` impl.
-     * @param args
-     *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
-     * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
-     *   genny::Node& node, Args...) {...} };` impl.
+     * Access children of a sequence.
+     *
+     * @param index
+     *   index of child to access
      * @return
-     *   the result of converting this node to O either via its constructor or via the
-     *   `NodeConvert<O>::convert` function.
-     *   Like `operation[]`, this will check its chain of parent nodes and inherit the value if it
-     *   exists anywhere in the chain. If the value is not specified in any parent node, it will
-     *   throw an `InvalidKeyException`. If you want to allow a value to be missing, use
-     *   `.maybe<O>()`.
-     * @throws InvalidKeyException
-     *   if key not found
-     * @throws InvalidConversionException
-     *   if cannot convert to O or if value is not specified
+     *   the child node at that key.
+     *   If there is no child at the key (e.g. if this Node is a scalar
+     *   or the key is outside the list of valid indexes) then will
+     *   return a `Node&` that evaluates to false according to `operator bool`.
      */
-    template <typename O, typename... Args>
-    O to(Args&&... args) const {
-        auto out = maybe<O, Args...>(std::forward<Args>(args)...);
-        if (!out) {
-            BOOST_THROW_EXCEPTION(
-                InvalidKeyException("Tried to access node that doesn't exist.", this->_key, this));
-        }
-        return std::move(*out);
-    }
+    const Node& operator[](long index) const;
+
+    /**
+     * Access children of a map.
+     *
+     * @param key
+     *   key of child to access
+     * @return
+     *   the child node at that key.
+     *   If there is no child at the key (e.g. if this Node is a scalar
+     *   or the Node's keyset doesn't contain `key`) then will
+     *   return a `Node&` that evaluates to false according to `operator bool`.
+     */
+    const Node& operator[](const std::string& key) const;
+
+    /**
+     * @return
+     *   If this Node is defined.
+     *   A node that is defined to be false or even null is still defined.
+     */
+    explicit operator bool() const;
+
+    /**
+     * @return
+     *   The type of this Node.
+     */
+    Type type() const;
+
+    /**
+     * @return
+     *   If this node is a scalar.
+     */
+    bool isScalar() const;
+
+    /**
+     * @return
+     *   If this node is null.
+     */
+    bool isNull() const;
+
+    /**
+     * @return
+     *   If this node is a map.
+     */
+    bool isMap() const;
+
+    /**
+     * @return
+     *   If this node is a sequence (array).
+     */
+    bool isSequence() const;
+
+    /**
+     * @return
+     *   How many children this node has.
+     *   Scalar nodes have size zero.
+     */
+    size_t size() const;
+
+    /**
+     * @return
+     *   The key that was used to access this Node.
+     *   Note that we always return a "stringified"
+     *   version of the key even if this Node was
+     *   accessed from a sequence. E.g. `node[0]` would
+     *   have key `"0"`.
+     */
+    std::string key() const;
+
+    /**
+     * @return
+     *   The full path to this Node. Path
+     *   elements are separated by `/`.
+     */
+    std::string path() const;
+
+    /**
+     * Iterate over child elements. If this Node is a scalar, undefined,
+     * or an empty map/sequence then `begin() == end()`.
+     *
+     * Example iteration:
+     *
+     * ```c++
+     * NodeSource ns{"foo:[10,20,30]", "example.yaml"};
+     * for(auto& [k,v] : ns["foo"]) {
+     *   // k = 0, 1, 2
+     *   // v = Node{10}, Node{20}, Node{30}
+     * }
+     * ```
+     *
+     * @return start iterator
+     */
+    class NodeIterator begin() const;
+
+    /**
+     * @return end iterator
+     */
+    class NodeIterator end() const;
 
     /**
      * @tparam O
@@ -331,12 +391,10 @@ public:
      * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
      *   genny::Node& node, Args...) {...} };` impl.
      * @return
-     *   A `nullopt` if this (or parent) node isn't defined.
+     *   A `nullopt` if this node isn't defined.
      *   Else the result of converting this node to O either via its constructor or via the
      *   `NodeConvert<O>::convert` function.
-     *   Like `operation[]`, this will check its chain of parent nodes and inherit the value if it
-     *   exists anywhere in the chain. If the value is not specified in any parent node, it will
-     *   return an empty optional (`std::nullopt`).
+     *   If the value is not specified, this function will return an empty optional (`std::nullopt`).
      */
     template <typename O = Node, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
@@ -361,34 +419,46 @@ public:
             "        };\n"
             "        }  // namesace genny\n"
             "\n"
-            "3.  is a type built into YAML::Node e.g. int, string, vector<built-in-type> etc.");
+            "3.  is a type built into YAML::Node e.g. int, string, vector<built-in-type>"
+            "    etc.");
         if (!*this) {
             return std::nullopt;
         }
         try {
             return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
         } catch (const YAML::BadConversion& x) {
-            BOOST_THROW_EXCEPTION(InvalidConversionException(*this, x, typeid(O)));
+            BOOST_THROW_EXCEPTION(InvalidConversionException(this, x, typeid(O)));
         }
     }
 
     /**
-     * @tparam K
-     *   key type (either a string for maps or an int for sequences)
-     * @param key
-     *   key to access. Can use the special key ".." to explicitly access a value from the parent
-     *   node.
+     * @tparam O
+     *   output type
+     * @tparam Args
+     *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
+     * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
+     *   genny::Node& node, Args...) {...} };` impl.
+     * @param args
+     *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
+     *   pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
+     *   genny::Node& node, Args...) {...} };` impl.
      * @return
-     *   Node at the given key.
-     *
-     *   This does *not* throw if the key isn't present. If they key isn't present in the parent
-     *   node it will try to find it in the parent node recursively. If it can't be found,
-     *   the node will be 'invalid' (and return false to `operator bool()` and the calls to
-     * `.maybe()` will return a `nullopt`. Calls to `.to<>()` will fail for invalid nodes.
+     *   the result of converting this node to O either via its constructor or via the
+     *   `NodeConvert<O>::convert` function. If you want to allow a value to be missing, use
+     *   `.maybe<O>()`.
+     * @throws InvalidKeyException
+     *   if key not found
+     * @throws InvalidConversionException
+     *   if cannot convert to O or if value is not specified
      */
-    template <typename K>
-    const Node operator[](const K& key) const {
-        return this->get(key);
+    template <typename O, typename... Args>
+    O to(Args&&... args) const {
+        auto out = maybe<O, Args...>(std::forward<Args>(args)...);
+        if (!out) {
+            BOOST_THROW_EXCEPTION(
+                InvalidKeyException("Tried to access node that doesn't exist.", this->key(), this));
+        }
+        return *out;
     }
 
     /**
@@ -452,173 +522,20 @@ public:
         // Default conversion function is `node.to<T>()`.
         F&& f = [](const Node& n) { return n.to<T>(); }) const;
 
-    /**
-     * @param out
-     *   output stream to dump `node` to in YAML format
-     * @param node
-     *   node to dump to `out`
-     * @return out
-     */
-    friend std::ostream& operator<<(std::ostream& out, const Node& node) {
-        return out << YAML::Dump(node._yaml);
-    }
+    friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
-    /**
-     * @return
-     *   number of child elements. This is the number of
-     *   elements in a sequence or (k,v) pairs in a map. The size
-     *   of scalar and null nodes is zero as is the size of
-     *   undefined/non-existant nodes.
-     */
-    auto size() const {
-        return _yaml.size();
-    }
-
-    /**
-     * @return
-     *   if this node **is defined**.
-     *
-     *   Note that this is not the same as `.to<bool>()`!
-     *
-     *   If you have YAML `foo: false`, the value of `bool(node["foo"])` is true.
-     */
-    explicit operator bool() const {
-        return _valid && _yaml;
-    }
-
-    /**
-     * @return
-     *   if we're specified as `null`.
-     *   This is not the same as not being defined.
-     */
-    bool isNull() const {
-        return type() == NodeType::Null;
-    }
-
-    /**
-     * @return
-     *   if we're a scalar type (string, number, etc).
-     */
-    bool isScalar() const {
-        return type() == NodeType::Scalar;
-    }
-
-    /**
-     * @return
-     *   if we're a sequence (array) type.
-     */
-    bool isSequence() const {
-        return type() == NodeType::Sequence;
-    }
-
-    /**
-     * @return
-     *   if we're a map type.
-     */
-    bool isMap() const {
-        return type() == NodeType::Map;
-    }
-
-    /**
-     * @return the YAML tag
-     */
-    const std::string& tag() const {
-        return _yaml.Tag();
-    }
-
-    /**
-     * @return
-     *   what type we are.
-     */
-    NodeType type() const {
-        if (!*this) {
-            return NodeType::Undefined;
-        }
-        auto yamlTyp = _yaml.Type();
-        switch (yamlTyp) {
-            case YAML::NodeType::Undefined:
-                return NodeType::Undefined;
-            case YAML::NodeType::Null:
-                return NodeType::Null;
-            case YAML::NodeType::Scalar:
-                return NodeType::Scalar;
-            case YAML::NodeType::Sequence:
-                return NodeType::Sequence;
-            case YAML::NodeType::Map:
-                return NodeType::Map;
-        }
-    }
-
-    /**
-     * @return
-     *   the path that we took to get here. Path elements are
-     *   separated by slashes.
-     *
-     * Given the following yaml:
-     *
-     * ```yaml
-     * foo: [1, 2]
-     * bar: baz
-     * ```
-     *
-     * 1. The path to `1` is `/foo/0`.
-     * 2. The path to `2` is `/foo/1`.
-     * 3. The path to `baz` is `/foo/bar`.
-     *
-     * **Paths for Keys in Sequences and Maps**:
-     *
-     * When iterating over maps, the keys technically have their own paths
-     * as well. For example:
-     *
-     * ```c++
-     * Node node {
-     *   "foo: [1, 2]\n"
-     *   "bar: baz", ""
-     * };
-     *
-     * for(auto kvp : node) {
-     *   // First iteration:
-     *   // - kvp.first is the 'foo' key and its path is `/foo$key`
-     *   // - kvp.second is the `[1,2]` value and its path is `/foo`.
-     *   //
-     *   // Second iteration:
-     *   // - kvp.first is the `bar` key and its path is `/bar$key`
-     *   // - kvp.second is the `baz` value and its path is `/bar`.
-     * }
-     * ```
-     *
-     * This is more of a curiosity than a useful feature. It is used when giving
-     * error-messages.
-     */
-    std::string path() const;
-
-    /** used in iteration */
-    struct iterator;
-
-    /** start iterating */
-    iterator begin() const;
-
-    /** end iterator */
-    iterator end() const;
-
-    /** the value-type of the iterator. */
-    // friends because we need to use private ctors
-    friend class IteratorValue;
+    // Only intended to be used internally
+    explicit Node(const v1::NodeKey::Path& path, const YAML::Node yaml);
 
 private:
-    Node(const YAML::Node yaml, v1::CopyablePtr<Node> parent, bool valid, std::string key)
-        : _yaml{yaml}, _parent{std::move(parent)}, _valid{valid}, _key{std::move(key)} {}
+    friend class NodeImpl;
 
-    Node(const YAML::Node yaml, v1::CopyablePtr<Node> parent, std::string key)
-        : Node{yaml, std::move(parent), yaml, std::move(key)} {}
+    const YAML::Node yaml() const;
 
-
-    // helper type-function
     template <typename O, typename... Args>
     static constexpr bool isNodeConstructible() {
-        // exclude is_trivially_constructible_v values because
-        // for some reason `int` and other primitives report as is_constructible here for some
-        // reason.
+        // exclude is_trivially_constructible_v values because for some reason `int` and
+        // other primitives report as is_constructible here
         return !std::is_trivially_constructible_v<O> &&
             std::is_constructible_v<O, const Node&, Args...>;
     }
@@ -664,184 +581,81 @@ private:
     std::optional<O> _maybeImpl(Args&&... args) const {
         static_assert(sizeof...(args) == 0,
                       "Cannot pass additional args when using built-in YAML conversion");
-        // If you get compiler errors in _maybeImpl, see the note on the public maybe() function.
-        return std::make_optional<O>(_yaml.as<O>());
+        return std::make_optional<O>(yaml().as<O>());
     }
 
-    // Helper to parse yaml string and throw a useful error message if parsing fails
-    static YAML::Node parse(std::string yaml, std::string path);
-
-    // helper for yamlGet that returns nullopt if no parent
-    template <typename K>
-    std::optional<const YAML::Node> parentGet(const K& key) const {
-        if (!_parent) {
-            return std::nullopt;
-        }
-        return _parent->yamlGet(key);
-    }
-
-    // Forward to _yaml[key] if we're a valid node else forward to the parent
-    template <typename K>
-    std::optional<const YAML::Node> yamlGet(const K& key) const {
-        if (!_valid) {
-            return parentGet(key);
-        }
-        const YAML::Node found = _yaml[key];
-        if (found) {
-            return std::make_optional<const YAML::Node>(found);
-        }
-        return parentGet(key);
-    }
-
-    template <typename K>
-    const Node get(const K& key) const {
-        const std::string keyStr = v1::toString(key);
-        if constexpr (std::is_convertible_v<K, std::string>) {
-            if (key == "..") {
-                if (!_parent) {
-                    return Node{YAML::Node{}, v1::CopyablePtr<Node>{nullptr}, false, _key + "/.."};
-                }
-
-                std::ostringstream parentKey;
-                parentKey << _parent->_key << "/" << _key << "/..";
-                return Node{_parent->_yaml, _parent->_parent, _parent->_valid, parentKey.str()};
-            }
-        }
-        try {
-            auto yaml = this->yamlGet(key);
-            auto nparent = v1::CopyablePtr{std::make_unique<Node>(*this)};
-            return yaml ? Node{*yaml, std::move(nparent), true, keyStr} : Node{YAML::Node{}, std::move(nparent), false, keyStr};
-        } catch (const YAML::Exception& x) {
-            // YAML::Node is inconsistent about where it throws exceptions for `node[0]` versus
-            // `node["foo"]`.
-            BOOST_THROW_EXCEPTION(InvalidKeyException(
-                "Invalid YAML access. Perhaps trying to treat a map as a sequence?",
-                v1::toString(key),
-                this));
-        }
-    }
-
-    void buildPath(std::stringstream& out) const;
-
-    YAML::Node _yaml;
-    std::string _key;
-    bool _valid;
-    v1::CopyablePtr<Node> _parent;
+    const std::unique_ptr<const class NodeImpl> _impl;
 };
 
-
-// we can act like a Node if iterated value is a scalar or
-// we can act like a pair of Nodes if iterated value is a map entry
-class IteratorValue : public std::pair<Node, Node>, public Node {
+/**
+ * The `[k,v]` used when doing `for(auto& [k,v] : node)`
+ */
+class NodeIteratorValue final : public std::pair<const v1::NodeKey&, const Node&> {
 public:
-    // jump through immense hoops to avoid knowing anything about the actual yaml iterator other
-    // than its pair form is a pair of {YAML::Node, YAML::Node}
-    template <typename ITVal>
-    IteratorValue(v1::CopyablePtr<Node> parent, ITVal itVal, size_t index)
-        :  // API like kvp when itVal is being used in map context
-          NodePair{std::make_pair(
-              Node{itVal.first,
-                   parent,
-                   bool(itVal.first),  // itVal.first will be falsy if we're iterating over a
-                                       // sequence.
-                   //
-                   // For map-iteration cases the path for the kvp may as well
-                   // be the index. See the 'YAML::Node Equivalency' test-cases.
-                   (itVal.first ? (itVal.first.template as<std::string>()) : v1::toString(index)) +
-                       "$key"},
-              Node{itVal.second,
-                   parent,
-                   bool(itVal.second),  // itVal.second will be falsy if we're iterating over a
-                                        // sequence
-                   //
-                   // The key for the value in map-iteration cases is
-                   // itVal.first. And it's the index on sequence-iteration
-                   // cases.
-                   itVal.first ? itVal.first.template as<std::string>() : v1::toString(index)})},
-          // API like a value where it's being used in sequence context
-          Node{itVal, parent, itVal, v1::toString(index)} {}
-
-private:
-    using NodePair = std::pair<Node, Node>;
+    NodeIteratorValue(const v1::NodeKey& key, const Node& node);
 };
 
-
-// Wrap a YAML iterator and also keep track of
-// the index on sequences for use in error-messaging.
-class Node::iterator {
+/**
+ * Iterates over nodes. See `Node::begin()` and `Node::end()`.
+ */
+class NodeIterator final {
 public:
-    auto operator++() {
-        ++index;
-        return _child.operator++();
-    }
+    ~NodeIterator();
 
-    auto operator*() const {
-        return IteratorValue{parent, (_child.operator*()), index};
-    }
+    bool operator!=(const NodeIterator&) const;
 
-    auto operator-> () const {
-        return IteratorValue{parent, (_child.operator*()), index};
-    }
+    bool operator==(const NodeIterator&) const;
 
-    auto operator==(const iterator& rhs) const {
-        return _child == rhs._child;
-    }
+    void operator++();
 
-    auto operator!=(const iterator& rhs) const {
-        return _child != rhs._child;
-    }
+    const NodeIteratorValue operator*() const;
 
 private:
-    // Don't expose or assume the type of YAML::Node.begin()
-    using IterType = decltype(std::declval<const YAML::Node>().begin());
-
-    iterator(IterType child, v1::CopyablePtr<Node> parent) : _child(std::move(child)), parent(parent) {}
-
     friend Node;
 
-    IterType _child;
-    v1::CopyablePtr<Node> parent;
-    size_t index = 0;
+    NodeIterator(const class NodeImpl*, bool end);
+
+    const std::unique_ptr<class IteratorImpl> _impl;
 };
 
-// Need to define this out-of-line because we need the
-// full class definition in order to iterate over
-// all the nodes in the plural case.
+
+// A bulk of this could probably be moved to the PiMPL version
+// in Node.cpp. Would just need `vector<const Node&> Node::getPlural(s,p)`
+// and then map f over the result.
 template <typename T, typename F>
 std::vector<T> Node::getPlural(const std::string& singular,
                                const std::string& plural,
                                F&& f) const {
     std::vector<T> out;
-    auto pluralValue = this->get(plural);
-    auto singValue = this->get(singular);
+    const auto& pluralValue = (*this)[plural];
+    const auto& singValue = (*this)[singular];
     if (pluralValue && singValue) {
         BOOST_THROW_EXCEPTION(
             // the `$plural(singular,plural)` key is kinda cheeky but hopefully
             // it helps to explain what the code tried to do in error-messages.
             InvalidKeyException("Can't have both '" + singular + "' and '" + plural + "'.",
-                                "$plural(" + singular + "," + plural + ")",
+                                "getPlural('" + singular + "', '" + plural + "')",
                                 this));
     } else if (pluralValue) {
         if (!pluralValue.isSequence()) {
             BOOST_THROW_EXCEPTION(
                 InvalidKeyException("Plural '" + plural + "' must be a sequence type.",
-                                    "$plural(" + singular + "," + plural + ")",
+                                    "getPlural('" + singular + "', '" + plural + "')",
                                     this));
         }
-        for (auto&& val : pluralValue) {
-            T created = std::invoke(f, val);
+        for (auto&& [k, v] : pluralValue) {
+            auto&& created = std::invoke(f, v);
             out.emplace_back(std::move(created));
         }
     } else if (singValue) {
-        T created = std::invoke(f, singValue);
+        auto&& created = std::invoke(f, singValue);
         out.emplace_back(std::move(created));
     } else if (!singValue && !pluralValue) {
         BOOST_THROW_EXCEPTION(
             InvalidKeyException("Either '" + singular + "' or '" + plural + "' required.",
-                                "$plural(" + singular + "," + plural + ")",
+                                "getPlural('" + singular + "', '" + plural + "')",
                                 this));
     }
-
     return out;
 }
 

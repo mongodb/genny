@@ -20,6 +20,11 @@ def run_self_test():
 
 
 def main():
+    # Check Python version
+    if not sys.version_info >= (3, 7):
+        logging.error('Please run this script with Python 3.7 or newer')
+        sys.exit(1)
+
     # Initialize the global context.
     os_family = platform.system()
     Context.set_triplet_os(os_family)
