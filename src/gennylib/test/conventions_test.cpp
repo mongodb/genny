@@ -15,11 +15,9 @@
 #include <chrono>
 #include <cmath>
 
-#include <yaml-cpp/yaml.h>
-
 #include <gennylib/conventions.hpp>
-#include <testlib/MongoTestFixture.hpp>
 
+#include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
 
 #include <config/Node.hpp>
