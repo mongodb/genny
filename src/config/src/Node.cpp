@@ -126,12 +126,11 @@ InvalidKeyException::InvalidKeyException(const std::string& msg,
 //
 class NodeImpl {
 public:
-    NodeImpl(const Node* self, v1::NodeKey::Path path, YAML::Node yaml)
+    NodeImpl(const Node* self, const YAML::Node yaml, const v1::NodeKey::Path& path)
         : _self{self},
           _children{constructChildren(path, yaml)},
           _yaml{yaml},
-          _path{std::move(path)}
-        {}
+          _path{path} {}
 
     const Node& get(const v1::NodeKey& key) const {
         auto&& it = _children.find(key);
@@ -190,9 +189,9 @@ public:
 private:
     friend NodeIterator;
 
-    static Children constructChildren(const v1::NodeKey::Path& path, YAML::Node node) {
+    static Children constructChildren(const v1::NodeKey::Path& path, const YAML::Node yaml) {
         Children out;
-        if (!node.IsMap() && !node.IsSequence()) {
+        if (!yaml.IsMap() && !yaml.IsSequence()) {
             return out;
         }
 
@@ -212,11 +211,11 @@ private:
             }
         };
 
-        for (auto&& kvp : node) {
-            const auto key = extractKey(kvp, node);
+        for (auto&& kvp : yaml) {
+            const auto key = extractKey(kvp, yaml);
             v1::NodeKey::Path childPath = path;
             childPath.push_back(key);
-            out.emplace(key, std::make_unique<Node>(std::move(childPath), extractValue(kvp, node)));
+            out.emplace(key, std::make_unique<Node>(std::move(childPath), extractValue(kvp, yaml)));
         }
 
         return out;
@@ -289,7 +288,7 @@ Node::operator bool() const {
 Node::~Node() = default;
 
 Node::Node(const v1::NodeKey::Path& path, const YAML::Node yaml)
-    : _impl{std::make_unique<NodeImpl>(this, path, yaml)} {}
+    : _impl{std::make_unique<NodeImpl>(this, yaml, path)} {}
 
 const Node& Node::operator[](long key) const {
     return _impl->get(v1::NodeKey{key});
