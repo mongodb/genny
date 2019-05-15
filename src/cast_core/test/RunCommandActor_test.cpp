@@ -555,7 +555,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                     documents: [{rating: 15}]
         )", "");
         REQUIRE_THROWS_AS(ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidConfigurationException);
+                          InvalidKeyException);
     }
 }
 
