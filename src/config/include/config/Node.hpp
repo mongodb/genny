@@ -50,6 +50,56 @@ private:
     const Type _value;
 };
 
+
+/**
+ * Throw this to indicate a bad conversion.
+ */
+class InvalidConversionException : public std::exception {
+public:
+    InvalidConversionException(const class Node* node,
+                               const YAML::BadConversion& yamlException,
+                               const std::type_info& destType);
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    std::string _what;
+};
+
+/**
+ * Throw this to indicate bad input yaml syntax.
+ */
+class InvalidYAMLException : public std::exception {
+public:
+    InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException);
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    std::string _what;
+};
+
+/**
+ * Throw this to indicate a bad path.
+ */
+class InvalidKeyException : public std::exception {
+public:
+    InvalidKeyException(const std::string& msg, const class Node* node);
+
+    const char* what() const noexcept override {
+        return _what.c_str();
+    }
+
+private:
+    std::string _what;
+};
+
+
+
 class Node {
 public:
     Node(const Node&) = delete;

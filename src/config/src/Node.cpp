@@ -220,3 +220,42 @@ iterator::~iterator() = default;
 iterator_value::iterator_value(const YamlKey key, const Node &node)
 : std::pair<const YamlKey, const Node&>{key, node} {}
 
+// Exception Types
+
+namespace {
+std::string createInvalidYamlExceptionWhat(const std::string& path,
+                                           const YAML::ParserException& yamlException) {
+    std::stringstream out;
+    out << "Invalid YAML: ";
+    out << "'" << yamlException.msg << "' ";
+    out << "at (Line:Column)=(" << yamlException.mark.line << ":" << yamlException.mark.column
+        << "). ";
+    out << "On node with path '" << path << "'.";
+
+    return out.str();
+}
+}  // namepsace
+
+InvalidYAMLException::InvalidYAMLException(const std::string &path, const YAML::ParserException &yamlException)
+        : _what{createInvalidYamlExceptionWhat(path, yamlException)} {}
+
+InvalidConversionException::InvalidConversionException(const struct Node *node,
+                                                       const YAML::BadConversion &yamlException,
+                                                       const std::type_info &destType) {
+    std::stringstream out;
+    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
+    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
+        << yamlException.mark.column << "). ";
+    out << "On node with path '" << node->path() << "': ";
+    out << *node;
+    this->_what = out.str();
+}
+
+InvalidKeyException::InvalidKeyException(const std::string &msg, const Node* node) {
+    std::stringstream out;
+//    out << "Invalid key 'key" << node->key() << "': ";
+    out << msg << " ";
+    out << "On node with path '" << node->path() << "': ";
+//    out << *node;
+    _what = out.str();
+}
