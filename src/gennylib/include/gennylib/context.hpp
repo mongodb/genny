@@ -70,7 +70,8 @@ public:
     template <typename T, typename F = std::function<T(const Node&)>>
     auto getPlural(const std::string& singular,
                     const std::string& plural,
-                    F&& f) const {
+            // Default conversion function is `node.to<T>()`.
+                   F&& f = [](const Node& n) { return n.to<T>(); }) {
         return std::move(this->_node.getPlural<T,F>(singular, plural, std::forward<F>(f)));
     }
 

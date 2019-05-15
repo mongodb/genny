@@ -302,7 +302,7 @@ Actors:
 }
 */
 
-void onContext(const Node& yaml, std::function<void(ActorContext&)> op) {
+void onContext(const NodeSource& yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
 
@@ -310,7 +310,7 @@ void onContext(const Node& yaml, std::function<void(ActorContext&)> op) {
         {"Op", std::make_shared<OpProducer>(op)}, {"Nop", std::make_shared<NopProducer>()},
     };
 
-    WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast};
+    WorkloadContext{yaml.root(), metrics, orchestrator, mongoUri.data(), cast};
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
@@ -337,13 +337,11 @@ TEST_CASE("PhaseContexts constructed as expected") {
         Foo2: Bar3
     )", "");
 
-    auto& yaml = ns.root();
-
     SECTION("Loads Phases") {
         // "test of the test"
         int calls = 0;
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) { ++calls; };
-        onContext(yaml, op);
+        onContext(ns, op);
         REQUIRE(calls == 1);
     }
 
@@ -352,7 +350,7 @@ TEST_CASE("PhaseContexts constructed as expected") {
             const auto& ph = ctx.phases();
             REQUIRE(ph.size() == 8);
         };
-        onContext(yaml, op);
+        onContext(ns, op);
     }
     SECTION("Phase index is defaulted") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
@@ -365,19 +363,19 @@ TEST_CASE("PhaseContexts constructed as expected") {
             REQUIRE((*ctx.phases().at(6))["Operation"].to<std::string>() == "Five");
             REQUIRE((*ctx.phases().at(7))["Operation"].to<std::string>() == "Five");
         };
-        onContext(yaml, op);
+        onContext(ns, op);
     }
     SECTION("Phases can have extra configs") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE((*ctx.phases().at(1))["Extra"][0].to<int>() == 1);
         };
-        onContext(yaml, op);
+        onContext(ns, op);
     }
     SECTION("Missing require values throw") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE_THROWS((*ctx.phases().at(1))["Extra"]["100"].to<int>());
         };
-        onContext(yaml, op);
+        onContext(ns, op);
     }
 }
 
@@ -430,13 +428,12 @@ TEST_CASE("No PhaseContexts") {
     - Name: HelloWorld
       Type: Nop
     )", "");
-    auto& yaml = ns.root();
 
     SECTION("Empty PhaseContexts") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
                 REQUIRE(ctx.phases().size() == 0);
         };
-        onContext(yaml, op);
+        onContext(ns, op);
     }
 }
 
@@ -461,7 +458,7 @@ TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE(ctx.phases().size() == 13);
         };
-        onContext(yaml.root(), op);
+        onContext(yaml, op);
     }
 }
 
@@ -580,23 +577,23 @@ struct convert<AnotherInt> {
 
 }  // namespace YAML
 
-/*
+// This test is slightly duplicated in context_test.cpp
 TEST_CASE("getPlural") {
-    auto createYaml = [](std::string actorYaml) {
-        auto doc = Node(R"(
+    auto createYaml = [](std::string actorYaml) -> NodeSource {
+        auto doc = YAML::Load(R"(
 SchemaVersion: 2018-07-01
 Numbers: [1,2,3]
 Actors: [{}]
-)", "");
+)");
         auto actor = YAML::Load(actorYaml);
         actor["Type"] = "Op";
         doc["Actors"][0] = actor;
-        return doc;
+        return NodeSource{YAML::Dump(doc), ""};
     };
 
     // can use built-in decode types
     onContext(createYaml("Foo: 5"), [](ActorContext& c) {
-        c.getPlural<TakesInt>("Foo", "Foos", [](YAML::Node n) { return TakesInt{n.as<int>()}; });
+        c.getPlural<TakesInt>("Foo", "Foos", [](const Node& n) { return TakesInt{n.to<int>()}; });
     });
 
     onContext(createYaml("Foo: 5"), [](ActorContext& c) {
@@ -605,13 +602,13 @@ Actors: [{}]
 
     onContext(createYaml("{}"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
-                            Matches("Either 'Foo' or 'Foos' required."));
+                            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Either 'Foo' or 'Foos' required. On node with path '/Actors/0': \\{Type: Op\\}"));
     });
     onContext(createYaml("Foo: 81"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH(
             [&]() {
                 c.getPlural<TakesInt>(
-                    "Foo", "Foos", [](YAML::Node n) { return TakesInt{n.as<int>()}; });
+                    "Foo", "Foos", [](const Node& n) { return TakesInt{n.to<int>()}; });
             }(),
             Matches("Expected"));
     });
@@ -622,7 +619,7 @@ Actors: [{}]
 
     onContext(createYaml("Foos: 73"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
-                            Matches("'Foos' must be a sequence type."));
+                            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Plural 'Foos' must be a sequence type. On node with path '/Actors/0': \\{Foos: 73, Type: Op\\}"));
     });
 
     onContext(createYaml("Foo: 71"), [](ActorContext& c) {
@@ -631,12 +628,7 @@ Actors: [{}]
 
     onContext(createYaml("{ Foo: 9, Foos: 1 }"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
-                            Matches("Can't have both 'Foo' and 'Foos'."));
-    });
-
-    onContext(createYaml("Number: 7"), [](ActorContext& c) {
-        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Number", "Numbers"); }(),
-                            Matches("Can't have both 'Number' and 'Numbers'."));
+                            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Can't have both 'Foo' and 'Foos'. On node with path '/Actors/0': \\{Foo: 9, Foos: 1, Type: Op\\}"));
     });
 
     onContext(createYaml("Numbers: [3, 4, 5]"), [](ActorContext& c) {
@@ -644,6 +636,7 @@ Actors: [{}]
     });
 }
 
+/*
 TEST_CASE("Configuration cascades to nested context types") {
     auto yaml = Node(R"(
 SchemaVersion: 2018-07-01
