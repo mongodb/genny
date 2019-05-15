@@ -29,11 +29,32 @@
 
 namespace genny {
 
+class NodeSource {
+public:
+    ~NodeSource();
+
+    const class Node& root() const& {
+        return *_root;
+    }
+
+    // disallow `NodeSource{"",""}.root();`
+    void root() const&& = delete;
+
+    NodeSource(std::string yaml, std::string path);
+
+private:
+    YAML::Node _yaml;
+    std::unique_ptr<class Node> _root;
+    std::string _path;
+};
+
 template <typename T>
 struct NodeConvert {};
 
 class YamlKey {
 public:
+    using Path = std::vector<YamlKey>;
+
     explicit YamlKey(std::string key) : _value{key} {};
 
     explicit YamlKey(long key) : _value{key} {};
@@ -50,10 +71,6 @@ private:
     using Type = std::variant<long, std::string>;
     const Type _value;
 };
-
-namespace v1 {
-using KeyPath = std::vector<YamlKey>;
-}
 
 
 /**
@@ -310,7 +327,7 @@ private:
     std::unique_ptr<class NodeImpl> _impl;
 
 public:
-    explicit Node(v1::KeyPath path, YAML::Node yaml);
+    explicit Node(YamlKey::Path path, YAML::Node yaml);
 
 private:
     const YAML::Node yaml() const;
@@ -396,26 +413,6 @@ private:
     friend class IteratorImpl;
 
     std::unique_ptr<class IteratorImpl> _impl;
-};
-
-
-class NodeSource {
-public:
-    ~NodeSource();
-
-    const Node& root() const& {
-        return *_root;
-    }
-
-    // disallow `NodeSource{"",""}.root();`
-    void root() const&& = delete;
-
-    NodeSource(std::string yaml, std::string path);
-
-private:
-    YAML::Node _yaml;
-    std::unique_ptr<Node> _root;
-    std::string _path;
 };
 
 
