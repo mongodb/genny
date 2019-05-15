@@ -104,6 +104,7 @@ struct OpProducer : public ActorProducer {
     std::function<void(ActorContext&)> _op;
 };
 
+/*
 TEST_CASE("loads configuration okay") {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
@@ -134,7 +135,7 @@ Actors:
         REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
     }
 
-    /* TODO
+
     SECTION("Can Construct RNG") {
         std::atomic_int calls = 0;
         auto templ = Node("foo: bar", "");
@@ -178,7 +179,6 @@ Actors:
 
         REQUIRE(calls == 3);
     }
-    */
 
     SECTION("Invalid config accesses") {
         // key not found
@@ -300,6 +300,7 @@ Actors:
         REQUIRE_THROWS_WITH(testFun(), StartsWith(R"(Failed to add 'Nop' as 'Foo')"));
     }
 }
+*/
 
 void onContext(const Node& yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;
@@ -366,47 +367,6 @@ TEST_CASE("PhaseContexts constructed as expected") {
         };
         onContext(yaml, op);
     }
-    SECTION("Phase values can override parent values") {
-        std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE((*ctx.phases().at(0))["Foo"].to<std::string>() == "Baz");
-            REQUIRE((*ctx.phases().at(1))["Foo"].to<std::string>() == "Bar");
-            REQUIRE((*ctx.phases().at(2))["Foo"].to<std::string>() == "Bar");
-            REQUIRE((*ctx.phases().at(3))["Foo"].to<std::string>() == "Bar");
-            REQUIRE((*ctx.phases().at(4))["Foo"].to<std::string>() == "Bar");
-            REQUIRE((*ctx.phases().at(5))["Foo"].to<std::string>() == "Bar");
-            REQUIRE((*ctx.phases().at(6))["Foo"].to<std::string>() == "Bar");
-            REQUIRE((*ctx.phases().at(7))["Foo"].to<std::string>() == "Bar");
-        };
-        onContext(yaml, op);
-    }
-    SECTION("Optional values also override") {
-        std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(*((*ctx.phases().at(0))["Foo"].maybe<std::string>()) == "Baz");
-            REQUIRE(*((*ctx.phases().at(1))["Foo"].maybe<std::string>()) == "Bar");
-            REQUIRE(*((*ctx.phases().at(2))["Foo"].maybe<std::string>()) == "Bar");
-            REQUIRE(*((*ctx.phases().at(3))["Foo"].maybe<std::string>()) == "Bar");
-            REQUIRE(*((*ctx.phases().at(4))["Foo"].maybe<std::string>()) == "Bar");
-            REQUIRE(*((*ctx.phases().at(5))["Foo"].maybe<std::string>()) == "Bar");
-            REQUIRE(*((*ctx.phases().at(6))["Foo"].maybe<std::string>()) == "Bar");
-            REQUIRE(*((*ctx.phases().at(7))["Foo"].maybe<std::string>()) == "Bar");
-            // call twice just for funsies
-            REQUIRE(*((*ctx.phases().at(7))["Foo"].maybe<std::string>()) == "Bar");
-        };
-        onContext(yaml, op);
-    }
-    SECTION("Optional values can be found from parent") {
-        std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(*((*ctx.phases().at(0))["Foo2"].maybe<std::string>()) == "Bar2");
-            REQUIRE(*((*ctx.phases().at(1))["Foo2"].maybe<std::string>()) == "Bar2");
-            REQUIRE(*((*ctx.phases().at(2))["Foo2"].maybe<std::string>()) == "Bar2");
-            REQUIRE(*((*ctx.phases().at(3))["Foo2"].maybe<std::string>()) == "Bar2");
-            REQUIRE(*((*ctx.phases().at(4))["Foo2"].maybe<std::string>()) == "Bar2");
-            REQUIRE(*((*ctx.phases().at(5))["Foo2"].maybe<std::string>()) == "Bar2");
-            REQUIRE(*((*ctx.phases().at(6))["Foo2"].maybe<std::string>()) == "Bar3");
-            REQUIRE(*((*ctx.phases().at(7))["Foo2"].maybe<std::string>()) == "Bar3");
-        };
-        onContext(yaml, op);
-    }
     SECTION("Phases can have extra configs") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE((*ctx.phases().at(1))["Extra"][0].to<int>() == 1);
@@ -435,9 +395,9 @@ TEST_CASE("Duplicate Phase Numbers") {
         MongoUri: mongodb://localhost:27017
         Actors:
         - Type: Nop
-        Phases:
-        - Phase: 0
-        - Phase: 0
+          Phases:
+          - Phase: 0
+          - Phase: 0
         )", "");
         auto& yaml = ns.root();
 
@@ -451,9 +411,9 @@ TEST_CASE("Duplicate Phase Numbers") {
         MongoUri: mongodb://localhost:27017
         Actors:
         - Type: Nop
-        Phases:
-        - Phase: 0
-        - Phase: 0..11
+          Phases:
+          - Phase: 0
+          - Phase: 0..11
         )", "");
         auto& yaml = ns.root();
 
