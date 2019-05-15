@@ -121,14 +121,17 @@ InvalidKeyException::InvalidKeyException(const std::string& msg,
                                          const Node* node)
     : _what{invalidKeyExceptionWhat(msg, key, node)} {}
 
-
+//
+// NodeImpl
+//
 class NodeImpl {
 public:
     NodeImpl(const Node* self, v1::NodeKey::Path path, YAML::Node yaml)
-        : _children{constructChildren(path, yaml)},
+        : _self{self},
+          _children{constructChildren(path, yaml)},
           _yaml{yaml},
-          _path{std::move(path)},
-          _self{self} {}
+          _path{std::move(path)}
+        {}
 
     const Node& get(const v1::NodeKey& key) const {
         auto&& it = _children.find(key);
