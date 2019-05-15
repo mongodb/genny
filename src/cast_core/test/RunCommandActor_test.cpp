@@ -387,9 +387,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: AdminCommand
               Threads: 1
-              Database: admin
               Phases:
               - Repeat: 1
+                Database: admin
                 Operation:
                   OperationName: AdminCommand
                   OperationCommand:

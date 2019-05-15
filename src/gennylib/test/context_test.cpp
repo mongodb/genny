@@ -182,23 +182,23 @@ Actors:
 
     SECTION("Invalid config accesses") {
         // key not found
-        errors<string>("Foo: bar", "Invalid key [FoO]", "FoO");
+        errors<string>("Foo: bar", "Invalid key 'FoO'", "FoO");
         // yaml library does type-conversion; we just forward through...
         gives<string>("Foo: 123", "123", "Foo");
         gives<int>("Foo: 123", 123, "Foo");
         // ...and propagate errors.
-        errors<int>("Foo: Bar", "Bad conversion of [Bar] to [i] at path [Foo/]:", "Foo");
+        errors<int>("Foo: Bar", "Couldn't convert to 'int': 'bad conversion' at (Line:Column)=(2:5). On node with path 'errors-testcase/Foo", "Foo");
         // okay
         gives<int>("Foo: [1,\"bar\"]", 1, "Foo", 0);
         // give meaningful error message:
         errors<string>("Foo: [1,\"bar\"]",
-                       "Invalid key [0] at path [Foo/0/]. Last accessed [[1, bar]].",
+                       "Invalid key '0': Tried to access node that doesn't exist. On node with path 'errors-testcase/Foo/0': ",
                        "Foo",
                        "0");
 
-        errors<string>("Foo: 7", "Wanted [Foo/Bar] but [Foo/] is scalar: [7]", "Foo", "Bar");
+        errors<string>("Foo: 7", "Invalid key 'Bar': Tried to access node that doesn't exist. On node with path 'errors-testcase/Foo/Bar", "Foo", "Bar");
         errors<string>(
-            "Foo: 7", "Wanted [Foo/Bar] but [Foo/] is scalar: [7]", "Foo", "Bar", "Baz", "Bat");
+            "Foo: 7", "Invalid key 'Bat': Tried to access node that doesn't exist. On node with path 'errors-testcase/Foo/Bar/Baz/Bat': ", "Foo", "Bar", "Baz", "Bat");
 
         auto other = R"(Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }])";
 
@@ -225,14 +225,14 @@ Actors:
         auto test = [&]() {
             WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
         };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
+        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key 'SchemaVersion': Tried to access node that doesn't exist. On node with path '/SchemaVersion': )"));
     }
     SECTION("No Actors") {
         auto yaml = NodeSource("SchemaVersion: 2018-07-01", "");
         auto test = [&]() {
             WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
         };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path(.*\n*)*)"));
+        test();
     }
 
     SECTION("Can call two actor producers") {
