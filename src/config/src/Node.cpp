@@ -7,9 +7,9 @@ namespace genny {
 namespace {
 
 using Child = std::unique_ptr<class Node>;
-using Children = std::map<YamlKey, Child>;
+using Children = std::map<v1::NodeKey, Child>;
 
-std::string joinPath(const YamlKey::Path& path) {
+std::string joinPath(const v1::NodeKey::Path& path) {
     std::stringstream out;
     for (size_t i = 0; i < path.size(); ++i) {
         auto key = path[i].toString();
@@ -51,13 +51,13 @@ YAML::Node parse(std::string yaml, const std::string& path) {
 
 class NodeImpl {
 public:
-    NodeImpl(const Node* self, YamlKey::Path path, YAML::Node yaml)
+    NodeImpl(const Node* self, v1::NodeKey::Path path, YAML::Node yaml)
         : _children{constructChildren(path, yaml)}, _yaml{yaml}, _path{std::move(path)}, _self{self} {}
 
-    const Node& get(const YamlKey& key) const {
+    const Node& get(const v1::NodeKey& key) const {
         auto&& it = _children.find(key);
         if (it == _children.end()) {
-            YamlKey::Path childPath = _self->_impl->_path;
+            v1::NodeKey::Path childPath = _self->_impl->_path;
             childPath.push_back(key);
             _children.emplace(key, std::make_unique<Node>(std::move(childPath), _zombie));
         }
@@ -116,21 +116,21 @@ private:
     mutable Children _children;
 
     const YAML::Node _yaml;
-    const YamlKey::Path _path;
+    const v1::NodeKey::Path _path;
     const Node* _self;
 
-    static Children constructChildren(const YamlKey::Path& path, YAML::Node node) {
+    static Children constructChildren(const v1::NodeKey::Path& path, YAML::Node node) {
         Children out;
         if (!node.IsMap() && !node.IsSequence()) {
             return out;
         }
 
         int index = 0;
-        auto extractKey = [&](auto& kvp, YAML::Node iteratee) -> YamlKey {
+        auto extractKey = [&](auto& kvp, YAML::Node iteratee) -> v1::NodeKey {
             if (iteratee.IsMap()) {
-                return YamlKey{kvp.first.template as<std::string>()};
+                return v1::NodeKey{kvp.first.template as<std::string>()};
             } else {
-                return YamlKey{index++};
+                return v1::NodeKey{index++};
             }
         };
         auto extractValue = [&](auto& kvp, YAML::Node iteratee) -> YAML::Node {
@@ -143,7 +143,7 @@ private:
 
         for (auto&& kvp : node) {
             const auto key = extractKey(kvp, node);
-            YamlKey::Path childPath = path;
+            v1::NodeKey::Path childPath = path;
             childPath.push_back(key);
             out.emplace(key, std::make_unique<Node>(std::move(childPath), extractValue(kvp, node)));
         }
@@ -181,15 +181,7 @@ Node::Type Node::type() const {
     return _impl->type();
 }
 
-std::ostream& operator<<(std::ostream& out, const YamlKey& key) {
-    try {
-        return out << std::get<std::string>(key._value);
-    } catch (const std::bad_variant_access&) {
-        return out << std::get<long>(key._value);
-    }
-}
-
-std::string YamlKey::toString() const {
+std::string v1::NodeKey::toString() const {
     std::stringstream out;
     out << *this;
     return out.str();
@@ -223,19 +215,19 @@ Node::operator bool() const {
 
 Node::~Node() = default;
 
-Node::Node(const YamlKey::Path& path, const YAML::Node yaml) : _impl{std::make_unique<NodeImpl>(this, path, yaml)} {}
+Node::Node(const v1::NodeKey::Path& path, const YAML::Node yaml) : _impl{std::make_unique<NodeImpl>(this, path, yaml)} {}
 
 const Node& Node::operator[](long key) const {
-    return _impl->get(YamlKey{key});
+    return _impl->get(v1::NodeKey{key});
 }
 
 const Node& Node::operator[](const std::string& key) const {
-    return _impl->get(YamlKey{key});
+    return _impl->get(v1::NodeKey{key});
 }
 
 NodeSource::NodeSource(std::string yaml, std::string path)
     : _yaml{parse(std::move(yaml), path)},
-      _root{std::make_unique<Node>(YamlKey::Path{YamlKey{path}}, _yaml)},
+      _root{std::make_unique<Node>(v1::NodeKey::Path{v1::NodeKey{path}}, _yaml)},
       _path{path} {}
 
 NodeSource::~NodeSource() = default;
@@ -288,8 +280,8 @@ NodeIterator::NodeIterator(const NodeImpl* nodeImpl, bool end)
 
 NodeIterator::~NodeIterator() = default;
 
-NodeIteratorValue::NodeIteratorValue(const YamlKey& key, const Node& node)
-    : std::pair<const YamlKey&, const Node&>{key, node} {}
+NodeIteratorValue::NodeIteratorValue(const v1::NodeKey& key, const Node& node)
+    : std::pair<const v1::NodeKey&, const Node&>{key, node} {}
 
 // Exception Types
 

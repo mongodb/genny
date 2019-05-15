@@ -51,26 +51,34 @@ private:
 template <typename T>
 struct NodeConvert {};
 
-class YamlKey final {
+namespace v1 {
+class NodeKey final {
 public:
-    using Path = std::vector<YamlKey>;
+    using Path = std::vector<NodeKey>;
 
-    explicit YamlKey(std::string key) : _value{std::move(key)} {};
+    explicit NodeKey(std::string key) : _value{std::move(key)} {};
 
-    explicit YamlKey(long key) : _value{key} {};
+    explicit NodeKey(long key) : _value{key} {};
 
-    bool operator<(const YamlKey& rhs) const {
+    bool operator<(const NodeKey &rhs) const {
         return _value < rhs._value;
     }
 
     std::string toString() const;
 
-    friend std::ostream& operator<<(std::ostream& out, const YamlKey& key);
+    friend std::ostream &operator<<(std::ostream &out, const ::genny::v1::NodeKey &key) {
+        try {
+            return out << std::get<std::string>(key._value);
+        } catch (const std::bad_variant_access&) {
+            return out << std::get<long>(key._value);
+        }
+    }
 
 private:
     using ValueType = std::variant<long, std::string>;
     const ValueType _value;
 };
+}
 
 
 /**
@@ -317,7 +325,7 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
     // Only intended to be used internally
-    explicit Node(const YamlKey::Path& path, const YAML::Node yaml);
+    explicit Node(const v1::NodeKey::Path& path, const YAML::Node yaml);
 
 private:
 
@@ -380,9 +388,9 @@ private:
     const std::unique_ptr<const class NodeImpl> _impl;
 };
 
-class NodeIteratorValue final : public std::pair<const YamlKey&, const Node&> {
+class NodeIteratorValue final : public std::pair<const v1::NodeKey&, const Node&> {
 public:
-    NodeIteratorValue(const YamlKey& key, const Node& node);
+    NodeIteratorValue(const v1::NodeKey& key, const Node& node);
 };
 
 class NodeIterator final {

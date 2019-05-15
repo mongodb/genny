@@ -317,25 +317,25 @@ TEST_CASE("YAML::Node Equivalency") {
     }
 }
 
-TEST_CASE("YamlKey") {
+TEST_CASE("NodeKey") {
     SECTION("Comparison") {
-        YamlKey a{"a"};
-        YamlKey m1{-1};
+        v1::NodeKey a{"a"};
+        v1::NodeKey m1{-1};
         REQUIRE(m1 < a);
         REQUIRE(!(m1 < m1));
         REQUIRE(!(a < a));
     }
     SECTION("As Map Key") {
-        std::map<YamlKey, long> actual{{YamlKey{1}, 7}, {YamlKey{2}, 17}, {YamlKey{-1}, 100}};
-        REQUIRE(actual.find(YamlKey{1}) != actual.end());
-        REQUIRE(actual.find(YamlKey{1})->second == 7);
-        REQUIRE(actual.find(YamlKey{-1})->second == 100);
+        std::map<v1::NodeKey, long> actual{{v1::NodeKey{1}, 7}, {v1::NodeKey{2}, 17}, {v1::NodeKey{-1}, 100}};
+        REQUIRE(actual.find(v1::NodeKey{1}) != actual.end());
+        REQUIRE(actual.find(v1::NodeKey{1})->second == 7);
+        REQUIRE(actual.find(v1::NodeKey{-1})->second == 100);
     }
     SECTION("When missing") {
-        std::map<YamlKey, long> actual{
-            {YamlKey{1}, 7},
+        std::map<v1::NodeKey, long> actual{
+            {v1::NodeKey{1}, 7},
         };
-        REQUIRE(actual.find(YamlKey{-1}) == actual.end());
+        REQUIRE(actual.find(v1::NodeKey{-1}) == actual.end());
     }
 }
 
