@@ -317,6 +317,25 @@ TEST_CASE("YAML::Node Equivalency") {
     }
 }
 
+TEST_CASE("Order is preserved") {
+    NodeSource ns(R"(
+insert: testCollection
+documents: [{rating: 10}]
+)", "");
+    auto& node = ns.root();
+
+    int index = 0;
+    for(auto&& [k,_] : node) {
+        if (index == 0) {
+            REQUIRE(k.toString() == "insert");
+        } else {
+            REQUIRE(k.toString() == "documents");
+        }
+        ++index;
+    }
+    REQUIRE(index == 2);
+}
+
 TEST_CASE("NodeKey") {
     SECTION("Comparison") {
         v1::NodeKey a{"a"};

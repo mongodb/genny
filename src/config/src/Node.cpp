@@ -11,6 +11,7 @@ namespace genny {
 namespace {
 using Child = std::unique_ptr<class Node>;
 using Children = std::map<v1::NodeKey, Child>;
+using ChildKeys = std::vector<v1::NodeKey>;
 
 std::string joinPath(const v1::NodeKey::Path& path) {
     std::stringstream out;
@@ -136,7 +137,7 @@ InvalidKeyException::InvalidKeyException(const std::string& msg,
 class NodeImpl {
 public:
     NodeImpl(const Node* self, const YAML::Node yaml, const v1::NodeKey::Path& path)
-        : _self{self}, _children{constructChildren(path, yaml)}, _yaml{yaml}, _path{path} {}
+        : _self{self}, _keyOrder{}, _children{constructChildren(path, _keyOrder, yaml)}, _yaml{yaml}, _path{path} {}
 
     const Node& get(const v1::NodeKey& key) const {
         auto&& it = _children.find(key);
@@ -199,7 +200,7 @@ public:
 private:
     friend NodeIterator;
 
-    static Children constructChildren(const v1::NodeKey::Path& path, const YAML::Node yaml) {
+    static Children constructChildren(const v1::NodeKey::Path& path, ChildKeys& keyOrder, const YAML::Node yaml) {
         Children out;
         if (!yaml.IsMap() && !yaml.IsSequence()) {
             return out;
@@ -223,6 +224,7 @@ private:
 
         for (auto&& kvp : yaml) {
             const auto key = extractKey(kvp, yaml);
+            keyOrder.push_back(key);
             v1::NodeKey::Path childPath = path;
             childPath.push_back(key);
             out.emplace(key, std::make_unique<Node>(std::move(childPath), extractValue(kvp, yaml)));
@@ -234,7 +236,8 @@ private:
     static const YAML::Node _zombie;
 
     const Node* _self;
-    // Needs to be mutable to generate placeholder nodes for non-existent keys.
+    // these 2 need to be mutable to generate placeholder nodes for non-existent keys.
+    mutable ChildKeys _keyOrder; // maintain insertion-order
     mutable Children _children;
     const YAML::Node _yaml;
     const v1::NodeKey::Path _path;
@@ -332,26 +335,29 @@ NodeIteratorValue::NodeIteratorValue(const v1::NodeKey& key, const Node& node)
 class IteratorImpl {
 public:
     void increment() {
-        ++_children;
+        ++_keyOrder;
     }
 
     bool equal(const IteratorImpl& rhs) const {
-        return _children == rhs._children;
+        return _keyOrder == rhs._keyOrder;
     }
 
     bool notEqual(const IteratorImpl& rhs) const {
-        return _children != rhs._children;
+        return _keyOrder != rhs._keyOrder;
     }
 
     const NodeIteratorValue getValue() const {
-        auto& [key, implPtr] = *_children;
-        return {key, *implPtr};
+        auto& key = *_keyOrder;
+        return {key, *_children.at(key)};
     }
 
-    explicit IteratorImpl(Children::const_iterator children) : _children(children) {}
+    explicit IteratorImpl(ChildKeys::const_iterator keyOrder, const Children& children)
+    : _keyOrder{keyOrder},
+      _children{children} {}
 
 private:
-    Children::const_iterator _children;
+    ChildKeys::const_iterator _keyOrder;
+    const Children& _children;
 };
 
 
@@ -360,8 +366,9 @@ private:
 //
 
 NodeIterator::NodeIterator(const NodeImpl* nodeImpl, bool end)
-    : _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_children.end()
-                                               : nodeImpl->_children.begin())} {}
+    : _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_keyOrder.end()
+                                               : nodeImpl->_keyOrder.begin(),
+                                               nodeImpl->_children)} {}
 NodeIterator::~NodeIterator() = default;
 
 void NodeIterator::operator++() {
