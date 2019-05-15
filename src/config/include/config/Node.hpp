@@ -29,7 +29,7 @@
 
 namespace genny {
 
-class NodeSource {
+class NodeSource final {
 public:
     ~NodeSource();
 
@@ -43,19 +43,19 @@ public:
     NodeSource(std::string yaml, std::string path);
 
 private:
-    YAML::Node _yaml;
-    std::unique_ptr<class Node> _root;
-    std::string _path;
+    const YAML::Node _yaml;
+    const std::unique_ptr<class Node> _root;
+    const std::string _path;
 };
 
 template <typename T>
 struct NodeConvert {};
 
-class YamlKey {
+class YamlKey final {
 public:
     using Path = std::vector<YamlKey>;
 
-    explicit YamlKey(std::string key) : _value{key} {};
+    explicit YamlKey(std::string key) : _value{std::move(key)} {};
 
     explicit YamlKey(long key) : _value{key} {};
 
@@ -68,8 +68,8 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const YamlKey& key);
 
 private:
-    using Type = std::variant<long, std::string>;
-    const Type _value;
+    using ValueType = std::variant<long, std::string>;
+    const ValueType _value;
 };
 
 
@@ -87,7 +87,7 @@ public:
     }
 
 private:
-    std::string _what;
+    const std::string _what;
 };
 
 /**
@@ -102,7 +102,7 @@ public:
     }
 
 private:
-    std::string _what;
+    const std::string _what;
 };
 
 /**
@@ -117,19 +117,10 @@ public:
     }
 
 private:
-    std::string _what;
+    const std::string _what;
 };
 
-
-enum class NodeType {
-    Undefined,
-    Null,
-    Scalar,
-    Sequence,
-    Map,
-};
-
-class Node {
+class Node final {
 public:
     Node(const Node&) = delete;
 
@@ -141,13 +132,21 @@ public:
 
     ~Node();
 
+    enum class Type {
+        Undefined,
+        Null,
+        Scalar,
+        Sequence,
+        Map,
+    };
+
     const Node& operator[](long key) const;
 
-    const Node& operator[](std::string key) const;
+    const Node& operator[](const std::string& key) const;
 
     explicit operator bool() const;
 
-    NodeType type() const;
+    Type type() const;
 
     bool isScalar() const;
 
@@ -317,19 +316,13 @@ public:
 
     friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
+    // Only intended to be used internally
+    explicit Node(const YamlKey::Path& path, const YAML::Node yaml);
+
 private:
-    friend class NodeIterator;
 
     friend class NodeImpl;
 
-    friend class NodeSource;
-
-    std::unique_ptr<class NodeImpl> _impl;
-
-public:
-    explicit Node(YamlKey::Path path, YAML::Node yaml);
-
-private:
     const YAML::Node yaml() const;
 
     template <typename O, typename... Args>
@@ -383,17 +376,16 @@ private:
                       "Cannot pass additional args when using built-in YAML conversion");
         return std::make_optional<O>(yaml().as<O>());
     }
+
+    const std::unique_ptr<const class NodeImpl> _impl;
 };
 
-class NodeIteratorValue : public std::pair<const YamlKey, const Node&> {
+class NodeIteratorValue final : public std::pair<const YamlKey&, const Node&> {
 public:
-    NodeIteratorValue(YamlKey key, const Node& node);
-
-private:
-    friend Node;
+    NodeIteratorValue(const YamlKey& key, const Node& node);
 };
 
-class NodeIterator {
+class NodeIterator final {
 public:
     ~NodeIterator();
 
@@ -410,9 +402,7 @@ private:
 
     friend Node;
 
-    friend class IteratorImpl;
-
-    std::unique_ptr<class IteratorImpl> _impl;
+    const std::unique_ptr<class IteratorImpl> _impl;
 };
 
 
