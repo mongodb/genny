@@ -248,7 +248,7 @@ struct actor::RunCommand::PhaseConfig {
                 mongocxx::pool::entry& client,
                 ActorId id)
         : throwOnFailure{context["ThrowOnFailure"].maybe<bool>().value_or(true)} {
-        auto actorType = context["Type"].to<std::string>();
+        auto actorType = actorContext["Type"].to<std::string>();
         auto database = context["Database"].maybe<std::string>().value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
             throw InvalidConfigurationException(

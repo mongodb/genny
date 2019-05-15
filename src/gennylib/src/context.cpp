@@ -155,9 +155,6 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
 }
 
 bool PhaseContext::isNop() const {
-    BOOST_LOG_TRIVIAL(info) << "Checking isNop from node " << this->_node;
-    BOOST_LOG_TRIVIAL(info) << "Checking isNop parent = " << this->_node[".."];
-    BOOST_LOG_TRIVIAL(info) << "Checking isNop parent path =  " << this->_node[".."].path();
     auto& nop = (*this)["Nop"];
     return nop.maybe<bool>().value_or(false);
 }

@@ -419,9 +419,7 @@ public:
     PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
         : _node{node},
           _actor{std::addressof(actorContext)},
-          _phaseNumber(phaseNumber) {
-          BOOST_LOG_TRIVIAL(info) << "Constructed phase " << phaseNumber << " from node " << node;
-    }
+          _phaseNumber(phaseNumber) {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;

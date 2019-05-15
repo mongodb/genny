@@ -17,6 +17,8 @@
 #include <thread>
 #include <vector>
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 
@@ -80,7 +82,15 @@ void ActorHelper::doRunThreaded(const WorkloadContext& wl) {
     std::transform(cbegin(wl.actors()),
                    cend(wl.actors()),
                    std::back_inserter(threads),
-                   [&](const auto& actor) { return std::thread{[&]() { actor->run(); }}; });
+                   [&](const auto& actor) { return std::thread{[&]() {
+                    try {
+                        actor->run();
+                    } catch(const boost::exception& b) {
+                        BOOST_LOG_TRIVIAL(error) << boost::diagnostic_information(b, true);
+                        throw;
+                    }
+
+                    }}; });
 
     for (auto& thread : threads)
         thread.join();
