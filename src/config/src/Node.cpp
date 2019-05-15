@@ -1,25 +1,87 @@
-// Copyright 2019-present MongoDB Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+#include <utility>
 
 #include <config/Node.hpp>
-
-#include <boost/core/demangle.hpp>
+#include <map>
 
 namespace genny {
 
-std::string InvalidYAMLException::createWhat(const std::string& path,
-                                             const YAML::ParserException& yamlException) {
+//
+// Helper Functions
+//
+namespace {
+using Child = std::unique_ptr<class Node>;
+using Children = std::map<v1::NodeKey, Child>;
+
+std::string joinPath(const v1::NodeKey::Path& path) {
+    std::stringstream out;
+    for (size_t i = 0; i < path.size(); ++i) {
+        auto key = path[i].toString();
+        out << key;
+        if (i < path.size() - 1) {
+            out << "/";
+        }
+    }
+    return out.str();
+}
+
+Node::Type determineType(const YAML::Node node) {
+    auto yamlTyp = node.Type();
+    switch (yamlTyp) {
+        case YAML::NodeType::Undefined:
+            return Node::Type::Undefined;
+        case YAML::NodeType::Null:
+            return Node::Type::Null;
+        case YAML::NodeType::Scalar:
+            return Node::Type::Scalar;
+        case YAML::NodeType::Sequence:
+            return Node::Type::Sequence;
+        case YAML::NodeType::Map:
+            return Node::Type::Map;
+    }
+}
+
+// Like YAML::Load but throw more useful exception
+YAML::Node parse(std::string yaml, const std::string& path) {
+    try {
+        return YAML::Load(yaml);
+    } catch (const YAML::ParserException& x) {
+        BOOST_THROW_EXCEPTION(InvalidYAMLException(path, x));
+    }
+}
+
+}  // namespace
+
+
+//
+// NodeSource
+//
+
+NodeSource::NodeSource(std::string yaml, std::string path)
+    : _yaml{parse(std::move(yaml), path)},
+      _path{path},
+      _root{std::make_unique<Node>(v1::NodeKey::Path{v1::NodeKey{path}}, _yaml)} {}
+
+NodeSource::~NodeSource() = default;
+
+
+//
+// v1::NodeKey
+//
+
+std::string v1::NodeKey::toString() const {
+    std::stringstream out;
+    out << *this;
+    return out.str();
+}
+
+
+//
+// Exception Types
+//
+
+namespace {
+std::string invalidYamlExceptionWhat(const std::string& path,
+                                     const YAML::ParserException& yamlException) {
     std::stringstream out;
     out << "Invalid YAML: ";
     out << "'" << yamlException.msg << "' ";
@@ -29,61 +91,285 @@ std::string InvalidYAMLException::createWhat(const std::string& path,
 
     return out.str();
 }
-
-std::string InvalidConversionException::createWhat(const Node& node,
-                                                   const YAML::BadConversion& yamlException,
-                                                   const std::type_info& destType) {
+std::string invalidConversionExceptionWhat(const struct Node* node,
+                                           const YAML::BadConversion& yamlException,
+                                           const std::type_info& destType) {
     std::stringstream out;
     out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
     out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
         << yamlException.mark.column << "). ";
-    out << "On node with path '" << node.path() << "': ";
-    out << node;
-
+    out << "On node with path '" << node->path() << "': ";
+    out << *node;
     return out.str();
 }
-
-std::string InvalidKeyException::createWhat(const std::string& msg,
-                                            const std::string& key,
-                                            const Node* node) {
+std::string invalidKeyExceptionWhat(const std::string& msg,
+                                    const std::string& key,
+                                    const Node* node) {
     std::stringstream out;
     out << "Invalid key '" << key << "': ";
     out << msg << " ";
     out << "On node with path '" << node->path() << "': ";
     out << *node;
-
     return out.str();
 }
+}  // namespace
 
-void Node::buildPath(std::stringstream& out) const {
-    if (_parent) {
-        _parent->buildPath(out);
-        out << "/";
-    }
-    out << _key;
-}
+InvalidYAMLException::InvalidYAMLException(const std::string& path,
+                                           const YAML::ParserException& yamlException)
+    : _what{invalidYamlExceptionWhat(path, yamlException)} {}
 
-YAML::Node Node::parse(std::string yaml, std::string path) {
-    try {
-        return YAML::Load(yaml);
-    } catch (const YAML::ParserException& x) {
-        BOOST_THROW_EXCEPTION(InvalidYAMLException(path, x));
+InvalidConversionException::InvalidConversionException(const struct Node* node,
+                                                       const YAML::BadConversion& yamlException,
+                                                       const std::type_info& destType)
+    : _what{invalidConversionExceptionWhat(node, yamlException, destType)} {}
+
+InvalidKeyException::InvalidKeyException(const std::string& msg,
+                                         const std::string& key,
+                                         const Node* node)
+    : _what{invalidKeyExceptionWhat(msg, key, node)} {}
+
+
+//
+// NodeImpl
+//
+
+class NodeImpl {
+public:
+    NodeImpl(const Node* self, const YAML::Node yaml, const v1::NodeKey::Path& path)
+        : _self{self}, _children{constructChildren(path, yaml)}, _yaml{yaml}, _path{path} {}
+
+    const Node& get(const v1::NodeKey& key) const {
+        auto&& it = _children.find(key);
+        if (it == _children.end()) {
+            v1::NodeKey::Path childPath = _self->_impl->_path;
+            childPath.push_back(key);
+            _children.emplace(key, std::make_unique<Node>(std::move(childPath), _zombie));
+        }
+        return *_children.at(key);
     }
+
+    const YAML::Node yaml() const {
+        return _yaml;
+    }
+
+    Node::Type type() const {
+        return determineType(_yaml);
+    }
+
+    explicit operator bool() const {
+        return bool(_yaml);
+    }
+
+    bool isScalar() const {
+        return _yaml.IsScalar();
+    }
+
+    bool isMap() const {
+        return _yaml.IsMap();
+    }
+
+    bool isSequence() const {
+        return _yaml.IsSequence();
+    }
+
+    bool isNull() const {
+        return _yaml.IsNull();
+    }
+
+    size_t size() const {
+        return _yaml.size();
+    }
+
+    std::string key() const {
+        return _path.empty() ? "/" : _path.back().toString();
+    }
+
+    std::string path() const {
+        return joinPath(_path);
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const NodeImpl& impl) {
+        return out << YAML::Dump(impl._yaml);
+    }
+
+private:
+    friend NodeIterator;
+
+    static Children constructChildren(const v1::NodeKey::Path& path, const YAML::Node yaml) {
+        Children out;
+        if (!yaml.IsMap() && !yaml.IsSequence()) {
+            return out;
+        }
+
+        int index = 0;
+        auto extractKey = [&](auto& kvp, YAML::Node iteratee) -> v1::NodeKey {
+            if (iteratee.IsMap()) {
+                return v1::NodeKey{kvp.first.template as<std::string>()};
+            } else {
+                return v1::NodeKey{index++};
+            }
+        };
+        auto extractValue = [&](auto& kvp, YAML::Node iteratee) -> YAML::Node {
+            if (iteratee.IsMap()) {
+                return kvp.second;
+            } else {
+                return kvp;
+            }
+        };
+
+        for (auto&& kvp : yaml) {
+            const auto key = extractKey(kvp, yaml);
+            v1::NodeKey::Path childPath = path;
+            childPath.push_back(key);
+            out.emplace(key, std::make_unique<Node>(std::move(childPath), extractValue(kvp, yaml)));
+        }
+
+        return out;
+    }
+
+    static const YAML::Node _zombie;
+
+    const Node* _self;
+    // Needs to be mutable to generate placeholder nodes for non-existent keys.
+    mutable Children _children;
+    const YAML::Node _yaml;
+    const v1::NodeKey::Path _path;
+};
+
+const YAML::Node NodeImpl::_zombie = YAML::Load("")["zombie"];
+
+
+//
+// Node
+//
+
+Node::~Node() = default;
+
+Node::Node(const v1::NodeKey::Path& path, const YAML::Node yaml)
+    : _impl{std::make_unique<NodeImpl>(this, yaml, path)} {}
+
+std::string Node::key() const {
+    return this->_impl->key();
 }
 
 std::string Node::path() const {
-    std::stringstream out;
-    this->buildPath(out);
-    return out.str();
+    return this->_impl->path();
 }
 
-Node::iterator Node::begin() const {
-    return Node::iterator{_yaml.begin(), this};
+std::ostream& operator<<(std::ostream& out, const Node& node) {
+    return out << *(node._impl);
 }
 
-Node::iterator Node::end() const {
-    return Node::iterator{_yaml.end(), this};
+bool Node::isScalar() const {
+    return _impl->isScalar();
 }
 
+Node::Type Node::type() const {
+    return _impl->type();
+}
+
+bool Node::isNull() const {
+    return _impl->isNull();
+}
+
+bool Node::isMap() const {
+    return _impl->isMap();
+}
+
+bool Node::isSequence() const {
+    return _impl->isSequence();
+}
+
+size_t Node::size() const {
+    return _impl->size();
+}
+
+const YAML::Node Node::yaml() const {
+    return _impl->yaml();
+}
+
+Node::operator bool() const {
+    return _impl->operator bool();
+}
+
+const Node& Node::operator[](long key) const {
+    return _impl->get(v1::NodeKey{key});
+}
+
+const Node& Node::operator[](const std::string& key) const {
+    return _impl->get(v1::NodeKey{key});
+}
+
+class NodeIterator Node::begin() const {
+    return NodeIterator{&*this->_impl, false};
+}
+
+class NodeIterator Node::end() const {
+    return NodeIterator{&*this->_impl, true};
+}
+
+
+//
+// NodeIteratorValue
+//
+
+NodeIteratorValue::NodeIteratorValue(const v1::NodeKey& key, const Node& node)
+    : std::pair<const v1::NodeKey&, const Node&>{key, node} {}
+
+
+//
+// IteratorImpl
+//
+
+class IteratorImpl {
+public:
+    void increment() {
+        ++_children;
+    }
+
+    bool equal(const IteratorImpl& rhs) const {
+        return _children == rhs._children;
+    }
+
+    bool notEqual(const IteratorImpl& rhs) const {
+        return _children != rhs._children;
+    }
+
+    const NodeIteratorValue getValue() const {
+        auto& [key, implPtr] = *_children;
+        return {key, *implPtr};
+    }
+
+    explicit IteratorImpl(Children::const_iterator children) : _children(children) {}
+
+private:
+    Children::const_iterator _children;
+};
+
+
+//
+// NodeIterator
+//
+
+NodeIterator::NodeIterator(const NodeImpl* nodeImpl, bool end)
+    : _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_children.end()
+                                               : nodeImpl->_children.begin())} {}
+NodeIterator::~NodeIterator() = default;
+
+void NodeIterator::operator++() {
+    return _impl->increment();
+}
+
+bool NodeIterator::operator!=(const NodeIterator& rhs) const {
+    return _impl->notEqual(*rhs._impl);
+}
+
+bool NodeIterator::operator==(const NodeIterator& rhs) const {
+    return _impl->equal(*rhs._impl);
+}
+
+const NodeIteratorValue NodeIterator::operator*() const {
+    return _impl->getValue();
+}
 
 }  // namespace genny
