@@ -14,16 +14,19 @@
 
 #include <value_generators/DocumentGenerator.hpp>
 
+#include <fstream>
 #include <functional>
 #include <map>
 #include <sstream>
+
+#include <config/Node.hpp>
 
 #include <boost/log/trivial.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
 #include <bsoncxx/builder/basic/document.hpp>
 #include <bsoncxx/builder/basic/kvp.hpp>
-#include <fstream>
+
 
 namespace {
 
@@ -101,8 +104,8 @@ namespace {
  * @return
  *   `node[key]` if exists else throw with a meaningful error message
  */
-const Node extract(const Node& node, const std::string& key, const std::string& src) {
-    auto out = node[key];
+const Node& extract(const Node& node, const std::string& key, const std::string& src) {
+    auto& out = node[key];
     if (!out) {
         std::stringstream ex;
         ex << "Missing '" << key << "' for '" << src << "' in input " << node;
@@ -122,9 +125,9 @@ const Node extract(const Node& node, const std::string& key, const std::string& 
 std::optional<std::string> getMetaKey(const Node& node) {
     size_t foundKeys = 0;
     std::optional<std::string> out = std::nullopt;
-    for (const auto&& kvp : node) {
+    for (const auto&& [k,v] : node) {
         ++foundKeys;
-        auto key = kvp.first.to<std::string>();
+        auto key = k.toString();
         if (!key.empty() && key[0] == '^') {
             out = key;
         }
