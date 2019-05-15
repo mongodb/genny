@@ -290,7 +290,7 @@ auto createDocumentGenerator(const Node& source,
                              const std::string& key,
                              PhaseContext& context,
                              ActorId id) {
-    auto doc = source[key];
+    auto& doc = source[key];
     if (!doc) {
         std::stringstream msg;
         msg << "'" << opType << "' expects a '" << key << "' field.";
@@ -646,12 +646,12 @@ struct BulkWriteOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
-        auto writeOpsYaml = opNode["WriteOperations"];
+        auto& writeOpsYaml = opNode["WriteOperations"];
         if (!writeOpsYaml.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'bulkWrite' requires a 'WriteOperations' node of sequence type."));
         }
-        for (const auto& writeOp : writeOpsYaml) {
+        for (const auto& [k,writeOp] : writeOpsYaml) {
             createOps(writeOp, context, id);
         }
         if (opNode["Options"]) {
@@ -962,12 +962,12 @@ struct InsertManyOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
-        auto documents = opNode["Documents"];
+        auto& documents = opNode["Documents"];
         if (!documents && !documents.isSequence()) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'insertMany' expects a 'Documents' field of sequence type."));
         }
-        for (auto&& document : documents) {
+        for (auto&& [k,document] : documents) {
             _docExprs.push_back(document.to<DocumentGenerator>(context.rng(id)));
         }
     }
@@ -1193,7 +1193,7 @@ struct CrudActor::PhaseConfig {
         : collection{db[phaseContext["Collection"].to<std::string>()]},
           metrics{actorContext.operation("Crud", id)} {
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
-            auto yamlCommand = node["OperationCommand"];
+            auto& yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].to<std::string>();
             auto onSession = false;
             if (yamlCommand) {

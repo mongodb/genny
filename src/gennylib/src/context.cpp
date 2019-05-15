@@ -53,7 +53,7 @@ WorkloadContext::WorkloadContext(const Node& node,
     mongocxx::instance::current();
 
     // Make a bunch of actor contexts
-    for (const auto& actor : (*this)["Actors"]) {
+    for (const auto& [k,actor] : (*this)["Actors"]) {
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
@@ -123,12 +123,12 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
 std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::constructPhaseContexts(
     const Node&, ActorContext* actorContext) {
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> out;
-    auto phases = (*actorContext)["Phases"];
+    auto& phases = (*actorContext)["Phases"];
     if (!phases) {
         return out;
     }
     PhaseNumber lastPhaseNumber = 0;
-    for (const auto& phase : phases) {
+    for (const auto& [k,phase] : phases) {
         // If we don't have a node or we are a null type, then we are a Nop
         if (!phase || phase.isNull()) {
             std::ostringstream ss;
@@ -158,7 +158,7 @@ bool PhaseContext::isNop() const {
     BOOST_LOG_TRIVIAL(info) << "Checking isNop from node " << this->_node;
     BOOST_LOG_TRIVIAL(info) << "Checking isNop parent = " << this->_node[".."];
     BOOST_LOG_TRIVIAL(info) << "Checking isNop parent path =  " << this->_node[".."].path();
-    auto nop = (*this)["Nop"];
+    auto& nop = (*this)["Nop"];
     return nop.maybe<bool>().value_or(false);
 }
 }  // namespace genny

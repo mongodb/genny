@@ -35,7 +35,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     dropAllDatabases();
     auto db = client.database("mydb");
 
-    genny::Node config (R"(
+    genny::NodeSource config (R"(
         SchemaVersion: 2018-07-01
         Database: mydb
         Collection: &Collection CommitLatency
@@ -74,7 +74,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             builder2 << "_id" << 1 << "n" << 100 << bsoncxx::builder::stream::finalize;
             coll.insert_one(builder2.view());
 
-            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            genny::ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             auto count = db.collection("CommitLatency").estimated_document_count();

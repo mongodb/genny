@@ -47,8 +47,8 @@ struct Loader::PhaseConfig {
           batchSize{context["BatchSize"].to<IntegerSpec>()},
           documentExpr{context["Document"].to<DocumentGenerator>(context.rng(id))},
           collectionOffset{numCollections * thread} {
-        auto indexNodes = context["Indexes"];
-        for (auto indexNode : indexNodes) {
+        auto& indexNodes = context["Indexes"];
+        for (auto [k,indexNode] : indexNodes) {
             indexes.emplace_back(
                 indexNode["keys"].to<DocumentGenerator>(context.rng(id)),
                 indexNode["options"].maybe<DocumentGenerator>(context.rng(id)));

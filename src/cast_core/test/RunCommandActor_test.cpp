@@ -55,7 +55,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "RunCommandActor successfully connects to a MongoDB instance.",
                  "[standalone][single_node_replset][three_node_replset]") {
 
-    Node config (R"(
+    NodeSource config (R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Name: TestRunCommand
@@ -68,7 +68,7 @@ TEST_CASE_METHOD(MongoTestFixture,
               OperationCommand: {someKey: 1}
     )", "");
 
-    ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+    ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
 
     SECTION("throws error with full context on operation_exception") {
         bool has_exception = true;
@@ -139,8 +139,9 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
             yamlPhase["Operation"]["OperationCommand"]["writeConcern"]["w"] = 3;
         }(yamlConfig["Actors"][0]["Phases"][0]);
 
+        NodeSource nodeSource {YAML::Dump(yamlConfig),""};
         auto apmCallback = makeApmCallback(events);
-        ActorHelper ah(Node{YAML::Dump(yamlConfig),""}, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+        ActorHelper ah{nodeSource.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback};
         ah.run();
         auto coll = MongoTestFixture::client["test"]["testCollection"];
         REQUIRE(events.size() > 0);
@@ -218,7 +219,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
-        ActorHelper ah(Node{YAML::Dump(config),""}, 1, MongoTestFixture::connectionUri().to_string());
+        NodeSource nodeSource{YAML::Dump(config),""};
+        ActorHelper ah(nodeSource.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.collection("testCollection").count_documents(view) == 1);

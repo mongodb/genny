@@ -122,7 +122,7 @@ public:
     void operator=(WorkloadContext&&) = delete;
 
     template<typename...Args>
-    auto operator[](Args&&... args) const {
+    auto& operator[](Args&&... args) const {
         return this->_node.operator[](std::forward<Args>(args)...);
     }
 
@@ -323,7 +323,7 @@ public:
 
     // TODO: forward instead
     template<typename K>
-    auto operator[](K key) const {
+    const Node& operator[](K key) const {
         return this->_node[key];
     }
 
@@ -430,7 +430,7 @@ public:
     void operator=(PhaseContext&&) = delete;
 
     template<typename...Args>
-    auto operator[](Args&&... args) const {
+    auto& operator[](Args&&... args) const {
         return this->_node.operator[](std::forward<Args>(args)...);
     }
 

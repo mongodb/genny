@@ -481,9 +481,9 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
     }
 
     DocumentGenerator::Impl::Entries entries;
-    for (const auto&& ent : node) {
-        auto key = ent.first.to<std::string>();
-        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent.second, rng, allParsers);
+    for (const auto&& [k,v] : node) {
+        auto key = k.toString();
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, rng, allParsers);
         entries.emplace_back(key, std::move(valgen));
     }
     return std::make_unique<DocumentGenerator::Impl>(std::move(entries));
@@ -497,8 +497,8 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng) {
     ArrayGenerator::ValueType entries;
-    for (const auto&& ent : node) {
-        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(ent, rng, allParsers);
+    for (const auto&& [k,v] : node) {
+        auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, rng, allParsers);
         entries.push_back(std::move(valgen));
     }
     return std::make_unique<ArrayGenerator>(std::move(entries));
