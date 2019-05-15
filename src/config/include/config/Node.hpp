@@ -29,10 +29,18 @@
 
 namespace genny {
 
+/**
+ * Source of all `genny::Node` instances.
+ * This must outlive all `Node&`s handed out.
+ */
 class NodeSource final {
 public:
     ~NodeSource();
 
+    /**
+     * @return
+     *   The root node that represents the whole YAML file/document.
+     */
     const class Node& root() const& {
         return *_root;
     }
@@ -40,6 +48,13 @@ public:
     // disallow `NodeSource{"",""}.root();`
     void root() const&& = delete;
 
+    /**
+     * @param yaml
+     *   The full yaml document
+     * @param path
+     *   Path information. Used in error messages.
+     *   Likely a file-path from where the yaml was loaded.
+     */
     NodeSource(std::string yaml, std::string path);
 
 private:
@@ -48,10 +63,31 @@ private:
     const std::unique_ptr<class Node> _root;
 };
 
+/**
+ * Specialize this type if you wish to provide
+ * a conversion function for `O` but you can't
+ * create a new constructor on `O` that takes in
+ * a `const Node&` as its first parameter.
+ *
+ * See documentation on `genny::Node`.
+ */
 template <typename T>
 struct NodeConvert {};
 
+/**
+ * @namespace v1
+ *   This is not intended to be used directly you should never be typing `v1::`
+ *   in Actor or test code.
+ */
 namespace v1 {
+
+/**
+ * The key of a node in the YAML.
+ *
+ * If you have `const Node& foo = node["Foo"]`, then
+ * the key for `foo` is `Foo`. Can be a `long` for
+ * sequence types.
+ */
 class NodeKey final {
 public:
     using Path = std::vector<NodeKey>;
@@ -60,6 +96,7 @@ public:
 
     explicit NodeKey(long key) : _value{key} {};
 
+    // Needed for storage in std::map
     bool operator<(const NodeKey& rhs) const {
         return _value < rhs._value;
     }
@@ -128,18 +165,102 @@ private:
     const std::string _what;
 };
 
+
+/**
+ * Access YAML configuration
+ *
+ * Example usage:
+ *
+ * ```c++
+ * // use [] to traverse
+ * auto bar = node["foo"]["bar"][0];
+ *
+ * // treat as boolean to see if the value
+ * // was specified in the yaml:
+ * if (bar) {
+ *   // use .to<T>() to convert
+ *   std::cout << "bar = " << bar.to<int>();
+ * }
+ *
+ * // or use .maybe<int>().value_or:
+ * int w = node["w"].maybe<int>().value_or(1);
+ *
+ * // convert to built-in APIs like std::vector and std::map:
+ * auto ns = node["ns"].to<std::vector<int>>();
+ *
+ * // iterate over a sequence
+ * // e.g. given yaml "ns: [1,2,3]"
+ * for(auto [k,v] : node["ns"]) { ... }
+ *
+ * // or iterate over a map
+ * // e.g. given yaml "vals: {a: A, b: B}"
+ * for(auto [k,v] : node["vals"]) {
+ *     auto key = k.toString();
+ *     auto val = v.to<std::string>();
+ * }
+ *
+ * // Or support syntax-sugar for plural values:
+ * std::vector<int> nums = node.getPlural<int>("num", "nums");
+ * // this allows the user to specify either `num:7` or `nums:[1,2,3]`.
+ * // See docs on `getPlural` for more info.
+ * ```
+ *
+ * The API for `genny::Node` is strongly inspired by that of `YAML::Node`,
+ * but it provides better error-reporting in the case of invalid
+ * configuration and it allows conversion functions to pass in additional
+ * arguments.
+ *
+ * To convert to non-primitive/built-in types you have two options:
+ *
+ * 1.  Add a constructor to your type that takes a `const Node&` as the
+ *     first parameter. You can pass additional constructor-args in the
+ *     call to `.to<T>()` or `.maybe<T>()`:
+ *
+ *     ```c++
+ *     struct MyFoo {
+ *       MyFoo(const Node& n, int x) {...};
+ *     };
+ *     MyFoo mf = node["foo"].to<MyFoo>(7);
+ *     // calls MyFoo(node["foo"], 7)
+ *     ```
+ *
+ * 2.  Specialize the `genny::NodeConvert` struct for the type:
+ *
+ *     ```c++
+ *     namespace genny {
+ *     template<>
+ *     struct NodeConvert<MyFoo2> {
+ *       // required due to SFINAE
+ *       using type = MyFoo2;
+ *       static type convert(const Node& node, int x) {
+ *         ...
+ *       };
+ *     };
+ *     }  // namespace genny
+ *
+ *     MyFoo2 mf2 = node["foo2"].to<MyFoo2>(7);
+ *     // calls NodeConvert<MyFoo2>::convert(node["foo2"], 7);
+ *     ```
+ *
+ * Whenever possible, prefer the first method of creating a constructor.
+ * This allows you to keep all your logic for how to construct your type
+ * with your type itself.
+ *
+ * Note that it is intentionally impossible to convert `genny::Node` into
+ * `YAML::Node`.
+ */
 class Node final {
 public:
+    // No move or copy
     Node(const Node&) = delete;
-
     void operator=(const Node&) = delete;
-
     Node(Node&&) = delete;
-
     void operator=(Node&&) = delete;
 
+    /** Destruct */
     ~Node();
 
+    /** What type of node are we */
     enum class Type {
         Undefined,
         Null,
@@ -148,30 +269,114 @@ public:
         Map,
     };
 
-    const Node& operator[](long key) const;
+    /**
+     * Access children of a sequence.
+     *
+     * @param index
+     *   index of child to access
+     * @return
+     *   the child node at that key.
+     *   If there is no child at the key (e.g. if this Node is a scalar
+     *   or the key is outside the list of valid indexes) then will
+     *   return a `Node&` that evaluates to false according to `operator bool`.
+     */
+    const Node& operator[](long index) const;
 
+    /**
+     * Access children of a map.
+     *
+     * @param key
+     *   key of child to access
+     * @return
+     *   the child node at that key.
+     *   If there is no child at the key (e.g. if this Node is a scalar
+     *   or the Node's keyset doesn't contain `key`) then will
+     *   return a `Node&` that evaluates to false according to `operator bool`.
+     */
     const Node& operator[](const std::string& key) const;
 
+    /**
+     * @return
+     *   If this Node is defined.
+     *   A node that is defined to be false or even null is still defined.
+     */
     explicit operator bool() const;
 
+    /**
+     * @return
+     *   The type of this Node.
+     */
     Type type() const;
 
+    /**
+     * @return
+     *   If this node is a scalar.
+     */
     bool isScalar() const;
 
+    /**
+     * @return
+     *   If this node is null.
+     */
     bool isNull() const;
 
+    /**
+     * @return
+     *   If this node is a map.
+     */
     bool isMap() const;
 
+    /**
+     * @return
+     *   If this node is a sequence (array).
+     */
     bool isSequence() const;
 
+    /**
+     * @return
+     *   How many children this node has.
+     *   Scalar nodes have size zero.
+     */
     size_t size() const;
 
+    /**
+     * @return
+     *   The key that was used to access this Node.
+     *   Note that we always return a "stringified"
+     *   version of the key even if this Node was
+     *   accessed from a sequence. E.g. `node[0]` would
+     *   have key `"0"`.
+     */
     std::string key() const;
 
+    /**
+     * @return
+     *   The full path to this Node. Path
+     *   elements are separated by `/`.
+     */
     std::string path() const;
 
+    /**
+     * Iterate over child elements. If this Node is a scalar, undefined,
+     * or an empty map/sequence then `begin() == end()`.
+     *
+     * Example iteration:
+     *
+     * ```c++
+     * NodeSource ns{"foo:[10,20,30]", "example.yaml"};
+     * for(auto& [k,v] : ns["foo"]) {
+     *   // k = 0, 1, 2
+     *   // v = Node{10}, Node{20}, Node{30}
+     * }
+     * ```
+     *
+     * @return start iterator
+     */
     class NodeIterator begin() const;
 
+    /**
+     * @return end iterator
+     */
     class NodeIterator end() const;
 
     /**
@@ -186,12 +391,10 @@ public:
      * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
      *   genny::Node& node, Args...) {...} };` impl.
      * @return
-     *   A `nullopt` if this (or parent) node isn't defined.
+     *   A `nullopt` if this node isn't defined.
      *   Else the result of converting this node to O either via its constructor or via the
      *   `NodeConvert<O>::convert` function.
-     *   Like `operation[]`, this will check its chain of parent nodes and inherit the value if it
-     *   exists anywhere in the chain. If the value is not specified in any parent node, it will
-     *   return an empty optional (`std::nullopt`).
+     *   If the value is not specified, this function will return an empty optional (`std::nullopt`).
      */
     template <typename O = Node, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
@@ -237,14 +440,11 @@ public:
      *   genny::Node& node, Args...) {...} };` impl.
      * @param args
      *   any additional arguments to forward to the `O` constructor in addition to `*this` *or* to
-     * pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
+     *   pass to the `template<> class genny::NodeConvert<O> { using type=O; static O convert(const
      *   genny::Node& node, Args...) {...} };` impl.
      * @return
      *   the result of converting this node to O either via its constructor or via the
-     *   `NodeConvert<O>::convert` function.
-     *   Like `operation[]`, this will check its chain of parent nodes and inherit the value if it
-     *   exists anywhere in the chain. If the value is not specified in any parent node, it will
-     *   throw an `InvalidKeyException`. If you want to allow a value to be missing, use
+     *   `NodeConvert<O>::convert` function. If you want to allow a value to be missing, use
      *   `.maybe<O>()`.
      * @throws InvalidKeyException
      *   if key not found
@@ -387,13 +587,17 @@ private:
     const std::unique_ptr<const class NodeImpl> _impl;
 };
 
-
+/**
+ * The `[k,v]` used when doing `for(auto& [k,v] : node)`
+ */
 class NodeIteratorValue final : public std::pair<const v1::NodeKey&, const Node&> {
 public:
     NodeIteratorValue(const v1::NodeKey& key, const Node& node);
 };
 
-
+/**
+ * Iterates over nodes. See `Node::begin()` and `Node::end()`.
+ */
 class NodeIterator final {
 public:
     ~NodeIterator();
