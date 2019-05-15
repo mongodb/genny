@@ -137,46 +137,36 @@ Actors:
 
     SECTION("Can Construct RNG") {
         std::atomic_int calls = 0;
-        auto templ = NodeSource("doc: {foo: bar}", "");
-
-        auto fromYaml = std::make_shared<OpProducer>([&](ActorContext& a) {
-            auto docgen = a["doc"].to<DocumentGenerator>(a.rng(0));
-            REQUIRE(docgen().view() ==
-                    genny::testing::toDocumentBson(Node("foo: bar", "")).view());
-            ++calls;
-        });
+        auto foobar = genny::testing::toDocumentBson("foo: bar");
 
         auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
-            for (const auto&& doc : a["docs"])) {
-                auto docgen = a.createDocumentGenerator(0, templ);
-                REQUIRE(docgen().view() ==
-                        genny::testing::toDocumentBson(Node("foo: bar")).view());
+            for (const auto&& [k,doc] : a["docs"]) {
+                auto docgen = doc.to<DocumentGenerator>(a.rng(0));
+                REQUIRE(docgen().view() == foobar.view());
                 ++calls;
             }
         });
         auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
-            auto docgen = a.createDocumentGenerator(0, "doc");
-            REQUIRE(docgen().view() ==
-                    genny::testing::toDocumentBson(Node("foo: bar")).view());
+            auto docgen = a["doc"].to<DocumentGenerator>(a.rng(0));
+            REQUIRE(docgen().view() == foobar.view());
             ++calls;
         });
 
         auto cast2 =
-            Cast{{{"fromYaml", fromYaml}, {"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
-        auto yaml = Node(
+            Cast{{{"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
+        auto yaml = NodeSource(
             "SchemaVersion: 2018-07-01\n"
             "Actors: [ "
-            "  {Type: fromYaml}, "
             "  {Type: fromDocList, docs: [{foo: bar}]}, "
             "  {Type: fromDoc,     doc:   {foo: bar}} "
             "]", "");
 
         auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast2);
+            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast2);
         };
         test();
 
-        REQUIRE(calls == 3);
+        REQUIRE(calls == 2);
     }
 
     SECTION("Invalid config accesses") {

@@ -16,12 +16,15 @@
 #define HEADER_765C17F3_36B6_4EDC_BA8C_61DD618CCA80_INCLUDED
 
 #include <exception>
+#include <string>
 
 #include <bsoncxx/array/view_or_value.hpp>
 #include <bsoncxx/document/view_or_value.hpp>
 #include <bsoncxx/types.hpp>
 
 #include <yaml-cpp/yaml.h>
+
+#include <config/Node.hpp>
 
 namespace genny::testing {
 
@@ -30,19 +33,47 @@ class InvalidYAMLToBsonException : public std::invalid_argument {
 };
 
 /**
- * @param node yaml map node
+ * @param node map node
  * @return bson representation of it.
  * @throws InvalidYAMLToBsonException if node isn't a map
  */
 bsoncxx::document::value toDocumentBson(const YAML::Node& node);
 
+/**
+ * @param node map node
+ * @return bson representation of it.
+ * @throws InvalidYAMLToBsonException if node isn't a map
+ */
+bsoncxx::document::value toDocumentBson(const std::string& yaml);
+
+/**
+ * @param node map node
+ * @return bson representation of it.
+ * @throws InvalidYAMLToBsonException if node isn't a map
+ */
+bsoncxx::document::value toDocumentBson(const genny::Node& node);
+
+
+/**
+ * @param node list node
+ * @return bson representation of it.
+ * @throws InvalidYAMLToBsonException if node isn't a list (sequence)
+ */
+bsoncxx::array::value toArrayBson(const YAML::Node& node);
+
+/**
+ * @param node list node
+ * @return bson representation of it.
+ * @throws InvalidYAMLToBsonException if node isn't a list (sequence)
+ */
+bsoncxx::array::value toArrayBson(const std::string& node);
 
 /**
  * @param node yaml list node
  * @return bson representation of it.
  * @throws InvalidYAMLToBsonException if node isn't a list (sequence)
  */
-bsoncxx::array::value toArrayBson(const YAML::Node& node);
+bsoncxx::array::value toArrayBson(const genny::Node& node);
 
 }  // namespace genny::testing
 
