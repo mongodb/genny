@@ -972,7 +972,7 @@ TEST_CASE("getPlural") {
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
             Catch::Matches(
-                R"(Invalid key '\$plural\(Foo,Foos\)': Either 'Foo' or 'Foos' required. On node with path '': \{\})"));
+                R"(Invalid key 'getPlural\('Foo', 'Foos'\)': Either 'Foo' or 'Foos' required. On node with path '': \{\})"));
     }
 
     {
@@ -982,7 +982,7 @@ TEST_CASE("getPlural") {
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
             Catch::Matches(
-                R"(Invalid key '\$plural\(Foo,Foos\)': Plural 'Foos' must be a sequence type. On node with path '': \{Foos: 7\})"));
+                R"(Invalid key 'getPlural\('Foo', 'Foos'\)': Plural 'Foos' must be a sequence type. On node with path '': \{Foos: 7\})"));
     }
 
     {
@@ -992,7 +992,7 @@ TEST_CASE("getPlural") {
         REQUIRE_THROWS_WITH(
             [&]() { node.getPlural<int>("Foo", "Foos"); }(),
             Catch::Matches(
-                R"(Invalid key '\$plural\(Foo,Foos\)': Can't have both 'Foo' and 'Foos'. On node with path '': \{Foo: 8, Foos: \[1, 2\]\})"));
+                R"(Invalid key 'getPlural\('Foo', 'Foos'\)': Can't have both 'Foo' and 'Foos'. On node with path '': \{Foo: 8, Foos: \[1, 2\]\})"));
     }
 }
 

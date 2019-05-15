@@ -88,7 +88,7 @@ private:
  */
 class InvalidKeyException : public std::exception {
 public:
-    InvalidKeyException(const std::string& msg, const class Node* node);
+    InvalidKeyException(const std::string& msg, const std::string& key, const class Node* node);
 
     const char* what() const noexcept override {
         return _what.c_str();
@@ -208,7 +208,7 @@ public:
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
             BOOST_THROW_EXCEPTION(
-                    InvalidKeyException("Tried to access node that doesn't exist.", this));
+                    InvalidKeyException("Tried to access node that doesn't exist.", this->key(), this));
         }
         return *out;
     }
@@ -407,11 +407,13 @@ std::vector<T> Node::getPlural(const std::string& singular,
         // the `$plural(singular,plural)` key is kinda cheeky but hopefully
         // it helps to explain what the code tried to do in error-messages.
                 InvalidKeyException("Can't have both '" + singular + "' and '" + plural + "'.",
+                                    "getPlural('" + singular + "', '" + plural + "')",
                                     this));
     } else if (pluralValue) {
         if (!pluralValue.isSequence()) {
             BOOST_THROW_EXCEPTION(
                     InvalidKeyException("Plural '" + plural + "' must be a sequence type.",
+                                        "getPlural('" + singular + "', '" + plural + "')",
                                         this));
         }
         for (auto&& [k,v] : pluralValue) {
@@ -424,6 +426,7 @@ std::vector<T> Node::getPlural(const std::string& singular,
     } else if (!singValue && !pluralValue) {
         BOOST_THROW_EXCEPTION(
                 InvalidKeyException("Either '" + singular + "' or '" + plural + "' required.",
+                                    "getPlural('" + singular + "', '" + plural + "')",
                                     this));
     }
     return out;

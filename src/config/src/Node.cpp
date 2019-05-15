@@ -318,9 +318,9 @@ InvalidConversionException::InvalidConversionException(const struct Node *node,
     this->_what = out.str();
 }
 
-InvalidKeyException::InvalidKeyException(const std::string &msg, const Node* node) {
+InvalidKeyException::InvalidKeyException(const std::string &msg, const std::string& key, const Node* node) {
     std::stringstream out;
-    out << "Invalid key '" << node->key() << "': ";
+    out << "Invalid key '" << key << "': ";
     out << msg << " ";
     out << "On node with path '" << node->path() << "': ";
     out << *node;
