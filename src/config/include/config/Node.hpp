@@ -304,9 +304,13 @@ private:
 class NodeSource {
 public:
     ~NodeSource();
-    const Node& root() const {
+    const Node& root() const &{
         return *_root;
     }
+
+    // disallow `NodeSource{"",""}.root();`
+    void root() const && = delete;
+
     NodeSource(std::string yaml, std::string path);
 private:
     YAML::Node _yaml;

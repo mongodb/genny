@@ -34,8 +34,7 @@ struct HasConversionSpecialization {
 TEST_CASE("Nested sequence like map") {
     NodeSource nodeSource("a: []", "");
     const auto& yaml = nodeSource.root();
-//    yaml["a"]["wtf"]["even_deeper"];
-//    REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
+    REQUIRE(bool(yaml["a"]["wtf"]["even_deeper"]) == false);
 }
 
 TEST_CASE("Out of Range") {
@@ -68,11 +67,6 @@ TEST_CASE("Static Failures") {
                                   HasConversionSpecialization>);
 }
 
-
-TEST_CASE("Construct") {
-    NodeSource ns("foo: bar\nbat: [1,2,3]", "");
-    const auto& node = ns.root();
-}
 TEST_CASE("YAML::Node Equivalency") {
 
     //
@@ -132,8 +126,7 @@ TEST_CASE("YAML::Node Equivalency") {
             REQUIRE(yaml["foos"]["a"].maybe<int>().value_or(7) == 7);
         }
     }
-}
-TEST_CASE("More YAML::Node Equivalency") {
+
     SECTION("iteration over sequences") {
         {
             YAML::Node yaml = YAML::Load("ns: [1,2,3]");
@@ -187,14 +180,9 @@ TEST_CASE("More YAML::Node Equivalency") {
     }
 
     SECTION("Default-constructed is valid") {
-    // TODO: is this comment still valid?
-        // This is why we need to have Node::_valid
-        // We can't rely on our default-constructed nodes.
-        {
-            auto defaultConstructed = YAML::Node{};
-            REQUIRE(bool(defaultConstructed) == true);
-            REQUIRE(defaultConstructed.Type() == YAML::NodeType::Null);
-        }
+        auto defaultConstructed = YAML::Node{};
+        REQUIRE(bool(defaultConstructed) == true);
+        REQUIRE(defaultConstructed.Type() == YAML::NodeType::Null);
     }
 
     SECTION("we're equivalent to YAML::Node's handling of null and missing values") {
@@ -402,88 +390,84 @@ TEST_CASE("Invalid YAML") {
 }
 
 
-//TEST_CASE("inheritance sequence-val can inherit") {
-//    NodeSource ns{R"(
-//Coll: Test
-//Phases:
-//- Doc: foo
-//)", ""};
-//    auto node = ns.root();
-//    {
-//        auto phases = node["Phases"];
-//        auto zero = phases[0];
-//        auto coll = zero["Coll"];
-//        REQUIRE(coll.to<std::string>() == "Test");
-//    }
-//    REQUIRE(node["Phases"][0]["Coll"].to<std::string>() == "Test");
-//}
-//
-//TEST_CASE("nested inheritance") {
-//    NodeSource ns{"children: {seven: 7}", ""};
-//    auto node = ns.root();
-//
-//    auto children = node["children"];
-//    auto childrenfoo = children["foo"];
-//    auto childrenfooseven = childrenfoo["seven"];
-//    auto childrenfoosevenmaybe = childrenfooseven.maybe<int>();
-//    REQUIRE(childrenfoosevenmaybe.value_or(8) == 7);
-//    REQUIRE(childrenfooseven.to<int>() == 7);
-//}
-//
-//TEST_CASE("inheritance from pr") {
-//    {
-//        NodeSource ns{"seven: 7", ""};
-//        auto node = ns.root();
-//
-//        {
-//            auto foo = node["foo"];
-//            auto seven = foo["seven"];
-//            auto maybeSeven = seven.maybe<int>();
-//            REQUIRE(maybeSeven.value_or(8) == 7);
-//            REQUIRE(seven.to<int>() == 7);
-//        }
-//
-//        REQUIRE(node["foo"]["bar"][0]["seven"].maybe<int>().value_or(8) == 7);
-//        REQUIRE(node["seven"].to<int>() == 7);
-//        REQUIRE(node["foo"]["bar"][0]["seven"].to<int>() == 7);
-//    }
-//
-//    NodeSource ns{R"(
-//Coll: Test
-//Phases:
-//- Doc: foo
-//- Coll: Bar
-//- Another:
-//  - Nested: {Coll: Baz}
-//)",
-//              ""};
-//    auto node = ns.root();
-//
-//    REQUIRE(node["Coll"].to<std::string>() == "Test");
-//    REQUIRE(node["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    // Arguably this should throw? we're treating a sequence like a map
-//    REQUIRE(node["Phases"]["Coll"].to<std::string>() == "Test");
-//    REQUIRE(node["Phases"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    REQUIRE(node["Phases"][0]["Coll"].to<std::string>() == "Test");
-//    REQUIRE(node["Phases"][0]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    REQUIRE(node["Phases"][1]["Coll"].to<std::string>() == "Bar");
-//    REQUIRE(node["Phases"][1]["Coll"].maybe<std::string>().value_or("Or") == "Bar");
-//
-//    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Test");
-//
-//    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
-//            "Baz");
-//    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
-//            "Baz");
-//}
-//
+TEST_CASE("No Inheritance") {
+    NodeSource ns{R"(
+Coll: Test
+Phases:
+- Doc: foo
+)", ""};
+    auto& node = ns.root();
+    {
+        auto& phases = node["Phases"];
+        auto& zero = phases[0];
+        auto& coll = zero["Coll"];
+        REQUIRE(bool(coll) == false);
+    }
+    REQUIRE(bool(node["Phases"][0]["Coll"]) == false);
+}
+
+TEST_CASE("no nested inheritance") {
+    NodeSource ns{"children: {seven: 7}", ""};
+    auto& node = ns.root();
+
+    auto& children = node["children"];
+    auto& childrenfoo = children["foo"];
+    auto& childrenfooseven = childrenfoo["seven"];
+    auto childrenfoosevenmaybe = childrenfooseven.maybe<int>();
+    REQUIRE(childrenfoosevenmaybe.value_or(8) == 8);
+    REQUIRE(bool(childrenfooseven) == false);
+}
+
+TEST_CASE("more lack of inheritance") {
+    {
+        NodeSource ns{"seven: 7", ""};
+        auto& node = ns.root();
+
+        {
+            auto& foo = node["foo"];
+            auto& seven = foo["seven"];
+            auto maybeSeven = seven.maybe<int>();
+            REQUIRE(maybeSeven.value_or(8) == 8);
+            REQUIRE(bool(seven) == false);
+        }
+
+        REQUIRE(node["foo"]["bar"][0]["seven"].maybe<int>().value_or(8) == 8);
+        REQUIRE(node["seven"].to<int>() == 7);
+        REQUIRE(bool(node["foo"]["bar"][0]["seven"]) == false);
+    }
+
+    NodeSource ns{R"(
+Coll: Test
+Phases:
+- Doc: foo
+- Coll: Bar
+- Another:
+  - Nested: {Coll: Baz}
+)",
+              ""};
+    auto& node = ns.root();
+
+    REQUIRE(node["Coll"].to<std::string>() == "Test");
+    REQUIRE(node["Coll"].maybe<std::string>().value_or("Or") == "Test");
+
+    // Arguably this should throw? we're treating a sequence like a map
+    REQUIRE(bool(node["Phases"]["Coll"]) == false);
+    REQUIRE(node["Phases"]["Coll"].maybe<std::string>().value_or("Or") == "Or");
+
+    REQUIRE(bool(node["Phases"][0]["Coll"]) == false);
+    REQUIRE(node["Phases"][0]["Coll"].maybe<std::string>().value_or("Or") == "Or");
+
+    REQUIRE(node["Phases"][1]["Coll"].to<std::string>() == "Bar");
+    REQUIRE(node["Phases"][1]["Coll"].maybe<std::string>().value_or("Or") == "Bar");
+
+    REQUIRE(node["Phases"][2]["Coll"].maybe<std::string>().value_or("Or") == "Or");
+
+    REQUIRE(node["Phases"][2]["Another"]["Coll"].maybe<std::string>().value_or("Or") == "Or");
+
+    REQUIRE(node["Phases"][2]["Another"][0]["Nested"]["Coll"].maybe<std::string>().value_or("Or") ==
+            "Baz");
+}
+
 
 TEST_CASE(".maybe and value_or") {
     auto yaml = std::string(R"(
