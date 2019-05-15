@@ -842,7 +842,7 @@ Two: {}
     NodeSource ns(yaml, "");
     auto& node = ns.root();
     REQUIRE(node["One"][".."].path() == "/One/..");
-    REQUIRE(node.path() == "");
+    REQUIRE(node.path() == "/");
     REQUIRE(node[0].path() == "/0");
     REQUIRE(node["msg"].path() == "/msg");
     REQUIRE(node["msg"][".."].path() == "/msg/..");

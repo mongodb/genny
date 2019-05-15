@@ -6,17 +6,21 @@ namespace {
 using Child = std::unique_ptr<class Node>;
 using Children = std::map<YamlKey, Child>;
 
+std::string appendPath(std::string parentPath, YamlKey key) {
+    return parentPath + "/" + key.toString();
+}
+
 }  // namespace
 
 class NodeImpl {
 public:
-    explicit NodeImpl(const Node* self, YamlKey path, YAML::Node yaml)
-        : _children{constructChildren(self, yaml)}, _yaml{yaml}, _path{path}, _self{self} {}
+    explicit NodeImpl(const Node* self, YamlKey key, std::string parentPath, YAML::Node yaml)
+        : _children{constructChildren(parentPath, yaml)}, _yaml{yaml}, _path{appendPath(parentPath, key)}, _key{key}, _self{self} {}
 
     const Node& get(YamlKey key) const {
         auto&& it = _children.find(key);
         if (it == _children.end()) {
-            _children.emplace(key, std::make_unique<Node>(_self, key, _zombie));
+            _children.emplace(key, std::make_unique<Node>(key, _self->path(), _zombie));
         }
         return *_children.at(key);
     }
@@ -45,8 +49,12 @@ public:
         return _yaml.size();
     }
 
+    std::string key() const {
+        return _key.toString();
+    }
+
     std::string path() const {
-        return _path.toString();
+        return _path;
     }
 
     friend std::ostream& operator<<(std::ostream& out, const NodeImpl& impl) {
@@ -60,10 +68,11 @@ private:
     // Needs to be mutable to generate placeholder nodes for non-existent keys.
     mutable Children _children;
     YAML::Node _yaml;
-    YamlKey _path;
+    YamlKey _key;
+    std::string _path;
     const Node* _self;
 
-    static Children constructChildren(const Node *parent, YAML::Node node) {
+    static Children constructChildren(std::string parentPath, YAML::Node node) {
         Children out;
         if (!node.IsMap() && !node.IsSequence()) {
             return out;
@@ -87,16 +96,21 @@ private:
 
         for (const auto kvp: node) {
             const auto key = extractKey(kvp, node);
-            out.emplace(key, std::make_unique<Node>(parent, key, extractValue(kvp, node)));
+            out.emplace(key, std::make_unique<Node>(key, parentPath, extractValue(kvp, node)));
         }
 
         return out;
     }
 };
 
+std::string Node::key() const {
+    return this->_impl->key();
+}
+
 std::string Node::path() const {
     return this->_impl->path();
 }
+
 
 class iterator Node::begin() const {
     return iterator{&*this->_impl, false};
@@ -136,6 +150,7 @@ size_t Node::size() const {
     return _impl->size();
 }
 
+// TODO: is this right?
 YAML::Node NodeImpl::_zombie = YAML::Load("")["zombie"];
 
 const YAML::Node Node::yaml() const {
@@ -149,8 +164,8 @@ Node::operator bool() const {
 Node::~Node() = default;
 
 // TODO: parent unused
-Node::Node(const Node* parent, YamlKey path, YAML::Node yaml)
-    : _impl{std::make_unique<NodeImpl>(this, path, yaml)} {}
+Node::Node(YamlKey key, std::string path, YAML::Node yaml)
+    : _impl{std::make_unique<NodeImpl>(this, key, path, yaml)} {}
 
 const Node& Node::operator[](long key) const {
     return _impl->get(YamlKey{key});
@@ -162,7 +177,7 @@ const Node& Node::operator[](std::string key) const {
 
 NodeSource::NodeSource(std::string yaml, std::string path)
 : _yaml{YAML::Load(yaml)},
-  _root{std::make_unique<Node>(nullptr, YamlKey{""}, _yaml)},
+  _root{std::make_unique<Node>(YamlKey{""}, path, _yaml)},
   _path{path} {}
 
 NodeSource::~NodeSource() = default;
@@ -246,16 +261,16 @@ InvalidConversionException::InvalidConversionException(const struct Node *node,
     out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
     out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
         << yamlException.mark.column << "). ";
-    out << "On node with path '" << node->path() << "': ";
+//    out << "On node with path '" << node->path() << "': ";
     out << *node;
     this->_what = out.str();
 }
 
 InvalidKeyException::InvalidKeyException(const std::string &msg, const Node* node) {
     std::stringstream out;
-//    out << "Invalid key 'key" << node->key() << "': ";
+    out << "Invalid key '" << node->key() << "': ";
     out << msg << " ";
-    out << "On node with path '" << node->path() << "': ";
-//    out << *node;
+//    out << "On node with path '" << node->path() << "': ";
+    out << *node;
     _what = out.str();
 }

@@ -208,6 +208,8 @@ public:
 
     size_t size() const;
 
+    std::string key() const;
+
     std::string path() const;
 
     class iterator begin() const;
@@ -221,7 +223,7 @@ private:
     friend class NodeSource;
     std::unique_ptr<class NodeImpl> _impl;
 public:
-    explicit Node(const Node* parent, YamlKey key, YAML::Node yaml);
+    explicit Node(YamlKey key, std::string path, YAML::Node yaml);
 private:
     const YAML::Node yaml() const;
 
