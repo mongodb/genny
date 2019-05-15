@@ -104,7 +104,6 @@ struct OpProducer : public ActorProducer {
     std::function<void(ActorContext&)> _op;
 };
 
-/*
 TEST_CASE("loads configuration okay") {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
@@ -138,17 +137,17 @@ Actors:
 
     SECTION("Can Construct RNG") {
         std::atomic_int calls = 0;
-        auto templ = Node("foo: bar", "");
+        auto templ = NodeSource("doc: {foo: bar}", "");
 
         auto fromYaml = std::make_shared<OpProducer>([&](ActorContext& a) {
-            auto docgen = a(0, templ);
+            auto docgen = a["doc"].to<DocumentGenerator>(a.rng(0));
             REQUIRE(docgen().view() ==
                     genny::testing::toDocumentBson(Node("foo: bar", "")).view());
             ++calls;
         });
 
         auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
-            for (const auto&& doc : a.get("docs")) {
+            for (const auto&& doc : a["docs"])) {
                 auto docgen = a.createDocumentGenerator(0, templ);
                 REQUIRE(docgen().view() ==
                         genny::testing::toDocumentBson(Node("foo: bar")).view());
@@ -300,7 +299,6 @@ Actors:
         REQUIRE_THROWS_WITH(testFun(), StartsWith(R"(Failed to add 'Nop' as 'Foo')"));
     }
 }
-*/
 
 void onContext(const NodeSource& yaml, std::function<void(ActorContext&)> op) {
     genny::metrics::Registry metrics;

@@ -387,6 +387,10 @@ public:
         return _phaseContexts;
     }
 
+    DefaultRandom& rng(ActorId id) {
+        return this->workload().getRNGForThread(id);
+    }
+
     /**
      * @return a pool from the "default" MongoDB connection-pool.
      * @throws InvalidConfigurationException if no connections available.
@@ -433,7 +437,7 @@ public:
     void operator=(PhaseContext&&) = delete;
 
     DefaultRandom& rng(ActorId id) {
-        return this->_actor->workload().getRNGForThread(id);
+        return this->_actor->rng(id);
     }
 
     /**
