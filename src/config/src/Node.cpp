@@ -19,6 +19,15 @@ std::string joinPath(const KeyPath& path) {
 }
 
 
+// Helper to parse yaml string and throw a useful error message if parsing fails
+YAML::Node parse(std::string yaml, const std::string& path) {
+    try {
+        return YAML::Load(yaml);
+    } catch (const YAML::ParserException& x) {
+        BOOST_THROW_EXCEPTION(InvalidYAMLException(path, x));
+    }
+}
+
 }  // namespace
 
 class NodeImpl {
@@ -187,7 +196,7 @@ const Node& Node::operator[](std::string key) const {
 }
 
 NodeSource::NodeSource(std::string yaml, std::string path)
-: _yaml{YAML::Load(yaml)},
+: _yaml{parse(yaml, path)},
   _root{std::make_unique<Node>(KeyPath{YamlKey{path}}, _yaml)},
   _path{path} {}
 
@@ -272,7 +281,7 @@ InvalidConversionException::InvalidConversionException(const struct Node *node,
     out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
     out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
         << yamlException.mark.column << "). ";
-//    out << "On node with path '" << node->path() << "': ";
+    out << "On node with path '" << node->path() << "': ";
     out << *node;
     this->_what = out.str();
 }
@@ -281,7 +290,7 @@ InvalidKeyException::InvalidKeyException(const std::string &msg, const Node* nod
     std::stringstream out;
     out << "Invalid key '" << node->key() << "': ";
     out << msg << " ";
-//    out << "On node with path '" << node->path() << "': ";
+    out << "On node with path '" << node->path() << "': ";
     out << *node;
     _what = out.str();
 }

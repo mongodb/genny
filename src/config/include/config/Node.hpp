@@ -163,8 +163,7 @@ public:
         try {
             return _maybeImpl<O, Args...>(std::forward<Args>(args)...);
         } catch (const YAML::BadConversion& x) {
-            throw std::logic_error("TODO");
-//            BOOST_THROW_EXCEPTION(InvalidConversionException(this, x, typeid(O)));
+            BOOST_THROW_EXCEPTION(InvalidConversionException(this, x, typeid(O)));
         }
     }
 
@@ -195,9 +194,8 @@ public:
     O to(Args&&... args) const {
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
-            throw std::logic_error("TODO");
-//            BOOST_THROW_EXCEPTION(
-//                    InvalidKeyException("Tried to access node that doesn't exist.", this));
+            BOOST_THROW_EXCEPTION(
+                    InvalidKeyException("Tried to access node that doesn't exist.", this));
         }
         return *out;
     }
