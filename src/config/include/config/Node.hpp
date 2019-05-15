@@ -357,6 +357,11 @@ public:
     std::string path() const;
 
     /**
+     * @return the YAML tag associated with this node.
+     */
+    std::string tag() const;
+
+    /**
      * Iterate over child elements. If this Node is a scalar, undefined,
      * or an empty map/sequence then `begin() == end()`.
      *

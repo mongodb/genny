@@ -156,6 +156,10 @@ public:
         return determineType(_yaml);
     }
 
+    std::string tag() const {
+        return _yaml.Tag();
+    }
+
     explicit operator bool() const {
         return bool(_yaml);
     }
@@ -278,6 +282,10 @@ bool Node::isMap() const {
 
 bool Node::isSequence() const {
     return _impl->isSequence();
+}
+
+std::string Node::tag() const {
+    return _impl->tag();
 }
 
 size_t Node::size() const {
