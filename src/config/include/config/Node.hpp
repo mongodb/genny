@@ -51,6 +51,10 @@ private:
     const Type _value;
 };
 
+namespace v1 {
+using KeyPath = std::vector<YamlKey>;
+}
+
 
 /**
  * Throw this to indicate a bad conversion.
@@ -99,7 +103,6 @@ private:
     std::string _what;
 };
 
-using KeyPath = std::vector<YamlKey>;
 
 enum class NodeType {
     Undefined,
@@ -119,11 +122,11 @@ public:
 
     void operator=(Node&&) = delete;
 
+    ~Node();
+
     const Node& operator[](long key) const;
 
     const Node& operator[](std::string key) const;
-
-    ~Node();
 
     explicit operator bool() const;
 
@@ -131,6 +134,21 @@ public:
 
     bool isScalar() const;
 
+    bool isNull() const;
+
+    bool isMap() const;
+
+    bool isSequence() const;
+
+    size_t size() const;
+
+    std::string key() const;
+
+    std::string path() const;
+
+    class NodeIterator begin() const;
+
+    class NodeIterator end() const;
 
     /**
      * @tparam O
@@ -219,23 +237,6 @@ public:
         return *out;
     }
 
-    bool isNull() const;
-
-    bool isMap() const;
-
-    bool isSequence() const;
-
-    size_t size() const;
-
-    std::string key() const;
-
-    std::string path() const;
-
-    class iterator begin() const;
-
-    class iterator end() const;
-
-
     /**
      * Extract a vector of items by supporting both singular and plural keys.
      *
@@ -300,7 +301,7 @@ public:
     friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
 private:
-    friend class iterator;
+    friend class NodeIterator;
 
     friend class NodeImpl;
 
@@ -309,16 +310,15 @@ private:
     std::unique_ptr<class NodeImpl> _impl;
 
 public:
-    explicit Node(KeyPath path, YAML::Node yaml);
+    explicit Node(v1::KeyPath path, YAML::Node yaml);
 
 private:
     const YAML::Node yaml() const;
 
     template <typename O, typename... Args>
     static constexpr bool isNodeConstructible() {
-        // exclude is_trivially_constructible_v values because
-        // for some reason `int` and other primitives report as is_constructible here for some
-        // reason.
+        // exclude is_trivially_constructible_v values because for some reason `int` and
+        // other primitives report as is_constructible here
         return !std::is_trivially_constructible_v<O> &&
             std::is_constructible_v<O, const Node&, Args...>;
     }
@@ -368,28 +368,28 @@ private:
     }
 };
 
-class iterator_value : public std::pair<const YamlKey, const Node&> {
+class NodeIteratorValue : public std::pair<const YamlKey, const Node&> {
 public:
-    iterator_value(YamlKey key, const Node& node);
+    NodeIteratorValue(YamlKey key, const Node& node);
 
 private:
     friend Node;
 };
 
-class iterator {
+class NodeIterator {
 public:
-    ~iterator();
+    ~NodeIterator();
 
-    bool operator!=(const iterator&) const;
+    bool operator!=(const NodeIterator&) const;
 
-    bool operator==(const iterator&) const;
+    bool operator==(const NodeIterator&) const;
 
     void operator++();
 
-    const iterator_value operator*() const;
+    const NodeIteratorValue operator*() const;
 
 private:
-    iterator(const class NodeImpl*, bool end);
+    NodeIterator(const class NodeImpl*, bool end);
 
     friend Node;
 
@@ -397,6 +397,7 @@ private:
 
     std::unique_ptr<class IteratorImpl> _impl;
 };
+
 
 class NodeSource {
 public:
@@ -416,6 +417,7 @@ private:
     std::unique_ptr<Node> _root;
     std::string _path;
 };
+
 
 // A bulk of this could probably be moved to the PiMPL version
 // in Node.cpp. Would just need `vector<const Node&> Node::getPlural(s,p)`
