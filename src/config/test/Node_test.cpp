@@ -29,7 +29,7 @@ struct HasConversionSpecialization {
     int x;
 };
 
-//namespace genny {
+// namespace genny {
 
 TEST_CASE("Nested sequence like map") {
     NodeSource nodeSource("a: []", "");
@@ -98,7 +98,7 @@ TEST_CASE("YAML::Node Equivalency") {
 
         {
             NodeSource nodeSource{"foo: a", ""};
-            const Node& node {nodeSource.root()};
+            const Node& node{nodeSource.root()};
             // test of the test
             REQUIRE(node["foo"].to<std::string>() == "a");
             // don't barf when treating a map like a sequence
@@ -117,7 +117,7 @@ TEST_CASE("YAML::Node Equivalency") {
         }
         {
             NodeSource nodeSource("foos: [{a: 1}]", "");
-            auto& yaml {nodeSource.root()};
+            auto& yaml{nodeSource.root()};
             REQUIRE(bool(yaml["foos"]["a"]) == false);
             REQUIRE_THROWS_WITH([&]() { yaml["foos"]["a"].to<int>(); }(),
                                 Catch::Matches("Invalid key 'a': Tried to access node that doesn't "
@@ -143,7 +143,7 @@ TEST_CASE("YAML::Node Equivalency") {
             NodeSource ns{"ns: [1,2,3]", ""};
             auto& node = ns.root();
             int sum = 0;
-            for(auto& [k,v] : node["ns"]) {
+            for (auto& [k, v] : node["ns"]) {
                 REQUIRE(bool(v) == true);
                 sum += v.to<int>();
                 if (sum == 1) {
@@ -169,7 +169,7 @@ TEST_CASE("YAML::Node Equivalency") {
             NodeSource ns("foo: bar", "");
             auto& node = ns.root();
             int seen = 0;
-            for (auto& [k,v]: node) {
+            for (auto& [k, v] : node) {
                 ++seen;
                 REQUIRE(k.toString() == "foo");
                 REQUIRE(v.to<std::string>() == "bar");
@@ -260,7 +260,7 @@ TEST_CASE("YAML::Node Equivalency") {
         }
         {
             NodeSource nodeSource("{}", "");
-            auto& node {nodeSource.root()};
+            auto& node{nodeSource.root()};
             REQUIRE(bool(node) == true);
             auto& dne = node["doesntexist"];
             REQUIRE(bool(dne) == false);
@@ -320,18 +320,14 @@ TEST_CASE("YamlKey") {
         REQUIRE(!(a < a));
     }
     SECTION("As Map Key") {
-        std::map<YamlKey, long> actual {
-                {YamlKey{1}, 7},
-                {YamlKey{2}, 17},
-                {YamlKey{-1}, 100}
-        };
+        std::map<YamlKey, long> actual{{YamlKey{1}, 7}, {YamlKey{2}, 17}, {YamlKey{-1}, 100}};
         REQUIRE(actual.find(YamlKey{1}) != actual.end());
         REQUIRE(actual.find(YamlKey{1})->second == 7);
         REQUIRE(actual.find(YamlKey{-1})->second == 100);
     }
     SECTION("When missing") {
-        std::map<YamlKey, long> actual {
-                {YamlKey{1}, 7},
+        std::map<YamlKey, long> actual{
+            {YamlKey{1}, 7},
         };
         REQUIRE(actual.find(YamlKey{-1}) == actual.end());
     }
@@ -372,10 +368,9 @@ nope: false
         [&]() { node[0].to<int>(); }(),
         Catch::Matches(
             "Invalid key '0': Tried to access node that doesn't exist. On node with path '/0': "));
-    REQUIRE_THROWS_WITH(
-        [&]() { node["seven"][0].to<int>(); }(),
-        Catch::Matches(
-            "Invalid key '0': Tried to access node that doesn't exist. On node with path '/seven/0': "));
+    REQUIRE_THROWS_WITH([&]() { node["seven"][0].to<int>(); }(),
+                        Catch::Matches("Invalid key '0': Tried to access node that doesn't exist. "
+                                       "On node with path '/seven/0': "));
 
     REQUIRE_THROWS_WITH([&]() { node["bee"].to<int>(); }(),
                         Catch::Matches("Couldn't convert to 'int': 'bad conversion' at "
@@ -395,7 +390,8 @@ TEST_CASE("No Inheritance") {
 Coll: Test
 Phases:
 - Doc: foo
-)", ""};
+)",
+                  ""};
     auto& node = ns.root();
     {
         auto& phases = node["Phases"];
@@ -444,7 +440,7 @@ Phases:
 - Another:
   - Nested: {Coll: Baz}
 )",
-              ""};
+                  ""};
     auto& node = ns.root();
 
     REQUIRE(node["Coll"].to<std::string>() == "Test");
@@ -579,13 +575,12 @@ struct WLCtx {
     const Node& node;
     std::vector<std::unique_ptr<ACtx>> actxs;
     std::vector<std::unique_ptr<Actr>> actrs;
-    explicit WLCtx(const Node& node)
-            : node{node} {
+    explicit WLCtx(const Node& node) : node{node} {
         // Make a bunch of actor contexts
-        for (auto& [k,actor] : node["Actors"]) {
+        for (auto& [k, actor] : node["Actors"]) {
             actxs.emplace_back(std::make_unique<ACtx>(actor, *this));
         }
-        for(auto& actx : actxs) {
+        for (auto& actx : actxs) {
             // don't go thru a "ActorProducer" it shouldn't matter
             // cuz it just passes in the ActorContext& to the ctor
             actrs.push_back(std::make_unique<Actr>(*actx));
@@ -596,14 +591,13 @@ struct ACtx {
     const Node& node;
     std::unique_ptr<WLCtx> wlc;
     std::vector<std::unique_ptr<PCtx>> pcs;
-    ACtx(const Node& node, WLCtx& wlctx)
-            : node{node} {
+    ACtx(const Node& node, WLCtx& wlctx) : node{node} {
         pcs = constructPhaseContexts(node, this);
     }
     static std::vector<std::unique_ptr<PCtx>> constructPhaseContexts(const Node& node, ACtx* actx) {
         std::vector<std::unique_ptr<PCtx>> out;
         auto& phases = (*actx).node["Phases"];
-        for(const auto& [k,phase] : phases) {
+        for (const auto& [k, phase] : phases) {
             out.emplace_back(std::make_unique<PCtx>(phase, *actx));
         }
         return out;
@@ -615,8 +609,7 @@ struct PCtx {
     bool isNop() {
         return node["Nop"].maybe<bool>().value_or(false);
     }
-    PCtx(const Node& node, ACtx& actx)
-            : node{node}, actx{std::addressof(actx)} {}
+    PCtx(const Node& node, ACtx& actx) : node{node}, actx{std::addressof(actx)} {}
 };
 struct Actr {
     explicit Actr(ACtx& ctx) {
@@ -625,7 +618,7 @@ struct Actr {
 };
 
 TEST_CASE("Mickey-mouse Use From context.hpp") {
-    NodeSource yaml (R"(
+    NodeSource yaml(R"(
     SchemaVersion: 2018-07-01
     Database: test
     Actors:
@@ -634,7 +627,8 @@ TEST_CASE("Mickey-mouse Use From context.hpp") {
       Threads: 1
       Phases:
       - Repeat: 1
-    )", "");
+    )",
+                    "");
     WLCtx ctx{yaml.root()};
 }
 
@@ -689,9 +683,7 @@ TEST_CASE("size") {
 }
 
 TEST_CASE("Parent .. traversal isn't a thing") {
-    NodeSource ns{
-            "a: {b: { c: {d: D, e: E} } }",
-            ""};
+    NodeSource ns{"a: {b: { c: {d: D, e: E} } }", ""};
     auto& node = ns.root();
     REQUIRE(node["a"]["b"]["c"]["d"].to<std::string>() == "D");
     REQUIRE(node["a"]["b"]["c"]["e"].to<std::string>() == "E");
@@ -790,7 +782,7 @@ TEST_CASE("Basic Sequence Node Iteration") {
     {
         auto it = foo.begin();
         REQUIRE(it != foo.end());
-        auto& [k,v] = *it;
+        auto& [k, v] = *it;
         REQUIRE(k.toString() == "0");
         REQUIRE(v.to<long>() == 1);
         REQUIRE(it != foo.end());
@@ -801,14 +793,14 @@ TEST_CASE("Basic Sequence Node Iteration") {
 
 
 TEST_CASE("Simple Path 1") {
-    NodeSource ns {"", "f.yml"};
+    NodeSource ns{"", "f.yml"};
     auto& node = ns.root();
     REQUIRE(node.path() == "f.yml");
     REQUIRE(node[0].path() == "f.yml/0");
 }
 
 TEST_CASE("Simple Path 2") {
-    NodeSource ns {"", ""};
+    NodeSource ns{"", ""};
     auto& node = ns.root();
     REQUIRE(node.path() == "");
     REQUIRE(node["a"]["b"].path() == "/a/b");
@@ -852,7 +844,7 @@ mapTwoDeep: {a: {A: aA}}
     auto& node = ns.root();
     {
         int seen = 0;
-        for (auto&& [k,v] : node["one"]) {
+        for (auto&& [k, v] : node["one"]) {
             REQUIRE(v.path() == "/one/0");
             ++seen;
         }
@@ -860,7 +852,7 @@ mapTwoDeep: {a: {A: aA}}
     }
     {
         int seen = 0;
-        for (auto& [k,v] : node["two"]) {
+        for (auto& [k, v] : node["two"]) {
             REQUIRE(v.path() == "/two/" + std::to_string(seen));
             ++seen;
         }
@@ -868,7 +860,7 @@ mapTwoDeep: {a: {A: aA}}
     }
     {
         int seen = 0;
-        for (auto&& [k,v] : node["mapOneDeep"]) {
+        for (auto&& [k, v] : node["mapOneDeep"]) {
             REQUIRE(v.path() == "/mapOneDeep/a");
             ++seen;
         }
@@ -892,12 +884,6 @@ Two: {}
             node["One"].to<TakesEmptyStructAndExtractsMsg>(&context);
         REQUIRE(one.msg == "foo");
     }
-
-//    {
-//        TakesEmptyStructAndExtractsMsg one =
-//            node["Two"].to<TakesEmptyStructAndExtractsMsg>(&context);
-//        REQUIRE(one.msg == "bar");
-//    }
 }
 
 TEST_CASE("operator-left-shift") {
@@ -910,7 +896,7 @@ TEST_CASE("operator-left-shift") {
     }
     {
         NodeSource ns{"Foo: {Bar: Baz}", ""};
-        const auto&  node = ns.root();
+        const auto& node = ns.root();
         std::stringstream str;
         str << node;
         REQUIRE(str.str() == "Foo: {Bar: Baz}");
@@ -936,14 +922,14 @@ TEST_CASE("getPlural") {
         auto& node = ns.root();
 
         int calls = 0;
-        REQUIRE(node.getPlural<HasConversionSpecialization>("Foo",
-                                                            "Foos",
-                                                            [&](const Node& node) -> HasConversionSpecialization {
-                                                                ++calls;
-                                                                // add one to the node value
-                                                                return HasConversionSpecialization{
-                                                                    node.to<int>() + 1};
-                                                            })[0]
+        REQUIRE(node.getPlural<HasConversionSpecialization>(
+                        "Foo",
+                        "Foos",
+                        [&](const Node& node) -> HasConversionSpecialization {
+                            ++calls;
+                            // add one to the node value
+                            return HasConversionSpecialization{node.to<int>() + 1};
+                        })[0]
                     .x == 713);
         REQUIRE(calls == 1);
     }
@@ -1055,7 +1041,7 @@ SingleItemList: [37]
         auto& mp = node["SimpleMap"];
         REQUIRE(mp);
         int seen = 0;
-        for (auto& [k,v] : mp) {
+        for (auto& [k, v] : mp) {
             REQUIRE(k.toString() == "a");
             REQUIRE(v.to<std::string>() == "b");
             ++seen;
@@ -1067,7 +1053,7 @@ SingleItemList: [37]
         auto& lst = node["ListOfScalars"];
         REQUIRE(lst);
         int i = 1;
-        for (auto& [k,v] : lst) {
+        for (auto& [k, v] : lst) {
             REQUIRE(v.to<int>() == i);
             ++i;
         }
@@ -1079,7 +1065,7 @@ SingleItemList: [37]
         REQUIRE(lom);
         REQUIRE(lom.size() == 1);
         auto countMaps = 0;
-        for (auto& [k,m] : lom) {
+        for (auto& [k, m] : lom) {
             ++countMaps;
             REQUIRE(m.size() == 2);
 
@@ -1100,7 +1086,7 @@ SingleItemList: [37]
         REQUIRE(sil.size() == 1);
         REQUIRE(sil[0].to<int>() == 37);
         auto count = 0;
-        for (auto& [k,v] : sil) {
+        for (auto& [k, v] : sil) {
             REQUIRE(v.to<int>() == 37);
             ++count;
         }

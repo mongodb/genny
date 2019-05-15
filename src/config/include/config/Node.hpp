@@ -19,23 +19,21 @@
 #include <optional>
 #include <type_traits>
 #include <utility>
-#include <vector>
 #include <variant>
+#include <vector>
 
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <yaml-cpp/yaml.h>
 
-template<typename T>
-struct NodeConvert{};
+template <typename T>
+struct NodeConvert {};
 
 class YamlKey {
 public:
-    explicit YamlKey(std::string key)
-            : _value{key} {};
-    explicit YamlKey(long key)
-            : _value{key} {};
+    explicit YamlKey(std::string key) : _value{key} {};
+    explicit YamlKey(long key) : _value{key} {};
 
     bool operator<(const YamlKey& rhs) const {
         return _value < rhs._value;
@@ -152,24 +150,24 @@ public:
         static_assert(!std::is_same_v<std::decay_t<YAML::Node>, std::decay_t<O>>,
                       "Cannot convert to YAML::Node");
         static_assert(
-                // This isn't the most reliable static_assert but hopefully this block
-                // makes debugging compiler-errors easier.
-                std::is_same_v<decltype(_maybeImpl<O, Args...>(std::forward<Args>(args)...)),
-                        std::optional<O>>,
-                "Destination type must satisfy at least *one* of the following:\n"
-                "\n"
-                "1.  is constructible from `const Node&` and the given arguments\n"
-                "2.  has a `NodeConvert` struct like the following:\n"
-                "\n"
-                "        namespace genny {\n"
-                "        template<> struct NodeConvert<Foo> {\n"
-                "            using type = Foo;\n"
-                "            static Foo convert(const Node& node, other, args) { ... }\n"
-                "        };\n"
-                "        }  // namesace genny\n"
-                "\n"
-                "3.  is a type built into YAML::Node e.g. int, string, vector<built-in-type>"
-                "    etc.");
+            // This isn't the most reliable static_assert but hopefully this block
+            // makes debugging compiler-errors easier.
+            std::is_same_v<decltype(_maybeImpl<O, Args...>(std::forward<Args>(args)...)),
+                           std::optional<O>>,
+            "Destination type must satisfy at least *one* of the following:\n"
+            "\n"
+            "1.  is constructible from `const Node&` and the given arguments\n"
+            "2.  has a `NodeConvert` struct like the following:\n"
+            "\n"
+            "        namespace genny {\n"
+            "        template<> struct NodeConvert<Foo> {\n"
+            "            using type = Foo;\n"
+            "            static Foo convert(const Node& node, other, args) { ... }\n"
+            "        };\n"
+            "        }  // namesace genny\n"
+            "\n"
+            "3.  is a type built into YAML::Node e.g. int, string, vector<built-in-type>"
+            "    etc.");
         if (!*this) {
             return std::nullopt;
         }
@@ -208,7 +206,7 @@ public:
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
             BOOST_THROW_EXCEPTION(
-                    InvalidKeyException("Tried to access node that doesn't exist.", this->key(), this));
+                InvalidKeyException("Tried to access node that doesn't exist.", this->key(), this));
         }
         return *out;
     }
@@ -282,10 +280,11 @@ public:
     // The implementation is below because we require the full class definition
     // within the implementation.
     template <typename T, typename F = std::function<T(const Node&)>>
-    std::vector<T> getPlural(const std::string& singular,
-                                   const std::string& plural,
-                                    // Default conversion function is `node.to<T>()`.
-                             F&& f = [](const Node& n) { return n.to<T>(); }) const;
+    std::vector<T> getPlural(
+        const std::string& singular,
+        const std::string& plural,
+        // Default conversion function is `node.to<T>()`.
+        F&& f = [](const Node& n) { return n.to<T>(); }) const;
 
     friend std::ostream& operator<<(std::ostream& out, const Node& node);
 
@@ -294,8 +293,10 @@ private:
     friend class NodeImpl;
     friend class NodeSource;
     std::unique_ptr<class NodeImpl> _impl;
+
 public:
     explicit Node(KeyPath path, YAML::Node yaml);
+
 private:
     const YAML::Node yaml() const;
 
@@ -305,31 +306,31 @@ private:
         // for some reason `int` and other primitives report as is_constructible here for some
         // reason.
         return !std::is_trivially_constructible_v<O> &&
-               std::is_constructible_v<O, const Node&, Args...>;
+            std::is_constructible_v<O, const Node&, Args...>;
     }
 
     // Simple case where we have `O(const Node&,Args...)` constructor.
     template <typename O,
-            typename... Args,
-            typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
+              typename... Args,
+              typename = std::enable_if_t<isNodeConstructible<O, Args...>()>>
     std::optional<O> _maybeImpl(Args&&... args) const {
         // If you get compiler errors in _maybeImpl, see the note on the public maybe() function.
         return std::make_optional<O>(*this, std::forward<Args>(args)...);
     }
 
     template <typename O,
-            typename... Args,
-            typename = std::enable_if_t<
-                    // don't have an `O(const Node&, Args...)` constructor
-                    !isNodeConstructible<O, Args...>() &&
-                    // rely on sfinae to determine if we have a `NodeConvert<O>` definition.
-                    std::is_same_v<O, typename NodeConvert<O>::type> &&
-                    // a bit pedantic but also require that we can call
-                    // `NodeConvert<O>::convert` and get back an O.
-                    std::is_same_v<O,
-                            decltype(NodeConvert<O>::convert(std::declval<Node>(),
-                                                             std::declval<Args>()...))>>,
-            typename = void>
+              typename... Args,
+              typename = std::enable_if_t<
+                  // don't have an `O(const Node&, Args...)` constructor
+                  !isNodeConstructible<O, Args...>() &&
+                  // rely on sfinae to determine if we have a `NodeConvert<O>` definition.
+                  std::is_same_v<O, typename NodeConvert<O>::type> &&
+                  // a bit pedantic but also require that we can call
+                  // `NodeConvert<O>::convert` and get back an O.
+                  std::is_same_v<O,
+                                 decltype(NodeConvert<O>::convert(std::declval<Node>(),
+                                                                  std::declval<Args>()...))>>,
+              typename = void>
     std::optional<O> _maybeImpl(Args&&... args) const {
         // If you get compiler errors in _maybeImpl, see the note on the public maybe() function.
         return std::make_optional<O>(NodeConvert<O>::convert(*this, std::forward<Args>(args)...));
@@ -337,16 +338,15 @@ private:
 
     // This will get used if the ↑ fails to instantiate due to SFINAE.
     template <
-            typename O,
-            typename... Args,
-            typename = std::enable_if_t<
-                    // don't have an `O(const Node&, Args...)` constructor
-                    !isNodeConstructible<O, Args...>() &&
-                    // and the `YAML::convert<O>` struct has been defined.
-                    std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())),
-                            YAML::Node>>,
-            typename = void,
-            typename = void>
+        typename O,
+        typename... Args,
+        typename = std::enable_if_t<
+            // don't have an `O(const Node&, Args...)` constructor
+            !isNodeConstructible<O, Args...>() &&
+            // and the `YAML::convert<O>` struct has been defined.
+            std::is_same_v<decltype(YAML::convert<O>::encode(std::declval<O>())), YAML::Node>>,
+        typename = void,
+        typename = void>
     std::optional<O> _maybeImpl(Args&&... args) const {
         static_assert(sizeof...(args) == 0,
                       "Cannot pass additional args when using built-in YAML conversion");
@@ -354,9 +354,10 @@ private:
     }
 };
 
-class iterator_value : public std::pair<const YamlKey,const Node&> {
+class iterator_value : public std::pair<const YamlKey, const Node&> {
 public:
     iterator_value(YamlKey key, const Node& node);
+
 private:
     friend Node;
 };
@@ -368,6 +369,7 @@ public:
     bool operator==(const iterator&) const;
     void operator++();
     const iterator_value operator*() const;
+
 private:
     iterator(const class NodeImpl*, bool end);
     friend Node;
@@ -378,14 +380,15 @@ private:
 class NodeSource {
 public:
     ~NodeSource();
-    const Node& root() const &{
+    const Node& root() const& {
         return *_root;
     }
 
     // disallow `NodeSource{"",""}.root();`
-    void root() const && = delete;
+    void root() const&& = delete;
 
     NodeSource(std::string yaml, std::string path);
+
 private:
     YAML::Node _yaml;
     std::unique_ptr<Node> _root;
@@ -404,19 +407,19 @@ std::vector<T> Node::getPlural(const std::string& singular,
     const auto& singValue = (*this)[singular];
     if (pluralValue && singValue) {
         BOOST_THROW_EXCEPTION(
-        // the `$plural(singular,plural)` key is kinda cheeky but hopefully
-        // it helps to explain what the code tried to do in error-messages.
-                InvalidKeyException("Can't have both '" + singular + "' and '" + plural + "'.",
-                                    "getPlural('" + singular + "', '" + plural + "')",
-                                    this));
+            // the `$plural(singular,plural)` key is kinda cheeky but hopefully
+            // it helps to explain what the code tried to do in error-messages.
+            InvalidKeyException("Can't have both '" + singular + "' and '" + plural + "'.",
+                                "getPlural('" + singular + "', '" + plural + "')",
+                                this));
     } else if (pluralValue) {
         if (!pluralValue.isSequence()) {
             BOOST_THROW_EXCEPTION(
-                    InvalidKeyException("Plural '" + plural + "' must be a sequence type.",
-                                        "getPlural('" + singular + "', '" + plural + "')",
-                                        this));
+                InvalidKeyException("Plural '" + plural + "' must be a sequence type.",
+                                    "getPlural('" + singular + "', '" + plural + "')",
+                                    this));
         }
-        for (auto&& [k,v] : pluralValue) {
+        for (auto&& [k, v] : pluralValue) {
             auto&& created = std::invoke(f, v);
             out.emplace_back(std::move(created));
         }
@@ -425,9 +428,9 @@ std::vector<T> Node::getPlural(const std::string& singular,
         out.emplace_back(std::move(created));
     } else if (!singValue && !pluralValue) {
         BOOST_THROW_EXCEPTION(
-                InvalidKeyException("Either '" + singular + "' or '" + plural + "' required.",
-                                    "getPlural('" + singular + "', '" + plural + "')",
-                                    this));
+            InvalidKeyException("Either '" + singular + "' or '" + plural + "' required.",
+                                "getPlural('" + singular + "', '" + plural + "')",
+                                this));
     }
     return out;
 }
