@@ -5,8 +5,10 @@
 
 namespace genny {
 
+//
+// Helper Functions
+//
 namespace {
-
 using Child = std::unique_ptr<class Node>;
 using Children = std::map<v1::NodeKey, Child>;
 
@@ -38,7 +40,7 @@ Node::Type determineType(const YAML::Node node) {
     }
 }
 
-// Helper to parse yaml string and throw a useful error message if parsing fails
+// Like YAML::Load but throw more useful exception
 YAML::Node parse(std::string yaml, const std::string& path) {
     try {
         return YAML::Load(yaml);
@@ -49,9 +51,11 @@ YAML::Node parse(std::string yaml, const std::string& path) {
 
 }  // namespace
 
+
 //
 // NodeSource
 //
+
 NodeSource::NodeSource(std::string yaml, std::string path)
     : _yaml{parse(std::move(yaml), path)},
       _path{path},
@@ -59,18 +63,22 @@ NodeSource::NodeSource(std::string yaml, std::string path)
 
 NodeSource::~NodeSource() = default;
 
+
 //
 // v1::NodeKey
 //
+
 std::string v1::NodeKey::toString() const {
     std::stringstream out;
     out << *this;
     return out.str();
 }
 
+
 //
 // Exception Types
 //
+
 namespace {
 std::string invalidYamlExceptionWhat(const std::string& path,
                                      const YAML::ParserException& yamlException) {
@@ -94,7 +102,6 @@ std::string invalidConversionExceptionWhat(const struct Node* node,
     out << *node;
     return out.str();
 }
-
 std::string invalidKeyExceptionWhat(const std::string& msg,
                                     const std::string& key,
                                     const Node* node) {
@@ -121,16 +128,15 @@ InvalidKeyException::InvalidKeyException(const std::string& msg,
                                          const Node* node)
     : _what{invalidKeyExceptionWhat(msg, key, node)} {}
 
+
 //
 // NodeImpl
 //
+
 class NodeImpl {
 public:
     NodeImpl(const Node* self, const YAML::Node yaml, const v1::NodeKey::Path& path)
-        : _self{self},
-          _children{constructChildren(path, yaml)},
-          _yaml{yaml},
-          _path{path} {}
+        : _self{self}, _children{constructChildren(path, yaml)}, _yaml{yaml}, _path{path} {}
 
     const Node& get(const v1::NodeKey& key) const {
         auto&& it = _children.find(key);
@@ -230,21 +236,24 @@ private:
     const v1::NodeKey::Path _path;
 };
 
+const YAML::Node NodeImpl::_zombie = YAML::Load("")["zombie"];
+
+
+//
+// Node
+//
+
+Node::~Node() = default;
+
+Node::Node(const v1::NodeKey::Path& path, const YAML::Node yaml)
+    : _impl{std::make_unique<NodeImpl>(this, yaml, path)} {}
+
 std::string Node::key() const {
     return this->_impl->key();
 }
 
 std::string Node::path() const {
     return this->_impl->path();
-}
-
-
-class NodeIterator Node::begin() const {
-    return NodeIterator{&*this->_impl, false};
-}
-
-class NodeIterator Node::end() const {
-    return NodeIterator{&*this->_impl, true};
 }
 
 std::ostream& operator<<(std::ostream& out, const Node& node) {
@@ -275,8 +284,6 @@ size_t Node::size() const {
     return _impl->size();
 }
 
-const YAML::Node NodeImpl::_zombie = YAML::Load("")["zombie"];
-
 const YAML::Node Node::yaml() const {
     return _impl->yaml();
 }
@@ -285,11 +292,6 @@ Node::operator bool() const {
     return _impl->operator bool();
 }
 
-Node::~Node() = default;
-
-Node::Node(const v1::NodeKey::Path& path, const YAML::Node yaml)
-    : _impl{std::make_unique<NodeImpl>(this, yaml, path)} {}
-
 const Node& Node::operator[](long key) const {
     return _impl->get(v1::NodeKey{key});
 }
@@ -297,6 +299,27 @@ const Node& Node::operator[](long key) const {
 const Node& Node::operator[](const std::string& key) const {
     return _impl->get(v1::NodeKey{key});
 }
+
+class NodeIterator Node::begin() const {
+    return NodeIterator{&*this->_impl, false};
+}
+
+class NodeIterator Node::end() const {
+    return NodeIterator{&*this->_impl, true};
+}
+
+
+//
+// NodeIteratorValue
+//
+
+NodeIteratorValue::NodeIteratorValue(const v1::NodeKey& key, const Node& node)
+    : std::pair<const v1::NodeKey&, const Node&>{key, node} {}
+
+
+//
+// IteratorImpl
+//
 
 class IteratorImpl {
 public:
@@ -323,6 +346,16 @@ private:
     Children::const_iterator _children;
 };
 
+
+//
+// NodeIterator
+//
+
+NodeIterator::NodeIterator(const NodeImpl* nodeImpl, bool end)
+    : _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_children.end()
+                                               : nodeImpl->_children.begin())} {}
+NodeIterator::~NodeIterator() = default;
+
 void NodeIterator::operator++() {
     return _impl->increment();
 }
@@ -338,15 +371,5 @@ bool NodeIterator::operator==(const NodeIterator& rhs) const {
 const NodeIteratorValue NodeIterator::operator*() const {
     return _impl->getValue();
 }
-
-NodeIterator::NodeIterator(const NodeImpl* nodeImpl, bool end)
-    : _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_children.end()
-                                               : nodeImpl->_children.begin())} {}
-
-
-NodeIterator::~NodeIterator() = default;
-
-NodeIteratorValue::NodeIteratorValue(const v1::NodeKey& key, const Node& node)
-    : std::pair<const v1::NodeKey&, const Node&>{key, node} {}
 
 }  // namespace genny

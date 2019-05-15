@@ -60,13 +60,13 @@ public:
 
     explicit NodeKey(long key) : _value{key} {};
 
-    bool operator<(const NodeKey &rhs) const {
+    bool operator<(const NodeKey& rhs) const {
         return _value < rhs._value;
     }
 
     std::string toString() const;
 
-    friend std::ostream &operator<<(std::ostream &out, const ::genny::v1::NodeKey &key) {
+    friend std::ostream& operator<<(std::ostream& out, const ::genny::v1::NodeKey& key) {
         try {
             return out << std::get<std::string>(key._value);
         } catch (const std::bad_variant_access&) {
@@ -78,7 +78,7 @@ private:
     using ValueType = std::variant<long, std::string>;
     const ValueType _value;
 };
-}
+}  // namespace v1
 
 
 /**
@@ -328,7 +328,6 @@ public:
     explicit Node(const v1::NodeKey::Path& path, const YAML::Node yaml);
 
 private:
-
     friend class NodeImpl;
 
     const YAML::Node yaml() const;
