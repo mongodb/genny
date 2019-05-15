@@ -471,16 +471,15 @@ Actors:
 - Name: ${actor_name}
   Type: ${actor_name}
   Threads: 100
+  Database: test
   Phases:
   - Phase: 0
     Repeat: 1e3 # used by PhaesLoop
-    Database: test
     # below used by PhaseConfig in ${actor_name}.cpp
     Collection: test
     Document: {foo: {^RandomInt: {min: 0, max: 100}}}
   - Phase: 1
     Duration: 5 seconds
-    Database: test
     Collection: test
     Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
 EOF
