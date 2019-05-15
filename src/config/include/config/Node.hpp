@@ -44,8 +44,8 @@ public:
 
 private:
     const YAML::Node _yaml;
-    const std::unique_ptr<class Node> _root;
     const std::string _path;
+    const std::unique_ptr<class Node> _root;
 };
 
 template <typename T>
@@ -388,10 +388,12 @@ private:
     const std::unique_ptr<const class NodeImpl> _impl;
 };
 
+
 class NodeIteratorValue final : public std::pair<const v1::NodeKey&, const Node&> {
 public:
     NodeIteratorValue(const v1::NodeKey& key, const Node& node);
 };
+
 
 class NodeIterator final {
 public:
@@ -406,9 +408,9 @@ public:
     const NodeIteratorValue operator*() const;
 
 private:
-    NodeIterator(const class NodeImpl*, bool end);
-
     friend Node;
+
+    NodeIterator(const class NodeImpl*, bool end);
 
     const std::unique_ptr<class IteratorImpl> _impl;
 };

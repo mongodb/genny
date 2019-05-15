@@ -4,6 +4,7 @@
 #include <map>
 
 namespace genny {
+
 namespace {
 
 using Child = std::unique_ptr<class Node>;
@@ -37,7 +38,6 @@ Node::Type determineType(const YAML::Node node) {
     }
 }
 
-
 // Helper to parse yaml string and throw a useful error message if parsing fails
 YAML::Node parse(std::string yaml, const std::string& path) {
     try {
@@ -48,6 +48,7 @@ YAML::Node parse(std::string yaml, const std::string& path) {
 }
 
 }  // namespace
+
 
 class NodeImpl {
 public:
@@ -109,15 +110,7 @@ public:
     }
 
 private:
-    static const YAML::Node _zombie;
     friend NodeIterator;
-
-    // Needs to be mutable to generate placeholder nodes for non-existent keys.
-    mutable Children _children;
-
-    const YAML::Node _yaml;
-    const v1::NodeKey::Path _path;
-    const Node* _self;
 
     static Children constructChildren(const v1::NodeKey::Path& path, YAML::Node node) {
         Children out;
@@ -150,6 +143,15 @@ private:
 
         return out;
     }
+
+    static const YAML::Node _zombie;
+
+    const Node* _self;
+    // Needs to be mutable to generate placeholder nodes for non-existent keys.
+    mutable Children _children;
+    const YAML::Node _yaml;
+    const v1::NodeKey::Path _path;
+
 };
 
 std::string Node::key() const {
