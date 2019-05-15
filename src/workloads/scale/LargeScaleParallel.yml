@@ -13,6 +13,7 @@ Actors:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
     Repeat: 1
+    Threads: 1
   - &Nop {Nop: true}
 
 - Name: Update
