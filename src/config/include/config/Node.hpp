@@ -100,6 +100,14 @@ private:
 
 using KeyPath = std::vector<YamlKey>;
 
+enum class NodeType {
+    Undefined,
+    Null,
+    Scalar,
+    Sequence,
+    Map,
+};
+
 class Node {
 public:
     Node(const Node&) = delete;
@@ -112,6 +120,11 @@ public:
     ~Node();
 
     explicit operator bool() const;
+
+    NodeType type() const;
+
+    bool isScalar() const;
+
 
     /**
      * @tparam O

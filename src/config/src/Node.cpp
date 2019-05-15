@@ -18,6 +18,22 @@ std::string joinPath(const KeyPath& path) {
     return out.str();
 }
 
+NodeType determineType(const YAML::Node node) {
+    auto yamlTyp = node.Type();
+    switch (yamlTyp) {
+        case YAML::NodeType::Undefined:
+            return NodeType::Undefined;
+        case YAML::NodeType::Null:
+            return NodeType::Null;
+        case YAML::NodeType::Scalar:
+            return NodeType::Scalar;
+        case YAML::NodeType::Sequence:
+            return NodeType::Sequence;
+        case YAML::NodeType::Map:
+            return NodeType::Map;
+    }
+}
+
 
 // Helper to parse yaml string and throw a useful error message if parsing fails
 YAML::Node parse(std::string yaml, const std::string& path) {
@@ -49,8 +65,16 @@ public:
         return _yaml;
     }
 
+    NodeType type() const {
+        return determineType(_yaml);
+    }
+
     explicit operator bool() const {
         return bool(_yaml);
+    }
+
+    bool isScalar() const {
+        return _yaml.IsScalar();
     }
 
     bool isMap() const {
@@ -142,6 +166,14 @@ class iterator Node::end() const {
 
 std::ostream& operator<<(std::ostream& out, const Node& node) {
     return out << *(node._impl);
+}
+
+bool Node::isScalar() const {
+    return _impl->isScalar();
+}
+
+NodeType Node::type() const {
+    return _impl->type();
 }
 
 std::ostream& operator<<(std::ostream& out, const YamlKey& key)  {
