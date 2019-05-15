@@ -75,8 +75,6 @@ public:
           // If it is a nop then should iterate 0 times.
           _minIterations{isNop ? IntegerSpec(0l) : minIterations},
           _doesBlock{_minIterations || _minDuration} {
-        BOOST_LOG_TRIVIAL(info) << "IsNop?" << isNop;
-        BOOST_LOG_TRIVIAL(info) << "Got iterations " << (_minIterations ? std::to_string(*_minIterations) : std::string("empty"));
         if (minDuration && minDuration->count() < 0) {
             std::stringstream str;
             str << "Need non-negative duration. Gave " << minDuration->count() << " milliseconds";
@@ -105,12 +103,6 @@ public:
                            phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["Rate"].maybe<RateSpec>()) {
-        BOOST_LOG_TRIVIAL(info) << "phaseContext parent      = " << phaseContext[".."];
-        BOOST_LOG_TRIVIAL(info) << "phaseContext parent path = " << phaseContext[".."].path();
-        auto repeat = phaseContext["Repeat"].maybe<IntegerSpec>();
-        auto repeatInt = phaseContext["Repeat"].maybe<int>();
-        auto repeatTo = phaseContext["Repeat"].to<IntegerSpec>();
-
         const auto rateSpec = phaseContext["Rate"].maybe<RateSpec>();
 
         const auto rateLimiterName =

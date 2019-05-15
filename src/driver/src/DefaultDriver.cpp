@@ -116,10 +116,10 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
-    Node node{YAML::Dump(yaml), options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kFile ? options.workloadSource : "inline-yaml"};
+    NodeSource nodeSource{YAML::Dump(yaml), options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kFile ? options.workloadSource : "inline-yaml"};
 
     auto workloadContext =
-        WorkloadContext{node, metrics, orchestrator, options.mongoUri, globalCast()};
+        WorkloadContext{nodeSource.root(), metrics, orchestrator, options.mongoUri, globalCast()};
 
     if (options.runMode == DefaultDriver::RunMode::kDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;

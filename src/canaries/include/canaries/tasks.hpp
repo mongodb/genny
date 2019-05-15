@@ -179,6 +179,7 @@ private:
     explicit Singleton(std::string mongoUri);
 
 public:
+    NodeSource ns;
     mongocxx::pool::entry client;
     bsoncxx::document::value pingCmd;
 

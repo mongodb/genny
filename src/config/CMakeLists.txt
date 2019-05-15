@@ -18,7 +18,6 @@ CreateGennyTargets(
     NAME    config
     TYPE    STATIC
     DEPENDS
-        MongoCxx::bsoncxx
         yaml-cpp
         Boost::boost
         Boost::log

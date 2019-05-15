@@ -450,7 +450,7 @@ TEST_CASE("Phases can set metrics") {
 //    }
 
     SECTION("With default metrics name") {
-        Node yaml (R"(
+        NodeSource yaml (R"(
     SchemaVersion: 2018-07-01
     Database: test
     Actors:
@@ -461,7 +461,7 @@ TEST_CASE("Phases can set metrics") {
       - Repeat: 1
     )", "");
 
-        ActorHelper ah{yaml, 1};
+        ActorHelper ah{yaml.root(), 1};
         ah.run();
 
         const auto metrics = ah.getMetricsOutput();

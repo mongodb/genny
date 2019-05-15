@@ -40,17 +40,8 @@ TEST_CASE("Actor Helper") {
         }
     };
 
-    SECTION("Barfs on invalid YAML") {
-        genny::Node badConfig("{i-am-json-not-yaml}", "");
-        auto dummyProducer =
-            std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
-
-        auto test = [&]() { genny::ActorHelper ah(badConfig, 1, {{"DummyActor", dummyProducer}}); };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key.*i-am-json-not-yaml.*)"));
-    }
-
     SECTION("Barfs on invalid thread count (aka token)") {
-        genny::Node config (R"(
+        genny::NodeSource config (R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -59,7 +50,7 @@ Actors:
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 
-        auto test = [&]() { genny::ActorHelper ah(config, -1, {{"DummyActor", dummyProducer}}); };
+        auto test = [&]() { genny::ActorHelper ah(config.root(), -1, {{"DummyActor", dummyProducer}}); };
         REQUIRE_THROWS_WITH(test(), Matches("Must add a positive number of tokens"));
     }
 
@@ -71,7 +62,7 @@ Actors:
     };
 
     SECTION("Barfs if Actor Ctor barfs") {
-        genny::Node config (R"(
+        genny::NodeSource config (R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -80,12 +71,12 @@ Actors:
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<CtorThrowingActor>>("DummyActor");
 
-        auto test = [&]() { genny::ActorHelper ah(config, 1, {{"DummyActor", dummyProducer}}); };
+        auto test = [&]() { genny::ActorHelper ah(config.root(), 1, {{"DummyActor", dummyProducer}}); };
         REQUIRE_THROWS_WITH(test(), Matches("CTOR Barf"));
     }
 
     SECTION("Barfs if Actor runAndVerify() barfs") {
-        genny::Node config (R"(
+        genny::NodeSource config(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -94,7 +85,7 @@ Actors:
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 
-        genny::ActorHelper ah(config, 1, {{"DummyActor", dummyProducer}});
+        genny::ActorHelper ah(config.root(), 1, {{"DummyActor", dummyProducer}});
         auto runFunc = [](const genny::WorkloadContext& wc) {};
         auto verifyFunc = [](const genny::WorkloadContext& wc) {
             throw genny::InvalidConfigurationException("RUN Barf");

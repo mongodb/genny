@@ -30,7 +30,7 @@ namespace {
 using namespace std::chrono;
 
 TEST_CASE("Conventions used by PhaseLoop") {
-    Node yaml(R"(
+    NodeSource ns(R"(
     SchemaVersion: 2018-07-01
     Database: test
     Actors:
@@ -40,7 +40,8 @@ TEST_CASE("Conventions used by PhaseLoop") {
       Phases:
       - Repeat: 1
     )", "");
-    auto phaseContext = yaml["Actors"][0]["Phases"][0];
+    auto& yaml = ns.root();
+    auto& phaseContext = yaml["Actors"][0]["Phases"][0];
     // Test of the test
     REQUIRE(phaseContext);
 

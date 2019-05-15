@@ -286,7 +286,7 @@ TEST_CASE("Actual Actor Example") {
     SECTION("Simple Actor") {
         // ////////
         // setup and run (bypass the driver)
-        genny::Node config(R"(
+        genny::NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -298,7 +298,7 @@ TEST_CASE("Actual Actor Example") {
         )", "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
         ah.run();
 
         REQUIRE(imvProducer->counters ==
@@ -349,7 +349,7 @@ TEST_CASE("Actual Actor Example") {
         };
 
         // This is how a Nop command should be specified.
-        Node config (R"(
+        NodeSource config (R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -367,7 +367,7 @@ TEST_CASE("Actual Actor Example") {
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
         ah.run();
 
         REQUIRE(imvProducer->counters ==
@@ -378,7 +378,7 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepBefore and SleepAfter") {
         using namespace std::literals::chrono_literals;
-        Node config (R"(
+        NodeSource config (R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -390,7 +390,7 @@ TEST_CASE("Actual Actor Example") {
         )", "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
 
         auto start = std::chrono::high_resolution_clock::now();
         ah.run();
@@ -403,7 +403,7 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepBefore < 0") {
         using namespace std::literals::chrono_literals;
-        Node config (R"(
+        NodeSource config (R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -418,7 +418,7 @@ TEST_CASE("Actual Actor Example") {
 
         REQUIRE_THROWS_WITH(
             ([&]() {
-                ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+                ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                 ah.run();
             }()),
             Catch::Matches("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
@@ -426,7 +426,7 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepAfter and Rate") {
         using namespace std::literals::chrono_literals;
-        Node config (R"(
+        NodeSource config (R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -441,7 +441,7 @@ TEST_CASE("Actual Actor Example") {
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
         REQUIRE_THROWS_WITH(([&]() {
-                                ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+                                ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                                 ah.run();
                             }()),
                             Catch::Matches(R"(Rate must \*not\* be specified alongside .*)"));
@@ -449,7 +449,7 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepBefore = 0") {
         using namespace std::literals::chrono_literals;
-        Node config (R"(
+        NodeSource config (R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -461,7 +461,7 @@ TEST_CASE("Actual Actor Example") {
         )", "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
 
         auto start = std::chrono::high_resolution_clock::now();
         ah.run();

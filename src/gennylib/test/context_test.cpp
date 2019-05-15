@@ -45,7 +45,7 @@ using Catch::Matchers::StartsWith;
 static constexpr std::string_view mongoUri = "mongodb://localhost:27017";
 
 template<typename T, typename Arg, typename... Rest>
-auto applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
+auto& applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
     if constexpr(sizeof...(rest) == 0) {
         return t[std::forward<Arg>(arg)];
     } else {
@@ -58,9 +58,9 @@ void errors(const string& yaml, string message, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
-    auto read = genny::Node{modified, "errors-testcase"};
+    NodeSource ns{modified, "errors-testcase"};
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
+        auto context = WorkloadContext{ns.root(), metrics, orchestrator, mongoUri.data(), Cast{}};
         return applyBracket(context, std::forward<Args>(args)...).template to<Out>();
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -73,9 +73,9 @@ void gives(const string& yaml, OutV expect, Args... args) {
     genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
-    auto read = Node{modified, "gives-test"};
+    NodeSource ns{modified, "gives-test"};
     auto test = [&]() {
-        auto context = WorkloadContext{read, metrics, orchestrator, mongoUri.data(), Cast{}};
+        auto context = WorkloadContext{ns.root(), metrics, orchestrator, mongoUri.data(), Cast{}};
         if constexpr (Required) {
             return applyBracket(context, std::forward<Args>(args)...).template to<Out>();
         } else {
@@ -113,7 +113,7 @@ TEST_CASE("loads configuration okay") {
     };
 
     SECTION("Valid YAML") {
-        auto yaml = Node(R"(
+        auto yaml = NodeSource(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: HelloWorld
@@ -121,15 +121,15 @@ Actors:
   Count: 7
         )", "");
 
-        WorkloadContext w{yaml, metrics, orchestrator, mongoUri.data(), cast};
-        auto actors = w["Actors"];
+        WorkloadContext w{yaml.root(), metrics, orchestrator, mongoUri.data(), cast};
+        auto& actors = w["Actors"];
     }
 
     SECTION("Invalid Schema Version") {
-        auto yaml = Node("SchemaVersion: 2018-06-27\nActors: []", "");
+        auto yaml = NodeSource("SchemaVersion: 2018-06-27\nActors: []", "");
 
         auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
     }
@@ -221,22 +221,22 @@ Actors:
     }
 
     SECTION("Empty Yaml") {
-        auto yaml = Node("Actors: []", "");
+        auto yaml = NodeSource("Actors: []", "");
         auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[SchemaVersion\] at path(.*\n*)*)"));
     }
     SECTION("No Actors") {
-        auto yaml = Node("SchemaVersion: 2018-07-01", "");
+        auto yaml = NodeSource("SchemaVersion: 2018-07-01", "");
         auto test = [&]() {
-            WorkloadContext w(yaml, metrics, orchestrator, mongoUri.data(), cast);
+            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
         };
         REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key \[Actors\] at path(.*\n*)*)"));
     }
 
     SECTION("Can call two actor producers") {
-        auto yaml = Node(R"(
+        NodeSource ns(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -281,6 +281,7 @@ Actors:
             {"SomeList", someListProducer},
             {"Count", countProducer},
         };
+        auto& yaml = ns.root();
 
         auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), twoActorCast};
 
@@ -312,7 +313,7 @@ void onContext(const Node& yaml, std::function<void(ActorContext&)> op) {
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
-    auto yaml = Node(R"(
+    NodeSource ns(R"(
     SchemaVersion: 2018-07-01
     MongoUri: mongodb://localhost:27017
     Actors:
@@ -334,6 +335,8 @@ TEST_CASE("PhaseContexts constructed as expected") {
         Phase: 6..7
         Foo2: Bar3
     )", "");
+
+    auto& yaml = ns.root();
 
     SECTION("Loads Phases") {
         // "test of the test"
@@ -427,7 +430,7 @@ TEST_CASE("Duplicate Phase Numbers") {
     };
 
     SECTION("Phase Number syntax") {
-        auto yaml = Node(R"(
+        NodeSource ns(R"(
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://localhost:27017
         Actors:
@@ -436,13 +439,14 @@ TEST_CASE("Duplicate Phase Numbers") {
         - Phase: 0
         - Phase: 0
         )", "");
+        auto& yaml = ns.root();
 
         REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
                             Catch::Matches("Duplicate phase 0"));
     }
 
     SECTION("PhaseRange syntax") {
-        auto yaml = Node(R"(
+        NodeSource ns(R"(
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://localhost:27017
         Actors:
@@ -451,6 +455,7 @@ TEST_CASE("Duplicate Phase Numbers") {
         - Phase: 0
         - Phase: 0..11
         )", "");
+        auto& yaml = ns.root();
 
         REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
                             Catch::Matches("Duplicate phase 0"));
@@ -458,17 +463,18 @@ TEST_CASE("Duplicate Phase Numbers") {
 }
 
 TEST_CASE("No PhaseContexts") {
-    auto yaml = Node(R"(
+    NodeSource ns(R"(
     SchemaVersion: 2018-07-01
     MongoUri: mongodb://localhost:27017
     Actors:
     - Name: HelloWorld
       Type: Nop
     )", "");
+    auto& yaml = ns.root();
 
     SECTION("Empty PhaseContexts") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-            REQUIRE(ctx.phases().size() == 0);
+                REQUIRE(ctx.phases().size() == 0);
         };
         onContext(yaml, op);
     }
@@ -476,7 +482,7 @@ TEST_CASE("No PhaseContexts") {
 
 TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
     SECTION("One Phase per block") {
-        auto yaml = Node(R"(
+        auto yaml = NodeSource(R"(
         SchemaVersion: 2018-07-01
         MongoUri: mongodb://localhost:27017
         Actors:
@@ -495,7 +501,7 @@ TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE(ctx.phases().size() == 13);
         };
-        onContext(yaml, op);
+        onContext(yaml.root(), op);
     }
 }
 
@@ -561,7 +567,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
     auto insertProducer = std::make_shared<DefaultActorProducer<DummyInsert>>("DummyInsert");
     auto findProducer = std::make_shared<DefaultActorProducer<DummyFind>>("DummyFind");
 
-    Node config(R"(
+    NodeSource ns(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Name: DummyInsert
@@ -575,6 +581,7 @@ TEST_CASE("Actors Share WorkloadContext State") {
           Phases:
           - Repeat: 10
     )", "");
+    auto& config = ns.root();
 
     ActorHelper ah(config, 20, {{"DummyInsert", insertProducer}, {"DummyFind", findProducer}});
     ah.run();

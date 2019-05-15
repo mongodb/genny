@@ -56,7 +56,7 @@ TEST_CASE("Find max performance of rate limiter", "[benchmark]") {
         PhaseLoop<PhaseConfig> _loop;
     };
 
-    Node config(R"(
+    NodeSource config(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
@@ -70,7 +70,7 @@ Actors:
     auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
     int num_threads = 50;
 
-    genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+    genny::ActorHelper ah{config.root(), num_threads, {{"IncActor", incProducer}}};
     auto getCurState = []() {
         return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().load();
     };

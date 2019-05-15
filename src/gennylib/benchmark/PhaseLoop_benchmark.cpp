@@ -138,13 +138,13 @@ auto runActors(int threads, long iterations) {
       - Repeat: %i
     )") %
         threads % iterations;
-    auto config = Node(configString.str(), "");
+    auto config = NodeSource(configString.str(), "");
 
     auto incProducer = std::make_shared<DefaultActorProducer<IncrementsActor>>("Increments");
 
     int64_t actorDur;
 
-    ActorHelper ac(config, threads, {{"Increments", incProducer}});
+    ActorHelper ac(config.root(), threads, {{"Increments", incProducer}});
     ac.run([&actorDur](const WorkloadContext& wc) { actorDur = timedRun(wc.actors()); });
 
     REQUIRE(IncrementsActor::increments == threads * iterations);

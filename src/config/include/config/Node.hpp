@@ -460,8 +460,9 @@ public:
     O to(Args&&... args) const {
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
-            BOOST_THROW_EXCEPTION(
-                InvalidKeyException("Tried to access node that doesn't exist.", this->key(), this));
+            auto x = InvalidKeyException("Tried to access node that doesn't exist.", this->key(), this);
+            BOOST_LOG_TRIVIAL(fatal) << x.what();
+            BOOST_THROW_EXCEPTION(x);
         }
         return std::move(*out);
     }
