@@ -38,16 +38,16 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
       Actors:
       - Name: MultiCollectionQuery
         Type: MultiCollectionQuery
-        Threads: 1
-        Database: mydb
-        CollectionCount: 1
-        Filter: {a: 1}
-        Limit: 1
-        Sort: {a: 1}
-        ReadConcern:
-          Level: local
         Phases:
         - Repeat: 1
+          Database: mydb
+          Threads: 1
+          CollectionCount: 1
+          Filter: {a: 1}
+          Limit: 1
+          Sort: {a: 1}
+          ReadConcern:
+            Level: local
       )", "");
 
         try {
