@@ -5,15 +5,19 @@
 #include <map>
 #include <vector>
 
+namespace genny {
+
 struct EmptyStruct {};
 
 struct ExtractsMsg {
     std::string msg;
+
     ExtractsMsg(const Node& node) : msg{node["msg"].to<std::string>()} {}
 };
 
 struct TakesEmptyStructAndExtractsMsg {
     std::string msg;
+
     TakesEmptyStructAndExtractsMsg(const Node& node, EmptyStruct*)
         : msg{node["msg"].to<std::string>()} {}
 };
@@ -22,6 +26,7 @@ struct RequiresParamToEqualNodeX {
     RequiresParamToEqualNodeX(const Node& node, int x) {
         REQUIRE(node["x"].to<int>() == x);
     }
+
     RequiresParamToEqualNodeX(int any) {}
 };
 
@@ -53,6 +58,7 @@ TEST_CASE("Out of Range") {
 template <>
 struct NodeConvert<HasConversionSpecialization> {
     using type = HasConversionSpecialization;
+
     static type convert(const Node& node, int delta) {
         return {node["x"].to<int>() + delta};
     }
@@ -575,6 +581,7 @@ struct WLCtx {
     const Node& node;
     std::vector<std::unique_ptr<ACtx>> actxs;
     std::vector<std::unique_ptr<Actr>> actrs;
+
     explicit WLCtx(const Node& node) : node{node} {
         // Make a bunch of actor contexts
         for (auto& [k, actor] : node["Actors"]) {
@@ -587,13 +594,16 @@ struct WLCtx {
         }
     }
 };
+
 struct ACtx {
     const Node& node;
     std::unique_ptr<WLCtx> wlc;
     std::vector<std::unique_ptr<PCtx>> pcs;
+
     ACtx(const Node& node, WLCtx& wlctx) : node{node} {
         pcs = constructPhaseContexts(node, this);
     }
+
     static std::vector<std::unique_ptr<PCtx>> constructPhaseContexts(const Node& node, ACtx* actx) {
         std::vector<std::unique_ptr<PCtx>> out;
         auto& phases = (*actx).node["Phases"];
@@ -603,14 +613,18 @@ struct ACtx {
         return out;
     }
 };
+
 struct PCtx {
     const Node& node;
     ACtx* actx;
+
     bool isNop() {
         return node["Nop"].maybe<bool>().value_or(false);
     }
+
     PCtx(const Node& node, ACtx& actx) : node{node}, actx{std::addressof(actx)} {}
 };
+
 struct Actr {
     explicit Actr(ACtx& ctx) {
         REQUIRE(ctx.node["Nop"].maybe<bool>().value_or(false) == false);
@@ -1093,3 +1107,5 @@ SingleItemList: [37]
         REQUIRE(count == 1);
     }
 }
+
+}  // namespace genny

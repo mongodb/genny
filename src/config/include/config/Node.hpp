@@ -27,12 +27,15 @@
 
 #include <yaml-cpp/yaml.h>
 
+namespace genny {
+
 template <typename T>
 struct NodeConvert {};
 
 class YamlKey {
 public:
     explicit YamlKey(std::string key) : _value{key} {};
+
     explicit YamlKey(long key) : _value{key} {};
 
     bool operator<(const YamlKey& rhs) const {
@@ -109,12 +112,17 @@ enum class NodeType {
 class Node {
 public:
     Node(const Node&) = delete;
+
     void operator=(const Node&) = delete;
+
     Node(Node&&) = delete;
+
     void operator=(Node&&) = delete;
 
     const Node& operator[](long key) const;
+
     const Node& operator[](std::string key) const;
+
     ~Node();
 
     explicit operator bool() const;
@@ -212,7 +220,9 @@ public:
     }
 
     bool isNull() const;
+
     bool isMap() const;
+
     bool isSequence() const;
 
     size_t size() const;
@@ -222,6 +232,7 @@ public:
     std::string path() const;
 
     class iterator begin() const;
+
     class iterator end() const;
 
 
@@ -290,8 +301,11 @@ public:
 
 private:
     friend class iterator;
+
     friend class NodeImpl;
+
     friend class NodeSource;
+
     std::unique_ptr<class NodeImpl> _impl;
 
 public:
@@ -365,21 +379,29 @@ private:
 class iterator {
 public:
     ~iterator();
+
     bool operator!=(const iterator&) const;
+
     bool operator==(const iterator&) const;
+
     void operator++();
+
     const iterator_value operator*() const;
 
 private:
     iterator(const class NodeImpl*, bool end);
+
     friend Node;
+
     friend class IteratorImpl;
+
     std::unique_ptr<class IteratorImpl> _impl;
 };
 
 class NodeSource {
 public:
     ~NodeSource();
+
     const Node& root() const& {
         return *_root;
     }
@@ -435,5 +457,6 @@ std::vector<T> Node::getPlural(const std::string& singular,
     return out;
 }
 
+}  // namespace genny
 
 #endif  // HEADER_17681835_40A0_443E_939D_3679A1A6B5DD_INCLUDED

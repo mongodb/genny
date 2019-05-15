@@ -1,6 +1,7 @@
 #include <config/Node.hpp>
 #include <map>
 
+namespace genny {
 namespace {
 
 using Child = std::unique_ptr<class Node>;
@@ -160,6 +161,7 @@ std::string Node::path() const {
 class iterator Node::begin() const {
     return iterator{&*this->_impl, false};
 }
+
 class iterator Node::end() const {
     return iterator{&*this->_impl, true};
 }
@@ -183,6 +185,7 @@ std::ostream& operator<<(std::ostream& out, const YamlKey& key) {
         return out << std::get<long>(key._value);
     }
 }
+
 std::string YamlKey::toString() const {
     std::stringstream out;
     out << *this;
@@ -196,9 +199,11 @@ bool Node::isNull() const {
 bool Node::isMap() const {
     return _impl->isMap();
 }
+
 bool Node::isSequence() const {
     return _impl->isSequence();
 }
+
 size_t Node::size() const {
     return _impl->size();
 }
@@ -241,12 +246,15 @@ public:
     void increment() {
         ++_children;
     }
+
     bool equal(const IteratorImpl& rhs) const {
         return _children == rhs._children;
     }
+
     bool notEqual(const IteratorImpl& rhs) const {
         return _children != rhs._children;
     }
+
     const iterator_value getValue() const {
         auto& [key, implPtr] = *_children;
         return {key, *implPtr};
@@ -265,6 +273,7 @@ void iterator::operator++() {
 bool iterator::operator!=(const iterator& rhs) const {
     return _impl->notEqual(*rhs._impl);
 }
+
 bool iterator::operator==(const iterator& rhs) const {
     return _impl->equal(*rhs._impl);
 }
@@ -325,3 +334,5 @@ InvalidKeyException::InvalidKeyException(const std::string& msg,
     out << *node;
     _what = out.str();
 }
+
+}  // namespace genny
