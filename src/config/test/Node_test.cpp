@@ -698,8 +698,6 @@ TEST_CASE("size") {
         auto& node = ns.root();
         REQUIRE(node.size() == 2);
         REQUIRE(node["foos"].size() == 3);
-        // inheritance
-        REQUIRE(node["children"]["foos"].size() == 3);
         REQUIRE(node["children"].size() == 1);
         // scalars have size 0
         REQUIRE(node["children"]["a"].size() == 0);
