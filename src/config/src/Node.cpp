@@ -49,11 +49,86 @@ YAML::Node parse(std::string yaml, const std::string& path) {
 
 }  // namespace
 
+//
+// NodeSource
+//
+NodeSource::NodeSource(std::string yaml, std::string path)
+    : _yaml{parse(std::move(yaml), path)},
+      _path{path},
+      _root{std::make_unique<Node>(v1::NodeKey::Path{v1::NodeKey{path}}, _yaml)} {}
+
+NodeSource::~NodeSource() = default;
+
+//
+// v1::NodeKey
+//
+std::string v1::NodeKey::toString() const {
+    std::stringstream out;
+    out << *this;
+    return out.str();
+}
+
+//
+// Exception Types
+//
+namespace {
+std::string invalidYamlExceptionWhat(const std::string& path,
+                                     const YAML::ParserException& yamlException) {
+    std::stringstream out;
+    out << "Invalid YAML: ";
+    out << "'" << yamlException.msg << "' ";
+    out << "at (Line:Column)=(" << yamlException.mark.line << ":" << yamlException.mark.column
+        << "). ";
+    out << "On node with path '" << path << "'.";
+
+    return out.str();
+}
+std::string invalidConversionExceptionWhat(const struct Node* node,
+                                           const YAML::BadConversion& yamlException,
+                                           const std::type_info& destType) {
+    std::stringstream out;
+    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
+    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
+        << yamlException.mark.column << "). ";
+    out << "On node with path '" << node->path() << "': ";
+    out << *node;
+    return out.str();
+}
+
+std::string invalidKeyExceptionWhat(const std::string& msg,
+                                    const std::string& key,
+                                    const Node* node) {
+    std::stringstream out;
+    out << "Invalid key '" << key << "': ";
+    out << msg << " ";
+    out << "On node with path '" << node->path() << "': ";
+    out << *node;
+    return out.str();
+}
+}  // namespace
+
+InvalidYAMLException::InvalidYAMLException(const std::string& path,
+                                           const YAML::ParserException& yamlException)
+    : _what{invalidYamlExceptionWhat(path, yamlException)} {}
+
+InvalidConversionException::InvalidConversionException(const struct Node* node,
+                                                       const YAML::BadConversion& yamlException,
+                                                       const std::type_info& destType)
+    : _what{invalidConversionExceptionWhat(node, yamlException, destType)} {}
+
+InvalidKeyException::InvalidKeyException(const std::string& msg,
+                                         const std::string& key,
+                                         const Node* node)
+    : _what{invalidKeyExceptionWhat(msg, key, node)} {}
+
 
 class NodeImpl {
 public:
     NodeImpl(const Node* self, v1::NodeKey::Path path, YAML::Node yaml)
-        : _children{constructChildren(path, yaml)}, _yaml{yaml}, _path{std::move(path)}, _self{self} {}
+        : _children{constructChildren(path, yaml)},
+          _yaml{yaml},
+          _path{std::move(path)},
+          _self{self} {}
 
     const Node& get(const v1::NodeKey& key) const {
         auto&& it = _children.find(key);
@@ -151,7 +226,6 @@ private:
     mutable Children _children;
     const YAML::Node _yaml;
     const v1::NodeKey::Path _path;
-
 };
 
 std::string Node::key() const {
@@ -183,12 +257,6 @@ Node::Type Node::type() const {
     return _impl->type();
 }
 
-std::string v1::NodeKey::toString() const {
-    std::stringstream out;
-    out << *this;
-    return out.str();
-}
-
 bool Node::isNull() const {
     return _impl->isNull();
 }
@@ -217,7 +285,8 @@ Node::operator bool() const {
 
 Node::~Node() = default;
 
-Node::Node(const v1::NodeKey::Path& path, const YAML::Node yaml) : _impl{std::make_unique<NodeImpl>(this, path, yaml)} {}
+Node::Node(const v1::NodeKey::Path& path, const YAML::Node yaml)
+    : _impl{std::make_unique<NodeImpl>(this, path, yaml)} {}
 
 const Node& Node::operator[](long key) const {
     return _impl->get(v1::NodeKey{key});
@@ -226,13 +295,6 @@ const Node& Node::operator[](long key) const {
 const Node& Node::operator[](const std::string& key) const {
     return _impl->get(v1::NodeKey{key});
 }
-
-NodeSource::NodeSource(std::string yaml, std::string path)
-    : _yaml{parse(std::move(yaml), path)},
-      _root{std::make_unique<Node>(v1::NodeKey::Path{v1::NodeKey{path}}, _yaml)},
-      _path{path} {}
-
-NodeSource::~NodeSource() = default;
 
 class IteratorImpl {
 public:
@@ -284,58 +346,5 @@ NodeIterator::~NodeIterator() = default;
 
 NodeIteratorValue::NodeIteratorValue(const v1::NodeKey& key, const Node& node)
     : std::pair<const v1::NodeKey&, const Node&>{key, node} {}
-
-// Exception Types
-
-namespace {
-std::string createInvalidYamlExceptionWhat(const std::string& path,
-                                           const YAML::ParserException& yamlException) {
-    std::stringstream out;
-    out << "Invalid YAML: ";
-    out << "'" << yamlException.msg << "' ";
-    out << "at (Line:Column)=(" << yamlException.mark.line << ":" << yamlException.mark.column
-        << "). ";
-    out << "On node with path '" << path << "'.";
-
-    return out.str();
-}
-}  // namespace
-
-InvalidYAMLException::InvalidYAMLException(const std::string& path,
-                                           const YAML::ParserException& yamlException)
-    : _what{createInvalidYamlExceptionWhat(path, yamlException)} {}
-
-std::string invalidConversionWhat(const struct Node* node,
-                                  const YAML::BadConversion& yamlException,
-                                  const std::type_info& destType) {
-    std::stringstream out;
-    out << "Couldn't convert to '" << boost::core::demangle(destType.name()) << "': ";
-    out << "'" << yamlException.msg << "' at (Line:Column)=(" << yamlException.mark.line << ":"
-        << yamlException.mark.column << "). ";
-    out << "On node with path '" << node->path() << "': ";
-    out << *node;
-    return out.str();
-}
-
-InvalidConversionException::InvalidConversionException(const struct Node* node,
-                                                       const YAML::BadConversion& yamlException,
-                                                       const std::type_info& destType)
-: _what{invalidConversionWhat(node, yamlException, destType)} {}
-
-std::string invalidKeyExceptionWhat(const std::string& msg,
-                                    const std::string& key,
-                                    const Node* node) {
-    std::stringstream out;
-    out << "Invalid key '" << key << "': ";
-    out << msg << " ";
-    out << "On node with path '" << node->path() << "': ";
-    out << *node;
-    return out.str();
-}
-
-InvalidKeyException::InvalidKeyException(const std::string& msg,
-                                         const std::string& key,
-                                         const Node* node)
-: _what{invalidKeyExceptionWhat(msg, key, node)} {}
 
 }  // namespace genny
