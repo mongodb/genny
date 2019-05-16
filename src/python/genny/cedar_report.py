@@ -79,7 +79,7 @@ class _Config(object):
         # This env var is either the string "true" or unset.
         self.mainline = not (env.get('is_patch', '') == 'true')
 
-	try:
+        try:
             self.order = int(env['order'])
         except (ValueError, TypeError):
             self.order = None
