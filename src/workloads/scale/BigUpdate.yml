@@ -95,7 +95,6 @@ Actors:
 - Name: MultiCollectionUpdate
   Type: MultiCollectionUpdate
   Threads: 100
-  CollectionCount: *CollectionCount
   Phases:
   - *Nop
   - Duration: &phase2_duration 10 minutes

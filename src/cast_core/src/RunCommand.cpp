@@ -94,7 +94,7 @@ struct RunCommandOperationConfig {
       awaitStepdown{node["OperationAwaitStepdown"].maybe<bool>().value_or(false)}
     {
         if (auto opName = node["OperationName"].maybe<std::string>(); opName != "RunCommand" && opName != "AdminCommand") {
-            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException("Operation name '" + *opName + "' not recognized. Needs either 'RunCommand' or 'AdminCommand'."))
+            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException("Operation name '" + *opName + "' not recognized. Needs either 'RunCommand' or 'AdminCommand'."));
         }
     }
     explicit RunCommandOperationConfig() {}
