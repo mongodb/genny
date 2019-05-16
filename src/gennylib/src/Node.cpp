@@ -137,7 +137,11 @@ InvalidKeyException::InvalidKeyException(const std::string& msg,
 class NodeImpl {
 public:
     NodeImpl(const Node* self, const YAML::Node yaml, const v1::NodeKey::Path& path)
-        : _self{self}, _keyOrder{}, _children{constructChildren(path, _keyOrder, yaml)}, _yaml{yaml}, _path{path} {}
+        : _self{self},
+          _keyOrder{},
+          _children{constructChildren(path, _keyOrder, yaml)},
+          _yaml{yaml},
+          _path{path} {}
 
     const Node& get(const v1::NodeKey& key) const {
         auto&& it = _children.find(key);
@@ -196,7 +200,9 @@ public:
 private:
     friend NodeIterator;
 
-    static Children constructChildren(const v1::NodeKey::Path& path, ChildKeys& keyOrder, const YAML::Node yaml) {
+    static Children constructChildren(const v1::NodeKey::Path& path,
+                                      ChildKeys& keyOrder,
+                                      const YAML::Node yaml) {
         Children out;
         if (!yaml.IsMap() && !yaml.IsSequence()) {
             return out;
@@ -233,7 +239,7 @@ private:
 
     const Node* _self;
     // these 2 need to be mutable to generate placeholder nodes for non-existent keys.
-    mutable ChildKeys _keyOrder; // maintain insertion-order
+    mutable ChildKeys _keyOrder;  // maintain insertion-order
     mutable Children _children;
     const YAML::Node _yaml;
     const v1::NodeKey::Path _path;
@@ -344,8 +350,7 @@ public:
     }
 
     explicit IteratorImpl(ChildKeys::const_iterator keyOrder, const Children& children)
-    : _keyOrder{keyOrder},
-      _children{children} {}
+        : _keyOrder{keyOrder}, _children{children} {}
 
 private:
     ChildKeys::const_iterator _keyOrder;
@@ -358,9 +363,8 @@ private:
 //
 
 NodeIterator::NodeIterator(const NodeImpl* nodeImpl, bool end)
-    : _impl{std::make_unique<IteratorImpl>(end ? nodeImpl->_keyOrder.end()
-                                               : nodeImpl->_keyOrder.begin(),
-                                               nodeImpl->_children)} {}
+    : _impl{std::make_unique<IteratorImpl>(
+          end ? nodeImpl->_keyOrder.end() : nodeImpl->_keyOrder.begin(), nodeImpl->_children)} {}
 NodeIterator::~NodeIterator() = default;
 
 void NodeIterator::operator++() {

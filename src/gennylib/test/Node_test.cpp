@@ -321,11 +321,12 @@ TEST_CASE("Order is preserved") {
     NodeSource ns(R"(
 insert: testCollection
 documents: [{rating: 10}]
-)", "");
+)",
+                  "");
     auto& node = ns.root();
 
     int index = 0;
-    for(auto&& [k,_] : node) {
+    for (auto&& [k, _] : node) {
         if (index == 0) {
             REQUIRE(k.toString() == "insert");
         } else {
@@ -345,7 +346,8 @@ TEST_CASE("NodeKey") {
         REQUIRE(!(a < a));
     }
     SECTION("As Map Key") {
-        std::map<v1::NodeKey, long> actual{{v1::NodeKey{1}, 7}, {v1::NodeKey{2}, 17}, {v1::NodeKey{-1}, 100}};
+        std::map<v1::NodeKey, long> actual{
+            {v1::NodeKey{1}, 7}, {v1::NodeKey{2}, 17}, {v1::NodeKey{-1}, 100}};
         REQUIRE(actual.find(v1::NodeKey{1}) != actual.end());
         REQUIRE(actual.find(v1::NodeKey{1})->second == 7);
         REQUIRE(actual.find(v1::NodeKey{-1})->second == 100);
@@ -673,14 +675,15 @@ Actors:
 - Name: Foo
   Phases:
   - Repeat: 1
-)", ""};
+)",
+                  ""};
     auto& node = ns.root();
 
     std::optional<const Node*> phase0;
     {
         unsigned seen = 0;
-        for(auto&& [k,actor] : node["Actors"]) {
-            for(auto&& [p,phase] : actor["Phases"]) {
+        for (auto&& [k, actor] : node["Actors"]) {
+            for (auto&& [p, phase] : actor["Phases"]) {
                 phase0 = &phase;
                 ++seen;
             }

@@ -393,7 +393,8 @@ public:
      *   A `nullopt` if this node isn't defined.
      *   Else the result of converting this node to O either via its constructor or via the
      *   `NodeConvert<O>::convert` function.
-     *   If the value is not specified, this function will return an empty optional (`std::nullopt`).
+     *   If the value is not specified, this function will return an empty optional
+     * (`std::nullopt`).
      */
     template <typename O = Node, typename... Args>
     std::optional<O> maybe(Args&&... args) const {
