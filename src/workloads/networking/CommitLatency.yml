@@ -5,9 +5,6 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
-Anchors:
-  Collection: &Collection CommitLatency
-
 Actors:
 - Name: Load phase
   Type: RunCommand
@@ -19,7 +16,7 @@ Actors:
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        drop: *Collection
+        drop: &Collection CommitLatency
   - &Load
     Repeat: 1
     Operations:
