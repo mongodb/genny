@@ -5,7 +5,8 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
-Collection: &Collection CommitLatency
+Anchors:
+  Collection: &Collection CommitLatency
 
 Actors:
 - Name: Load phase
@@ -63,7 +64,6 @@ Actors:
 - Name: CommitLatency
   Type: CommitLatency
   Threads: 1
-  Repeat: 500
   Database: test
   Phases:
   - *Nop  # Load phase is different actor
@@ -71,7 +71,6 @@ Actors:
   - MetricsName: CommitLatency_w0_local
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: 0
@@ -84,7 +83,6 @@ Actors:
   - MetricsName: CommitLatency_w1_local
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: 1
@@ -97,7 +95,6 @@ Actors:
   - MetricsName: CommitLatency_w1_local_sec
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: 1
@@ -110,7 +107,6 @@ Actors:
   - MetricsName: CommitLatency_w1_jtrue_local_sec
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: 1
@@ -137,7 +133,6 @@ Actors:
   - MetricsName: CommitLatency_wmajority_majority_sec
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: majority
@@ -150,7 +145,6 @@ Actors:
   - MetricsName: CommitLatency_wmajority_jtrue_majority
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: majority
@@ -164,7 +158,6 @@ Actors:
   - MetricsName: CommitLatency_wmajority_linearizable
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: majority
@@ -191,7 +184,6 @@ Actors:
   - MetricsName: CommitLatency_wmajority_majority_sec_session
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: majority
@@ -205,7 +197,6 @@ Actors:
   - MetricsName: CommitLatency_wmajority_majority_trx
     Collection: *Collection
     Repeat: 500
-    Database: test
     Threads: 1
     WriteConcern:
       Level: majority

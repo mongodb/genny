@@ -29,6 +29,7 @@
 
 #include <config/Node.hpp>
 
+#include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/MongoException.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
@@ -91,7 +92,11 @@ struct RunCommandOperationConfig {
     : metricsName{node["OperationMetricsName"].maybe<std::string>().value_or("")},
       isQuiet{node["OperationIsQuiet"].maybe<bool>().value_or(false)},
       awaitStepdown{node["OperationAwaitStepdown"].maybe<bool>().value_or(false)}
-    {}
+    {
+        if (auto opName = node["OperationName"].maybe<std::string>(); opName != "RunCommand" && opName != "AdminCommand") {
+            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException("Operation name '" + *opName + "' not recognized. Needs either 'RunCommand' or 'AdminCommand'."))
+        }
+    }
     explicit RunCommandOperationConfig() {}
 
     const std::string metricsName = "";

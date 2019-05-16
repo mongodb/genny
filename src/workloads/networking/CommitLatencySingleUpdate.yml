@@ -7,7 +7,6 @@ Actors:
 - Name: SingleThreadUpdate
   Type: RunCommand
   Threads: 1
-  Database: test
   Phases:
   # Drop
   - Repeat: 1

@@ -18,7 +18,7 @@ Actors:
   - Phase: 1
     Repeat: 1
     SleepBefore: 30 seconds
-    SleepAter: 30 seconds
+    SleepAfter: 30 seconds
     ThrowOnFailure: false
     Operation:
       OperationMetricsName: "Stepdown"

@@ -1,8 +1,9 @@
 SchemaVersion: 2018-07-01
 
-Pool:
-  QueryOptions:
-    maxPoolSize: 100
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
 
 Actors:
 - Name: Loader

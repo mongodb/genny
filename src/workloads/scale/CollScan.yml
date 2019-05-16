@@ -29,12 +29,12 @@ Actors:
 - Name: CollScan
   Type: RunCommand
   Threads: 1
-  Database: *DB
   Phases:
   - *Nop
   - Repeat: 10
+    Database: *DB
     Operations:
     - OperationName: RunCommand
       OperationCommand:
         find: Collection0
-      filter: {x: "never true"}
+        filter: {x: "never true"}
