@@ -1,4 +1,4 @@
-#include <config/Node.hpp>
+#include <gennylib/Node.hpp>
 
 #include <catch2/catch.hpp>
 
@@ -968,7 +968,7 @@ TEST_CASE("operator-left-shift") {
     // rely on YAML::Dump so don't need to enforce much beyond this
 }
 
-TEST_CASE("getPlural") {
+TEST_CASE("Node getPlural") {
     {
         NodeSource ns{"Foo: 7", ""};
         auto& node = ns.root();

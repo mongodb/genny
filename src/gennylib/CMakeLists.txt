@@ -21,7 +21,6 @@ CreateGennyTargets(
     TYPE    STATIC
     DEPENDS
         loki
-        config
         metrics
         value_generators
         Boost::boost

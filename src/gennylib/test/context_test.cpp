@@ -24,6 +24,7 @@
 
 #include <bsoncxx/json.hpp>
 
+#include <gennylib/Node.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
@@ -566,7 +567,7 @@ struct convert<AnotherInt> {
 }  // namespace YAML
 
 // This test is slightly duplicated in context_test.cpp
-TEST_CASE("getPlural") {
+TEST_CASE("context getPlural") {
     auto createYaml = [](std::string actorYaml) -> NodeSource {
         auto doc = YAML::Load(R"(
 SchemaVersion: 2018-07-01

@@ -1,7 +1,8 @@
 #include <utility>
 
-#include <config/Node.hpp>
 #include <map>
+
+#include <gennylib/Node.hpp>
 
 namespace genny {
 
@@ -59,7 +60,6 @@ YAML::Node parse(std::string yaml, const std::string& path) {
 
 NodeSource::NodeSource(std::string yaml, std::string path)
     : _yaml{parse(std::move(yaml), path)},
-      _path{path},
       _root{std::make_unique<Node>(v1::NodeKey::Path{v1::NodeKey{path}}, _yaml)} {}
 
 NodeSource::~NodeSource() = default;
