@@ -294,12 +294,22 @@ errors. These are not currently run in a CI job. If you are adding
 complicated code and are afraid of undefined behavior or data-races
 etc, you can run the clang sanitizers yourself easily.
 
+Run `./scripts/lamp --help` for information on what sanitizers there are.
+
 To run with ASAN:
 
 ```sh
 ./scripts/lamp -b make -s asan
 ./scripts/lamp cmake-test
-./build/src/driver/genny run ./workloads/docs/HelloWorld.yml
+# Pick a workload YAML that uses your Actor below
+ASAN_OPTIONS="detect_container_overflow=0" ./build/src/driver/genny run ./src/workloads/docs/HelloWorld.yml
 ```
 
-Run `./scripts/lamp --help` for information on what sanitizers there are.
+The toolchain isn't instrumented with sanitizers, so you may get
+[false-positives][fp] for Boost, hence the `ASAN_OPTIONS` flag.
+
+
+
+[fp]: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives
+
+
