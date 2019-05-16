@@ -30,8 +30,7 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <config/Node.hpp>
-
+#include <gennylib/Node.hpp>
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>

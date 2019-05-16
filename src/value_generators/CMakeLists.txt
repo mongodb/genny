@@ -18,7 +18,7 @@ CreateGennyTargets(
     NAME    value_generators
     TYPE    STATIC
     DEPENDS
-        config
+        gennylib
         MongoCxx::bsoncxx
         Boost::boost
         Boost::log

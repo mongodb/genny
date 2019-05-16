@@ -24,8 +24,7 @@
 #include <mongocxx/read_preference.hpp>
 #include <mongocxx/write_concern.hpp>
 
-#include <config/Node.hpp>
-
+#include <gennylib/Node.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/Orchestrator.hpp>
 

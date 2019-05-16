@@ -27,8 +27,7 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <config/Node.hpp>
-
+#include <gennylib/Node.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/MongoException.hpp>
 

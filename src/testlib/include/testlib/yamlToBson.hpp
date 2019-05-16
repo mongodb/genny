@@ -24,7 +24,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <config/Node.hpp>
+#include <gennylib/Node.hpp>
 
 namespace genny::testing {
 

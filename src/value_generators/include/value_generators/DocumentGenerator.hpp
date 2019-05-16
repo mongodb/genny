@@ -21,7 +21,7 @@
 
 #include <bsoncxx/document/value.hpp>
 
-#include <config/Node.hpp>
+#include <gennylib/Node.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
 

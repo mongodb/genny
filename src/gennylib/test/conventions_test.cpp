@@ -16,11 +16,10 @@
 #include <cmath>
 
 #include <gennylib/conventions.hpp>
+#include <gennylib/Node.hpp>
 
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
-
-#include <config/Node.hpp>
 
 
 namespace genny {

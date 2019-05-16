@@ -23,7 +23,7 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <config/Node.hpp>
+#include <gennylib/Node.hpp>
 
 namespace genny::v1 {
 

@@ -19,8 +19,6 @@
 #include <map>
 #include <sstream>
 
-#include <config/Node.hpp>
-
 #include <boost/log/trivial.hpp>
 
 #include <bsoncxx/builder/basic/array.hpp>
