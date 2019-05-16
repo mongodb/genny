@@ -30,12 +30,12 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <gennylib/Node.hpp>
 #include <gennylib/Actor.hpp>
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
 #include <gennylib/Cast.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/Node.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/conventions.hpp>
 #include <gennylib/v1/GlobalRateLimiter.hpp>
@@ -61,24 +61,25 @@ class HasNode {
 public:
     explicit HasNode(const Node& node) : _node{node} {}
 
-    template<typename...Args>
+    template <typename... Args>
     auto& operator[](Args&&... args) const {
         return this->_node.operator[](std::forward<Args>(args)...);
     }
 
     template <typename T, typename F = std::function<T(const Node&)>>
-    auto getPlural(const std::string& singular,
-                    const std::string& plural,
-            // Default conversion function is `node.to<T>()`.
-                   F&& f = [](const Node& n) { return n.to<T>(); }) {
-        return std::move(this->_node.getPlural<T,F>(singular, plural, std::forward<F>(f)));
+    auto getPlural(
+        const std::string& singular,
+        const std::string& plural,
+        // Default conversion function is `node.to<T>()`.
+        F&& f = [](const Node& n) { return n.to<T>(); }) {
+        return std::move(this->_node.getPlural<T, F>(singular, plural, std::forward<F>(f)));
     }
 
 protected:
     const Node& _node;
 };
 
-}
+}  // namespace v1
 
 class WorkloadContext;
 
@@ -311,9 +312,7 @@ class PhaseContext;
 class ActorContext final : public v1::HasNode {
 public:
     ActorContext(const Node& node, WorkloadContext& workloadContext)
-        : v1::HasNode{node},
-          _workload{&workloadContext},
-          _phaseContexts{} {
+        : v1::HasNode{node}, _workload{&workloadContext}, _phaseContexts{} {
         _phaseContexts = constructPhaseContexts(_node, this);
     }
 
@@ -425,9 +424,7 @@ private:
 class PhaseContext final : public v1::HasNode {
 public:
     PhaseContext(const Node& node, PhaseNumber phaseNumber, ActorContext& actorContext)
-        : v1::HasNode{node},
-          _actor{std::addressof(actorContext)},
-          _phaseNumber(phaseNumber) {}
+        : v1::HasNode{node}, _actor{std::addressof(actorContext)}, _phaseNumber(phaseNumber) {}
 
     // no copy or move
     PhaseContext(PhaseContext&) = delete;

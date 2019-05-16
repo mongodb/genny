@@ -45,9 +45,9 @@ using Catch::Matchers::StartsWith;
 // the connection-pool
 static constexpr std::string_view mongoUri = "mongodb://localhost:27017";
 
-template<typename T, typename Arg, typename... Rest>
+template <typename T, typename Arg, typename... Rest>
 auto& applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
-    if constexpr(sizeof...(rest) == 0) {
+    if constexpr (sizeof...(rest) == 0) {
         return t[std::forward<Arg>(arg)];
     } else {
         return applyBracket(t[std::forward<Arg>(arg)], std::forward<Rest>(rest)...);
@@ -120,7 +120,8 @@ Actors:
 - Name: HelloWorld
   Type: Nop
   Count: 7
-        )", "");
+        )",
+                               "");
 
         WorkloadContext w{yaml.root(), metrics, orchestrator, mongoUri.data(), cast};
         auto& actors = w["Actors"];
@@ -141,7 +142,7 @@ Actors:
         auto foobar = genny::testing::toDocumentBson("foo: bar");
 
         auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
-            for (const auto&& [k,doc] : a["docs"]) {
+            for (const auto&& [k, doc] : a["docs"]) {
                 auto docgen = doc.to<DocumentGenerator>(a.rng(0));
                 REQUIRE(docgen().view() == foobar.view());
                 ++calls;
@@ -153,14 +154,14 @@ Actors:
             ++calls;
         });
 
-        auto cast2 =
-            Cast{{{"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
+        auto cast2 = Cast{{{"fromDocList", fromDocList}, {"fromDoc", fromDoc}}};
         auto yaml = NodeSource(
             "SchemaVersion: 2018-07-01\n"
             "Actors: [ "
             "  {Type: fromDocList, docs: [{foo: bar}]}, "
             "  {Type: fromDoc,     doc:   {foo: bar}} "
-            "]", "");
+            "]",
+            "");
 
         auto test = [&]() {
             WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast2);
@@ -177,18 +178,31 @@ Actors:
         gives<string>("Foo: 123", "123", "Foo");
         gives<int>("Foo: 123", 123, "Foo");
         // ...and propagate errors.
-        errors<int>("Foo: Bar", "Couldn't convert to 'int': 'bad conversion' at (Line:Column)=(2:5). On node with path 'errors-testcase/Foo", "Foo");
+        errors<int>("Foo: Bar",
+                    "Couldn't convert to 'int': 'bad conversion' at (Line:Column)=(2:5). On node "
+                    "with path 'errors-testcase/Foo",
+                    "Foo");
         // okay
         gives<int>("Foo: [1,\"bar\"]", 1, "Foo", 0);
         // give meaningful error message:
         errors<string>("Foo: [1,\"bar\"]",
-                       "Invalid key '0': Tried to access node that doesn't exist. On node with path 'errors-testcase/Foo/0': ",
+                       "Invalid key '0': Tried to access node that doesn't exist. On node with "
+                       "path 'errors-testcase/Foo/0': ",
                        "Foo",
                        "0");
 
-        errors<string>("Foo: 7", "Invalid key 'Bar': Tried to access node that doesn't exist. On node with path 'errors-testcase/Foo/Bar", "Foo", "Bar");
-        errors<string>(
-            "Foo: 7", "Invalid key 'Bat': Tried to access node that doesn't exist. On node with path 'errors-testcase/Foo/Bar/Baz/Bat': ", "Foo", "Bar", "Baz", "Bat");
+        errors<string>("Foo: 7",
+                       "Invalid key 'Bar': Tried to access node that doesn't exist. On node with "
+                       "path 'errors-testcase/Foo/Bar",
+                       "Foo",
+                       "Bar");
+        errors<string>("Foo: 7",
+                       "Invalid key 'Bat': Tried to access node that doesn't exist. On node with "
+                       "path 'errors-testcase/Foo/Bar/Baz/Bat': ",
+                       "Foo",
+                       "Bar",
+                       "Baz",
+                       "Bat");
 
         auto other = R"(Other: [{ Foo: [{Key: 1, Another: true, Nested: [false, true]}] }])";
 
@@ -215,7 +229,10 @@ Actors:
         auto test = [&]() {
             WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
         };
-        REQUIRE_THROWS_WITH(test(), Matches(R"(Invalid key 'SchemaVersion': Tried to access node that doesn't exist. On node with path '/SchemaVersion': )"));
+        REQUIRE_THROWS_WITH(
+            test(),
+            Matches(
+                R"(Invalid key 'SchemaVersion': Tried to access node that doesn't exist. On node with path '/SchemaVersion': )"));
     }
     SECTION("No Actors") {
         auto yaml = NodeSource("SchemaVersion: 2018-07-01", "");
@@ -236,7 +253,8 @@ Actors:
   Type: Count
   Count: 7
   SomeList: [2]
-        )", "");
+        )",
+                      "");
 
         struct SomeListProducer : public ActorProducer {
             using ActorProducer::ActorProducer;
@@ -327,7 +345,8 @@ TEST_CASE("PhaseContexts constructed as expected") {
       - Operation: Five
         Phase: 6..7
         Foo2: Bar3
-    )", "");
+    )",
+                  "");
 
     SECTION("Loads Phases") {
         // "test of the test"
@@ -388,7 +407,8 @@ TEST_CASE("Duplicate Phase Numbers") {
           Phases:
           - Phase: 0
           - Phase: 0
-        )", "");
+        )",
+                      "");
         auto& yaml = ns.root();
 
         REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
@@ -404,7 +424,8 @@ TEST_CASE("Duplicate Phase Numbers") {
           Phases:
           - Phase: 0
           - Phase: 0..11
-        )", "");
+        )",
+                      "");
         auto& yaml = ns.root();
 
         REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
@@ -419,11 +440,12 @@ TEST_CASE("No PhaseContexts") {
     Actors:
     - Name: HelloWorld
       Type: Nop
-    )", "");
+    )",
+                  "");
 
     SECTION("Empty PhaseContexts") {
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
-                REQUIRE(ctx.phases().size() == 0);
+            REQUIRE(ctx.phases().size() == 0);
         };
         onContext(ns, op);
     }
@@ -445,7 +467,8 @@ TEST_CASE("PhaseContexts constructed correctly with PhaseRange syntax") {
         - Phase: 7..1e1
         - Phase: 11..11
         - Phase: 12
-        )", "");
+        )",
+                               "");
 
         std::function<void(ActorContext&)> op = [&](ActorContext& ctx) {
             REQUIRE(ctx.phases().size() == 13);
@@ -529,7 +552,8 @@ TEST_CASE("Actors Share WorkloadContext State") {
           Threads: 10
           Phases:
           - Repeat: 10
-    )", "");
+    )",
+                  "");
     auto& config = ns.root();
 
     ActorHelper ah(config, 20, {{"DummyInsert", insertProducer}, {"DummyFind", findProducer}});
@@ -593,8 +617,10 @@ Actors: [{}]
     });
 
     onContext(createYaml("{}"), [](ActorContext& c) {
-        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
-                            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Either 'Foo' or 'Foos' required. On node with path '/Actors/0': \\{Type: Op\\}"));
+        REQUIRE_THROWS_WITH(
+            [&]() { c.getPlural<int>("Foo", "Foos"); }(),
+            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Either 'Foo' or 'Foos' required. "
+                    "On node with path '/Actors/0': \\{Type: Op\\}"));
     });
     onContext(createYaml("Foo: 81"), [](ActorContext& c) {
         REQUIRE_THROWS_WITH(
@@ -610,8 +636,10 @@ Actors: [{}]
     });
 
     onContext(createYaml("Foos: 73"), [](ActorContext& c) {
-        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
-                            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Plural 'Foos' must be a sequence type. On node with path '/Actors/0': \\{Foos: 73, Type: Op\\}"));
+        REQUIRE_THROWS_WITH(
+            [&]() { c.getPlural<int>("Foo", "Foos"); }(),
+            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Plural 'Foos' must be a sequence "
+                    "type. On node with path '/Actors/0': \\{Foos: 73, Type: Op\\}"));
     });
 
     onContext(createYaml("Foo: 71"), [](ActorContext& c) {
@@ -619,8 +647,10 @@ Actors: [{}]
     });
 
     onContext(createYaml("{ Foo: 9, Foos: 1 }"), [](ActorContext& c) {
-        REQUIRE_THROWS_WITH([&]() { c.getPlural<int>("Foo", "Foos"); }(),
-                            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Can't have both 'Foo' and 'Foos'. On node with path '/Actors/0': \\{Foo: 9, Foos: 1, Type: Op\\}"));
+        REQUIRE_THROWS_WITH(
+            [&]() { c.getPlural<int>("Foo", "Foos"); }(),
+            Matches("Invalid key 'getPlural\\('Foo', 'Foos'\\)': Can't have both 'Foo' and 'Foos'. "
+                    "On node with path '/Actors/0': \\{Foo: 9, Foos: 1, Type: Op\\}"));
     });
 
     onContext(createYaml("Numbers: [3, 4, 5]"), [](ActorContext& c) {
@@ -642,7 +672,8 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
     Actors:
     - Name: Actor1
       Type: Bar
-    )", "");
+    )",
+                           "");
 
     SECTION("Incorrect type value inputted") {
         auto test = [&]() {
@@ -652,4 +683,3 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
             test(), Matches(R"(Unable to construct actors: No producer for 'Bar'(.*\n*)*)"));
     }
 }
-

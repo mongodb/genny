@@ -33,7 +33,7 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
     auto db = client.database("mydb");
 
     SECTION("Query documents in a collection with sort and limit") {
-        genny::NodeSource config (R"(
+        genny::NodeSource config(R"(
       SchemaVersion: 2018-07-01
       Actors:
       - Name: MultiCollectionQuery
@@ -48,7 +48,8 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
           Sort: {a: 1}
           ReadConcern:
             Level: local
-      )", "");
+      )",
+                                 "");
 
         try {
             auto coll = db.collection("Collection1");

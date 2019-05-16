@@ -35,7 +35,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     dropAllDatabases();
     auto db = client.database("mydb");
 
-    genny::NodeSource config (R"(
+    genny::NodeSource config(R"(
         SchemaVersion: 2018-07-01
         Database: mydb
         Collection: &Collection CommitLatency
@@ -65,7 +65,8 @@ TEST_CASE_METHOD(MongoTestFixture,
              Collection: *Collection
              Transaction: True         # Implies Session
 
-    )", "");
+    )",
+                             "");
 
 
     SECTION("With and without transactions.") {

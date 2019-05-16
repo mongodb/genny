@@ -53,7 +53,7 @@ WorkloadContext::WorkloadContext(const Node& node,
     mongocxx::instance::current();
 
     // Make a bunch of actor contexts
-    for (const auto& [k,actor] : (*this)["Actors"]) {
+    for (const auto& [k, actor] : (*this)["Actors"]) {
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
@@ -128,7 +128,7 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
         return out;
     }
     PhaseNumber lastPhaseNumber = 0;
-    for (const auto& [k,phase] : phases) {
+    for (const auto& [k, phase] : phases) {
         // If we don't have a node or we are a null type, then we are a Nop
         if (!phase || phase.isNull()) {
             std::ostringstream ss;
@@ -136,8 +136,8 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
                   "Every phase should have at least be an empty map.";
             throw InvalidConfigurationException(ss.str());
         }
-        PhaseRangeSpec configuredRange =
-            phase["Phase"].maybe<PhaseRangeSpec>().value_or(PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
+        PhaseRangeSpec configuredRange = phase["Phase"].maybe<PhaseRangeSpec>().value_or(
+            PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
         for (PhaseNumber rangeIndex = configuredRange.start; rangeIndex <= configuredRange.end;
              rangeIndex++) {
             auto [it, success] = out.try_emplace(

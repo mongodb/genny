@@ -15,8 +15,8 @@
 #include <chrono>
 #include <cmath>
 
-#include <gennylib/conventions.hpp>
 #include <gennylib/Node.hpp>
+#include <gennylib/conventions.hpp>
 
 #include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
@@ -36,7 +36,8 @@ TEST_CASE("Conventions used by PhaseLoop") {
       Threads: 1
       Phases:
       - Repeat: 1
-    )", "");
+    )",
+                  "");
     auto& yaml = ns.root();
     auto& phaseContext = yaml["Actors"][0]["Phases"][0];
     // Test of the test
@@ -50,7 +51,8 @@ TEST_CASE("Conventions used by PhaseLoop") {
     REQUIRE(phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{33}) == TimeSpec{33});
     REQUIRE(phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{33}) == TimeSpec{33});
     REQUIRE(phaseContext["Rate"].maybe<RateSpec>() == std::nullopt);
-    REQUIRE(phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter") == "defaultRateLimiter");
+    REQUIRE(phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter") ==
+            "defaultRateLimiter");
 };
 
 TEST_CASE("genny::TimeSpec conversions") {

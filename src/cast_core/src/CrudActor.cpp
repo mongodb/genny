@@ -229,8 +229,8 @@ ThrowMode decodeThrowMode(const Node& operation, PhaseContext& phaseContext) {
 
     // look in operation otherwise fallback to phasecontext
     // we really need to kill const Node& and only use ConfigNode...
-    bool throwOnFailure = operation[key] ? operation[key].to<bool>()
-                                         : phaseContext[key].maybe<bool>().value_or(true);
+    bool throwOnFailure =
+        operation[key] ? operation[key].to<bool>() : phaseContext[key].maybe<bool>().value_or(true);
     return throwOnFailure ? ThrowMode::kRethrow : ThrowMode::kSwallow;
 }
 
@@ -271,8 +271,12 @@ struct BaseOperation {
     virtual ~BaseOperation() = default;
 };
 
-using OpCallback = std::function<std::unique_ptr<BaseOperation>(
-    const Node&, bool, mongocxx::collection, metrics::Operation, PhaseContext& context, ActorId id)>;
+using OpCallback = std::function<std::unique_ptr<BaseOperation>(const Node&,
+                                                                bool,
+                                                                mongocxx::collection,
+                                                                metrics::Operation,
+                                                                PhaseContext& context,
+                                                                ActorId id)>;
 
 struct WriteOperation : public BaseOperation {
     WriteOperation(PhaseContext& phaseContext, const Node& operation)
@@ -651,7 +655,7 @@ struct BulkWriteOperation : public BaseOperation {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'bulkWrite' requires a 'WriteOperations' node of sequence type."));
         }
-        for (const auto& [k,writeOp] : writeOpsYaml) {
+        for (const auto& [k, writeOp] : writeOpsYaml) {
             createOps(writeOp, context, id);
         }
         if (opNode["Options"]) {
@@ -967,7 +971,7 @@ struct InsertManyOperation : public BaseOperation {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "'insertMany' expects a 'Documents' field of sequence type."));
         }
-        for (auto&& [k,document] : documents) {
+        for (auto&& [k, document] : documents) {
             _docExprs.push_back(document.to<DocumentGenerator>(context.rng(id)));
         }
     }

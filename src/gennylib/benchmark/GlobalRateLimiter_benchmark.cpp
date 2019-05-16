@@ -65,7 +65,8 @@ Actors:
   Phases:
     - Duration: 10 seconds
       Rate: 1 per 100 microseconds
-    )", "");
+    )",
+                      "");
 
     auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
     int num_threads = 50;

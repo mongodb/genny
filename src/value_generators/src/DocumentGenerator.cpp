@@ -123,7 +123,7 @@ const Node& extract(const Node& node, const std::string& key, const std::string&
 std::optional<std::string> getMetaKey(const Node& node) {
     size_t foundKeys = 0;
     std::optional<std::string> out = std::nullopt;
-    for (const auto&& [k,v] : node) {
+    for (const auto&& [k, v] : node) {
         ++foundKeys;
         auto key = k.toString();
         if (!key.empty() && key[0] == '^') {
@@ -283,7 +283,8 @@ public:
     /**
      * @param node `{length:<int>, alphabet:opt string}`
      */
-    NormalRandomStringGenerator(const Node& node, DefaultRandom& rng) : StringGenerator(node, rng) {}
+    NormalRandomStringGenerator(const Node& node, DefaultRandom& rng)
+        : StringGenerator(node, rng) {}
 
     std::string evaluate() override {
         auto distribution = boost::random::uniform_int_distribution<size_t>{0, _alphabetLength - 1};
@@ -479,7 +480,7 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
     }
 
     DocumentGenerator::Impl::Entries entries;
-    for (const auto&& [k,v] : node) {
+    for (const auto&& [k, v] : node) {
         auto key = k.toString();
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, rng, allParsers);
         entries.emplace_back(key, std::move(valgen));
@@ -495,7 +496,7 @@ std::unique_ptr<DocumentGenerator::Impl> documentGenerator(const Node& node, Def
 template <bool Verbatim>
 UniqueGenerator<bsoncxx::array::value> arrayGenerator(const Node& node, DefaultRandom& rng) {
     ArrayGenerator::ValueType entries;
-    for (const auto&& [k,v] : node) {
+    for (const auto&& [k, v] : node) {
         auto valgen = valueGenerator<Verbatim, UniqueAppendable>(v, rng, allParsers);
         entries.push_back(std::move(valgen));
     }

@@ -27,9 +27,9 @@
 
 #include <boost/log/trivial.hpp>
 
-#include <gennylib/Node.hpp>
 #include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/MongoException.hpp>
+#include <gennylib/Node.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -88,12 +88,14 @@ void runThenAwaitStepdown(mongocxx::database& database, bsoncxx::document::view&
 
 struct RunCommandOperationConfig {
     explicit RunCommandOperationConfig(const genny::Node& node)
-    : metricsName{node["OperationMetricsName"].maybe<std::string>().value_or("")},
-      isQuiet{node["OperationIsQuiet"].maybe<bool>().value_or(false)},
-      awaitStepdown{node["OperationAwaitStepdown"].maybe<bool>().value_or(false)}
-    {
-        if (auto opName = node["OperationName"].maybe<std::string>(); opName != "RunCommand" && opName != "AdminCommand") {
-            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException("Operation name '" + *opName + "' not recognized. Needs either 'RunCommand' or 'AdminCommand'."));
+        : metricsName{node["OperationMetricsName"].maybe<std::string>().value_or("")},
+          isQuiet{node["OperationIsQuiet"].maybe<bool>().value_or(false)},
+          awaitStepdown{node["OperationAwaitStepdown"].maybe<bool>().value_or(false)} {
+        if (auto opName = node["OperationName"].maybe<std::string>();
+            opName != "RunCommand" && opName != "AdminCommand") {
+            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException(
+                "Operation name '" + *opName +
+                "' not recognized. Needs either 'RunCommand' or 'AdminCommand'."));
         }
     }
     explicit RunCommandOperationConfig() {}
@@ -145,7 +147,8 @@ public:
         auto& yamlCommand = node["OperationCommand"];
         auto commandExpr = yamlCommand.to<DocumentGenerator>(context.rng(id));
 
-        auto options = node.maybe<DatabaseOperation::OpConfig>().value_or(DatabaseOperation::OpConfig{});
+        auto options =
+            node.maybe<DatabaseOperation::OpConfig>().value_or(DatabaseOperation::OpConfig{});
         return std::make_unique<DatabaseOperation>(context,
                                                    actorContext,
                                                    id,

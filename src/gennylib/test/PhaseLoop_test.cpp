@@ -295,7 +295,8 @@ TEST_CASE("Actual Actor Example") {
                 Key: 71
               - Repeat: 3
                 Key: 93
-        )", "");
+        )",
+                                 "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
         ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
@@ -349,7 +350,7 @@ TEST_CASE("Actual Actor Example") {
         };
 
         // This is how a Nop command should be specified.
-        NodeSource config (R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -363,7 +364,8 @@ TEST_CASE("Actual Actor Example") {
               - Repeat: 3
                 Key: 93
               - Nop: true
-        )", "");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
@@ -378,7 +380,7 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepBefore and SleepAfter") {
         using namespace std::literals::chrono_literals;
-        NodeSource config (R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -387,7 +389,8 @@ TEST_CASE("Actual Actor Example") {
                 SleepBefore: 50 milliseconds
                 SleepAfter: 100 milliseconds
                 Key: 71
-        )", "");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
         ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
@@ -403,7 +406,7 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepBefore < 0") {
         using namespace std::literals::chrono_literals;
-        NodeSource config (R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -412,7 +415,8 @@ TEST_CASE("Actual Actor Example") {
                 SleepBefore: -10 milliseconds
                 SleepAfter: 100 milliseconds
                 Key: 71
-        )", "");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
@@ -426,7 +430,7 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepAfter and Rate") {
         using namespace std::literals::chrono_literals;
-        NodeSource config (R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -436,7 +440,8 @@ TEST_CASE("Actual Actor Example") {
                 SleepAfter: 100 milliseconds
                 Rate: 20 per 30 milliseconds
                 Key: 71
-        )", "");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
@@ -449,7 +454,7 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepBefore = 0") {
         using namespace std::literals::chrono_literals;
-        NodeSource config (R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
@@ -458,7 +463,8 @@ TEST_CASE("Actual Actor Example") {
                 SleepBefore: 0 milliseconds
                 SleepAfter: 100 milliseconds
                 Key: 71
-        )", "");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
         ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});

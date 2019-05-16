@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/v1/PoolFactory.hpp>
 #include <gennylib/v1/PoolManager.hpp>
-#include <gennylib/InvalidConfigurationException.hpp>
 
 namespace genny::v1 {
 namespace {
@@ -25,12 +25,14 @@ auto createPool(const std::string& mongoUri,
                 const Node& context) {
     auto poolFactory = PoolFactory(mongoUri, apmCallback);
 
-    auto queryOpts = context["Clients"][name]["QueryOptions"].maybe<std::map<std::string, std::string>>();
+    auto queryOpts =
+        context["Clients"][name]["QueryOptions"].maybe<std::map<std::string, std::string>>();
     if (queryOpts) {
         poolFactory.setOptions(PoolFactory::kQueryOption, *queryOpts);
     }
 
-    auto accessOpts = context["Clients"][name]["AccessOptions"].maybe<std::map<std::string, std::string>>();
+    auto accessOpts =
+        context["Clients"][name]["AccessOptions"].maybe<std::map<std::string, std::string>>();
     if (accessOpts) {
         poolFactory.setOptions(genny::v1::PoolFactory::kAccessOption, *accessOpts);
     }

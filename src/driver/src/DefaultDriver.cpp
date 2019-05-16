@@ -116,7 +116,11 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
-    NodeSource nodeSource{YAML::Dump(yaml), options.workloadSourceType == DefaultDriver::ProgramOptions::YamlSource::kFile ? options.workloadSource : "inline-yaml"};
+    NodeSource nodeSource{YAML::Dump(yaml),
+                          options.workloadSourceType ==
+                                  DefaultDriver::ProgramOptions::YamlSource::kFile
+                              ? options.workloadSource
+                              : "inline-yaml"};
 
     auto workloadContext =
         WorkloadContext{nodeSource.root(), metrics, orchestrator, options.mongoUri, globalCast()};

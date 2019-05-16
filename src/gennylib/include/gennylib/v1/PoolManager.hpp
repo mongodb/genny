@@ -70,9 +70,7 @@ public:
      *   the WorkloadContext used to look up the configurations
      * @return a connection from the pool or throw if none available
      */
-    mongocxx::pool::entry client(const std::string& name,
-                                 size_t instance,
-                                 const Node& context);
+    mongocxx::pool::entry client(const std::string& name, size_t instance, const Node& context);
 
     // Only used for testing
     /** @private */

@@ -41,16 +41,19 @@ TEST_CASE("Actor Helper") {
     };
 
     SECTION("Barfs on invalid thread count (aka token)") {
-        genny::NodeSource config (R"(
+        genny::NodeSource config(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: DummyActor
-)", "");
+)",
+                                 "");
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 
-        auto test = [&]() { genny::ActorHelper ah(config.root(), -1, {{"DummyActor", dummyProducer}}); };
+        auto test = [&]() {
+            genny::ActorHelper ah(config.root(), -1, {{"DummyActor", dummyProducer}});
+        };
         REQUIRE_THROWS_WITH(test(), Matches("Must add a positive number of tokens"));
     }
 
@@ -62,16 +65,19 @@ Actors:
     };
 
     SECTION("Barfs if Actor Ctor barfs") {
-        genny::NodeSource config (R"(
+        genny::NodeSource config(R"(
 SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: DummyActor
-)", "");
+)",
+                                 "");
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<CtorThrowingActor>>("DummyActor");
 
-        auto test = [&]() { genny::ActorHelper ah(config.root(), 1, {{"DummyActor", dummyProducer}}); };
+        auto test = [&]() {
+            genny::ActorHelper ah(config.root(), 1, {{"DummyActor", dummyProducer}});
+        };
         REQUIRE_THROWS_WITH(test(), Matches("CTOR Barf"));
     }
 
@@ -81,7 +87,8 @@ SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: DummyActor
-)", "");
+)",
+                                 "");
         auto dummyProducer =
             std::make_shared<genny::DefaultActorProducer<DummyActor>>("DummyActor");
 

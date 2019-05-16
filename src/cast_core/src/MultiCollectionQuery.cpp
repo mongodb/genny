@@ -49,7 +49,8 @@ struct MultiCollectionQuery::PhaseConfig {
             options.limit(*limit);
         }
 
-        std::optional<DocumentGenerator> sort = context["Sort"].maybe<DocumentGenerator>(context.rng(id));
+        std::optional<DocumentGenerator> sort =
+            context["Sort"].maybe<DocumentGenerator>(context.rng(id));
         if (sort) {
             options.sort((*sort)());
         }
