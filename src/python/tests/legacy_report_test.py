@@ -21,8 +21,8 @@ class LegacyReportTest(unittest.TestCase):
                 'end': 419.99981,
                 'results': {
                     '1': {
-                        'ops_per_sec': 13.0,
-                        'ops_per_sec_values': [13.0]
+                        'ops_per_sec': 76923076.92307693,
+                        'ops_per_sec_values': [76923076.92307693]
                     }
                 }
             }, {
@@ -32,8 +32,8 @@ class LegacyReportTest(unittest.TestCase):
                 'end': 420.0,
                 'results': {
                     '2': {
-                        'ops_per_sec': 13.5,
-                        'ops_per_sec_values': [13.5]
+                        'ops_per_sec': 117647058.8235294,
+                        'ops_per_sec_values': [117647058.8235294]
                     }
                 }
             }, {
@@ -43,8 +43,8 @@ class LegacyReportTest(unittest.TestCase):
                 'end': 419.99985,
                 'results': {
                     '2': {
-                        'ops_per_sec': 21.5,
-                        'ops_per_sec_values': [21.5]
+                        'ops_per_sec': 80000000.0,
+                        'ops_per_sec_values': [80000000.0]
                     }
                 }
             }]
