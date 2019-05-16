@@ -227,8 +227,6 @@ enum class ThrowMode {
 ThrowMode decodeThrowMode(const Node& operation, PhaseContext& phaseContext) {
     static const char* key = "ThrowOnFailure";
 
-    // look in operation otherwise fallback to phasecontext
-    // we really need to kill const Node& and only use ConfigNode...
     bool throwOnFailure =
         operation[key] ? operation[key].to<bool>() : phaseContext[key].maybe<bool>().value_or(true);
     return throwOnFailure ? ThrowMode::kRethrow : ThrowMode::kSwallow;
