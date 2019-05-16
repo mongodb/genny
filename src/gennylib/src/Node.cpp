@@ -1,7 +1,8 @@
 #include <utility>
 
-#include <config/Node.hpp>
 #include <map>
+
+#include <gennylib/Node.hpp>
 
 namespace genny {
 
