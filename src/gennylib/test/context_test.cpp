@@ -599,7 +599,7 @@ struct convert<AnotherInt> {
 
 }  // namespace YAML
 
-TEST_CASE("getPlural") {
+TEST_CASE("Context getPlural") {
     auto createYaml = [](std::string actorYaml) {
         auto doc = YAML::Load(R"(
 SchemaVersion: 2018-07-01
