@@ -289,31 +289,27 @@ open build/docs/html/index.html
 
 ### Sanitizers
 
-TODO(TIG-1518): The `lamp` script does not currently support
-the below style of passing in `CMAKE_CXX_FLAGS`.
-
 Genny is periodically manually tested to be free of unknown sanitizer
 errors. These are not currently run in a CI job. If you are adding
 complicated code and are afraid of undefined behavior or data-races
 etc, you can run the clang sanitizers yourself easily.
 
-Running with TSAN:
+Run `./scripts/lamp --help` for information on what sanitizers there are.
 
-    FLAGS="-pthread -fsanitize=thread -g -O1"
-    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./scripts/lamp cmake-test
-    ./build/src/driver/genny run ./workloads/docs/Workload.yml
+To run with ASAN:
 
-Running with ASAN:
+```sh
+./scripts/lamp -b make -s asan
+./scripts/lamp cmake-test
+# Pick a workload YAML that uses your Actor below
+ASAN_OPTIONS="detect_container_overflow=0" ./build/src/driver/genny run ./src/workloads/docs/HelloWorld.yml
+```
 
-    FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
-    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./scripts/lamp cmake-test
-    ./build/src/driver/genny run ./workloads/docs/Workload.yml
+The toolchain isn't instrumented with sanitizers, so you may get
+[false-positives][fp] for Boost, hence the `ASAN_OPTIONS` flag.
 
-Running with UBSAN
 
-    FLAGS="-pthread -fsanitize=undefined -g -O1"
-    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./scripts/lamp cmake-test
-    ./build/src/driver/genny run ./workloads/docs/Workload.yml
+
+[fp]: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives
+
+

@@ -2,6 +2,19 @@ import logging
 import os
 import subprocess
 
+def _sanitizer_flags(context):
+    if context.SANITIZER is None:
+        return []
+
+    if context.SANITIZER == 'asan':
+        return ['-DCMAKE_CXX_FLAGS=-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g']
+    elif context.SANITIZER == 'tsan':
+        return ['-DCMAKE_CXX_FLAGS=-pthread -fsanitize=thread -g -O1']
+    elif context.SANITIZER == 'ubsan':
+        return ['-DCMAKE_CXX_FLAGS=-pthread -fsanitize=undefined -g -O1']
+
+    # arg parser should prevent us from getting here
+    raise ValueError('Unknown sanitizer {}'.format(context.SANITIZER))
 
 def cmake(context, toolchain_dir, env, cmdline_cmake_args):
     generators = {
@@ -21,11 +34,12 @@ def cmake(context, toolchain_dir, env, cmdline_cmake_args):
         '-DVCPKG_TARGET_TRIPLET=x64-{}-static'.format(context.TRIPLET_OS),
     ]
 
+    cmake_cmd += _sanitizer_flags(context)
+
     cmake_cmd += cmdline_cmake_args
 
     logging.info('Running cmake: %s', ' '.join(cmake_cmd))
     subprocess.run(cmake_cmd, env=env)
-
 
 def compile_all(context, env):
     compile_cmd = [context.BUILD_SYSTEM, '-C', 'build']
