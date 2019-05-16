@@ -59,7 +59,6 @@ public:
 
 private:
     const YAML::Node _yaml;
-    const std::string _path;
     const std::unique_ptr<class Node> _root;
 };
 
