@@ -47,6 +47,7 @@ class Context:
     IGNORE_TOOLCHAIN_VERSION = False
     TRIPLET_OS = None
     BUILD_SYSTEM = None
+    SANITIZER = None
 
     # Dynamic context
     _compile_environment = None
