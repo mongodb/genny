@@ -117,17 +117,23 @@ std::string invalidKeyExceptionWhat(const std::string& msg,
 
 InvalidYAMLException::InvalidYAMLException(const std::string& path,
                                            const YAML::ParserException& yamlException)
-    : _what{invalidYamlExceptionWhat(path, yamlException)} {}
+    : _what{invalidYamlExceptionWhat(path, yamlException)} {
+    *this << InvalidYAMLException::Message{_what};
+}
 
 InvalidConversionException::InvalidConversionException(const struct Node* node,
                                                        const YAML::BadConversion& yamlException,
                                                        const std::type_info& destType)
-    : _what{invalidConversionExceptionWhat(node, yamlException, destType)} {}
+    : _what{invalidConversionExceptionWhat(node, yamlException, destType)} {
+    *this << InvalidConversionException::Message{_what};
+}
 
 InvalidKeyException::InvalidKeyException(const std::string& msg,
                                          const std::string& key,
                                          const Node* node)
-    : _what{invalidKeyExceptionWhat(msg, key, node)} {}
+    : _what{invalidKeyExceptionWhat(msg, key, node)} {
+    *this << InvalidKeyException::Message{_what};
+}
 
 
 //
