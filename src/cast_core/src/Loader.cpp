@@ -45,12 +45,12 @@ struct Loader::PhaseConfig {
                          context["Threads"].to<IntegerSpec>()},
           numDocuments{context["DocumentCount"].to<IntegerSpec>()},
           batchSize{context["BatchSize"].to<IntegerSpec>()},
-          documentExpr{context["Document"].to<DocumentGenerator>(context.rng(id))},
+          documentExpr{context["Document"].to<DocumentGenerator>(context, id)},
           collectionOffset{numCollections * thread} {
         auto& indexNodes = context["Indexes"];
         for (auto [k, indexNode] : indexNodes) {
-            indexes.emplace_back(indexNode["keys"].to<DocumentGenerator>(context.rng(id)),
-                                 indexNode["options"].maybe<DocumentGenerator>(context.rng(id)));
+            indexes.emplace_back(indexNode["keys"].to<DocumentGenerator>(context, id),
+                                 indexNode["options"].maybe<DocumentGenerator>(context, id));
         }
         if (thread == context["Threads"].to<int>() - 1) {
             // Pick up any extra collections left over by the division

@@ -40,8 +40,8 @@ struct MultiCollectionUpdate::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId id)
         : database{(*client)[context["Database"].to<std::string>()]},
           numCollections{context["CollectionCount"].to<IntegerSpec>()},
-          queryExpr{context["UpdateFilter"].to<DocumentGenerator>(context.rng(id))},
-          updateExpr{context["Update"].to<DocumentGenerator>(context.rng(id))},
+          queryExpr{context["UpdateFilter"].to<DocumentGenerator>(context, id)},
+          updateExpr{context["Update"].to<DocumentGenerator>(context, id)},
           uniformDistribution{0, numCollections} {}
 
     mongocxx::database database;

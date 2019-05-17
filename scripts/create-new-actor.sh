@@ -318,7 +318,7 @@ struct ${actor_name}::PhaseConfig {
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
         : collection{db[phaseContext["Collection"].to<std::string>()]},
-          documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext.rng(id))} {}
+          documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id} {}
 };
 
 

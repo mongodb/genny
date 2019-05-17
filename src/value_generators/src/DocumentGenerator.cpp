@@ -566,6 +566,11 @@ UniqueGenerator<int64_t> intGenerator(const Node& node, DefaultRandom& rng) {
 // Kick the recursion into motion
 DocumentGenerator::DocumentGenerator(const Node& node, DefaultRandom& rng)
     : _impl{documentGenerator<false>(node, rng)} {}
+DocumentGenerator::DocumentGenerator(const Node& node, PhaseContext& phaseContext, ActorId id)
+    : DocumentGenerator{node, phaseContext.rng(id)} {}
+DocumentGenerator::DocumentGenerator(const Node& node, ActorContext& actorContext, ActorId id)
+    : DocumentGenerator{node, actorContext.rng(id)} {}
+
 
 DocumentGenerator::DocumentGenerator(DocumentGenerator&&) noexcept = default;
 

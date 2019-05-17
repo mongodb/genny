@@ -145,7 +145,7 @@ public:
                                                      mongocxx::pool::entry& client,
                                                      const std::string& database) {
         auto& yamlCommand = node["OperationCommand"];
-        auto commandExpr = yamlCommand.to<DocumentGenerator>(context.rng(id));
+        auto commandExpr = yamlCommand.to<DocumentGenerator>(context, id);
 
         auto options =
             node.maybe<DatabaseOperation::OpConfig>().value_or(DatabaseOperation::OpConfig{});

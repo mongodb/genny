@@ -34,6 +34,8 @@
 #include <testlib/helpers.hpp>
 #include <testlib/yamlToBson.hpp>
 
+#include <value_generators/DocumentGenerator.hpp>
+
 using namespace genny;
 using namespace std;
 
@@ -143,13 +145,13 @@ Actors:
 
         auto fromDocList = std::make_shared<OpProducer>([&](ActorContext& a) {
             for (const auto&& [k, doc] : a["docs"]) {
-                auto docgen = doc.to<DocumentGenerator>(a.rng(0));
+                auto docgen = doc.to<DocumentGenerator>(a, 0);
                 REQUIRE(docgen().view() == foobar.view());
                 ++calls;
             }
         });
         auto fromDoc = std::make_shared<OpProducer>([&](ActorContext& a) {
-            auto docgen = a["doc"].to<DocumentGenerator>(a.rng(0));
+            auto docgen = a["doc"].to<DocumentGenerator>(a, 0);
             REQUIRE(docgen().view() == foobar.view());
             ++calls;
         });
