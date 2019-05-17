@@ -543,7 +543,7 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
           - Repeat: 100
             Collection: mycoll
             Document: {foo: {^RandomInt: {min: 0, max: 100}}}
-    )", "${actor_name}_test");
+    )", __FILE__);
 
 
     SECTION("Inserts documents into the database.") {

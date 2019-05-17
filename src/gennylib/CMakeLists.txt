@@ -20,6 +20,7 @@ CreateGennyTargets(
     NAME    gennylib
     TYPE    STATIC
     DEPENDS
+        yaml-cpp
         loki
         metrics
         value_generators
