@@ -44,7 +44,6 @@
 #include <metrics/metrics.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
-#include <value_generators/DocumentGenerator.hpp>
 
 /**
  * @file context.hpp defines WorkloadContext, ActorContext, and PhaseContext.
