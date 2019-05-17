@@ -295,7 +295,7 @@ struct ${actor_name}::PhaseConfig {
     //
     // When we construct a ${q}DocumentGenerator${q} from this:
     //
-    //     auto docGen = phaseContext.createDocumentGenerator(id, "Document");
+    //     auto docGen = phaseContext["Document"].to<DocumentGenerator>(phaseContext, actorId);
     //
     // We can evaluate it multiple times to get a randomly-generated document:
     //
@@ -318,7 +318,7 @@ struct ${actor_name}::PhaseConfig {
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
         : collection{db[phaseContext["Collection"].to<std::string>()]},
-          documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id} {}
+          documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
 };
 
 
