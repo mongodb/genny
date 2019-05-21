@@ -80,7 +80,7 @@ class _Config(object):
         self.mainline = not (env.get('is_patch', '') == 'true')
 
         try:
-            self.order = int(env['order'])
+            self.order = int(env['revision_order_id'])
         except (ValueError, TypeError):
             self.order = None
 
