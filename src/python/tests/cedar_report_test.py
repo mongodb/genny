@@ -57,7 +57,7 @@ class CedarReportTest(unittest.TestCase):
         expected_json = {
             'project': 'my_project',
             'version': 'my_version',
-            'revision_order_id': 1,
+            'order': 1,
             'variant': 'my_variant',
             'task_name': 'my_task_name',
             'task_id': 'my_task_id',
