@@ -69,7 +69,7 @@ void runActor(Actor&& actor,
 
 DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
-    auto actorSetup = metrics.operation("Genny", "Setup", 0u);
+    auto actorSetup = metrics.operation(options.workloadSource, "Setup", 0u);
     auto setupCtx = actorSetup.start();
 
     if (options.runMode == DefaultDriver::RunMode::kListActors) {
