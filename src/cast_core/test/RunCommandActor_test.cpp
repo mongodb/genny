@@ -63,28 +63,29 @@ TEST_CASE_METHOD(MongoTestFixture,
           Phases:
           - Repeat: 1
             Database: mydb
-            Type: RunCommand
             Operation:
+              OperationName: RunCommand
               OperationCommand: {someKey: 1}
     )",
                       "");
-
-    ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
 
     SECTION("throws error with full context on operation_exception") {
         bool has_exception = true;
 
         try {
+            ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
             has_exception = false;
         } catch (const boost::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
-
+            INFO(diagInfo);
             REQUIRE(diagInfo.find("someKey") != std::string::npos);
             REQUIRE(diagInfo.find("InfoObject") != std::string::npos);
 
             REQUIRE(diagInfo.find("no such command") != std::string::npos);
             REQUIRE(diagInfo.find("ServerResponse") != std::string::npos);
+        } catch(const std::exception& x) {
+            FAIL(x.what());
         }
 
         // runCommandHelper did not throw exception.
@@ -199,6 +200,8 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "Perform a single RunCommand command.",
                  "[standalone][single_node_replset][three_node_replset]") {
     dropAllDatabases();
+    client.database("admin").collection("testCollection").drop();
+
     auto db = client.database("test");
 
     SECTION("Insert a single document using the 'Operations' key name.") {
@@ -209,9 +212,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
@@ -245,7 +248,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         )");
         NodeSource ns{YAML::Dump(config), ""};
         REQUIRE_THROWS_AS(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidConfigurationException);
+                          InvalidKeyException);
     }
 
     SECTION("Insert a single document using the 'Operation' key name.") {
@@ -256,9 +259,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operation:
                   OperationName: RunCommand
                   OperationCommand:
@@ -271,7 +274,6 @@ TEST_CASE_METHOD(MongoTestFixture,
         NodeSource ns{YAML::Dump(config), ""};
         ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, view](const WorkloadContext& context) {
-            REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.collection("testCollection").count_documents(view) == 1);
         };
         ah.runDefaultAndVerify(verifyFn);
@@ -285,9 +287,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operation:
                   OperationName: RunCommand
                   OperationCommand:
@@ -316,23 +318,23 @@ TEST_CASE_METHOD(MongoTestFixture,
 
             Actors:
             - Name: TestActor
-            Type: RunCommand
-            Threads: 1
-            Database: test
-            Phases:
-            - Repeat: 1
-              OperationName: RunCommand
-              OperationCommand:
-                insert: testCollection
-                documents: [{rating: 10}]
-              OperationName: RunCommand
-              OperationCommand:
-                insert: testCollection
-                documents: [{rating: 10}]
+              Type: RunCommand
+              Threads: 1
+              Database: test
+              Phases:
+              - Repeat: 1
+                OperationName: RunCommand
+                OperationCommand:
+                  insert: testCollection
+                  documents: [{rating: 10}]
+                OperationName: RunCommand
+                OperationCommand:
+                  insert: testCollection
+                  documents: [{rating: 10}]
         )");
         NodeSource ns{YAML::Dump(config), ""};
         REQUIRE_THROWS_AS(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidConfigurationException);
+                          InvalidKeyException);
     }
 
     SECTION("Database should default to 'admin' when not specified in the the config.") {
@@ -354,6 +356,7 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
+
         NodeSource ns{YAML::Dump(config), ""};
         ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto adminDb = client.database("admin");
