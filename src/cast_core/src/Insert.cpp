@@ -39,8 +39,8 @@ struct Insert::PhaseConfig {
     DocumentGenerator documentExpr;
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
-        : collection{db[phaseContext.get<std::string>("Collection")]},
-          documentExpr{phaseContext.createDocumentGenerator(id, "Document")} {}
+        : collection{db[phaseContext["Collection"].to<std::string>()]},
+          documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
 };
 
 void Insert::run() {
@@ -61,7 +61,7 @@ Insert::Insert(genny::ActorContext& context)
     : Actor(context),
       _insert{context.operation("Insert", Insert::id())},
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context.get<std::string>("Database")], Insert::id()} {}
+      _loop{context, (*_client)[context["Database"].to<std::string>()], Insert::id()} {}
 
 namespace {
 auto registerInsert = genny::Cast::registerDefault<genny::actor::Insert>();

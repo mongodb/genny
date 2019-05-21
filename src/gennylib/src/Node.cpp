@@ -117,17 +117,23 @@ std::string invalidKeyExceptionWhat(const std::string& msg,
 
 InvalidYAMLException::InvalidYAMLException(const std::string& path,
                                            const YAML::ParserException& yamlException)
-    : _what{invalidYamlExceptionWhat(path, yamlException)} {}
+    : _what{invalidYamlExceptionWhat(path, yamlException)} {
+    *this << InvalidYAMLException::Message{_what};
+}
 
 InvalidConversionException::InvalidConversionException(const struct Node* node,
                                                        const YAML::BadConversion& yamlException,
                                                        const std::type_info& destType)
-    : _what{invalidConversionExceptionWhat(node, yamlException, destType)} {}
+    : _what{invalidConversionExceptionWhat(node, yamlException, destType)} {
+    *this << InvalidConversionException::Message{_what};
+}
 
 InvalidKeyException::InvalidKeyException(const std::string& msg,
                                          const std::string& key,
                                          const Node* node)
-    : _what{invalidKeyExceptionWhat(msg, key, node)} {}
+    : _what{invalidKeyExceptionWhat(msg, key, node)} {
+    *this << InvalidKeyException::Message{_what};
+}
 
 
 //
@@ -159,6 +165,10 @@ public:
 
     Node::Type type() const {
         return determineType(_yaml);
+    }
+
+    std::string tag() const {
+        return _yaml.Tag();
     }
 
     explicit operator bool() const {
@@ -287,6 +297,10 @@ bool Node::isMap() const {
 
 bool Node::isSequence() const {
     return _impl->isSequence();
+}
+
+std::string Node::tag() const {
+    return _impl->tag();
 }
 
 size_t Node::size() const {

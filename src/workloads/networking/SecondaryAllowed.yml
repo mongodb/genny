@@ -12,14 +12,14 @@ Actors:
 - Name: StepdownCommand
   Type: AdminCommand
   Threads: 1
-  ThrowOnFailure: false
   Phases:
   - Phase: 0
     Nop: true
   - Phase: 1
     Repeat: 1
     SleepBefore: 30 seconds
-    SleepAter: 30 seconds
+    SleepAfter: 30 seconds
+    ThrowOnFailure: false
     Operation:
       OperationMetricsName: "Stepdown"
       OperationName: AdminCommand
@@ -30,8 +30,6 @@ Actors:
 - Name: SecondaryPreferredRead
   Type: RunCommand
   Threads: 100
-  ThrowOnFailure: false
-  Database: test
   Phases:
   - Phase: 0
     Nop: true
@@ -39,6 +37,8 @@ Actors:
     Rate: 1 per 100 microseconds
     # This should be how long the StepdownCommand Actor Phase 1 takes
     Duration: 2 minutes
+    ThrowOnFailure: false
+    Database: test
     Operation: &find_one
       OperationMetricsName: "Find"
       OperationName: RunCommand
@@ -51,14 +51,15 @@ Actors:
 - Name: Loader
   Type: Loader
   Threads: 1
-  Database: test
-  CollectionCount: 1
-  DocumentCount: 100
-  BatchSize: 100
-  Document:
-    x: {^RandomInt: {min: 0, max: 20}}
-  Indexes:
-  - keys: {x: 1}
   Phases:
   - Phase: 0
+    Threads: 1
+    Database: test
+    CollectionCount: 1
+    DocumentCount: 100
+    BatchSize: 100
+    Document:
+      x: {^RandomInt: {min: 0, max: 20}}
+    Indexes:
+    - keys: {x: 1}
   - Nop: true

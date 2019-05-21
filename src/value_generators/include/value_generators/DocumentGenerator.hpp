@@ -21,7 +21,8 @@
 
 #include <bsoncxx/document/value.hpp>
 
-#include <yaml-cpp/yaml.h>
+#include <gennylib/Node.hpp>
+#include <gennylib/context.hpp>
 
 #include <value_generators/DefaultRandom.hpp>
 
@@ -37,7 +38,9 @@ public:
 
 class DocumentGenerator {
 public:
-    explicit DocumentGenerator(YAML::Node node, DefaultRandom& rng);
+    explicit DocumentGenerator(const Node& node, PhaseContext& phaseContext, ActorId id);
+    explicit DocumentGenerator(const Node& node, ActorContext& phaseContext, ActorId id);
+    explicit DocumentGenerator(const Node& node, DefaultRandom& rng);
     bsoncxx::document::value operator()();
     DocumentGenerator(DocumentGenerator&&) noexcept;
     ~DocumentGenerator();

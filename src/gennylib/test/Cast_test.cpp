@@ -25,7 +25,7 @@ using namespace genny;
 // Possibly extract this section to a ContextHelper if it seems useful elsewhere
 namespace genny {
 
-inline YAML::Node createWorkloadYaml(const std::string& type, const std::string& actorYaml) {
+inline NodeSource createWorkloadYaml(const std::string& type, const std::string& actorYaml) {
     auto base = YAML::Load(R"(
 SchemaVersion: 2018-07-01
 Actors: []
@@ -34,7 +34,8 @@ Actors: []
     actor["Type"] = type;
 
     base["Actors"].push_back(actor);
-    return base;
+    auto str = YAML::Dump(base);
+    return NodeSource{str, ""};
 }
 
 template <class ProducerT>
@@ -46,11 +47,14 @@ public:
     explicit ContextHelper(const std::string& name, const std::string& actorYaml = "")
         : _producer{std::make_shared<ProducerT>(name)},
           _registration{globalCast().registerCustom(_producer)},
-          _node{createWorkloadYaml(name, actorYaml)},
+          _nodeSource{createWorkloadYaml(name, actorYaml)},
           _registry{},
           _orchestrator{},
-          _workloadContext{
-              _node, _registry, _orchestrator, "mongodb://localhost:27017", genny::globalCast()} {}
+          _workloadContext{_nodeSource.root(),
+                           _registry,
+                           _orchestrator,
+                           "mongodb://localhost:27017",
+                           genny::globalCast()} {}
 
     void run() {
         for (auto&& actor : _workloadContext.actors()) {
@@ -61,9 +65,9 @@ public:
     // add other helper methods here (e.g. exposing Orchestrator etc) as-needed.
 
 private:
+    NodeSource _nodeSource;
     std::shared_ptr<ProducerT> _producer;
     Cast::Registration _registration;
-    YAML::Node _node;
     metrics::Registry _registry;
     Orchestrator _orchestrator;
     WorkloadContext _workloadContext;

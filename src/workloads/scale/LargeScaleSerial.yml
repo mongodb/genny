@@ -1,15 +1,17 @@
 SchemaVersion: 2018-07-01
 
-Pool:
-  QueryOptions:
-    maxPoolSize: 100
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
 
 Actors:
 - Name: Loader
   Type: Loader
   Threads: 1
   Phases:
-  - ExternalPhaseConfig:
+  - Threads: 1
+    ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
     Repeat: 1
@@ -18,7 +20,6 @@ Actors:
 
 - Name: WarmupUpdate
   Type: MultiCollectionUpdate
-  Threads: 10
   Phases:
   - ExternalPhaseConfig:
       Path: *PhasePath

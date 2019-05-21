@@ -39,19 +39,20 @@ namespace genny::actor {
 /** @private */
 struct MultiCollectionQuery::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, ActorId id)
-        : database{(*client)[context.get<std::string>("Database")]},
-          numCollections{context.get<IntegerSpec, true>("CollectionCount")},
-          readConcern{context.get<mongocxx::read_concern, false>("ReadConcern")},
-          filterExpr{context.createDocumentGenerator(id, "Filter")},
+        : database{(*client)[context["Database"].to<std::string>()]},
+          numCollections{context["CollectionCount"].to<IntegerSpec>()},
+          readConcern{context["ReadConcern"].maybe<mongocxx::read_concern>()},
+          filterExpr{std::move(context["Filter"].to<DocumentGenerator>(context, id))},
           uniformDistribution{0, numCollections} {
-        const auto limit = context.get<int64_t, false>("Limit");
+        const auto limit = context["Limit"].maybe<int64_t>();
         if (limit) {
             options.limit(*limit);
         }
 
-        const auto sort = context.get<YAML::Node, false>("Sort");
+        std::optional<DocumentGenerator> sort =
+            context["Sort"].maybe<DocumentGenerator>(context, id);
         if (sort) {
-            options.sort(context.createDocumentGenerator(id, *sort)());
+            options.sort((*sort)());
         }
     }
 

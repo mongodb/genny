@@ -9,7 +9,7 @@ Actors:
 - Name: InsertRemoveTest
   Type: InsertRemove
   Threads: 100
-  Database: test
   Phases:
   - Collection: inserts
     Duration: 3 minutes
+    Database: test

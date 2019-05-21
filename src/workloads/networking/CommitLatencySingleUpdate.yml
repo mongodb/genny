@@ -7,7 +7,6 @@ Actors:
 - Name: SingleThreadUpdate
   Type: RunCommand
   Threads: 1
-  Database: test
   Phases:
   # Drop
   - Repeat: 1
@@ -26,56 +25,64 @@ Actors:
   - MetricsName: SingleThreadUpdate_w0
     Repeat: 500
     Operations:
-    - OperationCommand:
+    - OperationName: RunCommand
+      OperationCommand:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {w: 0}
   - MetricsName: SingleThreadUpdate_w1
     Repeat: 500
     Operations:
-    - OperationCommand:
+    - OperationName: RunCommand
+      OperationCommand:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {w: 1}
   - MetricsName: SingleThreadUpdate_w2
     Repeat: 500
     Operations:
-    - OperationCommand:
+    - OperationName: RunCommand
+      OperationCommand:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {w: 2}
   - MetricsName: SingleThreadUpdate_w3
     Repeat: 500
     Operations:
-    - OperationCommand:
+    - OperationName: RunCommand
+      OperationCommand:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {w: 3}
   - MetricsName: SingleThreadUpdate_jtrue
     Repeat: 500
     Operations:
-    - OperationCommand:
+    - OperationName: RunCommand
+      OperationCommand:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {j: true}
   - MetricsName: SingleThreadUpdate_w2_jtrue
     Repeat: 500
     Operations:
-    - OperationCommand:
+    - OperationName: RunCommand
+      OperationCommand:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {w: 2, j: true}
   - MetricsName: SingleThreadUpdate_wmajority
     Repeat: 500
     Operations:
-    - OperationCommand:
+    - OperationName: RunCommand
+      OperationCommand:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {w: majority, j: false}
   - MetricsName: SingleThreadUpdate_wmajority_jtrue
     Repeat: 500
     Operations:
-    - OperationCommand:
+    - OperationName: RunCommand
+      OperationCommand:
         update: *Collection
         updates: [{q: {_id: 1}, u: {$inc: {n: 1}}}]
         writeConcern: {w: majority, j: true}

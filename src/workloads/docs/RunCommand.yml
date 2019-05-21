@@ -5,9 +5,9 @@ Actors:
 - Name: ServerStatusInsertFind
   Type: RunCommand
   Threads: 1
-  Database: test
   Phases:
   - Duration: 5 minutes
+    Database: test
     Operations:
     - OperationMetricsName: ServerStatus
       OperationName: RunCommand

@@ -4,34 +4,37 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
 Actors:
+
 - Name: Loader
   Type: Loader
   Threads: 1  # TODO: Loader doesn't support multiple threads for a single collection
-  Database: &DB test
-  CollectionCount: 1
-  # Collection name will be Collection0, this is not configurable.
-  DocumentCount: 10000000  # 10M
-  BatchSize: 1000
-  Document:  # Documents are approximately 18 - 108 bytes in size
-    x: {^RandomInt: {distribution: geometric, p: 0.1}}
-    string0: {^RandomString: {length: {^RandomInt: {min: 5, max: 50}}}}
-    y: {^RandomInt: {min: 0, max: 2147483647}}
-    string1: {^RandomString: {length: {^RandomInt: {min: 5, max: 50}}}}
-    z: {^RandomInt: {min: 0, max: 2147483647}}
-  Indexes:
-  - keys: {y: 1}
   Phases:
   - Repeat: 1
+    Database: &DB test
+    Threads: 1
+    CollectionCount: 1
+    # Collection name will be Collection0, this is not configurable.
+    DocumentCount: 10000000  # 10M
+    BatchSize: 1000
+    Document:  # Documents are approximately 18 - 108 bytes in size
+      x: {^RandomInt: {distribution: geometric, p: 0.1}}
+      string0: {^RandomString: {length: {^RandomInt: {min: 5, max: 50}}}}
+      y: {^RandomInt: {min: 0, max: 2147483647}}
+      string1: {^RandomString: {length: {^RandomInt: {min: 5, max: 50}}}}
+      z: {^RandomInt: {min: 0, max: 2147483647}}
+    Indexes:
+    - keys: {y: 1}
   - &Nop {Nop: true}
+
 - Name: CollScan
   Type: RunCommand
   Threads: 1
-  Database: *DB
   Phases:
   - *Nop
   - Repeat: 10
-  Operations:
-  - OperationName: RunCommand
-    OperationCommand:
-      find: Collection0
-    filter: {x: "never true"}
+    Database: *DB
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        find: Collection0
+        filter: {x: "never true"}

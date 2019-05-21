@@ -295,7 +295,7 @@ struct ${actor_name}::PhaseConfig {
     //
     // When we construct a ${q}DocumentGenerator${q} from this:
     //
-    //     auto docGen = phaseContext.createDocumentGenerator(id, "Document");
+    //     auto docGen = phaseContext["Document"].to<DocumentGenerator>(phaseContext, actorId);
     //
     // We can evaluate it multiple times to get a randomly-generated document:
     //
@@ -317,8 +317,8 @@ struct ${actor_name}::PhaseConfig {
     //
 
     PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id)
-        : collection{db[phaseContext.get<std::string>("Collection")]},
-          documentExpr{phaseContext.createDocumentGenerator(id, "Document")} {}
+        : collection{db[phaseContext["Collection"].to<std::string>()]},
+          documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
 };
 
 
@@ -422,7 +422,7 @@ ${actor_name}::${actor_name}(genny::ActorContext& context)
       // ${q}PhaseLoop${q} reads the ${q}PhaseContext${q}s from there and constructs one
       // instance for each Phase.
       //
-      _loop{context, (*_client)[context.get<std::string>("Database")], ${actor_name}::id()} {}
+      _loop{context, (*_client)[context["Database"].to<std::string>()], ${actor_name}::id()} {}
 
 namespace {
 //
@@ -517,6 +517,7 @@ create_test() {
 
 #include <gennylib/context.hpp>
 
+namespace genny {
 namespace {
 using namespace genny::testing;
 namespace bson_stream = bsoncxx::builder::stream;
@@ -532,7 +533,7 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
     dropAllDatabases();
     auto db = client.database("mydb");
 
-    YAML::Node config = YAML::Load(R"(
+    NodeSource nodes = NodeSource(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Name: ${actor_name}
@@ -542,12 +543,12 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
           - Repeat: 100
             Collection: mycoll
             Document: {foo: {^RandomInt: {min: 0, max: 100}}}
-    )");
+    )", __FILE__);
 
 
     SECTION("Inserts documents into the database.") {
         try {
-            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            genny::ActorHelper ah(nodes.root(), 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             auto builder = bson_stream::document{};
@@ -565,7 +566,8 @@ TEST_CASE_METHOD(MongoTestFixture, "${actor_name} successfully connects to a Mon
         }
     }
 }
-} // namespace
+}  // namespace
+}  // namespace genny
 EOF
 }
 

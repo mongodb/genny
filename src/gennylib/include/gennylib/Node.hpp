@@ -22,6 +22,9 @@
 #include <variant>
 #include <vector>
 
+#include <boost/exception/all.hpp>
+#include <boost/exception/error_info.hpp>
+#include <boost/exception/exception.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -120,7 +123,7 @@ private:
 /**
  * Throw this to indicate a bad conversion.
  */
-class InvalidConversionException : public std::exception {
+class InvalidConversionException : public boost::exception, public std::exception {
 public:
     InvalidConversionException(const class Node* node,
                                const YAML::BadConversion& yamlException,
@@ -131,13 +134,14 @@ public:
     }
 
 private:
+    using Message = boost::error_info<struct Message, std::string>;
     const std::string _what;
 };
 
 /**
  * Throw this to indicate bad input yaml syntax.
  */
-class InvalidYAMLException : public std::exception {
+class InvalidYAMLException : public boost::exception, public std::exception {
 public:
     InvalidYAMLException(const std::string& path, const YAML::ParserException& yamlException);
 
@@ -146,13 +150,14 @@ public:
     }
 
 private:
+    using Message = boost::error_info<struct Message, std::string>;
     const std::string _what;
 };
 
 /**
  * Throw this to indicate a bad path.
  */
-class InvalidKeyException : public std::exception {
+class InvalidKeyException : public boost::exception, public std::exception {
 public:
     InvalidKeyException(const std::string& msg, const std::string& key, const class Node* node);
 
@@ -161,6 +166,7 @@ public:
     }
 
 private:
+    using Message = boost::error_info<struct Message, std::string>;
     const std::string _what;
 };
 
@@ -356,6 +362,11 @@ public:
     std::string path() const;
 
     /**
+     * @return the YAML tag associated with this node.
+     */
+    std::string tag() const;
+
+    /**
      * Iterate over child elements. If this Node is a scalar, undefined,
      * or an empty map/sequence then `begin() == end()`.
      *
@@ -455,10 +466,12 @@ public:
     O to(Args&&... args) const {
         auto out = maybe<O, Args...>(std::forward<Args>(args)...);
         if (!out) {
-            BOOST_THROW_EXCEPTION(
-                InvalidKeyException("Tried to access node that doesn't exist.", this->key(), this));
+            auto x =
+                InvalidKeyException("Tried to access node that doesn't exist.", this->key(), this);
+            BOOST_LOG_TRIVIAL(fatal) << x.what();
+            BOOST_THROW_EXCEPTION(x);
         }
-        return *out;
+        return std::move(*out);
     }
 
     /**

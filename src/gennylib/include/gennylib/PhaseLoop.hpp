@@ -97,16 +97,16 @@ public:
     }
 
     explicit IterationChecker(PhaseContext& phaseContext)
-        : IterationChecker(phaseContext.get<TimeSpec, false>("Duration"),
-                           phaseContext.get<IntegerSpec, false>("Repeat"),
+        : IterationChecker(phaseContext["Duration"].maybe<TimeSpec>(),
+                           phaseContext["Repeat"].maybe<IntegerSpec>(),
                            phaseContext.isNop(),
-                           phaseContext.get<TimeSpec, false>("SleepBefore").value_or(TimeSpec()),
-                           phaseContext.get<TimeSpec, false>("SleepAfter").value_or(TimeSpec()),
-                           phaseContext.get<RateSpec, false>("Rate")) {
-        const auto rateSpec = phaseContext.get<RateSpec, false>("Rate");
+                           phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}),
+                           phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{}),
+                           phaseContext["Rate"].maybe<RateSpec>()) {
+        const auto rateSpec = phaseContext["Rate"].maybe<RateSpec>();
 
         const auto rateLimiterName =
-            phaseContext.get<std::string, false>("RateLimiterName").value_or("defaultRateLimiter");
+            phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter");
 
         if (rateSpec) {
             if (!_doesBlock) {
@@ -419,7 +419,7 @@ using PhaseMap = std::unordered_map<PhaseNumber, v1::ActorPhase<T>>;
 
 
 /**
- * The iterator used by `for(auto&& [p,h] : phaseLoop)`.
+ * The iterator used by `for(auto&& config : phaseLoop)`.
  *
  * @attention Don't use this outside of range-based for loops.
  *            Other STL algorithms like `std::advance` etc. are not supported to work.
