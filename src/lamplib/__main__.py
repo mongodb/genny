@@ -29,7 +29,7 @@ def validate_environment():
     # for platform.mac_ver().
     if platform.mac_ver()[0]:
         release_triplet = platform.mac_ver()[0].split('.')
-        if int(release_triplet[1]) < 15:
+        if int(release_triplet[1]) < 14:
             # You could technically compile clang or gcc yourself on an older version
             # of macOS, but it's untested so we might as well just enforce
             # a blanket minimum macOS version for simplicity.
