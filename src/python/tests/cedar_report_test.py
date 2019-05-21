@@ -34,7 +34,7 @@ class CedarReportTest(unittest.TestCase):
             'task_name': 'my_task_name',
             'project': 'my_project',
             'version_id': 'my_version',
-            'order': '1',
+            'revision_order_id': '1',
             'build_variant': 'my_variant',
             'task_id': 'my_task_id',
             'execution': '1',
