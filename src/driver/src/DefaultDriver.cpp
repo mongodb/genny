@@ -69,7 +69,8 @@ void runActor(Actor&& actor,
 
 DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& options) {
     genny::metrics::Registry metrics;
-    auto actorSetup = metrics.operation(options.workloadSource, "Setup", 0u);
+    const auto workloadName = fs::path(options.workloadSource).stem().string();
+    auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
     auto setupCtx = actorSetup.start();
 
     if (options.runMode == DefaultDriver::RunMode::kListActors) {
@@ -130,8 +131,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     setupCtx.success();
 
-    auto startedActors = metrics.operation("Genny", "ActorStarted", 0u);
-    auto finishedActors = metrics.operation("Genny", "ActorFinished", 0u);
+    auto startedActors = metrics.operation(workloadName, "ActorStarted", 0u);
+    auto finishedActors = metrics.operation(workloadName, "ActorFinished", 0u);
 
     std::atomic<DefaultDriver::OutcomeCode> outcomeCode = DefaultDriver::OutcomeCode::kSuccess;
 
