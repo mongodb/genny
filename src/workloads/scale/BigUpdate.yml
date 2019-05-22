@@ -104,7 +104,6 @@ Actors:
     UpdateFilter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
     Update: {$inc: {x: 1}}
 
->>>>>>> master
 - Name: MultiCollectionQuery
   Type: MultiCollectionQuery
   Threads: 100
