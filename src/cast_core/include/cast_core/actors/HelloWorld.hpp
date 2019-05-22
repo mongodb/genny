@@ -60,7 +60,7 @@ private:
      * @private
      */
     struct PhaseConfig;
-    /** loops over each Phase and handles Duration/Repeat/Rate */
+    /** loops over each Phase and handles Duration/Repeat/GlobalRate */
     PhaseLoop<PhaseConfig> _loop;
     /** example of sharing data. @see HelloWorldCounter */
     HelloWorldCounter& _helloCounter;

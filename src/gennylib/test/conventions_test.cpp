@@ -127,8 +127,12 @@ TEST_CASE("genny::IntegerSpec conversions") {
 
 TEST_CASE("genny::RateSpec conversions") {
     SECTION("Can convert to genny::RateSpec") {
-        REQUIRE(YAML::Load("Rate: 300 per 2 nanoseconds")["Rate"].as<RateSpec>().operations == 300);
-        REQUIRE(YAML::Load("Rate: 300 per 2 nanoseconds")["Rate"].as<RateSpec>().per.count() == 2);
+        REQUIRE(YAML::Load("GlobalRate: 300 per 2 nanoseconds")["GlobalRate"]
+                    .as<RateSpec>()
+                    .operations == 300);
+        REQUIRE(YAML::Load("GlobalRate: 300 per 2 nanoseconds")["GlobalRate"]
+                    .as<RateSpec>()
+                    .per.count() == 2);
     }
 
     SECTION("Barfs on invalid values") {
@@ -146,9 +150,9 @@ TEST_CASE("genny::RateSpec conversions") {
 
     SECTION("Can encode") {
         YAML::Node n;
-        n["Rate"] = RateSpec{20, 30};
-        REQUIRE(n["Rate"].as<RateSpec>().per.count() == 20);
-        REQUIRE(n["Rate"].as<RateSpec>().operations == 30);
+        n["GlobalRate"] = RateSpec{20, 30};
+        REQUIRE(n["GlobalRate"].as<RateSpec>().per.count() == 20);
+        REQUIRE(n["GlobalRate"].as<RateSpec>().operations == 30);
     }
 }
 

@@ -64,7 +64,7 @@ Actors:
   Threads: 50
   Phases:
     - Duration: 10 seconds
-      Rate: 1 per 100 microseconds
+      GlobalRate: 1 per 100 microseconds
     )",
                       "");
 

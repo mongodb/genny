@@ -8,7 +8,7 @@ Actors:
   Phases:
   - Message: Hello Phase 0 🐳
     Duration: 50 milliseconds
-    # Rate: 99 per 88 nanoseconds
+    # GlobalRate: 99 per 88 nanoseconds
     # SleepBefore: 11 milliseconds
     # SleepAfter: 17 microseconds
     # MetricsName: 🐳Message

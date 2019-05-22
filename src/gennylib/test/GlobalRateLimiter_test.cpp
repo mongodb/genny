@@ -118,7 +118,7 @@ Actors:
   Type: IncActor
   Threads: 1
   Phases:
-    - Rate: 5 per 4 seconds
+    - GlobalRate: 5 per 4 seconds
 )",
                       "");
         auto& config = ns.root();
@@ -142,7 +142,7 @@ Actors:
   Threads: 2
   Phases:
     - Repeat: 7
-      Rate: 3 per 200 milliseconds
+      GlobalRate: 3 per 200 milliseconds
 )",
                       "");
         auto& config = ns.root();

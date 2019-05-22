@@ -88,7 +88,7 @@ public:
 
         if ((sleepBefore || sleepAfter) && rateSpec) {
             throw InvalidConfigurationException(
-                "Rate must *not* be specified alongside either sleepBefore or sleepAfter. "
+                "GlobalRate must *not* be specified alongside either sleepBefore or sleepAfter. "
                 "genny cannot enforce the global rate when there are mandatory sleeps in"
                 "each thread");
         }
@@ -102,17 +102,23 @@ public:
                            phaseContext.isNop(),
                            phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{}),
-                           phaseContext["Rate"].maybe<RateSpec>()) {
-        const auto rateSpec = phaseContext["Rate"].maybe<RateSpec>();
+                           phaseContext["GlobalRate"].maybe<RateSpec>()) {
+        const auto rateSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
 
         const auto rateLimiterName =
             phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter");
 
         if (rateSpec) {
+            std::ostringstream defaultRLName;
+            defaultRLName << phaseContext.actor()["Name"] << phaseContext.getPhaseNumber();
+            const auto rateLimiterName =
+                phaseContext["RateLimiterName"].maybe<std::string>().value_or(defaultRLName.str());
+
             if (!_doesBlock) {
                 throw InvalidConfigurationException(
-                    "Rate must be specified alongside either Duration or Repeat, otherwise there's "
-                    "no guarantee the rate limited operation will run in the correct phase");
+                    "GlobalRate must be specified alongside either Duration or Repeat, otherwise "
+                    "there's no guarantee the rate limited operation will run in the correct "
+                    "phase");
             }
             _rateLimiter =
                 phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
