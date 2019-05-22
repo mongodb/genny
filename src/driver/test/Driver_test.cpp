@@ -87,7 +87,7 @@ struct Fails : public genny::Actor {
     struct PhaseConfig {
         std::string mode;
         PhaseConfig(genny::PhaseContext& phaseContext)
-            : mode{phaseContext.get<std::string>("Mode")} {}
+            : mode{phaseContext["Mode"].to<std::string>()} {}
     };
     genny::PhaseLoop<PhaseConfig> loop;
     static StaticFailsInfo state;

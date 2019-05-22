@@ -46,8 +46,8 @@ struct InsertRemove::PhaseConfig {
                 genny::DefaultRandom& rng,
                 mongocxx::pool::entry& client,
                 int id)
-        : PhaseConfig((*client)[context.get<std::string>("Database")],
-                      context.get<std::string>("Collection"),
+        : PhaseConfig((*client)[context["Database"].to<std::string>()],
+                      context["Collection"].to<std::string>(),
                       rng,
                       id) {}
 

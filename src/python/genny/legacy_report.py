@@ -24,10 +24,10 @@ class _LegacyReportIntermediateFormat(object):
         self.threads = set()
         self.started = sys.maxsize
         self.ended = 0
-        self.mean = 0
+        self.ops_per_ns = 0
 
     def finalize(self):
-        self.mean = self.duration_sum / self.n
+        self.ops_per_ns = self.n / (self.ended - self.started)
         return self
 
     def _asdict(self):
@@ -35,7 +35,7 @@ class _LegacyReportIntermediateFormat(object):
         return {
             'started': self.started,
             'ended': self.ended,
-            'mean': self.mean,
+            'ops_per_ns': self.ops_per_ns,
             'threads': self.threads
         }
 
@@ -50,8 +50,8 @@ def _translate_to_perf_json(timers):
             'end': timer['ended'] / 100000,
             'results': {
                 len(timer['threads']): {
-                    'ops_per_sec': timer['mean'],
-                    'ops_per_sec_values': [timer['mean']]
+                    'ops_per_sec': timer['ops_per_ns'] * 1e9,
+                    'ops_per_sec_values': [timer['ops_per_ns'] * 1e9]
                 }
             }
         })

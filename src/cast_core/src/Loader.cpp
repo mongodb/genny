@@ -39,25 +39,22 @@ using index_type = std::pair<DocumentGenerator, std::optional<DocumentGenerator>
 /** @private */
 struct Loader::PhaseConfig {
     PhaseConfig(PhaseContext& context, mongocxx::pool::entry& client, uint thread, ActorId id)
-        : database{(*client)[context.get<std::string>("Database")]},
+        : database{(*client)[context["Database"].to<std::string>()]},
           // The next line uses integer division. The Remainder is accounted for below.
-          numCollections{context.get<IntegerSpec, true>("CollectionCount") /
-                         context.get<IntegerSpec, true>("Threads")},
-          numDocuments{context.get<IntegerSpec, true>("DocumentCount")},
-          batchSize{context.get<IntegerSpec, true>("BatchSize")},
-          documentExpr{context.createDocumentGenerator(id, "Document")},
+          numCollections{context["CollectionCount"].to<IntegerSpec>() /
+                         context["Threads"].to<IntegerSpec>()},
+          numDocuments{context["DocumentCount"].to<IntegerSpec>()},
+          batchSize{context["BatchSize"].to<IntegerSpec>()},
+          documentExpr{context["Document"].to<DocumentGenerator>(context, id)},
           collectionOffset{numCollections * thread} {
-        auto indexNodes = context.get("Indexes");
-        for (auto indexNode : indexNodes) {
-            indexes.emplace_back(
-                context.createDocumentGenerator(id, indexNode["keys"]),
-                indexNode["options"]
-                    ? std::make_optional(context.createDocumentGenerator(id, indexNode["options"]))
-                    : std::nullopt);
+        auto& indexNodes = context["Indexes"];
+        for (auto [k, indexNode] : indexNodes) {
+            indexes.emplace_back(indexNode["keys"].to<DocumentGenerator>(context, id),
+                                 indexNode["options"].maybe<DocumentGenerator>(context, id));
         }
-        if (thread == context.get<int>("Threads") - 1) {
+        if (thread == context["Threads"].to<int>() - 1) {
             // Pick up any extra collections left over by the division
-            numCollections += context.get<uint>("CollectionCount") % context.get<uint>("Threads");
+            numCollections += context["CollectionCount"].to<uint>() % context["Threads"].to<uint>();
         }
     }
 
@@ -138,11 +135,11 @@ class LoaderProducer : public genny::ActorProducer {
 public:
     LoaderProducer(const std::string_view& name) : ActorProducer(name) {}
     genny::ActorVector produce(genny::ActorContext& context) {
-        if (context.get<std::string>("Type") != "Loader") {
+        if (context["Type"].to<std::string>() != "Loader") {
             return {};
         }
         genny::ActorVector out;
-        for (uint i = 0; i < context.get<int>("Threads"); ++i) {
+        for (uint i = 0; i < context["Threads"].to<int>(); ++i) {
             out.emplace_back(std::make_unique<genny::actor::Loader>(context, i));
         }
         return out;

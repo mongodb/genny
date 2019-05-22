@@ -23,7 +23,6 @@
 
 #include <mongocxx/client.hpp>
 
-#include <gennylib/v1/ConfigNode.hpp>
 #include <gennylib/v1/PoolManager.hpp>
 
 namespace genny::canaries {
@@ -180,6 +179,7 @@ private:
     explicit Singleton(std::string mongoUri);
 
 public:
+    NodeSource ns;
     mongocxx::pool::entry client;
     bsoncxx::document::value pingCmd;
 

@@ -12,35 +12,36 @@ Actors:
   # See https://jira.mongodb.org/browse/TIG-1322 for what Type this should be eventually
   Type: AdminCommand
   Threads: 1
-  # An exception is expected because the replSetStepDown command either returns failure
-  # or disconnects its client session. That said, any other failure we did not expect would still
-  # be caught.
-  ThrowOnFailure: false
   Phases:
   - Phase: 0  # Load
     Nop: true
   - Phase: 1  # Run
     Repeat: 1
     SleepBefore: 60 seconds
+    # An exception is expected because the replSetStepDown command either returns failure
+    # or disconnects its client session. That said, any other failure we did not expect would still
+    # be caught.
+    ThrowOnFailure: false
     Operation:
       OperationMetricsName: Stepdown
       OperationName: AdminCommand
       OperationCommand:
         replSetStepDown: 60
+
 - Name: PrimaryRequiredRead
   Type: RunCommand
   Threads: 100
-  # We want to continue to send our find commands in any situation.
-  # However, failures before replSetStepDown indicate that something was wrong with the test.
-  # Ideally, post-workload analysis will show if any find failure happens before replSetStepdown.
-  ThrowOnFailure: false
-  Database: test
   Phases:
   - Phase: 0  # Load
     Nop: true
   - Phase: 1  # Run
     Duration: 180 seconds
     GlobalRate: 1 per 100 microseconds
+    Database: test
+    # We want to continue to send our find commands in any situation.
+    # However, failures before replSetStepDown indicate that something was wrong with the test.
+    # Ideally, post-workload analysis will show if any find failure happens before replSetStepdown.
+    ThrowOnFailure: false
     Operation: &find_one
       OperationMetricsName: "Find"
       OperationName: RunCommand
@@ -49,18 +50,21 @@ Actors:
         find: Collection0
         readConcern: {level: local}
         $readPreference: {mode: primary}
+
 - Name: Loader
   Type: Loader
   Threads: 1
-  Database: test
-  CollectionCount: 1
-  DocumentCount: 100
-  BatchSize: 100
-  Document:
-    t: {^RandomInt: {min: 0, max: 10}}
-  Indexes:
-  - keys: {t: 1}
   Phases:
   - Phase: 0  # Load
+    Database: test
+    CollectionCount: 1
+    DocumentCount: 100
+    BatchSize: 100
+    Threads: 1
+    Document:
+      t: {^RandomInt: {min: 0, max: 10}}
+    Indexes:
+    - keys: {t: 1}
+
   - Phase: 1  # Run
     Nop: true

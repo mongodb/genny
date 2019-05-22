@@ -24,6 +24,7 @@ def parse_args(args, os_family):
                         choices=['make', 'ninja'], default='ninja',
                         help='Which build-system to use for compilation. May need to use make for '
                              'IDEs.')
+    parser.add_argument('-s', '--sanitizer', choices=['asan', 'tsan', 'ubsan'])
 
     subparsers = parser.add_subparsers(
         dest='subcommand',
@@ -32,6 +33,7 @@ def parse_args(args, os_family):
     subparsers.add_parser(
         'cmake-test', help='run cmake unit tests that don\'t connect to a MongoDB cluster')
     subparsers.add_parser('benchmark-test', help='run benchmark unit tests')
+
     resmoke_test_parser = subparsers.add_parser(
         'resmoke-test', help='run cmake unit tests that connect to a MongoDB cluster')
     group = resmoke_test_parser.add_mutually_exclusive_group()
@@ -43,7 +45,6 @@ def parse_args(args, os_family):
     resmoke_test_parser.add_argument('--mongo-dir', dest='resmoke_mongo_dir',
                        help='path to the mongo repo, which contains buildscripts/resmoke.py')
 
-    subparsers.add_parser('compile', help='just run the compile step for genny')
     subparsers.add_parser('install', help='just run the install step for genny')
     subparsers.add_parser('clean', help='cleanup existing build')
     subparsers.add_parser('self-test', help='run lamplib unittests')
@@ -69,3 +70,4 @@ def add_args_to_context(args):
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     Context.IGNORE_TOOLCHAIN_VERSION = args.ignore_toolchain_version
     Context.BUILD_SYSTEM = args.build_system
+    Context.SANITIZER = args.sanitizer

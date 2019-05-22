@@ -33,22 +33,23 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
     auto db = client.database("mydb");
 
     SECTION("Query documents in a collection with sort and limit") {
-        YAML::Node config = YAML::Load(R"(
+        genny::NodeSource config(R"(
       SchemaVersion: 2018-07-01
       Actors:
       - Name: MultiCollectionQuery
         Type: MultiCollectionQuery
-        Threads: 1
-        Database: mydb
-        CollectionCount: 1
-        Filter: {a: 1}
-        Limit: 1
-        Sort: {a: 1}
-        ReadConcern:
-          Level: local
         Phases:
         - Repeat: 1
-      )");
+          Database: mydb
+          Threads: 1
+          CollectionCount: 1
+          Filter: {a: 1}
+          Limit: 1
+          Sort: {a: 1}
+          ReadConcern:
+            Level: local
+      )",
+                                 "");
 
         try {
             auto coll = db.collection("Collection1");
@@ -60,7 +61,7 @@ TEST_CASE_METHOD(MongoTestFixture, "MultiCollectionQuery", "[standalone][MultiCo
 
             auto apmCallback = makeApmCallback(events);
             genny::ActorHelper ah(
-                config, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+                config.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             for (auto&& event : events) {

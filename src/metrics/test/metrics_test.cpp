@@ -430,19 +430,20 @@ TEST_CASE("Operation with threshold") {
 TEST_CASE("Phases can set metrics") {
 
     SECTION("With MetricsName") {
-        auto yaml = YAML::Load(R"(
-    SchemaVersion: 2018-07-01
-    Database: test
-    Actors:
-    - Name: MetricsNameTest
-      Type: HelloWorld
-      Threads: 1
-      Phases:
-      - Repeat: 1
-        MetricsName: Phase1Metrics
-    )");
+        NodeSource yaml(R"(
+        SchemaVersion: 2018-07-01
+        Database: test
+        Actors:
+        - Name: MetricsNameTest
+          Type: HelloWorld
+          Threads: 1
+          Phases:
+          - Repeat: 1
+            MetricsName: Phase1Metrics
+        )",
+                        "");
 
-        ActorHelper ah{yaml, 1};
+        ActorHelper ah{yaml.root(), 1};
         ah.run();
 
         const auto metrics = ah.getMetricsOutput();
@@ -450,7 +451,7 @@ TEST_CASE("Phases can set metrics") {
     }
 
     SECTION("With default metrics name") {
-        auto yaml = YAML::Load(R"(
+        NodeSource yaml(R"(
     SchemaVersion: 2018-07-01
     Database: test
     Actors:
@@ -459,9 +460,10 @@ TEST_CASE("Phases can set metrics") {
       Threads: 1
       Phases:
       - Repeat: 1
-    )");
+    )",
+                        "");
 
-        ActorHelper ah{yaml, 1};
+        ActorHelper ah{yaml.root(), 1};
         ah.run();
 
         const auto metrics = ah.getMetricsOutput();

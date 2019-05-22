@@ -24,9 +24,8 @@
 #include <mongocxx/read_preference.hpp>
 #include <mongocxx/write_concern.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/Node.hpp>
 #include <gennylib/Orchestrator.hpp>
 
 namespace genny {
@@ -37,8 +36,8 @@ namespace genny {
  * the value in a node or a fallback value (traditionally, this involves at least a decltype).
  */
 template <typename T, typename S>
-void decodeNodeInto(T& out, const YAML::Node& node, const S& fallback) {
-    out = node.as<T>(fallback);
+void decodeNodeInto(T& out, const genny::Node& node, const S& fallback) {
+    out = node.maybe<T>().value_or(fallback);
 }
 
 /**

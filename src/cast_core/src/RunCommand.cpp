@@ -25,11 +25,11 @@
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <boost/log/trivial.hpp>
 
+#include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/MongoException.hpp>
+#include <gennylib/Node.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -87,66 +87,25 @@ void runThenAwaitStepdown(mongocxx::database& database, bsoncxx::document::view&
 }
 
 struct RunCommandOperationConfig {
-    /** Default values for each of the keys */
-    struct Defaults {
-        static constexpr auto kMetricsName = "";
-        static constexpr auto kIsQuiet = false;
-        static constexpr auto kAwaitStepdown = false;
-    };
+    explicit RunCommandOperationConfig(const genny::Node& node)
+        : metricsName{node["OperationMetricsName"].maybe<std::string>().value_or("")},
+          isQuiet{node["OperationIsQuiet"].maybe<bool>().value_or(false)},
+          awaitStepdown{node["OperationAwaitStepdown"].maybe<bool>().value_or(false)} {
+        if (auto opName = node["OperationName"].maybe<std::string>();
+            opName != "RunCommand" && opName != "AdminCommand") {
+            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException(
+                "Operation name '" + *opName +
+                "' not recognized. Needs either 'RunCommand' or 'AdminCommand'."));
+        }
+    }
+    explicit RunCommandOperationConfig() {}
 
-    /** YAML keys */
-    struct Keys {
-        static constexpr auto kAwaitStepdown = "OperationAwaitStepdown";
-        static constexpr auto kMetricsName = "OperationMetricsName";
-        static constexpr auto kIsQuiet = "OperationIsQuiet";
-        static constexpr auto kMinPeriod = "OperationMinPeriod";
-        static constexpr auto kPreSleep = "OperationSleepBefore";
-        static constexpr auto kPostSleep = "OperationSleepAfter";
-    };
-
-    std::string metricsName = Defaults::kMetricsName;
-    bool isQuiet = Defaults::kIsQuiet;
-    bool awaitStepdown = Defaults::kAwaitStepdown;
+    const std::string metricsName = "";
+    const bool isQuiet = false;
+    const bool awaitStepdown = false;
 };
 
 }  // namespace
-
-namespace YAML {
-
-template <>
-struct convert<RunCommandOperationConfig> {
-    using Config = RunCommandOperationConfig;
-    using Defaults = typename Config::Defaults;
-    using Keys = typename Config::Keys;
-
-    static Node encode(const Config& rhs) {
-        Node node;
-
-        // If we don't have a MetricsName, this key is null
-        node[Keys::kMetricsName] = rhs.metricsName;
-
-        node[Keys::kIsQuiet] = rhs.isQuiet;
-        node[Keys::kAwaitStepdown] = rhs.awaitStepdown;
-
-        return node;
-    }
-
-    static bool decode(const Node& node, Config& rhs) {
-        if (!node.IsMap()) {
-            return false;
-        }
-
-        genny::decodeNodeInto(rhs.metricsName, node[Keys::kMetricsName], Defaults::kMetricsName);
-        genny::decodeNodeInto(rhs.isQuiet, node[Keys::kIsQuiet], Defaults::kIsQuiet);
-        genny::decodeNodeInto(
-            rhs.awaitStepdown, node[Keys::kAwaitStepdown], Defaults::kAwaitStepdown);
-
-        return true;
-    }
-};
-
-}  // namespace YAML
-
 
 namespace genny {
 
@@ -179,16 +138,17 @@ public:
                                actorContext.operation(_options.metricsName, id))
                          : phaseContext.operation("DatabaseOperation", id)} {}
 
-    static std::unique_ptr<DatabaseOperation> create(YAML::Node node,
+    static std::unique_ptr<DatabaseOperation> create(const Node& node,
                                                      PhaseContext& context,
                                                      ActorContext& actorContext,
                                                      ActorId id,
                                                      mongocxx::pool::entry& client,
                                                      const std::string& database) {
-        auto yamlCommand = node["OperationCommand"];
-        auto commandExpr = context.createDocumentGenerator(id, yamlCommand);
+        auto& yamlCommand = node["OperationCommand"];
+        auto commandExpr = yamlCommand.to<DocumentGenerator>(context, id);
 
-        auto options = node.as<DatabaseOperation::OpConfig>(DatabaseOperation::OpConfig{});
+        auto options =
+            node.maybe<DatabaseOperation::OpConfig>().value_or(DatabaseOperation::OpConfig{});
         return std::make_unique<DatabaseOperation>(context,
                                                    actorContext,
                                                    id,
@@ -247,15 +207,15 @@ struct actor::RunCommand::PhaseConfig {
                 ActorContext& actorContext,
                 mongocxx::pool::entry& client,
                 ActorId id)
-        : throwOnFailure{context.get<bool, false>("ThrowOnFailure").value_or(true)} {
-        auto actorType = context.get<std::string>("Type");
-        auto database = context.get<std::string, false>("Database").value_or("admin");
+        : throwOnFailure{context["ThrowOnFailure"].maybe<bool>().value_or(true)} {
+        auto actorType = actorContext["Type"].to<std::string>();
+        auto database = context["Database"].maybe<std::string>().value_or("admin");
         if (actorType == "AdminCommand" && database != "admin") {
             throw InvalidConfigurationException(
                 "AdminCommands can only be run on the 'admin' database.");
         }
 
-        auto createOperation = [&](YAML::Node node) {
+        auto createOperation = [&](const Node& node) {
             return DatabaseOperation::create(node, context, actorContext, id, client, database);
         };
 

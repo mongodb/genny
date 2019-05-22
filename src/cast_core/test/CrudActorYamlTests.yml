@@ -176,7 +176,7 @@ Tests:
             WriteConcern:
               Timeout: 3000 milliseconds
               Journal: false
-    Error: '.*yaml-cpp: error at line.*bad conversion$'
+    Error: '.*bad conversion.*$'
 
   - Description: The 'test' collection is dropped with write concern majority.
     Operations:
@@ -274,7 +274,7 @@ Tests:
           Options:
             WriteConcern:
               Level: infinite
-    Error: '.*yaml-cpp: error at line.*bad conversion$'
+    Error: '.*bad conversion.*'
 
   - Description: Read preference is 'secondaryPreferred'.
     Operations:
@@ -310,7 +310,7 @@ Tests:
           Options:
             ReadPreference:
               MaxStaleness: 100 seconds
-    Error: '.*yaml-cpp: error at line.*bad conversion$'
+    Error: '.*bad conversion.*'
 
   - Description: Read preference with invalid 'ReadMode' should throw.
     Operations:
@@ -320,7 +320,7 @@ Tests:
           Options:
             ReadPreference:
               ReadMode: badReadMode
-    Error: '.*yaml-cpp: error at line.*bad conversion$'
+    Error: '.*bad conversion.*'
 
   - Description: estimatedDocumentCount can also specify ReadMode, MaxStaleness
     Operations:

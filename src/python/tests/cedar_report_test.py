@@ -34,6 +34,7 @@ class CedarReportTest(unittest.TestCase):
             'task_name': 'my_task_name',
             'project': 'my_project',
             'version_id': 'my_version',
+            'revision_order_id': '1',
             'build_variant': 'my_variant',
             'task_id': 'my_task_id',
             'execution': '1',
@@ -56,6 +57,7 @@ class CedarReportTest(unittest.TestCase):
         expected_json = {
             'project': 'my_project',
             'version': 'my_version',
+            'order': 1,
             'variant': 'my_variant',
             'task_name': 'my_task_name',
             'task_id': 'my_task_id',
