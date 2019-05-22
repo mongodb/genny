@@ -112,7 +112,7 @@ public:
             std::ostringstream defaultRLName;
             defaultRLName << phaseContext.actor()["Name"] << phaseContext.getPhaseNumber();
             const auto rateLimiterName =
-                    phaseContext["RateLimiterName"].maybe<std::string>().value_or(defaultRLName.str());
+                phaseContext["RateLimiterName"].maybe<std::string>().value_or(defaultRLName.str());
 
             if (!_doesBlock) {
                 throw InvalidConfigurationException(
