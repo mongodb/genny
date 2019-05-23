@@ -22,6 +22,7 @@ from datetime import datetime
 from os.path import join as pjoin
 
 from bson import BSON
+from bson.int64 import Int64
 
 from genny.parsers.csv2 import CSV2, IntermediateCSVColumns
 from third_party.csvsort import csvsort
@@ -123,19 +124,19 @@ class IntermediateCSVReader:
 
         res = OrderedDict([
             ('ts', ts),
-            ('id', int(line[IntermediateCSVColumns.THREAD])),
+            ('id', Int64(line[IntermediateCSVColumns.THREAD])),
             ('counters', OrderedDict([
-                ('n', int(self.cumulatives_for_op[op][IntermediateCSVColumns.N])),
-                ('ops', int(self.cumulatives_for_op[op][IntermediateCSVColumns.OPS])),
-                ('size', int(self.cumulatives_for_op[op][IntermediateCSVColumns.SIZE])),
-                ('errors', int(self.cumulatives_for_op[op][IntermediateCSVColumns.ERRORS]))
+                ('n', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.N])),
+                ('ops', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.OPS])),
+                ('size', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.SIZE])),
+                ('errors', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.ERRORS]))
             ])),
             ('timers', OrderedDict([
-                ('duration', int(self.cumulatives_for_op[op][IntermediateCSVColumns.DURATION])),
-                ('total', int(self.total_for_op[op]))
+                ('duration', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.DURATION])),
+                ('total', Int64(self.total_for_op[op]))
             ])),
             ('gauges', OrderedDict([
-                ('workers', int(line[IntermediateCSVColumns.WORKERS]))
+                ('workers', Int64(line[IntermediateCSVColumns.WORKERS]))
             ]))
         ])
 
