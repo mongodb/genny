@@ -6,26 +6,27 @@ C++17.
 
 ## Build and Install
 
-Here're the steps to get genny up and running locally:
+Here're the steps to get Genny up and running locally:
 
-1. Install the development tools for your OS.
+1.  Install the development tools for your OS.
 
-    - Ubuntu 18.04: `sudo apt install build-essential`
-    - Red Hat/CentOS 7/Amazon Linux 2: `sudo yum groupinstall "Development Tools"`
-    - Arch: Grab a beer. Everything should already be set up.
-    - macOS: `xcode-select --install`
-    - Windows: <https://visualstudio.microsoft.com/>
+    -   Ubuntu 18.04: `sudo apt install build-essential`
+    -   Red Hat/CentOS 7/Amazon Linux 2:
+        `sudo yum groupinstall "Development Tools"`
+    -   Arch: Everything should already be set up.
+    -   macOS: `xcode-select --install`
+    -   Windows: <https://visualstudio.microsoft.com/>
 
-1.  Make sure you have a C++17 compatible compiler and Python 3.
-    The ones from mongodbtoolchain are safe bets if you're unsure.
-    (mongodbtoolchain is internal to MongoDB).
+2.  Make sure you have a C++17 compatible compiler and a recent Python 3
+    distribution. The ones from mongodbtoolchain are safe bets if you're
+    unsure. (mongodbtoolchain is internal to MongoDB).
 
-1. `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
+3.  `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
 
-    This command downloads genny's toolchain, compiles genny and
-    installs genny to `dist/`. You can rerun this command at any time
-    to rebuild genny. If your OS isn't the supported, please let us
-    know in \#workload-generation or on GitHub.
+    This command downloads Genny's toolchain, compiles Genny, and
+    installs Genny to `dist/`. You can rerun this command at any time to
+    rebuild Genny. If your OS isn't the supported, please let us know in
+    `#workload-generation` slack or on GitHub.
 
     Note that the `--linux-distro` argument is not needed on macOS.
 
@@ -33,6 +34,13 @@ Here're the steps to get genny up and running locally:
     using `make` rather than `ninja`. Building using `make` may make
     some IDEs happier.
 
+    If you get python errors from `lamp` such as this:
+
+    > `TypeError: __init__() got an unexpected keyword argument 'capture_output'`
+
+    ensure you have a modern version of python3. On a Mac, run
+    `brew install python3` (assuming you have [homebrew
+    installed](https://brew.sh/)) and then restart your shell.
 
 ## IDEs and Whatnot
 
@@ -73,7 +81,7 @@ lint YAML files and generating test reports.
 Genny has self-tests using Catch2. You can run them with the following command:
 
 ```sh
-# Build genny first: `./scripts/lamp [...]`
+# Build Genny first: `./scripts/lamp [...]`
 ./scripts/lamp cmake-test
 ```
 
@@ -81,7 +89,7 @@ For more fine-tuned testing (eg. running a single test or excluding some) you
 can manually invoke the test binaries:
 
 ```sh
-# Build genny first: `./scripts/lamp [...]`
+# Build Genny first: `./scripts/lamp [...]`
 ./build/src/gennylib/gennylib_test "My testcase"
 ```
 
@@ -100,20 +108,20 @@ If you want to run all the tests except perf tests you can manually
 invoke the test binaries and exclude perf tests:
 
 ```sh
-# Build genny first: `./scripts/lamp [...]`
+# Build Genny first: `./scripts/lamp [...]`
 ./build/src/gennylib/gennylib_test '~[benchmark]'
 ```
 
 #### Actor Integration Tests
 
-The actor tests use resmoke to set up a real MongoDB cluster and execute
+The Actor tests use resmoke to set up a real MongoDB cluster and execute
 the test binary. The resmoke yaml config files that define the different
 cluster configurations are defined in `src/resmokeconfig`.
 
 resmoke.py can be run locally as follows:
 ```sh
 # Set up virtualenv and install resmoke requirements if needed.
-# From genny's top-level directory.
+# From Genny's top-level directory.
 python /path/to/resmoke.py --suite src/resmokeconfig/genny_standalone.yml
 ```
 
@@ -121,9 +129,9 @@ Each yaml configuration file will only run tests that are associated
 with their specific tags. (Eg. `genny_standalone.yml` will only run
 tests that have been tagged with the "[standalone]" tag.)
 
-When creating a new actor, `create-new-actor.sh` will generate a new test case
-template to ensure the new actor can run against different MongoDB topologies,
-please update the template as needed so it uses the newly created actor.
+When creating a new Actor, `create-new-actor.sh` will generate a new test case
+template to ensure the new Actor can run against different MongoDB topologies,
+please update the template as needed so it uses the newly-created Actor.
 
 ## Patch-Testing and Evergreen
 
@@ -203,7 +211,7 @@ For an example external phase config, please see the
 A couple of tips on defining external phase configs:
 
 1. Most existing workloads define their options at the `Actor` level, which is one
-level above `Phases`. Because genny recursively traverses up the YAML to find an
+level above `Phases`. Because Genny recursively traverses up the YAML to find an
 option, most of the options can be pushed down and defined at the phase level
 instead. The notable exceptions are `Name`, `Type`, and `Threads`,
 which must be defined on `Actor`.
@@ -218,10 +226,10 @@ Install the [evergreen command-line client](https://evergreen.mongodb.com/settin
 in your PATH.
 
 Create a patch build from the mongo repository
+
 ```sh
 cd mongo
 evergreen patch -p sys-perf
-
 ```
 
 You will see an output like this:
@@ -236,8 +244,9 @@ You will see an output like this:
 
 Copy the value of the "ID" field and a browser window to the "Build" URL.
 
-Then, set the genny module in DSI with your local genny repo.
-```
+Then, set the Genny module in DSI with your local Genny repo.
+
+```sh
 cd genny
 evergreen set-module -m dsi -i <ID> # Use the build ID from the previous step.
 ```
@@ -280,31 +289,27 @@ open build/docs/html/index.html
 
 ### Sanitizers
 
-TODO(TIG-1518): The `lamp` script does not currently support
-the below style of passing in `CMAKE_CXX_FLAGS`.
-
 Genny is periodically manually tested to be free of unknown sanitizer
 errors. These are not currently run in a CI job. If you are adding
 complicated code and are afraid of undefined behavior or data-races
 etc, you can run the clang sanitizers yourself easily.
 
-Running with TSAN:
+Run `./scripts/lamp --help` for information on what sanitizers there are.
 
-    FLAGS="-pthread -fsanitize=thread -g -O1"
-    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./scripts/lamp cmake-test
-    ./build/src/driver/genny run ./workloads/docs/Workload.yml
+To run with ASAN:
 
-Running with ASAN:
+```sh
+./scripts/lamp -b make -s asan
+./scripts/lamp cmake-test
+# Pick a workload YAML that uses your Actor below
+ASAN_OPTIONS="detect_container_overflow=0" ./build/src/driver/genny run ./src/workloads/docs/HelloWorld.yml
+```
 
-    FLAGS="-pthread -fsanitize=address -O1 -fno-omit-frame-pointer -g"
-    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./scripts/lamp cmake-test
-    ./build/src/driver/genny run ./workloads/docs/Workload.yml
+The toolchain isn't instrumented with sanitizers, so you may get
+[false-positives][fp] for Boost, hence the `ASAN_OPTIONS` flag.
 
-Running with UBSAN
 
-    FLAGS="-pthread -fsanitize=undefined -g -O1"
-    ./scripts/lamp -DCMAKE_CXX_FLAGS="$FLAGS"
-    ./scripts/lamp cmake-test
-    ./build/src/driver/genny run ./workloads/docs/Workload.yml
+
+[fp]: https://github.com/google/sanitizers/wiki/AddressSanitizerContainerOverflow#false-positives
+
+

@@ -87,7 +87,7 @@ struct Fails : public genny::Actor {
     struct PhaseConfig {
         std::string mode;
         PhaseConfig(genny::PhaseContext& phaseContext)
-            : mode{phaseContext.get<std::string>("Mode")} {}
+            : mode{phaseContext["Mode"].to<std::string>()} {}
     };
     genny::PhaseLoop<PhaseConfig> loop;
     static StaticFailsInfo state;
@@ -165,6 +165,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails
           Threads: 1
           Phases:
           - Mode: NoException
@@ -180,6 +181,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails
           Threads: 1
           Phases:
           - Mode: NoException
@@ -195,6 +197,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails
           Threads: 1
           Phases:
           - Mode: StdException
@@ -210,6 +213,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails
           Threads: 1
           Phases:
             - Repeat: 1
@@ -225,6 +229,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails
           Threads: 1
           Phases:
             - Repeat: 1
@@ -241,6 +246,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails
           Threads: 2
           Phases:
             - Repeat: 1
@@ -259,6 +265,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails
           Threads: 1
           Phases:
             - Repeat: 1
@@ -276,6 +283,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails
           Threads: 200
           Phases:
             - Repeat: 1
@@ -293,11 +301,13 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
         - Type: Fails
+          Name: Fails1
           Threads: 1
           Phases:
             - Repeat: 1
               Mode: BoostException
         - Type: Fails
+          Name: Fails2
           Threads: 1
           Phases:
             - Repeat: 1
@@ -320,6 +330,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 2
             Phases:
               - Repeat: 1
@@ -336,6 +347,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
@@ -351,6 +363,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
@@ -367,6 +380,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
@@ -385,6 +399,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
@@ -401,6 +416,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
@@ -418,6 +434,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
@@ -435,6 +452,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 1
             Phases:
             - ExternalPhaseConfig:
@@ -452,6 +470,7 @@ TEST_CASE("Various Actor Behaviors") {
         SchemaVersion: 2018-07-01
         Actors:
           - Type: Fails
+            Name: Fails
             Threads: 1
             Phases:
             - ExternalPhaseConfig:

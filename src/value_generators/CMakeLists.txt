@@ -18,8 +18,8 @@ CreateGennyTargets(
     NAME    value_generators
     TYPE    STATIC
     DEPENDS
+        gennylib
         MongoCxx::bsoncxx
-        yaml-cpp
         Boost::boost
         Boost::log
     TEST_DEPENDS    testlib

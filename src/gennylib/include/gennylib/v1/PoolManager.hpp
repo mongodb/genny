@@ -23,7 +23,7 @@
 
 #include <mongocxx/pool.hpp>
 
-#include <gennylib/v1/ConfigNode.hpp>
+#include <gennylib/Node.hpp>
 
 namespace genny::v1 {
 
@@ -70,9 +70,7 @@ public:
      *   the WorkloadContext used to look up the configurations
      * @return a connection from the pool or throw if none available
      */
-    mongocxx::pool::entry client(const std::string& name,
-                                 size_t instance,
-                                 const ConfigNode& context);
+    mongocxx::pool::entry client(const std::string& name, size_t instance, const Node& context);
 
     // Only used for testing
     /** @private */

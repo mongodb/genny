@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cast_core/actors/HelloWorld.hpp>
+#include <cast_core/actors/NopMetrics.hpp>
 
 #include <string>
 
@@ -23,37 +23,34 @@
 namespace genny::actor {
 
 /** @private */
-struct HelloWorld::PhaseConfig {
-    std::string message;
-
+struct NopMetrics::PhaseConfig {
     /** record data about each iteration */
     metrics::Operation operation;
 
     explicit PhaseConfig(PhaseContext& context, ActorId actorId)
-        : message{context["Message"].maybe<std::string>().value_or("Hello, World!")},
-          operation{context.operation("DefaultMetricsName", actorId)} {}
+        : operation{context.operation("Iterate", actorId)} {}
 };
 
-void HelloWorld::run() {
+void NopMetrics::run() {
+
     for (auto&& config : _loop) {
+        auto prev_ctx = std::unique_ptr<metrics::OperationContext>();
         for (auto _ : config) {
-            auto ctx = config->operation.start();
-            BOOST_LOG_TRIVIAL(info) << config->message;
-            ++_helloCounter;
-            BOOST_LOG_TRIVIAL(info) << "Counter: " << _helloCounter;
-            ctx.addDocuments(1);
-            ctx.addBytes(config->message.size());
-            ctx.success();
+            if (prev_ctx) {
+                prev_ctx->success();
+            }
+            prev_ctx = std::make_unique<metrics::OperationContext>(config->operation.start());
+        }
+        if (prev_ctx) {
+            prev_ctx->success();
         }
     }
 }
 
-HelloWorld::HelloWorld(genny::ActorContext& context)
-    : Actor(context),
-      _helloCounter{WorkloadContext::getActorSharedState<HelloWorld, HelloWorldCounter>()},
-      _loop{context, HelloWorld::id()} {}
+NopMetrics::NopMetrics(genny::ActorContext& context)
+    : Actor(context), _loop{context, NopMetrics::id()} {}
 
 namespace {
-auto registerHelloWorld = genny::Cast::registerDefault<genny::actor::HelloWorld>();
+auto registerNopMetrics = genny::Cast::registerDefault<genny::actor::NopMetrics>();
 }
 }  // namespace genny::actor

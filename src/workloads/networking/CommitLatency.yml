@@ -5,29 +5,27 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
 
-Collection: &Collection CommitLatency
-
 Actors:
 - Name: Load phase
   Type: RunCommand
   Threads: 1
-  Database: test
   Phases:
   - &DropCollection
     Repeat: 1
+    Database: test
     Operations:
     - OperationName: RunCommand
       OperationCommand:
-        drop: *Collection
+        drop: &Collection CommitLatency
   - &Load
     Repeat: 1
+    Database: test
     Operations:
     - OperationName: RunCommand
       OperationCommand:
         insert: *Collection
         documents: [{_id: 1, n: 100}, {_id: 2, n: 100}]
-  - &Nop
-    Operation: Nop
+  - &Nop {Nop: true}
   - *DropCollection
   - *Load
   - *Nop
@@ -64,12 +62,14 @@ Actors:
 - Name: CommitLatency
   Type: CommitLatency
   Threads: 1
-  Repeat: 500
   Database: test
   Phases:
   - *Nop  # Load phase is different actor
   - *Nop
   - MetricsName: CommitLatency_w0_local
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: 0
     ReadConcern:
@@ -79,6 +79,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_w1_local
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: 1
     ReadConcern:
@@ -88,6 +91,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_w1_local_sec
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: 1
     ReadConcern:
@@ -97,6 +103,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_w1_jtrue_local_sec
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: 1
       Journal: true
@@ -107,6 +116,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_majority
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: majority
     ReadConcern:
@@ -116,6 +128,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_majority_sec
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: majority
     ReadConcern:
@@ -125,6 +140,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_jtrue_majority
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: majority
       Journal: true
@@ -135,6 +153,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_linearizable
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: majority
     ReadConcern:
@@ -144,6 +165,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_majority_session
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: majority
     ReadConcern:
@@ -154,6 +178,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_majority_sec_session
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: majority
     ReadConcern:
@@ -164,6 +191,9 @@ Actors:
   - *Nop
   - *Nop
   - MetricsName: CommitLatency_wmajority_majority_trx
+    Collection: *Collection
+    Repeat: 500
+    Threads: 1
     WriteConcern:
       Level: majority
     ReadConcern:

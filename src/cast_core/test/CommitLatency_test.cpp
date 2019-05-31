@@ -35,7 +35,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     dropAllDatabases();
     auto db = client.database("mydb");
 
-    YAML::Node config = YAML::Load(R"(
+    genny::NodeSource config(R"(
         SchemaVersion: 2018-07-01
         Database: mydb
         Collection: &Collection CommitLatency
@@ -43,24 +43,30 @@ TEST_CASE_METHOD(MongoTestFixture,
         - Name: CommitLatency
           Type: CommitLatency
           Threads: 1
-          Repeat: 500
           Database: test
           Phases:
-           - WriteConcern:
+           - Threads: 1
+             Repeat: 500
+             WriteConcern:
                Level: 0
              ReadConcern:
                Level: local
              ReadPreference:
                ReadMode: primary
-           - WriteConcern:
+             Collection: *Collection
+           - Threads: 1
+             Repeat: 500
+             WriteConcern:
                Level: majority
              ReadConcern:
                Level: snapshot
              ReadPreference:
                ReadMode: primary
+             Collection: *Collection
              Transaction: True         # Implies Session
 
-    )");
+    )",
+                             "");
 
 
     SECTION("With and without transactions.") {
@@ -74,7 +80,7 @@ TEST_CASE_METHOD(MongoTestFixture,
             builder2 << "_id" << 1 << "n" << 100 << bsoncxx::builder::stream::finalize;
             coll.insert_one(builder2.view());
 
-            genny::ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+            genny::ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const genny::WorkloadContext& wc) { wc.actors()[0]->run(); });
 
             auto count = db.collection("CommitLatency").estimated_document_count();

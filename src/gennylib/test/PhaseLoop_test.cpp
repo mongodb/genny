@@ -262,7 +262,7 @@ TEST_CASE("Actual Actor Example") {
         struct IncrPhaseConfig {
             int _key;
             IncrPhaseConfig(PhaseContext& ctx, int keyOffset)
-                : _key{ctx.get<int>("Key") + keyOffset} {}
+                : _key{ctx["Key"].to<int>() + keyOffset} {}
         };
 
         PhaseLoop<IncrPhaseConfig> _loop;
@@ -286,19 +286,21 @@ TEST_CASE("Actual Actor Example") {
     SECTION("Simple Actor") {
         // ////////
         // setup and run (bypass the driver)
-        YAML::Node config = YAML::Load(R"(
+        genny::NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 100
                 Key: 71
               - Repeat: 3
                 Key: 93
-        )");
+        )",
+                                 "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
         ah.run();
 
         REQUIRE(imvProducer->counters ==
@@ -349,29 +351,27 @@ TEST_CASE("Actual Actor Example") {
         };
 
         // This is how a Nop command should be specified.
-        YAML::Node config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Phase: 0
-                Operation:
-                  OperationName: Nop
+                Nop: true
               - Repeat: 10
                 Key: 71
-              - Operation:
-                  OperationName: Nop
-              - Operation:
-                  OperationName: Nop
+              - Nop: true
+              - Nop: true
               - Repeat: 3
                 Key: 93
-              - Operation:
-                  OperationName: Nop
-        )");
+              - Nop: true
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
         ah.run();
 
         REQUIRE(imvProducer->counters ==
@@ -380,41 +380,23 @@ TEST_CASE("Actual Actor Example") {
                     {94, 3}});
     }
 
-    SECTION("Throws with other keywords in Nop phases") {
-        // This is how a Nop command should be specified.
-        YAML::Node config = YAML::Load(R"(
-            SchemaVersion: 2018-07-01
-            Actors:
-            - Type: Nop
-              Phases:
-              - Phase: 0
-                Operation:
-                  OperationName: Nop
-                Duration: 7 minutes
-        )");
-        REQUIRE_THROWS_WITH(
-            ([&]() {
-                ActorHelper ah(config, 1, {{"Nop", genny::actor::NopActor::producer()}});
-            }()),
-            Catch::Matches("'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
-                           "configuration."));
-    }
-
     SECTION("SleepBefore and SleepAfter") {
         using namespace std::literals::chrono_literals;
-        YAML::Node config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 3
                 SleepBefore: 50 milliseconds
                 SleepAfter: 100 milliseconds
                 Key: 71
-        )");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
 
         auto start = std::chrono::high_resolution_clock::now();
         ah.run();
@@ -427,65 +409,71 @@ TEST_CASE("Actual Actor Example") {
 
     SECTION("SleepBefore < 0") {
         using namespace std::literals::chrono_literals;
-        YAML::Node config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 3
                 SleepBefore: -10 milliseconds
                 SleepAfter: 100 milliseconds
                 Key: 71
-        )");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
         REQUIRE_THROWS_WITH(
             ([&]() {
-                ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+                ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                 ah.run();
             }()),
             Catch::Matches("Value for genny::IntegerSpec can't be negative: -10 from config: -10"));
     }
 
-    SECTION("SleepAfter and Rate") {
+    SECTION("SleepAfter and GlobalRate") {
         using namespace std::literals::chrono_literals;
-        YAML::Node config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 3
                 SleepBefore: 10 milliseconds
                 SleepAfter: 100 milliseconds
-                Rate: 20 per 30 milliseconds
+                GlobalRate: 20 per 30 milliseconds
                 Key: 71
-        )");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
         REQUIRE_THROWS_WITH(([&]() {
-                                ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+                                ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
                                 ah.run();
                             }()),
-                            Catch::Matches(R"(Rate must \*not\* be specified alongside .*)"));
+                            Catch::Matches(R"(GlobalRate must \*not\* be specified alongside .*)"));
     }
 
     SECTION("SleepBefore = 0") {
         using namespace std::literals::chrono_literals;
-        YAML::Node config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Type: Inc
+              Name: Inc
               Phases:
               - Repeat: 3
                 SleepBefore: 0 milliseconds
                 SleepAfter: 100 milliseconds
                 Key: 71
-        )");
+        )",
+                          "");
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
-        ActorHelper ah(config, 1, {{"Inc", imvProducer}});
+        ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
 
         auto start = std::chrono::high_resolution_clock::now();
         ah.run();

@@ -24,9 +24,8 @@
 #include <mongocxx/read_preference.hpp>
 #include <mongocxx/write_concern.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <gennylib/InvalidConfigurationException.hpp>
+#include <gennylib/Node.hpp>
 #include <gennylib/Orchestrator.hpp>
 
 namespace genny {
@@ -37,8 +36,8 @@ namespace genny {
  * the value in a node or a fallback value (traditionally, this involves at least a decltype).
  */
 template <typename T, typename S>
-void decodeNodeInto(T& out, const YAML::Node& node, const S& fallback) {
-    out = node.as<T>(fallback);
+void decodeNodeInto(T& out, const genny::Node& node, const S& fallback) {
+    out = node.maybe<T>().value_or(fallback);
 }
 
 /**
@@ -116,7 +115,7 @@ inline bool operator==(const TimeSpec& lhs, const TimeSpec& rhs) {
 using Duration = typename TimeSpec::ValueT;
 
 /**
- * Rate defined as X operations per Y duration.
+ * RateSpec defined as X operations per Y duration.
  */
 struct RateSpec {
     RateSpec() = default;
@@ -380,7 +379,7 @@ struct convert<genny::PhaseRangeSpec> {
 };
 
 /**
- * Convert between YAML and genny::Rate
+ * Convert between YAML and genny::RateSpec
  *
  * The YAML syntax accepts [genny::Integer] per [genny::Time]
  * The syntax is interpreted as operations per unit of time.

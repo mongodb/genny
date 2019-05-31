@@ -26,13 +26,13 @@
 
 namespace genny {
 
-WorkloadContext::WorkloadContext(const YAML::Node& node,
+WorkloadContext::WorkloadContext(const Node& node,
                                  metrics::Registry& registry,
                                  Orchestrator& orchestrator,
                                  const std::string& mongoUri,
                                  const Cast& cast,
                                  v1::PoolManager::OnCommandStartCallback apmCallback)
-    : v1::ConfigNode(node),
+    : v1::HasNode{node},
       _registry{&registry},
       _orchestrator{&orchestrator},
       _rateLimiters{10},
@@ -42,7 +42,7 @@ WorkloadContext::WorkloadContext(const YAML::Node& node,
 
     // This is good enough for now. Later can add a WorkloadContextValidator concept
     // and wire in a vector of those similar to how we do with the vector of Producers.
-    if (const std::string schemaVersion = this->get_noinherit<std::string>("SchemaVersion");
+    if (const std::string schemaVersion = (*this)["SchemaVersion"].to<std::string>();
         validSchemaVersions.count(schemaVersion) != 1) {
         std::ostringstream errMsg;
         errMsg << "Invalid Schema Version: " << schemaVersion;
@@ -53,13 +53,13 @@ WorkloadContext::WorkloadContext(const YAML::Node& node,
     mongocxx::instance::current();
 
     // Make a bunch of actor contexts
-    for (const auto& actor : this->get_noinherit("Actors")) {
+    for (const auto& [k, actor] : (*this)["Actors"]) {
         _actorContexts.emplace_back(std::make_unique<genny::ActorContext>(actor, *this));
     }
 
     // Default value selected from random.org, by selecting 2 random numbers
     // between 1 and 10^9 and concatenating.
-    _rng.seed(this->get_noinherit<int, false>("RandomSeed").value_or(269849313357703264));
+    _rng.seed((*this)["RandomSeed"].maybe<long>().value_or(269849313357703264));
 
     for (auto& actorContext : _actorContexts) {
         for (auto&& actor : _constructActors(cast, actorContext)) {
@@ -72,7 +72,7 @@ WorkloadContext::WorkloadContext(const YAML::Node& node,
 ActorVector WorkloadContext::_constructActors(const Cast& cast,
                                               const std::unique_ptr<ActorContext>& actorContext) {
     auto actors = ActorVector{};
-    auto name = actorContext->get<std::string>("Type");
+    auto name = (*actorContext)["Type"].to<std::string>();
 
     std::shared_ptr<ActorProducer> producer;
     try {
@@ -91,7 +91,7 @@ ActorVector WorkloadContext::_constructActors(const Cast& cast,
 }
 
 mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t instance) {
-    return _poolManager.client(name, instance, *this);
+    return _poolManager.client(name, instance, this->_node);
 }
 
 v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
@@ -121,23 +121,23 @@ DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
 
 // Helper method to convert Phases:[...] to PhaseContexts
 std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::constructPhaseContexts(
-    const YAML::Node&, ActorContext* actorContext) {
+    const Node&, ActorContext* actorContext) {
     std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> out;
-    auto phases = actorContext->get<YAML::Node, false>("Phases");
+    auto& phases = (*actorContext)["Phases"];
     if (!phases) {
         return out;
     }
     PhaseNumber lastPhaseNumber = 0;
-    for (const auto& phase : *phases) {
-        // If we don't have a node or we are a null type, then we are a NoOp
-        if (!phase || phase.IsNull()) {
+    for (const auto& [k, phase] : phases) {
+        // If we don't have a node or we are a null type, then we are a Nop
+        if (!phase || phase.isNull()) {
             std::ostringstream ss;
             ss << "Encountered a null/empty phase. "
                   "Every phase should have at least be an empty map.";
             throw InvalidConfigurationException(ss.str());
         }
-        PhaseRangeSpec configuredRange =
-            phase["Phase"].as<PhaseRangeSpec>(PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
+        PhaseRangeSpec configuredRange = phase["Phase"].maybe<PhaseRangeSpec>().value_or(
+            PhaseRangeSpec{IntegerSpec{lastPhaseNumber}});
         for (PhaseNumber rangeIndex = configuredRange.start; rangeIndex <= configuredRange.end;
              rangeIndex++) {
             auto [it, success] = out.try_emplace(
@@ -154,57 +154,8 @@ std::unordered_map<PhaseNumber, std::unique_ptr<PhaseContext>> ActorContext::con
     return out;
 }
 
-// this could probably be made into a free-function rather than an
-// instance method
-bool PhaseContext::_isNop() const {
-    auto hasNoOp = get<bool, false>("Nop").value_or(false)  //
-        || get<bool, false>("nop").value_or(false)          //
-        || get<bool, false>("NoOp").value_or(false)         //
-        || get<bool, false>("noop").value_or(false);
-
-    // If we had the simple Nop key, just exit out now
-    if (hasNoOp)
-        return true;
-
-    // If we don't have an operation or our operation isn't a map, then we're not a NoOp
-    auto maybeOperation = get<YAML::Node, false>("Operation");
-    if (!maybeOperation)
-        return false;
-
-    // If we have a simple string, use that
-    // If we have a full object, get "OperationName"
-    // Otherwise, we're null
-    auto yamlOpName = YAML::Node{};
-    if (maybeOperation->IsScalar())
-        yamlOpName = *maybeOperation;
-    else if (maybeOperation->IsMap())
-        yamlOpName = (*maybeOperation)["OperationName"];
-
-    // At this stage, we should have a string scalar
-    if (!yamlOpName.IsScalar())
-        return false;
-
-    // Fall back to an empty string in case we cannot convert to string
-    const auto& opName = yamlOpName.as<std::string>("");
-    return (opName == "Nop")   //
-        || (opName == "nop")   //
-        || (opName == "NoOp")  //
-        || (opName == "noop");
-}
-
 bool PhaseContext::isNop() const {
-    auto isNop = _isNop();
-
-    // Check to make sure we haven't broken our rules
-    if (isNop && _node.size() > 1) {
-        if (_node.size() != 2 || !_node["Phase"]) {
-            throw InvalidConfigurationException(
-                "'Nop' cannot be used with any other keywords except 'Phase'. Check YML "
-                "configuration.");
-        }
-    }
-
-    return isNop;
+    auto& nop = (*this)["Nop"];
+    return nop.maybe<bool>().value_or(false);
 }
-
 }  // namespace genny

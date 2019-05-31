@@ -1,8 +1,9 @@
 SchemaVersion: 2018-07-01
 
-Pool:
-  QueryOptions:
-    maxPoolSize: 100
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 100
 
 Actors:
 - Name: Loader
@@ -13,24 +14,25 @@ Actors:
       Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
       Key: Loader
     Repeat: 1
-  - &NoOp {Operation: Nop}
+    Threads: 1
+  - &Nop {Nop: true}
 
 - Name: Update
   Type: MultiCollectionUpdate
   Threads: 10
   Phases:
-  - *NoOp
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Update
     Duration: &Duration 1 hour
-    Rate: 10 per 1 millisecond  # Target is 10 operations on every millisecond.
+    GlobalRate: 10 per 1 millisecond  # Target is 10 operations on every millisecond.
 
 - Name: Query
   Type: MultiCollectionQuery
   Threads: 10
   Phases:
-  - *NoOp
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: Query
@@ -40,7 +42,7 @@ Actors:
   Type: MultiCollectionQuery
   Threads: 2  # 2 threads for doing a two-minute query every minute.
   Phases:
-  - *NoOp
+  - *Nop
   - ExternalPhaseConfig:
       Path: *PhasePath
       Key: LargeQuery

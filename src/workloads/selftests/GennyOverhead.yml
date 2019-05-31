@@ -1,0 +1,63 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+
+Description: |
+
+  This workload measures the overhead of Genny itself. There are 2 different
+  configurations that run consecutively for 5 phases each. The first
+  configuration runs with 100 threads and the second configuration runs
+  with 1 thread.
+
+  The 5 phases of each configuration are as follows:
+
+  1. Loop for 10 seconds using the "Duration" keyword
+  2. Loop for 3M iterations using the "Repeat" keyword. Each iteration
+     takes around 5µs when run in a single thread.
+  3. Loop for 10k iterations with a 1 per 1ms rate limit
+  4. Loop for 10k iterations while sleeping for 1ms before each iteration
+  5. Loop for 10k iterations while sleeping for 1ms after each iteration
+
+  Each iteration is craftered to take around 10s. More configurations
+  can be added as needed, but unfortunately the "5 phases" building block
+  can't be reused en masse because YAML doesn't support merging lists.
+
+Actors:
+- Name: GennyOverhead100T
+  Type: NopMetrics
+  Threads: 100
+  Phases:
+  - MetricsName: LoopOnlyFixedTime
+    Duration: 10 milliseconds  # This test produces 20GB of metrics per second.
+  - MetricsName: LoopOnly
+    Repeat: 1e4  # Repeat 10k times per thread for a total of 1e6 iterations.
+  - MetricsName: LoopNRateLimit
+    Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
+    GlobalRate: 1 per 1 millisecond
+  - MetricsName: LoopNSleepBefore
+    Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
+    SleepBefore: 1 millisecond
+  - MetricsName: LoopNSleepAfter
+    Repeat: 100  # Repeat 100 times per thread for a total of 1e4 iterations.
+    SleepAfter: 1 millisecond
+  - Phase: 5..9
+    Nop: true
+
+- Name: GennyOverhead1T
+  Type: NopMetrics
+  Threads: 1
+  Phases:
+  - Phase: 0..4
+    Nop: true
+  - MetricsName: LoopOnlyFixedTime
+    Duration: 10 milliseconds
+  - MetricsName: LoopOnly
+    Repeat: 1e6
+  - MetricsName: LoopNRateLimit
+    Repeat: 1e4
+    GlobalRate: 1 per 1 millisecond
+  - MetricsName: LoopNSleepBefore
+    Repeat: 1e4
+    SleepBefore: 1 millisecond
+  - MetricsName: LoopNSleepAfter
+    Repeat: 1e4
+    SleepAfter: 1 millisecond

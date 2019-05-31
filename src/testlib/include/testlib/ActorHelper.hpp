@@ -20,8 +20,6 @@
 
 #include <mongocxx/uri.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <gennylib/Cast.hpp>
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
@@ -47,7 +45,7 @@ public:
      * @param uri optional, connection string to the mongo cluster.
      * @param clientOpts optional, options to the mongocxx::client.
      */
-    ActorHelper(const YAML::Node& config,
+    ActorHelper(const Node& config,
                 int tokenCount,
                 Cast::List castInitializer,
                 const std::string& uri = mongocxx::uri::k_default_uri,
@@ -56,7 +54,7 @@ public:
     /**
      * Construct an ActorHelper with the global cast.
      */
-    ActorHelper(const YAML::Node& config,
+    ActorHelper(const Node& config,
                 int tokenCount,
                 const std::string& uri = mongocxx::uri::k_default_uri,
                 v1::PoolManager::OnCommandStartCallback apmCallback = {});
@@ -74,7 +72,7 @@ public:
 
     void doRunThreaded(const WorkloadContext& wl);
 
-    const std::string_view getMetricsOutput() {
+    const std::string getMetricsOutput() {
         return _metricsOutput.str();
     }
 

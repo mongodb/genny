@@ -172,3 +172,20 @@ bsoncxx::array::value genny::testing::toArrayBson(const YAML::Node& node) {
     }
     return arr.extract();
 }
+
+bsoncxx::document::value genny::testing::toDocumentBson(const genny::Node& node) {
+    std::stringstream str;
+    str << node;
+    const YAML::Node asYaml = YAML::Load(str.str());
+    return genny::testing::toDocumentBson(asYaml);
+}
+
+bsoncxx::document::value genny::testing::toDocumentBson(const std::string& yaml) {
+    const YAML::Node asYaml = YAML::Load(yaml);
+    return genny::testing::toDocumentBson(asYaml);
+}
+
+bsoncxx::array::value genny::testing::toArrayBson(const std::string& yaml) {
+    const YAML::Node asYaml = YAML::Load(yaml);
+    return genny::testing::toArrayBson(asYaml);
+}

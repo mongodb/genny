@@ -19,7 +19,28 @@ def run_self_test():
     sys.exit(0)
 
 
+def validate_environment():
+    # Check Python version
+    if not sys.version_info >= (3, 7):
+        logging.error('Please run this script with Python 3.7 or newer')
+        sys.exit(1)
+
+    # Check the macOS version. Non-mac platforms return a tuple of empty strings
+    # for platform.mac_ver().
+    if platform.mac_ver()[0]:
+        release_triplet = platform.mac_ver()[0].split('.')
+        if int(release_triplet[1]) < 14:
+            # You could technically compile clang or gcc yourself on an older version
+            # of macOS, but it's untested so we might as well just enforce
+            # a blanket minimum macOS version for simplicity.
+            logging.error('Genny requires macOS 10.14 Mojave or newer')
+            sys.exit(1)
+    return
+
+
 def main():
+    validate_environment()
+
     # Initialize the global context.
     os_family = platform.system()
     Context.set_triplet_os(os_family)

@@ -17,6 +17,8 @@
 #include <thread>
 #include <vector>
 
+#include <boost/exception/diagnostic_information.hpp>
+
 #include <gennylib/Orchestrator.hpp>
 #include <gennylib/context.hpp>
 
@@ -25,7 +27,7 @@
 
 namespace genny {
 
-ActorHelper::ActorHelper(const YAML::Node& config,
+ActorHelper::ActorHelper(const Node& config,
                          int tokenCount,
                          Cast::List castInitializer,
                          const std::string& uri,
@@ -44,7 +46,7 @@ ActorHelper::ActorHelper(const YAML::Node& config,
         config, *_registry, *_orchestrator, uri, *_cast, apmCallback);
 }
 
-ActorHelper::ActorHelper(const YAML::Node& config,
+ActorHelper::ActorHelper(const Node& config,
                          int tokenCount,
                          const std::string& uri,
                          v1::PoolManager::OnCommandStartCallback apmCallback) {
@@ -80,7 +82,16 @@ void ActorHelper::doRunThreaded(const WorkloadContext& wl) {
     std::transform(cbegin(wl.actors()),
                    cend(wl.actors()),
                    std::back_inserter(threads),
-                   [&](const auto& actor) { return std::thread{[&]() { actor->run(); }}; });
+                   [&](const auto& actor) {
+                       return std::thread{[&]() {
+                           try {
+                               actor->run();
+                           } catch (const boost::exception& b) {
+                               BOOST_LOG_TRIVIAL(error) << boost::diagnostic_information(b, true);
+                               throw;
+                           }
+                       }};
+                   });
 
     for (auto& thread : threads)
         thread.join();

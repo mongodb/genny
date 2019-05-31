@@ -28,11 +28,11 @@ Actors:
   Foo:
     Repeat: "do-not-touch"
   Phases:
-  - Duration: 4 scores        # Removed
-    Repeat: 1e999             # Replaced with "1"
-    Rate: 1 per 2 megannum    # Removed
-    SleepBefore: 2 planks     # Removed
-    SleepAfter: 1 longtime    # Removed
+  - Duration: 4 scores            # Removed
+    Repeat: 1e999                 # Replaced with "1"
+    GlobalRate: 1 per 2 megannum  # Removed
+    SleepBefore: 2 planks         # Removed
+    SleepAfter: 1 longtime        # Removed
     Bar:
       Duration: "do-not-touch"
 )");

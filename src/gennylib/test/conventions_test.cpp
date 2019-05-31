@@ -15,17 +15,45 @@
 #include <chrono>
 #include <cmath>
 
-#include <yaml-cpp/yaml.h>
-
+#include <gennylib/Node.hpp>
 #include <gennylib/conventions.hpp>
-#include <testlib/MongoTestFixture.hpp>
 
+#include <testlib/MongoTestFixture.hpp>
 #include <testlib/helpers.hpp>
 
 
 namespace genny {
 namespace {
 using namespace std::chrono;
+
+TEST_CASE("Conventions used by PhaseLoop") {
+    NodeSource ns(R"(
+    SchemaVersion: 2018-07-01
+    Database: test
+    Actors:
+    - Name: MetricsNameTest
+      Type: HelloWorld
+      Threads: 1
+      Phases:
+      - Repeat: 1
+    )",
+                  "");
+    auto& yaml = ns.root();
+    auto& phaseContext = yaml["Actors"][0]["Phases"][0];
+    // Test of the test
+    REQUIRE(phaseContext);
+
+    REQUIRE(phaseContext["Nop"].maybe<bool>().value_or(false) == false);
+
+    // from `explicit IterationChecker(PhaseContext& phaseContext)` ctor
+    REQUIRE(phaseContext["Duration"].maybe<TimeSpec>() == std::nullopt);
+    REQUIRE(*(phaseContext["Repeat"].maybe<IntegerSpec>()) == IntegerSpec{1});
+    REQUIRE(phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{33}) == TimeSpec{33});
+    REQUIRE(phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{33}) == TimeSpec{33});
+    REQUIRE(phaseContext["Rate"].maybe<RateSpec>() == std::nullopt);
+    REQUIRE(phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter") ==
+            "defaultRateLimiter");
+};
 
 TEST_CASE("genny::TimeSpec conversions") {
     SECTION("Can convert to genny::TimeSpec") {
@@ -99,8 +127,12 @@ TEST_CASE("genny::IntegerSpec conversions") {
 
 TEST_CASE("genny::RateSpec conversions") {
     SECTION("Can convert to genny::RateSpec") {
-        REQUIRE(YAML::Load("Rate: 300 per 2 nanoseconds")["Rate"].as<RateSpec>().operations == 300);
-        REQUIRE(YAML::Load("Rate: 300 per 2 nanoseconds")["Rate"].as<RateSpec>().per.count() == 2);
+        REQUIRE(YAML::Load("GlobalRate: 300 per 2 nanoseconds")["GlobalRate"]
+                    .as<RateSpec>()
+                    .operations == 300);
+        REQUIRE(YAML::Load("GlobalRate: 300 per 2 nanoseconds")["GlobalRate"]
+                    .as<RateSpec>()
+                    .per.count() == 2);
     }
 
     SECTION("Barfs on invalid values") {
@@ -118,9 +150,9 @@ TEST_CASE("genny::RateSpec conversions") {
 
     SECTION("Can encode") {
         YAML::Node n;
-        n["Rate"] = RateSpec{20, 30};
-        REQUIRE(n["Rate"].as<RateSpec>().per.count() == 20);
-        REQUIRE(n["Rate"].as<RateSpec>().operations == 30);
+        n["GlobalRate"] = RateSpec{20, 30};
+        REQUIRE(n["GlobalRate"].as<RateSpec>().per.count() == 20);
+        REQUIRE(n["GlobalRate"].as<RateSpec>().operations == 30);
     }
 }
 

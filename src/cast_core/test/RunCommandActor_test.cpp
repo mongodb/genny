@@ -55,7 +55,7 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "RunCommandActor successfully connects to a MongoDB instance.",
                  "[standalone][single_node_replset][three_node_replset]") {
 
-    YAML::Node config = YAML::Load(R"(
+    NodeSource config(R"(
         SchemaVersion: 2018-07-01
         Actors:
         - Name: TestRunCommand
@@ -63,27 +63,29 @@ TEST_CASE_METHOD(MongoTestFixture,
           Phases:
           - Repeat: 1
             Database: mydb
-            Type: RunCommand
             Operation:
+              OperationName: RunCommand
               OperationCommand: {someKey: 1}
-    )");
-
-    ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+    )",
+                      "");
 
     SECTION("throws error with full context on operation_exception") {
         bool has_exception = true;
 
         try {
+            ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
             ah.run([](const WorkloadContext& wc) { wc.actors()[0]->run(); });
             has_exception = false;
         } catch (const boost::exception& e) {
             auto diagInfo = boost::diagnostic_information(e);
-
+            INFO(diagInfo);
             REQUIRE(diagInfo.find("someKey") != std::string::npos);
             REQUIRE(diagInfo.find("InfoObject") != std::string::npos);
 
             REQUIRE(diagInfo.find("no such command") != std::string::npos);
             REQUIRE(diagInfo.find("ServerResponse") != std::string::npos);
+        } catch(const std::exception& x) {
+            FAIL(x.what());
         }
 
         // runCommandHelper did not throw exception.
@@ -139,8 +141,10 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
             yamlPhase["Operation"]["OperationCommand"]["writeConcern"]["w"] = 3;
         }(yamlConfig["Actors"][0]["Phases"][0]);
 
+        NodeSource nodeSource{YAML::Dump(yamlConfig), ""};
         auto apmCallback = makeApmCallback(events);
-        ActorHelper ah(yamlConfig, 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
+        ActorHelper ah{
+            nodeSource.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback};
         ah.run();
         auto coll = MongoTestFixture::client["test"]["testCollection"];
         REQUIRE(events.size() > 0);
@@ -196,6 +200,8 @@ TEST_CASE_METHOD(MongoTestFixture,
                  "Perform a single RunCommand command.",
                  "[standalone][single_node_replset][three_node_replset]") {
     dropAllDatabases();
+    client.database("admin").collection("testCollection").drop();
+
     auto db = client.database("test");
 
     SECTION("Insert a single document using the 'Operations' key name.") {
@@ -206,9 +212,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
@@ -218,7 +224,8 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        NodeSource nodeSource{YAML::Dump(config), ""};
+        ActorHelper ah(nodeSource.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.collection("testCollection").count_documents(view) == 1);
@@ -239,8 +246,9 @@ TEST_CASE_METHOD(MongoTestFixture,
               - Repeat: 1
                 Operations: 5
         )");
-        REQUIRE_THROWS_AS(ActorHelper(config, 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidConfigurationException);
+        NodeSource ns{YAML::Dump(config), ""};
+        REQUIRE_THROWS_AS(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()),
+                          InvalidKeyException);
     }
 
     SECTION("Insert a single document using the 'Operation' key name.") {
@@ -251,9 +259,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operation:
                   OperationName: RunCommand
                   OperationCommand:
@@ -263,9 +271,9 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        NodeSource ns{YAML::Dump(config), ""};
+        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, view](const WorkloadContext& context) {
-            REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.collection("testCollection").count_documents(view) == 1);
         };
         ah.runDefaultAndVerify(verifyFn);
@@ -279,9 +287,9 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operation:
                   OperationName: RunCommand
                   OperationCommand:
@@ -295,7 +303,8 @@ TEST_CASE_METHOD(MongoTestFixture,
                                                      << "$gte" << 5 << bson_stream::close_document
                                                      << bson_stream::finalize;
         auto view = doc_value.view();
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        NodeSource ns{YAML::Dump(config), ""};
+        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, view](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.collection("testCollection").count_documents(view) == 1);
@@ -309,22 +318,23 @@ TEST_CASE_METHOD(MongoTestFixture,
 
             Actors:
             - Name: TestActor
-            Type: RunCommand
-            Threads: 1
-            Database: test
-            Phases:
-            - Repeat: 1
-              OperationName: RunCommand
-              OperationCommand:
-                insert: testCollection
-                documents: [{rating: 10}]
-              OperationName: RunCommand
-              OperationCommand:
-                insert: testCollection
-                documents: [{rating: 10}]
+              Type: RunCommand
+              Threads: 1
+              Database: test
+              Phases:
+              - Repeat: 1
+                OperationName: RunCommand
+                OperationCommand:
+                  insert: testCollection
+                  documents: [{rating: 10}]
+                OperationName: RunCommand
+                OperationCommand:
+                  insert: testCollection
+                  documents: [{rating: 10}]
         )");
-        REQUIRE_THROWS_AS(ActorHelper(config, 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidConfigurationException);
+        NodeSource ns{YAML::Dump(config), ""};
+        REQUIRE_THROWS_AS(ActorHelper(ns.root(), 1, MongoTestFixture::connectionUri().to_string()),
+                          InvalidKeyException);
     }
 
     SECTION("Database should default to 'admin' when not specified in the the config.") {
@@ -346,7 +356,9 @@ TEST_CASE_METHOD(MongoTestFixture,
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+
+        NodeSource ns{YAML::Dump(config), ""};
+        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto adminDb = client.database("admin");
         auto verifyFn = [&adminDb, view](const WorkloadContext& context) {
             REQUIRE(adminDb.has_collection("testCollection"));
@@ -355,9 +367,9 @@ TEST_CASE_METHOD(MongoTestFixture,
 
         ah.runDefaultAndVerify(verifyFn);
 
+        NodeSource ns2{YAML::Dump(dropAdminTestCollConfig), ""};
         // Clean up the newly created collection in the 'admin' database.
-        ActorHelper dropCollActor(
-            dropAdminTestCollConfig, 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper dropCollActor(ns2.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyDropFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
         };
@@ -380,24 +392,26 @@ TEST_CASE_METHOD(MongoTestFixture,
             - Name: TestActor
               Type: AdminCommand
               Threads: 1
-              Database: admin
               Phases:
               - Repeat: 1
+                Database: admin
                 Operation:
                   OperationName: AdminCommand
                   OperationCommand:
                     create: testCollection
         )");
+        NodeSource ns{YAML::Dump(config), ""};
+
         REQUIRE_FALSE(adminDb.has_collection("testCollection"));
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyCreateFun = [&adminDb](const WorkloadContext& context) {
             REQUIRE(adminDb.has_collection("testCollection"));
         };
         ah.runDefaultAndVerify(verifyCreateFun);
 
         // Clean up the newly created collection in the 'admin' database.
-        ActorHelper dropCollActor(
-            dropAdminTestCollConfig, 1, MongoTestFixture::connectionUri().to_string());
+        NodeSource ns2{YAML::Dump(dropAdminTestCollConfig), ""};
+        ActorHelper dropCollActor(ns2.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyDropFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
         };
@@ -418,37 +432,42 @@ TEST_CASE_METHOD(MongoTestFixture,
                   OperationCommand:
                     create: testCollection
         )");
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        NodeSource ns{YAML::Dump(config), ""};
+        ActorHelper ah(ns.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyCreateFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE(adminDb.has_collection("testCollection"));
         };
         ah.runDefaultAndVerify(verifyCreateFn);
 
+        NodeSource ns2{YAML::Dump(dropAdminTestCollConfig), ""};
+
+
         // Clean up the newly created collection in the 'admin' database.
-        ActorHelper dropCollActor(
-            dropAdminTestCollConfig, 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper dropCollActor(ns2.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyDropFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
         };
         dropCollActor.runDefaultAndVerify(verifyDropFn);
     }
     SECTION("Running an AdminCommand on a non-admin database should throw.") {
-        auto config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Name: TestActor
               Type: AdminCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operation:
                   OperationName: AdminCommand
                   OperationCommand:
                     create: testCollection
-        )");
-        REQUIRE_THROWS_AS(ActorHelper(config, 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidConfigurationException);
+        )",
+                          "");
+        REQUIRE_THROWS_AS(
+            ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()),
+            InvalidConfigurationException);
     }
 }
 
@@ -462,15 +481,15 @@ TEST_CASE_METHOD(MongoTestFixture,
     auto db = client.database("test");
 
     SECTION("Create a collection and then insert a document.") {
-        auto config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: AdminCommand
                   OperationCommand:
@@ -481,11 +500,12 @@ TEST_CASE_METHOD(MongoTestFixture,
                     documents:
                     - {rating: {^RandomInt: {min: 10, max: 10}}, name: y}
                     - {rating: 10, name: x}
-        )");
+        )",
+                          "");
         auto builder = bson_stream::document{};
         bsoncxx::document::value doc_value = builder << "rating" << 10 << bson_stream::finalize;
         auto view = doc_value.view();
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, adminDb, view](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection"));
@@ -495,7 +515,7 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 
     SECTION("Database should default to 'admin' if not specified in the config.") {
-        auto config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
 
             Actors:
@@ -511,8 +531,9 @@ TEST_CASE_METHOD(MongoTestFixture,
                 - OperationName: AdminCommand
                   OperationCommand:
                     drop: testCollection
-        )");
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        )",
+                          "");
+        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&adminDb](const WorkloadContext& context) {
             REQUIRE_FALSE(adminDb.has_collection("testCollection"));
         };
@@ -520,15 +541,15 @@ TEST_CASE_METHOD(MongoTestFixture,
     }
 
     SECTION("Having both 'Operation' and 'Operations' should throw.") {
-        auto config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operation:
                   OperationName: RunCommand
                   OperationCommand:
@@ -539,9 +560,11 @@ TEST_CASE_METHOD(MongoTestFixture,
                   OperationCommand:
                     insert: testCollection
                     documents: [{rating: 15}]
-        )");
-        REQUIRE_THROWS_AS(ActorHelper(config, 1, MongoTestFixture::connectionUri().to_string()),
-                          InvalidConfigurationException);
+        )",
+                          "");
+        REQUIRE_THROWS_AS(
+            ActorHelper(config.root(), 1, MongoTestFixture::connectionUri().to_string()),
+            InvalidKeyException);
     }
 }
 
@@ -554,78 +577,80 @@ TEST_CASE_METHOD(MongoTestFixture,
     auto db = client.database("test");
 
     SECTION("Insert a single document with operation metrics reported.") {
-        auto config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
                     insert: testCollection
                     documents: [{rating: 10}]
                   OperationMetricsName: InsertMetric
-        )");
+        )",
+                          "");
 
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, &ah](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
 
-            std::string_view metricsOutput = ah.getMetricsOutput();
+            std::string metricsOutput = ah.getMetricsOutput();
             auto metricNamePos = metricsOutput.rfind("InsertMetric");
 
             // Naive check that the metrics output contains the substring equal to the metric name.
-            REQUIRE(metricNamePos != std::string_view::npos);
+            REQUIRE(metricNamePos != std::string::npos);
         };
         ah.runDefaultAndVerify(verifyFn);
     }
 
     SECTION("Insert a single document with operation metrics not reported.") {
-        auto config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
             Actors:
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
                     insert: testCollection
                     documents: [{rating: 10}]
-        )");
+        )",
+                          "");
 
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
         };
         ah.runDefaultAndVerify(verifyFn);
 
-        std::string_view metricsOutput = ah.getMetricsOutput();
+        std::string metricsOutput = ah.getMetricsOutput();
         auto metricNamePos = metricsOutput.rfind("InsertMetric");
 
         // Naive check that the metrics output doesn't contain the substring equal to the metric
         // name.
-        REQUIRE(metricNamePos == std::string_view::npos);
+        REQUIRE(metricNamePos == std::string::npos);
     }
 
     SECTION("Have multiple operation metrics reported.") {
-        auto config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
 
             Actors:
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
@@ -636,35 +661,36 @@ TEST_CASE_METHOD(MongoTestFixture,
                   OperationCommand:
                     create: testCollection2
                   OperationMetricsName: CreateCollectionMetric
-        )");
+        )",
+                          "");
 
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, &ah](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection2"));
 
-            std::string_view metricsOutput = ah.getMetricsOutput();
+            std::string metricsOutput = ah.getMetricsOutput();
             auto insertMetricNamePos = metricsOutput.rfind("InsertMetric");
             auto createCollMetricNamePos = metricsOutput.rfind("CreateCollectionMetric");
 
             // Naive check that the metrics output contains the substring equal to the metric name.
-            REQUIRE(insertMetricNamePos != std::string_view::npos);
-            REQUIRE(createCollMetricNamePos != std::string_view::npos);
+            REQUIRE(insertMetricNamePos != std::string::npos);
+            REQUIRE(createCollMetricNamePos != std::string::npos);
         };
         ah.runDefaultAndVerify(verifyFn);
     }
 
     SECTION("Metrics reported for only one of the two operations listed.") {
-        auto config = YAML::Load(R"(
+        NodeSource config(R"(
             SchemaVersion: 2018-07-01
 
             Actors:
             - Name: TestActor
               Type: RunCommand
               Threads: 1
-              Database: test
               Phases:
               - Repeat: 1
+                Database: test
                 Operations:
                 - OperationName: RunCommand
                   OperationCommand:
@@ -674,20 +700,21 @@ TEST_CASE_METHOD(MongoTestFixture,
                   OperationCommand:
                     create: testCollection2
                   OperationMetricsName: CreateCollectionMetric
-        )");
+        )",
+                          "");
 
-        ActorHelper ah(config, 1, MongoTestFixture::connectionUri().to_string());
+        ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
         auto verifyFn = [&db, &ah](const WorkloadContext& context) {
             REQUIRE(db.has_collection("testCollection"));
             REQUIRE(db.has_collection("testCollection2"));
 
-            std::string_view metricsOutput = ah.getMetricsOutput();
+            std::string metricsOutput = ah.getMetricsOutput();
             auto insertMetricNamePos = metricsOutput.rfind("InsertMetric");
             auto createCollMetricNamePos = metricsOutput.rfind("CreateCollectionMetric");
 
             // Naive check that the metrics output contains the substring equal to the metric name.
-            REQUIRE(insertMetricNamePos == std::string_view::npos);
-            REQUIRE(createCollMetricNamePos != std::string_view::npos);
+            REQUIRE(insertMetricNamePos == std::string ::npos);
+            REQUIRE(createCollMetricNamePos != std::string::npos);
         };
         ah.runDefaultAndVerify(verifyFn);
     }

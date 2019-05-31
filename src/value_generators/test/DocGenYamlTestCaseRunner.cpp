@@ -9,8 +9,6 @@
 #include <bsoncxx/json.hpp>
 #include <bsoncxx/types/value.hpp>
 
-#include <yaml-cpp/yaml.h>
-
 #include <testlib/ActorHelper.hpp>
 #include <testlib/yamlTest.hpp>
 #include <testlib/yamlToBson.hpp>
@@ -61,11 +59,16 @@ public:
         }
     }
 
+    static NodeSource toNode(YAML::Node node) {
+        return NodeSource{YAML::Dump(node), ""};
+    }
+
     void run() const {
         DYNAMIC_SECTION("DocGenYamlTestCaseRunner " << name()) {
             if (_runMode == RunMode::kExpectException) {
                 try {
-                    genny::DocumentGenerator(this->_givenTemplate, rng);
+                    NodeSource ns = toNode(this->_givenTemplate);
+                    genny::DocumentGenerator(ns.root(), rng);
                     FAIL("Expected exception " << this->_expectedExceptionMessage.as<std::string>()
                                                << " but none occurred");
                 } catch (const std::exception& x) {
@@ -75,7 +78,8 @@ public:
                 return;
             }
 
-            auto docGen = genny::DocumentGenerator(this->_givenTemplate, rng);
+            NodeSource ns = toNode(this->_givenTemplate);
+            auto docGen = genny::DocumentGenerator(ns.root(), rng);
             for (const auto&& nextValue : this->_thenReturns) {
                 auto expected = testing::toDocumentBson(nextValue);
                 auto actual = docGen();

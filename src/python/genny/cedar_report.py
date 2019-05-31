@@ -49,6 +49,7 @@ CedarTest = namedtuple('CedarTest', [
 CedarReport = namedtuple('CedarReport', [
     'project',
     'version',
+    'order',
     'variant',
     'task_name',
     'task_id',
@@ -77,6 +78,11 @@ class _Config(object):
         self.execution_number = int(env['execution'])
         # This env var is either the string "true" or unset.
         self.mainline = not (env.get('is_patch', '') == 'true')
+
+        try:
+            self.order = int(env['revision_order_id'])
+        except (ValueError, TypeError):
+            self.order = None
 
         # We set these for convenience.
         self.test_name = env['test_name']
@@ -161,6 +167,7 @@ def build_report(config):
     report = CedarReport(
         project=config.project,
         version=config.version,
+        order=config.order,
         variant=config.variant,
         task_name=config.task_name,
         task_id=config.task_id,
