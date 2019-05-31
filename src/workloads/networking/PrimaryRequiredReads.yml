@@ -36,7 +36,7 @@ Actors:
     Nop: true
   - Phase: 1  # Run
     Duration: 180 seconds
-    GlobalRate: 1 per 100 microseconds
+    GlobalRate: 1 per 1 microsecond
     Database: test
     # We want to continue to send our find commands in any situation.
     # However, failures before replSetStepDown indicate that something was wrong with the test.
