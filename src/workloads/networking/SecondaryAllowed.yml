@@ -34,7 +34,7 @@ Actors:
   - Phase: 0
     Nop: true
   - Phase: 1
-    Rate: 1 per 1 microsecond
+    GlobalRate: 1 per 1 microsecond
     # This should be how long the StepdownCommand Actor Phase 1 takes
     Duration: 2 minutes
     ThrowOnFailure: false
