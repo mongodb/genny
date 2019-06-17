@@ -303,6 +303,9 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
         with open(args.expansions_file, 'r') as f:
             env = yaml.safe_load(f)
 
+    if env.get('cedar_mode', '') == 'skip':
+        return
+
     if args.test_name:
         env['test_name'] = args.test_name
     else:

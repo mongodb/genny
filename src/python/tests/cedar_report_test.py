@@ -162,3 +162,16 @@ class CedarReportTest(unittest.TestCase):
             self.assertDictEqual(expected_json, report_json)
 
         mock_uploader_run.assert_called_with(expected_uploader_run_args)
+
+    @patch('genny.cedar_report.ShellCuratorRunner.run')
+    def test_cedar_mode_skip(self, mock_uploader_run):
+        mock_env = {
+            'cedar_mode': 'skip',
+        }
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            argv = [get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'), output_dir]
+            main__cedar_report(argv, mock_env, _NoopCertRetriever)
+
+        mock_uploader_run.assert_not_called()
+
