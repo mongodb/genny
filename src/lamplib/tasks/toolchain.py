@@ -3,7 +3,6 @@ import os
 import shutil
 import subprocess
 import sys
-import tarfile
 import urllib.request
 
 from context import Context
@@ -52,10 +51,11 @@ def fetch_and_install_toolchain(url, install_dir):
             logging.info('Finished Downloading gennytoolchain as %s', toolchain_tarball)
 
         logging.info('Extracting gennytoolchain into %s, please wait...', toolchain_dir)
-        tarball = tarfile.open(toolchain_tarball)
 
         shutil.rmtree(toolchain_dir, ignore_errors=True)
-        tarball.extractall(toolchain_dir)
+        os.mkdir(toolchain_dir)
+        # use tar(1) because python's TarFile was inexplicably truncating the tarball
+        subprocess.run(['tar', '-xzf', toolchain_tarball, '-C', toolchain_dir])
         logging.info('Finished extracting gennytoolchain into %s', toolchain_dir)
 
         # Get 1GB back.
