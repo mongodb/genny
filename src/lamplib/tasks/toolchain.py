@@ -55,7 +55,7 @@ def fetch_and_install_toolchain(url, install_dir):
         shutil.rmtree(toolchain_dir, ignore_errors=True)
         os.mkdir(toolchain_dir)
         # use tar(1) because python's TarFile was inexplicably truncating the tarball
-        subprocess.run(['tar', '-xzf', toolchain_tarball, '-C', toolchain_dir])
+        subprocess.run(['tar', '-xzf', toolchain_tarball, '-C', toolchain_dir], check=True)
         logging.info('Finished extracting gennytoolchain into %s', toolchain_dir)
 
         # Get 1GB back.
