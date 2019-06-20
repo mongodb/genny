@@ -52,10 +52,10 @@ Make you run the script from the root of the Genny repository
 Script: `genny-metrics-legacy-report`
 ---------------------------------
 
-Produces a summary in JSON format given the 'csv' output format:
+Produces a summary in legacy JSON format for the Evergreen perf plugin.
 
 ```sh
-./genny run -o metrics.csv -m csv InsertRemove.yml
+./genny run -o metrics.csv -m cedar-csv InsertRemove.yml
 genny-metrics-legacy-report metrics.csv
 ```
 
@@ -63,8 +63,7 @@ genny-metrics-legacy-report metrics.csv
 Script: `genny-metrics-report`
 ---------------------------------
 
-Send metrics to Evergreen's metrics collection service (Cedar)
-given the 'cedar-csv' output format.
+Send metrics to Evergreen's metrics collection service (Cedar).
 
 This code snippet is provided for reference only as Cedar does
 not yet support local environments.
