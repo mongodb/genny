@@ -1,0 +1,20 @@
+# This workload loads 500 rows into a collection, each of which is approximately 15MB in size.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/replication"
+
+Actors:
+
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &DB test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 500
+    BatchSize: 1
+    Document:
+      x: {^RandomInt: {min: 0, max: 2147483647}}
+      string0: {^FastRandomString: {length: 15000000}}
