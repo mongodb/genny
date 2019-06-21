@@ -1,0 +1,36 @@
+# This workload inserts 1GB of documents and runs validate()
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 1e4  # TODO: increase the document size/count so there is more data.
+    BatchSize: 10000
+    Document:
+      some_number: &number {^RandomInt: {distribution: geometric, p: 0.1}}
+      some_string: &string {^RandomString: {length: {^RandomInt: {min: 5, max: 10000}}}}
+      some_array:
+      - *string
+      - *number
+  - &Nop {Nop: true}
+
+- Name: Validate
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 10  # Run validate() 10 times to reduce noise.
+    Database: *db
+    Operation:
+      OperationMetricsName: ValidateCmd
+      OperationName: RunCommand
+      OperationCommand:
+        validate: Collection0
