@@ -36,7 +36,7 @@ setup(name='genny',
           'console_scripts': [
               'genny-metrics-report = genny.cedar_report:main__cedar_report',
               'genny-metrics-legacy-report = genny.legacy_report:main__legacy_report',
-              'lint-yaml = genny.workload_linter:main'
+              'lint-yaml = genny.yaml_linter:main'
           ]
       },
       )
