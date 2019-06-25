@@ -1,4 +1,4 @@
-# This workload inserts 1GB of documents and runs validate()
+# This workload inserts ~1GB of documents, creates various indexes and runs validate().
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
@@ -12,14 +12,33 @@ Actors:
     Database: &db test
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 1e4  # TODO: increase the document size/count so there is more data.
+    DocumentCount: 500000
     BatchSize: 10000
     Document:
-      some_number: &number {^RandomInt: {distribution: geometric, p: 0.1}}
-      some_string: &string {^RandomString: {length: {^RandomInt: {min: 5, max: 10000}}}}
-      some_array:
-      - *string
-      - *number
+      x: &x {^RandomInt: {distribution: geometric, p: 0.1}}
+      y: &y {^RandomInt: {distribution: geometric, p: 0.1}}
+      z: &z {^RandomInt: {distribution: geometric, p: 0.1}}
+      a: &a {^RandomString: {length: 500}}
+      b: &b {^RandomString: {length: 750}}
+      c: &c {^RandomString: {length: 1000}}
+      arr:
+      - *a
+      - *x
+      - *y
+      - *z
+    Indexes:
+    - keys: {x: 1}
+    - keys: {x: -1}
+      options: {expireAfterSeconds: 1000000}
+    - keys: {x: 1, y: 1}
+    - keys: {x: 1, y: 1, c: 1}
+    - keys: {arr: 1, z: 1}
+    - keys: {arr: 1, a : 1}
+    - keys: {c: "text"}
+    - keys: {x: 1, a: 1, y: 1, b: 1}
+    - keys: {c: 1}
+      options: {sparse: true}
+    - keys: {b: "hashed"}
   - &Nop {Nop: true}
 
 - Name: Validate
