@@ -1,0 +1,36 @@
+# This workload inserts ~1GB of documents in the first phase, and creates a hashed index on them in the second.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 500000
+    BatchSize: 10000
+    Document:
+      _id: {^RandomString: {length: 1000}}
+  - &Nop {Nop: true}
+
+- Name: IndexCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operation:
+      OperationMetricsName: CreateIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key: 
+            _id: "hashed"
+          name: hashIndex
