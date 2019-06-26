@@ -318,8 +318,8 @@ struct ${actor_name}::PhaseConfig {
     // documentation in ${q}context.hpp${q}.
     //
 
-    PhaseConfig(PhaseContext& phaseContext, mongocxx::database db, ActorId id)
-        : database{std::move(db)},
+    PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
+        : database{db},
           collection{database[phaseContext["Collection"].to<std::string>()]},
           documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
 };
