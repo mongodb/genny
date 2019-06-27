@@ -39,3 +39,4 @@ Actors:
           weights:
             a: {^RandomInt: {distribution: geometric, p: 0.1}}
             b: {^RandomInt: {distribution: geometric, p: 0.1}}
+            

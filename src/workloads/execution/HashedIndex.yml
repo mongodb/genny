@@ -1,4 +1,4 @@
-# This workload inserts ~1GB of documents in the first phase, and creates a geoHaystack index on them in the second.
+# This workload inserts ~1GB of documents in the first phase, and creates a hashed index on them in the second.
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
@@ -15,7 +15,7 @@ Actors:
     DocumentCount: 500000
     BatchSize: 10000
     Document:
-      a: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+      _id: {^RandomString: {length: 1000}}
   - &Nop {Nop: true}
 
 - Name: IndexCollection
@@ -32,7 +32,6 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key: 
-            a: "geoHaystack"
-            min: -180, max: 180
-            bucketSize: {^RandomInt: {distribution: geometric, p: 0.1}}
-          name: geoHaystackIndex
+            _id: "hashed"
+          name: hashIndex
+          

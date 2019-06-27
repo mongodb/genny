@@ -1,4 +1,4 @@
-# This workload inserts ~1GB of documents in the first phase, and creates a hashed index on them in the second.
+# This workload inserts ~1GB of documents in the first phase, and creates a unique index on them in the second.
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
@@ -15,7 +15,9 @@ Actors:
     DocumentCount: 500000
     BatchSize: 10000
     Document:
-      _id: {^RandomString: {length: 1000}}
+      a: {^RandomString: {length: 500}}
+      b: {^RandomInt: {distribution: geometric, p: 0.1}}
+      c: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
   - &Nop {Nop: true}
 
 - Name: IndexCollection
@@ -32,5 +34,10 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key: 
-            _id: "hashed"
-          name: hashIndex
+            a: 1
+            b: 1
+            c: "2dsphere"
+          name: textIndex
+          unique:
+            true
+            
