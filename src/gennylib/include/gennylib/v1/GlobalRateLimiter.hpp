@@ -65,8 +65,7 @@ public:
 public:
     explicit BaseGlobalRateLimiter(const RateSpec& rs)
         : _burstSize(rs.operations),
-          _rateNS(rs.per.count()),
-          _lastEmptiedTimeNS{ClockT::now().time_since_epoch().count()} {};
+          _rateNS(rs.per.count()) {};
 
     // No copies or moves.
     BaseGlobalRateLimiter(const BaseGlobalRateLimiter& other) = delete;
@@ -130,6 +129,13 @@ public:
 
     void addUser() {
         _numUsers++;
+    }
+
+    /**
+     * The rate limiter should be reset before the start of each phase.
+     */
+    void resetLastEmptied() noexcept {
+        _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count();
     }
 
 private:
