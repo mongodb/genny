@@ -138,6 +138,11 @@ public:
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
         // _burstSize. `m` here is the number of threads using the rate limiter.
         if (shouldLimitRate(currentIteration)) {
+
+            // Make sure the bucket is empty on the first iteration.
+            if (currentIteration == 0) {
+                _rateLimiter->resetLastEmptied();
+            }
             while (true) {
                 auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
                 if (!success && (o.currentPhase() == inPhase)) {
