@@ -147,9 +147,8 @@ public:
                 auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
                 if (!success && (o.currentPhase() == inPhase)) {
                     // Add some jitter to avoid threads waking up at once.
-                    std::this_thread::sleep_for(
-                        std::chrono::nanoseconds((_rateLimiter->getRate() + std::rand() % 1000) *
-                                                 _rateLimiter->getNumUsers()));
+                    std::this_thread::sleep_for(std::chrono::nanoseconds(
+                            (_rateLimiter->getRate() * int64_t(0.95 + double(std::rand() % 10) / 10))));
                     continue;
                 }
                 break;
