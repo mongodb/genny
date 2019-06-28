@@ -1,0 +1,163 @@
+# This workload inserts documents in the first phase containing all types of indexes. The second phase creates indexes for each of them.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 150000
+    BatchSize: 10000
+    Document:
+      a: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+      b: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
+      c: { type: "Point", coordinates: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}] }
+      d: {^RandomString: {length: 50}}
+      e: {^RandomInt: {min: -10000000, max: 10000000}}
+      "attributes": { "color": "red", "size":" large", "inside": { "bookmark": 1, "postitnote":2 }, "outside": { "dustcover": "worn" }}
+  - &Nop {Nop: true}
+  - &Nop {Nop: true}
+  - &Nop {Nop: true}
+  - &Nop {Nop: true}
+  - &Nop {Nop: true}
+  - &Nop {Nop: true}
+  - &Nop {Nop: true}
+
+- Name: IndexCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 5
+    Database: *db
+    Operations:
+    - OperationMetricsName: Create2dIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key: 
+            a: "2d"
+            min: -180
+            max: 180
+            bits: 32
+          name: 2dIndex
+    - OperationMetricsName: DropCreated2dIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: 2dIndex
+  - Repeat: 5
+    Database: *db
+    Operations:
+    - OperationMetricsName: Create2dSphereIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key:
+            b: "2dsphere"
+            c: "2dsphere"
+            name: 1
+          name: 2dsphereIndex
+    - OperationMetricsName: DropCreated2dSphereIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: 2dsphereIndex
+  - Repeat: 5
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateGeoHaystackIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key: 
+            a: "geoHaystack"
+            d: 1
+          bucketSize: 5
+          name: geoHaystackIndex
+    - OperationMetricsName: DropCreatedGeoHaystackIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: geoHaystackIndex
+  - Repeat: 5
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateHashedIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key: 
+            d: "hashed"
+          name: hashedIndex
+    - OperationMetricsName: DropCreatedHashedIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: hashedIndex
+  - Repeat: 5
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateTextIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key: 
+            a: "text"
+            b: "text"
+          name: textIndex
+          weights:
+            a: 5
+            b: 10
+    - OperationMetricsName: DropCreatedTextIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: textIndex
+  - Repeat: 5
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateUniqueIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key: 
+            d: 1
+            e: 1
+            b: "2dsphere"
+          name: uniqueIndex
+          unique:
+            true
+    - OperationMetricsName: DropCreatedUniqueIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: uniqueIndex
+  - Repeat: 5
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateWildCardIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key: { "attributes.$**": 1 }
+          name: wildCardIndex
+    - OperationMetricsName: DropCreatedWildCardIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: wildCardIndex
+          
