@@ -1,4 +1,4 @@
-# This workload inserts documents in the first phase containing all types of indexes. The second phase creates indexes for each of them.
+# This workload has 2 actors, InsertData and IndexCollection. InsertData inserts documents containing all types of indexes, and IndexCollection creates indexes for each of them, one at a time.
 
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/server-execution"
@@ -15,19 +15,20 @@ Actors:
     DocumentCount: 150000
     BatchSize: 10000
     Document:
-      a: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
-      b: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
-      c: { type: "Point", coordinates: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}] }
-      d: {^RandomString: {length: 50}}
-      e: {^RandomInt: {min: -10000000, max: 10000000}}
-      "attributes": { "color": "red", "size":" large", "inside": { "bookmark": 1, "postitnote":2 }, "outside": { "dustcover": "worn" }}
+      loc2d: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+      loc2dSphere: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
+      point: { type: "Point", coordinates: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}] }
+      randomString: {^RandomString: {length: 50}}
+      randomInt: {^RandomInt: {min: -10000000, max: 10000000}}
+      "attributes": { randomString : randomString, randomString : randomString, randomString : { randomString :  randomInt, randomString :  randomInt }, randomString : { randomString : randomString }}
   - &Nop {Nop: true}
-  - &Nop {Nop: true}
-  - &Nop {Nop: true}
-  - &Nop {Nop: true}
-  - &Nop {Nop: true}
-  - &Nop {Nop: true}
-  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
 
 - Name: IndexCollection
   Type: RunCommand
@@ -43,10 +44,10 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key: 
-            a: "2d"
-            min: -180
-            max: 180
-            bits: 32
+            loc2d: "2d"
+          min: -180
+          max: 180
+          bits: 32
           name: 2dIndex
     - OperationMetricsName: DropCreated2dIndexesCmd
       OperationName: RunCommand
@@ -56,21 +57,35 @@ Actors:
   - Repeat: 5
     Database: *db
     Operations:
-    - OperationMetricsName: Create2dSphereIndexesCmd
+    - OperationMetricsName: Create2dSphereIndexesCoordCmd
       OperationName: RunCommand
       OperationCommand:
         createIndexes: Collection0
         indexes:
         - key:
-            b: "2dsphere"
-            c: "2dsphere"
-            name: 1
-          name: 2dsphereIndex
-    - OperationMetricsName: DropCreated2dSphereIndexesCmd
+            loc2dSphere: "2dsphere"
+          name: 2dsphereCoordIndex
+    - OperationMetricsName: DropCreated2dSpCreate2dSphereIndexesCoordCmdhereIndexesCmd
       OperationName: RunCommand
       OperationCommand:
         dropIndexes: Collection0
-        index: 2dsphereIndex
+        index: 2dsphereCoordIndex
+  - Repeat: 5
+    Database: *db
+    Operations:
+    - OperationMetricsName: Create2dSphereGeoJsonIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key:
+            point: "2dsphere"
+          name: 2dsphereGeoJsonIndex
+    - OperationMetricsName: Create2dSphereGeoJsonIndexesCmd
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: 2dsphereGeoJsonIndex
   - Repeat: 5
     Database: *db
     Operations:
@@ -80,8 +95,8 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key: 
-            a: "geoHaystack"
-            d: 1
+            loc2d: "geoHaystack"
+            a: 1
           bucketSize: 5
           name: geoHaystackIndex
     - OperationMetricsName: DropCreatedGeoHaystackIndexesCmd
@@ -98,7 +113,7 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key: 
-            d: "hashed"
+            randomString: "hashed"
           name: hashedIndex
     - OperationMetricsName: DropCreatedHashedIndexesCmd
       OperationName: RunCommand
@@ -114,12 +129,8 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key: 
-            a: "text"
-            b: "text"
+            randomString: "text"
           name: textIndex
-          weights:
-            a: 5
-            b: 10
     - OperationMetricsName: DropCreatedTextIndexesCmd
       OperationName: RunCommand
       OperationCommand:
@@ -134,9 +145,7 @@ Actors:
         createIndexes: Collection0
         indexes:
         - key: 
-            d: 1
-            e: 1
-            b: "2dsphere"
+            randomString: 1
           name: uniqueIndex
           unique:
             true
