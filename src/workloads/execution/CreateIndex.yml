@@ -15,12 +15,12 @@ Actors:
     DocumentCount: 150000
     BatchSize: 10000
     Document:
-      loc2d: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
-      loc2dSphere: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
-      point: { type: "Point", coordinates: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}] }
-      randomString: {^RandomString: {length: 50}}
-      randomInt: {^RandomInt: {min: -10000000, max: 10000000}}
-      "attributes": { randomString : randomString, randomString : randomString, randomString : { randomString :  randomInt, randomString :  randomInt }, randomString : { randomString : randomString }}
+      loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+      loc2dSphere: &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
+      point: &point { type: Point, coordinates: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}] }
+      randomString: &randomString {^RandomString: {length: 20}}
+      randomInt: &randomInt {^RandomInt: {min: -10000000, max: 10000000}}
+      attributes: &attributes { color: *randomString, size: *randomString, inside: { bookmark: *randomInt, postitnote: *randomInt }, outside: { dustcover: *randomString }}
   - &Nop {Nop: true}
   - *Nop
   - *Nop
@@ -96,7 +96,7 @@ Actors:
         indexes:
         - key: 
             loc2d: "geoHaystack"
-            a: 1
+            randomString: 1
           bucketSize: 5
           name: geoHaystackIndex
     - OperationMetricsName: DropCreatedGeoHaystackIndexesCmd
@@ -147,8 +147,7 @@ Actors:
         - key: 
             randomString: 1
           name: uniqueIndex
-          unique:
-            true
+          unique: true
     - OperationMetricsName: DropCreatedUniqueIndexesCmd
       OperationName: RunCommand
       OperationCommand:
