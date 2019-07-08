@@ -1,0 +1,12 @@
+SchemaVersion: 2018-07-01
+Owner: TODO put your github team name here e.g. @mongodb/stm
+
+Actors:
+- Name: CollectionScanner
+  Type: CollectionScanner
+  Threads: 20
+  Database: my_db
+  Phases:
+  - Repeat: 1
+    Duration: 60 minutes
+    Interval: 10 minutes
