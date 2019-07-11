@@ -16,9 +16,9 @@
 #define HEADER_1C384BE6_02A0_4C40_A866_B5122009F396_INCLUDED
 
 #include <string_view>
-
 #include <mongocxx/pool.hpp>
 
+#include <cast_core/actors/CollectionScanner.hpp>
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
@@ -60,11 +60,11 @@ public:
 
 private:
     mongocxx::pool::entry _client;
-    genny::metrics::Operation _totalInserts;
     /** @private */
     struct PhaseConfig;
     ActorCounter& _actorCounter;
     PhaseLoop<PhaseConfig> _loop;
+    CollectionScanner::RunningActorCounter& _collectionScannerCounter;
 };
 
 }  // namespace genny::actor

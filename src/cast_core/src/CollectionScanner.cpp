@@ -15,7 +15,7 @@
 #include <cast_core/actors/CollectionScanner.hpp>
 
 #include <memory>
-#include <random>
+#include <chrono>
 
 #include <yaml-cpp/yaml.h>
 
@@ -39,60 +39,62 @@ namespace genny::actor {
 
 struct CollectionScanner::PhaseConfig {
     mongocxx::database database;
-    std::vector<mongocxx::collection> collections;
-    std::mt19937 random;
-    std::uniform_int_distribution<> integerDistribution;
-    TimeSpec interval;
-    bool hasInterval = false;
-    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id, int threads, ActorCounter &counter)
+    std::vector<std::string> collectionNames;
+    bool skipFirstLoop = false;
+    bool firstThread;
+    bool lastThread = false;
+    metrics::Operation scanOperation;
+    int actorId;
+    PhaseConfig(PhaseContext& context, const mongocxx::database& db, ActorId id, int collectionCount,
+      int threads, ActorCounter &counter)
         : database{db},
-          interval{phaseContext["Interval"].maybe<TimeSpec>().value_or(TimeSpec{})} {
-        // Construct interval and set flag
-        if (interval.value != std::chrono::nanoseconds::zero()){
-            hasInterval = true;
-        }
-
-        int actorId = counter;
+          skipFirstLoop{context["SkipFirstLoop"].maybe<bool>().value_or(false)},
+          scanOperation{context.operation("Scan", id)} {
+        actorId = counter;
         counter ++;
-        // Distribute the collections among the actors "fairly"
-        auto collectionNames = database.list_collection_names();
-        int collectionsPerActor = std::round(collectionNames.size() / (double)threads);
-        if (collectionsPerActor == 0) collectionsPerActor = 1;
-        int collectionIndexStart = ((actorId % collectionNames.size()) * collectionsPerActor) % collectionNames.size();
-        int collectionIndexEnd = collectionIndexStart + collectionsPerActor;
-        for (int i = collectionIndexStart; i < collectionIndexEnd; ++i){
-          if (i >= collectionNames.size()) {
-                collectionIndexEnd %= collectionNames.size();
-                i = 0;
-            }
-            collections.push_back(database.collection(collectionNames[i]));
-        }
-
-        //If we are off due to a rounding error
-        if (collectionIndexStart + collectionsPerActor < collectionNames.size() && actorId == threads - 1){
-            for (auto i = collectionIndexStart + collectionsPerActor; i < collectionNames.size(); ++ i){
-                collections.push_back(database.collection(collectionNames[i]));
-                collectionsPerActor ++;
-            }
-        }
-        // Setup the random distribution
-        auto start = std::chrono::system_clock::now();
-        random.seed(start.time_since_epoch().count());
-        integerDistribution = std::uniform_int_distribution(0, (int)collectionsPerActor - 1);
+        firstThread = actorId == 0;
+        lastThread = actorId == threads - 1;
+        if (firstThread) std::cout << "I am the first thread" << std::endl;
+        if (lastThread) std::cout << "I am the last thread" << std::endl;
+        // Distribute the collections among the actors.
+        collectionNames = CollectionScanner::getCollectionNames(collectionCount, threads, actorId);
     }
 };
 
 void CollectionScanner::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
+            if (config->skipFirstLoop) {
+                std::cout << "skipping first loop " << std::endl;
+                config->skipFirstLoop = false;
+                continue;
+            }
             try {
-                if (config->hasInterval) {
-                    std::this_thread::sleep_for(config->interval.value);
+                auto timenow =
+                    std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+                std::cout << "In scanner loop " << config->actorId << " :: " << ctime(&timenow) << std::endl;
+                int tmp = _runningActorCounter;
+                _runningActorCounter ++;
+
+                if (tmp == 0) {
+                    std::cout << "Starting collection scanner" << std::endl;
                 }
-                auto cursor = config->collections[config->integerDistribution(config->random)].find({});
-                for (auto doc : cursor){
-                    ;
+                //stastic duration start
+                //document counted statistic
+                // Iterate over all collections this thread has been tasked with scanning each.
+                auto statTracker = config->scanOperation.start();
+                long count = 0;
+                for (int i = 0; i < config->collectionNames.size(); ++i){
+                    count += config->database[config->collectionNames[i]].count_documents({});
                 }
+                statTracker.addDocuments(count);
+                statTracker.success();
+                tmp = _runningActorCounter;
+                _runningActorCounter --;
+                if (tmp == 1){
+                    std::cout << "Stopping collection scanner" << std::endl;
+                }
+                //statistic duration end
             } catch(mongocxx::operation_exception& e) {
                 //BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
             }
@@ -105,13 +107,17 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
       _totalInserts{context.operation("Insert", CollectionScanner::id())},
       _client{context.client()},
       _actorCounter{WorkloadContext::getActorSharedState<CollectionScanner, ActorCounter>()},
+      _runningActorCounter{WorkloadContext::getActorSharedState<CollectionScanner, RunningActorCounter>()},
       _loop{
           context,
           (*_client)[context["Database"].to<std::string>()],
           CollectionScanner::id(),
-          context["Threads"].to<int>(),
+          context["CollectionCount"].to<IntegerSpec>(),
+          context["Threads"].to<IntegerSpec>(),
           _actorCounter
-      } { }
+      } {
+          _runningActorCounter.store(0);
+      }
 
 namespace {
 auto registerCollectionScanner = Cast::registerDefault<CollectionScanner>();

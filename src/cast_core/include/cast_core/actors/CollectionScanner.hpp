@@ -45,12 +45,31 @@ namespace genny::actor {
  * that extended documentation can be found in the docs/CollectionScanner.yml
  * file.
  *
- * Owner: TODO (which github team owns this Actor?)
+ * Owner: WiredTiger?
  */
 class CollectionScanner : public Actor {
     struct ActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
-
 public:
+    struct RunningActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
+
+    static std::vector<std::string> getCollectionNames(int collectionCount, int threadCount, int actorId) throw (){
+        //We always want a fair division of collections to actors
+        std::vector<std::string> collectionNames{};
+        if ((threadCount > collectionCount && threadCount % collectionCount != 0) || collectionCount % threadCount != 0){
+            throw std::invalid_argument("Thread count must be mutliple of database collection count");
+        }
+        int collectionsPerActor = threadCount > collectionCount ? 1 : collectionCount / threadCount;
+        int collectionIndexStart = (actorId % collectionCount) * collectionsPerActor;
+        int collectionIndexEnd = collectionIndexStart + collectionsPerActor;
+        for (int i = collectionIndexStart; i < collectionIndexEnd; ++i){
+            std::cout << "Assigning collection name: Collection" << std::to_string(i) <<
+             " to actor " << actorId << " thread count " << threadCount << std::endl;
+
+            collectionNames.push_back("Collection" + std::to_string(i));
+        }
+        return collectionNames;
+    }
+
     explicit CollectionScanner(ActorContext& context);
     ~CollectionScanner() = default;
     void run() override;
@@ -65,6 +84,7 @@ private:
     /** @private */
     struct PhaseConfig;
     ActorCounter& _actorCounter;
+    RunningActorCounter& _runningActorCounter;
     PhaseLoop<PhaseConfig> _loop;
 };
 

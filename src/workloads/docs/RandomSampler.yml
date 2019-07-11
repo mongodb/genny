@@ -9,7 +9,7 @@ Clients:
 Actors:
 - Name: RandomSampler
   Type: RandomSampler
-  Threads: 200
+  Threads: 40
   Database: my_db
   Phases:
   - Repeat: 1

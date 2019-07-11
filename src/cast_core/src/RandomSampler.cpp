@@ -13,10 +13,8 @@
 // limitations under the License.
 
 #include <cast_core/actors/RandomSampler.hpp>
-
+#include <cast_core/actors/CollectionScanner.hpp>
 #include <memory>
-#include <random>
-#include <math.h>
 
 #include <yaml-cpp/yaml.h>
 
@@ -39,65 +37,43 @@ namespace genny::actor {
 
 struct RandomSampler::PhaseConfig {
     mongocxx::database database;
-    std::vector<mongocxx::collection> collections;
-    std::mt19937 random;
+    std::vector<std::string> collectionNames;
+    genny::DefaultRandom random;
     std::uniform_int_distribution<> integerDistribution;
-    TimeSpec interval;
-    bool hasInterval = false;
-    PhaseConfig(PhaseContext& phaseContext, const mongocxx::database& db, ActorId id, int threads, ActorCounter &counter)
-        : database{db},
-          interval{phaseContext["Interval"].maybe<TimeSpec>().value_or(TimeSpec{})} {
-        // Construct interval and set flag
-        if (interval.value != std::chrono::nanoseconds::zero()){
-            hasInterval = true;
-        }
+    metrics::Operation readOperation;
+    metrics::Operation readWithScanOperation;
+    PhaseConfig(PhaseContext& context, const mongocxx::database& db, ActorId id, int collectionCount,
+        int threads, ActorCounter &counter)
+        : database{db}, readOperation{context.operation("Read", id)},
+        readWithScanOperation{context.operation("ReadWithScan", id)} {
         int actorId = counter;
         counter ++;
-
-        // Distribute the collections among the actors "fairly"
-        auto collectionNames = database.list_collection_names();
-        int collectionsPerActor = std::round(collectionNames.size() / (double)threads);
-        if (collectionsPerActor == 0) collectionsPerActor = 1;
-        int collectionIndexStart = ((actorId % collectionNames.size()) * collectionsPerActor) % collectionNames.size();
-        int collectionIndexEnd = collectionIndexStart + collectionsPerActor;
-        for (int i = collectionIndexStart; i < collectionIndexEnd; ++i){
-            if (i >= collectionNames.size()) {
-                collectionIndexEnd %= collectionNames.size();
-                i = 0;
-            }
-            collections.push_back(database.collection(collectionNames[i]));
-        }
-
-        //If we are off due to a rounding error
-        if (collectionIndexStart + collectionsPerActor < collectionNames.size() && actorId == threads - 1){
-            for (auto i = collectionIndexStart + collectionsPerActor; i < collectionNames.size(); ++ i){
-                collections.push_back(database.collection(collectionNames[i]));
-                collectionsPerActor ++;
-            }
-        }
-        // Setup the random distribution
-        auto start = std::chrono::system_clock::now();
-        random.seed(start.time_since_epoch().count());
-        integerDistribution = std::uniform_int_distribution(0, (int)collectionsPerActor - 1);
+        // Distribute the collections among the actors.
+        collectionNames = CollectionScanner::getCollectionNames(collectionCount, threads, actorId);
+        // Setup the int distribution.
+        integerDistribution = std::uniform_int_distribution(0, (int)collectionNames.size() - 1);
     }
 };
 
 void RandomSampler::run() {
     for (auto&& config : _loop) {
+        // Construct basic pipeline for retrieving one random record.
         mongocxx::pipeline pipeline{};
         pipeline.sample(1);
         for (const auto&& _ : config) {
             try {
-                if (config->hasInterval) {
-                    std::this_thread::sleep_for(config->interval.value);
+                auto statTracker = _collectionScannerCounter > 0 ? config->readWithScanOperation.start() :
+                  config->readOperation.start();
+                if (_collectionScannerCounter > 0){
+                    std::cout << "Collection scanner running" << std::endl;
                 }
-                int chosenspot = config->integerDistribution(config->random);
-                if (chosenspot > config->collections.size()) assert(false);
-                auto cursor = config->collections[chosenspot].aggregate(pipeline,
-                  mongocxx::options::aggregate{});
+                int index = config->collectionNames.size() > 1 ? config->integerDistribution(config->random) : 0;
+                auto cursor = config->database[config->collectionNames[index]].aggregate(pipeline,
+                    mongocxx::options::aggregate{});
                 for (auto doc : cursor){
-                    ;
+                  ;
                 }
+                statTracker.success();
             } catch(mongocxx::operation_exception& e) {
                 //BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
             }
@@ -107,14 +83,16 @@ void RandomSampler::run() {
 
 RandomSampler::RandomSampler(genny::ActorContext& context)
     : Actor{context},
-      _totalInserts{context.operation("Insert", RandomSampler::id())},
       _client{context.client()},
       _actorCounter{WorkloadContext::getActorSharedState<RandomSampler, ActorCounter>()},
+      _collectionScannerCounter{WorkloadContext::getActorSharedState<CollectionScanner,
+        CollectionScanner::RunningActorCounter>()},
       _loop{
         context,
         (*_client)[context["Database"].to<std::string>()],
         RandomSampler::id(),
-        context["Threads"].to<int>(),
+        context["CollectionCount"].to<IntegerSpec>(),
+        context["Threads"].to<IntegerSpec>(),
         _actorCounter
       } { }
 

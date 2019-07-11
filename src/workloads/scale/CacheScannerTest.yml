@@ -1,0 +1,52 @@
+SchemaVersion: 2018-07-01
+Owner: TODO put your github team name here e.g. @mongodb/stm
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+#- Name: Loader
+#  Type: Loader
+#  Threads: 10
+#  Phases:
+#  - Repeat: 1
+#    Database: cold
+#    CollectionCount: 1
+#    Threads: 1
+#    DocumentCount: 200000
+#    BatchSize: 100000
+#    Document:
+#      a: {^RandomString: { length: 100 }}
+#  - Repeat: 1
+#    Database: hot
+#    CollectionCount: 5
+#    Threads: 1
+#    DocumentCount: 200000
+#    BatchSize: 100000
+#    Document:
+#      a: {^RandomString: {length: 100 }}
+#  - {Nop: true}
+
+- Name: RandomSampler
+  Type: RandomSampler
+  Threads: 50
+  CollectionCount: 50 
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 1 minute
+
+- Name: CollectionScanner
+  Type: CollectionScanner
+  Threads: 5
+  Database: cold
+  CollectionCount: 10
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 1 minute
+    SkipFirstLoop: true
+    GlobalRate: 5 per 5 seconds
