@@ -1,0 +1,79 @@
+# This workload is developed as ... FILL ME IN
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+string_length: &string_length 10
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+  - &Nop {Nop: true}
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+        - key: {b: 1}
+          name: b
+          unique: true
+  - *Nop
+
+- Name: InsertData
+  Type: CrudActor
+  Database: *db
+  Threads: 1
+  Phases:
+  - *Nop
+  - &InsertMany
+    Collection: *coll
+    Repeat: 1000
+    Operations:
+    - OperationName: insertMany
+      OperationCommand:
+        Documents:
+        - &doc
+          a: &rs {^RandomString: {length: *string_length}}
+          b: *rs
+          c: *rs
+          d: *rs
+          e: *rs
+          f: *rs
+          g: *rs
+          h: *rs
+          i: *rs
+          j: *rs
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+  - *Nop
+  - *InsertMany
