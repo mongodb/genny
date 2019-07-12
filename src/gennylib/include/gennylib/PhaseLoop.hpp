@@ -147,9 +147,9 @@ public:
             while (true) {
                 auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
                 if (!success && !isDone(referenceStartingPoint, currentIteration)) {
-                    // Add some jitter to avoid threads waking up at once.
+                    // Add ±5% jitter to avoid threads waking up at once.
                     std::this_thread::sleep_for(std::chrono::nanoseconds(
-                            (_rateLimiter->getRate() * int64_t(0.95 + double(std::rand() % 10) / 10))));
+                            int64_t(_rateLimiter->getRate() * double(0.95 + 0.1 * ((double) rand() / (RAND_MAX))))));
                     continue;
                 }
                 break;
