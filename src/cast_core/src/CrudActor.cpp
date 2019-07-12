@@ -998,7 +998,6 @@ struct InsertManyOperation : public BaseOperation {
 private:
     mongocxx::collection _collection;
     const bool _onSession;
-    std::vector<bsoncxx::document::view_or_value> _writeOps;
     mongocxx::options::insert _options;
     metrics::Operation _operation;
     std::vector<DocumentGenerator> _docExprs;
@@ -1153,7 +1152,6 @@ struct DropOperation : public BaseOperation {
 private:
     mongocxx::collection _collection;
     const bool _onSession;
-    std::vector<bsoncxx::document::value> _writeOps;
     metrics::Operation _operation;
     mongocxx::write_concern _wc;
 };
