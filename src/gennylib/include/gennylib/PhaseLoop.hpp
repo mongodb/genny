@@ -130,7 +130,8 @@ public:
         return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
-    constexpr void limitRate(const int64_t currentIteration,
+    constexpr void limitRate(const SteadyClock::time_point referenceStartingPoint,
+                             const int64_t currentIteration,
                              const Orchestrator& o,
                              const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
@@ -145,7 +146,7 @@ public:
             }
             while (true) {
                 auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
-                if (!success && (o.currentPhase() == inPhase)) {
+                if (!success && !isDone(referenceStartingPoint, currentIteration)) {
                     // Add some jitter to avoid threads waking up at once.
                     std::this_thread::sleep_for(std::chrono::nanoseconds(
                             (_rateLimiter->getRate() * int64_t(0.95 + double(std::rand() % 10) / 10))));
@@ -239,7 +240,8 @@ public:
 
     constexpr ActorPhaseIterator& operator++() {
         if (_iterationCheck) {
-            _iterationCheck->limitRate(_currentIteration, *_orchestrator, _inPhase);
+            _iterationCheck->limitRate(
+                _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
             _iterationCheck->sleepAfter(*_orchestrator, _inPhase);
         }
 
