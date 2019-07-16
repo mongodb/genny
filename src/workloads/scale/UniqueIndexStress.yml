@@ -10,6 +10,12 @@ Owner: "@mongodb/product-perf"
 string_length: &string_length 10
 insert_threads: &insert_threads 1
 
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+
+
 Actors:
 - Name: Setup
   Type: RunCommand
