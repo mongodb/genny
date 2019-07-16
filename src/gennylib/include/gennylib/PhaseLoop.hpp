@@ -107,13 +107,14 @@ public:
             phaseContext["Blocking"].maybe<std::string>() != "None") {
             std::stringstream msg;
             msg << "Must specify 'Blocking: None' for Actors in Phases that don't block "
-                   "completion with a Repeat or Duration value. In Phase " << phaseContext.path() << ". Gave";
+                   "completion with a Repeat or Duration value. In Phase "
+                << phaseContext.path() << ". Gave";
             msg << " Duration:"
                 << phaseContext["Duration"].maybe<std::string>().value_or("undefined");
             msg << " Repeat:" << phaseContext["Repeat"].maybe<std::string>().value_or("undefined");
             msg << " Blocking:"
                 << phaseContext["Blocking"].maybe<std::string>().value_or("undefined");
-                throw InvalidConfigurationException(msg.str());
+            throw InvalidConfigurationException(msg.str());
         }
 
         const auto rateSpec = phaseContext["GlobalRate"].maybe<RateSpec>();

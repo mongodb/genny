@@ -498,11 +498,10 @@ TEST_CASE("Actual Actor Example") {
 
         auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
 
-        REQUIRE_THROWS_WITH(
-                ([&]() {
-                    ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
-                    ah.run();
-                }()),
-                Catch::Matches(".*Must specify 'Blocking: None'.*"));
+        REQUIRE_THROWS_WITH(([&]() {
+                                ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
+                                ah.run();
+                            }()),
+                            Catch::Matches(".*Must specify 'Blocking: None'.*"));
     }
 }
