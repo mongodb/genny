@@ -432,7 +432,7 @@ Actors:
   - *Nop
   - *Nop
 
-- Name: UniqueIndexes2
+- Name: UniqueIndexes7
   Type: CrudActor
   Database: *db
   Threads: *insert_threads
