@@ -1,4 +1,3 @@
-# This workload is developed as ... FILL ME IN
 # This workload tests insert performance with unique indexes. Each pair of phases first, drops the
 # database, then creates 7 indexes, before inserting documents as fast as it can. The difference
 # between the different phases is how many of the indexes are unique. It first does 0 unique
