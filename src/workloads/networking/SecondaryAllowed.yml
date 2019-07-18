@@ -54,6 +54,7 @@ Actors:
   Phases:
   - Phase: 0
     Threads: 1
+    Repeat: 1
     Database: test
     CollectionCount: 1
     DocumentCount: 100

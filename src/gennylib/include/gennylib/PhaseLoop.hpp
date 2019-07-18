@@ -103,8 +103,21 @@ public:
                            phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["GlobalRate"].maybe<RateSpec>()) {
-        const auto rateSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
+        if (!phaseContext.isNop() && !phaseContext["Duration"] && !phaseContext["Repeat"] &&
+            phaseContext["Blocking"].maybe<std::string>() != "None") {
+            std::stringstream msg;
+            msg << "Must specify 'Blocking: None' for Actors in Phases that don't block "
+                   "completion with a Repeat or Duration value. In Phase "
+                << phaseContext.path() << ". Gave";
+            msg << " Duration:"
+                << phaseContext["Duration"].maybe<std::string>().value_or("undefined");
+            msg << " Repeat:" << phaseContext["Repeat"].maybe<std::string>().value_or("undefined");
+            msg << " Blocking:"
+                << phaseContext["Blocking"].maybe<std::string>().value_or("undefined");
+            throw InvalidConfigurationException(msg.str());
+        }
 
+        const auto rateSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
         const auto rateLimiterName =
             phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter");
 
@@ -148,7 +161,7 @@ public:
                 if (!success && (o.currentPhase() == inPhase)) {
                     // Add some jitter to avoid threads waking up at once.
                     std::this_thread::sleep_for(std::chrono::nanoseconds(
-                            (_rateLimiter->getRate() * int64_t(0.95 + double(std::rand() % 10) / 10))));
+                        (_rateLimiter->getRate() * int64_t(0.95 + double(std::rand() % 10) / 10))));
                     continue;
                 }
                 break;
@@ -200,7 +213,7 @@ private:
 
 
 /**
- * The iterator used in `for(auto _ : phase)` and returned from
+ * The iterator used in `for(auto _ : cfg)` and returned from
  * `ActorPhase::begin()` and `ActorPhase::end()`.
  *
  * Configured with {@link IterationCompletionCheck} and will continue

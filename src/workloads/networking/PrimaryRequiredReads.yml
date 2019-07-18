@@ -65,6 +65,6 @@ Actors:
       t: {^RandomInt: {min: 0, max: 10}}
     Indexes:
     - keys: {t: 1}
-
+    Repeat: 1
   - Phase: 1  # Run
     Nop: true
