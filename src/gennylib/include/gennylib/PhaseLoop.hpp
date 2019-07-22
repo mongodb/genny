@@ -144,9 +144,8 @@ public:
                 if (!success && !isDone(referenceStartingPoint, currentIteration)) {
 
                     // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
-                    // specified
-                    // in seconds or lower resolution can cause the workloads to run visibly longer
-                    // than the specified duration.
+                    // specified in seconds or lower resolution can cause the workloads to
+                    // run visibly longer than the specified duration.
                     const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
 
                     // Add ±5% jitter to avoid threads waking up at once.
