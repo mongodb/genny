@@ -73,6 +73,10 @@ TEST_CASE("Global rate limiter") {
         REQUIRE(grl.consumeIfWithinRate(now));
         REQUIRE(!grl.consumeIfWithinRate(now));
     }
+
+    SECTION("Can math") {
+        // int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX))))
+    }
 }
 
 
@@ -208,9 +212,9 @@ Actors:
         auto dur = fun();
 
         // Shouldn't take longer than an even multiple of the rate-spec
-        REQUIRE(dur <= std::chrono::milliseconds{251});
+        REQUIRE(dur.count() <= 280 * 1e6);
         // Should take at least as long as the Duration
-        REQUIRE(dur >= std::chrono::milliseconds{215});
+        REQUIRE(dur.count() >= 215 * 1e6);
 
         const auto endState = getCurState();
 

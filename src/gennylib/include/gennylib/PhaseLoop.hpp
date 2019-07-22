@@ -255,7 +255,6 @@ public:
         if (_iterationCheck) {
             _iterationCheck->sleepAfter(*_orchestrator, _inPhase);
         }
-
         ++_currentIteration;
         return *this;
     }
