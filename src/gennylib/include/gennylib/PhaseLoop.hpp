@@ -242,8 +242,6 @@ public:
 
     constexpr ActorPhaseIterator& operator++() {
         if (_iterationCheck) {
-            _iterationCheck->limitRate(
-                _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
             _iterationCheck->sleepAfter(*_orchestrator, _inPhase);
         }
 
@@ -255,6 +253,8 @@ public:
     constexpr bool operator==(const ActorPhaseIterator& rhs) const {
         if (_iterationCheck)
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
+            _iterationCheck->limitRate(
+                _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
         return
                 // we're comparing against the .end() iterator (the common case)
                 (rhs._isEndIterator && !this->_isEndIterator &&
