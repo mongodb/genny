@@ -74,6 +74,10 @@ public:
         return std::move(this->_node.getPlural<T, F>(singular, plural, std::forward<F>(f)));
     }
 
+    auto path() const {
+        return _node.path();
+    }
+
 protected:
     const Node& _node;
 };

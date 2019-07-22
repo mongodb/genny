@@ -132,6 +132,7 @@ Actors:
   Threads: 1
   Phases:
     - GlobalRate: 5 per 4 seconds
+      Blocking: None
 )",
                       "");
         auto& config = ns.root();

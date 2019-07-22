@@ -89,11 +89,26 @@ calls run), the actor iterates over its `PhaseLoop` using the
 into an `ActorPhase` (it actually creates an entry into `the` `_loop`
 object for each thread that the YAML file specifies). The inner loop
 iterates over the config and runs the specified operation for the actor
-for as many times as `Repeat` or `Duration` specify it to run. If both
-the `Repeat` and `Duration` keywords are specified, then it will run for
+for as many times as `Repeat` or `Duration` specify it to run.
+
+**Notes on Repeat, Duration, and Blocking**
+
+If both the `Repeat` and `Duration` keywords are specified, then it will run for
 the longer of the two (e.g. `{ Duration: 2 seconds, Repeat: 1 }` the
 Duration will win unless the single iteration takes longer than 2
 seconds).
+
+If neither `Duration` nor `Repeat` is given for a `Phase` block,
+the YAML must specify `Blocking: None` to prevent accidentally
+causing an Actor to not run at all during a Phase. It is still possible
+for all Actors to specify `Blocking:None` for a given Phase in which
+case the number of iterations that all Actors will take in that Phase
+is undefined (but in practice is either 0 or 1 depending on how fast
+all the Actors call into the `Orchestrator` to say they're done blocking
+in the current Phase.)
+
+See extended discussion of how `Blocking` works in
+`src/workloads/docs/HelloWorld-MultiplePhases.yml`.
 
 ### Casts
 

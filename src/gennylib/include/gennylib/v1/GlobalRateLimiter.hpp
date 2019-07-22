@@ -64,8 +64,7 @@ public:
 
 public:
     explicit BaseGlobalRateLimiter(const RateSpec& rs)
-        : _burstSize(rs.operations),
-          _rateNS(rs.per.count()) {};
+        : _burstSize(rs.operations), _rateNS(rs.per.count()){};
 
     // No copies or moves.
     BaseGlobalRateLimiter(const BaseGlobalRateLimiter& other) = delete;
