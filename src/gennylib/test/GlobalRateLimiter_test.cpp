@@ -75,40 +75,53 @@ TEST_CASE("Global rate limiter") {
     }
 }
 
-TEST_CASE("Global rate limiter can be used by phase loop") {
-    using namespace std::chrono_literals;
 
-    class IncActor : public Actor {
-    public:
-        struct IncCounter : WorkloadContext::ShareableState<std::atomic_int64_t> {};
+class IncActor : public Actor {
+public:
+    struct IncCounter : WorkloadContext::ShareableState<std::atomic_int64_t> {};
 
-        IncActor(genny::ActorContext& ac)
+    IncActor(genny::ActorContext& ac)
             : Actor(ac),
               _loop{ac},
               _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {
-            _counter.store(0);
-        };
-
-        void run() override {
-            for (auto&& config : _loop) {
-                for (auto _ : config) {
-                    ++_counter;
-                }
-            }
-        };
-
-        static std::string_view defaultName() {
-            return "IncActor";
-        }
-
-    private:
-        struct PhaseConfig {
-            explicit PhaseConfig(PhaseContext& context){};
-        };
-
-        IncCounter& _counter;
-        PhaseLoop<PhaseConfig> _loop;
+        _counter.store(0);
     };
+
+    void run() override {
+        for (auto&& config : _loop) {
+            for (auto _ : config) {
+                BOOST_LOG_TRIVIAL(info) << "Incrementing";
+                ++_counter;
+            }
+        }
+    };
+
+    static std::string_view defaultName() {
+        return "IncActor";
+    }
+
+private:
+    struct PhaseConfig {
+        explicit PhaseConfig(PhaseContext& context){};
+    };
+
+    IncCounter& _counter;
+    PhaseLoop<PhaseConfig> _loop;
+};
+
+auto getCurState = []() {
+    return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().load();
+};
+
+auto resetState = []() {
+    return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().store(0);
+};
+
+
+auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
+
+TEST_CASE("Global rate limiter can be used by phase loop") {
+    using namespace std::chrono_literals;
 
     SECTION("Fail if no Repeat or Duration") {
         NodeSource ns(R"(
@@ -122,7 +135,6 @@ Actors:
 )",
                       "");
         auto& config = ns.root();
-        auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 2;
 
         auto fun = [&]() {
@@ -146,14 +158,10 @@ Actors:
 )",
                       "");
         auto& config = ns.root();
-        auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
         int num_threads = 2;
         int rate = 3;
 
         genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
-        auto getCurState = []() {
-            return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().load();
-        };
 
         auto runInBg = [&ah]() { ah.run(); };
         std::thread t(runInBg);
@@ -167,6 +175,49 @@ Actors:
         t.join();
 
         REQUIRE(getCurState() == 14);
+    }
+
+}
+TEST_CASE("Rate Limiter Try 2") {
+    SECTION("Doesn't iterate too many times or sleep unnecessarily") {
+        NodeSource ns(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: IncActor
+  Threads: 5
+  Phases:
+  - GlobalRate: 1 per 50 milliseconds
+    Duration: 215 milliseconds
+)",
+                      "");
+        auto& config = ns.root();
+        int num_threads = 5;
+
+        auto fun = [&]() -> auto {
+            auto start = std::chrono::steady_clock::now();
+            genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+            ah.run();
+            return std::chrono::steady_clock::now() - start;
+        };
+
+        resetState();
+        REQUIRE(getCurState() == 0);
+
+        auto dur = fun();
+
+        // Shouldn't take longer than an even multiple of the rate-spec
+        REQUIRE(dur <= std::chrono::milliseconds{251});
+        // Should take at least as long as the Duration
+        REQUIRE(dur >= std::chrono::milliseconds{215});
+
+        const auto endState = getCurState();
+
+        // Should have incremented 4 times in the "perfect" case
+        // but 5 times if there's any timing edge-cases.
+        REQUIRE(endState >= 4);
+        REQUIRE(endState <= 5);
+
     }
 }
 }  // namespace
