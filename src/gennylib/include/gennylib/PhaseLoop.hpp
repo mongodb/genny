@@ -139,17 +139,19 @@ public:
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
         // _burstSize. `m` here is the number of threads using the rate limiter.
         if (shouldLimitRate(currentIteration)) {
-
-            // Make sure the bucket is empty on the first iteration.
-            if (currentIteration == 0) {
-                _rateLimiter->resetLastEmptied();
-            }
             while (true) {
                 auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
                 if (!success && !isDone(referenceStartingPoint, currentIteration)) {
+
+                    // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
+                    // specified
+                    // in seconds or lower resolution can cause the workloads to run visibly longer
+                    // than the specified duration.
+                    const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
+
                     // Add ±5% jitter to avoid threads waking up at once.
                     std::this_thread::sleep_for(std::chrono::nanoseconds(
-                            int64_t(_rateLimiter->getRate() * double(0.95 + 0.1 * ((double) rand() / (RAND_MAX))))));
+                        int64_t(rate * double(0.95 + 0.1 * ((double)rand() / (RAND_MAX))))));
                     continue;
                 }
                 break;

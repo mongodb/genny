@@ -66,6 +66,12 @@ WorkloadContext::WorkloadContext(const Node& node,
             _actors.push_back(std::move(actor));
         }
     }
+
+    orchestrator.addPrePhaseStartHook([this](Orchestrator* o) {
+        for (auto&& rl : this->_rateLimiters) {
+            rl.second->resetLastEmptied();
+        }
+    });
     _done = true;
 }
 

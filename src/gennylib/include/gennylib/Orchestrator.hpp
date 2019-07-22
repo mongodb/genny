@@ -17,12 +17,18 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <functional>
 #include <shared_mutex>
+#include <vector>
 
 namespace genny {
 
+class Orchestrator;
+
 // May eventually want a proper type for Phase, but for now just a typedef is sufficient.
 using PhaseNumber = unsigned int;
+
+using OrchestratorCB = std::function<void(Orchestrator*)>;
 
 /**
  * Responsible for the synchronization of actors
@@ -90,11 +96,14 @@ public:
 
     void abort();
 
+    void addPrePhaseStartHook(const OrchestratorCB& f);
+
     /**
      * @return whether the workload should continue running. This is true as long as
      * no calls to abort() have been made.
      */
     bool continueRunning() const;
+
 
 private:
     mutable std::shared_mutex _mutex;
@@ -113,6 +122,8 @@ private:
     enum class State { PhaseEnded, PhaseStarted };
 
     State state = State::PhaseEnded;
+
+    std::vector<OrchestratorCB> _prePhaseHooks;
 };
 
 }  // namespace genny
