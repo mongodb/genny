@@ -75,6 +75,12 @@ Actors:
     auto getCurState = []() {
         return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().load();
     };
+    auto resetCurState = []() {
+        return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().store(0);
+    };
+
+    resetCurState();
+    REQUIRE(getCurState() == 0);
 
     ah.run();
 
