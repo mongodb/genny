@@ -147,7 +147,7 @@ Actors:
 
     // The rate interval needs to be large enough to avoid sporadic failures, which makes
     // this test take longer. It therefore has the "[slow]" label.
-    SECTION("Prevents execution when the rate is exceeded", "[slow]") {
+    SECTION("Prevents execution when the rate is exceeded", "[slow][benchmark]") {
         NodeSource ns(R"(
 SchemaVersion: 2018-07-01
 Actors:
@@ -178,7 +178,7 @@ Actors:
     }
 }
 
-TEST_CASE("Rate Limiter Try 2", "[benGlobal rate limiter can be chmark]") {
+TEST_CASE("Rate Limiter Try 2", "[slow][benchmark]") {
     SECTION("Doesn't iterate too many times or sleep unnecessarily") {
         NodeSource ns(R"(
 SchemaVersion: 2018-07-01
