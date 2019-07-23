@@ -28,7 +28,7 @@ class Orchestrator;
 // May eventually want a proper type for Phase, but for now just a typedef is sufficient.
 using PhaseNumber = unsigned int;
 
-using OrchestratorCB = std::function<void(Orchestrator*)>;
+using OrchestratorCB = std::function<void(const Orchestrator*)>;
 
 /**
  * Responsible for the synchronization of actors

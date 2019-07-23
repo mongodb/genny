@@ -67,11 +67,6 @@ WorkloadContext::WorkloadContext(const Node& node,
         }
     }
 
-    orchestrator.addPrePhaseStartHook([this](Orchestrator* o) {
-        for (auto&& rl : this->_rateLimiters) {
-            rl.second->resetLastEmptied();
-        }
-    });
     _done = true;
 }
 
@@ -102,11 +97,19 @@ mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t in
 
 v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
                                                        const RateSpec& spec) {
+    if (this->isDone()) {
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot create rate-limiters after setup"));
+    }
     if (_rateLimiters.count(name) == 0) {
         _rateLimiters.emplace(std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
     }
     auto rl = _rateLimiters[name].get();
     rl->addUser();
+
+    // Reset the rate-limiter at the start of every Phase
+    this->_orchestrator->addPrePhaseStartHook([&](const Orchestrator*){
+        rl->resetLastEmptied();
+    });
     return rl;
 }
 
