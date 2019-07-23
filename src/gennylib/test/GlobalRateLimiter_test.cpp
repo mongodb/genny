@@ -153,28 +153,28 @@ SchemaVersion: 2018-07-01
 Actors:
 - Name: One
   Type: IncActor
-  Threads: 2
+  Threads: 50
   Phases:
-    - Repeat: 5
+    - Duration: 520 milliseconds
       GlobalRate: 1 per 50 milliseconds
 )",
                       "");
         auto& config = ns.root();
-        int num_threads = 2;
+        int num_threads = 50;
 
-        genny::ActorHelper ah{config, 2, {{"IncActor", incProducer}}};
+        genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
 
         auto runInBg = [&ah]() { ah.run(); };
         std::thread t(runInBg);
         std::this_thread::sleep_for(110ms);
 
-        // after 110ms, a max of 3 threads should have made it through
+        // after 110ms, exactly 3 invocations should have made it through
         const auto preJoinState = getCurState();
 
         t.join();
 
-        REQUIRE(getCurState() == 10);
-        REQUIRE(preJoinState <= 3);
+        REQUIRE(getCurState() == 11);
+        REQUIRE(preJoinState == 3);
     }
 }
 
