@@ -121,7 +121,7 @@ auto resetState() {
 
 auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
 
-TEST_CASE("Global rate limiter can be used by phase loop") {
+TEST_CASE("Global rate limiter can be used by phase loop", "[benchmark]") {
     using namespace std::chrono_literals;
 
     SECTION("Fail if no Repeat or Duration") {
@@ -178,7 +178,7 @@ Actors:
     }
 }
 
-TEST_CASE("Rate Limiter Try 2") {
+TEST_CASE("Rate Limiter Try 2", "[benGlobal rate limiter can be chmark]") {
     SECTION("Doesn't iterate too many times or sleep unnecessarily") {
         NodeSource ns(R"(
 SchemaVersion: 2018-07-01
