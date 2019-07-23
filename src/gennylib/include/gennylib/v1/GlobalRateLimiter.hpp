@@ -137,7 +137,7 @@ public:
      * the start of each phase.
      */
     void resetLastEmptied() noexcept {
-        _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - (_rateNS * _burstSize);
+        _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
     }
 
 private:

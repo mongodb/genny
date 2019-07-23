@@ -219,5 +219,41 @@ Actors:
         REQUIRE(endState <= 5);
     }
 }
+
+TEST_CASE("Rate Limiter Try 3", "[slow][benchmark]") {
+    SECTION("Doesn't iterate too many times or sleep unnecessarily") {
+        NodeSource ns(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: IncActor
+  Threads: 3
+  Phases:
+  - GlobalRate: 3 per 500 milliseconds
+    Duration: 1200 milliseconds
+)",
+                      "");
+        auto& config = ns.root();
+        int num_threads = 3;
+
+        auto fun = [&]() -> auto {
+            auto start = std::chrono::steady_clock::now();
+            genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+            ah.run();
+            return std::chrono::steady_clock::now() - start;
+        };
+
+        resetState();
+        REQUIRE(getCurState() == 0);
+
+        auto dur = fun();
+
+        const auto endState = getCurState();
+
+        REQUIRE(endState == 9);
+    }
+}
+
+
 }  // namespace
 }  // namespace genny::testing
