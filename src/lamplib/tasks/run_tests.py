@@ -46,6 +46,7 @@ def cmake_test(env):
 
     ctest_cmd = [
         'ctest',
+        '--verbose',
         '--label-exclude',
         '(standalone|sharded|single_node_replset|three_node_replset|benchmark)'
     ]
