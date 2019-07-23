@@ -86,7 +86,7 @@ public:
     void run() override {
         for (auto&& config : _loop) {
             for (auto _ : config) {
-                //                BOOST_LOG_TRIVIAL(info) << "Incrementing";
+//                BOOST_LOG_TRIVIAL(info) << "Incrementing";
                 ++_counter;
             }
         }

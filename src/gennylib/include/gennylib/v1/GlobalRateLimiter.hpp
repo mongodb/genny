@@ -159,7 +159,6 @@ public:
      */
     void resetLastEmptied() noexcept {
         if (_burstSize > 1) {
-            _curBurstCount = _burstSize;
             _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count();
         } else {
             // The _burstSize == 1 case is optimized to not use _curBurstCount and rely entirely
