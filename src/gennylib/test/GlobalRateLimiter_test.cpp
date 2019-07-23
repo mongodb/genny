@@ -74,10 +74,6 @@ TEST_CASE("Global rate limiter") {
         REQUIRE(grl.consumeIfWithinRate(now));
         REQUIRE(!grl.consumeIfWithinRate(now));
     }
-
-    SECTION("Can math") {
-        // int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX))))
-    }
 }
 
 
