@@ -245,7 +245,6 @@ private:
         return out;
     }
 
-    static const YAML::Node _empty;
     static const YAML::Node _zombie;
 
     const Node* _self;
@@ -256,8 +255,7 @@ private:
     const v1::NodeKey::Path _path;
 };
 
-const YAML::Node NodeImpl::_empty= YAML::Load("");
-const YAML::Node NodeImpl::_zombie = NodeImpl::_empty["zombie"];
+const YAML::Node NodeImpl::_zombie = YAML::Load("")["zombie"];
 
 
 //
