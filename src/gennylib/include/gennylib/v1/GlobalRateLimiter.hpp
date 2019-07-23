@@ -85,9 +85,19 @@ public:
      */
     bool consumeIfWithinRate(const typename ClockT::time_point& now) {
 
-        int64_t optimisticallyConsume;
+        // This if-block deviates from the "burst" behavior of the default token-bucket
+        // algorithm. Instead of having the caller burst, we parallelize the burst
+        // behavior by granting one token to each consumer thread across as many threads
+        // as possible, up to "_burstSize".
+        //
+        // For the use cases in Genny, we assume the burst size is the same order of magnitude
+        // as the number of threads, so we always optimistically run the operation and backtrack
+        // if the operation turned out to be illegal. As noted in the doc for
+        // BaseGlobalRateLimiter, if number of threads >> burst size, performance may be
+        // adversely affected. On the other hand, if the number of threads < burst size, the
+        // test will run slower than the specified rate.
         if (_burstSize > 1) {
-            optimisticallyConsume = _curBurstCount++;
+            const int64_t optimisticallyConsume = _curBurstCount++;
             if (optimisticallyConsume % _burstSize == 0) {
                 // Optimistically consume an op; if it turns out we exceeded
                 // the burst size, undo our consumption and default to waiting
@@ -114,7 +124,11 @@ public:
 
         // Use the "weak" version for performance at the expense of false negatives (i.e.
         // `compare_exchange` not comparing equal when it should).
-        return _lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime);
+        const auto success = _lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime);
+        if (success) {
+            _curBurstCount++;
+        }
+        return success;
 
     }
 
@@ -144,8 +158,17 @@ public:
      * the start of each phase.
      */
     void resetLastEmptied() noexcept {
-        _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count();
-        _curBurstCount = _burstSize;
+        if (_burstSize > 1) {
+            _curBurstCount = _burstSize;
+            _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count();
+        } else {
+            // The _burstSize == 1 case is optimized to not use _curBurstCount and rely entirely
+            // on _lastEmptiedTimeNS, so we compute the initial rate differently to allow one thread
+            // to run on the first iteration.
+            _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
+        }
+
+
     }
 
 private:
