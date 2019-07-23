@@ -85,7 +85,7 @@ public:
      */
     bool consumeIfWithinRate(const typename ClockT::time_point& now) {
         // The time the bucket was emptied before this consumeIfWithinRate() call.
-        int64_t curEmptiedTime = _lastEmptiedTimeNS.load();
+        long long curEmptiedTime = _lastEmptiedTimeNS.load();
 
         // The time the bucket was emptied after this consumeIfWithinRate() call.
 
@@ -107,11 +107,11 @@ public:
         return true;
     }
 
-    constexpr int64_t getBurstSize() const {
+    constexpr long long getBurstSize() const {
         return _burstSize;
     }
 
-    constexpr int64_t getRate() const {
+    constexpr long long getRate() const {
         return _rateNS;
     }
 
@@ -124,7 +124,7 @@ public:
      * So it makes sense for each caller to wait for a duration of the same magnitude.
      * @return
      */
-    constexpr int64_t getNumUsers() const {
+    constexpr long long getNumUsers() const {
         return _numUsers;
     }
 
@@ -144,16 +144,16 @@ private:
     // Manually align _lastEmptiedTimeNS here to vastly improve performance.
     // Lazily initialized by the first call to consumeIfWithinRate().
     // Note that std::chrono::time_point is not trivially copyable and can't be used here.
-    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _lastEmptiedTimeNS = 0;
+    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_llong _lastEmptiedTimeNS = 0;
 
     // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to
     // store the burst size and the rate together, since they're specified together in
     // the YAML as RateSpec.
-    const int64_t _burstSize;
-    const int64_t _rateNS;
+    const long long _burstSize;
+    const long long _rateNS;
 
     // Number of threads using this rate limiter.
-    int64_t _numUsers = 0;
+    long long _numUsers = 0;
 };
 
 using GlobalRateLimiter = BaseGlobalRateLimiter<std::chrono::steady_clock>;
