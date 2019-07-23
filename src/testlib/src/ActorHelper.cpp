@@ -59,8 +59,13 @@ ActorHelper::ActorHelper(const Node& config,
     _orchestrator = std::make_unique<genny::Orchestrator>();
     _orchestrator->addRequiredTokens(tokenCount);
 
-    _wlc = std::make_unique<WorkloadContext>(
-        config, *_registry, *_orchestrator, uri, globalCast(), apmCallback);
+    try {
+        _wlc = std::make_unique<WorkloadContext>(
+                config, *_registry, *_orchestrator, uri, globalCast(), apmCallback);
+    } catch(const std::exception& x) {
+        BOOST_LOG_TRIVIAL(fatal) << boost::diagnostic_information(x, true);
+        throw;
+    }
 }
 
 void ActorHelper::run() {

@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 #include <boost/log/trivial.hpp>
 
 #include <chrono>
@@ -85,16 +86,16 @@ public:
     struct IncCounter : WorkloadContext::ShareableState<std::atomic_int64_t> {};
 
     IncActor(genny::ActorContext& ac)
-            : Actor(ac),
-              _loop{ac},
-              _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {
+        : Actor(ac),
+          _loop{ac},
+          _counter{WorkloadContext::getActorSharedState<IncActor, IncCounter>()} {
         _counter.store(0);
     };
 
     void run() override {
         for (auto&& config : _loop) {
             for (auto _ : config) {
-                BOOST_LOG_TRIVIAL(info) << "Incrementing";
+                //                BOOST_LOG_TRIVIAL(info) << "Incrementing";
                 ++_counter;
             }
         }
@@ -113,13 +114,13 @@ private:
     PhaseLoop<PhaseConfig> _loop;
 };
 
-auto getCurState = []() {
+auto getCurState() {
     return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().load();
-};
+}
 
-auto resetState = []() {
+auto resetState() {
     return WorkloadContext::getActorSharedState<IncActor, IncActor::IncCounter>().store(0);
-};
+}
 
 
 auto incProducer = std::make_shared<DefaultActorProducer<IncActor>>("IncActor");
@@ -150,7 +151,7 @@ Actors:
 
     // The rate interval needs to be large enough to avoid sporadic failures, which makes
     // this test take longer. It therefore has the "[slow]" label.
-    SECTION("Prevents execution when the rate is exceeded") {
+    SECTION("Prevents execution when the rate is exceeded", "[slow]") {
         NodeSource ns(R"(
 SchemaVersion: 2018-07-01
 Actors:
@@ -158,31 +159,29 @@ Actors:
   Type: IncActor
   Threads: 2
   Phases:
-    - Repeat: 7
-      GlobalRate: 3 per 200 milliseconds
+    - Repeat: 5
+      GlobalRate: 1 per 50 milliseconds
 )",
                       "");
         auto& config = ns.root();
         int num_threads = 2;
-        int rate = 3;
 
-        genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+        genny::ActorHelper ah{config, 2, {{"IncActor", incProducer}}};
 
         auto runInBg = [&ah]() { ah.run(); };
         std::thread t(runInBg);
+        std::this_thread::sleep_for(110ms);
 
-        // Due to the placement of the rate limiter in operator++() in PhaseLoop, the number of
-        // completed iterations is always `rate * n + num_threads` and not an exact multiple of
-        // `rate`.
-        std::this_thread::sleep_for(500ms);
-        REQUIRE(getCurState() == (rate * 2 + num_threads));
+        // after 110ms, a max of 3 threads should have made it through
+        const auto preJoinState = getCurState();
 
         t.join();
 
-        REQUIRE(getCurState() == 14);
+        REQUIRE(getCurState() == 10);
+        REQUIRE(preJoinState <= 3);
     }
-
 }
+
 TEST_CASE("Rate Limiter Try 2") {
     SECTION("Doesn't iterate too many times or sleep unnecessarily") {
         NodeSource ns(R"(
@@ -222,7 +221,6 @@ Actors:
         // but 5 times if there's any timing edge-cases.
         REQUIRE(endState >= 4);
         REQUIRE(endState <= 5);
-
     }
 }
 }  // namespace

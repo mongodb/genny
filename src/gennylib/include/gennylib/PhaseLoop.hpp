@@ -139,7 +139,7 @@ public:
     }
 
     constexpr bool shouldLimitRate(int64_t currentIteration) const {
-        // Only rate limit if the current iteration is a muliple of the burst size.
+        // Only rate limit if the current iteration is a multiple of the burst size.
         return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
@@ -153,8 +153,9 @@ public:
         // _burstSize. `m` here is the number of threads using the rate limiter.
         if (shouldLimitRate(currentIteration)) {
             while (true) {
-                auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
-                if (!success && !isDone(referenceStartingPoint, currentIteration)) {
+                const auto now = SteadyClock::now();
+                auto success = _rateLimiter->consumeIfWithinRate(now);
+                if (!success && !isDone(referenceStartingPoint, currentIteration, now)) {
 
                     // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
                     // specified in seconds or lower resolution can cause the workloads to
@@ -162,7 +163,8 @@ public:
                     const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
 
                     // Add ±5% jitter to avoid threads waking up at once.
-                    std::this_thread::sleep_for(std::chrono::nanoseconds(int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
+                    std::this_thread::sleep_for(std::chrono::nanoseconds(
+                        int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
                     continue;
                 }
                 break;
@@ -175,11 +177,11 @@ public:
         return _minDuration ? SteadyClock::now() : SteadyClock::time_point::min();
     }
 
-    constexpr bool isDone(SteadyClock::time_point startedAt, int64_t currentIteration) {
+    constexpr bool isDone(SteadyClock::time_point startedAt,
+                          int64_t currentIteration,
+                          SteadyClock::time_point now) {
         return (!_minIterations || currentIteration >= (*_minIterations).value) &&
-            (!_minDuration ||
-             // check is last to avoid doing now() call unnecessarily
-             (*_minDuration).value <= SteadyClock::now() - startedAt);
+            (!_minDuration || (*_minDuration).value <= now - startedAt);
     }
 
     constexpr bool operator==(const IterationChecker& other) const {
@@ -259,12 +261,13 @@ public:
         return *this;
     }
 
-    // clang-format off
-    constexpr bool operator==(const ActorPhaseIterator& rhs) const {
-        if (_iterationCheck)
+    bool operator==(const ActorPhaseIterator& rhs) const {
+        if (_iterationCheck) {
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
             _iterationCheck->limitRate(
                 _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
+        }
+        // clang-format off
         return
                 // we're comparing against the .end() iterator (the common case)
                 (rhs._isEndIterator && !this->_isEndIterator &&
@@ -273,8 +276,9 @@ public:
                      // ...or...
                      // if we block, then check to see if we're done in current phase
                      // else check to see if current phase has expired
-                     (_iterationCheck->doesBlockCompletion() ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration)
-                                                   : _orchestrator->currentPhase() != _inPhase)))
+                     (_iterationCheck->doesBlockCompletion()
+                            ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration, SteadyClock::now())
+                            : _orchestrator->currentPhase() != _inPhase)))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
