@@ -93,7 +93,6 @@ public:
 
         const auto newEmptiedTime = curEmptiedTime + _rateNS;
 
-        // If the new emptied time is in the future, the bucket is empty. Return early.
         if (nowInTicks < newEmptiedTime) {
             return false;
         }
@@ -133,7 +132,7 @@ public:
     }
 
     /**
-     * The rate limiter should be reset to allow one thread to run _burstSize number of times before the
+     * The rate limiter should be reset to allow to run _burstSize number of times before the
      * start of each phase.
      */
     void resetLastEmptied() noexcept {

@@ -73,6 +73,10 @@ TEST_CASE("Global rate limiter") {
         REQUIRE(grl.consumeIfWithinRate(now));
         REQUIRE(!grl.consumeIfWithinRate(now));
     }
+
+    SECTION("Can math") {
+        // int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX))))
+    }
 }
 
 
@@ -142,6 +146,83 @@ Actors:
             genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
         };
         REQUIRE_THROWS_WITH(fun(), Matches(R"(.*alongside either Duration or Repeat.*)"));
+    }
+
+    // The rate interval needs to be large enough to avoid sporadic failures, which makes
+    // this test take longer. It therefore has the "[slow]" label.
+    SECTION("Prevents execution when the rate is exceeded") {
+        NodeSource ns(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: IncActor
+  Threads: 2
+  Phases:
+    - Repeat: 7
+      GlobalRate: 3 per 200 milliseconds
+)",
+                      "");
+        auto& config = ns.root();
+        int num_threads = 2;
+        int rate = 3;
+
+        genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+
+        auto runInBg = [&ah]() { ah.run(); };
+        std::thread t(runInBg);
+
+        // Due to the placement of the rate limiter in operator++() in PhaseLoop, the number of
+        // completed iterations is always `rate * n + num_threads` and not an exact multiple of
+        // `rate`.
+        std::this_thread::sleep_for(500ms);
+        REQUIRE(getCurState() == (rate * 2 + num_threads));
+
+        t.join();
+
+        REQUIRE(getCurState() == 14);
+    }
+
+}
+TEST_CASE("Rate Limiter Try 2") {
+    SECTION("Doesn't iterate too many times or sleep unnecessarily") {
+        NodeSource ns(R"(
+SchemaVersion: 2018-07-01
+Actors:
+- Name: One
+  Type: IncActor
+  Threads: 5
+  Phases:
+  - GlobalRate: 1 per 50 milliseconds
+    Duration: 215 milliseconds
+)",
+                      "");
+        auto& config = ns.root();
+        int num_threads = 5;
+
+        auto fun = [&]() -> auto {
+            auto start = std::chrono::steady_clock::now();
+            genny::ActorHelper ah{config, num_threads, {{"IncActor", incProducer}}};
+            ah.run();
+            return std::chrono::steady_clock::now() - start;
+        };
+
+        resetState();
+        REQUIRE(getCurState() == 0);
+
+        auto dur = fun();
+
+        // Shouldn't take longer than an even multiple of the rate-spec
+        REQUIRE(dur.count() <= 280 * 1e6);
+        // Should take at least as long as the Duration
+        REQUIRE(dur.count() >= 215 * 1e6);
+
+        const auto endState = getCurState();
+
+        // Should have incremented 4 times in the "perfect" case
+        // but 5 times if there's any timing edge-cases.
+        REQUIRE(endState >= 4);
+        REQUIRE(endState <= 5);
+
     }
 }
 }  // namespace
