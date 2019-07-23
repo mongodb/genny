@@ -57,11 +57,6 @@ TEST_CASE("Global rate limiter") {
     const RateSpec rs{per, burst};  // 2 operations per 3 ticks.
     v1::BaseGlobalRateLimiter<MyDummyClock> grl{rs};
 
-    SECTION("Stores the burst size and rate") {
-        REQUIRE(grl.getBurstSize() == burst);
-        REQUIRE(grl.getRate() == per);
-    }
-
     SECTION("Limits Rate") {
         auto now = MyDummyClock::now();
 
