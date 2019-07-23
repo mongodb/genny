@@ -107,9 +107,8 @@ v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
     rl->addUser();
 
     // Reset the rate-limiter at the start of every Phase
-    this->_orchestrator->addPrePhaseStartHook([rl](const Orchestrator*){
-        rl->resetLastEmptied();
-    });
+    this->_orchestrator->addPrePhaseStartHook(
+        [rl](const Orchestrator*) { rl->resetLastEmptied(); });
     return rl;
 }
 

@@ -133,8 +133,8 @@ public:
     }
 
     /**
-     * The rate limiter should be reset to allow one thread to run _burstSize number of times before the
-     * start of each phase.
+     * The rate limiter should be reset to allow one thread to run _burstSize number of times before
+     * the start of each phase.
      */
     void resetLastEmptied() noexcept {
         _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - (_rateNS * _burstSize);
