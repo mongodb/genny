@@ -483,4 +483,25 @@ TEST_CASE("Actual Actor Example") {
         REQUIRE(duration > 0ms);
         REQUIRE(duration < 350ms);
     }
+
+    SECTION("Missing explicit Blocking = None") {
+        using namespace std::literals::chrono_literals;
+        NodeSource config(R"(
+            SchemaVersion: 2018-07-01
+            Actors:
+            - Type: Inc
+              Name: Inc
+              Phases:
+              - Key: 72
+        )",
+                          "");
+
+        auto imvProducer = std::make_shared<CounterProducer<IncrementsMapValues>>("Inc");
+
+        REQUIRE_THROWS_WITH(([&]() {
+                                ActorHelper ah(config.root(), 1, {{"Inc", imvProducer}});
+                                ah.run();
+                            }()),
+                            Catch::Matches(".*Must specify 'Blocking: None'.*"));
+    }
 }

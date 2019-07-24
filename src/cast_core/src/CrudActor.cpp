@@ -975,16 +975,17 @@ struct InsertManyOperation : public BaseOperation {
     }
 
     void run(mongocxx::client_session& session) override {
+        std::vector<bsoncxx::document::view_or_value> writeOps;
         size_t bytes = 0;
         for (auto&& docExpr : _docExprs) {
             auto doc = docExpr();
             bytes += doc.view().length();
-            _writeOps.emplace_back(std::move(doc));
+            writeOps.emplace_back(std::move(doc));
         }
 
         this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
-            auto result = (_onSession) ? _collection.insert_many(session, _writeOps, _options)
-                                       : _collection.insert_many(_writeOps, _options);
+            auto result = (_onSession) ? _collection.insert_many(session, writeOps, _options)
+                                       : _collection.insert_many(writeOps, _options);
 
             ctx.addBytes(bytes);
             if (result) {
@@ -997,7 +998,6 @@ struct InsertManyOperation : public BaseOperation {
 private:
     mongocxx::collection _collection;
     const bool _onSession;
-    std::vector<bsoncxx::document::view_or_value> _writeOps;
     mongocxx::options::insert _options;
     metrics::Operation _operation;
     std::vector<DocumentGenerator> _docExprs;
@@ -1152,7 +1152,6 @@ struct DropOperation : public BaseOperation {
 private:
     mongocxx::collection _collection;
     const bool _onSession;
-    std::vector<bsoncxx::document::value> _writeOps;
     metrics::Operation _operation;
     mongocxx::write_concern _wc;
 };

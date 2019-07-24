@@ -81,6 +81,9 @@ PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
 
     auto currentPhase = this->_current;
     if (_currentTokens >= _requireTokens) {
+        for (auto&& cb : _prePhaseHooks) {
+            cb(this);
+        }
         _phaseChange.notify_all();
         state = State::PhaseStarted;
     } else {
@@ -141,6 +144,11 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
         }
     }
     return morePhaseLogic(this->_current, this->_max, this->_errors);
+}
+
+
+void Orchestrator::addPrePhaseStartHook(const OrchestratorCB& f) {
+    _prePhaseHooks.push_back(f);
 }
 
 void Orchestrator::abort() {

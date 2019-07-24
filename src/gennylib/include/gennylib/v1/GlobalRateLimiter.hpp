@@ -64,8 +64,7 @@ public:
 
 public:
     explicit BaseGlobalRateLimiter(const RateSpec& rs)
-        : _burstSize(rs.operations),
-          _rateNS(rs.per.count()) {};
+        : _burstSize(rs.operations), _rateNS(rs.per.count()){};
 
     // No copies or moves.
     BaseGlobalRateLimiter(const BaseGlobalRateLimiter& other) = delete;
@@ -89,19 +88,21 @@ public:
         int64_t curEmptiedTime = _lastEmptiedTimeNS.load();
 
         // The time the bucket was emptied after this consumeIfWithinRate() call.
-        int64_t newEmptiedTime;
 
         auto nowInTicks = now.time_since_epoch().count();
-        do {
-            newEmptiedTime = curEmptiedTime + _rateNS;
 
-            // If the new emptied time is in the future, the bucket is empty. Return early.
-            if (nowInTicks < newEmptiedTime) {
-                return false;
-            }
-            // Use the "weak" version for performance at the expense of false negatives (i.e.
-            // `compare_exchange` not comparing equal when it should).
-        } while (!_lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime));
+        const auto newEmptiedTime = curEmptiedTime + _rateNS;
+
+        // If the new emptied time is in the future, the bucket is empty. Return early.
+        if (nowInTicks < newEmptiedTime) {
+            return false;
+        }
+
+        // Use the "weak" version for performance at the expense of false negatives (i.e.
+        // `compare_exchange` not comparing equal when it should).
+        if (!_lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime)) {
+            return false;
+        }
 
         return true;
     }
@@ -132,10 +133,11 @@ public:
     }
 
     /**
-     * The rate limiter should be reset before the start of each phase.
+     * The rate limiter should be reset to allow one thread to run _burstSize number of times before
+     * the start of each phase.
      */
     void resetLastEmptied() noexcept {
-        _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count();
+        _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
     }
 
 private:

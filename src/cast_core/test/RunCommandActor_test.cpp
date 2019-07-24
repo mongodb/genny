@@ -84,7 +84,7 @@ TEST_CASE_METHOD(MongoTestFixture,
 
             REQUIRE(diagInfo.find("no such command") != std::string::npos);
             REQUIRE(diagInfo.find("ServerResponse") != std::string::npos);
-        } catch(const std::exception& x) {
+        } catch (const std::exception& x) {
             FAIL(x.what());
         }
 

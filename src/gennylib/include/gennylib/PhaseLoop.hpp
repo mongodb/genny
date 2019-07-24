@@ -103,8 +103,21 @@ public:
                            phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["GlobalRate"].maybe<RateSpec>()) {
-        const auto rateSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
+        if (!phaseContext.isNop() && !phaseContext["Duration"] && !phaseContext["Repeat"] &&
+            phaseContext["Blocking"].maybe<std::string>() != "None") {
+            std::stringstream msg;
+            msg << "Must specify 'Blocking: None' for Actors in Phases that don't block "
+                   "completion with a Repeat or Duration value. In Phase "
+                << phaseContext.path() << ". Gave";
+            msg << " Duration:"
+                << phaseContext["Duration"].maybe<std::string>().value_or("undefined");
+            msg << " Repeat:" << phaseContext["Repeat"].maybe<std::string>().value_or("undefined");
+            msg << " Blocking:"
+                << phaseContext["Blocking"].maybe<std::string>().value_or("undefined");
+            throw InvalidConfigurationException(msg.str());
+        }
 
+        const auto rateSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
         const auto rateLimiterName =
             phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter");
 
@@ -126,11 +139,12 @@ public:
     }
 
     constexpr bool shouldLimitRate(int64_t currentIteration) const {
-        // Only rate limit if the current iteration is a muliple of the burst size.
+        // Only rate limit if the current iteration is a multiple of the burst size.
         return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
     }
 
-    constexpr void limitRate(const int64_t currentIteration,
+    constexpr void limitRate(const SteadyClock::time_point referenceStartingPoint,
+                             const int64_t currentIteration,
                              const Orchestrator& o,
                              const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
@@ -138,17 +152,19 @@ public:
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
         // _burstSize. `m` here is the number of threads using the rate limiter.
         if (shouldLimitRate(currentIteration)) {
-
-            // Make sure the bucket is empty on the first iteration.
-            if (currentIteration == 0) {
-                _rateLimiter->resetLastEmptied();
-            }
             while (true) {
-                auto success = _rateLimiter->consumeIfWithinRate(SteadyClock::now());
-                if (!success && (o.currentPhase() == inPhase)) {
-                    // Add some jitter to avoid threads waking up at once.
+                const auto now = SteadyClock::now();
+                auto success = _rateLimiter->consumeIfWithinRate(now);
+                if (!success && !isDone(referenceStartingPoint, currentIteration, now)) {
+
+                    // Don't sleep for more than 1 second (1e9 nanoseconds). Otherwise rates
+                    // specified in seconds or lower resolution can cause the workloads to
+                    // run visibly longer than the specified duration.
+                    const auto rate = _rateLimiter->getRate() > 1e9 ? 1e9 : _rateLimiter->getRate();
+
+                    // Add ±5% jitter to avoid threads waking up at once.
                     std::this_thread::sleep_for(std::chrono::nanoseconds(
-                            (_rateLimiter->getRate() * int64_t(0.95 + double(std::rand() % 10) / 10))));
+                        int64_t(rate * (0.95 + 0.1 * (double(rand()) / RAND_MAX)))));
                     continue;
                 }
                 break;
@@ -161,11 +177,11 @@ public:
         return _minDuration ? SteadyClock::now() : SteadyClock::time_point::min();
     }
 
-    constexpr bool isDone(SteadyClock::time_point startedAt, int64_t currentIteration) {
+    constexpr bool isDone(SteadyClock::time_point startedAt,
+                          int64_t currentIteration,
+                          SteadyClock::time_point now) {
         return (!_minIterations || currentIteration >= (*_minIterations).value) &&
-            (!_minDuration ||
-             // check is last to avoid doing now() call unnecessarily
-             (*_minDuration).value <= SteadyClock::now() - startedAt);
+            (!_minDuration || (*_minDuration).value <= now - startedAt);
     }
 
     constexpr bool operator==(const IterationChecker& other) const {
@@ -200,7 +216,7 @@ private:
 
 
 /**
- * The iterator used in `for(auto _ : phase)` and returned from
+ * The iterator used in `for(auto _ : cfg)` and returned from
  * `ActorPhase::begin()` and `ActorPhase::end()`.
  *
  * Configured with {@link IterationCompletionCheck} and will continue
@@ -239,18 +255,19 @@ public:
 
     constexpr ActorPhaseIterator& operator++() {
         if (_iterationCheck) {
-            _iterationCheck->limitRate(_currentIteration, *_orchestrator, _inPhase);
             _iterationCheck->sleepAfter(*_orchestrator, _inPhase);
         }
-
         ++_currentIteration;
         return *this;
     }
 
-    // clang-format off
-    constexpr bool operator==(const ActorPhaseIterator& rhs) const {
-        if (_iterationCheck)
+    bool operator==(const ActorPhaseIterator& rhs) const {
+        if (_iterationCheck) {
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
+            _iterationCheck->limitRate(
+                _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
+        }
+        // clang-format off
         return
                 // we're comparing against the .end() iterator (the common case)
                 (rhs._isEndIterator && !this->_isEndIterator &&
@@ -259,8 +276,9 @@ public:
                      // ...or...
                      // if we block, then check to see if we're done in current phase
                      // else check to see if current phase has expired
-                     (_iterationCheck->doesBlockCompletion() ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration)
-                                                   : _orchestrator->currentPhase() != _inPhase)))
+                     (_iterationCheck->doesBlockCompletion()
+                            ? _iterationCheck->isDone(_referenceStartingPoint, _currentIteration, SteadyClock::now())
+                            : _orchestrator->currentPhase() != _inPhase)))
 
                 // Below checks are mostly for pure correctness;
                 //   "well-formed" code will only use this iterator in range-based for-loops and will thus
