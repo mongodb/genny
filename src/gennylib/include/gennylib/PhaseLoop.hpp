@@ -138,20 +138,14 @@ public:
         }
     }
 
-    constexpr bool shouldLimitRate(int64_t currentIteration) const {
-        // Only rate limit if the current iteration is a multiple of the burst size.
-        return _rateLimiter && (currentIteration % _rateLimiter->getBurstSize() == 0);
-    }
-
     constexpr void limitRate(const SteadyClock::time_point referenceStartingPoint,
                              const int64_t currentIteration,
-                             const Orchestrator& o,
                              const PhaseNumber inPhase) {
         // This function is called after each iteration, so we never rate limit the
         // first iteration. This means the number of completed operations is always
         // `n * GlobalRateLimiter::_burstSize + m` instead of an exact multiple of
         // _burstSize. `m` here is the number of threads using the rate limiter.
-        if (shouldLimitRate(currentIteration)) {
+        if (_rateLimiter) {
             while (true) {
                 const auto now = SteadyClock::now();
                 auto success = _rateLimiter->consumeIfWithinRate(now);
@@ -265,7 +259,7 @@ public:
         if (_iterationCheck) {
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
             _iterationCheck->limitRate(
-                _referenceStartingPoint, _currentIteration, *_orchestrator, _inPhase);
+                _referenceStartingPoint, _currentIteration, _inPhase);
         }
         // clang-format off
         return
