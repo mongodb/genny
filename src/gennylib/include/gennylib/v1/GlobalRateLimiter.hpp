@@ -84,27 +84,20 @@ public:
      * appropriate back-off strategy if this function returns false.
      */
     bool consumeIfWithinRate(const typename ClockT::time_point& now) {
-
         // This if-block deviates from the "burst" behavior of the default token-bucket
         // algorithm. Instead of having the caller burst, we parallelize the burst
         // behavior by granting one token to each consumer thread across as many threads
         // as possible, up to "_burstSize".
         //
-        // For the use cases in Genny, we assume the burst size is the same order of magnitude
-        // as the number of threads, so we always optimistically run the operation and backtrack
-        // if the operation turned out to be illegal. As noted in the doc for
-        // BaseGlobalRateLimiter, if number of threads >> burst size, performance may be
-        // adversely affected. On the other hand, if the number of threads < burst size, the
-        // test will run slower than the specified rate.
+        // This means we basically have two serial token bucket rate limiters. We first
+        // check the bucket for _burstCount, and proceeed if there are tokens available
+        // (i.e. canBurst is true). If not, we fallback to the token bucket for
+        // _lastEmptiedTimeNS and check if the emptied time is in the future.
         if (_burstSize > 1) {
-            const int64_t optimisticallyConsume = _curBurstCount++;
-            if (optimisticallyConsume % _burstSize == 0) {
-                // Optimistically consume an op; if it turns out we exceeded
-                // the burst size, undo our consumption and default to waiting
-                // for the bucket to fill.
-                _curBurstCount--;
-            } else {
-                return true;
+            int64_t curBurstCount = _burstCount.load();
+            const bool canBurst = (curBurstCount % _burstSize) != 0;
+            if (canBurst) {
+                return _burstCount.compare_exchange_weak(curBurstCount, curBurstCount + 1);
             }
         }
 
@@ -112,21 +105,23 @@ public:
         int64_t curEmptiedTime = _lastEmptiedTimeNS.load();
 
         // The time the bucket was emptied after this consumeIfWithinRate() call.
-
-        auto nowInTicks = now.time_since_epoch().count();
-
         const auto newEmptiedTime = curEmptiedTime + getRate();
 
         // If the new emptied time is in the future, the bucket is empty. Return early.
-        if (nowInTicks < newEmptiedTime) {
+        if (now.time_since_epoch().count() < newEmptiedTime) {
             return false;
         }
 
         // Use the "weak" version for performance at the expense of false negatives (i.e.
         // `compare_exchange` not comparing equal when it should).
         const auto success = _lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime);
+
+        // Note that incrementing _burstCount is *not* atomic with incrementing _lastEmptiedTimeNS.
+        // This may cause some threads to see an outdated _burstCount, causing unnecessary waiting
+        // in the caller. For this reason, the caller should ensure the number of tokens does not
+        // greatly exceed _burstSize.
         if (success) {
-            _curBurstCount++;
+            _burstCount++;
         }
         return success;
 
@@ -158,25 +153,16 @@ public:
      * the start of each phase.
      */
     void resetLastEmptied() noexcept {
-        if (_burstSize > 1) {
-            _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count();
-        } else {
-            // The _burstSize == 1 case is optimized to not use _curBurstCount and rely entirely
-            // on _lastEmptiedTimeNS, so we compute the initial rate differently to allow one thread
-            // to run on the first iteration.
-            _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
-        }
-
-
+        _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
     }
 
 private:
-    // Manually align _lastEmptiedTimeNS and _curBurstCount here to vastly improve performance.
+    // Manually align _lastEmptiedTimeNS and _burstCount here to vastly improve performance.
     // Lazily initialized by the first call to consumeIfWithinRate().
     // Note that std::chrono::time_point is not trivially copyable and can't be used here.
     alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _lastEmptiedTimeNS = 0;
-    // _curBurstCount stores the remaining
-    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _curBurstCount = 0;
+    // _burstCount stores the remaining
+    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _burstCount = 0;
 
     // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to
     // store the burst size and the rate together, since they're specified together in
