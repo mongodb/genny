@@ -76,8 +76,8 @@ public:
     ~BaseGlobalRateLimiter() = default;
 
     /**
-     * Request to consume _burstSize number of tokens from the bucket. Does not block
-     * if the bucket is empty; does block while waiting for concurrent accesses to the
+     * Request to consume 1 token from the bucket. Does not block
+     * if the bucket is empty, also does not block while waiting for concurrent accesses to the
      * bucket to finish.
      *
      * @return bool whether consume() succeeded. The caller is responsible for using an
