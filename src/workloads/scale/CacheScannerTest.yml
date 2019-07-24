@@ -13,33 +13,33 @@ Actors:
 #  Phases:
 #  - Repeat: 1
 #    Database: cold
-#    CollectionCount: 1
+#    CollectionCount: 6
 #    Threads: 1
-#    DocumentCount: 200000
+#    DocumentCount: 2000000
 #    BatchSize: 100000
 #    Document:
 #      a: {^RandomString: { length: 100 }}
 #  - Repeat: 1
 #    Database: hot
-#    CollectionCount: 5
+#    CollectionCount: 10
 #    Threads: 1
-#    DocumentCount: 200000
+#    DocumentCount: 2000000
 #    BatchSize: 100000
 #    Document:
 #      a: {^RandomString: {length: 100 }}
 #  - {Nop: true}
 
-- Name: RandomSampler
+- Name: HotSampler
   Type: RandomSampler
-  Threads: 50
-  CollectionCount: 50 
+  Threads: 100
+  CollectionCount: 100
   Database: hot
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: 1 minute
+  - Duration: 10 minutes
 
-- Name: CollectionScanner
+- Name: ColdScanner
   Type: CollectionScanner
   Threads: 5
   Database: cold
@@ -47,6 +47,6 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: 1 minute
+  - Duration: 10 minutes
     SkipFirstLoop: true
-    GlobalRate: 5 per 5 seconds
+    GlobalRate: 5 per 1 minute

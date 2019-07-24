@@ -54,8 +54,6 @@ struct CollectionScanner::PhaseConfig {
         counter ++;
         firstThread = actorId == 0;
         lastThread = actorId == threads - 1;
-        if (firstThread) std::cout << "I am the first thread" << std::endl;
-        if (lastThread) std::cout << "I am the last thread" << std::endl;
         // Distribute the collections among the actors.
         collectionNames = CollectionScanner::getCollectionNames(collectionCount, threads, actorId);
     }
@@ -65,11 +63,11 @@ void CollectionScanner::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
             if (config->skipFirstLoop) {
-                std::cout << "skipping first loop " << std::endl;
+                std::cout << "skipping first loop " << config->actorId << std::endl;
                 config->skipFirstLoop = false;
-                continue;
-            }
-            try {
+            } else {
+                std::cout << "Not skipping first loop" << config->actorId << std::endl;
+                try {
                 auto timenow =
                     std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
                 std::cout << "In scanner loop " << config->actorId << " :: " << ctime(&timenow) << std::endl;
@@ -95,8 +93,9 @@ void CollectionScanner::run() {
                     std::cout << "Stopping collection scanner" << std::endl;
                 }
                 //statistic duration end
-            } catch(mongocxx::operation_exception& e) {
-                //BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
+                } catch(mongocxx::operation_exception& e) {
+                    //BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
+                }
             }
         }
     }

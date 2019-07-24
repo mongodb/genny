@@ -62,8 +62,8 @@ public:
         int collectionIndexStart = (actorId % collectionCount) * collectionsPerActor;
         int collectionIndexEnd = collectionIndexStart + collectionsPerActor;
         for (int i = collectionIndexStart; i < collectionIndexEnd; ++i){
-            std::cout << "Assigning collection name: Collection" << std::to_string(i) <<
-             " to actor " << actorId << " thread count " << threadCount << std::endl;
+            //std::cout << "Assigning collection name: Collection" << std::to_string(i) <<
+            // " to actor " << actorId << " thread count " << threadCount << std::endl;
 
             collectionNames.push_back("Collection" + std::to_string(i));
         }

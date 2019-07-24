@@ -62,10 +62,10 @@ void RandomSampler::run() {
         pipeline.sample(1);
         for (const auto&& _ : config) {
             try {
-                auto statTracker = _collectionScannerCounter > 0 ? config->readWithScanOperation.start() :
-                  config->readOperation.start();
+                //auto statTracker = _collectionScannerCounter > 0 ? config->readWithScanOperation.start() :
+                //  config->readOperation.start();
                 if (_collectionScannerCounter > 0){
-                    std::cout << "Collection scanner running" << std::endl;
+                    //std::cout << "Collection scanner running" << std::endl;
                 }
                 int index = config->collectionNames.size() > 1 ? config->integerDistribution(config->random) : 0;
                 auto cursor = config->database[config->collectionNames[index]].aggregate(pipeline,
@@ -73,7 +73,7 @@ void RandomSampler::run() {
                 for (auto doc : cursor){
                   ;
                 }
-                statTracker.success();
+                //statTracker.success();
             } catch(mongocxx::operation_exception& e) {
                 //BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
             }
