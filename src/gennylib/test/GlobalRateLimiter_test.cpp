@@ -57,21 +57,25 @@ TEST_CASE("Global rate limiter") {
     const RateSpec rs{per, burst};  // 2 operations per 3 ticks.
     v1::BaseGlobalRateLimiter<MyDummyClock> grl{rs};
 
-    SECTION("Stores the burst size and rate") {
-        REQUIRE(grl.getBurstSize() == burst);
-        REQUIRE(grl.getRate() == per);
-    }
-
     SECTION("Limits Rate") {
+        grl.resetLastEmptied();
         auto now = MyDummyClock::now();
 
-        // consumeIfWithinRate() should fail because we have not incremented the clock.
+        // consumeIfWithinRate() should succeed because we allow "burst" number of ops at the
+        // beginning.
+        for (int i = 0; i < burst; i++) {
+            REQUIRE(grl.consumeIfWithinRate(now));
+        }
+
+        // The next call should fail because we have not incremented the clock.
         REQUIRE(!grl.consumeIfWithinRate(now));
 
         // Increment the clock should allow consumeIfWithinRate() to succeed exactly once.
         MyDummyClock::nowRaw += per;
         now = MyDummyClock::now();
-        REQUIRE(grl.consumeIfWithinRate(now));
+        for (int i = 0; i < burst; i++) {
+            REQUIRE(grl.consumeIfWithinRate(now));
+        }
         REQUIRE(!grl.consumeIfWithinRate(now));
     }
 }
@@ -91,7 +95,7 @@ public:
     void run() override {
         for (auto&& config : _loop) {
             for (auto _ : config) {
-                //                BOOST_LOG_TRIVIAL(info) << "Incrementing";
+//                BOOST_LOG_TRIVIAL(info) << "Incrementing";
                 ++_counter;
             }
         }
