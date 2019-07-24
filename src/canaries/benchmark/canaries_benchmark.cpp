@@ -51,8 +51,8 @@ TEST_CASE("Measure Phaseloop Overhead", "[benchmark]") {
     auto validateTimingRange = [&](std::vector<Nanosecond>& loopTimings, std::string_view name) {
         printRes(loopTimings, name);
 
-        // The threshold is (difference * 30), which is 3.33%.
-        const int threshold = 30;
+        // The threshold is (difference * 1000), which is 0.1%.
+        const int threshold = 1000;
 
         auto s = loopTimings[0];
         auto m = loopTimings[1];
