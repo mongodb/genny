@@ -59,23 +59,20 @@ void RandomSampler::run() {
     for (auto&& config : _loop) {
         // Construct basic pipeline for retrieving one random record.
         mongocxx::pipeline pipeline{};
-        pipeline.sample(1);
+        pipeline.sample(10);
         for (const auto&& _ : config) {
             try {
-                //auto statTracker = _collectionScannerCounter > 0 ? config->readWithScanOperation.start() :
-                //  config->readOperation.start();
-                if (_collectionScannerCounter > 0){
-                    //std::cout << "Collection scanner running" << std::endl;
-                }
+                auto statTracker = _collectionScannerCounter > 0 ? config->readWithScanOperation.start() :
+                  config->readOperation.start();
                 int index = config->collectionNames.size() > 1 ? config->integerDistribution(config->random) : 0;
                 auto cursor = config->database[config->collectionNames[index]].aggregate(pipeline,
                     mongocxx::options::aggregate{});
                 for (auto doc : cursor){
                   ;
                 }
-                //statTracker.success();
+                statTracker.success();
             } catch(mongocxx::operation_exception& e) {
-                //BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
+                BOOST_LOG_TRIVIAL(error) << boost::diagnostic_information(e);
             }
         }
     }

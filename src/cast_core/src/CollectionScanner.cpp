@@ -63,38 +63,20 @@ void CollectionScanner::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
             if (config->skipFirstLoop) {
-                std::cout << "skipping first loop " << config->actorId << std::endl;
                 config->skipFirstLoop = false;
             } else {
-                std::cout << "Not skipping first loop" << config->actorId << std::endl;
                 try {
-                auto timenow =
-                    std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-                std::cout << "In scanner loop " << config->actorId << " :: " << ctime(&timenow) << std::endl;
-                int tmp = _runningActorCounter;
-                _runningActorCounter ++;
-
-                if (tmp == 0) {
-                    std::cout << "Starting collection scanner" << std::endl;
-                }
-                //stastic duration start
-                //document counted statistic
-                // Iterate over all collections this thread has been tasked with scanning each.
-                auto statTracker = config->scanOperation.start();
-                long count = 0;
-                for (int i = 0; i < config->collectionNames.size(); ++i){
-                    count += config->database[config->collectionNames[i]].count_documents({});
-                }
-                statTracker.addDocuments(count);
-                statTracker.success();
-                tmp = _runningActorCounter;
-                _runningActorCounter --;
-                if (tmp == 1){
-                    std::cout << "Stopping collection scanner" << std::endl;
-                }
-                //statistic duration end
+                    _runningActorCounter ++;
+                    BOOST_LOG_TRIVIAL(info) << "Starting collection scanner id:" << config->actorId;
+                    // Count over all collections this thread has been tasked with scanning each.
+                    auto statTracker = config->scanOperation.start();
+                    for (int i = 0; i < config->collectionNames.size(); ++i){
+                        statTracker.addDocuments(config->database[config->collectionNames[i]].count_documents({}));
+                    }
+                    _runningActorCounter --;
+                    statTracker.success();
                 } catch(mongocxx::operation_exception& e) {
-                    //BOOST_THROW_EXCEPTION(MongoException(e, document.view()));
+                    BOOST_LOG_TRIVIAL(error) << boost::diagnostic_information(e);
                 }
             }
         }
