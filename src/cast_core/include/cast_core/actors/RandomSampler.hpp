@@ -28,24 +28,10 @@
 namespace genny::actor {
 
 /**
- * Indicate what the Actor does and give an example yaml configuration.
- * Markdown is supported in all docstrings so you could list an example here:
+ * This actor will sample 10 documents from the collections it is tasked with
+ * continuously.
  *
- * ```yaml
- * SchemaVersion: 2017-07-01
- * Actors:
- * - Name: RandomSampler
- *   Type: RandomSampler
- *   Phases:
- *   - Document: foo
- * ```
- *
- * Or you can fill out the generated workloads/docs/RandomSampler.yml
- * file with extended documentation. If you do this, please mention
- * that extended documentation can be found in the docs/RandomSampler.yml
- * file.
- *
- * Owner: TODO (which github team owns this Actor?)
+ * Owner: Storage Engines
  */
 class RandomSampler : public Actor {
     struct ActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};

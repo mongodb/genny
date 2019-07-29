@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: TODO put your github team name here e.g. @mongodb/stm
+Owner: Storage Engines
 
 Clients:
   Default:
@@ -7,11 +7,10 @@ Clients:
       maxPoolSize: 400
 
 Actors:
-- Name: RandomSampler
+- Name: DbHotSampler
   Type: RandomSampler
-  Threads: 40
-  Database: my_db
+  Threads: 50
+  CollectionCount: 50
+  Database: hot
   Phases:
-  - Repeat: 1
-    Duration: 10 minutes
-    #Interval: How often to do the random read on each thread
+  - Duration: 30 minutes

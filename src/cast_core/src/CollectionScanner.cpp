@@ -41,8 +41,6 @@ struct CollectionScanner::PhaseConfig {
     mongocxx::database database;
     std::vector<std::string> collectionNames;
     bool skipFirstLoop = false;
-    bool firstThread;
-    bool lastThread = false;
     metrics::Operation scanOperation;
     int actorId;
     PhaseConfig(PhaseContext& context, const mongocxx::database& db, ActorId id, int collectionCount,
@@ -52,8 +50,6 @@ struct CollectionScanner::PhaseConfig {
           scanOperation{context.operation("Scan", id)} {
         actorId = counter;
         counter ++;
-        firstThread = actorId == 0;
-        lastThread = actorId == threads - 1;
         // Distribute the collections among the actors.
         collectionNames = CollectionScanner::getCollectionNames(collectionCount, threads, actorId);
     }

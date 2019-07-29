@@ -28,24 +28,9 @@
 namespace genny::actor {
 
 /**
- * Indicate what the Actor does and give an example yaml configuration.
- * Markdown is supported in all docstrings so you could list an example here:
+ * This actor will scan all collections it is tasked with.
  *
- * ```yaml
- * SchemaVersion: 2017-07-01
- * Actors:
- * - Name: CollectionScanner
- *   Type: CollectionScanner
- *   Phases:
- *   - Document: foo
- * ```
- *
- * Or you can fill out the generated workloads/docs/CollectionScanner.yml
- * file with extended documentation. If you do this, please mention
- * that extended documentation can be found in the docs/CollectionScanner.yml
- * file.
- *
- * Owner: WiredTiger?
+ * Owner: Storage Engines
  */
 class CollectionScanner : public Actor {
     struct ActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
@@ -62,9 +47,6 @@ public:
         int collectionIndexStart = (actorId % collectionCount) * collectionsPerActor;
         int collectionIndexEnd = collectionIndexStart + collectionsPerActor;
         for (int i = collectionIndexStart; i < collectionIndexEnd; ++i){
-            //std::cout << "Assigning collection name: Collection" << std::to_string(i) <<
-            // " to actor " << actorId << " thread count " << threadCount << std::endl;
-
             collectionNames.push_back("Collection" + std::to_string(i));
         }
         return collectionNames;
