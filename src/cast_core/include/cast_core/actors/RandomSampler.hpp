@@ -15,8 +15,8 @@
 #ifndef HEADER_1C384BE6_02A0_4C40_A866_B5122009F396_INCLUDED
 #define HEADER_1C384BE6_02A0_4C40_A866_B5122009F396_INCLUDED
 
-#include <string_view>
 #include <mongocxx/pool.hpp>
+#include <string_view>
 
 #include <cast_core/actors/CollectionScanner.hpp>
 #include <gennylib/Actor.hpp>
@@ -30,6 +30,8 @@ namespace genny::actor {
 /**
  * This actor will sample 10 documents from the collections it is tasked with
  * continuously.
+ *
+ * Example yaml can be found under workloads/docs.
  *
  * Owner: Storage Engines
  */
@@ -48,9 +50,10 @@ private:
     mongocxx::pool::entry _client;
     /** @private */
     struct PhaseConfig;
+    DefaultRandom& _random;
     ActorCounter& _actorCounter;
     PhaseLoop<PhaseConfig> _loop;
-    CollectionScanner::RunningActorCounter& _collectionScannerCounter;
+    CollectionScanner::RunningActorCounter& _activeCollectionScannerInstances;
 };
 
 }  // namespace genny::actor
