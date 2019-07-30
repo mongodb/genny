@@ -31,11 +31,14 @@ namespace genny::actor {
  * This actor will sample 10 documents from the collections it is tasked with
  * continuously.
  *
- * Example yaml can be found under workloads/docs.
+ * Example yaml can be found at src/workloads/docs/RandomSampler.yml
  *
  * Owner: Storage Engines
  */
 class RandomSampler : public Actor {
+    // Used to assign each RandomSampler instance an id starting at 0.
+    // The genny::Acttor::id() field is monotonically increasing across all Actors
+    // of all types.
     struct ActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
 
 public:

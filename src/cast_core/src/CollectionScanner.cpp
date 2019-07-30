@@ -39,7 +39,6 @@ namespace genny::actor {
 
 struct CollectionScanner::PhaseConfig {
     std::vector<mongocxx::collection> collections;
-    std::vector<std::string> collectionNames;
     bool skipFirstLoop = false;
     metrics::Operation scanOperation;
     int actorIndex;
@@ -57,8 +56,8 @@ struct CollectionScanner::PhaseConfig {
         int actorIndex = counter;
         counter++;
         // Distribute the collections among the actors.
-        for (const auto collectionName :
-             CollectionScanner::getCollectionNames(collectionCount, threads, actorIndex)) {
+        for (const auto& collectionName :
+             distributeCollectionNames(collectionCount, threads, actorIndex)) {
             collections.push_back(db[collectionName]);
         }
     }
@@ -72,7 +71,7 @@ void CollectionScanner::run() {
                 continue;
             }
             _runningActorCounter++;
-            BOOST_LOG_TRIVIAL(info) << "Starting collection scanner id:" << config->actorIndex;
+            BOOST_LOG_TRIVIAL(info) << "Starting collection scanner id: " << config->actorIndex;
             // Count over all collections this thread has been tasked with scanning each.
             auto statTracker = config->scanOperation.start();
             for (auto& collection : config->collections) {
@@ -99,6 +98,24 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
             context["Threads"].to<IntegerSpec>(),
             _actorCounter} {
     _runningActorCounter.store(0);
+}
+
+std::vector<std::string> distributeCollectionNames(size_t collectionCount,
+                                                   size_t threadCount,
+                                                   ActorId actorId) {
+    // We always want a fair division of collections to actors
+    std::vector<std::string> collectionNames{};
+    if ((threadCount > collectionCount && threadCount % collectionCount != 0) ||
+        collectionCount % threadCount != 0) {
+        throw std::invalid_argument("Thread count must be mutliple of database collection count");
+    }
+    int collectionsPerActor = threadCount > collectionCount ? 1 : collectionCount / threadCount;
+    int collectionIndexStart = (actorId % collectionCount) * collectionsPerActor;
+    int collectionIndexEnd = collectionIndexStart + collectionsPerActor;
+    for (int i = collectionIndexStart; i < collectionIndexEnd; ++i) {
+        collectionNames.push_back("Collection" + std::to_string(i));
+    }
+    return collectionNames;
 }
 
 namespace {

@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cast_core/actors/CollectionScanner.hpp>
 #include <cast_core/actors/RandomSampler.hpp>
+#include <cast_core/actors/CollectionScanner.hpp>
+
 #include <memory>
 
 #include <yaml-cpp/yaml.h>
@@ -63,8 +64,8 @@ struct RandomSampler::PhaseConfig {
         int actorIndex = counter;
         counter++;
         // Distribute the collections among the actors.
-        for (const auto collectionName :
-             CollectionScanner::getCollectionNames(collectionCount, threads, actorIndex)) {
+        for (const auto& collectionName :
+             distributeCollectionNames(collectionCount, threads, actorIndex)) {
             collections.push_back(db[collectionName]);
         }
         // Setup the int distribution.
@@ -84,6 +85,7 @@ void RandomSampler::run() {
                                                                mongocxx::options::aggregate{});
             for (auto doc : cursor) {
                 statTracker.addDocuments(1);
+                statTracker.addBytes(doc.length());
             }
             statTracker.success();
         }
