@@ -110,3 +110,4 @@ Actors:
   - Duration: 30 minutes
     SkipFirstLoop: true
     GlobalRate: 1 per 4 minutes
+
