@@ -1,0 +1,113 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 10
+  Phases:
+  - Repeat: 1
+    Database: cold
+    CollectionCount: 6
+    Threads: 1
+    DocumentCount: 2000000
+    BatchSize: 100000
+    Document:
+      a: {^RandomString: { length: 100 }}
+  - Repeat: 1
+    Database: hot
+    CollectionCount: 5
+    Threads: 1
+    DocumentCount: 2000000
+    BatchSize: 100000
+    Document:
+      a: {^RandomString: {length: 100 }}
+  - {Nop: true}
+
+- Name: HotSampler
+  Type: RandomSampler
+  Threads: 50
+  CollectionCount: 50
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+
+- Name: ColdScanner
+  Type: CollectionScanner
+  Threads: 1
+  Database: cold
+  CollectionCount: 10
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+    SkipFirstLoop: true
+    GlobalRate: 1 per 4 minutes
+
+- Name: ColdScanner2
+  Type: CollectionScanner
+  Threads: 1
+  Database: cold
+  CollectionCount: 10
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+    SkipFirstLoop: true
+    GlobalRate: 1 per 4 minutes
+
+- Name: ColdScanner3
+  Type: CollectionScanner
+  Threads: 1
+  Database: cold
+  CollectionCount: 10
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+    SkipFirstLoop: true
+    GlobalRate: 1 per 4 minutes
+
+- Name: ColdScanner4
+  Type: CollectionScanner
+  Threads: 1
+  Database: cold
+  CollectionCount: 10
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+    SkipFirstLoop: true
+    GlobalRate: 1 per 4 minutes
+
+- Name: ColdScanner5
+  Type: CollectionScanner
+  Threads: 1
+  Database: cold
+  CollectionCount: 10
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+    SkipFirstLoop: true
+    GlobalRate: 1 per 4 minutes
+
+- Name: ColdScanner6
+  Type: CollectionScanner
+  Threads: 1
+  Database: cold
+  CollectionCount: 10
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+    SkipFirstLoop: true
+    GlobalRate: 1 per 4 minutes
+

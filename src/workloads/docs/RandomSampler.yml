@@ -1,0 +1,16 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+- Name: DbHotSampler
+  Type: RandomSampler
+  Threads: 50
+  CollectionCount: 50
+  Database: hot
+  Phases:
+  - Duration: 30 minutes
