@@ -48,24 +48,18 @@ struct RandomSampler::PhaseConfig {
     mongocxx::pipeline pipeline{};
 
     PhaseConfig(PhaseContext& context,
+                const RandomSampler* actor,
                 const mongocxx::database& db,
-                ActorId id,
                 int collectionCount,
-                int threads,
-                ActorCounter& counter)
-        : readOperation{context.operation("Read", id)},
-          readWithScanOperation{context.operation("ReadWithScan", id)} {
+                int threads)
+        : readOperation{context.operation("Read", actor->id())},
+          readWithScanOperation{context.operation("ReadWithScan", actor->id())} {
         // Construct basic pipeline for retrieving 10 random records.
         pipeline.sample(10);
 
-        // This tracks which RandomSampler we are out of all RandomSamplers. As
-        // opposed to ActorId which is
-        // the overall actorId in the entire genny workload.
-        int actorIndex = counter;
-        counter++;
         // Distribute the collections among the actors.
         for (const auto& collectionName :
-             distributeCollectionNames(collectionCount, threads, actorIndex)) {
+             distributeCollectionNames(collectionCount, threads, actor->_index)) {
             collections.push_back(db[collectionName]);
         }
         // Setup the int distribution.
@@ -95,17 +89,16 @@ void RandomSampler::run() {
 RandomSampler::RandomSampler(genny::ActorContext& context)
     : Actor{context},
       _client{context.client()},
-      _actorCounter{WorkloadContext::getActorSharedState<RandomSampler, ActorCounter>()},
+      _index{WorkloadContext::getActorSharedState<RandomSampler, ActorCounter>().fetch_add(1)},
       _activeCollectionScannerInstances{
           WorkloadContext::getActorSharedState<CollectionScanner,
                                                CollectionScanner::RunningActorCounter>()},
       _random{context.workload().getRNGForThread(RandomSampler::id())},
       _loop{context,
+            this,
             (*_client)[context["Database"].to<std::string>()],
-            RandomSampler::id(),
             context["CollectionCount"].to<IntegerSpec>(),
-            context["Threads"].to<IntegerSpec>(),
-            _actorCounter} {}
+            context["Threads"].to<IntegerSpec>()} {}
 
 namespace {
 auto registerRandomSampler = Cast::registerDefault<RandomSampler>();

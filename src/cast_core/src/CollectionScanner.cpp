@@ -41,23 +41,19 @@ struct CollectionScanner::PhaseConfig {
     std::vector<mongocxx::collection> collections;
     bool skipFirstLoop = false;
     metrics::Operation scanOperation;
-    int actorIndex;
 
     PhaseConfig(PhaseContext& context,
+                const CollectionScanner* actor,
                 const mongocxx::database& db,
-                ActorId id,
                 int collectionCount,
-                int threads,
-                ActorCounter& counter)
+                int threads)
         : skipFirstLoop{context["SkipFirstLoop"].maybe<bool>().value_or(false)},
-          scanOperation{context.operation("Scan", id)} {
+          scanOperation{context.operation("Scan", actor->id())} {
         // This tracks which CollectionScanners we are out of all CollectionScanners. As opposed to
         // ActorId which is the overall actorId in the entire genny workload.
-        int actorIndex = counter;
-        counter++;
         // Distribute the collections among the actors.
         for (const auto& collectionName :
-             distributeCollectionNames(collectionCount, threads, actorIndex)) {
+             distributeCollectionNames(collectionCount, threads, actor->_index)) {
             collections.push_back(db[collectionName]);
         }
     }
@@ -71,15 +67,16 @@ void CollectionScanner::run() {
                 continue;
             }
             _runningActorCounter++;
-            BOOST_LOG_TRIVIAL(info) << "Starting collection scanner id: " << config->actorIndex;
+            BOOST_LOG_TRIVIAL(info) << "Starting collection scanner id: " << this->_index;
             // Count over all collections this thread has been tasked with scanning each.
+            std::this_thread::sleep_for(std::chrono::seconds{1});
             auto statTracker = config->scanOperation.start();
             for (auto& collection : config->collections) {
                 statTracker.addDocuments(collection.count_documents({}));
             }
             statTracker.success();
             _runningActorCounter--;
-            BOOST_LOG_TRIVIAL(info) << "Finished collection scanner id: " << config->actorIndex;
+            BOOST_LOG_TRIVIAL(info) << "Finished collection scanner id: " << this->_index;
         }
     }
 }
@@ -88,15 +85,14 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
     : Actor{context},
       _totalInserts{context.operation("Insert", CollectionScanner::id())},
       _client{context.client()},
-      _actorCounter{WorkloadContext::getActorSharedState<CollectionScanner, ActorCounter>()},
+      _index{WorkloadContext::getActorSharedState<CollectionScanner, ActorCounter>().fetch_add(1)},
       _runningActorCounter{
           WorkloadContext::getActorSharedState<CollectionScanner, RunningActorCounter>()},
       _loop{context,
+            this,
             (*_client)[context["Database"].to<std::string>()],
-            CollectionScanner::id(),
             context["CollectionCount"].to<IntegerSpec>(),
-            context["Threads"].to<IntegerSpec>(),
-            _actorCounter} {
+            context["Threads"].to<IntegerSpec>()} {
     _runningActorCounter.store(0);
 }
 

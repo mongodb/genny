@@ -41,73 +41,12 @@ Actors:
 
 - Name: ColdScanner
   Type: CollectionScanner
-  Threads: 1
+  Threads: 6
   Database: cold
-  CollectionCount: 10
+  CollectionCount: 60
   Phases:
   - {Nop: true}
   - {Nop: true}
   - Duration: 30 minutes
     SkipFirstLoop: true
-    GlobalRate: 1 per 4 minutes
-
-- Name: ColdScanner2
-  Type: CollectionScanner
-  Threads: 1
-  Database: cold
-  CollectionCount: 10
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - Duration: 30 minutes
-    SkipFirstLoop: true
-    GlobalRate: 1 per 4 minutes
-
-- Name: ColdScanner3
-  Type: CollectionScanner
-  Threads: 1
-  Database: cold
-  CollectionCount: 10
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - Duration: 30 minutes
-    SkipFirstLoop: true
-    GlobalRate: 1 per 4 minutes
-
-- Name: ColdScanner4
-  Type: CollectionScanner
-  Threads: 1
-  Database: cold
-  CollectionCount: 10
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - Duration: 30 minutes
-    SkipFirstLoop: true
-    GlobalRate: 1 per 4 minutes
-
-- Name: ColdScanner5
-  Type: CollectionScanner
-  Threads: 1
-  Database: cold
-  CollectionCount: 10
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - Duration: 30 minutes
-    SkipFirstLoop: true
-    GlobalRate: 1 per 4 minutes
-
-- Name: ColdScanner6
-  Type: CollectionScanner
-  Threads: 1
-  Database: cold
-  CollectionCount: 10
-  Phases:
-  - {Nop: true}
-  - {Nop: true}
-  - Duration: 30 minutes
-    SkipFirstLoop: true
-    GlobalRate: 1 per 4 minutes
-
+    GlobalRate: 6 per 4 minutes

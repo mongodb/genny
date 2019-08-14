@@ -35,7 +35,7 @@ namespace genny::actor {
  * Owner: Storage Engines
  */
 class CollectionScanner : public Actor {
-    // Used to assign each RandomSampler instance an id starting at 0.
+    // Used to assign each CollectionScanner instance an id starting at 0.
     // The genny::Acttor::id() field is monotonically increasing across all Actors
     // of all types.
     struct ActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
@@ -57,7 +57,7 @@ private:
 
     /** @private */
     struct PhaseConfig;
-    ActorCounter& _actorCounter;
+    int _index;
     RunningActorCounter& _runningActorCounter;
     PhaseLoop<PhaseConfig> _loop;
 };
