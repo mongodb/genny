@@ -1,0 +1,44 @@
+SchemaVersion: 2018-07-01
+Owner: TODO put your github team name here e.g. @mongodb/stm
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: hot
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1000
+    BatchSize: 1000
+    Document:
+      a: {^RandomInt: {min: 0, max: 1000}}
+  - {Nop: true}
+
+- Name: HotCollectionUpdater
+  Type: CrudActor
+  Threads: 40
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - Duration: 3 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: { a : {^RandomInt: {min: 0, max: 1000}}}
+    GlobalRate: 1000 per 1 second
+
+- Name: HotTruncator
+  Type: Truncator
+  Threads: 40
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - Duration: 3 minutes
+    Collection: Collection0
+    TruncateSize: 1
+    GlobalRate: 1000 per 1 second

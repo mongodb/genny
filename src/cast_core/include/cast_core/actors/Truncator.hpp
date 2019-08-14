@@ -1,0 +1,57 @@
+// Copyright 2019-present MongoDB Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef HEADER_988DA49D_0805_48D9_BEE8_AC72016F9E4D_INCLUDED
+#define HEADER_988DA49D_0805_48D9_BEE8_AC72016F9E4D_INCLUDED
+
+#include <string_view>
+
+#include <mongocxx/pool.hpp>
+
+#include <gennylib/Actor.hpp>
+#include <gennylib/PhaseLoop.hpp>
+#include <gennylib/context.hpp>
+
+#include <metrics/metrics.hpp>
+
+namespace genny::actor {
+
+/**
+ * This actor will delete truncateSize documents from the collection it
+ * it tasked with.
+ *
+ * Example yaml can be found at src/workloads/docs/Truncator.yml
+ *
+ * Owner: Storage Engines
+ */
+class Truncator : public Actor {
+public:
+    explicit Truncator(ActorContext& context);
+    ~Truncator() = default;
+    void run() override;
+
+    static std::string_view defaultName() {
+        return "Truncator";
+    }
+
+private:
+    mongocxx::pool::entry _client;
+    /** @private */
+    struct PhaseConfig;
+    PhaseLoop<PhaseConfig> _loop;
+};
+
+}  // namespace genny::actor
+
+#endif  // HEADER_988DA49D_0805_48D9_BEE8_AC72016F9E4D_INCLUDED
