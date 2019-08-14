@@ -1,0 +1,40 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: hot
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1
+    BatchSize: 1
+    Document:
+      first: first
+      second: {^RandomInt: {min: 0, max: 1000}}
+  - {Nop: true}
+
+- Name: HotDocumentUpdater
+  Type: CrudActor
+  Threads: 40
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - Duration: 1 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: updateOne
+          Filter: {first : first}
+          Update: {$set: {second: {^RandomInt: {min: 0, max: 1000}}}}
+    GlobalRate: 1000 per 1 second
