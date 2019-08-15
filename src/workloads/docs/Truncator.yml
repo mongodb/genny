@@ -40,5 +40,4 @@ Actors:
   - {Nop: true}
   - Duration: 3 minutes
     Collection: Collection0
-    TruncateSize: 1
     GlobalRate: 1000 per 1 second

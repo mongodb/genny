@@ -38,19 +38,20 @@ namespace genny::actor {
 struct Truncator::PhaseConfig {
     mongocxx::database database;
     mongocxx::collection collection;
-    int64_t truncateSize;
+    metrics::Operation truncateOperation;
+
     PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
         : database{db},
           collection{database[phaseContext["Collection"].to<std::string>()]},
-          truncateSize{phaseContext["TruncateSize"].to<IntegerSpec>()} {}
+          truncateOperation{context.operation("Truncate", id)} {}
 };
 
 void Truncator::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            for (int i = 0; i < config->truncateSize; i++){
-                config->collection.find_one_and_delete({});
-            }
+            config->truncateOperation.start();
+            config->collection.find_one_and_delete({});
+            config->truncateOperation.success();
         }
     }
 }
