@@ -54,7 +54,7 @@ private:
     /** @private */
     struct PhaseConfig;
     DefaultRandom& _random;
-    ActorCounter& _actorCounter;
+    int _index;
     PhaseLoop<PhaseConfig> _loop;
     CollectionScanner::RunningActorCounter& _activeCollectionScannerInstances;
 };

@@ -114,7 +114,8 @@ public:
 
         // Use the "weak" version for performance at the expense of false negatives (i.e.
         // `compare_exchange` not comparing equal when it should).
-        const auto success = _lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime);
+        const auto success =
+            _lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime);
 
         // Note that incrementing _burstCount is *not* atomic with incrementing _lastEmptiedTimeNS.
         // This may cause some threads to see an outdated _burstCount, causing unnecessary waiting
@@ -124,7 +125,6 @@ public:
             _burstCount++;
         }
         return success;
-
     }
 
     constexpr int64_t getRate() const {
