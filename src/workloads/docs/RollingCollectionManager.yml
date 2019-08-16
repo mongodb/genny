@@ -1,0 +1,25 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+Actors:
+- Name: RollingCollectionManager
+  Type: RollingCollectionManager
+  Threads: 1
+  Database: rolling
+  Indexes:
+  - keys: {a: 1}
+  - keys: {b: 1}
+  - keys: {c: 1}
+  - keys: {d: 1}
+  - keys: {e: 1}
+  - keys: {f: 1, g: 1}
+  - keys: {h: 1, i: 1}
+  - keys: {k: 1, j: 1}
+  Phases:
+  - Phase: 0
+    Setup: true
+    CollectionCount: 3600
+    Repeat: 1
+  - Phase: 1
+    Duration: 1 minute
+    GlobalRate: 1 per 1 seconds
