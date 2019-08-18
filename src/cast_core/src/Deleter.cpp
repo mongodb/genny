@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cast_core/actors/Truncator.hpp>
+#include <cast_core/actors/Deleter.hpp>
 
 #include <memory>
 
@@ -35,33 +35,37 @@
 
 
 namespace genny::actor {
-struct Truncator::PhaseConfig {
+struct Deleter::PhaseConfig {
     mongocxx::database database;
     mongocxx::collection collection;
-    metrics::Operation truncateOperation;
+    metrics::Operation deleteOperation;
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
         : database{db},
           collection{database[phaseContext["Collection"].to<std::string>()]},
-          truncateOperation{context.operation("Truncate", id)} {}
+          deleteOperation{phaseContext.operation("Delete", id)} {}
 };
 
-void Truncator::run() {
+void Deleter::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            config->truncateOperation.start();
+            auto statTracker = config->deleteOperation.start();
+            /*
+             * This will delete the oldest document as .find() returns documents
+             * in order of _id.
+             */
             config->collection.find_one_and_delete({});
-            config->truncateOperation.success();
+            statTracker.success();
         }
     }
 }
 
-Truncator::Truncator(genny::ActorContext& context)
+Deleter::Deleter(genny::ActorContext& context)
     : Actor{context},
       _client{context.client()},
-      _loop{context, (*_client)[context["Database"].to<std::string>()], Truncator::id()} {}
+      _loop{context, (*_client)[context["Database"].to<std::string>()], Deleter::id()} {}
 
 namespace {
-auto registerTruncator = Cast::registerDefault<Truncator>();
+auto registerDeleter = Cast::registerDefault<Deleter>();
 }  // namespace
 }  // namespace genny::actor

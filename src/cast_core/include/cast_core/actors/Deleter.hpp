@@ -28,21 +28,21 @@
 namespace genny::actor {
 
 /**
- * This actor will delete truncateSize documents from the collection it
+ * This actor will delete documents from the collection it
  * it tasked with.
  *
- * Example yaml can be found at src/workloads/docs/Truncator.yml
+ * Example yaml can be found at src/workloads/docs/Deleter.yml
  *
  * Owner: Storage Engines
  */
-class Truncator : public Actor {
+class Deleter : public Actor {
 public:
-    explicit Truncator(ActorContext& context);
-    ~Truncator() = default;
+    explicit Deleter(ActorContext& context);
+    ~Deleter() = default;
     void run() override;
 
     static std::string_view defaultName() {
-        return "Truncator";
+        return "Deleter";
     }
 
 private:
