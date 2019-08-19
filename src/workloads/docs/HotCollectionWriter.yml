@@ -28,7 +28,7 @@ Actors:
   Database: hot
   Phases:
   - {Nop: true}
-  - Duration: 1 minutes
+  - Duration: 1 minute
     Collection: Collection0
     Operations:
     - OperationName: bulkWrite

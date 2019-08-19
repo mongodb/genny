@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: TODO put your github team name here e.g. @mongodb/stm
+Owner: Storage Engines
 
 Actors:
 - Name: Loader
