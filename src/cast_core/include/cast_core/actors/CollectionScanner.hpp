@@ -60,6 +60,7 @@ private:
     int _index;
     RunningActorCounter& _runningActorCounter;
     PhaseLoop<PhaseConfig> _loop;
+    bool _generateCollectionNames;
 };
 
 // Defined in CollectionScanner.cpp but used by CollectionScanner and RandomSampler
