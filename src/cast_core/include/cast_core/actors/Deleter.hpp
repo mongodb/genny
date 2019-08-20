@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef HEADER_1C384BE6_02A0_4C40_A866_B5122009F396_INCLUDED
-#define HEADER_1C384BE6_02A0_4C40_A866_B5122009F396_INCLUDED
+#ifndef HEADER_988DA49D_0805_48D9_BEE8_AC72016F9E4D_INCLUDED
+#define HEADER_988DA49D_0805_48D9_BEE8_AC72016F9E4D_INCLUDED
 
-#include <mongocxx/pool.hpp>
 #include <string_view>
 
-#include <cast_core/actors/CollectionScanner.hpp>
+#include <mongocxx/pool.hpp>
+
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
@@ -28,37 +28,30 @@
 namespace genny::actor {
 
 /**
- * This actor will sample 10 documents from the collections it is tasked with
- * continuously.
+ * This actor will delete documents from the collection it
+ * it tasked with.
  *
- * Example yaml can be found at src/workloads/docs/RandomSampler.yml
+ * Example yaml can be found at src/workloads/docs/Deleter.yml
  *
  * Owner: Storage Engines
  */
-class RandomSampler : public Actor {
-    // Used to assign each RandomSampler instance an id starting at 0.
-    // The genny::Acttor::id() field is monotonically increasing across all Actors
-    // of all types.
-    struct ActorCounter : genny::WorkloadContext::ShareableState<std::atomic_int> {};
-
+class Deleter : public Actor {
 public:
-    explicit RandomSampler(ActorContext& context);
-    ~RandomSampler() = default;
+    explicit Deleter(ActorContext& context);
+    ~Deleter() = default;
     void run() override;
+
     static std::string_view defaultName() {
-        return "RandomSampler";
+        return "Deleter";
     }
 
 private:
     mongocxx::pool::entry _client;
     /** @private */
     struct PhaseConfig;
-    DefaultRandom& _random;
-    int _index;
     PhaseLoop<PhaseConfig> _loop;
-    CollectionScanner::RunningActorCounter& _activeCollectionScannerInstances;
 };
 
 }  // namespace genny::actor
 
-#endif  // HEADER_1C384BE6_02A0_4C40_A866_B5122009F396_INCLUDED
+#endif  // HEADER_988DA49D_0805_48D9_BEE8_AC72016F9E4D_INCLUDED

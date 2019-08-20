@@ -258,8 +258,7 @@ public:
     bool operator==(const ActorPhaseIterator& rhs) const {
         if (_iterationCheck) {
             _iterationCheck->sleepBefore(*_orchestrator, _inPhase);
-            _iterationCheck->limitRate(
-                _referenceStartingPoint, _currentIteration, _inPhase);
+            _iterationCheck->limitRate(_referenceStartingPoint, _currentIteration, _inPhase);
         }
         // clang-format off
         return
