@@ -2,13 +2,84 @@ SchemaVersion: 2018-07-01
 Owner: Storage Engines
 
 Actors:
-- Name: ColdScanner
+- Name: Loader
+  Type: Loader
+  Threads: 10
+  Phases:
+  - Repeat: 1
+    Database: cold
+    CollectionCount: 6
+    Threads: 1
+    DocumentCount: 200000
+    BatchSize: 100000
+    Document:
+      a: {^RandomString: { length: 100 }}
+  - Repeat: 1
+    Database: hot
+    CollectionCount: 6
+    Threads: 1
+    DocumentCount: 200000
+    BatchSize: 100000
+    Document:
+      a: {^RandomString: { length: 100 }}
+  - {Nop: true}
+  - {Nop: true}
+
+- Name: CountScanner
   Type: CollectionScanner
   Threads: 1
   Database: cold
   CollectionCount: 10
   Phases:
-  - Duration: 30 minutes
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 2 minutes
     # Optionally skip the first iteration of the collection scanner
     SkipFirstLoop: true
-    GlobalRate: 1 per 4 minutes
+    # This flag will assume the collection names have been created
+    # by the Loader actor and try to use them automatically.
+    # Additionally it allows the collections being scanned to be
+    # distributed fairly among the threads. It requires collection
+    # count to be specified at the top level.
+    GenerateCollectionNames: true
+    GlobalRate: 1 per 10 seconds
+    ScanType: count
+  - {Nop: true}
+
+- Name: StandardScanner
+  Type: CollectionScanner
+  Threads: 10
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 2 minutes
+    # Scan size bytes will scan up to this many byte per scan iteration
+    # once the limit is hit it will exit the scan loop.
+    ScanSizeBytes: 100000
+    GlobalRate: 10 per 30 seconds
+    ScanType: standard
+  - Duration: 2 minutes
+    # The Documents configuration specifies the max number of documents we
+    # want to scan per scan loop. Once we hit this limit we exit the loop.
+    Documents: 1000
+    ScanType: standard
+    GlobalRate: 10 per 10 seconds
+
+# A snapshot scanner begins a transaction prior to starting its scan
+# with read concern majority, which should pin the read for the
+# duration of the scan.
+- Name: SnapshotScanner
+  Type: CollectionScanner
+  Threads: 10
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 2 minutes
+    ScanType: snapshot
+    GlobalRate: 1 per 1 minute
+  - Duration: 1 minute
+    ScanType: snapshot
+    GlobalRate: 10 per 20 seconds
+    Documents: 200

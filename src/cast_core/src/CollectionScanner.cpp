@@ -27,6 +27,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
@@ -38,14 +39,15 @@
 namespace genny::actor {
 enum ScanType { Count, Snapshot, Standard };
 
-
 struct CollectionScanner::PhaseConfig {
     std::vector<mongocxx::collection> collections;
+    mongocxx::database database;
     bool skipFirstLoop = false;
     metrics::Operation scanOperation;
-    size_t documents;
-    size_t scanSizeBytes;
+    int64_t documents;
+    int64_t scanSizeBytes;
     ScanType scanType;
+    bool queryCollectionList;
 
     PhaseConfig(PhaseContext& context,
                 const CollectionScanner* actor,
@@ -53,31 +55,97 @@ struct CollectionScanner::PhaseConfig {
                 int collectionCount,
                 int threads,
                 bool generateCollectionNames)
-        : skipFirstLoop{context["SkipFirstLoop"].maybe<bool>().value_or(false)},
+        : database{db},
+          skipFirstLoop{context["SkipFirstLoop"].maybe<bool>().value_or(false)},
           scanOperation{context.operation("Scan", actor->id())},
           documents{context["Documents"].maybe<IntegerSpec>().value_or(0)},
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)} {
         // Initialise scan type enum.
         auto scanTypeString = context["ScanType"].to<std::string>();
-        if (scanTypeString == "Count"){
+        // Ignore case
+        boost::algorithm::to_lower(scanTypeString);
+        if (scanTypeString == "count"){
             scanType = Count;
-        } else if (scanTypeString == "Snapshot"){
+        } else if (scanTypeString == "snapshot"){
             scanType = Snapshot;
         } else {
             scanType = Standard;
         }
-        // This tracks which CollectionScanners we are out of all CollectionScanners. As opposed to
-        // ActorId which is the overall actorId in the entire genny workload.
-        // Distribute the collections among the actors.
+        /*
+         * This tracks which CollectionScanners we are out of all CollectionScanners. As opposed to
+         * ActorId which is the overall actorId in the entire genny workload.
+         * Distribute the collections among the actors.
+         */
         if (generateCollectionNames){
+            queryCollectionList = false;
             BOOST_LOG_TRIVIAL(info) << " Generating collection names";
             for (const auto& collectionName :
                 distributeCollectionNames(collectionCount, threads, actor->_index)) {
                 collections.push_back(db[collectionName]);
             }
+        } else {
+            queryCollectionList = true;
         }
     }
 };
+
+void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
+                    std::vector<mongocxx::collection>& collections){
+    /*
+     * Here we are either doing a snapshot collection scan
+     * or just a normal scan?
+     */
+    size_t docCount = 0;
+    size_t scanSize = 0;
+    bool scanFinished = false;
+    auto statTracker = config->scanOperation.start();
+    for (auto& collection : config->collections) {
+        auto docs = collection.find({});
+        /*
+         * Try-catch this as the collection may have been deleted.
+         * You can still do a find but it'll throw an exception when we iterate.
+         */
+        try {
+            for (auto &doc : docs){
+                docCount += 1;
+                if (config->documents != 0 && config->documents == docCount) {
+                    scanFinished = true;
+                    break;
+                }
+                if (config->scanSizeBytes != 0) {
+                    scanSize += doc.length();
+                    if (scanSize >= config->scanSizeBytes) {
+                        scanFinished = true;
+                        break;
+                    }
+                }
+            }
+            if (scanFinished){
+                break;
+            }
+        } catch (mongocxx::operation_exception e){
+            // Do nothing
+        }
+    }
+    statTracker.addDocuments(docCount);
+    statTracker.success();
+}
+
+void countScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
+               std::vector<mongocxx::collection> collections){
+    auto statTracker = config->scanOperation.start();
+    for (auto& collection : config->collections) {
+        try {
+        statTracker.addDocuments(collection.count_documents({}));
+        } catch (mongocxx::operation_exception e){
+            /*
+             * Again do nothing as we've likely tried to count on
+             * a collection that doesn't exist.
+             */
+        }
+    }
+    statTracker.success();
+}
 
 void CollectionScanner::run() {
     for (auto&& config : _loop) {
@@ -88,51 +156,33 @@ void CollectionScanner::run() {
             }
             _runningActorCounter++;
             BOOST_LOG_TRIVIAL(info) << "Starting collection scanner id: " << this->_index;
-            // Count over all collections this thread has been tasked with scanning each.
             std::this_thread::sleep_for(std::chrono::seconds{1});
-            if (config->scanType == Count){
-                BOOST_LOG_TRIVIAL(info) << "Scan type is standard";
-                auto statTracker = config->scanOperation.start();
-                for (auto& collection : config->collections) {
-                    statTracker.addDocuments(collection.count_documents({}));
+
+            // Populate collections if need be.
+            std::vector<mongocxx::collection>& collections = config->collections;
+            if (config->queryCollectionList){
+                std::vector<mongocxx::collection> tempCollections{};
+                for (const auto &collection : config->database.list_collection_names({})){
+                    tempCollections.push_back(config->database[collection]);
                 }
-                statTracker.success();
-            } else {
-                if (config->scanType == Snapshot) {
-                    auto session = _client.start_session();
-                }
-                BOOST_LOG_TRIVIAL(info) << "Scan type is standard";
-                //Here we are either doing a snapshot collection scan
-                // or just a normal scan?
-                size_t docCount = 0;
-                size_t scanSize = 0;
-                bool scanFinished = false;
-                auto statTracker = config->scanOperation.start();
-                for (auto& collection : config->collections) {
-                    BOOST_LOG_TRIVIAL(info) << "Iterating over collecitons";
-                    auto docs = collection.find({});
-                    for (auto &doc : docs){
-                        docCount += 1;
-                        if (config->documents != 0 && config->documents == docCount) {
-                            scanFinished = true;
-                            break;
-                        }
-                        if (config->scanSizeBytes != 0) {
-                            scanSize += doc.length();
-                            if (scanSize >= config->scanSizeByte) {
-                                scanFinished = true;
-                                break;
-                            }
-                        }
-                    }
-                    if (scanFinished){
-                        break;
-                    }
-                }
-                statTracker.addDocuments(docCount);
-                statTracker.success();
+                collections = tempCollections;
             }
 
+            // Do each kind of scan.
+            if (config->scanType == Count){
+                countScan(config, collections);
+            } else if (config->scanType == Snapshot) {
+                mongocxx::client_session session = _client->start_session({});
+                auto transactionOptions = mongocxx::options::transaction{};
+                auto readConcern = mongocxx::read_concern{};
+                readConcern.acknowledge_level(mongocxx::read_concern::level::k_majority);
+                transactionOptions.read_concern(readConcern);
+                session.start_transaction(transactionOptions);
+                collectionScan(config, collections);
+                session.commit_transaction();
+            } else {
+                collectionScan(config, collections);
+            }
             _runningActorCounter--;
             BOOST_LOG_TRIVIAL(info) << "Finished collection scanner id: " << this->_index;
         }
@@ -150,7 +200,7 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
       _loop{context,
             this,
             (*_client)[context["Database"].to<std::string>()],
-            context["CollectionCount"].to<IntegerSpec>(),
+            context["CollectionCount"].maybe<IntegerSpec>().value_or(0),
             context["Threads"].to<IntegerSpec>(),
             context["GenerateCollectionNames"].maybe<bool>().value_or(false)} {
     _runningActorCounter.store(0);

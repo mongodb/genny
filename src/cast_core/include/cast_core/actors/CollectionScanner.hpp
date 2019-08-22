@@ -50,13 +50,13 @@ public:
     static std::string_view defaultName() {
         return "CollectionScanner";
     }
+    struct PhaseConfig;
 
 private:
     mongocxx::pool::entry _client;
     genny::metrics::Operation _totalInserts;
 
     /** @private */
-    struct PhaseConfig;
     int _index;
     RunningActorCounter& _runningActorCounter;
     PhaseLoop<PhaseConfig> _loop;
