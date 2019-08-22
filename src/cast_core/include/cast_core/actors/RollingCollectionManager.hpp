@@ -44,6 +44,8 @@ namespace genny::actor {
  */
 class RollingCollectionManager : public Actor {
 public:
+    struct RollingCollectionNames : genny::WorkloadContext::ShareableState<std::deque<std::string>> {};
+
     explicit RollingCollectionManager(ActorContext& context);
     ~RollingCollectionManager() = default;
     void run() override;
@@ -57,7 +59,7 @@ private:
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
     std::vector<DocumentGenerator> _indexConfig;
-    std::queue<mongocxx::collection> _collections;
+    RollingCollectionNames& _collectionNames;
     int64_t _currentCollectionId;
     int64_t _collectionWindowSize;
 };

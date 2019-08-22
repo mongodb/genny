@@ -18,7 +18,7 @@
 #include <string_view>
 
 #include <mongocxx/pool.hpp>
-
+#include <cast_core/actors/RollingCollectionManager.hpp>
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
@@ -36,6 +36,7 @@ public:
     }
 
 private:
+    RollingCollectionManager::RollingCollectionNames& _rollingCollectionNames;
     mongocxx::pool::entry _client;
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;

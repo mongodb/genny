@@ -55,15 +55,15 @@ struct RollingCollectionManager::PhaseConfig {
 };
 
 std::string getRollingCollectionName(int64_t lastId){
-    return "rolling_" + std::to_string(lastId);
+    return "r_" + std::to_string(lastId);
 }
 
-mongocxx::collection createCollection(mongocxx::database& database, std::vector<DocumentGenerator>& indexConfig, int64_t lastId){
-    auto collection = database.create_collection(getRollingCollectionName(lastId));
+mongocxx::collection createCollection(mongocxx::database& database, std::vector<DocumentGenerator>& indexConfig,
+                                      std::string collectionName){
+    auto collection = database.create_collection(collectionName);
     for (auto&& keys : indexConfig) {
         collection.create_index(keys());
     }
-    return collection;
 }
 
 void RollingCollectionManager::run() {
@@ -72,8 +72,9 @@ void RollingCollectionManager::run() {
             if (config->setupPhase) {
                 BOOST_LOG_TRIVIAL(info) << "Creating " << _collectionWindowSize << " initial collections.";
                 for (auto i = 0; i < _collectionWindowSize; ++i){
-                    auto collection = createCollection(config->database, _indexConfig, _currentCollectionId);
-                    _collections.push(collection);
+                    auto collectionName = getRollingCollectionName(i);
+                    auto collection = createCollection(config->database, _indexConfig, collectionName);
+                    _collectionNames.push_back(collectionName);
                     for (auto j = 0; j < config->documentCount; ++j){
                         auto document = config->documentExpr();
                         collection.insert_one(document.view());
@@ -83,16 +84,16 @@ void RollingCollectionManager::run() {
             } else {
                 // Create collection with timestamped name
                 auto createCollectionTracker = config->createCollectionOperation.start();
-                auto collection = createCollection(config->database, _indexConfig, _currentCollectionId);
+                auto collectionName = getRollingCollectionName(_currentCollectionId);
+                createCollection(config->database, _indexConfig, collectionName);
                 _currentCollectionId++;
                 createCollectionTracker.success();
-                _collections.push(collection);
-
+                _collectionNames.push_back(collectionName);
                 // Delete collection at head of deque
-                collection = _collections.front();
-                _collections.pop();
+                collectionName = _collectionNames.front();
+                _collectionNames.pop_front();
                 auto deleteCollectionTracker = config->deleteCollectionOperation.start();
-                collection.drop();
+                config->database[collectionName].drop();
                 deleteCollectionTracker.success();
             }
         }
@@ -104,6 +105,7 @@ RollingCollectionManager::RollingCollectionManager(genny::ActorContext& context)
       _client{context.client()},
       _currentCollectionId{0},
       _collectionWindowSize{context["CollectionWindowSize"].maybe<IntegerSpec>().value_or(0)},
+      _collectionNames{WorkloadContext::getActorSharedState<RollingCollectionManager, RollingCollectionNames>()},
       _loop{context, (*_client)[context["Database"].to<std::string>()], RollingCollectionManager::id()} {
         _indexConfig = std::vector<DocumentGenerator>{};
         auto& indexNodes = context["Indexes"];

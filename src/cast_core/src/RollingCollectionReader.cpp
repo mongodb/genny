@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <cast_core/actors/RollingCollectionReader.hpp>
-#include <cast_core/actors/RollingCollectionWriter.hpp>
 #include <cast_core/actors/RollingCollectionManager.hpp>
 
 #include <memory>
@@ -39,61 +38,52 @@
 namespace genny::actor {
 
 struct RollingCollectionReader::PhaseConfig {
+    std::optional<DocumentGenerator> filterExpr;
     mongocxx::database database;
-    RollingCollectionWindow rollingCollectionWindow;
-    DocumentGenerator filterExpr;
     double distribution;
-    boost::random::uniform_real_distribution<double> realDistribution;
     metrics::Operation findOperation;
-    PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id, int64_t collectionWindowSize)
-        : rollingCollectionWindow{collectionWindowSize},
-          database{db},
-          filterExpr{phaseContext["Filter"].to<DocumentGenerator>(phaseContext, id)},
+    boost::random::uniform_real_distribution<double> realDistribution;
+    PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
+        : database{db},
+          filterExpr{phaseContext["Filter"].maybe<DocumentGenerator>(phaseContext, id)},
           distribution{phaseContext["Distribution"].maybe<double>().value_or(0)},
           findOperation{phaseContext.operation("Find", id)} {
-        BOOST_LOG_TRIVIAL(info) << "Window size: " << collectionWindowSize;
         // Setup the real distribution.
         realDistribution =
             boost::random::uniform_real_distribution<double>(0, 1);
     }
 };
 
-int getNextCollectionId(RollingCollectionWindow window, double distribution, double rand){
-    return std::floor((window.max - ((distribution * rand) * window.max)) + window.min);
+int getNextCollectionId(size_t size, double distribution, double rand){
+    return std::floor(size - ((distribution * rand) * size));
 }
 
 void RollingCollectionReader::run() {
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
-            updateCurrentIdWindow(config->rollingCollectionWindow);
-            auto name = getRollingCollectionName(getNextCollectionId(config->rollingCollectionWindow,
-              config->distribution, config->realDistribution(_random)));
-            if (!config->database.has_collection(name)) {
-                /*
-                 * Hopefully this is a result of the rolling collection manager
-                 * deleting a collection we were about to use.
-                 */
-                BOOST_LOG_TRIVIAL(info) << "Missing collection: " << name;
-            } else {
-                auto statTracker = config->findOperation.start();
-                try {
-                    BOOST_LOG_TRIVIAL(info) << "Reading collection: " << name;
-                    BOOST_LOG_TRIVIAL(info) << "Window size: " << config->rollingCollectionWindow.min
-                     << " -> " << config->rollingCollectionWindow.max;
-                    auto optionalDocument = config->database[name].find_one(config->filterExpr().view());
-                    if (optionalDocument) {
-                        auto document = optionalDocument.get();
-                        statTracker.addDocuments(1);
-                        statTracker.addBytes(document.view().length());
-                        statTracker.success();
-                    } else {
-                        statTracker.failure();
-                    }
-                } catch (mongocxx::operation_exception& e){
-                    //We likely tried to read from missing collection;
-                    BOOST_LOG_TRIVIAL(info) << "Exception:";
+            auto id = getNextCollectionId(_rollingCollectionNames.size(),
+              config->distribution, config->realDistribution(_random));
+            auto collection = config->database[_rollingCollectionNames[id]];
+            auto statTracker = config->findOperation.start();
+            try {
+                boost::optional<bsoncxx::document::value> optionalDocument;
+                if (config->filterExpr) {
+                    optionalDocument = collection.find_one((*config->filterExpr)());
+                } else {
+                    optionalDocument = collection.find_one({});
+                }
+                if (optionalDocument) {
+                    auto document = optionalDocument.get();
+                    statTracker.addDocuments(1);
+                    statTracker.addBytes(document.view().length());
+                    statTracker.success();
+                } else {
                     statTracker.failure();
                 }
+            } catch (mongocxx::operation_exception& e){
+                //We likely tried to read from missing collection;
+                BOOST_LOG_TRIVIAL(info) << "Exception:";
+                statTracker.failure();
             }
         }
     }
@@ -102,10 +92,10 @@ void RollingCollectionReader::run() {
 RollingCollectionReader::RollingCollectionReader(genny::ActorContext& context)
     : Actor{context},
       _client{context.client()},
-      _collectionWindowSize{context["CollectionWindowSize"].maybe<IntegerSpec>().value_or(0)},
       _random{context.workload().getRNGForThread(RollingCollectionReader::id())},
-      _loop{context, (*_client)[context["Database"].to<std::string>()], RollingCollectionReader::id(),
-        context["CollectionWindowSize"].maybe<IntegerSpec>().value_or(0)} {}
+      _rollingCollectionNames{WorkloadContext::getActorSharedState<RollingCollectionManager,
+        RollingCollectionManager::RollingCollectionNames>()},
+      _loop{context, (*_client)[context["Database"].to<std::string>()], RollingCollectionReader::id()} {}
 
 namespace {
 auto registerRollingCollectionReader = Cast::registerDefault<RollingCollectionReader>();

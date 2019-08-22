@@ -18,11 +18,10 @@
 #include <string_view>
 
 #include <mongocxx/pool.hpp>
-
+#include <cast_core/actors/RollingCollectionManager.hpp>
 #include <gennylib/Actor.hpp>
 #include <gennylib/PhaseLoop.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/asio.hpp>
 
 #include <gennylib/context.hpp>
 
@@ -60,28 +59,11 @@ public:
     }
 
 private:
+    RollingCollectionManager::RollingCollectionNames& _rollingCollectionNames;
     mongocxx::pool::entry _client;
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
-    int64_t _collectionWindowSize;
-    boost::asio::deadline_timer _timer;
 };
-
-struct RollingCollectionWindow {
-    RollingCollectionWindow(int64_t _collectionWindowSize)
-        : lastSecond{INT64_MAX},
-          max{_collectionWindowSize - 1},
-          min{0},
-          collectionWindowSize{_collectionWindowSize} { }
-    int64_t collectionWindowSize;
-    int64_t lastSecond;
-    // Max collection id
-    int64_t max;
-    // Min collection id
-    int64_t min;
-};
-bool updateCurrentIdWindow(RollingCollectionWindow& config);
-
 }  // namespace genny::actor
 
 #endif  // HEADER_34CFFB35_C0EB_42FA_ACF2_91A7E6556841_INCLUDED

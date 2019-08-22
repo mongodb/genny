@@ -25,24 +25,23 @@ Actors:
     GlobalRate: 1 per 1 second
     Document: {foo: {^RandomInt: {min: 500, max: 10000}}}
 
-- Name: RollingCollectionWriter
-  Type: RollingCollectionWriter
-  Threads: 10
-  CollectionWindowSize: 20
-  Database: rolling
-  Phases:
-  - {Nop: true}
-  - Duration: 1 minute
-    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
+#- Name: RollingCollectionWriter
+#  Type: RollingCollectionWriter
+#  Threads: 40
+#  CollectionWindowSize: 20
+#  Database: rolling
+#  Phases:
+#  - {Nop: true}
+#  - Duration: 1 minute
+#    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
 
-- Name: RollingCollectionReader
-  Type: RollingCollectionReader
-  Threads: 10
-  CollectionWindowSize: 20
-  Database: rolling
-  Phases:
-  - {Nop: true}
-  - Duration: 1 minute
-    Distribution: 0.25
-    Filter: {bar: 1}
-    GlobalRate: 10 per 1 second
+#- Name: RollingCollectionReader
+#  Type: RollingCollectionReader
+#  Threads: 10
+#  Database: rolling
+#  Phases:
+#  - {Nop: true}
+#  - Duration: 1 minute
+#    Distribution: 0.25
+#    Filter: {bar: 1}
+#    GlobalRate: 10 per 1 second
