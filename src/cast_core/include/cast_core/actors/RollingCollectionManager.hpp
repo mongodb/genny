@@ -16,6 +16,7 @@
 #define HEADER_ED16EA41_82CE_428D_B7D1_94AAEE3AF70C_INCLUDED
 
 #include <string_view>
+#include <queue>
 
 #include <mongocxx/pool.hpp>
 
@@ -50,14 +51,16 @@ public:
     static std::string_view defaultName() {
         return "RollingCollectionManager";
     }
-
 private:
     mongocxx::pool::entry _client;
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
     std::vector<DocumentGenerator> _indexConfig;
-    std::deque<mongocxx::collection> _collections;
+    std::queue<mongocxx::collection> _collections;
+    int64_t _currentCollectionId;
+    int64_t _collectionWindowSize;
 };
+std::string getRollingCollectionName(int64_t lastId);
 }
 #endif  // HEADER_ED16EA41_82CE_428D_B7D1_94AAEE3AF70C_INCLUDED
