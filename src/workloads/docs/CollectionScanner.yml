@@ -59,6 +59,8 @@ Actors:
     ScanSizeBytes: 100000
     GlobalRate: 10 per 30 seconds
     ScanType: standard
+    # To peform an index scan use the Filter config.
+    Filter: {a : 1}
   - Duration: 2 minutes
     # The Documents configuration specifies the max number of documents we
     # want to scan per scan loop. Once we hit this limit we exit the loop.

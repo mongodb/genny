@@ -41,6 +41,7 @@ enum ScanType { Count, Snapshot, Standard };
 
 struct CollectionScanner::PhaseConfig {
     std::vector<mongocxx::collection> collections;
+    std::optional<DocumentGenerator> filterExpr;
     mongocxx::database database;
     bool skipFirstLoop = false;
     metrics::Operation scanOperation;
@@ -57,6 +58,7 @@ struct CollectionScanner::PhaseConfig {
                 bool generateCollectionNames)
         : database{db},
           skipFirstLoop{context["SkipFirstLoop"].maybe<bool>().value_or(false)},
+          filterExpr{context["Filter"].maybe<DocumentGenerator>(context, actor->id())},
           scanOperation{context.operation("Scan", actor->id())},
           documents{context["Documents"].maybe<IntegerSpec>().value_or(0)},
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)} {
@@ -100,7 +102,9 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
     for (auto& collection : config->collections) {
-        auto docs = collection.find({});
+        auto filter = config->filterExpr ? config->filterExpr->evaluate() :
+            bsoncxx::document::view_or_value{};
+        auto docs = collection.find(filter);
         /*
          * Try-catch this as the collection may have been deleted.
          * You can still do a find but it'll throw an exception when we iterate.
@@ -135,8 +139,10 @@ void countScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
                std::vector<mongocxx::collection> collections){
     auto statTracker = config->scanOperation.start();
     for (auto& collection : config->collections) {
+        auto filter = config->filterExpr ? config->filterExpr->evaluate() :
+            bsoncxx::document::view_or_value{};
         try {
-        statTracker.addDocuments(collection.count_documents({}));
+            statTracker.addDocuments(collection.count_documents(filter));
         } catch (mongocxx::operation_exception e){
             /*
              * Again do nothing as we've likely tried to count on
