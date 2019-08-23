@@ -41,7 +41,27 @@ public:
     explicit DocumentGenerator(const Node& node, PhaseContext& phaseContext, ActorId id);
     explicit DocumentGenerator(const Node& node, ActorContext& phaseContext, ActorId id);
     explicit DocumentGenerator(const Node& node, DefaultRandom& rng);
+    /**
+     * @return a document according to the template given by the node in the constructor.
+     */
     bsoncxx::document::value operator()();
+    /**
+     * Same as `operator()()` but this syntax allows you to use in a ptr-like context more
+     * easily e.g.
+     *
+     * ```c++
+     * auto docGen = context["Document"].maybe<DocumentGenerator>(context, id);
+     * ...
+     * if(docGen) {
+     *     // use operator()()
+     *     auto doc = (*filter)();
+     *     // or evaluate()
+     *     auto doc = filter->evaluate();
+     * }
+     * ```
+     * @return
+     */
+    bsoncxx::document::value evaluate();
     DocumentGenerator(DocumentGenerator&&) noexcept;
     ~DocumentGenerator();
     class Impl;
