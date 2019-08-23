@@ -1,12 +1,15 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
-
 Actors:
 - Name: RollingCollectionManager
   Type: RollingCollectionManager
+  # The rolling collection manager isn't intended to be multithreaded so this
+  # should generally always be 1.
   Threads: 1
   CollectionWindowSize: 20
   Database: rolling
+  # The indexes configuration creates an index for each set of keys specified
+  # currently it doesn't support options.
   Indexes:
   - keys: {a: 1}
   - keys: {b: 1}
@@ -17,6 +20,8 @@ Actors:
   - keys: {h: 1, i: 1}
   - keys: {k: 1, j: 1}
   Phases:
+  # The setup phase creates CollectionWindowSize collections, and populates them with
+  # DocumentCount documents
   - Setup: true
     Repeat: 1
     Document: {a: {^RandomString: {length: 30}}, z : {^RandomInt: {min: 100, max: 200}}}
@@ -41,6 +46,7 @@ Actors:
   Phases:
   - {Nop: true}
   - Duration: 1 minute
+    # Distribution is a linear distribution from 0 to 1
     Distribution: 0.5
     GlobalRate: 10 per 1 second
 
@@ -52,5 +58,6 @@ Actors:
   - {Nop: true}
   - Duration: 1 minute
     Distribution: 0.25
+    # Filter modifies the find to use whatever filter you pass to it
     Filter: {a: 1}
     GlobalRate: 10 per 1 second

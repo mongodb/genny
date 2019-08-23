@@ -30,22 +30,10 @@
 namespace genny::actor {
 
 /**
- * Indicate what the Actor does and give an example yaml configuration.
- * Markdown is supported in all docstrings so you could list an example here:
+ * Writes into the latest collection created by the rolling collection
+ * manager.
  *
- * ```yaml
- * SchemaVersion: 2017-07-01
- * Actors:
- * - Name: RollingCollectionWriter
- *   Type: RollingCollectionWriter
- *   Phases:
- *   - Document: foo
- * ```
- *
- * Or you can fill out the generated workloads/docs/RollingCollectionWriter.yml
- * file with extended documentation. If you do this, please mention
- * that extended documentation can be found in the docs/RollingCollectionWriter.yml
- * file.
+ * For use example see: src/workloads/docs/RollingCollectionManager.yml
  *
  * Owner: Storage Engines
  */

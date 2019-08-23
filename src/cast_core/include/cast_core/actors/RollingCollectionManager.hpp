@@ -34,8 +34,7 @@ namespace genny::actor {
  * at the top level of the actor, additionally has a setup phase which allows
  * it to create an amount of collections as defined by CollectionCount.
  *
- * The collections created are named by the datetime that they are created at.
- * It will delete the oldest collection created. Not to be used with more
+ * The collections created are named r_X. Not to be used with more
  * than one thread.
  *
  * For use example see: src/workloads/docs/RollingCollectionManager.yml

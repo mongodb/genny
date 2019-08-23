@@ -26,6 +26,18 @@
 #include <metrics/metrics.hpp>
 
 namespace genny::actor {
+
+/**
+ * Reads collections created by the rolling collection manager.
+ * It will chose which collection to read from based off a linear
+ * distribution configurable using the Distribution configuration option.
+ *
+ * It can read from indexes if desired specified with the Filter option.
+ *
+ * For use example see: src/workloads/docs/RollingCollectionManager.yml
+ *
+ * Owner: Storage Engines
+ */
 class RollingCollectionReader : public Actor {
 public:
     explicit RollingCollectionReader(ActorContext& context);
