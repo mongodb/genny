@@ -43,14 +43,14 @@ struct RollingCollectionManager::PhaseConfig {
     metrics::Operation deleteCollectionOperation;
     metrics::Operation createCollectionOperation;
     bool setupPhase;
-    DocumentGenerator documentExpr;
+    std::optional<DocumentGenerator> documentExpr;
     int64_t documentCount;
 
     PhaseConfig(PhaseContext& phaseContext, mongocxx::database&& db, ActorId id)
         : database{db}, setupPhase{phaseContext["Setup"].maybe<bool>().value_or(false)},
           deleteCollectionOperation{phaseContext.operation("CreateCollection", id)},
           createCollectionOperation{phaseContext.operation("DeleteCollection", id)},
-          documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)},
+          documentExpr{phaseContext["Document"].maybe<DocumentGenerator>(phaseContext, id)},
           documentCount{phaseContext["DocumentCount"].maybe<IntegerSpec>().value_or(0)} {}
 };
 
@@ -64,6 +64,7 @@ mongocxx::collection createCollection(mongocxx::database& database, std::vector<
     for (auto&& keys : indexConfig) {
         collection.create_index(keys());
     }
+    return collection;
 }
 
 void RollingCollectionManager::run() {
@@ -75,14 +76,15 @@ void RollingCollectionManager::run() {
                     auto collectionName = getRollingCollectionName(i);
                     auto collection = createCollection(config->database, _indexConfig, collectionName);
                     _collectionNames.push_back(collectionName);
-                    for (auto j = 0; j < config->documentCount; ++j){
-                        auto document = config->documentExpr();
-                        collection.insert_one(document.view());
+                    if (config->documentExpr){
+                        for (auto j = 0; j < config->documentCount; ++j){
+                            collection.insert_one((*config->documentExpr)());
+                        }
                     }
                     _currentCollectionId++;
                 }
             } else {
-                // Create collection with timestamped name
+                // Create collection
                 auto createCollectionTracker = config->createCollectionOperation.start();
                 auto collectionName = getRollingCollectionName(_currentCollectionId);
                 createCollection(config->database, _indexConfig, collectionName);

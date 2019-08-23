@@ -19,29 +19,38 @@ Actors:
   Phases:
   - Setup: true
     Repeat: 1
-    Document: {foo: {^RandomInt: {min: 500, max: 10000}}}
+    Document: {a: {^RandomString: {length: 30}}, z : {^RandomInt: {min: 100, max: 200}}}
     DocumentCount: 1000
   - Duration: 1 minute
     GlobalRate: 1 per 1 second
-    Document: {foo: {^RandomInt: {min: 500, max: 10000}}}
 
-#- Name: RollingCollectionWriter
-#  Type: RollingCollectionWriter
-#  Threads: 40
-#  CollectionWindowSize: 20
-#  Database: rolling
-#  Phases:
-#  - {Nop: true}
-#  - Duration: 1 minute
-#    Document: {bar: {^RandomInt: {min: 500, max: 10000}}}
+- Name: RollingCollectionWriter
+  Type: RollingCollectionWriter
+  Threads: 40
+  CollectionWindowSize: 20
+  Database: rolling
+  Phases:
+  - {Nop: true}
+  - Duration: 1 minute
+    Document: {a: {^RandomString: {length: 30}}, z : {^RandomInt: {min: 100, max: 200}}}
 
-#- Name: RollingCollectionReader
-#  Type: RollingCollectionReader
-#  Threads: 10
-#  Database: rolling
-#  Phases:
-#  - {Nop: true}
-#  - Duration: 1 minute
-#    Distribution: 0.25
-#    Filter: {bar: 1}
-#    GlobalRate: 10 per 1 second
+- Name: RollingCollectionReader
+  Type: RollingCollectionReader
+  Threads: 10
+  Database: rolling
+  Phases:
+  - {Nop: true}
+  - Duration: 1 minute
+    Distribution: 0.5
+    GlobalRate: 10 per 1 second
+
+- Name: RollingCollectionReader
+  Type: RollingCollectionReader
+  Threads: 1
+  Database: rolling
+  Phases:
+  - {Nop: true}
+  - Duration: 1 minute
+    Distribution: 0.25
+    Filter: {a: 1}
+    GlobalRate: 10 per 1 second

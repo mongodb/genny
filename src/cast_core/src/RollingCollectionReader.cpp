@@ -82,7 +82,6 @@ void RollingCollectionReader::run() {
                 }
             } catch (mongocxx::operation_exception& e){
                 //We likely tried to read from missing collection;
-                BOOST_LOG_TRIVIAL(info) << "Exception:";
                 statTracker.failure();
             }
         }
