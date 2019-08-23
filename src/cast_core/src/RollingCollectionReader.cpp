@@ -68,7 +68,7 @@ void RollingCollectionReader::run() {
             try {
                 boost::optional<bsoncxx::document::value> optionalDocument;
                 if (config->filterExpr) {
-                    optionalDocument = collection.find_one((*config->filterExpr)());
+                    optionalDocument = collection.find_one(config->filterExpr->evaluate());
                 } else {
                     optionalDocument = collection.find_one({});
                 }

@@ -78,7 +78,7 @@ void RollingCollectionManager::run() {
                     _collectionNames.push_back(collectionName);
                     if (config->documentExpr){
                         for (auto j = 0; j < config->documentCount; ++j){
-                            collection.insert_one((*config->documentExpr)());
+                            collection.insert_one(config->documentExpr->evaluate());
                         }
                     }
                     _currentCollectionId++;
