@@ -1,0 +1,90 @@
+# Create indexes on a collection large enough that the external sorter must spill to disk.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+
+Actors:
+
+# Phase 1: Insert enough data to ensure than an index build on each field spills to disk with a
+# memory limit of 100MB.
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10000000
+    BatchSize: 1000
+    Document:
+      randomInt: {^RandomInt: {min: -10000000, max: 10000000}}
+      randomString: {^RandomString: {length: 16}}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+# Phase 2: Fsync the data and lower the memory limit.
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    # Use fsync to force a checkpoint to ensure no distruptions occur during the index build.
+    - OperationMetricsName: FsyncCommand
+      OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+    # Lower the memory limit for spilling to disk so that it occurs more often.
+    - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        maxIndexBuildMemoryUsageMegabytes: 100
+  - *Nop
+  - *Nop
+
+# Phases 3+: Build indexes on each field.
+- Name: IndexCollection
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+    # Build an index on an integer field.
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateIndexInt
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key:
+            randomInt: 1
+          name: random_int
+    - OperationMetricsName: DropIndexInt
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: random_int
+    # Build an index on a string field.
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateIndexString
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0
+        indexes:
+        - key:
+            randomString: 1
+          name: random_string
+    - OperationMetricsName: DropIndexString
+      OperationName: RunCommand
+      OperationCommand:
+        dropIndexes: Collection0
+        index: random_string
