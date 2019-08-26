@@ -24,7 +24,7 @@ Actors:
   - *Nop
   - *Nop
 
-# Phase 2: Fsync the data and lower the memory limit.
+# Phase 2: Lower the memory limit for spilling to disk so that it occurs more often.
 - Name: Setup
   Type: RunCommand
   Threads: 1
@@ -33,12 +33,6 @@ Actors:
   - Repeat: 1
     Database: admin
     Operations:
-    # Use fsync to force a checkpoint to ensure no distruptions occur during the index build.
-    - OperationMetricsName: FsyncCommand
-      OperationName: RunCommand
-      OperationCommand:
-        fsync: 1
-    # Lower the memory limit for spilling to disk so that it occurs more often.
     - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
       OperationName: RunCommand
       OperationCommand:
@@ -55,7 +49,7 @@ Actors:
   - *Nop
   - *Nop
     # Build an index on an integer field.
-  - Repeat: 1
+  - Repeat: 5
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndexInt
@@ -72,7 +66,7 @@ Actors:
         dropIndexes: Collection0
         index: random_int
     # Build an index on a string field.
-  - Repeat: 1
+  - Repeat: 5
     Database: *db
     Operations:
     - OperationMetricsName: CreateIndexString
