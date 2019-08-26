@@ -74,6 +74,10 @@ public:
         return std::move(this->_node.getPlural<T, F>(singular, plural, std::forward<F>(f)));
     }
 
+    auto path() const {
+        return _node.path();
+    }
+
 protected:
     const Node& _node;
 };
@@ -230,6 +234,9 @@ public:
      * @warning
      *   This is intended to only be used internally. It is called
      *   by PhaseLoop in response to the `GlobalRate:` yaml keyword.
+     *   Additionally it cannot be called after the WorkloadContext
+     *   has been constructed: it can only be called during Actors'
+     *   constructors, etc.
      *
      * @param name
      *   name/id to use

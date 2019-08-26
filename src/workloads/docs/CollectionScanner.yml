@@ -1,0 +1,14 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+Actors:
+- Name: ColdScanner
+  Type: CollectionScanner
+  Threads: 1
+  Database: cold
+  CollectionCount: 10
+  Phases:
+  - Duration: 30 minutes
+    # Optionally skip the first iteration of the collection scanner
+    SkipFirstLoop: true
+    GlobalRate: 1 per 4 minutes

@@ -581,4 +581,8 @@ bsoncxx::document::value DocumentGenerator::operator()() {
     return _impl->evaluate();
 }
 
+bsoncxx::document::value DocumentGenerator::evaluate() {
+    return operator()();
+}
+
 }  // namespace genny

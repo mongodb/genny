@@ -1,0 +1,52 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 10
+  Phases:
+  - Repeat: 1
+    Database: cold
+    CollectionCount: 6
+    Threads: 1
+    DocumentCount: 2000000
+    BatchSize: 100000
+    Document:
+      a: {^RandomString: { length: 100 }}
+  - Repeat: 1
+    Database: hot
+    CollectionCount: 5
+    Threads: 1
+    DocumentCount: 2000000
+    BatchSize: 100000
+    Document:
+      a: {^RandomString: {length: 100 }}
+  - {Nop: true}
+
+- Name: HotSampler
+  Type: RandomSampler
+  Threads: 50
+  CollectionCount: 50
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+
+- Name: ColdScanner
+  Type: CollectionScanner
+  Threads: 6
+  Database: cold
+  CollectionCount: 60
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 30 minutes
+    SkipFirstLoop: true
+    GlobalRate: 6 per 4 minutes

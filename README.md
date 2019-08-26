@@ -17,11 +17,12 @@ Here're the steps to get Genny up and running locally:
     -   macOS: `xcode-select --install`
     -   Windows: <https://visualstudio.microsoft.com/>
 
-2.  Make sure you have a C++17 compatible compiler and a recent Python 3
-    distribution. The ones from mongodbtoolchain are safe bets if you're
+2.  Make sure you have a C++17 compatible compiler and Python 3.7 or newer.
+    The ones from mongodbtoolchain v3 are safe bets if you're
     unsure. (mongodbtoolchain is internal to MongoDB).
 
-3.  `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]`
+3.  `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]` once
+    you have Python 3.7+ installed.
 
     This command downloads Genny's toolchain, compiles Genny, and
     installs Genny to `dist/`. You can rerun this command at any time to
