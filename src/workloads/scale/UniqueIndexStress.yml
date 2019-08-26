@@ -284,172 +284,81 @@ Actors:
         - *doc
         - *doc
         - *doc
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 2..15
+    Nop: true
 
 - Name: UniqueIndexes1
   Type: CrudActor
   Database: *db
   Threads: *insert_threads
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 0..2
+    Nop: true
   - *InsertMany
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 4..15
+    Nop: true
 
 - Name: UniqueIndexes2
   Type: CrudActor
   Database: *db
   Threads: *insert_threads
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 0..4
+    Nop: true
   - *InsertMany
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 6..15
+    Nop: true
 
 - Name: UniqueIndexes3
   Type: CrudActor
   Database: *db
   Threads: *insert_threads
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 0..6
+    Nop: true
   - *InsertMany
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 8..15
+    Nop: true
 
 - Name: UniqueIndexes4
   Type: CrudActor
   Database: *db
   Threads: *insert_threads
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 0..8
+    Nop: true
   - *InsertMany
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 10..15
+    Nop: true
 
 - Name: UniqueIndexes5
   Type: CrudActor
   Database: *db
   Threads: *insert_threads
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 0..10
+    Nop: true
   - *InsertMany
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 12..15
+    Nop: true
 
 - Name: UniqueIndexes6
   Type: CrudActor
   Database: *db
   Threads: *insert_threads
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 0..12
+    Nop: true
   - *InsertMany
-  - *Nop
-  - *Nop
+  - Phase: 14..15
+    Nop: true
 
 - Name: UniqueIndexes7
   Type: CrudActor
   Database: *db
   Threads: *insert_threads
   Phases:
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
+  - Phase: 0..14
+    Nop: true
   - *InsertMany
 
