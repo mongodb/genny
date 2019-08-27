@@ -17,10 +17,6 @@
 #include <chrono>
 #include <memory>
 
-#include <yaml-cpp/yaml.h>
-
-#include <bsoncxx/json.hpp>
-
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
@@ -66,18 +62,15 @@ struct CollectionScanner::PhaseConfig {
         auto scanTypeString = context["ScanType"].to<std::string>();
         // Ignore case
         boost::algorithm::to_lower(scanTypeString);
-        if (scanTypeString == "count"){
+        if (scanTypeString == "count") {
             scanType = Count;
-        } else if (scanTypeString == "snapshot"){
+        } else if (scanTypeString == "snapshot") {
             scanType = Snapshot;
-        } else {
+        } else if (scanTypeString == "standard") {
             scanType = Standard;
+        } else {
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException("ScanType is invalid."));
         }
-        /*
-         * This tracks which CollectionScanners we are out of all CollectionScanners. As opposed to
-         * ActorId which is the overall actorId in the entire genny workload.
-         * Distribute the collections among the actors.
-         */
         if (generateCollectionNames){
             queryCollectionList = false;
             BOOST_LOG_TRIVIAL(info) << " Generating collection names";
@@ -112,16 +105,14 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
         try {
             for (auto &doc : docs){
                 docCount += 1;
+                scanSize += doc.length();
                 if (config->documents != 0 && config->documents == docCount) {
                     scanFinished = true;
                     break;
                 }
-                if (config->scanSizeBytes != 0) {
-                    scanSize += doc.length();
-                    if (scanSize >= config->scanSizeBytes) {
-                        scanFinished = true;
-                        break;
-                    }
+                if (config->scanSizeBytes != 0 && scanSize >= config->scanSizeBytes) {
+                    scanFinished = true;
+                    break;
                 }
             }
             if (scanFinished){

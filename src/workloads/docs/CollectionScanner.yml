@@ -29,7 +29,7 @@ Actors:
   Type: CollectionScanner
   Threads: 1
   Database: cold
-  CollectionCount: 10
+  CollectionCount: 60
   Phases:
   - {Nop: true}
   - {Nop: true}
@@ -54,7 +54,7 @@ Actors:
   - {Nop: true}
   - {Nop: true}
   - Duration: 2 minutes
-    # Scan size bytes will scan up to this many byte per scan iteration
+    # Scan size bytes will scan up to this many bytes per scan iteration
     # once the limit is hit it will exit the scan loop.
     ScanSizeBytes: 100000
     GlobalRate: 10 per 30 seconds
