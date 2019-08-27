@@ -33,6 +33,11 @@ Actors:
   - Repeat: 1
     Database: admin
     Operations:
+    # Fsync to force a checkpoint and quiesce the system.
+    - OperationMetricsName: FsyncCommand
+      OperationName: AdminCommand
+      OperationCommand:
+        fsync: 1
     - OperationMetricsName: LimitIndexBuildMemoryUsageCommand
       OperationName: RunCommand
       OperationCommand:
@@ -52,11 +57,6 @@ Actors:
   - Repeat: 5
     Database: *db
     Operations:
-    # Fsync before each index build to force a checkpoint and quiesce the system.
-    - OperationMetricsName: FsyncCommand
-      OperationName: AdminCommand
-      OperationCommand:
-        fsync: 1
     - OperationMetricsName: CreateIndexInt
       OperationName: RunCommand
       OperationCommand:
@@ -74,11 +74,6 @@ Actors:
   - Repeat: 5
     Database: *db
     Operations:
-    # Fsync before each index build to force a checkpoint and quiesce the system.
-    - OperationMetricsName: FsyncCommand
-      OperationName: AdminCommand
-      OperationCommand:
-        fsync: 1
     - OperationMetricsName: CreateIndexString
       OperationName: RunCommand
       OperationCommand:
