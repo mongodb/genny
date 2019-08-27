@@ -1178,7 +1178,19 @@ std::unordered_map<std::string, OpCallback&> opConstructors = {
     {"updateOne", baseCallback<BaseOperation, OpCallback, UpdateOneOperation>},
     {"updateMany", baseCallback<BaseOperation, OpCallback, UpdateManyOperation>},
     {"replaceOne", baseCallback<BaseOperation, OpCallback, ReplaceOneOperation>}};
-};  // namespace
+
+// Equivalent to `nvl(phase[Database], actor[Database])`.
+std::string getDbName(const PhaseContext& phaseContext) {
+    auto phaseDb = phaseContext["Database"].maybe<std::string>();
+    auto actorDb = phaseContext.actor()["Database"].maybe<std::string>();
+    if (!phaseDb && !actorDb) {
+        BOOST_THROW_EXCEPTION(
+            InvalidConfigurationException("Must give Database in Phase or Actor block."));
+    }
+    return phaseDb ? *phaseDb : *actorDb;
+}
+
+}  // namespace
 
 namespace genny::actor {
 
@@ -1187,12 +1199,10 @@ struct CrudActor::PhaseConfig {
     std::vector<std::unique_ptr<BaseOperation>> operations;
     metrics::Operation metrics;
 
-    PhaseConfig(PhaseContext& phaseContext,
-                const mongocxx::database& db,
-                ActorContext& actorContext,
-                ActorId id)
-        : collection{db[phaseContext["Collection"].to<std::string>()]},
-          metrics{actorContext.operation("Crud", id)} {
+    PhaseConfig(PhaseContext& phaseContext, mongocxx::pool::entry& client, ActorId id)
+        : collection{(
+              *client)[getDbName(phaseContext)][phaseContext["Collection"].to<std::string>()]},
+          metrics{phaseContext.actor().operation("Crud", id)} {
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             auto& yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].to<std::string>();
@@ -1211,7 +1221,7 @@ struct CrudActor::PhaseConfig {
             return createOperation(yamlCommand,
                                    onSession,
                                    collection,
-                                   actorContext.operation(opName, id),
+                                   phaseContext.actor().operation(opName, id),
                                    phaseContext,
                                    id);
         };
@@ -1239,7 +1249,7 @@ void CrudActor::run() {
 CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
       _client{std::move(context.client())},
-      _loop{context, (*_client)[context["Database"].to<std::string>()], context, CrudActor::id()} {}
+      _loop{context, _client, CrudActor::id()} {}
 
 namespace {
 auto registerCrudActor = Cast::registerDefault<CrudActor>();
