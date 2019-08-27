@@ -54,7 +54,7 @@ Actors:
     Operations:
     # Fsync before each index build to force a checkpoint and quiesce the system.
     - OperationMetricsName: FsyncCommand
-      OperationName: RunCommand
+      OperationName: AdminCommand
       OperationCommand:
         fsync: 1
     - OperationMetricsName: CreateIndexInt
@@ -76,7 +76,7 @@ Actors:
     Operations:
     # Fsync before each index build to force a checkpoint and quiesce the system.
     - OperationMetricsName: FsyncCommand
-      OperationName: RunCommand
+      OperationName: AdminCommand
       OperationCommand:
         fsync: 1
     - OperationMetricsName: CreateIndexString
