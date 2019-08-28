@@ -21,16 +21,15 @@
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
-
 
 namespace genny::actor {
 enum ScanType { Count, Snapshot, Standard };
@@ -71,11 +70,11 @@ struct CollectionScanner::PhaseConfig {
         } else {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("ScanType is invalid."));
         }
-        if (generateCollectionNames){
+        if (generateCollectionNames) {
             queryCollectionList = false;
             BOOST_LOG_TRIVIAL(info) << " Generating collection names";
             for (const auto& collectionName :
-                distributeCollectionNames(collectionCount, threads, actor->_index)) {
+                 distributeCollectionNames(collectionCount, threads, actor->_index)) {
                 collections.push_back(db[collectionName]);
             }
         } else {
@@ -85,7 +84,7 @@ struct CollectionScanner::PhaseConfig {
 };
 
 void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
-                    std::vector<mongocxx::collection>& collections){
+                    std::vector<mongocxx::collection>& collections) {
     /*
      * Here we are either doing a snapshot collection scan
      * or just a normal scan?
@@ -95,15 +94,15 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
     for (auto& collection : config->collections) {
-        auto filter = config->filterExpr ? config->filterExpr->evaluate() :
-            bsoncxx::document::view_or_value{};
+        auto filter = config->filterExpr ? config->filterExpr->evaluate()
+                                         : bsoncxx::document::view_or_value{};
         auto docs = collection.find(filter);
         /*
          * Try-catch this as the collection may have been deleted.
          * You can still do a find but it'll throw an exception when we iterate.
          */
         try {
-            for (auto &doc : docs){
+            for (auto& doc : docs) {
                 docCount += 1;
                 scanSize += doc.length();
                 if (config->documents != 0 && config->documents == docCount) {
@@ -115,10 +114,10 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
                     break;
                 }
             }
-            if (scanFinished){
+            if (scanFinished) {
                 break;
             }
-        } catch (mongocxx::operation_exception e){
+        } catch (mongocxx::operation_exception e) {
             // Do nothing
         }
     }
@@ -127,14 +126,14 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
 }
 
 void countScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
-               std::vector<mongocxx::collection> collections){
+               std::vector<mongocxx::collection> collections) {
     auto statTracker = config->scanOperation.start();
     for (auto& collection : config->collections) {
-        auto filter = config->filterExpr ? config->filterExpr->evaluate() :
-            bsoncxx::document::view_or_value{};
+        auto filter = config->filterExpr ? config->filterExpr->evaluate()
+                                         : bsoncxx::document::view_or_value{};
         try {
             statTracker.addDocuments(collection.count_documents(filter));
-        } catch (mongocxx::operation_exception e){
+        } catch (mongocxx::operation_exception e) {
             /*
              * Again do nothing as we've likely tried to count on
              * a collection that doesn't exist.
@@ -157,16 +156,16 @@ void CollectionScanner::run() {
 
             // Populate collections if need be.
             std::vector<mongocxx::collection>& collections = config->collections;
-            if (config->queryCollectionList){
+            if (config->queryCollectionList) {
                 std::vector<mongocxx::collection> tempCollections{};
-                for (const auto &collection : config->database.list_collection_names({})){
+                for (const auto& collection : config->database.list_collection_names({})) {
                     tempCollections.push_back(config->database[collection]);
                 }
                 collections = tempCollections;
             }
 
             // Do each kind of scan.
-            if (config->scanType == Count){
+            if (config->scanType == Count) {
                 countScan(config, collections);
             } else if (config->scanType == Snapshot) {
                 mongocxx::client_session session = _client->start_session({});
