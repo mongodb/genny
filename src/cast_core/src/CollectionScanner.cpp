@@ -40,10 +40,12 @@ struct CollectionScanner::PhaseConfig {
     mongocxx::database database;
     bool skipFirstLoop = false;
     metrics::Operation scanOperation;
+    metrics::Operation exceptionsCaught;
     int64_t documents;
     int64_t scanSizeBytes;
     ScanType scanType;
     bool queryCollectionList;
+    std::optional<mongocxx::options::transaction> transactionOptions;
 
     PhaseConfig(PhaseContext& context,
                 const CollectionScanner* actor,
@@ -55,6 +57,7 @@ struct CollectionScanner::PhaseConfig {
           skipFirstLoop{context["SkipFirstLoop"].maybe<bool>().value_or(false)},
           filterExpr{context["Filter"].maybe<DocumentGenerator>(context, actor->id())},
           scanOperation{context.operation("Scan", actor->id())},
+          exceptionsCaught{context.operation("ExceptionsCaught", actor->id())}
           documents{context["Documents"].maybe<IntegerSpec>().value_or(0)},
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)} {
         // Initialise scan type enum.
@@ -64,6 +67,10 @@ struct CollectionScanner::PhaseConfig {
         if (scanTypeString == "count") {
             scanType = Count;
         } else if (scanTypeString == "snapshot") {
+            transactionOptions = mongocxx::options::transaction{};
+            auto readConcern = mongocxx::read_concern{};
+            readConcern.acknowledge_level(mongocxx::read_concern::level::k_majority);
+            transactionOptions->read_concern(readConcern);
             scanType = Snapshot;
         } else if (scanTypeString == "standard") {
             scanType = Standard;
@@ -117,10 +124,13 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
             if (scanFinished) {
                 break;
             }
-        } catch (mongocxx::operation_exception e) {
-            // Do nothing
+        } catch (const mongocxx::operation_exception& e) {
+            auto exceptionsCaught = config->exceptionsCaught.start();
+            exceptionsCaught.addDocuments(1);
+            exceptionsCaught.success();
         }
     }
+    statTracker.addBytes(scanSize);
     statTracker.addDocuments(docCount);
     statTracker.success();
 }
@@ -133,11 +143,10 @@ void countScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
                                          : bsoncxx::document::view_or_value{};
         try {
             statTracker.addDocuments(collection.count_documents(filter));
-        } catch (mongocxx::operation_exception e) {
-            /*
-             * Again do nothing as we've likely tried to count on
-             * a collection that doesn't exist.
-             */
+        } catch (const mongocxx::operation_exception& e) {
+            auto exceptionsCaught = config->exceptionsCaught.start();
+            exceptionsCaught.addDocuments(1);
+            exceptionsCaught.success();
         }
     }
     statTracker.success();
@@ -169,11 +178,7 @@ void CollectionScanner::run() {
                 countScan(config, collections);
             } else if (config->scanType == Snapshot) {
                 mongocxx::client_session session = _client->start_session({});
-                auto transactionOptions = mongocxx::options::transaction{};
-                auto readConcern = mongocxx::read_concern{};
-                readConcern.acknowledge_level(mongocxx::read_concern::level::k_majority);
-                transactionOptions.read_concern(readConcern);
-                session.start_transaction(transactionOptions);
+                session.start_transaction(*config->transactionOptions);
                 collectionScan(config, collections);
                 session.commit_transaction();
             } else {
