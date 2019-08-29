@@ -24,9 +24,6 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
-#include <metrics/metrics.hpp>
-#include <value_generators/DocumentGenerator.hpp>
-
 namespace genny::actor {
 template<typename T>
 struct AtomicDeque {
@@ -58,15 +55,20 @@ struct AtomicDeque {
         std::lock_guard<std::mutex> lock(_mutex);
         return _deque.size();
     }
+    bool empty() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.empty();
+    }
 };
 
 /**
- * Creates and deletes one collection per iteration, indexes are configurable
- * at the top level of the actor, additionally has a setup phase which allows
- * it to create an amount of collections as defined by CollectionCount.
+ * This actor provides a rolling collection functionality, it has 4 operations:
+ * Setup: Creates an intial set of collections and creates documents within them.
+ * Manage: Creates and deletes a collection per iteration.
+ * Read: Reads from the set of collection preferencing reading the most recently created collection.
+ * Write: Writes to the most recently created collection.
  *
- * The collections created are named r_X. Not to be used with more
- * than one thread.
+ * The collections created are named rX_timestamp.
  *
  * For use example see: src/workloads/docs/RollingCollections.yml
  *

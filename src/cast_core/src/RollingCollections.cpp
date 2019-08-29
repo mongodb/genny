@@ -56,6 +56,7 @@ namespace timestamping {
             rollingCollectionId++;
         } else {
             rollingCollectionId = 0;
+            lastTimestamp = now;
         }
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
         auto time = std::chrono::system_clock::to_time_t(now);
@@ -93,27 +94,32 @@ struct Read : public RunOperation {
         }
 
     void run() override {
-        auto id = getNextCollectionId(rollingCollectionNames.size(),
+        auto size = rollingCollectionNames.size();
+        auto id = getNextCollectionId(size,
             _distribution, _realDistribution(_random));
         auto statTracker = _findOperation.start();
-        auto collection = database[rollingCollectionNames.at(id)];
-        try {
-            boost::optional<bsoncxx::document::value> optionalDocument;
-            if (_filterExpr) {
-                optionalDocument = collection.find_one(_filterExpr->evaluate());
-            } else {
-                optionalDocument = collection.find_one({});
-            }
-            if (optionalDocument) {
-                auto document = optionalDocument.get();
-                statTracker.addDocuments(1);
-                statTracker.addBytes(document.view().length());
-                statTracker.success();
-            } else {
+        if (size > 0) {
+            auto collection = database[rollingCollectionNames.at(id)];
+            try {
+                boost::optional<bsoncxx::document::value> optionalDocument;
+                if (_filterExpr) {
+                    optionalDocument = collection.find_one(_filterExpr->evaluate());
+                } else {
+                    optionalDocument = collection.find_one({});
+                }
+                if (optionalDocument) {
+                    auto document = optionalDocument.get();
+                    statTracker.addDocuments(1);
+                    statTracker.addBytes(document.view().length());
+                    statTracker.success();
+                } else {
+                    statTracker.failure();
+                }
+            } catch (mongocxx::operation_exception& e){
+                //We likely tried to read from a collection that was deleted.
                 statTracker.failure();
             }
-        } catch (mongocxx::operation_exception& e){
-            //We likely tried to read from a collection that was deleted.
+        } else {
             statTracker.failure();
         }
     }
@@ -136,12 +142,16 @@ struct Write : public RunOperation {
     void run() override {
         auto statTracker = _insertOperation.start();
         auto document = _documentExpr();
-        auto collectionName = rollingCollectionNames.back();
-        auto collection = database[collectionName];
-        collection.insert_one(document.view());
-        statTracker.addDocuments(1);
-        statTracker.addBytes(document.view().length());
-        statTracker.success();
+        if (!rollingCollectionNames.empty()) {
+            auto collectionName = rollingCollectionNames.back();
+            auto collection = database[collectionName];
+            collection.insert_one(document.view());
+            statTracker.addDocuments(1);
+            statTracker.addBytes(document.view().length());
+            statTracker.success();
+        } else {
+            statTracker.failure();
+        }
     }
 
 private:
@@ -197,18 +207,20 @@ struct Manage : public RunOperation {
         }
 
     void run() override {
+        // Delete collection at head of deque, check to see that a collection exists first.
+        if (!rollingCollectionNames.empty()){
+            auto collectionName = rollingCollectionNames.front();
+            rollingCollectionNames.pop_front();
+            auto deleteCollectionTracker = _deleteCollectionOperation.start();
+            database[collectionName].drop();
+            deleteCollectionTracker.success();
+        }
         // Create collection
         auto createCollectionTracker = _createCollectionOperation.start();
         auto collectionName = timestamping::getRollingCollectionName();
         createCollection(database, _indexConfig, collectionName);
         createCollectionTracker.success();
         rollingCollectionNames.emplace_back(collectionName);
-        // Delete collection at head of deque
-        collectionName = rollingCollectionNames.front();
-        rollingCollectionNames.pop_front();
-        auto deleteCollectionTracker = _deleteCollectionOperation.start();
-        database[collectionName].drop();
-        deleteCollectionTracker.success();
     }
 
 private:
