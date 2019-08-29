@@ -28,6 +28,37 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
+template<typename T>
+struct AtomicDeque {
+    std::deque<T> _deque;
+    std::mutex _mutex;
+    auto&& front() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.front();
+    }
+    template<typename...Args>
+    auto&& emplace_back(Args... args) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.emplace_back(std::forward<Args>(args)...);
+    }
+    auto&& back() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.back();
+    }
+    auto&& at(size_t pos) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.back();
+    }
+    void pop_front() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _deque.pop_front();
+        return;
+    }
+    size_t size() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _deque.size();
+    }
+};
 
 /**
  * Creates and deletes one collection per iteration, indexes are configurable
@@ -37,30 +68,27 @@ namespace genny::actor {
  * The collections created are named r_X. Not to be used with more
  * than one thread.
  *
- * For use example see: src/workloads/docs/RollingCollectionManager.yml
+ * For use example see: src/workloads/docs/RollingCollections.yml
  *
  * Owner: Storage Engines
  */
-class RollingCollectionManager : public Actor {
+class RollingCollections : public Actor {
 public:
-    struct RollingCollectionNames : genny::WorkloadContext::ShareableState<std::deque<std::string>> {};
+    struct RollingCollectionNames : genny::WorkloadContext::ShareableState<AtomicDeque<std::string>> {};
 
-    explicit RollingCollectionManager(ActorContext& context);
-    ~RollingCollectionManager() = default;
+    explicit RollingCollections(ActorContext& context);
+    ~RollingCollections() = default;
     void run() override;
 
     static std::string_view defaultName() {
-        return "RollingCollectionManager";
+        return "RollingCollections";
     }
 private:
     mongocxx::pool::entry _client;
     /** @private */
     struct PhaseConfig;
     PhaseLoop<PhaseConfig> _loop;
-    std::vector<DocumentGenerator> _indexConfig;
     RollingCollectionNames& _collectionNames;
-    int64_t _currentCollectionId;
-    int64_t _collectionWindowSize;
 };
 std::string getRollingCollectionName(int64_t lastId);
 }
