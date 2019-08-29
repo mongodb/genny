@@ -57,7 +57,7 @@ struct CollectionScanner::PhaseConfig {
           skipFirstLoop{context["SkipFirstLoop"].maybe<bool>().value_or(false)},
           filterExpr{context["Filter"].maybe<DocumentGenerator>(context, actor->id())},
           scanOperation{context.operation("Scan", actor->id())},
-          exceptionsCaught{context.operation("ExceptionsCaught", actor->id())}
+          exceptionsCaught{context.operation("ExceptionsCaught", actor->id())},
           documents{context["Documents"].maybe<IntegerSpec>().value_or(0)},
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)} {
         // Initialise scan type enum.
