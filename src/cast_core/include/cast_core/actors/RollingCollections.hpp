@@ -15,8 +15,8 @@
 #ifndef HEADER_ED16EA41_82CE_428D_B7D1_94AAEE3AF70C_INCLUDED
 #define HEADER_ED16EA41_82CE_428D_B7D1_94AAEE3AF70C_INCLUDED
 
-#include <string_view>
 #include <queue>
+#include <string_view>
 
 #include <mongocxx/pool.hpp>
 
@@ -25,7 +25,7 @@
 #include <gennylib/context.hpp>
 
 namespace genny::actor {
-template<typename T>
+template <typename T>
 struct AtomicDeque {
     std::deque<T> _deque;
     std::mutex _mutex;
@@ -33,7 +33,7 @@ struct AtomicDeque {
         std::lock_guard<std::mutex> lock(_mutex);
         return _deque.front();
     }
-    template<typename...Args>
+    template <typename... Args>
     auto&& emplace_back(Args... args) {
         std::lock_guard<std::mutex> lock(_mutex);
         return _deque.emplace_back(std::forward<Args>(args)...);
@@ -44,7 +44,7 @@ struct AtomicDeque {
     }
     auto&& at(size_t pos) {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _deque.back();
+        return _deque.at(pos);
     }
     void pop_front() {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -63,7 +63,7 @@ struct AtomicDeque {
 
 /**
  * This actor provides a rolling collection functionality, it has 4 operations:
- * Setup: Creates an intial set of collections and creates documents within them.
+ * Setup: Creates an initial set of collections and creates documents within them.
  * Manage: Creates and deletes a collection per iteration.
  * Read: Reads from the set of collection preferencing reading the most recently created collection.
  * Write: Writes to the most recently created collection.
@@ -76,7 +76,8 @@ struct AtomicDeque {
  */
 class RollingCollections : public Actor {
 public:
-    struct RollingCollectionNames : genny::WorkloadContext::ShareableState<AtomicDeque<std::string>> {};
+    struct RollingCollectionNames
+        : genny::WorkloadContext::ShareableState<AtomicDeque<std::string>> {};
 
     explicit RollingCollections(ActorContext& context);
     ~RollingCollections() = default;
@@ -85,6 +86,7 @@ public:
     static std::string_view defaultName() {
         return "RollingCollections";
     }
+
 private:
     mongocxx::pool::entry _client;
     /** @private */
@@ -93,5 +95,5 @@ private:
     RollingCollectionNames& _collectionNames;
 };
 std::string getRollingCollectionName(int64_t lastId);
-}
+}  // namespace genny::actor
 #endif  // HEADER_ED16EA41_82CE_428D_B7D1_94AAEE3AF70C_INCLUDED
