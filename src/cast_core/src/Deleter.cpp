@@ -54,8 +54,14 @@ void Deleter::run() {
              * This will delete the oldest document as .find() returns documents
              * in order of _id.
              */
-            config->collection.find_one_and_delete({});
-            statTracker.success();
+            const auto result = config->collection.find_one_and_delete({});
+            if (result) {
+                statTracker.addDocuments(1);
+                statTracker.addBytes(result->view().length());
+                statTracker.success();
+            } else {
+                statTracker.failure();
+            }
         }
     }
 }

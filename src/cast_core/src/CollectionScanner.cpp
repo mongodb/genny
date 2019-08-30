@@ -100,6 +100,7 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
     size_t scanSize = 0;
     bool scanFinished = false;
     auto statTracker = config->scanOperation.start();
+    auto exceptionsCaught = config->exceptionsCaught.start();
     for (auto& collection : config->collections) {
         auto filter = config->filterExpr ? config->filterExpr->evaluate()
                                          : bsoncxx::document::view_or_value{};
@@ -125,7 +126,6 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
                 break;
             }
         } catch (const mongocxx::operation_exception& e) {
-            auto exceptionsCaught = config->exceptionsCaught.start();
             exceptionsCaught.addDocuments(1);
             exceptionsCaught.success();
         }
@@ -138,13 +138,13 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
 void countScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
                std::vector<mongocxx::collection> collections) {
     auto statTracker = config->scanOperation.start();
+    auto exceptionsCaught = config->exceptionsCaught.start();
     for (auto& collection : config->collections) {
         auto filter = config->filterExpr ? config->filterExpr->evaluate()
                                          : bsoncxx::document::view_or_value{};
         try {
             statTracker.addDocuments(collection.count_documents(filter));
         } catch (const mongocxx::operation_exception& e) {
-            auto exceptionsCaught = config->exceptionsCaught.start();
             exceptionsCaught.addDocuments(1);
             exceptionsCaught.success();
         }
