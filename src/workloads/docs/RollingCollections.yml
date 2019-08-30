@@ -1,0 +1,82 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+Actors:
+- Name: Setup
+  Type: RollingCollections
+  # The setup operation creates CollectionWindowSize collections, and populates them with
+  # DocumentCount documents, each collection will have indexes created as specified in
+  # the index block.
+  Operation: Setup
+  Database: rolling
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    CollectionWindowSize: 10
+    Document: {a: {^RandomString: {length: 30}}, z : {^RandomInt: {min: 100, max: 200}}}
+    DocumentCount: 1000
+    Indexes:
+    - keys: {a: 1}
+    - keys: {b: 1}
+    - keys: {c: 1}
+    - keys: {d: 1}
+    - keys: {e: 1}
+    - keys: {f: 1, g: 1}
+    - keys: {h: 1, i: 1}
+    - keys: {k: 1, j: 1}
+  - {Nop: true}
+
+- Name: Manage
+  Type: RollingCollections
+  Threads: 1
+  # The manage operation creates and drops one collection per iteration,
+  # it also creates indexes for that collection.
+  Operation: Manage
+  Database: rolling
+  Phases:
+  - {Nop: true}
+  - Duration: 1 minute
+    GlobalRate: 1 per 1 second
+    Indexes:
+    - keys: {a: 1}
+    - keys: {b: 1}
+    - keys: {c: 1}
+    - keys: {d: 1}
+    - keys: {e: 1}
+    - keys: {f: 1, g: 1}
+    - keys: {h: 1, i: 1}
+    - keys: {k: 1, j: 1}
+
+- Name: Writer
+  Type: RollingCollections
+  Threads: 40
+  Operation: Write
+  Database: rolling
+  Phases:
+  - {Nop: true}
+  - Duration: 1 minute
+    Document: {a: {^RandomString: {length: 30}}, z : {^RandomInt: {min: 100, max: 200}}}
+
+- Name: Reader
+  Type: RollingCollections
+  Threads: 10
+  Database: rolling
+  Operation: Read
+  Phases:
+  - {Nop: true}
+  - Duration: 1 minute
+    # Distribution is a linear distribution from 0 to 1
+    Distribution: 0.8
+    GlobalRate: 10 per 1 second
+
+- Name: Reader
+  Type: RollingCollections
+  Threads: 1
+  Database: rolling
+  Operation: Read
+  Phases:
+  - {Nop: true}
+  - Duration: 1 minute
+    Distribution: 0.25
+    # Filter modifies the find to use whatever filter you pass to it
+    Filter: {a: 1}
+    GlobalRate: 100 per 1 second
