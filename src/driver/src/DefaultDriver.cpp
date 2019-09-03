@@ -179,7 +179,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         metricsOutput.open(options.metricsOutputFileName,
                            std::ofstream::out | std::ofstream::trunc);
         auto logMode = options.metricsOutputFileName == "/dev/stdout"
-        ? genny::metrics::LogMode::kNone : genny::metrics::LogMode::kNormal;
+            ? genny::metrics::LogMode::kNone
+            : genny::metrics::LogMode::kNormal;
         reporter.report(metricsOutput, options.metricsFormat, logMode);
     }
 
