@@ -1,4 +1,5 @@
 import datetime
+import logging
 import json
 import os
 import subprocess
@@ -296,6 +297,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     :param cert_retriever_cls: class for cert retriever, can be overridden if no certificates are required.
     :return:
     """
+    logging.basicConfig(level=logging.INFO)
     parser = build_parser()
     args = parser.parse_args(argv)
 

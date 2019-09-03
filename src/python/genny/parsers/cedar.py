@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import logging
 import csv
 import sys
 from collections import OrderedDict, defaultdict
@@ -250,6 +251,7 @@ def run(args):
         files = split_into_actor_csv_files(data_reader, out_dir)
 
         for f in files:
+            logging.info('Processing metrics in file %s', f)
             # csvsort by timestamp, thread
             sort_csv_file(f, out_dir)
 

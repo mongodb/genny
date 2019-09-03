@@ -3,6 +3,7 @@ Parse cedar-csv output into legacy "perf.json" report file format.
 """
 import argparse
 import json
+import logging
 import sys
 
 from genny.parsers.csv2 import CSV2, IntermediateCSVColumns
@@ -63,6 +64,7 @@ def run(args):
 
     my_csv2 = CSV2(args.input_file)
 
+    iterations = 0
     with my_csv2.data_reader() as data_reader:
         metric_name = None
         report = None
@@ -88,6 +90,10 @@ def run(args):
             report.duration_sum += duration
             report.n += 1
 
+            iterations = iterations + 1
+            if iterations % 1e6 == 0:
+                logging.info('Processed %d metrics lines', iterations)
+
         if report:
             # pylint: disable=protected-access
             timers[metric_name] = report.finalize()._asdict()
@@ -103,5 +109,6 @@ def main__legacy_report(argv=sys.argv[1:]):
     Entry point to convert cedar csv metrics format into legacy perf.json
     :return: None
     """
+    logging.basicConfig(level=logging.INFO)
     parser = build_parser()
     run(parser.parse_args(argv))
