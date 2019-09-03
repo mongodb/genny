@@ -25,7 +25,7 @@
 namespace genny::metrics {
 
 enum class LogMode {
-    kNormal,
+    kCI,
     kNone,
 };
 
