@@ -18,9 +18,16 @@
 #include <iostream>
 #include <map>
 
+#include <boost/log/trivial.hpp>
+
 #include <metrics/metrics.hpp>
 
 namespace genny::metrics {
+
+enum class LogMode {
+    kNormal,
+    kNone,
+};
 
 /**
  * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
@@ -63,7 +70,7 @@ public:
      * @param metricsFormat the format to use. Must be "csv".
      */
     template <typename ReporterClockSource = SystemClockSource>
-    void report(std::ostream& out, const std::string& metricsFormat) const {
+    void report(std::ostream& out, const std::string& metricsFormat, LogMode logMode) const {
         v1::Permission perm;
 
         // should these values come from the registry, and should they be recorded at
@@ -76,7 +83,7 @@ public:
         if (metricsFormat == "csv") {
             reportLegacyCsv(out, systemTime, metricsTime, perm);
         } else if (metricsFormat == "cedar-csv") {
-            reportCedarCsv(out, systemTime, metricsTime, perm);
+            reportCedarCsv(out, systemTime, metricsTime, perm, logMode);
         } else {
             throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
         }
@@ -245,7 +252,8 @@ private:
     void reportCedarCsv(std::ostream& out,
                         long long systemTime,
                         long long metricsTime,
-                        v1::Permission perm) const {
+                        v1::Permission perm,
+                        const LogMode logMode) const {
         out << "Clocks" << std::endl;
         out << "clock,nanoseconds" << std::endl;
         writeClocks(out, systemTime, metricsTime);
@@ -274,6 +282,8 @@ private:
         }
         out << std::endl;
 
+        unsigned long long iter = 0;
+
         out << "Operations" << std::endl;
         out << "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size" << std::endl;
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
@@ -295,6 +305,10 @@ private:
                         out << event.second.ops << ",";
                         out << event.second.errors << ",";
                         out << event.second.size << std::endl;
+
+                        if (++iter % 100000 == 0 && logMode != LogMode::kNone) {
+                            BOOST_LOG_TRIVIAL(info) << "Processed " << iter << " metrics. Processing " << actorName << "." << opName;
+                        }
                     }
                 }
             }
