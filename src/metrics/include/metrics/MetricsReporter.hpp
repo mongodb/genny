@@ -306,7 +306,8 @@ private:
                         out << event.second.errors << ",";
                         out << event.second.size << std::endl;
 
-                        if (++iter % 1000000 == 0 && logMode != LogMode::kNone) {
+                        // Log progress every 100e6 iterations
+                        if (++iter % (100 * 1000 * 1000) == 0 && logMode != LogMode::kNone) {
                             BOOST_LOG_TRIVIAL(info)
                                 << "Processed " << iter << " metrics. Processing " << actorName
                                 << "." << opName;

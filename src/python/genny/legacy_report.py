@@ -91,7 +91,7 @@ def run(args):
             report.n += 1
 
             iterations = iterations + 1
-            if iterations % 1000000 == 0:
+            if iterations % 1e6 == 0:
                 logging.info('Processed %d metrics lines', iterations)
 
         if report:
