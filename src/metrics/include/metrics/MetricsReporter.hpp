@@ -306,7 +306,7 @@ private:
                         out << event.second.errors << ",";
                         out << event.second.size << std::endl;
 
-                        if (++iter % 100000 == 0 && logMode != LogMode::kNone) {
+                        if (++iter % 1000000 == 0 && logMode != LogMode::kNone) {
                             BOOST_LOG_TRIVIAL(info) << "Processed " << iter << " metrics. Processing " << actorName << "." << opName;
                         }
                     }
