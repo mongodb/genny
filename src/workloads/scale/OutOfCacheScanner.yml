@@ -50,3 +50,4 @@ Actors:
   - Duration: 30 minutes
     SkipFirstLoop: true
     GlobalRate: 6 per 4 minutes
+    ScanType: Standard

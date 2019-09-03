@@ -1,0 +1,43 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: hot
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1000
+    BatchSize: 1000
+    Document:
+      a: {^RandomInt: {min: 0, max: 1000}}
+  - {Nop: true}
+
+- Name: HotCollectionUpdater
+  Type: CrudActor
+  Threads: 40
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - Duration: 3 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: { a : {^RandomInt: {min: 0, max: 1000}}}
+    GlobalRate: 1000 per 1 second
+
+- Name: HotDeleter
+  Type: Deleter
+  Threads: 40
+  Database: hot
+  Phases:
+  - {Nop: true}
+  - Duration: 3 minutes
+    Collection: Collection0
+    GlobalRate: 1000 per 1 second
