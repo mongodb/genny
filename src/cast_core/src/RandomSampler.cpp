@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cast_core/actors/CollectionScanner.hpp>
 #include <cast_core/actors/RandomSampler.hpp>
 
 #include <memory>
