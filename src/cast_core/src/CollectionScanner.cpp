@@ -175,14 +175,14 @@ void CollectionScanner::run() {
 
             // Do each kind of scan.
             if (config->scanType == Count) {
-                countScan(&*config, collections);
+                countScan(config, collections);
             } else if (config->scanType == Snapshot) {
                 mongocxx::client_session session = _client->start_session({});
                 session.start_transaction(*config->transactionOptions);
-                collectionScan(&*config, collections);
+                collectionScan(config, collections);
                 session.commit_transaction();
             } else {
-                collectionScan(&*config, collections);
+                collectionScan(config, collections);
             }
             _runningActorCounter--;
             BOOST_LOG_TRIVIAL(info) << "Finished collection scanner id: " << this->_index;
