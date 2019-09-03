@@ -70,6 +70,7 @@ not yet support local environments.
 
 ```sh
 ./genny run -o metrics.csv -m cedar-csv InsertRemove.yml
+# requires expansions.yml in cwd for cedar parameters
 genny-metrics-report metrics.csv
 ```
 
