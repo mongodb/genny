@@ -1,0 +1,364 @@
+# This workload tests insert performance with unique indexes. Each pair of phases first, drops the
+# database, then creates 7 indexes, before inserting documents as fast as it can. The difference
+# between the different phases is how many of the indexes are unique. It first does 0 unique
+# secondary indexes, then 1, 2, up to 7.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+string_length: &string_length 10
+insert_threads: &insert_threads 1
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+
+
+Actors:
+- Name: Setup
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+        - key: {b: 1}
+          name: b
+        - key: {c: 1}
+          name: c
+        - key: {d: 1}
+          name: d
+        - key: {e: 1}
+          name: e
+        - key: {f: 1}
+          name: f
+        - key: {g: 1}
+          name: g
+  - &Nop {Nop: true}
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+        - key: {b: 1}
+          name: b
+        - key: {c: 1}
+          name: c
+        - key: {d: 1}
+          name: d
+        - key: {e: 1}
+          name: e
+        - key: {f: 1}
+          name: f
+        - key: {g: 1}
+          name: g
+  - *Nop
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+        - key: {b: 1}
+          name: b
+          unique: true
+        - key: {c: 1}
+          name: c
+        - key: {d: 1}
+          name: d
+        - key: {e: 1}
+          name: e
+        - key: {f: 1}
+          name: f
+        - key: {g: 1}
+          name: g
+  - *Nop
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+        - key: {b: 1}
+          name: b
+          unique: true
+        - key: {c: 1}
+          name: c
+          unique: true
+        - key: {d: 1}
+          name: d
+        - key: {e: 1}
+          name: e
+        - key: {f: 1}
+          name: f
+        - key: {g: 1}
+          name: g
+  - *Nop
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+        - key: {b: 1}
+          name: b
+          unique: true
+        - key: {c: 1}
+          name: c
+          unique: true
+        - key: {d: 1}
+          name: d
+          unique: true
+        - key: {e: 1}
+          name: e
+        - key: {f: 1}
+          name: f
+        - key: {g: 1}
+          name: g
+  - *Nop
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+        - key: {b: 1}
+          name: b
+          unique: true
+        - key: {c: 1}
+          name: c
+          unique: true
+        - key: {d: 1}
+          name: d
+          unique: true
+        - key: {e: 1}
+          name: e
+          unique: true
+        - key: {f: 1}
+          name: f
+        - key: {g: 1}
+          name: g
+  - *Nop
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+        - key: {b: 1}
+          name: b
+          unique: true
+        - key: {c: 1}
+          name: c
+          unique: true
+        - key: {d: 1}
+          name: d
+          unique: true
+        - key: {e: 1}
+          name: e
+          unique: true
+        - key: {f: 1}
+          name: f
+          unique: true
+        - key: {g: 1}
+          name: g
+  - *Nop
+  - Repeat: 1
+    Database: &db test
+    Collection: &coll test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand: {dropDatabase: 1}
+    - OperationName: RunCommand
+      OperationCommand:
+        createIndexes: *coll
+        indexes:
+        - key: {a: 1}
+          name: a
+          unique: true
+        - key: {b: 1}
+          name: b
+          unique: true
+        - key: {c: 1}
+          name: c
+          unique: true
+        - key: {d: 1}
+          name: d
+          unique: true
+        - key: {e: 1}
+          name: e
+          unique: true
+        - key: {f: 1}
+          name: f
+          unique: true
+        - key: {g: 1}
+          name: g
+          unique: true
+  - *Nop
+
+- &InsertActor
+  Name: UniqueIndexes0
+  Type: CrudActor
+  Database: *db
+  Threads: *insert_threads
+  Phases:
+  - *Nop
+  - &InsertMany
+    Collection: *coll
+    Repeat: 10000
+    Operations:
+    - &InsertOp
+      OperationName: insertMany
+      OperationCommand:
+        Documents:
+        - &doc
+          a: &rs {^RandomString: {length: *string_length}}
+          b: *rs
+          c: *rs
+          d: *rs
+          e: *rs
+          f: *rs
+          g: *rs
+          h: *rs
+          i: *rs
+          j: *rs
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+        - *doc
+  - Phase: 2..15
+    Nop: true
+
+- Name: UniqueIndexes1
+  Type: CrudActor
+  Database: *db
+  Threads: *insert_threads
+  Phases:
+  - Phase: 0..2
+    Nop: true
+  - *InsertMany
+  - Phase: 4..15
+    Nop: true
+
+- Name: UniqueIndexes2
+  Type: CrudActor
+  Database: *db
+  Threads: *insert_threads
+  Phases:
+  - Phase: 0..4
+    Nop: true
+  - *InsertMany
+  - Phase: 6..15
+    Nop: true
+
+- Name: UniqueIndexes3
+  Type: CrudActor
+  Database: *db
+  Threads: *insert_threads
+  Phases:
+  - Phase: 0..6
+    Nop: true
+  - *InsertMany
+  - Phase: 8..15
+    Nop: true
+
+- Name: UniqueIndexes4
+  Type: CrudActor
+  Database: *db
+  Threads: *insert_threads
+  Phases:
+  - Phase: 0..8
+    Nop: true
+  - *InsertMany
+  - Phase: 10..15
+    Nop: true
+
+- Name: UniqueIndexes5
+  Type: CrudActor
+  Database: *db
+  Threads: *insert_threads
+  Phases:
+  - Phase: 0..10
+    Nop: true
+  - *InsertMany
+  - Phase: 12..15
+    Nop: true
+
+- Name: UniqueIndexes6
+  Type: CrudActor
+  Database: *db
+  Threads: *insert_threads
+  Phases:
+  - Phase: 0..12
+    Nop: true
+  - *InsertMany
+  - Phase: 14..15
+    Nop: true
+
+- Name: UniqueIndexes7
+  Type: CrudActor
+  Database: *db
+  Threads: *insert_threads
+  Phases:
+  - Phase: 0..14
+    Nop: true
+  - *InsertMany
+
