@@ -33,6 +33,7 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
+#include <utility>
 
 namespace genny::actor {
 typedef RollingCollections::RollingCollectionNames RollingCollectionNames;
@@ -40,8 +41,10 @@ typedef RollingCollections::RollingCollectionNames RollingCollectionNames;
 // Pure-virtual interface
 struct RunOperation {
     virtual void run() = 0;
+    virtual ~RunOperation() = default;
+
     RunOperation(mongocxx::database db, RollingCollectionNames& rollingCollectionNames)
-        : database{db}, rollingCollectionNames{rollingCollectionNames} {}
+        : database{std::move(db)}, rollingCollectionNames{rollingCollectionNames} {}
 
     mongocxx::database database;
     RollingCollectionNames& rollingCollectionNames;
@@ -77,7 +80,7 @@ int getNextCollectionId(size_t size, double distribution, double rand) {
 
 mongocxx::collection createCollection(mongocxx::database& database,
                                       std::vector<DocumentGenerator>& indexConfig,
-                                      std::string collectionName) {
+                                      const std::string& collectionName) {
     auto collection = database.create_collection(collectionName);
     for (auto&& keys : indexConfig) {
         collection.create_index(keys());
@@ -91,12 +94,14 @@ struct Read : public RunOperation {
          ActorId id,
          RollingCollectionNames& rollingCollectionNames,
          DefaultRandom& random)
-        : RunOperation(db, rollingCollectionNames),
+        : RunOperation(std::move(db), rollingCollectionNames),
           _filterExpr{phaseContext["Filter"].maybe<DocumentGenerator>(phaseContext, id)},
           _distribution{phaseContext["Distribution"].maybe<double>().value_or(0)},
           _findOperation{phaseContext.operation("Find", id)},
           _random{random},
           _realDistribution{0, 1} {}
+
+    ~Read() override = default;
 
     void run() override {
         auto size = rollingCollectionNames.size();
@@ -140,9 +145,11 @@ struct Write : public RunOperation {
           mongocxx::database db,
           ActorId id,
           RollingCollectionNames& rollingCollectionNames)
-        : RunOperation(db, rollingCollectionNames),
+        : RunOperation(std::move(db), rollingCollectionNames),
           _insertOperation{phaseContext.operation("Insert", id)},
           _documentExpr{phaseContext["Document"].to<DocumentGenerator>(phaseContext, id)} {}
+
+    ~Write() override = default;
 
     void run() override {
         auto statTracker = _insertOperation.start();
@@ -174,7 +181,7 @@ struct Setup : public RunOperation {
           mongocxx::database db,
           ActorId id,
           RollingCollectionNames& rollingCollectionNames)
-        : RunOperation(db, rollingCollectionNames),
+        : RunOperation(std::move(db), rollingCollectionNames),
           _documentExpr{phaseContext["Document"].maybe<DocumentGenerator>(phaseContext, id)},
           _documentCount{phaseContext["DocumentCount"].maybe<IntegerSpec>().value_or(0)},
           _collectionWindowSize{phaseContext["CollectionWindowSize"].to<IntegerSpec>()} {
@@ -185,14 +192,16 @@ struct Setup : public RunOperation {
         }
     }
 
+    ~Setup() override = default;
+
     void run() override {
         BOOST_LOG_TRIVIAL(info) << "Creating " << _collectionWindowSize << " initial collections.";
-        for (auto i = 0; i < _collectionWindowSize; ++i) {
+        for (int i = 0; i < _collectionWindowSize; ++i) {
             auto collectionName = getRollingCollectionName();
             auto collection = createCollection(database, _indexConfig, collectionName);
             rollingCollectionNames.emplace_back(collectionName);
             if (_documentExpr) {
-                for (auto j = 0; j < _documentCount; ++j) {
+                for (int j = 0; j < _documentCount; ++j) {
                     collection.insert_one(_documentExpr->evaluate());
                 }
             }
@@ -211,7 +220,7 @@ struct Manage : public RunOperation {
            mongocxx::database db,
            ActorId id,
            RollingCollectionNames& rollingCollectionNames)
-        : RunOperation(db, rollingCollectionNames),
+        : RunOperation(std::move(db), rollingCollectionNames),
           _deleteCollectionOperation{phaseContext.operation("CreateCollection", id)},
           _createCollectionOperation{phaseContext.operation("DeleteCollection", id)},
           _indexConfig{} {
@@ -225,6 +234,8 @@ struct Manage : public RunOperation {
             _indexConfig.emplace_back(indexNode["keys"].to<DocumentGenerator>(phaseContext, id));
         }
     }
+
+    ~Manage() override = default;
 
     void run() override {
         // Delete collection at head of deque, check to see that a collection exists first.
@@ -250,9 +261,9 @@ private:
 };
 
 
-std::unique_ptr<RunOperation> getOperation(std::string operation,
+std::unique_ptr<RunOperation> getOperation(const std::string& operation,
                                            PhaseContext& context,
-                                           mongocxx::database db,
+                                           const mongocxx::database& db,
                                            ActorId id,
                                            RollingCollectionNames& rollingCollectionNames,
                                            DefaultRandom& random) {
@@ -278,8 +289,8 @@ struct RollingCollections::PhaseConfig {
                 RollingCollectionNames& rollingCollectionNames,
                 DefaultRandom& random,
                 std::string operation)
-        : _operation(
-              getOperation(operation, phaseContext, db, id, rollingCollectionNames, random)) {}
+        : _operation(getOperation(
+              std::move(operation), phaseContext, db, id, rollingCollectionNames, random)) {}
 };
 
 void RollingCollections::run() {
