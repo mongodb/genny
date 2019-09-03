@@ -90,7 +90,7 @@ struct CollectionScanner::PhaseConfig {
     }
 };
 
-void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
+void collectionScan(CollectionScanner::PhaseConfig* config,
                     std::vector<mongocxx::collection>& collections) {
     /*
      * Here we are either doing a snapshot collection scan
@@ -135,7 +135,7 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
     statTracker.success();
 }
 
-void countScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
+void countScan(CollectionScanner::PhaseConfig* config,
                std::vector<mongocxx::collection> collections) {
     auto statTracker = config->scanOperation.start();
     auto exceptionsCaught = config->exceptionsCaught.start();
@@ -175,14 +175,14 @@ void CollectionScanner::run() {
 
             // Do each kind of scan.
             if (config->scanType == Count) {
-                countScan(config, collections);
+                countScan(&*config, collections);
             } else if (config->scanType == Snapshot) {
                 mongocxx::client_session session = _client->start_session({});
                 session.start_transaction(*config->transactionOptions);
-                collectionScan(config, collections);
+                collectionScan(&*config, collections);
                 session.commit_transaction();
             } else {
-                collectionScan(config, collections);
+                collectionScan(&*config, collections);
             }
             _runningActorCounter--;
             BOOST_LOG_TRIVIAL(info) << "Finished collection scanner id: " << this->_index;
