@@ -329,6 +329,9 @@ public:
  * if the Phase is non-blocking for the Actor, as long as the
  * Phase is held open by other Actors.
  *
+ * This type can be used as a `T*` through its implicit conversion
+ * and by its operator-overloads.
+ *
  * This is intended to be used via `PhaseLoop` below.
  */
 template <class T>
@@ -417,6 +420,16 @@ public:
         }
 #endif
         return _value.operator*();
+    }
+
+    // Allow ActorPhase<T> to be used as a T* through implicit conversion.
+    operator std::add_pointer_t<std::remove_reference_t<T>>() {
+#ifndef NDEBUG
+        if (!_value) {
+            BOOST_THROW_EXCEPTION(std::logic_error("Trying to dereference via * in a Nop phase."));
+        }
+#endif
+        return _value.operator->();
     }
 
     PhaseNumber phaseNumber() const {

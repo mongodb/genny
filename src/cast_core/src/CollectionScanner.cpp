@@ -90,7 +90,7 @@ struct CollectionScanner::PhaseConfig {
     }
 };
 
-void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
+void collectionScan(CollectionScanner::PhaseConfig* config,
                     std::vector<mongocxx::collection>& collections) {
     /*
      * Here we are either doing a snapshot collection scan
@@ -135,7 +135,7 @@ void collectionScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& confi
     statTracker.success();
 }
 
-void countScan(genny::v1::ActorPhase<CollectionScanner::PhaseConfig>& config,
+void countScan(CollectionScanner::PhaseConfig* config,
                std::vector<mongocxx::collection> collections) {
     auto statTracker = config->scanOperation.start();
     auto exceptionsCaught = config->exceptionsCaught.start();
