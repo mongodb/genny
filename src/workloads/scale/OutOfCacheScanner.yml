@@ -15,7 +15,7 @@ Actors:
     Database: cold
     CollectionCount: 6
     Threads: 1
-    DocumentCount: 2000000
+    DocumentCount: 1800000
     BatchSize: 100000
     Document:
       a: {^RandomString: { length: 100 }}
@@ -23,7 +23,7 @@ Actors:
     Database: hot
     CollectionCount: 5
     Threads: 1
-    DocumentCount: 2000000
+    DocumentCount: 1500000
     BatchSize: 100000
     Document:
       a: {^RandomString: {length: 100 }}
@@ -37,7 +37,8 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: 30 minutes
+  - Duration: 45 minutes
+    GlobalRate: 10 per 10 milliseconds
 
 - Name: ColdScanner
   Type: CollectionScanner
@@ -47,7 +48,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: 30 minutes
+  - Duration: 45 minutes
     SkipFirstLoop: true
-    GlobalRate: 6 per 4 minutes
+    GlobalRate: 6 per 6 minutes
     ScanType: Standard

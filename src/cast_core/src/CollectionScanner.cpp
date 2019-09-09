@@ -157,11 +157,11 @@ void CollectionScanner::run() {
         for (const auto&& _ : config) {
             if (config->skipFirstLoop) {
                 config->skipFirstLoop = false;
+                std::this_thread::sleep_for(std::chrono::seconds{1});
                 continue;
             }
             _runningActorCounter++;
             BOOST_LOG_TRIVIAL(info) << "Starting collection scanner id: " << this->_index;
-            std::this_thread::sleep_for(std::chrono::seconds{1});
 
             // Populate collections if need be.
             std::vector<mongocxx::collection>& collections = config->collections;
