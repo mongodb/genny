@@ -47,7 +47,7 @@ Actors:
   Phases:
   - *Nop
   - MetricsName: TransactionUpdate
-    Repeat: 1
+    Repeat: 5
     Collection: &Coll Collection0 # This is the default collection populated by the Loader.
     Operations:
     - OperationName: startTransaction
