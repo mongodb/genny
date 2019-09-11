@@ -1,0 +1,78 @@
+# This workload is developed to test the amount of time it takes to update a million documents in
+# a single replica set transaction. At the moment, the average time taken raises above the default
+# limit, so until we add a way to manually increase a transaction's lifetime, we must raise the
+# lifetime of all transactions.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/DesignDocWorkloadPhases.yml
+      Key: Loader
+      Parameters:
+        CollectionCount: 1
+        DocumentCount: 1e6
+        BatchSize: 100000
+    Repeat: 1
+    Threads: 1
+  - &Nop {Nop: true}
+  - *Nop
+
+- Name: RaiseTransactionLifetimeLimit
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Operation:
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        transactionLifetimeLimitSeconds: 120
+  - *Nop
+  - Repeat: 1
+    Operation:
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        transactionLifetimeLimitSeconds: 60
+
+- Name: UpdateDocumentsInTransaction
+  Type: CrudActor
+  Database: test
+  Phases:
+  - *Nop
+  - MetricsName: TransactionUpdate
+    Repeat: 5
+    Collection: &Coll Collection0 # This is the default collection populated by the Loader.
+    Operations:
+    - OperationName: startTransaction
+      OperationCommand:
+        Options:
+          WriteConcern:
+            Level: majority
+            Journal: true
+          ReadConcern:
+            Level: snapshot
+          ReadPreference:
+            ReadMode: primaryPreferred
+            MaxStaleness: 1000 seconds
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: updateMany
+          Filter: {x: { $exists: true }} # This will match all documents in the collection.
+          Update: {$inc: {x: 1}}
+        Options:
+          Ordered: true
+          MaxTime: 0
+        OnSession: true
+    - OperationName: commitTransaction
+  - Repeat: 1
+    Collection: *Coll
+    Operation:
+      OperationName: drop
