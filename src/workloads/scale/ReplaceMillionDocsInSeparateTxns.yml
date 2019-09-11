@@ -1,0 +1,166 @@
+# This workload is developed to test the amount of time it takes to remove and re-insert one
+# million documents, with a fixed transaction batch size of one hundred.
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/sharding"
+
+Document: &Doc # The size of each document is about 2kb.
+  a: 1
+  x: {^RandomInt: {min: 0, max: 2147483647}}
+  string0: {^FastRandomString: {length: 2000}}
+
+HundredDocumentsList: &DocumentList
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+- *Doc
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &DB test
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 100
+    BatchSize: 100
+    Document: *Doc
+  - &Nop {Nop: true}
+  - *Nop
+
+- Name: DeleteAndReinsert
+  Type: CrudActor
+  Database: test
+  Phases:
+  - *Nop
+  - MetricsName: TotalModificationTime
+    Repeat: 10000
+    Collection: &Coll Collection0 # This is the default collection populated by the Loader.
+    Operations:
+    - OperationName: startTransaction
+      OperationCommand:
+        Options:
+          WriteConcern:
+            Level: majority
+            Journal: true
+          ReadConcern:
+            Level: snapshot
+          ReadPreference:
+            ReadMode: primaryPreferred
+            MaxStaleness: 1000 seconds
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: deleteMany
+          Filter: {a: 1} 
+        Options:
+          Ordered: true
+          MaxTime: 0
+        OnSession: true
+    - OperationName: insertMany
+      OperationCommand:
+        Documents: *DocumentList
+        OnSession: true
+    - OperationName: commitTransaction
+  - Repeat: 1
+    Collection: *Coll
+    Operation:
+      OperationName: drop
