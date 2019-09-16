@@ -31,13 +31,13 @@ Actors:
 
 - Name: HotSampler
   Type: RandomSampler
-  Threads: 50
+  Threads: 10
   CollectionCount: 50
   Database: hot
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: 45 minutes
+  - Duration: 59 minutes
     GlobalRate: 10 per 10 milliseconds
 
 - Name: ColdScanner
@@ -48,7 +48,7 @@ Actors:
   Phases:
   - {Nop: true}
   - {Nop: true}
-  - Duration: 45 minutes
+  - Duration: 59 minutes
     SkipFirstLoop: true
-    GlobalRate: 6 per 6 minutes
+    GlobalRate: 6 per 10 minutes
     ScanType: Standard
