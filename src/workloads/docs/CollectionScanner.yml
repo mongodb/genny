@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Owner: Storage Engines
 
 Actors:
-- Name: Loader
+- Name: Loaders
   Type: Loader
   Threads: 10
   Phases:
