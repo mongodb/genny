@@ -260,6 +260,27 @@ private:
     std::vector<DocumentGenerator> _indexConfig;
 };
 
+struct OplogTailer : public RunOperation {
+    OplogTailer(mongocxx::database db,
+        RollingCollectionNames& rollingCollectionNames)
+    : RunOperation(db, rollingCollectionNames) {}
+    void run() override {
+        auto oplogCollection = database["oplog.rs"];
+        mongocxx::options::find opts{};
+        opts.cursor_type(mongocxx::cursor::type::k_tailable);
+        auto cursor = oplogCollection.find({}, opts);
+        BOOST_LOG_TRIVIAL(info) << "Tailing the oplog collection";
+        while(true) {
+            for (auto&& doc : cursor) {
+                auto op = doc["op"];
+                if (op.get_utf8().value.to_string() == "c") {
+                    BOOST_LOG_TRIVIAL(info) << "Creating a collection";
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    }
+};
 
 std::unique_ptr<RunOperation> getOperation(const std::string& operation,
                                            PhaseContext& context,
@@ -275,6 +296,8 @@ std::unique_ptr<RunOperation> getOperation(const std::string& operation,
         return std::make_unique<Read>(context, db, id, rollingCollectionNames, random);
     } else if (operation == "Write") {
         return std::make_unique<Write>(context, db, id, rollingCollectionNames);
+    } else if (operation == "OplogTailer") {
+        return std::make_unique<OplogTailer>(db, rollingCollectionNames);
     } else {
         BOOST_THROW_EXCEPTION(InvalidConfigurationException("Unknown operation " + operation));
     }
