@@ -82,8 +82,8 @@ class IntermediateCSVReader:
         # dict(operation -> total_duration)
         self.total_for_op = defaultdict(int)
 
-        # dict(thread -> prev_op_ts))
-        self.prev_ts_for_thread = {}
+        # dict(thread -> op -> prev_op_ts))
+        self.prev_ts_of_op_thread = defaultdict(lambda: {})
 
     def __iter__(self):
         return self
@@ -107,13 +107,13 @@ class IntermediateCSVReader:
 
         # total_duration is duration for the first operation on each thread
         # because we don't track when each thread starts.
-        if thread in self.prev_ts_for_thread:
-            cur_total = line[ts_col] - self.prev_ts_for_thread[thread]
+        if thread in self.prev_ts_of_op_thread and op in self.prev_ts_of_op_thread[thread]:
+            cur_total = line[ts_col] - self.prev_ts_of_op_thread[thread][op]
         else:
             cur_total = line[dur]
 
         self.total_for_op[op] += cur_total
-        self.prev_ts_for_thread[thread] = line[ts_col]
+        self.prev_ts_of_op_thread[thread][op] = line[ts_col]
 
     def _parse_into_cedar_format(self, line):
         # Compute all cumulative values for simplicity; Not all values are used.

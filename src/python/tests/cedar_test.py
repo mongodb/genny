@@ -111,7 +111,7 @@ class CedarIntegrationTest(unittest.TestCase):
             ])),
             ('timers', OrderedDict([
                 ('duration', 1392),
-                ('total', 0)
+                ('total', 1598)
             ])),
             ('gauges', OrderedDict([('workers', 5)]))
         ])
@@ -199,7 +199,7 @@ class CedarIntegrationTest(unittest.TestCase):
                 ])),
                 ('timers', OrderedDict([
                     ('duration', 10),
-                    ('total', 12)
+                    ('total', 10)
                 ])),
                 ('gauges', OrderedDict([('workers', 2)]))
             ]),
@@ -214,7 +214,7 @@ class CedarIntegrationTest(unittest.TestCase):
                 ])),
                 ('timers', OrderedDict([
                     ('duration', 27),
-                    ('total', 29)
+                    ('total', 27)
                 ])),
                 ('gauges', OrderedDict([('workers', 2)]))
             ]),
