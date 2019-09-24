@@ -64,31 +64,36 @@ struct OperationEvent final {
 
     /**
      * @param iters
-     *     The number of iterations that occurred before the operation was reported. This member will
-     *     almost always be 1 unless an actor decides to periodically report an operation in its for
-     *     loop.
+     *     The number of iterations that occurred before the operation was reported. This member
+     * will almost always be 1 unless an actor decides to periodically report an operation in its
+     * for loop.
      * @param ops
      *      The number of documents inserted, modified, deleted, etc.
      * @param size
      *      The size in bytes of the number of documents inserted, etc.
      * @param errors
-     *      The number of write errors, transient transaction errors, etc. that occurred when performing
-     *      the operation. The operation can still be considered OutcomeType::kSuccess even if errors are
-     *      reported.
+     *      The number of write errors, transient transaction errors, etc. that occurred when
+     * performing the operation. The operation can still be considered OutcomeType::kSuccess even if
+     * errors are reported.
      * @param duration
      *      The amount of time it took to perform the operation.
      * @param outcome
      *      Whether the operation succeeded.
      */
-    explicit OperationEvent(count_type iters = 0, count_type ops = 0, count_type size = 0, count_type errors = 0, Period<ClockSource> duration = {}, OutcomeType outcome = OutcomeType::kUnknown)
-    : iters{iters}, ops{ops}, size{size}, errors{errors}, duration{duration} {}
+    explicit OperationEvent(count_type iters = 0,
+                            count_type ops = 0,
+                            count_type size = 0,
+                            count_type errors = 0,
+                            Period<ClockSource> duration = {},
+                            OutcomeType outcome = OutcomeType::kUnknown)
+        : iters{iters}, ops{ops}, size{size}, errors{errors}, duration{duration} {}
 
-    count_type iters;  // corresponds to the 'n' field in Cedar
-    count_type ops;  // corresponds to the 'ops' field in Cedar
-    count_type size;  // corresponds to the 'size' field in Cedar
-    count_type errors;  // corresponds to the 'errors' field in Cedar
+    count_type iters;              // corresponds to the 'n' field in Cedar
+    count_type ops;                // corresponds to the 'ops' field in Cedar
+    count_type size;               // corresponds to the 'size' field in Cedar
+    count_type errors;             // corresponds to the 'errors' field in Cedar
     Period<ClockSource> duration;  // corresponds to the 'duration' field in Cedar
-    OutcomeType outcome;  // corresponds to the 'outcome' field in Cedar
+    OutcomeType outcome;           // corresponds to the 'outcome' field in Cedar
 };
 
 /**
@@ -335,21 +340,13 @@ public:
      * @see OperationEvent
      *
      * iters
-     *     The number of iterations that occurred before the operation was reported. This member will
-     *     almost always be 1 unless an actor decides to periodically report an operation in its for
-     *     loop.
-     * ops
-     *      The number of documents inserted, modified, deleted, etc.
-     * size
-     *      The size in bytes of the number of documents inserted, etc.
-     * errors
-     *      The number of write errors, transient transaction errors, etc. that occurred when performing
-     *      the operation. The operation can still be considered OutcomeType::kSuccess even if errors are
-     *      reported.
-     * duration
-     *      The amount of time it took to perform the operation.
-     * outcome
-     *      Whether the operation succeeded.
+     *     The number of iterations that occurred before the operation was reported. This member
+     * will almost always be 1 unless an actor decides to periodically report an operation in its
+     * for loop. ops The number of documents inserted, modified, deleted, etc. size The size in
+     * bytes of the number of documents inserted, etc. errors The number of write errors, transient
+     * transaction errors, etc. that occurred when performing the operation. The operation can still
+     * be considered OutcomeType::kSuccess even if errors are reported. duration The amount of time
+     * it took to perform the operation. outcome Whether the operation succeeded.
      */
     void report(time_point started, time_point finished, OperationEvent<ClockSource>&& event) {
         _op->reportAt(started, finished, event);

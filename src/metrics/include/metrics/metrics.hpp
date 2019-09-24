@@ -136,7 +136,8 @@ static_assert(Registry::clock::time_point::clock::is_steady, "clock must be stea
 
 using Operation = v1::OperationT<Registry::clock>;
 using OperationContext = v1::OperationContextT<Registry::clock>;
-using Event = OperationEvent<Registry::clock>; // TODO: rename OperationEvent -> OperationEventT to be consistent
+using Event = OperationEvent<Registry::clock>;  // TODO: rename OperationEvent -> OperationEventT to
+                                                // be consistent
 
 // Convenience types
 using time_point = Registry::clock::time_point;
