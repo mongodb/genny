@@ -34,7 +34,7 @@ Actors:
   Database: rolling
   Phases:
   - {Nop: true}
-  - Duration: 1 minute
+  - Duration: 10 seconds
     GlobalRate: 1 per 1 second
     Indexes:
     - keys: {a: 1}
@@ -53,7 +53,7 @@ Actors:
   Database: rolling
   Phases:
   - {Nop: true}
-  - Duration: 1 minute
+  - Duration: 10 seconds
     Document: {a: {^RandomString: {length: 30}}, z : {^RandomInt: {min: 100, max: 200}}}
 
 - Name: Reader
@@ -63,19 +63,19 @@ Actors:
   Operation: Read
   Phases:
   - {Nop: true}
-  - Duration: 1 minute
+  - Duration: 10 seconds
     # Distribution is a linear distribution from 0 to 1
     Distribution: 0.8
     GlobalRate: 10 per 1 second
 
-- Name: Reader
+- Name: Reader2
   Type: RollingCollections
   Threads: 1
   Database: rolling
   Operation: Read
   Phases:
   - {Nop: true}
-  - Duration: 1 minute
+  - Duration: 10 seconds
     Distribution: 0.25
     # Filter modifies the find to use whatever filter you pass to it
     Filter: {a: 1}
@@ -88,4 +88,4 @@ Actors:
   Operation: OplogTailer
   Phases:
   - {Nop : true}
-  - Duration: 1 minute
+  - Duration: 10 seconds
