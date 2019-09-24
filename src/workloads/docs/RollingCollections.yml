@@ -80,3 +80,12 @@ Actors:
     # Filter modifies the find to use whatever filter you pass to it
     Filter: {a: 1}
     GlobalRate: 100 per 1 second
+
+- Name: OplogTailer
+  Type: RollingCollections
+  Database: local
+  Threads: 1
+  Operation: OplogTailer
+  Phases:
+  - {Nop : true}
+  - Duration: 1 minute

@@ -23,7 +23,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
-
+#include <boost/algorithm/string.hpp>
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
@@ -57,18 +57,18 @@ static std::string getRollingCollectionName() {
     auto now = std::chrono::system_clock::now();
     auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
     auto time = std::chrono::system_clock::to_time_t(now);
-    std::strftime(&timestamp[0], timestamp.size(), "%Y-%m-%d-%H:%M:%S", std::localtime(&time));
+    std::strftime(&timestamp[0], timestamp.size(), "%Y-%m-%d-%H-%M-%S", std::localtime(&time));
     /*
      * This replaces the null terminator in the string which is added by strftime and doesn't get
      * removed by the string stream for some reason.
      */
-    timestamp[timestamp.size() - 1] = '.';
+    timestamp[timestamp.size() - 1] = '-';
     std::stringstream ss;
     /*
-     * This will create a collection name looking something like: r134_2019-08-30-11:08:19.123,
+     * This will create a collection name looking something like: r_134_2019-08-30-11-08-19-123,
      * the setw and setfill pad 0's for the ms if its anything < 100 ms.
      */
-    ss << "r" << id << "_" << timestamp << std::setfill('0') << std::setw(3) << ms.count();
+    ss << "r" << "_" << id << "_" << timestamp << std::setfill('0') << std::setw(3) << ms.count();
     id++;
     return ss.str();
 }
@@ -261,20 +261,45 @@ private:
 };
 
 struct OplogTailer : public RunOperation {
-    OplogTailer(mongocxx::database db,
-        RollingCollectionNames& rollingCollectionNames)
-    : RunOperation(db, rollingCollectionNames) {}
+    OplogTailer(PhaseContext& phaseContext,
+                mongocxx::database db,
+                ActorId id,
+                RollingCollectionNames& rollingCollectionNames)
+    : RunOperation(db, rollingCollectionNames) {
+        if (phaseContext.actor()["Threads"].to<int>() != 1) {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("OplogTailer can only be run with one thread"));
+        }
+    }
     void run() override {
-        auto oplogCollection = database["oplog.rs"];
         mongocxx::options::find opts{};
         opts.cursor_type(mongocxx::cursor::type::k_tailable);
-        auto cursor = oplogCollection.find({}, opts);
+        auto cursor = database["oplog.rs"].find({}, opts);
         BOOST_LOG_TRIVIAL(info) << "Tailing the oplog collection";
+        /*
+         * Exhaust the cursor to skip the initially created collections,
+         * i.e. the admin / local tables and the intial set of rolling
+         * collections, this avoids a spike in latency.
+         */
+        for (auto&& doc : cursor){
+            // Do nothing.
+        }
         while(true) {
             for (auto&& doc : cursor) {
-                auto op = doc["op"];
-                if (op.get_utf8().value.to_string() == "c") {
-                    BOOST_LOG_TRIVIAL(info) << "Creating a collection";
+                if (doc["op"].get_utf8().value.to_string() == "c") {
+                    auto object = doc["o"].get_document().value;
+                    auto it = object.find("create");
+                    if (it != object.end()) {
+                        auto collectionName = object["create"].get_utf8().value.to_string();
+                        if (collectionName.length() > 2 && collectionName[0] == 'r' && collectionName[1] == '_') {
+                            // Get the time as soon as we know we its a collection we care about.
+                            auto now = std::chrono::system_clock::now();
+                            std::vector<std::string> timeSplit;
+                            BOOST_LOG_TRIVIAL(info) << collectionName;
+                            boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_-"));
+                            BOOST_LOG_TRIVIAL(info) << timeSplit[2] << " " << timeSplit[3] << " " << timeSplit[4] << " " << timeSplit[5] << " " << timeSplit[6] << " ";
+                        }
+                    }
                 }
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -297,7 +322,7 @@ std::unique_ptr<RunOperation> getOperation(const std::string& operation,
     } else if (operation == "Write") {
         return std::make_unique<Write>(context, db, id, rollingCollectionNames);
     } else if (operation == "OplogTailer") {
-        return std::make_unique<OplogTailer>(db, rollingCollectionNames);
+        return std::make_unique<OplogTailer>(context, db, id, rollingCollectionNames);
     } else {
         BOOST_THROW_EXCEPTION(InvalidConfigurationException("Unknown operation " + operation));
     }
