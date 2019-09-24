@@ -31,13 +31,6 @@
 
 namespace genny::metrics {
 
-/**
- * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
- * the implementation of an actor.
- */
-namespace v1 {
-
 using count_type = long long;
 
 /**
@@ -69,28 +62,41 @@ struct OperationEvent final {
         return out;
     }
 
-    // The number of iterations that occurred before the operation was reported. This member will
-    // almost always be 1 unless an actor decides to periodically report an operation in its for
-    // loop.
-    count_type iters = 0;  // corresponds to the 'n' field in Cedar
+    /**
+     * @param iters
+     *     The number of iterations that occurred before the operation was reported. This member will
+     *     almost always be 1 unless an actor decides to periodically report an operation in its for
+     *     loop.
+     * @param ops
+     *      The number of documents inserted, modified, deleted, etc.
+     * @param size
+     *      The size in bytes of the number of documents inserted, etc.
+     * @param errors
+     *      The number of write errors, transient transaction errors, etc. that occurred when performing
+     *      the operation. The operation can still be considered OutcomeType::kSuccess even if errors are
+     *      reported.
+     * @param duration
+     *      The amount of time it took to perform the operation.
+     * @param outcome
+     *      Whether the operation succeeded.
+     */
+    explicit OperationEvent(count_type iters = 0, count_type ops = 0, count_type size = 0, count_type errors = 0, Period<ClockSource> duration = {}, OutcomeType outcome = OutcomeType::kUnknown)
+    : iters{iters}, ops{ops}, size{size}, errors{errors}, duration{duration} {}
 
-    // The number of documents inserted, modified, deleted, etc.
-    count_type ops = 0;  // corresponds to the 'ops' field in Cedar
-
-    // The size in bytes of the number of documents inserted, etc.
-    count_type size = 0;  // corresponds to the 'size' field in Cedar
-
-    // The number of write errors, transient transaction errors, etc. that occurred when performing
-    // the operation. The operation can still be considered OutcomeType::kSuccess even if errors are
-    // reported.
-    count_type errors = 0;  // corresponds to the 'errors' field in Cedar
-
-    // The amount of time it took to perform the operation.
-    Period<ClockSource> duration = {};  // corresponds to the 'duration' field in Cedar
-
-    // Whether the operation succeeded or not.
-    OutcomeType outcome = OutcomeType::kUnknown;  // corresponds to the 'outcome' field in Cedar
+    count_type iters;  // corresponds to the 'n' field in Cedar
+    count_type ops;  // corresponds to the 'ops' field in Cedar
+    count_type size;  // corresponds to the 'size' field in Cedar
+    count_type errors;  // corresponds to the 'errors' field in Cedar
+    Period<ClockSource> duration;  // corresponds to the 'duration' field in Cedar
+    OutcomeType outcome;  // corresponds to the 'outcome' field in Cedar
 };
+
+/**
+ * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
+ * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
+ * the implementation of an actor.
+ */
+namespace v1 {
 
 /**
  * Throw this to indicate the percentage of operations exceeding the
@@ -300,12 +306,55 @@ private:
 
 template <typename ClockSource>
 class OperationT final {
+    using time_point = typename ClockSource::time_point;
+
 public:
     explicit OperationT(v1::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
 
     OperationContextT<ClockSource> start() {
         return OperationContextT<ClockSource>{this->_op};
     }
+
+
+    /**
+     * Directly record a metrics event.
+     * MOST CALLERS SHOULD USE start(). Use this only if the start/end times of your
+     * operation are calculated or done in different threads.
+     *
+     * Example Usage:
+     *
+     * ```c++
+     * auto started = metrics::clock::now();
+     * ...
+     * auto end = metrics::clock::now();
+     * operation.report(started, metrics::clock::now(), metrics::Event{
+     *     iters, ops, size, errors, end - started, outcome
+     *  });
+     * ```
+     *
+     * @see OperationEvent
+     *
+     * iters
+     *     The number of iterations that occurred before the operation was reported. This member will
+     *     almost always be 1 unless an actor decides to periodically report an operation in its for
+     *     loop.
+     * ops
+     *      The number of documents inserted, modified, deleted, etc.
+     * size
+     *      The size in bytes of the number of documents inserted, etc.
+     * errors
+     *      The number of write errors, transient transaction errors, etc. that occurred when performing
+     *      the operation. The operation can still be considered OutcomeType::kSuccess even if errors are
+     *      reported.
+     * duration
+     *      The amount of time it took to perform the operation.
+     * outcome
+     *      Whether the operation succeeded.
+     */
+    void report(time_point started, time_point finished, OperationEvent<ClockSource>&& event) {
+        _op->reportAt(started, finished, event);
+    }
+
 
 private:
     v1::OperationImpl<ClockSource>* _op;
