@@ -22,13 +22,6 @@
 namespace genny::metrics {
 
 /**
- * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
- * the implementation of an actor.
- */
-namespace v1 {
-
-/**
  * A wrapper class around std::chrono::duration. It implements operator<<(std::ostream& os) for
  * convenience during testing.
  *
@@ -76,7 +69,6 @@ private:
     duration _duration;
 };
 
-}  // namespace v1
 }  // namespace genny::metrics
 
 #endif  // HEADER_E8439AA0_1871_4F5A_B672_BE8E29AA5ED7_INCLUDED
