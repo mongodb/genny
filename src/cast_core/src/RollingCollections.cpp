@@ -27,6 +27,8 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
+#include <metrics/operation.hpp>
+#include <metrics/metrics.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -291,16 +293,15 @@ struct OplogTailer : public RunOperation {
                     if (collectionName.length() > 2 && collectionName[0] == 'r' &&
                         collectionName[1] == '_') {
                         // Get the time as soon as we know we its a collection we care about.
-                        auto nowMs = getMillisecondsSinceEpoch();
+                        auto now = std::chrono::system_clock::now();
 
                         std::vector<std::string> timeSplit;
                         boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
                         long collectionCreationTime = std::stol(timeSplit[2]);
-                        // TODO: Hack until we are able to report latencies directly
-                        auto statTracker = _oplogLagOperation.start();
-                        std::this_thread::sleep_for(
-                            std::chrono::milliseconds(nowMs - collectionCreationTime));
-                        statTracker.success();
+                        auto event = metrics::Event{
+                            1, 1, 0, 0, now - now
+                        };
+                        _oplogLagOperation.report(now, now, event);
                     }
                 }
             }
