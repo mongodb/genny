@@ -50,7 +50,7 @@ struct RunOperation {
     RollingCollectionNames& rollingCollectionNames;
 };
 
-static long getTimeSinceEpoch() {
+static long getMillisecondsSinceEpoch() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(
                std::chrono::system_clock::now().time_since_epoch())
         .count();
@@ -61,7 +61,7 @@ static std::string getRollingCollectionName() {
     static std::atomic_long id = 0;
     std::stringstream ss;
     ss << "r"
-       << "_" << id << "_" << getTimeSinceEpoch();
+       << "_" << id << "_" << getMillisecondsSinceEpoch();
     id++;
     return ss.str();
 }
@@ -291,7 +291,7 @@ struct OplogTailer : public RunOperation {
                     if (collectionName.length() > 2 && collectionName[0] == 'r' &&
                         collectionName[1] == '_') {
                         // Get the time as soon as we know we its a collection we care about.
-                        auto nowMs = getTimeSinceEpoch();
+                        auto nowMs = getMillisecondsSinceEpoch();
 
                         std::vector<std::string> timeSplit;
                         boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
