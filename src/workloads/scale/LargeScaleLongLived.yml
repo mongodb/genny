@@ -20,14 +20,14 @@ Actors:
     Document:
       # Each document ranges in size from about 90 to 150 bytes (average 120)
       x0: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
-      x1: &rand4int {^RandomInt: {min: 0, max: 2147483647}}
-      x2: *rand4int
-      x3: *rand4int
-      x4: *rand4int
-      x5: *rand4int
-      x6: *rand4int
-      x7: *rand4int
-      x8: *rand4int
+      x1: &rand_4b_int {^RandomInt: {min: 0, max: 2147483647}}
+      x2: *rand_4b_int
+      x3: *rand_4b_int
+      x4: *rand_4b_int
+      x5: *rand_4b_int
+      x6: *rand_4b_int
+      x7: *rand_4b_int
+      x8: *rand_4b_int
       s0: {^RandomString: {length: {^RandomInt: {min: 20, max: 80}}}}
     Indexes:
     - keys: {x0: 1}
@@ -51,7 +51,6 @@ Actors:
     Database: *DB
     CollectionCount: *CollectionCount
     DocumentCount: *DocumentCount
-    Threads: 10
     Filter: {x0: *rand_10k_int}
 
 - Name: LongLivedReader
@@ -64,7 +63,6 @@ Actors:
     Database: *DB
     CollectionCount: *CollectionCount
     DocumentCount: *DocumentCount
-    Threads: 10
     Filter: {_id: *rand_10k_int}
 
 - Name: LongLivedWriter
@@ -77,6 +75,5 @@ Actors:
     Database: *DB
     CollectionCount: *CollectionCount
     DocumentCount: *DocumentCount
-    Threads: 5
     UpdateFilter: {_id: *rand_10k_int}
     Update: {$inc: {x1: 1}}
