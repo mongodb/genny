@@ -1,4 +1,4 @@
-Genny 🧞‍
+Genny 🧞‍!!
 ========
 
 Genny is a workload-generator library and tool. It is implemented using
