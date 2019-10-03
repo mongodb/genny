@@ -12,33 +12,34 @@ Actors:
     Database: &db test
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 500000
+    DocumentCount: 1250000
     BatchSize: 10000
     Document:
-      x: &x {^RandomInt: {distribution: geometric, p: 0.1}}
-      y: &y {^RandomInt: {distribution: geometric, p: 0.1}}
+      x: &x {^RandomInt: {min: 0, max: 2147483647}}
+      y: &y {^RandomInt: {min: -1000, max: 1000}}
       z: &z {^RandomInt: {distribution: geometric, p: 0.1}}
-      a: &a {^RandomString: {length: 500}}
-      b: &b {^RandomString: {length: 750}}
-      c: &c {^RandomString: {length: 1000}}
+      a: &a {^RandomString: {length: 128}}
+      b: &b {^RandomString: {length: 15}}
       arr:
-      - *a
       - *x
       - *y
       - *z
+      loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+      loc2dSphere: &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
     Indexes:
     - keys: {x: 1}
     - keys: {x: -1}
       options: {expireAfterSeconds: 1000000}
     - keys: {x: 1, y: 1}
-    - keys: {x: 1, y: 1, c: 1}
+    - keys: {x: 1, y: 1, b: 1}
     - keys: {arr: 1, z: 1}
-    - keys: {arr: 1, a : 1}
-    - keys: {c: "text"}
-    - keys: {x: 1, a: 1, y: 1, b: 1}
-    - keys: {c: 1}
+    - keys: {arr: 1, b : 1}
+    - keys: {a: "text"}
+    - keys: {a: 1}
       options: {sparse: true}
-    - keys: {b: "hashed"}
+    - keys: {a: "hashed"}
+    - keys: {loc2d: "2d"}
+    - keys: {loc2dSphere: "2dsphere"}
   - &Nop {Nop: true}
 
 - Name: Validate
