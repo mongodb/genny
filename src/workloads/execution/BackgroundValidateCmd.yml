@@ -57,13 +57,13 @@ Actors:
         - WriteCommand: insertOne
           Document: {y: {^RandomInt: {min: -1000, max: 1000}}}
         - WriteCommand: updateOne
-          Filter: {y: {min: -1000, max: 1000}}
-          Update: {$set: {y: {min: -1000, max: 1000}}}
+          Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
+          Update: {$set: {y: {^RandomInt: {min: -1000, max: 1000}}}}
         - WriteCommand: deleteOne
-          Filter: {y: {min: -1000, max: 1000}}
+          Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
     - OperationName: find
       OperationCommand:
-        Filter: {y: {min: -1000, max: 1000}}
+        Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
   - *Nop
   - *Nop
     
@@ -84,13 +84,13 @@ Actors:
         - WriteCommand: insertOne
           Document: {y: {^RandomInt: {min: -1000, max: 1000}}}
         - WriteCommand: updateOne
-          Filter: {y: {min: -1000, max: 1000}}
-          Update: {$set: {y: {min: -1000, max: 1000}}}
+          Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
+          Update: {$set: {y: {^RandomInt: {min: -1000, max: 1000}}}}
         - WriteCommand: deleteOne
-          Filter: {y: {min: -1000, max: 1000}}
+          Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
     - OperationName: find
       OperationCommand:
-        Filter: {y: {min: -1000, max: 1000}}
+        Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
 
 - Name: Validate
   Type: RunCommand
