@@ -1,0 +1,117 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 50000
+    BatchSize: 10000
+    Document:
+      x: &x {^RandomInt: {min: 0, max: 2147483647}}
+      y: &y {^RandomInt: {min: -1000, max: 1000}}
+      z: &z {^RandomInt: {distribution: geometric, p: 0.1}}
+      a: &a {^RandomString: {length: 128}}
+      b: &b {^RandomString: {length: 15}}
+      arr:
+      - *x
+      - *y
+      - *z
+      loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+      loc2dSphere: &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
+    Indexes:
+    - keys: {x: 1}
+    - keys: {x: -1}
+      options: {expireAfterSeconds: 1000000}
+    - keys: {x: 1, y: 1}
+    - keys: {x: 1, y: 1, b: 1}
+    - keys: {arr: 1, z: 1}
+    - keys: {arr: 1, b : 1}
+    - keys: {a: "text"}
+    - keys: {a: 1}
+      options: {sparse: true}
+    - keys: {a: "hashed"}
+    - keys: {loc2d: "2d"}
+    - keys: {loc2dSphere: "2dsphere"}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+- Name: CrudWithoutValidation
+  Type: CrudActor
+  Database: *db
+  Threads: 25
+  Phases:
+  - *Nop
+  - Duration: 5 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: {y: {^RandomInt: {min: -1000, max: 1000}}}
+        - WriteCommand: updateOne
+          Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
+          Update: {$set: {y: {^RandomInt: {min: -1000, max: 1000}}}}
+        - WriteCommand: deleteOne
+          Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
+    - OperationName: find
+      OperationCommand:
+        Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
+  - *Nop
+  - *Nop
+    
+- Name: CrudWithValidation
+  Type: CrudActor
+  Database: *db
+  Threads: 25
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Duration: 5 minutes
+    Collection: Collection0
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: {y: {^RandomInt: {min: -1000, max: 1000}}}
+        - WriteCommand: updateOne
+          Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
+          Update: {$set: {y: {^RandomInt: {min: -1000, max: 1000}}}}
+        - WriteCommand: deleteOne
+          Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
+    - OperationName: find
+      OperationCommand:
+        Filter: {y: {^RandomInt: {min: -1000, max: 1000}}}
+
+- Name: Validate
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operation:
+      OperationMetricsName: MaxValidateMBperSec
+      OperationName: RunCommand
+      OperationCommand:
+        setParameter: 1
+        maxValidateMBperSec: 1
+  - Duration: 5 minutes
+    Database: *db
+    Operation:
+      OperationMetricsName: ValidateCmd
+      OperationName: RunCommand
+      OperationCommand:
+        validate: Collection0
+        full: false
+        background: true
