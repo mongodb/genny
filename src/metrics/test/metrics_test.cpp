@@ -34,7 +34,7 @@ void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
                           RegistryClockSourceStub::duration dur2) {
     // We compare std:chrono::time_points by converting through Period in order to take advantage of
     // its operator<<(std::ostream&) in case the check fails.
-    REQUIRE(v1::Period<RegistryClockSourceStub>{dur1} == v1::Period<RegistryClockSourceStub>{dur2});
+    REQUIRE(Period<RegistryClockSourceStub>{dur1} == Period<RegistryClockSourceStub>{dur2});
 }
 
 TEST_CASE("metrics::OperationContext interface") {
@@ -52,7 +52,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
     REQUIRE(op.getEvents().size() == 0);
 
-    auto expected = v1::OperationEvent<RegistryClockSourceStub>{};
+    auto expected = OperationEvent<RegistryClockSourceStub>{};
     expected.iters = 1;
     expected.ops = 200;
     expected.size = 3000;
@@ -65,7 +65,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         ctx.reset();
 
-        expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
+        expected.outcome = OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
         assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 72ns);
         REQUIRE(op.getEvents()[0].second == expected);
     }
@@ -77,7 +77,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         ctx.reset();
 
-        expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kFailure;
+        expected.outcome = OperationEvent<RegistryClockSourceStub>::OutcomeType::kFailure;
         assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 72ns);
         REQUIRE(op.getEvents()[0].second == expected);
     }
@@ -108,7 +108,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         ctx.reset();
 
-        expected.outcome = v1::OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
+        expected.outcome = OperationEvent<RegistryClockSourceStub>::OutcomeType::kSuccess;
         assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 139ns);
         REQUIRE(op.getEvents()[0].second == expected);
     }
