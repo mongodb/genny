@@ -31,6 +31,16 @@ namespace genny::metrics {
  */
 namespace v1 {
 
+void logMaybe(unsigned long long iteration,
+              const std::string& actorName,
+              const std::string& opName) {
+    // Log progress every 100e6 iterations
+    if (iteration % (100 * 1000 * 1000)) {
+        BOOST_LOG_TRIVIAL(info) << "Processed " << iteration << " metrics. Processing " << actorName
+                                << "." << opName;
+    }
+}
+
 /**
  * A ReporterT is the only object in the system that
  * has read access to metrics data-points. It is not
@@ -167,12 +177,7 @@ private:
                         out << getter(event.second);
                         out << std::endl;
 
-                        // Log progress every 100e6 iterations
-                        if (++iter % (100 * 1000 * 1000) == 0) {
-                            BOOST_LOG_TRIVIAL(info)
-                                << "Processed " << iter << " metrics. Processing " << actorName
-                                << "." << opName;
-                        }
+                        logMaybe(++iter, actorName, opName);
                     }
                 }
             }
@@ -314,12 +319,7 @@ private:
                         out << event.second.errors << ",";
                         out << event.second.size << std::endl;
 
-                        // Log progress every 100e6 iterations
-                        if (++iter % (100 * 1000 * 1000)) {
-                            BOOST_LOG_TRIVIAL(info)
-                                << "Processed " << iter << " metrics. Processing " << actorName
-                                << "." << opName;
-                        }
+                        logMaybe(++iter, actorName, opName);
                     }
                 }
             }
