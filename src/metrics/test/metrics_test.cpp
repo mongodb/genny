@@ -13,11 +13,7 @@
 // limitations under the License.
 
 #include <iomanip>
-#include <iostream>
 #include <optional>
-#include <sstream>
-
-#include <gennylib/context.hpp>
 
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
@@ -210,7 +206,7 @@ TEST_CASE("metrics output format") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv", genny::metrics::LogMode::kNone);
+        reporter.report<ReporterClockSourceStub>(out, "csv");
         REQUIRE(out.str() == expected);
     }
 
@@ -236,7 +232,7 @@ TEST_CASE("metrics output format") {
             "28,InsertRemove,1,Insert,23,0,1,9,0,300\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv", genny::metrics::LogMode::kNone);
+        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
         REQUIRE(out.str() == expected);
     }
 }
@@ -270,7 +266,7 @@ TEST_CASE("Genny.Setup metric") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv", genny::metrics::LogMode::kNone);
+        reporter.report<ReporterClockSourceStub>(out, "csv");
         REQUIRE(out.str() == expected);
     }
 
@@ -290,7 +286,7 @@ TEST_CASE("Genny.Setup metric") {
             "15,Genny,0,Setup,10,0,1,0,0,0\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv", genny::metrics::LogMode::kNone);
+        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
         REQUIRE(out.str() == expected);
     }
 }
@@ -350,7 +346,7 @@ TEST_CASE("Genny.ActiveActors metric") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv", genny::metrics::LogMode::kNone);
+        reporter.report<ReporterClockSourceStub>(out, "csv");
         REQUIRE(out.str() == expected);
     }
 
@@ -368,7 +364,7 @@ TEST_CASE("Genny.ActiveActors metric") {
             "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv", genny::metrics::LogMode::kNone);
+        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
         REQUIRE(out.str() == expected);
     }
 }

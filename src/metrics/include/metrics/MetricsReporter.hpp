@@ -24,17 +24,30 @@
 
 namespace genny::metrics {
 
-enum class LogMode {
-    kCI,
-    kNone,
-};
-
 /**
  * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
  * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
  * the implementation of an actor.
  */
 namespace v1 {
+
+// Used in the implementation of outputting metrics. Only at the top of the file
+// because C++ is a delight.
+//
+// This has to be inline because it'll be included in multiple translation-units.
+// We could just have the decl here and make a separate impl .cpp file, but the
+// rest of the "metrics" module is header-only and it seems silly to kill that
+// just for a single function. If additional 'inline' functions abound in the
+// future, please move to a .cpp file to decrease compile- and link-times.
+inline void logMaybe(unsigned long long iteration,
+                     const std::string& actorName,
+                     const std::string& opName) {
+    // Log progress every 100e6 iterations
+    if (iteration % (100 * 1000 * 1000)) {
+        BOOST_LOG_TRIVIAL(info) << "Processed " << iteration << " metrics. Processing " << actorName
+                                << "." << opName;
+    }
+}
 
 /**
  * A ReporterT is the only object in the system that
@@ -70,8 +83,10 @@ public:
      * @param metricsFormat the format to use. Must be "csv".
      */
     template <typename ReporterClockSource = SystemClockSource>
-    void report(std::ostream& out, const std::string& metricsFormat, LogMode logMode) const {
+    void report(std::ostream& out, const std::string& metricsFormat) const {
         v1::Permission perm;
+
+        BOOST_LOG_TRIVIAL(debug) << "Beginning metrics reporting.";
 
         // should these values come from the registry, and should they be recorded at
         // time of registry-creation?
@@ -83,10 +98,12 @@ public:
         if (metricsFormat == "csv") {
             reportLegacyCsv(out, systemTime, metricsTime, perm);
         } else if (metricsFormat == "cedar-csv") {
-            reportCedarCsv(out, systemTime, metricsTime, perm, logMode);
+            reportCedarCsv(out, systemTime, metricsTime, perm);
         } else {
             throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
         }
+
+        BOOST_LOG_TRIVIAL(debug) << "Finished metrics reporting.";
     }
 
 private:
@@ -148,6 +165,9 @@ private:
         const std::string& suffix,
         Permission perm,
         std::function<count_type(const OperationEvent<MetricsClockSource>&)> getter) const {
+
+        size_t iter = 0;
+
         for (const auto& [actorName, opsByType] : _registry->getOps(perm)) {
             if (actorName == "Genny") {
                 // Metrics created by the DefaultDriver are handled separately in order to preserve
@@ -164,6 +184,8 @@ private:
                         out << ",";
                         out << getter(event.second);
                         out << std::endl;
+
+                        logMaybe(++iter, actorName, opName);
                     }
                 }
             }
@@ -252,8 +274,7 @@ private:
     void reportCedarCsv(std::ostream& out,
                         long long systemTime,
                         long long metricsTime,
-                        v1::Permission perm,
-                        const LogMode logMode) const {
+                        v1::Permission perm) const {
         out << "Clocks" << std::endl;
         out << "clock,nanoseconds" << std::endl;
         writeClocks(out, systemTime, metricsTime);
@@ -306,12 +327,7 @@ private:
                         out << event.second.errors << ",";
                         out << event.second.size << std::endl;
 
-                        // Log progress every 100e6 iterations
-                        if (++iter % (100 * 1000 * 1000) == 0 && logMode != LogMode::kNone) {
-                            BOOST_LOG_TRIVIAL(info)
-                                << "Processed " << iter << " metrics. Processing " << actorName
-                                << "." << opName;
-                        }
+                        logMaybe(++iter, actorName, opName);
                     }
                 }
             }

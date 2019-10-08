@@ -13,10 +13,6 @@
 // limitations under the License.
 
 #include <algorithm>
-#include <cassert>
-#include <cstdlib>
-#include <fstream>
-#include <map>
 #include <sstream>
 #include <thread>
 #include <vector>
@@ -24,6 +20,8 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/exception/exception.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/program_options.hpp>
 
@@ -68,7 +66,11 @@ void runActor(Actor&& actor,
 }
 
 DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& options) {
+    // setup logging as the first thing we do.
+    boost::log::core::get()->set_filter(boost::log::trivial::severity >= options.logVerbosity);
+
     genny::metrics::Registry metrics;
+
     const auto workloadName = fs::path(options.workloadSource).stem().string();
     auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
     auto setupCtx = actorSetup.start();
@@ -178,10 +180,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
         std::ofstream metricsOutput;
         metricsOutput.open(options.metricsOutputFileName,
                            std::ofstream::out | std::ofstream::trunc);
-        auto logMode = options.metricsOutputFileName == "/dev/stdout"
-            ? genny::metrics::LogMode::kNone
-            : genny::metrics::LogMode::kCI;
-        reporter.report(metricsOutput, options.metricsFormat, logMode);
+        reporter.report(metricsOutput, options.metricsFormat);
     }
 
     return outcomeCode;
@@ -221,6 +220,31 @@ std::string normalizeOutputFile(const std::string& str) {
         return std::string("/dev/stdout");
     }
     return str;
+}
+
+boost::log::trivial::severity_level parseVerbosity(const std::string& level) {
+
+    if (level == "trace") {
+        return boost::log::trivial::trace;
+    }
+    if (level == "debug") {
+        return boost::log::trivial::debug;
+    }
+    if (level == "info") {
+        return boost::log::trivial::info;
+    }
+    if (level == "warning") {
+        return boost::log::trivial::warning;
+    }
+    if (level == "error") {
+        return boost::log::trivial::error;
+    }
+    if (level == "fatal") {
+        return boost::log::trivial::fatal;
+    }
+
+    throw std::invalid_argument("Invalid verbosity level '" + level +
+                                "'. Need one of trace/debug/info/warning/error/fatal");
 }
 
 }  // namespace
@@ -265,6 +289,9 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
             ("mongo-uri,u",
              po::value<std::string>()->default_value("mongodb://localhost:27017"),
              "Mongo URI to use for the default connection-pool.")
+            ("verbosity,v",
+              po::value<std::string>()->default_value("info"),
+              "Log severity for boost logging. Valid values are trace/debug/info/warning/error/fatal.")
             ("smoke-test,s",
              po::value<bool>()->default_value(false),
              "Run a workload in smoke test mode where all phases are set to Repeat=1");
@@ -313,6 +340,8 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
 
     if (vm.count("help") >= 1)
         this->runMode = RunMode::kHelp;
+
+    this->logVerbosity = parseVerbosity(vm["verbosity"].as<std::string>());
     this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->isSmokeTest = vm["smoke-test"].as<bool>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());

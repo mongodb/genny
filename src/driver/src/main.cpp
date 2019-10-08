@@ -12,16 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <optional>
-
-#include <boost/log/core.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/trivial.hpp>
-
-#include <yaml-cpp/yaml.h>
 
 #include <gennylib/version.hpp>
 
@@ -37,9 +30,6 @@ int main(int argc, char** argv) {
         std::cout << opts.description << std::endl;
         return 0;
     }
-
-    // do this based on -v flag or something
-    boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
 
     genny::driver::DefaultDriver d;
 
