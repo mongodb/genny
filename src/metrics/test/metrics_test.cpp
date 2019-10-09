@@ -134,8 +134,11 @@ TEST_CASE("metrics output format") {
     auto remove1 = metrics.operation("InsertRemove", "Remove", 1u);
     auto remove2 = metrics.operation("InsertRemove", "Remove", 2u);
     auto greetings3 = metrics.operation("HelloWorld", "Greetings", 3u);
+    auto synthetic = metrics.operation("HelloWorld", "Synthetic", 4u);
 
     RegistryClockSourceStub::advance(5ns);
+    synthetic.report(RegistryClockSourceStub::now(), std::chrono::microseconds{300}, OutcomeType::kSuccess, 1, 2, 3, 4);
+
     auto insert1Ctx = insert1.start();
 
     RegistryClockSourceStub::advance(5ns);
@@ -179,16 +182,19 @@ TEST_CASE("metrics output format") {
             "MetricsTime,45\n"
             "\n"
             "Counters\n"
+            "5,HelloWorld.id-4.Synthetic_bytes,4\n"
             "26,HelloWorld.id-3.Greetings_bytes,0\n"
             "42,InsertRemove.id-2.Remove_bytes,30\n"
             "45,InsertRemove.id-1.Remove_bytes,40\n"
             "30,InsertRemove.id-2.Insert_bytes,200\n"
             "28,InsertRemove.id-1.Insert_bytes,300\n"
+            "5,HelloWorld.id-4.Synthetic_docs,1\n"
             "26,HelloWorld.id-3.Greetings_docs,0\n"
             "42,InsertRemove.id-2.Remove_docs,7\n"
             "45,InsertRemove.id-1.Remove_docs,6\n"
             "30,InsertRemove.id-2.Insert_docs,8\n"
             "28,InsertRemove.id-1.Insert_docs,9\n"
+            "5,HelloWorld.id-4.Synthetic_iters,3\n"
             "26,HelloWorld.id-3.Greetings_iters,2\n"
             "42,InsertRemove.id-2.Remove_iters,1\n"
             "45,InsertRemove.id-1.Remove_iters,1\n"
@@ -198,6 +204,7 @@ TEST_CASE("metrics output format") {
             "Gauges\n"
             "\n"
             "Timers\n"
+            "5,HelloWorld.id-4.Synthetic_timer,300000\n"
             "26,HelloWorld.id-3.Greetings_timer,13\n"
             "42,InsertRemove.id-2.Remove_timer,10\n"
             "45,InsertRemove.id-1.Remove_timer,17\n"
@@ -220,11 +227,13 @@ TEST_CASE("metrics output format") {
             "OperationThreadCounts\n"
             "actor,operation,workers\n"
             "HelloWorld,Greetings,1\n"
+            "HelloWorld,Synthetic,1\n"
             "InsertRemove,Insert,2\n"
             "InsertRemove,Remove,2\n"
             "\n"
             "Operations\n"
             "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n"
+            "5,HelloWorld,4,Synthetic,300000,0,3,1,2,4\n"
             "26,HelloWorld,3,Greetings,13,0,2,0,0,0\n"
             "42,InsertRemove,2,Remove,10,0,1,7,0,30\n"
             "45,InsertRemove,1,Remove,17,0,1,6,0,40\n"
