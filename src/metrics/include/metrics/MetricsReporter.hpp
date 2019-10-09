@@ -120,15 +120,15 @@ private:
         out << "Counters" << std::endl;
         writeGennyActiveActorsMetric(out, perm);
         writeMetricValuesLegacy(
-            out, "_bytes", perm, [](const OperationEvent<MetricsClockSource>& event) {
+            out, "_bytes", perm, [](const OperationEventT<MetricsClockSource>& event) {
                 return event.size;
             });
         writeMetricValuesLegacy(
-            out, "_docs", perm, [](const OperationEvent<MetricsClockSource>& event) {
+            out, "_docs", perm, [](const OperationEventT<MetricsClockSource>& event) {
                 return event.ops;
             });
         writeMetricValuesLegacy(
-            out, "_iters", perm, [](const OperationEvent<MetricsClockSource>& event) {
+            out, "_iters", perm, [](const OperationEventT<MetricsClockSource>& event) {
                 return event.iters;
             });
         out << std::endl;
@@ -139,7 +139,7 @@ private:
         out << "Timers" << std::endl;
         writeGennySetupMetric(out, perm);
         writeMetricValuesLegacy(
-            out, "_timer", perm, [](const OperationEvent<MetricsClockSource>& event) {
+            out, "_timer", perm, [](const OperationEventT<MetricsClockSource>& event) {
                 return nanosecondsCount(static_cast<duration>(event.duration));
             });
         out << std::endl;
@@ -164,7 +164,7 @@ private:
         std::ostream& out,
         const std::string& suffix,
         Permission perm,
-        std::function<count_type(const OperationEvent<MetricsClockSource>&)> getter) const {
+        std::function<count_type(const OperationEventT<MetricsClockSource>&)> getter) const {
 
         size_t iter = 0;
 

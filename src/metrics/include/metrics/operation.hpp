@@ -40,16 +40,16 @@ using count_type = long long;
  * MetricsClockSource other than during testing.
  */
 template <typename ClockSource>
-struct OperationEvent final {
+struct OperationEventT final {
     enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
-    bool operator==(const OperationEvent<ClockSource>& other) const {
+    bool operator==(const OperationEventT<ClockSource>& other) const {
         return iters == other.iters && ops == other.ops && size == other.size &&
             errors == other.errors && duration == other.duration && outcome == other.outcome;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const OperationEvent<ClockSource>& event) {
-        out << "OperationEvent{";
+    friend std::ostream& operator<<(std::ostream& out, const OperationEventT<ClockSource>& event) {
+        out << "OperationEventT{";
         out << "iters:" << event.iters;
         out << ",ops:" << event.ops;
         out << ",size:" << event.size;
@@ -80,12 +80,12 @@ struct OperationEvent final {
      * @param outcome
      *      Whether the operation succeeded.
      */
-    explicit OperationEvent(count_type iters = 0,
-                            count_type ops = 0,
-                            count_type size = 0,
-                            count_type errors = 0,
-                            Period<ClockSource> duration = {},
-                            OutcomeType outcome = OutcomeType::kUnknown)
+    explicit OperationEventT(count_type iters = 0,
+                             count_type ops = 0,
+                             count_type size = 0,
+                             count_type errors = 0,
+                             Period<ClockSource> duration = {},
+                             OutcomeType outcome = OutcomeType::kUnknown)
         : iters{iters}, ops{ops}, size{size}, errors{errors}, duration{duration} {}
 
     count_type iters;              // corresponds to the 'n' field in Cedar
@@ -128,7 +128,7 @@ private:  // Data members.
 
 public:
     using time_point = typename ClockSource::time_point;
-    using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
+    using EventSeries = TimeSeries<ClockSource, OperationEventT<ClockSource>>;
 
     struct OperationThreshold {
         std::chrono::nanoseconds maxDuration;
@@ -182,7 +182,7 @@ public:
         return _events;
     }
 
-    void reportAt(time_point started, time_point finished, OperationEvent<ClockSource>&& event) {
+    void reportAt(time_point started, time_point finished, OperationEventT<ClockSource>&& event) {
         if (_threshold) {
             _threshold->check(started, finished);
         }
@@ -204,7 +204,7 @@ private:
 template <typename ClockSource>
 class OperationContextT final : private boost::noncopyable {
 private:
-    using OutcomeType = typename OperationEvent<ClockSource>::OutcomeType;
+    using OutcomeType = typename OperationEventT<ClockSource>::OutcomeType;
 
 public:
     using time_point = typename ClockSource::time_point;
@@ -304,7 +304,7 @@ private:
     v1::OperationImpl<ClockSource>* const _op;
     const time_point _started;
 
-    OperationEvent<ClockSource> _event;
+    OperationEventT<ClockSource> _event;
     bool _isClosed = false;
 };
 
@@ -348,7 +348,7 @@ public:
      * be considered OutcomeType::kSuccess even if errors are reported. duration The amount of time
      * it took to perform the operation. outcome Whether the operation succeeded.
      */
-    void report(time_point started, time_point finished, OperationEvent<ClockSource>&& event) {
+    void report(time_point started, time_point finished, OperationEventT<ClockSource>&& event) {
         _op->reportAt(started, finished, event);
     }
 
