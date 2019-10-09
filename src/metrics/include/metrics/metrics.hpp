@@ -23,7 +23,7 @@
 #include <gennylib/conventions.hpp>
 
 #include <metrics/operation.hpp>
-#include <metrics/passkey.hpp>
+#include <metrics/v1/passkey.hpp>
 
 namespace genny::metrics {
 

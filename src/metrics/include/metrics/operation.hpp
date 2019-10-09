@@ -27,7 +27,7 @@
 #include <gennylib/Actor.hpp>
 
 #include <metrics/Period.hpp>
-#include <metrics/TimeSeries.hpp>
+#include <metrics/v1/TimeSeries.hpp>
 
 namespace genny::metrics {
 
