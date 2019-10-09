@@ -381,13 +381,16 @@ public:
      * @param outcome
      *     Whether the operation succeeded.
      */
+    // The order of the params differs here versus reportSynthetic
+    // because some params e.g. outcome are more likely than others
+    // to be omitted in the happy-case.
     void report(time_point finished,
                 std::chrono::microseconds duration,
-                count_type iters = 0,
-                count_type ops = 0,
-                count_type size = 0,
+                OutcomeType outcome = OutcomeType::kUnknown,
+                count_type ops = 1,
                 count_type errors = 0,
-                OutcomeType outcome = OutcomeType::kUnknown) {
+                count_type iters = 1,
+                count_type size = 0) {
         _op->reportSynthetic(finished, duration, iters, ops, size, errors, outcome);
     }
 

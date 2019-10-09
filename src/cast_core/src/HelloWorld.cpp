@@ -48,8 +48,8 @@ void HelloWorld::run() {
             ctx.addBytes(config->message.size());
             ctx.success();
 
-            config->syntheticOperation.report(
-                metrics::clock::now(), std::chrono::milliseconds{_helloCounter}, 1, 1);
+            config->syntheticOperation.report(metrics::clock::now(),
+                                              std::chrono::milliseconds{_helloCounter});
         }
     }
 }
