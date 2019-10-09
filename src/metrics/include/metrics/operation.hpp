@@ -198,11 +198,10 @@ public:
                          count_type errors,
                          OutcomeType outcome = OutcomeType::kUnknown) {
         auto started = finished - duration;
-        this->reportAt(started, finished, OperationEventT<ClockSource>{
-                iters, ops, size, errors,
-                Period<ClockSource>{duration},
-                outcome
-        });
+        this->reportAt(started,
+                       finished,
+                       OperationEventT<ClockSource>{
+                           iters, ops, size, errors, Period<ClockSource>{duration}, outcome});
     }
 
 private:
@@ -357,26 +356,30 @@ public:
      * ```
      *
      * @param finished
-     *   when the operation finished. This will be used as the time point the event occurred and
-     *   `finished - duration` will be used as when the event started.
+     *     when the operation finished. This will be used as the time point the event
+     *     occurred and `finished - duration` will be used as when the event started.
+     *
      * @param iters
-     *     The number of iterations that occurred before the operation was reported. This member
-     * will almost always be 1 unless an actor decides to periodically report an operation in its
-     * for loop.
+     *     The number of iterations that occurred before the operation was reported. This
+     *     member will almost always be 1 unless an actor decides to periodically report
+     *     an operation in its for loop.
+     *
      * @param ops
-     *   The number of documents inserted, modified, deleted, etc.
+     *     The number of documents inserted, modified, deleted, etc.
+     *
      * @param size
-     *   The size in
-     * bytes of the number of documents inserted, etc.
+     *     The size in bytes of the number of documents inserted, etc.
+     *
      * @param errors
-     *    The number of write errors, transient
-     * transaction errors, etc. that occurred when performing the operation. The operation can still
-     * be considered OutcomeType::kSuccess even if errors are reported.
+     *    The number of write errors, transient transaction errors, etc. that occurred
+     *    when performing the operation. The operation can still be considered
+     *    OutcomeType::kSuccess even if errors are reported.
+     *
      * @param duration
-     *   The amount of time
-     * it took to perform the operation.
+     *     The amount of time it took to perform the operation.
+     *
      * @param outcome
-     *   Whether the operation succeeded.
+     *     Whether the operation succeeded.
      */
     void report(time_point finished,
                 std::chrono::microseconds duration,
