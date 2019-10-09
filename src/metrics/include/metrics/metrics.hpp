@@ -111,11 +111,11 @@ public:
         return OperationT{opIt->second};
     }
 
-    const OperationsMap& getOps(Permission) const {
+    [[nodiscard]] const OperationsMap& getOps(Permission) const {
         return this->_ops;
     };
 
-    const typename ClockSource::time_point now(Permission) const {
+    [[nodiscard]] const typename ClockSource::time_point now(Permission) const {
         return ClockSource::now();
     }
 

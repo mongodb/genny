@@ -87,7 +87,7 @@ struct OperationEventT final {
                              count_type errors = 0,
                              Period<ClockSource> duration = {},
                              OutcomeType outcome = OutcomeType::kUnknown)
-        : iters{iters}, ops{ops}, size{size}, errors{errors}, duration{duration} {}
+        : iters{iters}, ops{ops}, size{size}, errors{errors}, duration{duration}, outcome{outcome} {}
 
     count_type iters;              // corresponds to the 'n' field in Cedar
     count_type ops;                // corresponds to the 'ops' field in Cedar
@@ -122,7 +122,7 @@ private:  // Data members.
         int64_t failed = 0;
         int64_t total = 0;
 
-        constexpr double_t failedPercentage() const {
+        [[nodiscard]] constexpr double_t failedPercentage() const {
             return static_cast<double_t>(failed) / total * 100;
         };
     };
@@ -165,14 +165,14 @@ public:
     /**
      * @return the name of the actor running the operation.
      */
-    const std::string& getActorName() const {
+    [[nodiscard]] const std::string& getActorName() const {
         return _actorName;
     }
 
     /**
      * @return the name of the operation being run.
      */
-    const std::string& getOpName() const {
+    [[nodiscard]] const std::string& getOpName() const {
         return _opName;
     }
 
