@@ -377,6 +377,13 @@ public:
      *
      * @param duration
      *     The amount of time it took to perform the operation.
+     *     If your time-unit isn't microseconds, you can use
+     *     `std::chrono::duration_cast` to convert. E.g.
+     *
+     *     ```c++
+     *      auto dur = std::chrono::seconds{1};
+     *      auto micros = std::chrono::duration_cast<std::chrono::microseconds>(dur);
+     *     ```
      *
      * @param outcome
      *     Whether the operation succeeded.
@@ -384,9 +391,18 @@ public:
     // The order of the params differs here versus reportSynthetic
     // because some params e.g. outcome are more likely than others
     // to be omitted in the happy-case.
+    //
+    // The choice of microseconds is arbitrary. Can't easily use "base"
+    // class like std::chrono::duration because it's (confusingly) templated;
+    // could make `report` templated too and forward to metrics::Period ctors
+    // or something but it doesn't seem unreasonable to ask for microseconds
+    // (that's what we currently report in), and using duration_cast isn't
+    // much of a hoop to jump through (and it's a compile-time conversion).
     void report(time_point finished,
                 std::chrono::microseconds duration,
                 OutcomeType outcome = OutcomeType::kUnknown,
+                // Should we be clever here and somehow default outcome
+                // based on ops and errors params?
                 count_type ops = 1,
                 count_type errors = 0,
                 count_type iters = 1,
