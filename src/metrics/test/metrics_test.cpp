@@ -137,7 +137,13 @@ TEST_CASE("metrics output format") {
     auto synthetic = metrics.operation("HelloWorld", "Synthetic", 4u);
 
     RegistryClockSourceStub::advance(5ns);
-    synthetic.report(RegistryClockSourceStub::now(), std::chrono::microseconds{300}, OutcomeType::kSuccess, 1, 2, 3, 4);
+    synthetic.report(RegistryClockSourceStub::now(),
+                     std::chrono::microseconds{300},
+                     OutcomeType::kSuccess,
+                     1,
+                     2,
+                     3,
+                     4);
 
     auto insert1Ctx = insert1.start();
 
