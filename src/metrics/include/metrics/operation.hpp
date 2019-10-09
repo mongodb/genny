@@ -87,7 +87,12 @@ struct OperationEventT final {
                              count_type errors = 0,
                              Period<ClockSource> duration = {},
                              OutcomeType outcome = OutcomeType::kUnknown)
-        : iters{iters}, ops{ops}, size{size}, errors{errors}, duration{duration}, outcome{outcome} {}
+        : iters{iters},
+          ops{ops},
+          size{size},
+          errors{errors},
+          duration{duration},
+          outcome{outcome} {}
 
     count_type iters;              // corresponds to the 'n' field in Cedar
     count_type ops;                // corresponds to the 'ops' field in Cedar
