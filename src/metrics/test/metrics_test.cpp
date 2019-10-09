@@ -65,7 +65,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         ctx.reset();
 
-        expected.outcome = OperationEventT<RegistryClockSourceStub>::OutcomeType::kSuccess;
+        expected.outcome = OutcomeType::kSuccess;
         assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 72ns);
         REQUIRE(op.getEvents()[0].second == expected);
     }
@@ -77,7 +77,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         ctx.reset();
 
-        expected.outcome = OperationEventT<RegistryClockSourceStub>::OutcomeType::kFailure;
+        expected.outcome = OutcomeType::kFailure;
         assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 72ns);
         REQUIRE(op.getEvents()[0].second == expected);
     }
@@ -108,7 +108,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         ctx.reset();
 
-        expected.outcome = OperationEventT<RegistryClockSourceStub>::OutcomeType::kSuccess;
+        expected.outcome = OutcomeType::kSuccess;
         assertDurationsEqual(op.getEvents()[0].first.time_since_epoch(), 139ns);
         REQUIRE(op.getEvents()[0].second == expected);
     }

@@ -29,9 +29,12 @@ struct HelloWorld::PhaseConfig {
     /** record data about each iteration */
     metrics::Operation operation;
 
+    metrics::Operation syntheticOperation;
+
     explicit PhaseConfig(PhaseContext& context, ActorId actorId)
         : message{context["Message"].maybe<std::string>().value_or("Hello, World!")},
-          operation{context.operation("DefaultMetricsName", actorId)} {}
+          operation{context.operation("DefaultMetricsName", actorId)},
+          syntheticOperation{context.operation("SyntheticOperation", actorId)} {}
 };
 
 void HelloWorld::run() {
@@ -44,6 +47,8 @@ void HelloWorld::run() {
             ctx.addDocuments(1);
             ctx.addBytes(config->message.size());
             ctx.success();
+
+            config->syntheticOperation.report(metrics::clock::now(), std::chrono::milliseconds{_helloCounter}, 1, 1);
         }
     }
 }

@@ -33,6 +33,8 @@ namespace genny::metrics {
 
 using count_type = long long;
 
+enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
+
 /**
  * The data captured at a particular time-point.
  *
@@ -41,7 +43,6 @@ using count_type = long long;
  */
 template <typename ClockSource>
 struct OperationEventT final {
-    enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
     bool operator==(const OperationEventT<ClockSource>& other) const {
         return iters == other.iters && ops == other.ops && size == other.size &&
@@ -189,6 +190,21 @@ public:
         _events.addAt(finished, event);
     }
 
+    void reportSynthetic(time_point finished,
+                         std::chrono::microseconds duration,
+                         count_type iters,
+                         count_type ops,
+                         count_type size,
+                         count_type errors,
+                         OutcomeType outcome = OutcomeType::kUnknown) {
+        auto started = finished - duration;
+        this->reportAt(started, finished, OperationEventT<ClockSource>{
+                iters, ops, size, errors,
+                Period<ClockSource>{duration},
+                outcome
+        });
+    }
+
 private:
     const std::string _actorName;
     const std::string _opName;
@@ -203,9 +219,6 @@ private:
  */
 template <typename ClockSource>
 class OperationContextT final : private boost::noncopyable {
-private:
-    using OutcomeType = typename OperationEventT<ClockSource>::OutcomeType;
-
 public:
     using time_point = typename ClockSource::time_point;
 
@@ -332,24 +345,47 @@ public:
      * auto started = metrics::clock::now();
      * ...
      * auto end = metrics::clock::now();
-     * operation.report(started, metrics::clock::now(), metrics::Event{
-     *     iters, ops, size, errors, end - started, outcome
+     * operation.report(
+     *     end,
+     *     end - started,
+     *     iters,
+     *     ops,
+     *     size,
+     *     errors,
+     *     outcome
      *  });
      * ```
      *
-     * @see OperationEvent
-     *
-     * iters
+     * @param finished
+     *   when the operation finished. This will be used as the time point the event occurred and
+     *   `finished - duration` will be used as when the event started.
+     * @param iters
      *     The number of iterations that occurred before the operation was reported. This member
      * will almost always be 1 unless an actor decides to periodically report an operation in its
-     * for loop. ops The number of documents inserted, modified, deleted, etc. size The size in
-     * bytes of the number of documents inserted, etc. errors The number of write errors, transient
+     * for loop.
+     * @param ops
+     *   The number of documents inserted, modified, deleted, etc.
+     * @param size
+     *   The size in
+     * bytes of the number of documents inserted, etc.
+     * @param errors
+     *    The number of write errors, transient
      * transaction errors, etc. that occurred when performing the operation. The operation can still
-     * be considered OutcomeType::kSuccess even if errors are reported. duration The amount of time
-     * it took to perform the operation. outcome Whether the operation succeeded.
+     * be considered OutcomeType::kSuccess even if errors are reported.
+     * @param duration
+     *   The amount of time
+     * it took to perform the operation.
+     * @param outcome
+     *   Whether the operation succeeded.
      */
-    void report(time_point started, time_point finished, OperationEventT<ClockSource>&& event) {
-        _op->reportAt(started, finished, event);
+    void report(time_point finished,
+                std::chrono::microseconds duration,
+                count_type iters = 0,
+                count_type ops = 0,
+                count_type size = 0,
+                count_type errors = 0,
+                OutcomeType outcome = OutcomeType::kUnknown) {
+        _op->reportSynthetic(finished, duration, iters, ops, size, errors, outcome);
     }
 
 

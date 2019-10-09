@@ -43,7 +43,7 @@ inline void logMaybe(unsigned long long iteration,
                      const std::string& actorName,
                      const std::string& opName) {
     // Log progress every 100e6 iterations
-    if (iteration % (100 * 1000 * 1000)) {
+    if (iteration % (100 * 1000 * 1000) == 0) {
         BOOST_LOG_TRIVIAL(info) << "Processed " << iteration << " metrics. Processing " << actorName
                                 << "." << opName;
     }
