@@ -15,14 +15,12 @@
 #ifndef HEADER_60839F59_EE36_4926_A72D_3D4B68DEA4F9_INCLUDED
 #define HEADER_60839F59_EE36_4926_A72D_3D4B68DEA4F9_INCLUDED
 
-namespace genny::metrics {
-
 /**
  * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
  * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
  * the implementation of an actor.
  */
-namespace v1 {
+namespace genny::metrics::v1 {
 
 /**
  * The ReporterT class is given read-only access to the metrics data for the purposes of recording
@@ -52,7 +50,6 @@ private:
 
 static_assert(std::is_empty<Permission>::value, "empty");
 
-}  // namespace v1
-}  // namespace genny::metrics
+}  // namespace genny::metrics::v1
 
 #endif  // HEADER_60839F59_EE36_4926_A72D_3D4B68DEA4F9_INCLUDED
