@@ -1,0 +1,79 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+Actors:
+- Name: LongLivedCreator
+  Type: Loader
+  Threads: 10
+  Phases:
+  - Repeat: 1
+    Database: &DB longlived
+    CollectionCount: &CollectionCount 1000
+    Threads: 10
+    DocumentCount: &DocumentCount 1000
+    BatchSize: 1000
+    Document:
+      # Each document ranges in size from about 90 to 150 bytes (average 120)
+      x0: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
+      x1: &rand_4b_int {^RandomInt: {min: 0, max: 2147483647}}
+      x2: *rand_4b_int
+      x3: *rand_4b_int
+      x4: *rand_4b_int
+      x5: *rand_4b_int
+      x6: *rand_4b_int
+      x7: *rand_4b_int
+      x8: *rand_4b_int
+      s0: {^RandomString: {length: {^RandomInt: {min: 20, max: 80}}}}
+    Indexes:
+    - keys: {x0: 1}
+    - keys: {x1: 1}
+    - keys: {x2: 1}
+    - keys: {x3: 1}
+    - keys: {x4: 1}
+    - keys: {x5: 1}
+    - keys: {x6: 1}
+    - keys: {x7: 1}
+    - keys: {x8: 1}
+  - {Nop: true}
+
+- Name: LongLivedIndexReader
+  Type: MultiCollectionQuery
+  Threads: 100
+  GlobalRate: 10000 per 1 second
+  Phases:
+  - {Nop: true}
+  - Duration: 10 minutes
+    Database: *DB
+    CollectionCount: *CollectionCount
+    DocumentCount: *DocumentCount
+    Filter: {x0: *rand_10k_int}
+
+- Name: LongLivedReader
+  Type: MultiCollectionQuery
+  Threads: 100
+  GlobalRate: 5000 per 1 second
+  Phases:
+  - {Nop: true}
+  - Duration: 10 minutes
+    Database: *DB
+    CollectionCount: *CollectionCount
+    DocumentCount: *DocumentCount
+    Filter: {_id: *rand_10k_int}
+
+- Name: LongLivedWriter
+  Type: MultiCollectionUpdate
+  Threads: 5
+  GlobalRate: 500 in 1 second
+  Phases:
+  - {Nop: true}
+  - Duration: 10 minutes
+    Database: *DB
+    CollectionCount: *CollectionCount
+    DocumentCount: *DocumentCount
+    UpdateFilter: {_id: *rand_10k_int}
+    Update: {$inc: {x1: 1}}

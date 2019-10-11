@@ -108,6 +108,6 @@ void ActorHelper::doRunThreaded(const WorkloadContext& wl) {
 
     auto reporter = genny::metrics::Reporter{*_registry};
 
-    reporter.report(_metricsOutput, "csv", genny::metrics::LogMode::kNone);
+    reporter.report(_metricsOutput, "csv");
 }
 }  // namespace genny

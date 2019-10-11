@@ -1,0 +1,181 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/repl"
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10000
+
+Actors:
+- Name: ParallelInsert-1
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - &Insert_WMajority
+    MetricsName: Insert_WMajority
+    Duration: 30 seconds
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationIsQuiet: true
+      OperationCommand:
+        insert: myCollection
+        documents: &Doc [{a: {^FastRandomString: {length: 1000}}}]
+        writeConcern: {w: majority}
+  - &Nop {Nop: true}
+  - &Insert_W1_JTrue
+    MetricsName: Insert_W1_JTrue
+    Duration: 30 seconds
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationIsQuiet: true
+      OperationCommand:
+        insert: myCollection
+        documents: *Doc
+        writeConcern: {w: 1, j: true}
+  - *Nop
+  - &Insert_WMajority_JFalse
+    MetricsName: Insert_WMajority_JFalse
+    Duration: 30 seconds
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationIsQuiet: true
+      OperationCommand:
+        insert: myCollection
+        documents: *Doc
+        writeConcern: {w: majority, j: false}
+  - *Nop
+  - &Insert_W1
+    MetricsName: Insert_W1
+    Duration: 30 seconds
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationIsQuiet: true
+      OperationCommand:
+        insert: myCollection
+        documents: *Doc
+        writeConcern: {w: 1}
+  - *Nop
+  - Phase: 8..39
+    Nop: true
+
+- Name: ParallelInsert-32
+  Type: RunCommand
+  Threads: 32
+  Phases:
+  - Phase: 0..7
+    Nop: true
+  - *Insert_WMajority
+  - *Nop
+  - *Insert_W1_JTrue
+  - *Nop
+  - *Insert_WMajority_JFalse
+  - *Nop
+  - *Insert_W1
+  - *Nop
+  - Phase: 16..39
+    Nop: true
+
+- Name: ParallelInsert-256
+  Type: RunCommand
+  Threads: 256
+  Phases:
+  - Phase: 0..15
+    Nop: true
+  - *Insert_WMajority
+  - *Nop
+  - *Insert_W1_JTrue
+  - *Nop
+  - *Insert_WMajority_JFalse
+  - *Nop
+  - *Insert_W1
+  - *Nop
+  - Phase: 24..39
+    Nop: true
+
+- Name: ParallelInsert-512
+  Type: RunCommand
+  Threads: 512
+  Phases:
+  - Phase: 0..23
+    Nop: true
+  - *Insert_WMajority
+  - *Nop
+  - *Insert_W1_JTrue
+  - *Nop
+  - *Insert_WMajority_JFalse
+  - *Nop
+  - *Insert_W1
+  - *Nop
+  - Phase: 32..39
+    Nop: true
+
+- Name: ParallelInsert-1024
+  Type: RunCommand
+  Threads: 1024
+  Phases:
+  - Phase: 0..31
+    Nop: true
+  - *Insert_WMajority
+  - *Nop
+  - *Insert_W1_JTrue
+  - *Nop
+  - *Insert_WMajority_JFalse
+  - *Nop
+  - *Insert_W1
+  - *Nop
+
+- Name: CleanUp
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - &DropCollection
+    Repeat: 1
+    Database: test
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        drop: myCollection
+        writeConcern: {w: majority}
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
+  - *Nop
+  - *DropCollection
