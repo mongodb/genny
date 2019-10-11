@@ -27,8 +27,8 @@
 #include <gennylib/Cast.hpp>
 #include <gennylib/MongoException.hpp>
 #include <gennylib/context.hpp>
-#include <metrics/operation.hpp>
 #include <metrics/metrics.hpp>
+#include <metrics/operation.hpp>
 
 #include <value_generators/DocumentGenerator.hpp>
 
@@ -293,15 +293,25 @@ struct OplogTailer : public RunOperation {
                     if (collectionName.length() > 2 && collectionName[0] == 'r' &&
                         collectionName[1] == '_') {
                         // Get the time as soon as we know we its a collection we care about.
-                        auto now = std::chrono::system_clock::now();
+                        auto now = metrics::clock::now();
 
                         std::vector<std::string> timeSplit;
                         boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
-                        long collectionCreationTime = std::stol(timeSplit[2]);
-                        auto event = metrics::Event{
-                            1, 1, 0, 0, now - now
-                        };
-                        _oplogLagOperation.report(now, now, event);
+
+                        using ms = std::chrono::milliseconds;
+                        using us = std::chrono::microseconds;
+                        using duration = metrics::clock::time_point::duration;
+
+                        // TODO(luke):
+                        //     is the thing after the underscore millis since epoch? Please ensure
+                        //     it uses
+                        //         std::chrono::duration_cast<std::chrono::milliseconds>(metrics::clock::now()).count()
+                        //     to keep all metrics-collection stuff using the same clocks.
+                        auto started = metrics::clock::time_point{
+                            std::chrono::duration_cast<duration>(ms{std::stol(timeSplit[2])})};
+                        _oplogLagOperation.report(now,
+                                                  std::chrono::duration_cast<us>(now - started),
+                                                  metrics::OutcomeType::kSuccess);
                     }
                 }
             }
