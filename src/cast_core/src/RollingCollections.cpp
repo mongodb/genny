@@ -53,8 +53,8 @@ struct RunOperation {
 };
 
 static long getMillisecondsSinceEpoch() {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(
-               std::chrono::system_clock::now().time_since_epoch())
+    return std::chrono::time_point_cast<std::chrono::milliseconds>(metrics::clock::now())
+        .time_since_epoch()
         .count();
 }
 
@@ -294,24 +294,15 @@ struct OplogTailer : public RunOperation {
                         collectionName[1] == '_') {
                         // Get the time as soon as we know we its a collection we care about.
                         auto now = metrics::clock::now();
-
                         std::vector<std::string> timeSplit;
                         boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
-
-                        using ms = std::chrono::milliseconds;
-                        using us = std::chrono::microseconds;
-                        using duration = metrics::clock::time_point::duration;
-
-                        // TODO(luke):
-                        //     is the thing after the underscore millis since epoch? Please ensure
-                        //     it uses
-                        //         std::chrono::duration_cast<std::chrono::milliseconds>(metrics::clock::now()).count()
-                        //     to keep all metrics-collection stuff using the same clocks.
                         auto started = metrics::clock::time_point{
-                            std::chrono::duration_cast<duration>(ms{std::stol(timeSplit[2])})};
-                        _oplogLagOperation.report(now,
-                                                  std::chrono::duration_cast<us>(now - started),
-                                                  metrics::OutcomeType::kSuccess);
+                            std::chrono::duration_cast<metrics::clock::time_point::duration>(
+                                std::chrono::milliseconds{std::stol(timeSplit[2])})};
+                        _oplogLagOperation.report(
+                            now,
+                            std::chrono::duration_cast<std::chrono::microseconds>(now - started),
+                            metrics::OutcomeType::kSuccess);
                     }
                 }
             }
