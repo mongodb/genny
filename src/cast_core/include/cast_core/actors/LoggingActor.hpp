@@ -39,6 +39,7 @@ public:
     static std::string_view defaultName() {
         return "LoggingActor";
     }
+
 private:
     /** @private */
     struct PhaseConfig;

@@ -14,57 +14,41 @@
 
 #include <cast_core/actors/LoggingActor.hpp>
 
-#include <memory>
-#include <optional>
-
 #include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/regex.hpp>
 
 #include <gennylib/Cast.hpp>
-#include <gennylib/InvalidConfigurationException.hpp>
 #include <gennylib/context.hpp>
 
-#include <value_generators/DocumentGenerator.hpp>
-
-namespace {
-
-constexpr auto MESSAGE = "Invalid RepeatEvery %s: (%s): Must be either \"N iterations\" or a TimeSpec (e.g. \"1 second\").";
-
-std::optional<genny::IntegerSpec> createIters(const std::string& repeatEvery) {
-    boost::regex expr{R"(^\s*(\d+)+\s+[iI]terations?$)"};
-    boost::smatch what;
-    if (boost::regex_search(repeatEvery, what, expr)) {
-        const auto spec = what[1];
-        try {
-            return std::make_optional(genny::IntegerSpec(boost::lexical_cast<int64_t>(spec)));
-        } catch(const boost::bad_lexical_cast &) {
-            std::stringstream str;
-            str << boost::format(MESSAGE) % repeatEvery % "bad_lexical_cast";
-            BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException(str.str()));
-        }
-    } else {
-        std::stringstream str;
-        str << boost::format(MESSAGE) % repeatEvery % "regex mismatch";
-        BOOST_THROW_EXCEPTION(genny::InvalidConfigurationException(str.str()));
-    }
-}
-
-std::optional<genny::TimeSpec> createTime(const std::string& repeatEvery) {
-
-}
-
-}  // namespace
 
 namespace genny::actor {
 
 struct LoggingActor::PhaseConfig {
-    std::optional<TimeSpec> time;
-    std::optional<IntegerSpec> iters;
+    TimeSpec time;
+    metrics::clock::time_point started;
+    unsigned iteration = 0;
 
-    explicit PhaseConfig(PhaseContext& phaseContex) {}
-    void report() {}
+    explicit PhaseConfig(PhaseContext& phaseContext)
+        : time{phaseContext["LogEvery"].to<TimeSpec>()}, started{metrics::clock::now()} {
+        if (phaseContext["Blocking"].to<std::string>() != "None") {
+            BOOST_THROW_EXCEPTION(
+                InvalidConfigurationException("LoggingActor must have Blocking:None"));
+        }
+    }
+    void report() {
+        // Avoid calling now() on most iterations
+        if (++iteration % 10000 != 0) {
+            return;
+        }
+        iteration = 0;
+
+        const auto now = metrics::clock::now();
+        const auto duration = now - started;
+        if (duration >= time.value) {
+            BOOST_LOG_TRIVIAL(info) << "Phase still progressing.";
+            started = now;
+        }
+    }
 };
 
 void LoggingActor::run() {
@@ -75,8 +59,7 @@ void LoggingActor::run() {
     }
 }
 
-LoggingActor::LoggingActor(genny::ActorContext& context)
-    : Actor{context}, _loop{context} {}
+LoggingActor::LoggingActor(genny::ActorContext& context) : Actor{context}, _loop{context} {}
 
 namespace {
 auto registerLoggingActor = Cast::registerDefault<LoggingActor>();

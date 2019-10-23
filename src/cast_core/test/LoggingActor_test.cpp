@@ -21,22 +21,27 @@
 #include <gennylib/context.hpp>
 
 namespace {
-    using namespace genny;
-    using namespace genny::testing;
+using namespace genny;
+using namespace genny::testing;
 
-    TEST_CASE("LoggingActor") {
-        SECTION("Configuration") {
-            NodeSource config{R"(
+TEST_CASE("LoggingActor") {
+    SECTION("Configuration") {
+        NodeSource config{R"(
 SchemaVersion: 2018-07-01
 Actors:
+- Name: Nop
+  Type: NopMetrics
+  Phases:
+  - Duration: 20 milliseconds
 - Name: 1
   Type: LoggingActor
   Phases:
-  - RepeatEvery: 1 iterations
+  - LogEvery: 5 milliseconds
     Blocking: None
-)", ""};
-            ActorHelper ah(config.root(), 1, MongoTestFixture::connectionUri().to_string());
-            ah.run();
-        }
+)",
+                          ""};
+        ActorHelper ah(config.root(), 2, MongoTestFixture::connectionUri().to_string());
+        ah.run();
     }
+}
 }  // namespace

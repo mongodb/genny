@@ -7,8 +7,6 @@ Actors:
   Threads: 1 # must be 1
   Phases:
   - Phase: 0
-    LogEvery: 1000 iterations # /^\s*(\d+)\s+iterations?\s*$/
-  - Phase: 1
     LogEvery: 15 minutes # TimeSpec
-    # it is invalid for LoggingActor Phase blocks
-    # to have any keys other than Phase and LogEvery
+    Blocking: None # must be Blocking:None
+
