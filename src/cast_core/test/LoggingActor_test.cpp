@@ -35,6 +35,7 @@ Actors:
   - Duration: 10 milliseconds
 - Name: 1
   Type: LoggingActor
+  Threads: 1
   Phases:
   - LogEvery: 3 milliseconds
     Blocking: None
