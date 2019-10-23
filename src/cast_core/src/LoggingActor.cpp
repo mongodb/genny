@@ -14,12 +14,10 @@
 
 #include <cast_core/actors/LoggingActor.hpp>
 
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Cast.hpp>
 #include <gennylib/context.hpp>
-
 
 namespace genny::actor {
 
@@ -29,12 +27,12 @@ namespace genny::actor {
 //
 
 struct LoggingActor::PhaseConfig {
-    TimeSpec time;
+    TimeSpec logEvery;
     metrics::clock::time_point started;
     unsigned iteration = 0;
 
     explicit PhaseConfig(PhaseContext& phaseContext)
-        : time{phaseContext["LogEvery"].to<TimeSpec>()}, started{metrics::clock::now()} {
+        : logEvery{phaseContext["LogEvery"].to<TimeSpec>()}, started{metrics::clock::now()} {
         if (phaseContext["Blocking"].to<std::string>() != "None") {
             BOOST_THROW_EXCEPTION(
                 InvalidConfigurationException("LoggingActor must have Blocking:None"));
@@ -49,7 +47,7 @@ struct LoggingActor::PhaseConfig {
 
         const auto now = metrics::clock::now();
         const auto duration = now - started;
-        if (duration >= time.value) {
+        if (duration >= logEvery.value) {
             BOOST_LOG_TRIVIAL(info) << "Phase still progressing.";
             started = now;
         }
