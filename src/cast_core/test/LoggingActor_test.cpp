@@ -32,16 +32,19 @@ Actors:
 - Name: Nop
   Type: NopMetrics
   Phases:
-  - Duration: 20 milliseconds
+  - Duration: 10 milliseconds
 - Name: 1
   Type: LoggingActor
   Phases:
-  - LogEvery: 5 milliseconds
+  - LogEvery: 3 milliseconds
     Blocking: None
 )",
                           ""};
         ActorHelper ah(config.root(), 2, MongoTestFixture::connectionUri().to_string());
         ah.run();
+        // Don't actually assert anything because it's hard to assert interactions with logging.
+        // If you're running this test manually you should see exactly 3 log messages from
+        // the LoggingActor.
     }
 }
 }  // namespace

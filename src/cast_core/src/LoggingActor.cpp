@@ -23,6 +23,11 @@
 
 namespace genny::actor {
 
+//
+// Note this Actor only has a manually-run test-case (LoggingActor_test.cpp).
+// Be careful when making changes.
+//
+
 struct LoggingActor::PhaseConfig {
     TimeSpec time;
     metrics::clock::time_point started;
