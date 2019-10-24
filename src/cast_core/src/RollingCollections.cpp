@@ -65,10 +65,12 @@ static std::string getRollingCollectionName() {
     timestamp[timestamp.size() - 1] = '.';
     std::stringstream ss;
     /*
-     * This will create a collection name looking something like: r134_2019-08-30-11:08:19.123,
+     * This will create a collection name looking something like: 2019-08-30-11:08:19.123_r134,
      * the setw and setfill pad 0's for the ms if its anything < 100 ms.
+     * Such a name should be unique, and the list of names in lexigraphic
+     * order will be ordered by time.
      */
-    ss << "r" << id << "_" << timestamp << std::setfill('0') << std::setw(3) << ms.count();
+    ss << timestamp << std::setfill('0') << std::setw(3) << ms.count() << "_r" << id;
     id++;
     return ss.str();
 }

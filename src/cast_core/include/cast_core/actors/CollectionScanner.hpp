@@ -59,6 +59,8 @@ private:
     /** @private */
     int _index;
     RunningActorCounter& _runningActorCounter;
+    std::string _databaseCommaList;
+    std::vector<std::string> _databaseNames;
     PhaseLoop<PhaseConfig> _loop;
     bool _generateCollectionNames;
 };
