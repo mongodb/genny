@@ -1,0 +1,33 @@
+SchemaVersion: 2018-07-01
+Owner:  "@mongodb/stm"
+
+Description:
+  The LoggingActor exists so DSI and Evergreen don't quit
+  your workload for not outputting anything to stdout.
+  (They do this in case your workload has timed-out.) If
+  you don't want to add periodic logging to your Actor
+  (you probably don't because logging would be done by
+  every thread and would probably make your workload super
+  verbose), then you can drop this Actor at the end of
+  your Workload YAML and configure this Actor to log
+  something periodically in Phases that are likely to run
+  longer than a few minutes.
+
+  This workload "works", but it basically just exits right
+  away without actually logging anything because the
+  LoggingActor insists on being a "background" Actor that
+  can never block a Phase from completing, and it only
+  actually logs every 10000 iterations.
+
+  To use this Actor, copy/paste the below block into
+  your workload YAML and create a Phase block for
+  every Phase that may last longer than a few minutes.
+
+Actors:
+- Name: LoggingActor
+  Type: LoggingActor
+  Threads: 1 # must be 1
+  Phases:
+  - Phase: 0
+    LogEvery: 15 minutes # TimeSpec
+    Blocking: None # must be Blocking:None
