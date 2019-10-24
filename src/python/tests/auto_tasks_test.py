@@ -2,9 +2,7 @@ import json
 import unittest
 
 from unittest.mock import patch
-
 from genny.genny_auto_tasks import construct_task_json
-# from tests.cedar_test import get_fixture
 
 
 class AutoTasksTest(unittest.TestCase):
