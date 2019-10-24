@@ -24,7 +24,7 @@
 namespace genny::actor {
 
 /**
- * Refer to workloads/docs/LoggingActor.yml for configuration examples.
+ * Refer to workloads/docs/LoggingActorExample.yml for configuration examples.
  * Owner: STM Team
  */
 class LoggingActor : public Actor {
