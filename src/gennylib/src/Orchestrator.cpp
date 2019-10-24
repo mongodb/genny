@@ -14,9 +14,10 @@
 
 #include <gennylib/Orchestrator.hpp>
 
+#include <boost/log/trivial.hpp>
+
 #include <algorithm>  // std::max
 #include <cassert>
-#include <iostream>
 
 namespace {
 
@@ -79,11 +80,12 @@ PhaseNumber Orchestrator::awaitPhaseStart(bool block, int addTokens) {
 
     _currentTokens += addTokens;
 
-    auto currentPhase = this->_current;
+    const auto currentPhase = this->_current;
     if (_currentTokens >= _requireTokens) {
         for (auto&& cb : _prePhaseHooks) {
             cb(this);
         }
+        BOOST_LOG_TRIVIAL(debug) << "Beginning phase " << currentPhase;
         _phaseChange.notify_all();
         state = State::PhaseStarted;
     } else {
@@ -134,6 +136,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
     if (_currentTokens <= 0) {
         ++_current;
+        BOOST_LOG_TRIVIAL(debug) << "Ended phase " << (this->_current - 1);
         _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {

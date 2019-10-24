@@ -68,7 +68,7 @@ Actors:
     Distribution: 0.8
     GlobalRate: 10 per 1 second
 
-- Name: Reader
+- Name: Reader2
   Type: RollingCollections
   Threads: 1
   Database: rolling
@@ -80,3 +80,12 @@ Actors:
     # Filter modifies the find to use whatever filter you pass to it
     Filter: {a: 1}
     GlobalRate: 100 per 1 second
+
+- Name: OplogTailer
+  Type: RollingCollections
+  Database: local
+  Threads: 1
+  Operation: OplogTailer
+  Phases:
+  - {Nop : true}
+  - Duration: 1 minute

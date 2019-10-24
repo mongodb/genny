@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/log/trivial.hpp>
+
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
 
@@ -36,7 +38,6 @@ public:
         kListActors,
         kHelp,
     };
-
 
     enum class OutcomeCode {
         kSuccess = 0,
@@ -66,6 +67,7 @@ public:
         std::string description;
         bool isSmokeTest;
         DefaultDriver::RunMode runMode = RunMode::kNormal;
+        boost::log::trivial::severity_level logVerbosity;
     };
 
     /**

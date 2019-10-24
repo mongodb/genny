@@ -27,11 +27,13 @@
 #include <gennylib/Actor.hpp>
 
 #include <metrics/Period.hpp>
-#include <metrics/TimeSeries.hpp>
+#include <metrics/v1/TimeSeries.hpp>
 
 namespace genny::metrics {
 
 using count_type = long long;
+
+enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
 /**
  * The data captured at a particular time-point.
@@ -40,16 +42,15 @@ using count_type = long long;
  * MetricsClockSource other than during testing.
  */
 template <typename ClockSource>
-struct OperationEvent final {
-    enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
+struct OperationEventT final {
 
-    bool operator==(const OperationEvent<ClockSource>& other) const {
+    bool operator==(const OperationEventT<ClockSource>& other) const {
         return iters == other.iters && ops == other.ops && size == other.size &&
             errors == other.errors && duration == other.duration && outcome == other.outcome;
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const OperationEvent<ClockSource>& event) {
-        out << "OperationEvent{";
+    friend std::ostream& operator<<(std::ostream& out, const OperationEventT<ClockSource>& event) {
+        out << "OperationEventT{";
         out << "iters:" << event.iters;
         out << ",ops:" << event.ops;
         out << ",size:" << event.size;
@@ -80,13 +81,18 @@ struct OperationEvent final {
      * @param outcome
      *      Whether the operation succeeded.
      */
-    explicit OperationEvent(count_type iters = 0,
-                            count_type ops = 0,
-                            count_type size = 0,
-                            count_type errors = 0,
-                            Period<ClockSource> duration = {},
-                            OutcomeType outcome = OutcomeType::kUnknown)
-        : iters{iters}, ops{ops}, size{size}, errors{errors}, duration{duration} {}
+    explicit OperationEventT(count_type iters = 0,
+                             count_type ops = 0,
+                             count_type size = 0,
+                             count_type errors = 0,
+                             Period<ClockSource> duration = {},
+                             OutcomeType outcome = OutcomeType::kUnknown)
+        : iters{iters},
+          ops{ops},
+          size{size},
+          errors{errors},
+          duration{duration},
+          outcome{outcome} {}
 
     count_type iters;              // corresponds to the 'n' field in Cedar
     count_type ops;                // corresponds to the 'ops' field in Cedar
@@ -121,14 +127,14 @@ private:  // Data members.
         int64_t failed = 0;
         int64_t total = 0;
 
-        constexpr double_t failedPercentage() const {
+        [[nodiscard]] constexpr double_t failedPercentage() const {
             return static_cast<double_t>(failed) / total * 100;
         };
     };
 
 public:
     using time_point = typename ClockSource::time_point;
-    using EventSeries = TimeSeries<ClockSource, OperationEvent<ClockSource>>;
+    using EventSeries = TimeSeries<ClockSource, OperationEventT<ClockSource>>;
 
     struct OperationThreshold {
         std::chrono::nanoseconds maxDuration;
@@ -164,14 +170,14 @@ public:
     /**
      * @return the name of the actor running the operation.
      */
-    const std::string& getActorName() const {
+    [[nodiscard]] const std::string& getActorName() const {
         return _actorName;
     }
 
     /**
      * @return the name of the operation being run.
      */
-    const std::string& getOpName() const {
+    [[nodiscard]] const std::string& getOpName() const {
         return _opName;
     }
 
@@ -182,11 +188,25 @@ public:
         return _events;
     }
 
-    void reportAt(time_point started, time_point finished, OperationEvent<ClockSource>&& event) {
+    void reportAt(time_point started, time_point finished, OperationEventT<ClockSource>&& event) {
         if (_threshold) {
             _threshold->check(started, finished);
         }
         _events.addAt(finished, event);
+    }
+
+    void reportSynthetic(time_point finished,
+                         std::chrono::microseconds duration,
+                         count_type iters,
+                         count_type ops,
+                         count_type size,
+                         count_type errors,
+                         OutcomeType outcome = OutcomeType::kUnknown) {
+        auto started = finished - duration;
+        this->reportAt(started,
+                       finished,
+                       OperationEventT<ClockSource>{
+                           iters, ops, size, errors, Period<ClockSource>{duration}, outcome});
     }
 
 private:
@@ -203,9 +223,6 @@ private:
  */
 template <typename ClockSource>
 class OperationContextT final : private boost::noncopyable {
-private:
-    using OutcomeType = typename OperationEvent<ClockSource>::OutcomeType;
-
 public:
     using time_point = typename ClockSource::time_point;
 
@@ -304,7 +321,7 @@ private:
     v1::OperationImpl<ClockSource>* const _op;
     const time_point _started;
 
-    OperationEvent<ClockSource> _event;
+    OperationEventT<ClockSource> _event;
     bool _isClosed = false;
 };
 
@@ -332,24 +349,70 @@ public:
      * auto started = metrics::clock::now();
      * ...
      * auto end = metrics::clock::now();
-     * operation.report(started, metrics::clock::now(), metrics::Event{
-     *     iters, ops, size, errors, end - started, outcome
+     * operation.report(
+     *     end,
+     *     end - started,
+     *     iters,
+     *     ops,
+     *     size,
+     *     errors,
+     *     outcome
      *  });
      * ```
      *
-     * @see OperationEvent
+     * @param finished
+     *     when the operation finished. This will be used as the time point the event
+     *     occurred and `finished - duration` will be used as when the event started.
      *
-     * iters
-     *     The number of iterations that occurred before the operation was reported. This member
-     * will almost always be 1 unless an actor decides to periodically report an operation in its
-     * for loop. ops The number of documents inserted, modified, deleted, etc. size The size in
-     * bytes of the number of documents inserted, etc. errors The number of write errors, transient
-     * transaction errors, etc. that occurred when performing the operation. The operation can still
-     * be considered OutcomeType::kSuccess even if errors are reported. duration The amount of time
-     * it took to perform the operation. outcome Whether the operation succeeded.
+     * @param iters
+     *     The number of iterations that occurred before the operation was reported. This
+     *     member will almost always be 1 unless an actor decides to periodically report
+     *     an operation in its for loop.
+     *
+     * @param ops
+     *     The number of documents inserted, modified, deleted, etc.
+     *
+     * @param size
+     *     The size in bytes of the number of documents inserted, etc.
+     *
+     * @param errors
+     *    The number of write errors, transient transaction errors, etc. that occurred
+     *    when performing the operation. The operation can still be considered
+     *    OutcomeType::kSuccess even if errors are reported.
+     *
+     * @param duration
+     *     The amount of time it took to perform the operation.
+     *     If your time-unit isn't microseconds, you can use
+     *     `std::chrono::duration_cast` to convert. E.g.
+     *
+     *     ```c++
+     *      auto dur = std::chrono::seconds{1};
+     *      auto micros = std::chrono::duration_cast<std::chrono::microseconds>(dur);
+     *     ```
+     *
+     * @param outcome
+     *     Whether the operation succeeded.
      */
-    void report(time_point started, time_point finished, OperationEvent<ClockSource>&& event) {
-        _op->reportAt(started, finished, event);
+    // The order of the params differs here versus reportSynthetic
+    // because some params e.g. outcome are more likely than others
+    // to be omitted in the happy-case.
+    //
+    // The choice of microseconds is arbitrary. Can't easily use "base"
+    // class like std::chrono::duration because it's (confusingly) templated;
+    // could make `report` templated too and forward to metrics::Period ctors
+    // or something but it doesn't seem unreasonable to ask for microseconds
+    // (that's what we currently report in), and using duration_cast isn't
+    // much of a hoop to jump through (and it's a compile-time conversion).
+    void report(time_point finished,
+                std::chrono::microseconds duration,
+                OutcomeType outcome = OutcomeType::kUnknown,
+                // Should we be clever here and somehow default outcome
+                // based on ops and errors params?
+                count_type ops = 1,
+                count_type errors = 0,
+                count_type iters = 1,
+                count_type size = 0) {
+        _op->reportSynthetic(finished, duration, iters, ops, size, errors, outcome);
     }
 
 
