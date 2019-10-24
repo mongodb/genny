@@ -136,7 +136,7 @@ bool Orchestrator::awaitPhaseEnd(bool block, int removeTokens) {
 
     if (_currentTokens <= 0) {
         ++_current;
-        BOOST_LOG_TRIVIAL(debug) << "Ended phase " << this->_current;
+        BOOST_LOG_TRIVIAL(debug) << "Ended phase " << (this->_current - 1);
         _phaseChange.notify_all();
         state = State::PhaseEnded;
     } else {
