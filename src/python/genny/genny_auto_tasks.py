@@ -26,7 +26,12 @@ def modified_workload_files():
 	Returns a list of filenames for workloads that have been modified according to git, relative to origin/master.
 	:return: a list of filenames in the format subdirectory/Task.yml
 	"""
-	out = subprocess.check_output('git diff --name-only $(git merge-base HEAD origin/master) -- ../workloads/', shell=True)
+	# Return the names of files in ../workloads/ that have been added or modified since the common ancestor of HEAD and origin/master
+	try:
+		out = subprocess.check_output('git diff --name-only --diff-filter=AM $(git merge-base HEAD origin/master) -- ../workloads/', shell=True)
+	except subprocess.CalledProcessError as e:
+		sys.exit(e.output)
+
 	if out.decode() == '':
 		return []
 
@@ -79,6 +84,9 @@ def main():
 	args = parser.parse_args(sys.argv[1:])
 
 	workloads = modified_workload_files()
+	if len(workloads) == 0:
+		sys.exit('No modified workloads found, generating no tasks.\nNo results from command: git diff --name-only --diff-filter=AM $(git merge-base HEAD origin/master) -- ../workloads/\nEnsure that any added/modified workloads have been committed locally.')
+
 	task_json = construct_task_json(workloads, args.variants)
 	print(task_json)
 
