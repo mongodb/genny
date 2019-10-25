@@ -70,10 +70,10 @@ class AutoTasksTest(unittest.TestCase):
                 }
             ]
         }
-        expected_json_str = json.dumps(expected_json, indent=4)
 
         workloads = mock_modified_workload_files()
         actual_json_str = construct_task_json(workloads, static_variants)
+        actual_json = json.loads(actual_json_str)
 
-        self.assertEqual(expected_json_str, actual_json_str)
+        self.assertDictEqual(expected_json, actual_json)
 

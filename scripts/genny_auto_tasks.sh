@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This script wraps the genny-auto-tasks entry-point in src/python,
+# running it inside a virtual environment with python3 and required dependencies.
+
 set -eou pipefail
 
 SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
@@ -41,4 +44,4 @@ set +u
 set -u
 _pip install -e "."
 
-/usr/bin/env python venv/bin/genny-auto-tasks "$@"
+venv/bin/genny-auto-tasks "$@"

@@ -1,3 +1,6 @@
+"""
+Output json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run
+"""
 import os
 import re
 import sys
@@ -22,7 +25,10 @@ def modified_workload_files():
 	Returns a list of filenames for workloads that have been modified according to git, relative to origin/master.
 	:return: a list of filenames in the format subdirectory/Task.yml
 	"""
-	out = subprocess.check_output('git diff --name-only `git merge-base HEAD origin/master` -- ../workloads/', shell=True)
+	out = subprocess.check_output('git diff --name-only $(git merge-base HEAD origin/master) -- ../workloads/', shell=True)
+	if out.decode() == '':
+		return []
+
 	# Make paths relative to workloads/ e.g. ../workloads/scale/NewTask.yml --> scale/NewTask.yml
 	short_filenames = [f.split('workloads/', 1)[1] for f in out.decode().strip().split('\n')]
 	return short_filenames
