@@ -37,6 +37,7 @@ def modified_workload_files():
 
 	# Make paths relative to workloads/ e.g. ../workloads/scale/NewTask.yml --> scale/NewTask.yml
 	short_filenames = [f.split('workloads/', 1)[1] for f in out.decode().strip().split('\n')]
+	short_filenames = list(filter(lambda x: x.endswith('.yml'), short_filenames))
 	return short_filenames
 
 def construct_task_json(workloads, variants):
