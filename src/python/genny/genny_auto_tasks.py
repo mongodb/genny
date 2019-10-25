@@ -1,6 +1,7 @@
 """
 Output json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run
 """
+import argparse
 import os
 import re
 import sys
@@ -70,10 +71,15 @@ def construct_task_json(workloads, variants):
 
 def main():
 	"""
-	Main Function: outputs evergreen tasks in json format for workloads that have been modified locally.
+	Main Function: parses args, outputs evergreen tasks in json format for workloads that have been modified locally.
 	"""
+	parser = argparse.ArgumentParser(description="Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run")
+
+	parser.add_argument('--variants', nargs='+', required=True, help='buildvariants that workloads should run on')
+	args = parser.parse_args(sys.argv[1:])
+
 	workloads = modified_workload_files()
-	task_json = construct_task_json(workloads, sys.argv[1:])
+	task_json = construct_task_json(workloads, args.variants)
 	print(task_json)
 
 if __name__ == '__main__':
