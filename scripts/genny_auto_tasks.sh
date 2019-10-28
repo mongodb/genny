@@ -31,9 +31,11 @@ _pip() {
 if [[ ! -d "venv" ]]; then
 	python_path=/opt/mongodbtoolchain/v3/bin/python3
 	if [[ ! -e "$python_path" ]]; then
+		echo "${python_path} does not exist"
 	    python_path="$(command -v python3)"
 	fi
 
+	echo "creating new env with python: ${python_path}"
 	_pip install virtualenv
 	/usr/bin/env virtualenv -q "venv" --python="${python_path}" >/dev/null
 fi

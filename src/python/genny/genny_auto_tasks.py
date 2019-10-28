@@ -82,12 +82,13 @@ def construct_task_json(workloads, variants):
 
 def main():
     """
-    Main Function: parses args, outputs evergreen tasks in json format for workloads that have been modified locally.
+    Main Function: parses args, writes to file evergreen tasks in json format for workloads that have been modified locally.
     """
     parser = argparse.ArgumentParser(
         description="Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run")
 
     parser.add_argument('--variants', nargs='+', required=True, help='buildvariants that workloads should run on')
+    parser.add_argument('-o', '--output', default='build/generated_tasks.json')
     args = parser.parse_args(sys.argv[1:])
 
     workloads = modified_workload_files()
@@ -98,7 +99,13 @@ def main():
             Ensure that any added/modified workloads have been committed locally.')
 
     task_json = construct_task_json(workloads, args.variants)
-    print(task_json)
+
+    # Interpret args.output from the genny root directory.
+    output_path = '../../{}'.format(args.output)
+    with open(output_path, 'w') as output_file:
+        output_file.write(task_json)
+
+    print('Wrote generated task json to genny/{}'.format(args.output))
 
 
 if __name__ == '__main__':
