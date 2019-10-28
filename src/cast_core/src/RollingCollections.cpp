@@ -62,13 +62,8 @@ static std::string getRollingCollectionName() {
     // The id is tracked globally and increments for every collection created.
     static std::atomic_long id = 0;
     std::stringstream ss;
-    /*
-     * Create a collection name something like: 2019-08-30-11:08:19.123_r134.
-     * Such a name should be unique, and the list of such names in lexigraphic
-     * order will be conveniently ordered by time.
-     */
-    ss << timestamp << std::setfill('0') << std::setw(3) << ms.count()
-       << "_r" << id;
+    // Create a unique collection name that sorts lexographically by time.
+    ss << "r_" << getMillisecondsSinceEpoch() << "_" << id;
     id++;
     return ss.str();
 }
@@ -297,13 +292,13 @@ struct OplogTailer : public RunOperation {
                     auto collectionName = object["create"].get_utf8().value.to_string();
                     if (collectionName.length() > 2 && collectionName[0] == 'r' &&
                         collectionName[1] == '_') {
-                        // Get the time as soon as we know we its a collection we care about.
+                        // Get the time as soon as we know it's a collection we care about.
                         auto now = metrics::clock::now();
                         std::vector<std::string> timeSplit;
                         boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
                         auto started = metrics::clock::time_point{
                             std::chrono::duration_cast<metrics::clock::time_point::duration>(
-                                std::chrono::milliseconds{std::stol(timeSplit[2])})};
+                                std::chrono::milliseconds{std::stol(timeSplit[1])})};
                         _oplogLagOperation.report(
                             now,
                             std::chrono::duration_cast<std::chrono::microseconds>(now - started),
