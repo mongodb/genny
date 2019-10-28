@@ -44,6 +44,18 @@ def modified_workload_files():
     return short_filenames
 
 
+def get_project_root():
+    """
+    :return: the path of the project root.
+    """
+    try:
+        out = subprocess.check_output('git rev-parse --show-toplevel', shell=True)
+    except subprocess.CalledProcessError as e:
+        sys.exit(e.output)
+
+    return out.decode().strip()
+
+
 def construct_task_json(workloads, variants):
     """
     :param list workloads: a list of filenames of workloads to generate tasks for, each in the format subdirectory/Task.yml
@@ -101,11 +113,12 @@ def main():
     task_json = construct_task_json(workloads, args.variants)
 
     # Interpret args.output from the genny root directory.
-    output_path = '../../{}'.format(args.output)
+    project_root = get_project_root()
+    output_path = '{}/{}'.format(project_root, args.output)
     with open(output_path, 'w') as output_file:
         output_file.write(task_json)
 
-    print('Wrote generated task json to genny/{}'.format(args.output))
+    print('Wrote generated task json to {}'.format(output_path))
 
 
 if __name__ == '__main__':
