@@ -1,5 +1,7 @@
-Genny 🧞‍
-========
+<img src="https://user-images.githubusercontent.com/119094/67700512-75458380-f984-11e9-9b81-668ea220b9fa.jpg" align="right" height="282" width="320">
+
+Genny
+=====
 
 Genny is a workload-generator library and tool. It is implemented using
 C++17.
