@@ -46,4 +46,4 @@ set +u
 set -u
 _pip install -e "."
 
-venv/bin/genny-auto-tasks "$@"
+genny-auto-tasks "$@"

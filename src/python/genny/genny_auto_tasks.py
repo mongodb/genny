@@ -33,7 +33,8 @@ def modified_workload_files():
         out = subprocess.check_output(
             'git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/', shell=True)
     except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+        print(e.output)
+        raise e
 
     if out.decode() == '':
         return []
@@ -51,7 +52,8 @@ def get_project_root():
     try:
         out = subprocess.check_output('git rev-parse --show-toplevel', shell=True)
     except subprocess.CalledProcessError as e:
-        sys.exit(e.output)
+        print(e.output)
+        raise e
 
     return out.decode().strip()
 
@@ -105,10 +107,11 @@ def main():
 
     workloads = modified_workload_files()
     if len(workloads) == 0:
-        sys.exit(
+        print(
             'No modified workloads found, generating no tasks.\n\
             No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
             Ensure that any added/modified workloads have been committed locally.')
+        return
 
     task_json = construct_task_json(workloads, args.variants)
 

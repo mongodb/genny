@@ -18,7 +18,8 @@ class AutoTasksTest(unittest.TestCase):
         the generated json is what evergreen will expect to generate the correct tasks.
         """
 
-        mock_modified_workload_files.return_value = ["scale/NewWorkload.yml", "subdir1/subdir2/subdir3/NestedTest.yml", "non-yaml-file.md"]
+        mock_modified_workload_files.return_value = ["scale/NewWorkload.yml", "subdir1/subdir2/subdir3/NestedTest.yml",
+                                                     "non-yaml-file.md"]
         static_variants = ['variant-1', 'variant-2']
 
         expected_json = {
@@ -114,6 +115,5 @@ class AutoTasksTest(unittest.TestCase):
 
         # Check that we handle errors from subprocess.check_output properly.
         mock_check_output.side_effect = CalledProcessError(127, 'cmd')
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(CalledProcessError) as cm:
             modified_workload_files()
-
