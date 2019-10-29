@@ -33,7 +33,7 @@ def modified_workload_files():
         out = subprocess.check_output(
             'git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/', shell=True)
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        print(e.output, file=sys.stderr)
         raise e
 
     if out.decode() == '':
@@ -52,7 +52,7 @@ def get_project_root():
     try:
         out = subprocess.check_output('git rev-parse --show-toplevel', shell=True)
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        print(e.output, file=sys.stderr)
         raise e
 
     return out.decode().strip()
@@ -125,7 +125,7 @@ def main():
     if args.workloads is not None:
         err = validate_user_workloads(args.workloads)
         if err is not None:
-            print(err)  # TODO stderr
+            print('invalid workload: {}'.format(err), file=sys.stderr)
             return
         workloads = args.workloads
     else:
