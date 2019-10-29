@@ -6,6 +6,7 @@ from unittest.mock import patch
 from unittest.mock import Mock
 from genny.genny_auto_tasks import construct_task_json
 from genny.genny_auto_tasks import modified_workload_files
+from genny.genny_auto_tasks import validate_user_workloads
 
 
 class AutoTasksTest(unittest.TestCase):
@@ -117,3 +118,37 @@ class AutoTasksTest(unittest.TestCase):
         mock_check_output.side_effect = CalledProcessError(127, 'cmd')
         with self.assertRaises(CalledProcessError) as cm:
             modified_workload_files()
+
+    def test_validate_user_workloads(self):
+        cases = [
+            (
+                ['scale/BigUpdate.yml'],
+                None
+            ),
+            (
+                ['scale/InsertBigDocs.yml', 'selftests/GennyOverhead.yml'],
+                None
+            ),
+            (
+                ['networking/NonExistent.yml'],
+                'no file'
+            ),
+            (
+                ['scale/BigUpdate.yml', 'docs'],
+                'no file'
+            ),
+            (
+                ['CMakeLists.txt'],
+                'not a .yml'
+            ),
+        ]
+
+        for tc in cases:
+            expected = tc[1]
+            actual = validate_user_workloads(tc[0])
+
+            # expected is either None (no validation error), or a required substring of the validation error.
+            if expected is not None and actual is not None:
+                self.assertTrue(expected in actual)
+            else:
+                self.assertEqual(expected, actual)
