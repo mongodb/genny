@@ -256,6 +256,32 @@ private:
 };
 
 struct OplogTailer : public RunOperation {
+    // Used only within this class, this tracks best/worst/average lag times.
+    struct LagTrack {
+        uint64_t best = UINT64_MAX;
+        uint64_t worst = 0;
+        uint64_t total = 0;
+        int count = 0;
+
+        void addLag(uint64_t lag) {
+            if (lag < best) {
+                best = lag;
+            }
+            if (lag > worst) {
+                worst = lag;
+            }
+            total += lag;
+            count++;
+        }
+
+        void clear() {
+            best = UINT64_MAX;
+            worst = 0;
+            total = 0;
+            count = 0;
+        }
+    };
+
     OplogTailer(PhaseContext& phaseContext,
                 mongocxx::database db,
                 ActorId id,
@@ -269,50 +295,127 @@ struct OplogTailer : public RunOperation {
         }
     }
 
-    void run() override {
-        if (_firstLoop) {
-            mongocxx::options::find opts{};
-            opts.cursor_type(mongocxx::cursor::type::k_tailable);
-            _cursor = std::optional<mongocxx::cursor>(database["oplog.rs"].find({}, opts));
-            /*
-             * Exhaust the cursor to skip the initially created collections,
-             * i.e. the admin / local tables and the intial set of rolling
-             * collections, this avoids a spike in latency.
-             */
-            for (auto&& doc : _cursor.value()) {
-                // Do nothing.
-            }
-            _firstLoop = false;
-        }
-        for (auto&& doc : _cursor.value()) {
-            if (doc["op"].get_utf8().value.to_string() == "c") {
-                auto object = doc["o"].get_document().value;
-                auto it = object.find("create");
-                if (it != object.end()) {
-                    auto collectionName = object["create"].get_utf8().value.to_string();
-                    if (collectionName.length() > 2 && collectionName[0] == 'r' &&
-                        collectionName[1] == '_') {
-                        // Get the time as soon as we know we its a collection we care about.
-                        auto now = metrics::clock::now();
-                        std::vector<std::string> timeSplit;
-                        boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
-                        auto started = metrics::clock::time_point{
-                            std::chrono::duration_cast<metrics::clock::time_point::duration>(
-                                std::chrono::milliseconds{std::stol(timeSplit[2])})};
-                        _oplogLagOperation.report(
-                            now,
-                            std::chrono::duration_cast<std::chrono::microseconds>(now - started),
-                            metrics::OutcomeType::kSuccess);
-                    }
+    bool isRollingOplogEntry(const bsoncxx::document::view &doc, long *rollingMillis)
+    {
+        if (doc["op"].get_utf8().value.to_string() == "c") {
+            auto object = doc["o"].get_document().value;
+            auto it = object.find("create");
+            if (it != object.end()) {
+                auto collectionName = object["create"].get_utf8().value.to_string();
+                if (collectionName.substr(0, 2) == "r_") {
+                    // It's a collection we care about,
+                    // get the embedded millisecond time.
+                    std::vector<std::string> timeSplit;
+                    boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
+                    *rollingMillis = stol(timeSplit[2]);
+                    return (true);
                 }
+            }
+        }
+        return (false);
+    }
+
+    // When we're still catching up, our lag times will be getting better
+    // and better. As a simple determinant, we'll say we're done catching
+    // up if we haven't a new "best" lag time within the last 5 seen.
+    bool caughtUp(uint64_t lagNanoseconds) {
+        if (!_caughtUp) {
+            if (lagNanoseconds < _catchUpBestLag) {
+                _catchUpBestLag = lagNanoseconds;
+                _catchUpBestWhen = 0;
+            } else if (++_catchUpBestWhen > 5) {
+                _caughtUp = true;
+                BOOST_LOG_TRIVIAL(info) << "Oplog tailer: caught up";
+            }
+        }
+        return (_caughtUp);
+    }
+
+    // Called when we see a create of a rolling collection.
+    // rollingMillis is the creation time taken from the name of the collection.
+    // We generally want to report the lag, but there's an issue when
+    // starting up. We'll see all the rolling collections that have been
+    // ever created in the oplog, and we'll have an artificial big spike in
+    // latencies. So we determine when we're "catching up", and ignore entries
+    // until we are caught up.
+    void trackRollingCreate(uint64_t rollingMillis, LagTrack &lagTrack) {
+        auto now = metrics::clock::now();
+        auto started = metrics::clock::time_point{
+            std::chrono::duration_cast<metrics::clock::time_point::duration>(
+              std::chrono::milliseconds{rollingMillis})};
+        auto lag = std::chrono::duration_cast<std::chrono::microseconds>(now - started);
+        auto lagns = lag.count();
+
+        if (caughtUp(lagns)) {
+            // BOOST_LOG_TRIVIAL(info) << "Oplog tailer lag: " << lagns << "ns";
+            _oplogLagOperation.report(now, lag,
+              metrics::OutcomeType::kSuccess);
+            lagTrack.addLag(lagns);
+
+            // Every minute (60 rolling collection creations), display some
+            // simple lag time stats and reset the stats.
+            if (lagTrack.count == 60) {
+                BOOST_LOG_TRIVIAL(info)
+                  << "Oplog tailer lag time stats: best " << lagTrack.best
+                  << "ns, worst " << lagTrack.worst
+                  << "ns, average " << (lagTrack.total / lagTrack.count) << "ns";
+                lagTrack.clear();
             }
         }
     }
 
+    void run() override {
+        // This method should only be called once, and will only exit
+        // when the oplog has gone idle.  We are using the "await"
+        // cursor type, which always waits for the next oplog entry
+        // (or until a second elapses).  When we reach a steady state,
+        // we can determine the lag time in the oplog.  This is done
+        // by watching for the creation of rolling collections in the oplog.
+        // Each such collection is named using a time stamp, and by looking
+        // at the difference of the current time and the time stamp name,
+        // we get the lag time, including the actual creation time.
+        mongocxx::options::find opts{};
+        opts.cursor_type(mongocxx::cursor::type::k_tailable_await);
+        _cursor = std::optional<mongocxx::cursor>(database["oplog.rs"].find({}, opts));
+
+        // Track the best, worst, average lag times, we'll display them
+        // periodically to the output.
+        LagTrack lagTrack;
+
+        try {
+            // If the cursor is idle for more than 10 seconds (that is 10
+            // consecutive returns without data), we'll assume oplog traffic
+            // is done and we should exit. If we stay running, the workload
+            // will never complete.
+            int idleCount = 0;
+            while (idleCount < 10) {
+                for (auto&& doc : _cursor.value()) {
+                    long rollingMillis;
+
+                    // Look for a creation of a rolling collection.
+                    if (isRollingOplogEntry(doc, &rollingMillis)) {
+                        // Found one, get the time and compute the lag.
+                        trackRollingCreate(rollingMillis, lagTrack);
+                    }
+                    idleCount = 0;
+                }
+                idleCount++;
+                // This will normally happen when the system shuts down.
+                BOOST_LOG_TRIVIAL(info) << "Oplog tailer: idle";
+          }
+        } catch (mongocxx::operation_exception& e) {
+            BOOST_LOG_TRIVIAL(error) << "Oplog tailer exception: " << e.what();
+            throw;
+        }
+        BOOST_LOG_TRIVIAL(info) << "Oplog tailer: done";
+    }
+
 private:
-    bool _firstLoop = true;
     std::optional<mongocxx::cursor> _cursor;
     metrics::Operation _oplogLagOperation;
+    bool _caughtUp = false;
+    uint64_t _catchUpBestLag = UINT64_MAX;
+    int _catchUpBestWhen = 0;
 };
 
 std::unique_ptr<RunOperation> getOperation(const std::string& operation,
