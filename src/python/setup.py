@@ -27,7 +27,8 @@ setup(name='genny',
           'pymongo==3.7.2',
           'PyYAML==5.1',
           'requests==2.21.0',
-          'yamllint==1.15.0'
+          'yamllint==1.15.0',
+          'shrub.py==0.2.3'
       ],
       setup_requires=[
           'nose==1.3.7'
@@ -36,7 +37,8 @@ setup(name='genny',
           'console_scripts': [
               'genny-metrics-report = genny.cedar_report:main__cedar_report',
               'genny-metrics-legacy-report = genny.legacy_report:main__legacy_report',
-              'lint-yaml = genny.yaml_linter:main'
+              'lint-yaml = genny.yaml_linter:main',
+              'genny-auto-tasks = genny.genny_auto_tasks:main'
           ]
       },
       )
