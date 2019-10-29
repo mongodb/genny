@@ -123,23 +123,23 @@ class AutoTasksTest(unittest.TestCase):
         cases = [
             (
                 ['scale/BigUpdate.yml'],
-                None
+                []
             ),
             (
                 ['scale/InsertBigDocs.yml', 'selftests/GennyOverhead.yml'],
-                None
+                []
             ),
             (
                 ['networking/NonExistent.yml'],
-                'no file'
+                ['no file']
             ),
             (
                 ['scale/BigUpdate.yml', 'docs'],
-                'no file'
+                ['no file']
             ),
             (
                 ['CMakeLists.txt'],
-                'not a .yml'
+                ['not a .yml']
             ),
         ]
 
@@ -147,8 +147,7 @@ class AutoTasksTest(unittest.TestCase):
             expected = tc[1]
             actual = validate_user_workloads(tc[0])
 
-            # expected is either None (no validation error), or a required substring of the validation error.
-            if expected is not None and actual is not None:
-                self.assertTrue(expected in actual)
-            else:
-                self.assertEqual(expected, actual)
+            # expected is either an empty list (no validation errors), or an ordered list of required substrings of the validation errors.
+            self.assertEqual(len(expected), len(actual))
+            for idx, expected_err in enumerate(expected):
+                self.assertTrue(expected_err in actual[idx])

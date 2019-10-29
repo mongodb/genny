@@ -62,15 +62,17 @@ def validate_user_workloads(workloads):
     if len(workloads) == 0:
         return 'No workloads specified'
 
+    errors = []
     genny_root = get_project_root()
     for w in workloads:
         workload_path = '{}/src/workloads/{}'.format(genny_root, w)
         if not os.path.isfile(workload_path):
-            return 'no file at path {}'.format(workload_path)
+            errors.append('no file at path {}'.format(workload_path))
+            continue
         if not workload_path.endswith('.yml'):
-            return '{} is not a .yml workload file'.format(workload_path)
+            errors.append('{} is not a .yml workload file'.format(workload_path))
 
-    return None
+    return errors
 
 
 def construct_task_json(workloads, variants):
@@ -117,15 +119,17 @@ def main():
         description="Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run")
 
     parser.add_argument('--variants', nargs='+', required=True, help='buildvariants that workloads should run on')
-    parser.add_argument('--workloads', nargs='+', help='paths of workloads to run, relative to genny/src/workloads/')
+    parser.add_argument('--workloads', nargs='+',
+                        help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
     parser.add_argument('-o', '--output', default='build/generated_tasks.json',
                         help='path of file to output result json to, relative to the genny root directory')
     args = parser.parse_args(sys.argv[1:])
 
     if args.workloads is not None:
-        err = validate_user_workloads(args.workloads)
-        if err is not None:
-            print('invalid workload: {}'.format(err), file=sys.stderr)
+        errs = validate_user_workloads(args.workloads)
+        if len(errs) > 0:
+            for e in errs:
+                print('invalid workload: {}'.format(err), file=sys.stderr)
             return
         workloads = args.workloads
     else:
