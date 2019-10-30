@@ -377,7 +377,10 @@ struct OplogTailer : public RunOperation {
         // we get the lag time, including the actual creation time.
         mongocxx::options::find opts{};
         opts.cursor_type(mongocxx::cursor::type::k_tailable_await);
-        _cursor = std::optional<mongocxx::cursor>(database["oplog.rs"].find({}, opts));
+        if (!_caughtUp) {
+            // first time
+            _cursor = std::optional<mongocxx::cursor>(database["oplog.rs"].find({}, opts));
+        }
 
         // Track the best, worst, average lag times, we'll display them
         // periodically to the output.
