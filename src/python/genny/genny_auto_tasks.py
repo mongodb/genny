@@ -60,7 +60,7 @@ def get_project_root():
 
 def validate_user_workloads(workloads):
     if len(workloads) == 0:
-        return 'No workloads specified'
+        return ['No workloads specified']
 
     errors = []
     genny_root = get_project_root()
