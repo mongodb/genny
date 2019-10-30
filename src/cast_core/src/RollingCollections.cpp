@@ -347,7 +347,6 @@ struct OplogTailer : public RunOperation {
         auto lagns = lag.count();
 
         if (caughtUp(lagns)) {
-            // BOOST_LOG_TRIVIAL(info) << "Oplog tailer lag: " << lagns << "ns";
             _oplogLagOperation.report(now, lag,
               metrics::OutcomeType::kSuccess);
             lagTrack.addLag(lagns);
@@ -364,14 +363,16 @@ struct OplogTailer : public RunOperation {
         }
     }
 
+    // Generally, this method runs once, for a long time, but if the oplog
+    // traffic goes completely idle for a second, this method will return,
+    // and will be called again by genny if the workload is still running.
     void run() override {
-        // This method should only be called once, and will only exit
-        // when the oplog has gone idle.  We are using the "await"
-        // cursor type, which always waits for the next oplog entry
-        // (or until a second elapses).  When we reach a steady state,
-        // we can determine the lag time in the oplog.  This is done
-        // by watching for the creation of rolling collections in the oplog.
-        // Each such collection is named using a time stamp, and by looking
+        // We are using the "await" cursor type,
+        // which always waits for the next oplog entry (or until a second
+        // elapses).  When we reach a steady state, we can determine the
+        // lag time in the oplog.  This is done by watching for the
+        // creation of rolling collections in the oplog.  Each such
+        // collection is named using a time stamp, and by looking
         // at the difference of the current time and the time stamp name,
         // we get the lag time, including the actual creation time.
         mongocxx::options::find opts{};
@@ -383,31 +384,25 @@ struct OplogTailer : public RunOperation {
         LagTrack lagTrack;
 
         try {
-            // If the cursor is idle for more than 10 seconds (that is 10
-            // consecutive returns without data), we'll assume oplog traffic
-            // is done and we should exit. If we stay running, the workload
-            // will never complete.
-            int idleCount = 0;
-            while (idleCount < 10) {
-                for (auto&& doc : _cursor.value()) {
-                    long rollingMillis;
+            for (auto&& doc : _cursor.value()) {
+                long rollingMillis;
 
-                    // Look for a creation of a rolling collection.
-                    if (isRollingOplogEntry(doc, &rollingMillis)) {
-                        // Found one, get the time and compute the lag.
-                        trackRollingCreate(rollingMillis, lagTrack);
-                    }
-                    idleCount = 0;
+                // Look for a creation of a rolling collection.
+                if (isRollingOplogEntry(doc, &rollingMillis)) {
+                    // Found one, get the time and compute the lag.
+                    trackRollingCreate(rollingMillis, lagTrack);
                 }
-                idleCount++;
-                // This will normally happen when the system shuts down.
-                BOOST_LOG_TRIVIAL(info) << "Oplog tailer: idle";
-          }
+            }
+            // The cursor will be complete the iteration loop when there are
+            // no oplog updates in a second. Return and let genny decide if
+            // the workload is finished or if the system is truly idle.
+            // If the latter, run will be called again and we'll pick up
+            // where we left off.
+            BOOST_LOG_TRIVIAL(info) << "Oplog tailer: idle";
         } catch (mongocxx::operation_exception& e) {
             BOOST_LOG_TRIVIAL(error) << "Oplog tailer exception: " << e.what();
             throw;
         }
-        BOOST_LOG_TRIVIAL(info) << "Oplog tailer: done";
     }
 
 private:
