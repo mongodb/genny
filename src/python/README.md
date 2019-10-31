@@ -49,6 +49,21 @@ Make you run the script from the root of the Genny repository
 (so it can pick up on the `.yamllint` linter config file)
 
 
+Script: `genny-auto-tasks`
+---------------------------------
+
+Generates JSON that can be used as input to evergreen's generate.tasks,
+representing genny workloads to be run.
+
+For example, if one wanted to write JSON tasks to `build/tasks.json` that would run the big_update and insert_remove workloads on the `linux-1-node-replSet` buildvariant, the following command could be used:
+
+```sh
+genny-auto-tasks --workloads scale/BigUpdate.yml scale/InsertRemove.yml --variants linux-1-node-replSet --output build/tasks.json
+```
+
+If the `--workloads` flag is not set, the script will instead generate JSON for all workloads that have been added or modified locally (relative to origin/master). Run with the `-h` flag for more information.
+
+
 Script: `genny-metrics-legacy-report`
 ---------------------------------
 

@@ -33,7 +33,7 @@ def modified_workload_files():
         out = subprocess.check_output(
             'git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/', shell=True)
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        print(e.output, file=sys.stderr)
         raise e
 
     if out.decode() == '':
@@ -52,10 +52,27 @@ def get_project_root():
     try:
         out = subprocess.check_output('git rev-parse --show-toplevel', shell=True)
     except subprocess.CalledProcessError as e:
-        print(e.output)
+        print(e.output, file=sys.stderr)
         raise e
 
     return out.decode().strip()
+
+
+def validate_user_workloads(workloads):
+    if len(workloads) == 0:
+        return ['No workloads specified']
+
+    errors = []
+    genny_root = get_project_root()
+    for w in workloads:
+        workload_path = '{}/src/workloads/{}'.format(genny_root, w)
+        if not os.path.isfile(workload_path):
+            errors.append('no file at path {}'.format(workload_path))
+            continue
+        if not workload_path.endswith('.yml'):
+            errors.append('{} is not a .yml workload file'.format(workload_path))
+
+    return errors
 
 
 def construct_task_json(workloads, variants):
@@ -102,20 +119,35 @@ def main():
         description="Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run")
 
     parser.add_argument('--variants', nargs='+', required=True, help='buildvariants that workloads should run on')
-    parser.add_argument('-o', '--output', default='build/generated_tasks.json')
+    parser.add_argument('--workloads', nargs='+',
+                        help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
+    parser.add_argument('-o', '--output', default='build/generated_tasks.json',
+                        help='path of file to output result json to, relative to the genny root directory')
     args = parser.parse_args(sys.argv[1:])
 
-    workloads = modified_workload_files()
-    if len(workloads) == 0:
-        print(
-            'No modified workloads found, generating no tasks.\n\
-            No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
-            Ensure that any added/modified workloads have been committed locally.')
-        return
+    if args.workloads is not None:
+        errs = validate_user_workloads(args.workloads)
+        if len(errs) > 0:
+            for e in errs:
+                print('invalid workload: {}'.format(err), file=sys.stderr)
+            return
+        workloads = args.workloads
+    else:
+        workloads = modified_workload_files()
+        if len(workloads) == 0:
+            print(
+                'No modified workloads found, generating no tasks.\n\
+                No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
+                Ensure that any added/modified workloads have been committed locally.')
+            return
 
     task_json = construct_task_json(workloads, args.variants)
 
-    # Interpret args.output from the genny root directory.
+    if args.output == 'stdout':
+        print(task_json)
+        return
+
+    # Interpret args.output relative to the genny root directory.
     project_root = get_project_root()
     output_path = '{}/{}'.format(project_root, args.output)
     with open(output_path, 'w') as output_file:
