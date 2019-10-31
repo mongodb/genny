@@ -175,7 +175,6 @@ def validate_user_workloads(workloads):
 
     return errors
 
-
 def construct_task_json(workloads, variants):
     """
     :param list workloads: a list of filenames of workloads to generate tasks for, each in the format subdirectory/Task.yml
