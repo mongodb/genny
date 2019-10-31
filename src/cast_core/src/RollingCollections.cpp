@@ -295,8 +295,7 @@ struct OplogTailer : public RunOperation {
         }
     }
 
-    std::optional<long> isRollingOplogEntry(const bsoncxx::document::view &doc)
-    {
+    std::optional<long> isRollingOplogEntry(const bsoncxx::document::view& doc) {
         if (doc["op"].get_utf8().value.to_string() == "c") {
             auto object = doc["o"].get_document().value;
             auto it = object.find("create");
@@ -337,26 +336,24 @@ struct OplogTailer : public RunOperation {
     // ever created in the oplog, and we'll have an artificial big spike in
     // latencies. So we determine when we're "catching up", and ignore entries
     // until we are caught up.
-    void trackRollingCreate(uint64_t rollingMillis, LagTrack &lagTrack) {
+    void trackRollingCreate(uint64_t rollingMillis, LagTrack& lagTrack) {
         auto now = metrics::clock::now();
         auto started = metrics::clock::time_point{
             std::chrono::duration_cast<metrics::clock::time_point::duration>(
-              std::chrono::milliseconds{rollingMillis})};
+                std::chrono::milliseconds{rollingMillis})};
         auto lag = std::chrono::duration_cast<std::chrono::microseconds>(now - started);
         auto lagns = lag.count();
 
         if (caughtUp(lagns)) {
-            _oplogLagOperation.report(now, lag,
-              metrics::OutcomeType::kSuccess);
+            _oplogLagOperation.report(now, lag, metrics::OutcomeType::kSuccess);
             lagTrack.addLag(lagns);
 
             // Every minute (60 rolling collection creations), display some
             // simple lag time stats and reset the stats.
             if (lagTrack.count == 60) {
-                BOOST_LOG_TRIVIAL(info)
-                  << "Oplog tailer lag time stats: best " << lagTrack.best
-                  << "ns, worst " << lagTrack.worst
-                  << "ns, average " << (lagTrack.total / lagTrack.count) << "ns";
+                BOOST_LOG_TRIVIAL(info) << "Oplog tailer lag time stats: best " << lagTrack.best
+                                        << "ns, worst " << lagTrack.worst << "ns, average "
+                                        << (lagTrack.total / lagTrack.count) << "ns";
                 lagTrack.clear();
             }
         }
@@ -403,8 +400,7 @@ struct OplogTailer : public RunOperation {
             _idleCount++;
             long millis = getMillisecondsSinceEpoch();
             if (_idleLastReported + 10000 < millis) {
-                BOOST_LOG_TRIVIAL(info) << "Oplog tailer: idle "
-                                        << _idleCount << " times";
+                BOOST_LOG_TRIVIAL(info) << "Oplog tailer: idle " << _idleCount << " times";
                 _idleLastReported = millis;
                 _idleCount = 0L;
             } else if (_idleCount % 100 == 0) {
