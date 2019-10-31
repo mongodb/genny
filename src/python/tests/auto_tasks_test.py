@@ -7,6 +7,7 @@ from unittest.mock import Mock
 from genny.genny_auto_tasks import construct_task_json
 from genny.genny_auto_tasks import modified_workload_files
 from genny.genny_auto_tasks import validate_user_workloads
+from genny.genny_auto_tasks import workload_should_autorun
 
 
 class AutoTasksTest(unittest.TestCase):
@@ -151,3 +152,254 @@ class AutoTasksTest(unittest.TestCase):
             self.assertEqual(len(expected), len(actual))
             for idx, expected_err in enumerate(expected):
                 self.assertTrue(expected_err in actual[idx])
+
+    def test_workload_should_autorun(self):
+        cases = [
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {
+                            'bootstrap': {
+                                'platform': 'linux',
+                                'storageEngine': 'wiredTiger'
+                            },
+                            'runtime': {
+                                'build_variant': 'variant1',
+                                'is_patch': 'true'
+                            }
+                        }
+                    }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                True
+            ),
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {
+                            'bootstrap': {
+                                'platform': 'linux'
+                            }
+                        }
+                    }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                True
+            ),
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {
+                            'runtime': {},
+                            'bootstrap': {}
+                        }
+                    }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                True
+            ),
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {}
+                    }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                True
+            ),
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {
+                            'bootstrap': {
+                                'platform': 'linux',
+                                'storageEngine': 'wiredTiger'
+                            },
+                            'runtime': {
+                                'build_variant': 'variant1',
+                                'is_patch': 'true'
+                            }
+                        }
+                    }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'osx',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                False
+            ),
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {
+                            'bootstrap': {
+                                'platform': 'linux',
+                                'storageEngine': 'wiredTiger'
+                            },
+                            'runtime': {
+                                'build_variant': 'variant1',
+                                'is_patch': 'true'
+                            },
+                            'other': {
+                                'key': 'value'
+                            }
+                        }
+                    }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'osx',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                False
+            ),
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {
+                            'bootstrap': {
+                                'platform': 'linux',
+                                'storageEngine': 'other'
+                            },
+
+                        }
+                    }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                False
+            ),
+            (
+                {},
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                False
+            ),
+            (
+                {
+                    'AutoRun': {}
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                False
+            ),
+            (
+                {
+                    'AutoRun': 'not-a-dict'
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                False
+            ),
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {
+                            'bootstrap': {
+                                'platform': 'linux',
+                                'storageEngine': 'wiredTiger'
+                            },
+                            'runtime': 'string-runtime'
+                        }
+                    }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                False
+            ),
+        ]
+
+        for tc in cases:
+            workload_yaml = tc[0]
+            env_dict = tc[1]
+            expected = tc[2]
+
+            actual = workload_should_autorun(workload_yaml, env_dict)
+            self.assertEqual(expected, actual)
