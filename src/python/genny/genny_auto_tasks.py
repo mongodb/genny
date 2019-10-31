@@ -80,29 +80,45 @@ def modified_workload_files():
     return short_filenames
 
 
-def workload_should_autorun(workload_yaml, env_dict):
+def workload_should_autorun(workload_dict, env_dict):
     """
     Check if the given workload's AutoRun conditions are met by the current environment
-    :param dict workload_yaml: a dict representation of the workload files's yaml.
+    :param dict workload_dict: a dict representation of the workload files's yaml.
     :param dict env_dict: a dict representing the values from bootstrap.yml and runtime.yml
     :return: True if this workload should be autorun, else False.
     """
 
     # First check that the workload has a proper AutoRun section.
-    if 'AutoRun' not in workload_yaml or not isinstance(workload_yaml['AutoRun'], dict):
+    if 'AutoRun' not in workload_dict or not isinstance(workload_dict['AutoRun'], dict):
         return False
-    if 'Requires' not in workload_yaml['AutoRun'] or not isinstance(workload_yaml['AutoRun']['Requires'], dict):
+    if 'Requires' not in workload_dict['AutoRun'] or not isinstance(workload_dict['AutoRun']['Requires'], dict):
         return False
 
-    for module, config in workload_yaml['AutoRun']['Requires'].items():
+    for module, required_config in workload_dict['AutoRun']['Requires'].items():
         if module not in env_dict:
             return False
-        if not isinstance(config, dict):
+        if not isinstance(required_config, dict):
             return False
 
         # True if set of config key-vaue pairs is subset of env_dict key-value pairs
-        if not config.items() <= env_dict[module].items():
-            return False
+        # This will be false if the AutoRun yaml uses a logical or (i.e. branch_name: master | prod), but it is efficient so we use it for a first-pass.
+        if not required_config.items() <= env_dict[module].items():
+            # Now have to check all k, v pairs individually
+            for k, v in required_config.items():
+                if k not in env_dict[module]:
+                    return False
+                if v != env_dict[module][k]:
+                    if '|' not in v:
+                        return False
+                    
+                    found_match = False
+                    for expr in v.split('|'):
+                        if expr.strip() == env_dict[module][k]:
+                            found_match = True
+                            break
+
+                    if not found_match:
+                        return False
 
     return True
 
@@ -118,10 +134,10 @@ def autorun_workload_files(env_dict):
     for fname in candidates:
         with open(fname, 'r') as handle:
             try:
-                config = yaml.safe_load(handle)
+                workload_dict = yaml.safe_load(handle)
             except Exception as e:
                 continue
-            if workload_should_autorun(config, env_dict):
+            if workload_should_autorun(workload_dict, env_dict):
                 matching_files.append(fname)
 
     return matching_files
