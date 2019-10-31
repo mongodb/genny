@@ -102,23 +102,16 @@ def workload_should_autorun(workload_dict, env_dict):
 
         # True if set of config key-vaue pairs is subset of env_dict key-value pairs
         # This will be false if the AutoRun yaml uses a logical or (i.e. branch_name: master | prod), but it is efficient so we use it for a first-pass.
-        if not required_config.items() <= env_dict[module].items():
+        # if not required_config.items() <= env_dict[module].items():
+        if True:
             # Now have to check all k, v pairs individually
             for k, v in required_config.items():
                 if k not in env_dict[module]:
                     return False
-                if v != env_dict[module][k]:
-                    if '|' not in v:
-                        return False
-                    
-                    found_match = False
-                    for expr in v.split('|'):
-                        if expr.strip() == env_dict[module][k]:
-                            found_match = True
-                            break
 
-                    if not found_match:
-                        return False
+                bools = [s.strip() == env_dict[module][k] for s in v.split('|')]
+                if True not in bools:
+                    return False
 
     return True
 
