@@ -6,7 +6,8 @@ import os
 import re
 import sys
 import subprocess
-import textwrap
+import yaml
+import glob
 
 from shrub.config import Configuration
 from shrub.command import CommandDefinition
@@ -22,19 +23,53 @@ def to_snake_case(str):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', str)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
+def cd_python_dir():
+    """
+    Changes the current working directory to genny/src/python, which is required for running the git commands below.
+    """
+    script_path = os.path.abspath(__file__)
+    genny_dir = os.path.dirname(script_path)
+    python_path = os.path.join(genny_dir, '..')
+    os.chdir(python_path)
+
+def get_project_root():
+    """
+    :return: the path of the project root.
+    """
+
+    # Temporarily change the cwd, but we undo this in the finally block.
+    original_cwd = os.getcwd()
+    cd_python_dir()
+
+    try:
+        out = subprocess.check_output('git rev-parse --show-toplevel', shell=True)
+    except subprocess.CalledProcessError as e:
+        print(e.output, file=sys.stderr)
+        raise e
+    finally:
+        os.chdir(original_cwd)
+
+    return out.decode().strip()
+
 
 def modified_workload_files():
     """
     Returns a list of filenames for workloads that have been modified according to git, relative to origin/master.
     :return: a list of filenames in the format subdirectory/Task.yml
     """
-    # Return the names of files in ../workloads/ that have been added/modified/renamed since the common ancestor of HEAD and origin/master
+
+    # Temporarily change the cwd, but we undo this in the finally block.
+    original_cwd = os.getcwd()
+    cd_python_dir()
     try:
+        # Returns the names of files in ../workloads/ that have been added/modified/renamed since the common ancestor of HEAD and origin/master
         out = subprocess.check_output(
             'git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/', shell=True)
     except subprocess.CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e
+    finally:
+        os.chdir(original_cwd)
 
     if out.decode() == '':
         return []
@@ -45,17 +80,67 @@ def modified_workload_files():
     return short_filenames
 
 
-def get_project_root():
+def workload_should_autorun(workload_yaml, env_dict):
     """
-    :return: the path of the project root.
+    Check if the given workload's AutoRun conditions are met by the current environment
+    :param dict workload_yaml: a dict representation of the workload files's yaml.
+    :param dict env_dict: a dict representing the values from bootstrap.yml and runtime.yml
+    :return: True if this workload should be autorun, else False.
     """
-    try:
-        out = subprocess.check_output('git rev-parse --show-toplevel', shell=True)
-    except subprocess.CalledProcessError as e:
-        print(e.output, file=sys.stderr)
-        raise e
 
-    return out.decode().strip()
+    # First check that the workload has a proper AutoRun section.
+    if 'AutoRun' not in workload_yaml or not isinstance(workload_yaml['AutoRun'], dict):
+        return False
+    if 'Requires' not in workload_yaml['AutoRun'] or not isinstance(workload_yaml['AutoRun']['Requires'], dict):
+        return False
+
+    for module, config in workload_yaml['AutoRun']['Requires'].items():
+        if module not in env_dict:
+            return False
+        if not isinstance(config, dict):
+            return False
+
+        # True if set of config key-vaue pairs is subset of env_dict key-value pairs
+        if not config.items() <= env_dict[module].items():
+            return False
+
+    return True
+
+def autorun_workload_files(env_dict):
+    """
+    :param dict env_dict: a dict representing the values from bootstrap.yml and runtime.yml -- the output of make_env_dict().
+    :return: a list of workload files whose AutoRun critera are met by the env_dict.
+    """
+    workload_dir = '{}/src/workloads'.format(get_project_root())
+    candidates = glob.glob('{}/**/*.yml'.format(workload_dir), recursive=True)
+
+    matching_files = []
+    for fname in candidates:
+        with open(fname, 'r') as handle:
+            try:
+                config = yaml.safe_load(handle)
+            except Exception as e:
+                continue
+            if workload_should_autorun(config, env_dict):
+                matching_files.append(fname)
+
+    return matching_files
+
+
+def make_env_dict():
+    """
+    :return: a dict representation of bootstrap.yml and runtime.yml in the cwd, with top level keys 'bootstrap' and 'runtime'
+    """
+    env_files = ['bootstrap.yml', 'runtime.yml']
+    env_dict = {}
+    for fname in env_files:
+        if not os.path.isfile(fname):
+            return None
+        with open(fname, 'r') as handle:
+            config = yaml.safe_load(handle)
+            module = os.path.basename(fname).split('.yml')[0]
+            env_dict[module] = config
+    return env_dict
 
 
 def validate_user_workloads(workloads):
@@ -113,26 +198,35 @@ def construct_task_json(workloads, variants):
 
 def main():
     """
-    Main Function: parses args, writes to file evergreen tasks in json format for workloads that have been modified locally.
+    Main Function: parses args, writes to file evergreen tasks in json format for workloads that are specified in args.
     """
     parser = argparse.ArgumentParser(
         description="Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run")
 
     parser.add_argument('--variants', nargs='+', required=True, help='buildvariants that workloads should run on')
-    parser.add_argument('--workloads', nargs='+',
-                        help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
     parser.add_argument('-o', '--output', default='build/generated_tasks.json',
                         help='path of file to output result json to, relative to the genny root directory')
+
+    workload_group = parser.add_mutually_exclusive_group(required=True)
+    workload_group.add_argument('--autorun', action='store_true', default=False,
+                        help='if set, the script will generate tasks based on workloads\' AutoRun section and bootstrap.yml/runtime.yml files in the working directory')
+    workload_group.add_argument('--modified', action='store_true', default=False, help='if set, the script will generate tasks for workloads that have been added/modifed locally, relative to origin/master')
+    workload_group.add_argument('--workloads', nargs='+',
+                        help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
+
     args = parser.parse_args(sys.argv[1:])
 
-    if args.workloads is not None:
-        errs = validate_user_workloads(args.workloads)
-        if len(errs) > 0:
-            for e in errs:
-                print('invalid workload: {}'.format(err), file=sys.stderr)
+    if args.autorun:
+        env_dict = make_env_dict()
+        if env_dict is None:
+            print('fatal error: bootstrap.yml and runtime.yml files not found in current directory, cannot AutoRun workloads')
             return
-        workloads = args.workloads
-    else:
+
+        workloads = autorun_workload_files(env_dict)
+        if len(workloads) == 0:
+            print('No AutoRun workloads found matching environment, generating no tasks.')
+            return
+    elif args.modified:
         workloads = modified_workload_files()
         if len(workloads) == 0:
             print(
@@ -140,9 +234,15 @@ def main():
                 No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
                 Ensure that any added/modified workloads have been committed locally.')
             return
+    elif args.workloads is not None:
+        errs = validate_user_workloads(args.workloads)
+        if len(errs) > 0:
+            for e in errs:
+                print('invalid workload: {}'.format(err), file=sys.stderr)
+            return
+        workloads = args.workloads
 
     task_json = construct_task_json(workloads, args.variants)
-
     if args.output == 'stdout':
         print(task_json)
         return

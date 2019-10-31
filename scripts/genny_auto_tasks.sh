@@ -20,15 +20,13 @@
 set -eou pipefail
 
 SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
-ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
-PYTHON_DIR="${ROOT_DIR}/src/python"
-cd "${PYTHON_DIR}"
+PYTHON_DIR="${SCRIPTS_DIR}/../src/python"
 
 _pip() {
     /usr/bin/env pip "$@" --isolated -q -q
 }
 
-if [[ ! -d "venv" ]]; then
+if [[ ! -d "${PYTHON_DIR}/venv" ]]; then
 	python_path=/opt/mongodbtoolchain/v3/bin/python3
 	if [[ ! -e "$python_path" ]]; then
 		echo "${python_path} does not exist"
@@ -37,13 +35,13 @@ if [[ ! -d "venv" ]]; then
 
 	echo "creating new env with python: ${python_path}"
 	_pip install virtualenv
-	/usr/bin/env virtualenv -q "venv" --python="${python_path}" >/dev/null
+	/usr/bin/env virtualenv -q "${PYTHON_DIR}/venv" --python="${python_path}" >/dev/null
 fi
 
 set +u
 	# shellcheck source=/dev/null
-	source "venv/bin/activate"
+	source "${PYTHON_DIR}/venv/bin/activate"
 set -u
-_pip install -e "."
+_pip install -e "${PYTHON_DIR}"
 
 genny-auto-tasks "$@"
