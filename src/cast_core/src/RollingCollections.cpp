@@ -394,12 +394,22 @@ struct OplogTailer : public RunOperation {
                     trackRollingCreate(*rollingMillis, lagTrack);
                 }
             }
-            // The cursor will be complete the iteration loop when there are
-            // no oplog updates in a second. Return and let genny decide if
-            // the workload is finished or if the system is truly idle.
-            // If the latter, run will be called again and we'll pick up
-            // where we left off.
-            BOOST_LOG_TRIVIAL(info) << "Oplog tailer: idle";
+            // The cursor will complete the iteration loop when there are
+            // no oplog updates. Return and let genny decide if the workload
+            // is finished or if the system is truly idle. If the latter,
+            // run will be called again and we'll pick up where we left off.
+            // The cursor generally pauses a second before returning nothing,
+            // but sometimes it returns quickly.  So don't report too often.
+            _idleCount++;
+            long millis = getMillisecondsSinceEpoch();
+            if (_idleLastReported + 10000 < millis) {
+                BOOST_LOG_TRIVIAL(info) << "Oplog tailer: idle "
+                                        << _idleCount << " times";
+                _idleLastReported = millis;
+                _idleCount = 0L;
+            } else if (_idleCount % 100 == 0) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
         } catch (mongocxx::operation_exception& e) {
             BOOST_LOG_TRIVIAL(error) << "Oplog tailer exception: " << e.what();
             throw;
@@ -412,6 +422,8 @@ private:
     bool _caughtUp = false;
     uint64_t _catchUpBestLag = UINT64_MAX;
     int _catchUpBestWhen = 0;
+    long _idleLastReported = 0L;
+    long _idleCount = 0L;
 };
 
 std::unique_ptr<RunOperation> getOperation(const std::string& operation,
