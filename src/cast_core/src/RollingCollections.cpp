@@ -295,7 +295,7 @@ struct OplogTailer : public RunOperation {
         }
     }
 
-    bool isRollingOplogEntry(const bsoncxx::document::view &doc, long *rollingMillis)
+    std::optional<long> isRollingOplogEntry(const bsoncxx::document::view &doc)
     {
         if (doc["op"].get_utf8().value.to_string() == "c") {
             auto object = doc["o"].get_document().value;
@@ -307,12 +307,11 @@ struct OplogTailer : public RunOperation {
                     // get the embedded millisecond time.
                     std::vector<std::string> timeSplit;
                     boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
-                    *rollingMillis = stol(timeSplit[2]);
-                    return (true);
+                    return (std::make_optional(stol(timeSplit[2])));
                 }
             }
         }
-        return (false);
+        return (std::nullopt);
     }
 
     // When we're still catching up, our lag times will be getting better
@@ -388,12 +387,11 @@ struct OplogTailer : public RunOperation {
 
         try {
             for (auto&& doc : _cursor.value()) {
-                long rollingMillis;
-
                 // Look for a creation of a rolling collection.
-                if (isRollingOplogEntry(doc, &rollingMillis)) {
+                auto rollingMillis = isRollingOplogEntry(doc);
+                if (rollingMillis) {
                     // Found one, get the time and compute the lag.
-                    trackRollingCreate(rollingMillis, lagTrack);
+                    trackRollingCreate(*rollingMillis, lagTrack);
                 }
             }
             // The cursor will be complete the iteration loop when there are
