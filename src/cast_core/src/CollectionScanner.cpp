@@ -36,26 +36,11 @@ enum ScanType { Count, Snapshot, Standard };
 enum SortOrderType { SortNone, SortForward, SortReverse };
 using SteadyClock = std::chrono::steady_clock;
 
-// Return a vector of database names from a comma separated string
-static std::vector<std::string>
-databaseList(mongocxx::pool::entry &client, const std::string str)
-{
-    std::vector<std::string> result;
-    std::stringstream ss(str);
-    std::string token;
-
-    while (std::getline(ss, token, ',')) {
-        // Remove trailing spaces
-        token.erase(std::remove(token.begin(), token.end(), ' '), token.end());
-        result.push_back(token);
-    }
-    return result;
-}
-
 struct CollectionScanner::PhaseConfig {
     std::vector<std::string> collectionNames;
     std::optional<DocumentGenerator> filterExpr;
     std::vector<mongocxx::database> databases;
+    std::optional<SteadyClock::time_point> stopPhase;
     bool skipFirstLoop = false;
     metrics::Operation scanOperation;
     metrics::Operation exceptionsCaught;
@@ -70,7 +55,7 @@ struct CollectionScanner::PhaseConfig {
 
     PhaseConfig(PhaseContext& context,
                 const CollectionScanner* actor,
-                const std::vector<std::string> dbnames,
+                const std::string& databaseNames,
                 int collectionCount,
                 int threads,
                 bool generateCollectionNames)
@@ -82,10 +67,17 @@ struct CollectionScanner::PhaseConfig {
           documents{context["Documents"].maybe<IntegerSpec>().value_or(0)},
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)},
           collectionSkip{context["CollectionSkip"].maybe<IntegerSpec>().value_or(0)},
-          scanDuration{context["ScanDuration"].maybe<TimeSpec>()}
-    {
-        for (std::string dbname : dbnames) {
+          scanDuration{context["ScanDuration"].maybe<TimeSpec>()} {
+        // The list of databases is comma separated.
+        std::vector<std::string> dbnames;
+        boost::split(dbnames, databaseNames, [](char c) { return (c == ','); });
+        for (const auto& dbname : dbnames) {
             databases.push_back((*actor->_client)[dbname]);
+        }
+        const auto now = SteadyClock::now();
+        const auto duration = context["Duration"].maybe<TimeSpec>();
+        if (duration) {
+            *stopPhase = now + (SteadyClock::duration)*duration;
         }
 
         // Initialise scan type enum.
@@ -107,10 +99,12 @@ struct CollectionScanner::PhaseConfig {
         }
         if (scanDuration) {
             if (scanDuration->count() < 0) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException("ScanDuration must be non-negative."));
+                BOOST_THROW_EXCEPTION(
+                    InvalidConfigurationException("ScanDuration must be non-negative."));
             }
             if (scanType != Snapshot) {
-                BOOST_THROW_EXCEPTION(InvalidConfigurationException("ScanDuration must be used with snapshot scans."));
+                BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                    "ScanDuration must be used with snapshot scans."));
             }
         }
         auto sortOrderString = context["CollectionSortOrder"].maybe<std::string>().value_or("none");
@@ -124,7 +118,8 @@ struct CollectionScanner::PhaseConfig {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("CollectionSortOrder is invalid."));
         }
         if (sortOrder == SortNone && collectionSkip != 0) {
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException("non-zero CollectionSkip requires a CollectionSortOrder"));
+            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
+                "non-zero CollectionSkip requires a CollectionSortOrder"));
         }
 
         if (generateCollectionNames) {
@@ -139,9 +134,9 @@ struct CollectionScanner::PhaseConfig {
         }
     }
 
-    void collectionsFromNameList(const mongocxx::database &db,
-      const std::vector<std::string>& names,
-      std::vector<mongocxx::collection>& result) {
+    void collectionsFromNameList(const mongocxx::database& db,
+                                 const std::vector<std::string>& names,
+                                 std::vector<mongocxx::collection>& result) {
         std::vector<std::string> nameOrder = names;
         if (sortOrder == SortForward) {
             sort(nameOrder.begin(), nameOrder.end(), std::less<>());
@@ -152,12 +147,13 @@ struct CollectionScanner::PhaseConfig {
             if (collectionSkip >= nameOrder.size()) {
                 return;
             }
-            nameOrder = std::vector<std::string>(nameOrder.begin() + collectionSkip, nameOrder.end());
+            nameOrder =
+                std::vector<std::string>(nameOrder.begin() + collectionSkip, nameOrder.end());
         }
         for (const auto& name : nameOrder) {
             auto collection = db[name];
             if (collection) {
-                result.push_back(db[name]);
+                result.push_back(collection);
             }
         }
     }
@@ -234,13 +230,15 @@ void CollectionScanner::run() {
                 continue;
             }
             _runningActorCounter++;
-            BOOST_LOG_TRIVIAL(info) << "Starting collection scanner databases: \"" << _databaseCommaList << "\", id: " << this->_index;
+            BOOST_LOG_TRIVIAL(info) << "Starting collection scanner databases: \"" << _databaseNames
+                                    << "\", id: " << this->_index;
 
             // Populate collection names if need be.
             std::vector<mongocxx::collection> collections;
             for (auto database : config->databases) {
                 if (config->queryCollectionList) {
-                    config->collectionsFromNameList(database, database.list_collection_names({}), collections);
+                    config->collectionsFromNameList(
+                        database, database.list_collection_names({}), collections);
                 } else {
                     config->collectionsFromNameList(database, config->collectionNames, collections);
                 }
@@ -259,13 +257,18 @@ void CollectionScanner::run() {
                 // last at least that long.  We'll do this within any
                 // running transaction, so we keep the "long running
                 // transaction" active as long as we've been asked to.
+                // However, honor the phase's duration if specified.
                 if (config->scanDuration) {
                     const SteadyClock::time_point now = SteadyClock::now();
                     auto stop = started + (*config->scanDuration).value;
+                    if (config->stopPhase && *config->stopPhase < stop) {
+                        stop = *config->stopPhase;
+                    }
                     if (stop > now) {
                         auto sleepDuration = stop - now;
-                        auto secs = sleepDuration.count() / (1000*1000*1000);
-                        BOOST_LOG_TRIVIAL(info) << "Scanner id: " << this->_index << " sleeping " << secs;
+                        auto secs = sleepDuration.count() / (1000 * 1000 * 1000);
+                        BOOST_LOG_TRIVIAL(info)
+                            << "Scanner id: " << this->_index << " sleeping " << secs;
                         std::this_thread::sleep_for(sleepDuration);
                     }
                 }
@@ -289,8 +292,7 @@ CollectionScanner::CollectionScanner(genny::ActorContext& context)
       _runningActorCounter{
           WorkloadContext::getActorSharedState<CollectionScanner, RunningActorCounter>()},
       _generateCollectionNames{context["GenerateCollectionNames"].maybe<bool>().value_or(false)},
-      _databaseCommaList{context["Database"].to<std::string>()},
-      _databaseNames{databaseList(_client, _databaseCommaList)},
+      _databaseNames{context["Database"].to<std::string>()},
       _loop{context,
             this,
             _databaseNames,
