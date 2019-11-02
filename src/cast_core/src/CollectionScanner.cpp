@@ -35,9 +35,14 @@
 namespace genny::actor {
 enum class ScanType { kCount, kSnapshot, kStandard };
 enum class SortOrderType { kSortNone, kSortForward, kSortReverse };
+// We don't need a metrics clock, as we're using this for measuring
+// the end of phase durations and scan durations.
 using SteadyClock = std::chrono::steady_clock;
 
 struct CollectionScanner::PhaseConfig {
+    // We keep collection names, not collections here, because the
+    // names make sense within the context of a database, and we may
+    // have multiple databases.
     std::vector<std::string> collectionNames;
     std::optional<DocumentGenerator> filterExpr;
     std::vector<mongocxx::database> databases;
