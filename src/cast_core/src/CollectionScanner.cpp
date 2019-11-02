@@ -1,3 +1,4 @@
+
 // Copyright 2019-present MongoDB Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,8 +33,8 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
-enum ScanType { Count, Snapshot, Standard };
-enum SortOrderType { SortNone, SortForward, SortReverse };
+enum class ScanType { kCount, kSnapshot, kStandard };
+enum class SortOrderType { kSortNone, kSortForward, kSortReverse };
 using SteadyClock = std::chrono::steady_clock;
 
 struct CollectionScanner::PhaseConfig {
@@ -85,15 +86,15 @@ struct CollectionScanner::PhaseConfig {
         // Ignore case
         boost::algorithm::to_lower(scanTypeString);
         if (scanTypeString == "count") {
-            scanType = Count;
+            scanType = ScanType::kCount;
         } else if (scanTypeString == "snapshot") {
             transactionOptions = mongocxx::options::transaction{};
             auto readConcern = mongocxx::read_concern{};
             readConcern.acknowledge_level(mongocxx::read_concern::level::k_majority);
             transactionOptions->read_concern(readConcern);
-            scanType = Snapshot;
+            scanType = ScanType::kSnapshot;
         } else if (scanTypeString == "standard") {
-            scanType = Standard;
+            scanType = ScanType::kStandard;
         } else {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("ScanType is invalid."));
         }
@@ -102,22 +103,22 @@ struct CollectionScanner::PhaseConfig {
                 BOOST_THROW_EXCEPTION(
                     InvalidConfigurationException("ScanDuration must be non-negative."));
             }
-            if (scanType != Snapshot) {
+            if (scanType != ScanType::kSnapshot) {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                     "ScanDuration must be used with snapshot scans."));
             }
         }
         auto sortOrderString = context["CollectionSortOrder"].maybe<std::string>().value_or("none");
         if (sortOrderString == "none") {
-            sortOrder = SortNone;
+            sortOrder = SortOrderType::kSortNone;
         } else if (sortOrderString == "forward") {
-            sortOrder = SortForward;
+            sortOrder = SortOrderType::kSortForward;
         } else if (sortOrderString == "reverse") {
-            sortOrder = SortReverse;
+            sortOrder = SortOrderType::kSortReverse;
         } else {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("CollectionSortOrder is invalid."));
         }
-        if (sortOrder == SortNone && collectionSkip != 0) {
+        if (sortOrder == SortOrderType::kSortNone && collectionSkip != 0) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                 "non-zero CollectionSkip requires a CollectionSortOrder"));
         }
@@ -138,9 +139,9 @@ struct CollectionScanner::PhaseConfig {
                                  const std::vector<std::string>& names,
                                  std::vector<mongocxx::collection>& result) {
         std::vector<std::string> nameOrder = names;
-        if (sortOrder == SortForward) {
+        if (sortOrder == SortOrderType::kSortForward) {
             sort(nameOrder.begin(), nameOrder.end(), std::less<>());
-        } else if (sortOrder == SortReverse) {
+        } else if (sortOrder == SortOrderType::kSortReverse) {
             sort(nameOrder.begin(), nameOrder.end(), std::greater<>());
         }
         if (collectionSkip != 0) {
@@ -247,9 +248,9 @@ void CollectionScanner::run() {
             const SteadyClock::time_point started = SteadyClock::now();
 
             // Do each kind of scan.
-            if (config->scanType == Count) {
+            if (config->scanType == ScanType::kCount) {
                 countScan(config, collections);
-            } else if (config->scanType == Snapshot) {
+            } else if (config->scanType == ScanType::kSnapshot) {
                 mongocxx::client_session session = _client->start_session({});
                 session.start_transaction(*config->transactionOptions);
                 collectionScan(config, collections);
