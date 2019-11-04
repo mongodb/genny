@@ -62,8 +62,8 @@ static std::string getRollingCollectionName() {
     // The id is tracked globally and increments for every collection created.
     static std::atomic_long id = 0;
     std::stringstream ss;
-    ss << "r"
-       << "_" << id << "_" << getMillisecondsSinceEpoch();
+    // Create a unique collection name that sorts lexographically by time.
+    ss << "r_" << getMillisecondsSinceEpoch() << "_" << id;
     id++;
     return ss.str();
 }
@@ -306,7 +306,7 @@ struct OplogTailer : public RunOperation {
                     // get the embedded millisecond time.
                     std::vector<std::string> timeSplit;
                     boost::algorithm::split(timeSplit, collectionName, boost::is_any_of("_"));
-                    return (std::make_optional(stol(timeSplit[2])));
+                    return (std::make_optional(stol(timeSplit[1])));
                 }
             }
         }
