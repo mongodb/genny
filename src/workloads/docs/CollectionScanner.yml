@@ -80,8 +80,26 @@ Actors:
   - {Nop: true}
   - Duration: 2 minutes
     ScanType: snapshot
+    CollectionSkip: 2
+    CollectionSortOrder: forward
     GlobalRate: 1 per 1 minute
   - Duration: 1 minute
     ScanType: snapshot
     GlobalRate: 10 per 20 seconds
     Documents: 200
+
+# Each time this snapshot scanner runs, two databases are fully scanned.
+# This is done within a snapshot transaction, which is specified to be
+# held open for a full 2 minutes if it completes before then.
+- Name: AllScanner
+  Type: CollectionScanner
+  Threads: 10
+  Database: hot, cold          # multiple databases can be specified
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: 10 minutes       # the duration of this phase
+    ScanType: snapshot
+    ScanDuration: 2 minutes    # the duration of each scan, transactions held open this long.
+    GlobalRate: 1 per 4 minutes
