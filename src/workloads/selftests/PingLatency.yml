@@ -2,7 +2,7 @@ SchemaVersion: 2018-07-01
 Actors:
 - Name: PingActor
   Type: RunCommand
-  Threads: 100
+  Threads: 1
   Phases:
   - Repeat: 10000
     Operations:
