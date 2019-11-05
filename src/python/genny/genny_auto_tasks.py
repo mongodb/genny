@@ -14,6 +14,34 @@ from shrub.command import CommandDefinition
 from shrub.variant import TaskSpec
 
 
+class AutoRunSpec():
+    """
+    AutoRunSpec class encapsulates the 'AutoRun' section of a workload yaml file, if it exists
+    """
+
+    def __init__(self, required_dict):
+        # A dictionary representing the yaml within the Requires section of the workload AutoRun yaml
+        self.required_dict = required_dict
+
+    @staticmethod
+    def create_from_workload_yaml(workload_yaml):
+        """
+        :param dict workload_yaml: dict representation of the workload yaml file
+        :return AutoRunSpec: if workload contains a valid AutoRun section: returns an AutoRunSpec containing the requirements for this yaml to be autorun. Else, returns None.
+        """
+        if 'AutoRun' not in workload_yaml or not isinstance(workload_yaml['AutoRun'], dict):
+            return None
+        if 'Requires' not in workload_yaml['AutoRun'] or not isinstance(workload_yaml['AutoRun']['Requires'], dict):
+            return None
+
+        required_dict = workload_yaml['AutoRun']['Requires']
+        for module, config in required_dict.items():
+            if not isinstance(config, dict):
+                return None
+
+        return AutoRunSpec(required_dict)
+
+
 def to_snake_case(str):
     """
     Converts str to snake_case, useful for generating test id's
@@ -23,31 +51,28 @@ def to_snake_case(str):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', str)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-def cd_python_dir():
+
+def cd_genny_root():
     """
-    Changes the current working directory to genny/src/python, which is required for running the git commands below.
+    Changes the current working directory to the genny repository root, which is required for running the git commands below.
     """
     script_path = os.path.abspath(__file__)
-    genny_dir = os.path.dirname(script_path)
-    python_path = os.path.join(genny_dir, '..')
-    os.chdir(python_path)
+    script_dir = os.path.dirname(script_path)
+    # cd into script directory first so we can get project root with git.
+    os.chdir(script_dir)
+    root = get_project_root()
+    os.chdir(root)
+
 
 def get_project_root():
     """
     :return: the path of the project root.
     """
-
-    # Temporarily change the cwd, but we undo this in the finally block.
-    original_cwd = os.getcwd()
-    cd_python_dir()
-
     try:
         out = subprocess.check_output('git rev-parse --show-toplevel', shell=True)
     except subprocess.CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e
-    finally:
-        os.chdir(original_cwd)
 
     return out.decode().strip()
 
@@ -57,44 +82,34 @@ def modified_workload_files():
     Returns a list of filenames for workloads that have been modified according to git, relative to origin/master.
     :return: a list of filenames in the format subdirectory/Task.yml
     """
-
-    # Temporarily change the cwd, but we undo this in the finally block.
-    original_cwd = os.getcwd()
-    cd_python_dir()
     try:
-        # Returns the names of files in ../workloads/ that have been added/modified/renamed since the common ancestor of HEAD and origin/master
+        # Returns the names of files in src/workloads/ that have been added/modified/renamed since the common ancestor of HEAD and origin/master
         out = subprocess.check_output(
-            'git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/', shell=True)
+            'git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- src/workloads/', shell=True)
     except subprocess.CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e
-    finally:
-        os.chdir(original_cwd)
 
     if out.decode() == '':
         return []
 
-    # Make paths relative to workloads/ e.g. ../workloads/scale/NewTask.yml --> scale/NewTask.yml
+    # Make paths relative to workloads/ e.g. src/workloads/scale/NewTask.yml --> scale/NewTask.yml
     short_filenames = [f.split('workloads/', 1)[1] for f in out.decode().strip().split('\n')]
     short_filenames = list(filter(lambda x: x.endswith('.yml'), short_filenames))
     return short_filenames
 
 
-def workload_should_autorun(workload_dict, env_dict):
+def workload_should_autorun(autorun_spec, env_dict):
     """
     Check if the given workload's AutoRun conditions are met by the current environment
-    :param dict workload_dict: a dict representation of the workload files's yaml.
+    :param AutoRunSpec autorun_spec: the workload's requirements to be autorun.
     :param dict env_dict: a dict representing the values from bootstrap.yml and runtime.yml
     :return: True if this workload should be autorun, else False.
     """
-
-    # First check that the workload has a proper AutoRun section.
-    if 'AutoRun' not in workload_dict or not isinstance(workload_dict['AutoRun'], dict):
-        return False
-    if 'Requires' not in workload_dict['AutoRun'] or not isinstance(workload_dict['AutoRun']['Requires'], dict):
+    if autorun_spec is None:
         return False
 
-    for module, required_config in workload_dict['AutoRun']['Requires'].items():
+    for module, required_config in autorun_spec.required_dict.items():
         if module not in env_dict:
             return False
         if not isinstance(required_config, dict):
@@ -102,8 +117,7 @@ def workload_should_autorun(workload_dict, env_dict):
 
         # True if set of config key-vaue pairs is subset of env_dict key-value pairs
         # This will be false if the AutoRun yaml uses a logical or (i.e. branch_name: master | prod), but it is efficient so we use it for a first-pass.
-        # if not required_config.items() <= env_dict[module].items():
-        if True:
+        if not required_config.items() <= env_dict[module].items():
             # Now have to check all k, v pairs individually
             for k, v in required_config.items():
                 if k not in env_dict[module]:
@@ -114,6 +128,7 @@ def workload_should_autorun(workload_dict, env_dict):
                     return False
 
     return True
+
 
 def autorun_workload_files(env_dict):
     """
@@ -130,19 +145,23 @@ def autorun_workload_files(env_dict):
                 workload_dict = yaml.safe_load(handle)
             except Exception as e:
                 continue
-            if workload_should_autorun(workload_dict, env_dict):
+
+            autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
+            if workload_should_autorun(autorun_spec, env_dict):
                 matching_files.append(fname)
 
     return matching_files
 
 
-def make_env_dict():
+def make_env_dict(dirname):
     """
+    :param str dir: the directory in which to look for bootstrap.yml and runtime.yml files.
     :return: a dict representation of bootstrap.yml and runtime.yml in the cwd, with top level keys 'bootstrap' and 'runtime'
     """
     env_files = ['bootstrap.yml', 'runtime.yml']
     env_dict = {}
     for fname in env_files:
+        fname = os.path.join(dirname, fname)
         if not os.path.isfile(fname):
             return None
         with open(fname, 'r') as handle:
@@ -167,6 +186,7 @@ def validate_user_workloads(workloads):
             errors.append('{} is not a .yml workload file'.format(workload_path))
 
     return errors
+
 
 def construct_task_json(workloads, variants):
     """
@@ -217,17 +237,24 @@ def main():
 
     workload_group = parser.add_mutually_exclusive_group(required=True)
     workload_group.add_argument('--autorun', action='store_true', default=False,
-                        help='if set, the script will generate tasks based on workloads\' AutoRun section and bootstrap.yml/runtime.yml files in the working directory')
-    workload_group.add_argument('--modified', action='store_true', default=False, help='if set, the script will generate tasks for workloads that have been added/modifed locally, relative to origin/master')
+                                help='if set, the script will generate tasks based on workloads\' AutoRun section and bootstrap.yml/runtime.yml files in the working directory')
+    workload_group.add_argument('--modified', action='store_true', default=False,
+                                help='if set, the script will generate tasks for workloads that have been added/modifed locally, relative to origin/master')
     workload_group.add_argument('--workloads', nargs='+',
-                        help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
+                                help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
 
     args = parser.parse_args(sys.argv[1:])
+    original_cwd = os.getcwd()
+    cd_genny_root()
 
     if args.autorun:
-        env_dict = make_env_dict()
+        env_dict = make_env_dict(original_cwd)
         if env_dict is None:
-            print('fatal error: bootstrap.yml and runtime.yml files not found in current directory, cannot AutoRun workloads')
+            print(
+                'fatal error: bootstrap.yml and runtime.yml files not found in current directory, cannot AutoRun workloads\n\
+                note: --autorun is intended to be called from within Evergreen. If using genny locally, please run the workload directly.',
+                file=sys.stderr)
+            print(os.getcwd(), file=sys.stderr)
             return
 
         workloads = autorun_workload_files(env_dict)
