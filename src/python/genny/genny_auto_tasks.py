@@ -58,7 +58,7 @@ def cd_genny_root():
     """
     script_path = os.path.abspath(__file__)
     script_dir = os.path.dirname(script_path)
-    # cd into script directory first so we can get project root with git.
+    # cd into script directory first so we can get the project root with git.
     os.chdir(script_dir)
     root = get_project_root()
     os.chdir(root)
@@ -116,15 +116,19 @@ def workload_should_autorun(autorun_spec, env_dict):
             return False
 
         # True if set of config key-vaue pairs is subset of env_dict key-value pairs
-        # This will be false if the AutoRun yaml uses a logical or (i.e. branch_name: master | prod), but it is efficient so we use it for a first-pass.
+        # This will be false if the AutoRun yaml uses a list to represent multiple matching criteria, but it is efficient so we use it for a first-pass.
         if not required_config.items() <= env_dict[module].items():
             # Now have to check all k, v pairs individually
-            for k, v in required_config.items():
-                if k not in env_dict[module]:
+            for key, autorun_val in required_config.items():
+                if key not in env_dict[module]:
                     return False
+                if autorun_val == env_dict[module][key]:
+                    continue
 
-                bools = [s.strip() == env_dict[module][k] for s in v.split('|')]
-                if True not in bools:
+                # Values not exactly equal, but the AutoRun value could be a list of possibilities.
+                if not isinstance(autorun_val, list):
+                    return False
+                if env_dict[module][key] not in autorun_val:
                     return False
 
     return True
@@ -259,16 +263,14 @@ def main():
 
         workloads = autorun_workload_files(env_dict)
         if len(workloads) == 0:
-            print('No AutoRun workloads found matching environment, generating no tasks.')
-            return
+            raise Exception('No AutoRun workloads found matching environment, generating no tasks.')
     elif args.modified:
         workloads = modified_workload_files()
         if len(workloads) == 0:
-            print(
+            raise Exception(
                 'No modified workloads found, generating no tasks.\n\
                 No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
                 Ensure that any added/modified workloads have been committed locally.')
-            return
     elif args.workloads is not None:
         errs = validate_user_workloads(args.workloads)
         if len(errs) > 0:

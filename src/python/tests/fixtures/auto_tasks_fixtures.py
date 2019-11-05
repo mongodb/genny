@@ -94,7 +94,7 @@ workload_should_autorun_cases = [
                     'AutoRun': {
                         'Requires': {
                             'bootstrap': {
-                                'platform': 'osx|windows| linux  '
+                                'platform': ['osx', 'windows', 'linux']
                             },
                             'runtime': {
                                 'build_variant': 'variant1',
@@ -120,7 +120,7 @@ workload_should_autorun_cases = [
                     'AutoRun': {
                         'Requires': {
                             'bootstrap': {
-                                'platform': 'osx | windows | debian'
+                                'platform': ['osx', 'windows', 'debian']
                             },
                             'runtime': {
                                 'build_variant': 'variant1',
@@ -146,7 +146,7 @@ workload_should_autorun_cases = [
                     'AutoRun': {
                         'Requires': {
                             'bootstrap': {
-                                'platform': 'osx | windows | linux'
+                                'platform': ['osx', 'windows', 'linux']
                             },
                             'runtime': {
                                 'build_variant': 'variant1',
