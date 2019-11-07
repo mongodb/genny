@@ -6,30 +6,24 @@ Actors:
   Threads: 1
   Phases:
   - Phase: 0
-    Duration: 1 minute
+    Duration: 1 second
     Collection: coll
-    Operations:
-    - OperationName: bulkWrite
-      OperationMetricsName: W2InsertOne
+    MetricsName: W2InsertOne
+    Operation:
+      OperationName: insertOne
       OperationCommand:
-        WriteOperations:
-          - WriteCommand: insertOne
-            Document: { a: 1 }
-        Options:
-          WriteConcern:
-            Level: 2
-            Timeout: 6000 milliseconds
+        Document: { a: 1 }
+        OperationOptions:
+          WriteConcern: { Level: 2 }
+          Timeout: 6000 milliseconds
   - Phase: 1
-    Duration: 1 minute
+    Duration: 1 second
     Collection: coll
-    Operations:
-    - OperationName: bulkWrite
-      OperationMetricsName: W3InsertOne
+    MetricsName: W3InsertOne
+    Operation:
+      OperationName: insertOne
       OperationCommand:
-        WriteOperations:
-          - WriteCommand: insertOne
-            Document: { a: 1 }
-        Options:
-          WriteConcern:
-            Level: 3
-            Timeout: 6000 milliseconds
+        Document: { a: 1 }
+        OperationOptions:
+          WriteConcern: { Level: 3 }
+          Timeout: 6000 milliseconds
