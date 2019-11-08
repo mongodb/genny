@@ -152,7 +152,7 @@ def autorun_workload_files(env_dict):
 
             autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
             if workload_should_autorun(autorun_spec, env_dict):
-                matching_files.append(fname)
+                matching_files.append(fname.split('/src/workloads/')[1])
 
     return matching_files
 
@@ -244,7 +244,8 @@ def main():
                                 help='if set, the script will generate tasks based on workloads\' AutoRun section and bootstrap.yml/runtime.yml files in the working directory')
     workload_group.add_argument('--modified', action='store_true', default=False,
                                 help='if set, the script will generate tasks for workloads that have been added/modifed locally, relative to origin/master')
-    workload_group.add_argument('--workloads', nargs='+',
+
+    parser.add_argument('--forced-workloads', nargs='+',
                                 help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
 
     args = parser.parse_args(sys.argv[1:])
@@ -271,13 +272,14 @@ def main():
                 'No modified workloads found, generating no tasks.\n\
                 No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
                 Ensure that any added/modified workloads have been committed locally.')
-    elif args.workloads is not None:
-        errs = validate_user_workloads(args.workloads)
+
+    if args.forced_workloads is not None:
+        errs = validate_user_workloads(args.forced_workloads)
         if len(errs) > 0:
             for e in errs:
-                print('invalid workload: {}'.format(err), file=sys.stderr)
+                print('invalid workload: {}'.format(e), file=sys.stderr)
             return
-        workloads = args.workloads
+        workloads.extend(args.forced_workloads)
 
     task_json = construct_task_json(workloads, args.variants)
     if args.output == 'stdout':
