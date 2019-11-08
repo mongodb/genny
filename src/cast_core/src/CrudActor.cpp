@@ -1072,10 +1072,6 @@ struct SetReadConcernOperation : public BaseOperation {
         : BaseOperation(context, opNode),
           _collection{std::move(collection)},
           _operation{operation} {
-        if (!opNode["ReadConcern"]) {
-            BOOST_THROW_EXCEPTION(InvalidConfigurationException(
-                "'setReadConcern' operation expects a 'ReadConcern' field."));
-        }
         _readConcern = opNode["ReadConcern"].to<mongocxx::read_concern>();
     }
 
@@ -1113,10 +1109,8 @@ struct DropOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation} {
-        if (!opNode)
-            return;
-        if (opNode["Options"] && opNode["Options"]["WriteConcern"]) {
-            _wc = opNode["Options"]["WriteConcern"].to<mongocxx::write_concern>();
+        if (auto& c = opNode["Options"]["WriteConcern"]) {
+            _wc = c.to<mongocxx::write_concern>();
         }
     }
 
@@ -1185,10 +1179,7 @@ struct CrudActor::PhaseConfig {
         auto addOperation = [&](const Node& node) -> std::unique_ptr<BaseOperation> {
             auto& yamlCommand = node["OperationCommand"];
             auto opName = node["OperationName"].to<std::string>();
-            auto onSession = false;
-            if (yamlCommand) {
-                onSession = yamlCommand["OnSession"] && yamlCommand["OnSession"].to<bool>();
-            }
+            auto onSession = yamlCommand["OnSession"].maybe<bool>().value_or(false);
 
             // Grab the appropriate Operation struct defined by 'OperationName'.
             auto op = opConstructors.find(opName);
