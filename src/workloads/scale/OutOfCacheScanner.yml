@@ -52,3 +52,8 @@ Actors:
     SkipFirstLoop: true
     GlobalRate: 6 per 10 minutes
     ScanType: Standard
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: single-replica-15gbwtcache

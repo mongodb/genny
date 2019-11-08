@@ -179,3 +179,11 @@ Actors:
   - *DropCollection
   - *Nop
   - *DropCollection
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup:
+        - replica
+        - single-replica
+        - replica-noflowcontrol

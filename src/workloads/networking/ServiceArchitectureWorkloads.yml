@@ -68,3 +68,10 @@ Actors:
     Repeat: 1
   - Phase: 1  # Run
     Nop: true
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: 
+        - replica
+        - replica-noflowcontrol

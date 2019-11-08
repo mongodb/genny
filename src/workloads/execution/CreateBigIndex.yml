@@ -87,3 +87,8 @@ Actors:
       OperationCommand:
         dropIndexes: Collection0
         index: random_string
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: single-replica
