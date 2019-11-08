@@ -170,7 +170,7 @@ struct convert<mongocxx::options::insert> {
         return {};
     }
     static bool decode(const Node& node, mongocxx::options::insert& rhs) {
-        if (node.IsSequence() || node.IsMap()) {
+        if (!node.IsMap()) {
             return false;
         }
         if (node["Ordered"]) {
@@ -293,11 +293,6 @@ auto createDocumentGenerator(const Node& source,
                              PhaseContext& context,
                              ActorId id) {
     auto& doc = source[key];
-    if (!doc) {
-        std::stringstream msg;
-        msg << "'" << opType << "' expects a '" << key << "' field.";
-        BOOST_THROW_EXCEPTION(InvalidConfigurationException(msg.str()));
-    }
     return doc.to<DocumentGenerator>(context, id);
 }
 
@@ -355,8 +350,7 @@ struct InsertOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _options{opNode["OperationOptions"].maybe<mongocxx::options::insert>().value_or(
-              mongocxx::options::insert{})},
+          _options{opNode["OperationOptions"].to<mongocxx::options::insert>()},
           _docExpr{createDocumentGenerator(opNode, "insertOne", "Document", context, id)} {}
 
     mongocxx::model::write getModel() override {
@@ -1217,11 +1211,22 @@ struct CrudActor::PhaseConfig {
                 BOOST_THROW_EXCEPTION(InvalidConfigurationException(
                     "Operation '" + opName + "' not supported in Crud Actor."));
             }
+
+            // If the yaml specified MetricsName in the Phase block, then associate the metrics
+            // with the Phase; otherwise, associate with the Actor (e.g. all bulkWrite operations
+            // get recorded together across all Phases). The latter case (not specifying
+            // MetricsName) is legacy configuration-syntax.
+            //
+            // Node is convertible to bool but only explicitly so need to do the odd-looking
+            // `? true : false` thing.
+            const bool perPhaseMetrics = phaseContext["MetricsName"] ? true : false;
+
             auto createOperation = op->second;
             return createOperation(yamlCommand,
                                    onSession,
                                    collection,
-                                   phaseContext.actor().operation(opName, id),
+                                   perPhaseMetrics ? phaseContext.operation(opName, id)
+                                                   : phaseContext.actor().operation(opName, id),
                                    phaseContext,
                                    id);
         };
