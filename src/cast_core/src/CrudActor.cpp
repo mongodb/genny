@@ -285,19 +285,6 @@ struct WriteOperation : public BaseOperation {
 using WriteOpCallback = std::function<std::unique_ptr<WriteOperation>(
     const Node&, bool, mongocxx::collection, metrics::Operation, PhaseContext&, ActorId)>;
 
-namespace {
-
-auto createDocumentGenerator(const Node& source,
-                             const std::string& opType,
-                             const std::string& key,
-                             PhaseContext& context,
-                             ActorId id) {
-    auto& doc = source[key];
-    return doc.to<DocumentGenerator>(context, id);
-}
-
-}  // namespace
-
 // Not technically "crud" but it was easy to add and made
 // a few of the tests easier to write (by allowing inserts
 // to fail due to index constraint-violations.
@@ -320,9 +307,8 @@ struct CreateIndexOperation : public BaseOperation {
           _collection(std::move(collection)),
           _operation{operation},
           _onSession{onSession},
-          _keysGenerator{createDocumentGenerator(opNode, "createIndex", "Keys", context, id)},
-          _indexOptionsGenerator{
-              createDocumentGenerator(opNode, "createIndex", "IndexOptions", context, id)} {}
+          _keysGenerator{opNode["Keys"].to<DocumentGenerator>(context, id)},
+          _indexOptionsGenerator{opNode["IndexOptions"].to<DocumentGenerator>(context, id)} {}
 
 
     void run(mongocxx::client_session& session) override {
@@ -352,7 +338,7 @@ struct InsertOneOperation : public WriteOperation {
           _operation{operation},
           _options{opNode["OperationOptions"].maybe<mongocxx::options::insert>().value_or(
               mongocxx::options::insert{})},
-          _docExpr{createDocumentGenerator(opNode, "insertOne", "Document", context, id)} {}
+          _docExpr{opNode["Document"].to<DocumentGenerator>(context, id)} {}
 
     mongocxx::model::write getModel() override {
         auto document = _docExpr();
@@ -392,8 +378,8 @@ struct UpdateOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "updateOne", "Filter", context, id)},
-          _updateExpr{createDocumentGenerator(opNode, "updateOne", "Update", context, id)} {}
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)},
+          _updateExpr{opNode["Update"].to<DocumentGenerator>(context, id)} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -436,8 +422,8 @@ struct UpdateManyOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "updateMany", "Filter", context, id)},
-          _updateExpr{createDocumentGenerator(opNode, "updateMany", "Update", context, id)} {}
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)},
+          _updateExpr{opNode["Update"].to<DocumentGenerator>(context, id)} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -480,7 +466,7 @@ struct DeleteOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr(createDocumentGenerator(opNode, "deleteOne", "Filter", context, id)) {}
+          _filterExpr(opNode["Filter"].to<DocumentGenerator>(context, id)) {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -518,7 +504,7 @@ struct DeleteManyOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "deleteMany", "Filter", context, id)} {}
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -556,9 +542,8 @@ struct ReplaceOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "replaceOne", "Filter", context, id)},
-          _replacementExpr{
-              createDocumentGenerator(opNode, "replaceOne", "Replacement", context, id)} {}
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)},
+          _replacementExpr{opNode["Replacement"].to<DocumentGenerator>(context, id)} {}
 
     mongocxx::model::write getModel() override {
         auto filter = _filterExpr();
@@ -721,7 +706,7 @@ struct CountDocumentsOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "Count", "Filter", context, id)} {
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)} {
         if (opNode["Options"]) {
             _options = opNode["Options"].to<mongocxx::options::count>();
         }
@@ -801,7 +786,7 @@ struct FindOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "Find", "Filter", context, id)} {}
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)} {}
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
@@ -836,8 +821,8 @@ struct FindOneAndUpdateOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "FindOneAndUpdate", "Filter", context, id)},
-          _updateExpr{createDocumentGenerator(opNode, "FindOneAndUpdate", "Update", context, id)} {}
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)},
+          _updateExpr{opNode["Update"].to<DocumentGenerator>(context, id)} {}
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
@@ -874,7 +859,7 @@ struct FindOneAndDeleteOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "FindOneAndDelete", "Filter", context, id)} {}
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)} {}
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
@@ -909,9 +894,8 @@ struct FindOneAndReplaceOperation : public BaseOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _filterExpr{createDocumentGenerator(opNode, "FindOneAndReplace", "Filter", context, id)},
-          _replacementExpr{
-              createDocumentGenerator(opNode, "FindOneAndReplace", "Replacement", context, id)} {}
+          _filterExpr{opNode["Filter"].to<DocumentGenerator>(context, id)},
+          _replacementExpr{opNode["Replacement"].to<DocumentGenerator>(context, id)} {}
 
     void run(mongocxx::client_session& session) override {
         auto filter = _filterExpr();
