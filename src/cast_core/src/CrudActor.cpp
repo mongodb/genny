@@ -350,7 +350,8 @@ struct InsertOneOperation : public WriteOperation {
           _onSession{onSession},
           _collection{std::move(collection)},
           _operation{operation},
-          _options{opNode["OperationOptions"].to<mongocxx::options::insert>()},
+          _options{opNode["OperationOptions"].maybe<mongocxx::options::insert>().value_or(
+                  mongocxx::options::insert{})},
           _docExpr{createDocumentGenerator(opNode, "insertOne", "Document", context, id)} {}
 
     mongocxx::model::write getModel() override {
