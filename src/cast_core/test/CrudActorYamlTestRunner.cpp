@@ -191,11 +191,17 @@ struct CrudActorTestCase {
           tcase{node} {}
 
     void doRun() const {
+        std::string generatedYaml = "";
         try {
             auto events = ApmEvents{};
             auto apmCallback = makeApmCallback(events);
 
             auto config = createConfigurationYaml(operations);
+            {
+                std::stringstream str;
+                str << config.root();
+                generatedYaml = str.str();
+            }
             genny::ActorHelper ah(
                 config.root(), 1, MongoTestFixture::connectionUri().to_string(), apmCallback);
             auto client = ah.client();
@@ -214,22 +220,24 @@ struct CrudActorTestCase {
                 requireAfterState(client, eventsCopy, tcase);
             }
         } catch (const boost::exception& e) {
-            launderException(e);
+            launderException(e, generatedYaml);
         } catch (const std::exception& e) {
-            launderException(e);
+            launderException(e, generatedYaml);
         }
     }
 
     template <typename X>
-    void launderException(const X& e) const {
+    void launderException(const X& e, const std::string& generatedYaml) const {
         auto diagInfo = boost::diagnostic_information(e);
         if (runMode == RunMode::kExpectedSetupException ||
             runMode == RunMode::kExpectedRuntimeException) {
             auto actual = boost::trim_copy(diagInfo);
             auto expect = boost::trim_copy(error.as<std::string>());
             INFO("Actual exception message : [[" << actual << "]]");
+            INFO("Generated YAML:\n" << generatedYaml);
             REQUIRE_THAT(actual, MultilineMatch(expect));
         } else {
+            INFO("Generated YAML:\n" << generatedYaml);
             INFO(description << " CAUGHT " << diagInfo);
             FAIL(diagInfo);
         }

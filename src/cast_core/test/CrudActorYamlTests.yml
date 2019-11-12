@@ -539,7 +539,7 @@ Tests:
 
   - Description: set WriteConcern 1 on an InsertOne
     Operations:
-      - OperatioName: insertOne
+      - OperationName: insertOne
         OperationCommand:
           Document: {a: 1}
         OperationOptions:
