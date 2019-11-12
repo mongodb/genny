@@ -192,11 +192,45 @@ def validate_user_workloads(workloads):
     return errors
 
 
-def construct_task_json(workloads, variants):
+def construct_all_tasks_json():
     """
-    :param list workloads: a list of filenames of workloads to generate tasks for, each in the format subdirectory/Task.yml
-    :param list variants: a list of buildvariants (strings) that the generated tasks should be run on.
-    :return: json representation of tasks that run the given workloads, that can be provided to evergreen's generate.tasks command.
+    :return: json representation of tasks for all workloads in the /src/workloads directory relative to the genny root.
+    """
+    c = Configuration()
+
+    workload_dir = '{}/src/workloads'.format(get_project_root())
+    all_workloads = glob.glob('{}/**/*.yml'.format(workload_dir), recursive=True)
+    all_workloads = [s.split('/src/workloads/')[1] for s in all_workloads]
+
+    for fname in all_workloads:
+        basename = os.path.basename(fname)
+        base_parts = os.path.splitext(basename)
+        if base_parts[1] != '.yml':
+            # Not a .yml workload file, ignore it.
+            continue
+
+        task_name = to_snake_case(base_parts[0])
+        t = c.task(task_name)
+        t.priority(5)  # The default priority in system_perf.yml
+        t.commands([
+            CommandDefinition().function('prepare environment').vars({
+                'test': task_name,
+                'auto_workload_path': fname
+            }),
+            CommandDefinition().function('deploy cluster'),
+            CommandDefinition().function('run test'),
+            CommandDefinition().function('analyze'),
+        ])
+
+    return c.to_json()
+
+
+def construct_variant_json(workloads, variants):
+    """
+    :param list workloads: a list of filenames of workloads to schedule tasks for, each in the format subdirectory/Task.yml
+    :param list variants: a list of buildvariants (strings) that the specified tasks should be run on.
+    :return: json representation of variants running the given workloads, that can be provided to evergreen's generate.tasks command.
+    Note: this function only generates variants, no tasks. It assumes that the tasks have already been generated (i.e. by calling generate.tasks with the result of construct_all_tasks_json()).
     """
     task_specs = []
     c = Configuration()
@@ -210,17 +244,6 @@ def construct_task_json(workloads, variants):
 
         task_name = to_snake_case(base_parts[0])
         task_specs.append(TaskSpec(task_name))
-        t = c.task(task_name)
-        t.priority(5)  # The default priority in system_perf.yml
-        t.commands([
-            CommandDefinition().function('prepare environment').vars({
-                'test': task_name,
-                'auto_workload_path': fname
-            }),
-            CommandDefinition().function('deploy cluster'),
-            CommandDefinition().function('run test'),
-            CommandDefinition().function('analyze'),
-        ])
 
     for v in variants:
         c.variant(v).tasks(task_specs)
@@ -230,69 +253,82 @@ def construct_task_json(workloads, variants):
 
 def main():
     """
-    Main Function: parses args, writes to file evergreen tasks in json format for workloads that are specified in args.
+    Main Function: parses args, writes a JSON file representing *either* evergreen tasks or buildvariants that can be passed to generate.tasks.
+    If run with --generate-all-tasks, this program outputs a JSON file of task definitions for all workloads in the /src/workloads genny directory.
+    If run with --variants, this program outputs a JSON file of buildvariant definitions that run a subset of workload tasks based on the other arguments.
     """
     parser = argparse.ArgumentParser(
         description="Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run")
 
-    parser.add_argument('--variants', nargs='+', required=True, help='buildvariants that workloads should run on')
-    parser.add_argument('-o', '--output', default='build/generated_tasks.json',
-                        help='path of file to output result json to, relative to the genny root directory')
+    op_group = parser.add_mutually_exclusive_group(required=True)
+    op_group.add_argument('--variants', nargs='+', help='buildvariants that workloads should run on')
+    op_group.add_argument('--generate-all-tasks', action='store_true',
+                          help='generates JSON task definitions for all genny workloads, does not attach them to any buildvariants')
 
-    workload_group = parser.add_mutually_exclusive_group(required=True)
+    workload_group = parser.add_mutually_exclusive_group()
     workload_group.add_argument('--autorun', action='store_true', default=False,
                                 help='if set, the script will generate tasks based on workloads\' AutoRun section and bootstrap.yml/runtime.yml files in the working directory')
     workload_group.add_argument('--modified', action='store_true', default=False,
                                 help='if set, the script will generate tasks for workloads that have been added/modifed locally, relative to origin/master')
-
     parser.add_argument('--forced-workloads', nargs='+',
-                                help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
+                        help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
+    parser.add_argument('-o', '--output', default='build/generated_tasks.json',
+                        help='path of file to output result json to, relative to the genny root directory')
 
     args = parser.parse_args(sys.argv[1:])
+    if args.generate_all_tasks and (args.autorun or args.modified):
+        parser.error('arguments --autorun and --modified not allowed with --generate-all-tasks')
+    if args.variants and not (args.autorun or args.modified):
+        parser.error('either --autorun or --modified required with --variants')
+
     original_cwd = os.getcwd()
     cd_genny_root()
 
-    if args.autorun:
-        env_dict = make_env_dict(original_cwd)
-        if env_dict is None:
-            print(
-                'fatal error: bootstrap.yml and runtime.yml files not found in current directory, cannot AutoRun workloads\n\
-                note: --autorun is intended to be called from within Evergreen. If using genny locally, please run the workload directly.',
-                file=sys.stderr)
-            print(os.getcwd(), file=sys.stderr)
-            return
+    if args.generate_all_tasks:
+        output_json = construct_all_tasks_json()
+    else:
+        if args.autorun:
+            env_dict = make_env_dict(original_cwd)
+            if env_dict is None:
+                print(
+                    'fatal error: bootstrap.yml and runtime.yml files not found in current directory, cannot AutoRun workloads\n\
+                    note: --autorun is intended to be called from within Evergreen. If using genny locally, please run the workload directly.',
+                    file=sys.stderr)
+                print(os.getcwd(), file=sys.stderr)
+                return
 
-        workloads = autorun_workload_files(env_dict)
-        if len(workloads) == 0:
-            raise Exception('No AutoRun workloads found matching environment, generating no tasks.')
-    elif args.modified:
-        workloads = modified_workload_files()
-        if len(workloads) == 0:
-            raise Exception(
-                'No modified workloads found, generating no tasks.\n\
-                No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
-                Ensure that any added/modified workloads have been committed locally.')
+            workloads = autorun_workload_files(env_dict)
+            if len(workloads) == 0:
+                raise Exception('No AutoRun workloads found matching environment, generating no tasks.')
+        elif args.modified:
+            workloads = modified_workload_files()
+            if len(workloads) == 0:
+                raise Exception(
+                    'No modified workloads found, generating no tasks.\n\
+                    No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
+                    Ensure that any added/modified workloads have been committed locally.')
 
-    if args.forced_workloads is not None:
-        errs = validate_user_workloads(args.forced_workloads)
-        if len(errs) > 0:
-            for e in errs:
-                print('invalid workload: {}'.format(e), file=sys.stderr)
-            return
-        workloads.extend(args.forced_workloads)
+        if args.forced_workloads is not None:
+            errs = validate_user_workloads(args.forced_workloads)
+            if len(errs) > 0:
+                for e in errs:
+                    print('invalid workload: {}'.format(e), file=sys.stderr)
+                return
+            workloads.extend(args.forced_workloads)
 
-    task_json = construct_task_json(workloads, args.variants)
+        output_json = construct_variant_json(workloads, args.variants)
+
     if args.output == 'stdout':
-        print(task_json)
+        print(output_json)
         return
 
     # Interpret args.output relative to the genny root directory.
     project_root = get_project_root()
     output_path = '{}/{}'.format(project_root, args.output)
     with open(output_path, 'w') as output_file:
-        output_file.write(task_json)
+        output_file.write(output_json)
 
-    print('Wrote generated task json to {}'.format(output_path))
+    print('Wrote generated JSON to {}'.format(output_path))
 
 
 if __name__ == '__main__':
