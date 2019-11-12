@@ -6,7 +6,7 @@ Actors:
   Threads: 1
   Phases:
   - Phase: 0
-    Duration: 1 second
+    Duration: 10 minutes
     Collection: coll
     MetricsName: W2InsertOne
     Operation:
@@ -17,7 +17,7 @@ Actors:
           WriteConcern: { Level: 2 }
           Timeout: 6000 milliseconds
   - Phase: 1
-    Duration: 1 second
+    Duration: 10 minutes
     Collection: coll
     MetricsName: W3InsertOne
     Operation:
