@@ -6,6 +6,10 @@ Genny
 Genny is a workload-generator library and tool. It is implemented using
 C++17.
 
+As of 2019-11-11, Genny is now using the Evergreen Commit-Queue. When
+you have received approval for your PR, simply comment `evergreen merge`
+and your PR will automatically be tested and merged.
+
 ## Build and Install
 
 Here're the steps to get Genny up and running locally:
