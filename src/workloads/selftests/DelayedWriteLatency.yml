@@ -3,7 +3,7 @@ Actors:
 - Name: BulkWrites
   Type: CrudActor
   Database: db
-  Threads: 1
+  Threads: 100
   Phases:
   - Phase: 0
     Duration: 10 minutes
