@@ -256,6 +256,7 @@ def main():
     Main Function: parses args, writes a JSON file representing *either* evergreen tasks or buildvariants that can be passed to generate.tasks.
     If run with --generate-all-tasks, this program outputs a JSON file of task definitions for all workloads in the /src/workloads genny directory.
     If run with --variants, this program outputs a JSON file of buildvariant definitions that run a subset of workload tasks based on the other arguments.
+    These two invocations are separate to ensure that no task will be generated more than once (which would cause generate.tasks to throw an error, even across different buildvariants).
     """
     parser = argparse.ArgumentParser(
         description="Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run")

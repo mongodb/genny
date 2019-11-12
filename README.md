@@ -260,10 +260,10 @@ In the browser window, select either `genny_patch_tasks` or `genny_auto_tasks`.
 you've been working on. 
 
 `genny_auto_tasks` automatically runs workloads based on the evergreen environment
-(variables from `bootstrap.yml` and `runtime.yml`) and an optional AutoRun section
-in any workload, doing simple key-value matching between them. For example, suppose
-we have a `test_workload.yml` file in a `workloads/*/` subdirectory, containing the
-following AutoRun section:
+(variables from `bootstrap.yml` and `runtime.yml` in DSI) and an optional AutoRun
+section in any workload, doing simple key-value matching between them. For example,
+suppose we have a `test_workload.yml` file in a `workloads/*/` subdirectory,
+containing the following AutoRun section:
 
 ```yaml
 AutoRun:
@@ -280,7 +280,7 @@ AutoRun sections are setup so that you can use `genny_auto_tasks` to run all rel
 workloads on a specific buildvariant.
 
 Both `genny_patch_tasks` and `genny_auto_tasks` will compile mongodb and then run
-the relevant workloads. Expect to wait around 25 minutes.
+the relevant workloads.
 
 NB: After the task runs you can call `set-module` again with more local changes.
 You can restart the workloads from the Evergreen web UI.
