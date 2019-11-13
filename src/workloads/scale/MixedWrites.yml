@@ -37,4 +37,7 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap: { mongodb_setup: [replica] }
+    bootstrap: { infrastructure_provisioning: [replica] }
+  PrepareEnvironmentWith:
+    # Arguments to pass to the "prepare environment" evergreen function
+    setup: replica-delay
