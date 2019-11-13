@@ -54,3 +54,8 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         validate: Collection0
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: standalone

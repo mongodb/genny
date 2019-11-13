@@ -115,3 +115,8 @@ Actors:
         validate: Collection0
         full: false
         background: true
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: standalone

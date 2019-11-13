@@ -168,4 +168,8 @@ Actors:
       OperationCommand:
         dropIndexes: Collection0
         index: wildCardIndex
-          
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: single-replica

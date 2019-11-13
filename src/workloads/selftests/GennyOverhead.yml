@@ -61,3 +61,9 @@ Actors:
   - MetricsName: LoopNSleepAfter
     Repeat: 1e4
     SleepAfter: 1 millisecond
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: 
+        - standalone
