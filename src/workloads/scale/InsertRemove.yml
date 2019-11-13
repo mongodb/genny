@@ -13,3 +13,12 @@ Actors:
   - Collection: inserts
     Duration: 3 minutes
     Database: test
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: 
+        - replica
+        - single-replica
+        - standalone
+        - shard

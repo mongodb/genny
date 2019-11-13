@@ -53,15 +53,35 @@ Script: `genny-auto-tasks`
 ---------------------------------
 
 Generates JSON that can be used as input to evergreen's generate.tasks,
-representing genny workloads to be run.
+representing either evergreen tasks or buildvariants that run genny workloads.
 
-For example, if one wanted to write JSON tasks to `build/tasks.json` that would run the big_update and insert_remove workloads on the `linux-1-node-replSet` buildvariant, the following command could be used:
+If run with `--generate-all-tasks`, `genny-auto-tasks` outputs a JSON file 
+of task definitions for all workloads in the `/src/workloads` genny directory.
+If run with `--variants`, this program outputs a JSON file of buildvariant
+definitions that run a subset of workload tasks based on the other arguments.
+These two invocations are separate to ensure that no task will be generated more
+than once when run on evergreen (which would cause generate.tasks to throw an
+error, even across different buildvariants).
+
+Thus, running `genny-auto-tasks` is generally a two step process. First, one
+generates all tasks as follows, with the output JSON going to `build/all_tasks.json`
+in this case:
 
 ```sh
-genny-auto-tasks --workloads scale/BigUpdate.yml scale/InsertRemove.yml --variants linux-1-node-replSet --output build/tasks.json
+genny-auto-tasks --generate-all-tasks --output build/all_tasks.json
 ```
 
-If the `--workloads` flag is not set, the script will instead generate JSON for all workloads that have been added or modified locally (relative to origin/master). Run with the `-h` flag for more information.
+Upon using generate.tasks with the outputted JSON, one can then generate JSON
+representing buildvariants that run the proper subset of tasks, based either
+on git modification history or the evergreen environment (See "Patch-Testing
+Genny Changes with Sys-Perf / DSI" in the main README for more info). For example,
+these commands write JSON definitions of `linux-1-node-replSet` buildvariants
+that run modified/autorun genny workloads.
+
+```sh
+genny-auto-tasks --modified --variants linux-1-node-replSet --output build/variants.json
+genny-auto-tasks --autorun --variants linux-1-node-replSet --output build/variants.json
+```
 
 
 Script: `genny-metrics-legacy-report`

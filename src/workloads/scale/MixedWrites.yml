@@ -34,3 +34,7 @@ Actors:
         OperationOptions:
           WriteConcern: { Level: 3 }
           Timeout: 6000 milliseconds
+
+AutoRun:
+  Requires:
+    bootstrap: { mongodb_setup: [replica] }
