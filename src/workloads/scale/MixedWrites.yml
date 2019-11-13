@@ -40,4 +40,6 @@ AutoRun:
     bootstrap: { infrastructure_provisioning: [replica] }
   PrepareEnvironmentWith:
     # Arguments to pass to the "prepare environment" evergreen function
-    setup: replica-delay
+    #
+    # The 'setup' parameter dictates which mongodb_setup file to use.
+    setup: replica-delay-mixed
