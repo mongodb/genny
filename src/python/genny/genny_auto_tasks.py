@@ -170,6 +170,8 @@ def make_env_dict(dirname):
             return None
         with open(fname, 'r') as handle:
             config = yaml.safe_load(handle)
+            if config is None:
+                return None
             module = os.path.basename(fname).split('.yml')[0]
             env_dict[module] = config
     return env_dict
@@ -300,7 +302,7 @@ def main():
 
             workloads = autorun_workload_files(env_dict)
             if len(workloads) == 0:
-                raise Exception('No AutoRun workloads found matching environment, generating no tasks.')
+                print('No AutoRun workloads found matching environment, generating no tasks.')
         elif args.modified:
             workloads = modified_workload_files()
             if len(workloads) == 0:
