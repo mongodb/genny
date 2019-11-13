@@ -1,6 +1,13 @@
 SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+Description: |
+  Does w:2 writes for a Phase followed
+  by w:3 writes for a second Phase.
+
+  Requires at least 3-node replset.
+
 Actors:
-- Name: BulkWrites
+- Name: MixedWrites
   Type: CrudActor
   Database: db
   Threads: 100
