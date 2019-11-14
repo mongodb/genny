@@ -1,6 +1,10 @@
 SchemaVersion: 2018-07-01
 Owner: Storage Engines
 
+# This is the "model" workload for the Large Scale Workload Automation project.
+# At present, it is set up to run the basic workload, but will evolve.
+# The primary points we expect to change are marked by a CHANGE comment.
+
 # This section contains shared definitions that are used in the workload.
 GlobalDefaults:
   Random10KInt: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
@@ -9,7 +13,7 @@ GlobalDefaults:
   Random30String: &rand_30b_string {^RandomString: {length: 30}}
   Random130String: &rand_100b_string {^RandomString: {length: 100}}
 
-  # TODO: set to 300 minutes or longer
+  # CHANGE: set to 300 minutes or longer
   Duration: &Duration 70 minutes   # set low, so we can see the effect of scans
   TrackProportion: &TrackProportion 0
 
@@ -32,7 +36,7 @@ GlobalDefaults:
   # except for the snapshot scanner that scans all databases.
   # We expect this to be larger than the amount of physical memory,
   # so that we'll displace lots of hot data in the cache.
-  # TODO: the spec says 10TB of live data (total in all databases).
+  # CHANGE: the spec says 10TB of live data (total in all databases).
   ScannerColdDBGigabytes: &ScannerColdDBGigabytes 150
 
   # This list is used to scan all databases. By putting first the hot databases,
@@ -182,8 +186,6 @@ Actors:
     Indexes: *RollingIndexes
   - {Nop: true}
 
-# TODO: make sure we are writing into the most recent collection,
-#       and deleting the oldest, etc.
 - Name: RollingManage
   Type: RollingCollections
   Threads: 1
@@ -452,10 +454,9 @@ Actors:
   - Duration: *Duration
     Documents: 100000000000
     ScanType: snapshot
-    #GlobalRate: 1 per 24 hours   # TODO
+    #GlobalRate: 1 per 24 hours   # CHANGE
     #Note: using "2 per 1" hour kicks off two scans at the top of the hour!
     GlobalRate: 1 per 30 minutes
-    #GlobalRate: 1 per 2 minutes
 
 - Name: OplogTailer
   Type: RollingCollections
