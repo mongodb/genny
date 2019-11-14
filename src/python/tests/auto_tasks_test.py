@@ -2,7 +2,7 @@ import json
 from subprocess import CalledProcessError
 import unittest
 
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 from unittest.mock import Mock
 from genny.genny_auto_tasks import construct_all_tasks_json
 from genny.genny_auto_tasks import construct_variant_json
@@ -15,8 +15,9 @@ from tests.fixtures.auto_tasks_fixtures import workload_should_autorun_cases
 
 class AutoTasksTest(unittest.TestCase):
 
+    @patch('genny.genny_auto_tasks.open', new_callable=mock_open, read_data='')
     @patch('glob.glob')
-    def test_construct_all_tasks_json(self, mock_glob):
+    def test_construct_all_tasks_json(self, mock_glob, mock_open):
         """
         This test runs construct_all_tasks_json with static workloads
         and checks that

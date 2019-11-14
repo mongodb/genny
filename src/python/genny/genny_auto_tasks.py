@@ -19,9 +19,11 @@ class AutoRunSpec():
     AutoRunSpec class encapsulates the 'AutoRun' section of a workload yaml file, if it exists
     """
 
-    def __init__(self, required_dict):
+    def __init__(self, required_dict, prepare_environment_with):
         # A dictionary representing the yaml within the Requires section of the workload AutoRun yaml
         self.required_dict = required_dict
+        # A dictionary representing the yaml within the PrepareEnvironmentWith section of the workload AutoRun yaml
+        self.prepare_environment_with = prepare_environment_with
 
     @staticmethod
     def create_from_workload_yaml(workload_yaml):
@@ -29,17 +31,25 @@ class AutoRunSpec():
         :param dict workload_yaml: dict representation of the workload yaml file
         :return AutoRunSpec: if workload contains a valid AutoRun section: returns an AutoRunSpec containing the requirements for this yaml to be autorun. Else, returns None.
         """
+        if workload_yaml is None or not isinstance(workload_yaml, dict):
+            return None
         if 'AutoRun' not in workload_yaml or not isinstance(workload_yaml['AutoRun'], dict):
             return None
-        if 'Requires' not in workload_yaml['AutoRun'] or not isinstance(workload_yaml['AutoRun']['Requires'], dict):
-            return None
+        autorun = workload_yaml['AutoRun']
 
-        required_dict = workload_yaml['AutoRun']['Requires']
-        for module, config in required_dict.items():
-            if not isinstance(config, dict):
-                return None
+        required_dict = None
+        if 'Requires' in workload_yaml['AutoRun'] and isinstance(autorun['Requires'], dict):
+            required_dict = autorun['Requires']
+            for module, config in required_dict.items():
+                if not isinstance(config, dict):
+                    required_dict = None
+                    break
 
-        return AutoRunSpec(required_dict)
+        prepare_environment_with = None
+        if 'PrepareEnvironmentWith' in autorun and isinstance(autorun['PrepareEnvironmentWith'], dict):
+            prepare_environment_with = autorun['PrepareEnvironmentWith']
+
+        return AutoRunSpec(required_dict, prepare_environment_with)
 
 
 def to_snake_case(str):
@@ -106,7 +116,7 @@ def workload_should_autorun(autorun_spec, env_dict):
     :param dict env_dict: a dict representing the values from bootstrap.yml and runtime.yml
     :return: True if this workload should be autorun, else False.
     """
-    if autorun_spec is None:
+    if autorun_spec is None or autorun_spec.required_dict is None:
         return False
 
     for module, required_config in autorun_spec.required_dict.items():
@@ -170,6 +180,8 @@ def make_env_dict(dirname):
             return None
         with open(fname, 'r') as handle:
             config = yaml.safe_load(handle)
+            if config is None:
+                return None
             module = os.path.basename(fname).split('.yml')[0]
             env_dict[module] = config
     return env_dict
@@ -212,11 +224,24 @@ def construct_all_tasks_json():
         task_name = to_snake_case(base_parts[0])
         t = c.task(task_name)
         t.priority(5)  # The default priority in system_perf.yml
+
+        prepare_environment_vars = {
+            'test': task_name,
+            'auto_workload_path': fname
+        }
+
+        full_filename = '{}/src/workloads/{}'.format(get_project_root(), fname)
+        with open(full_filename, 'r') as handle:
+            try:
+                workload_dict = yaml.safe_load(handle)
+                autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
+                if autorun_spec is not None and autorun_spec.prepare_environment_with is not None:
+                    prepare_environment_vars.update(autorun_spec.prepare_environment_with)
+            except Exception as e:
+                pass
+
         t.commands([
-            CommandDefinition().function('prepare environment').vars({
-                'test': task_name,
-                'auto_workload_path': fname
-            }),
+            CommandDefinition().function('prepare environment').vars(prepare_environment_vars),
             CommandDefinition().function('deploy cluster'),
             CommandDefinition().function('run test'),
             CommandDefinition().function('analyze'),
@@ -300,7 +325,7 @@ def main():
 
             workloads = autorun_workload_files(env_dict)
             if len(workloads) == 0:
-                raise Exception('No AutoRun workloads found matching environment, generating no tasks.')
+                print('No AutoRun workloads found matching environment, generating no tasks.')
         elif args.modified:
             workloads = modified_workload_files()
             if len(workloads) == 0:
