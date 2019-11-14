@@ -1,0 +1,45 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+Description: |
+  Does w:2 writes for a Phase followed
+  by w:3 writes for a second Phase.
+
+  Requires at least 3-node replset.
+
+Actors:
+- Name: MixedWrites
+  Type: CrudActor
+  Database: db
+  Threads: 100
+  Phases:
+  - Phase: 0
+    Duration: 10 minutes
+    Collection: coll
+    MetricsName: W2InsertOne
+    Operation:
+      OperationName: insertOne
+      OperationCommand:
+        Document: { a: 1 }
+        OperationOptions:
+          WriteConcern: { Level: 2 }
+          Timeout: 6000 milliseconds
+  - Phase: 1
+    Duration: 10 minutes
+    Collection: coll
+    MetricsName: W3InsertOne
+    Operation:
+      OperationName: insertOne
+      OperationCommand:
+        Document: { a: 1 }
+        OperationOptions:
+          WriteConcern: { Level: 3 }
+          Timeout: 6000 milliseconds
+
+AutoRun:
+  Requires:
+    bootstrap: { infrastructure_provisioning: [replica] }
+  PrepareEnvironmentWith:
+    # Arguments to pass to the "prepare environment" evergreen function
+    #
+    # The 'setup' parameter dictates which mongodb_setup file to use.
+    setup: replica-delay-mixed

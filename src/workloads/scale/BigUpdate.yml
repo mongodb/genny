@@ -115,3 +115,12 @@ Actors:
     CollectionCount: 100  # This is specifically 10% of collections.
     Filter: {y: {^RandomInt: {distribution: poisson, mean: 100}}}
     Limit: 20
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: 
+        - replica
+        - single-replica
+        - standalone
+        - replica-noflowcontrol

@@ -2,26 +2,31 @@ import json
 from subprocess import CalledProcessError
 import unittest
 
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 from unittest.mock import Mock
-from genny.genny_auto_tasks import construct_task_json
+from genny.genny_auto_tasks import construct_all_tasks_json
+from genny.genny_auto_tasks import construct_variant_json
 from genny.genny_auto_tasks import modified_workload_files
 from genny.genny_auto_tasks import validate_user_workloads
+from genny.genny_auto_tasks import workload_should_autorun
+from genny.genny_auto_tasks import AutoRunSpec
+from tests.fixtures.auto_tasks_fixtures import workload_should_autorun_cases
 
 
 class AutoTasksTest(unittest.TestCase):
 
-    @patch('genny.genny_auto_tasks.modified_workload_files')
-    def test_construct_task_json(self, mock_modified_workload_files):
+    @patch('genny.genny_auto_tasks.open', new_callable=mock_open, read_data='')
+    @patch('glob.glob')
+    def test_construct_all_tasks_json(self, mock_glob, mock_open):
         """
-        This test runs construct_task_json with static workloads and variants
+        This test runs construct_all_tasks_json with static workloads
         and checks that
         the generated json is what evergreen will expect to generate the correct tasks.
         """
 
-        mock_modified_workload_files.return_value = ["scale/NewWorkload.yml", "subdir1/subdir2/subdir3/NestedTest.yml",
-                                                     "non-yaml-file.md"]
-        static_variants = ['variant-1', 'variant-2']
+        mock_glob.return_value = ["genny/src/workloads/scale/NewWorkload.yml",
+                                  "genny/src/workloads/subdir1/subdir2/subdir3/NestedTest.yml",
+                                  "/the/full/path/to/genny/src/workloads/execution/ExecutionTask.yml"]
 
         expected_json = {
             'tasks': [
@@ -57,7 +62,43 @@ class AutoTasksTest(unittest.TestCase):
                     ],
                     'priority': 5
                 },
+                {
+                    'name': 'execution_task',
+                    'commands': [
+                        {
+                            'func': 'prepare environment',
+                            'vars': {
+                                'test': 'execution_task',
+                                'auto_workload_path': 'execution/ExecutionTask.yml'
+                            }
+                        },
+                        {'func': 'deploy cluster'},
+                        {'func': 'run test'},
+                        {'func': 'analyze'}
+                    ],
+                    'priority': 5
+                },
             ],
+        }
+
+        actual_json_str = construct_all_tasks_json()
+        actual_json = json.loads(actual_json_str)
+
+        self.assertDictEqual(expected_json, actual_json)
+
+    @patch('genny.genny_auto_tasks.modified_workload_files')
+    def test_construct_variant_json(self, mock_modified_workload_files):
+        """
+        This test runs construct_variant_json with static workloads and variants
+        and checks that
+        the generated json is what evergreen will expect to generate the correct variants.
+        """
+
+        mock_modified_workload_files.return_value = ["scale/NewWorkload.yml", "subdir1/subdir2/subdir3/NestedTest.yml",
+                                                     "non-yaml-file.md"]
+        static_variants = ['variant-1', 'variant-2']
+
+        expected_json = {
             'buildvariants': [
                 {
                     'name': 'variant-1',
@@ -77,7 +118,7 @@ class AutoTasksTest(unittest.TestCase):
         }
 
         workloads = mock_modified_workload_files()
-        actual_json_str = construct_task_json(workloads, static_variants)
+        actual_json_str = construct_variant_json(workloads, static_variants)
         actual_json = json.loads(actual_json_str)
 
         self.assertDictEqual(expected_json, actual_json)
@@ -151,3 +192,13 @@ class AutoTasksTest(unittest.TestCase):
             self.assertEqual(len(expected), len(actual))
             for idx, expected_err in enumerate(expected):
                 self.assertTrue(expected_err in actual[idx])
+
+    def test_workload_should_autorun(self):
+        for tc in workload_should_autorun_cases:
+            workload_yaml = tc[0]
+            env_dict = tc[1]
+            expected = tc[2]
+
+            autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_yaml)
+            actual = workload_should_autorun(autorun_spec, env_dict)
+            self.assertEqual(expected, actual)

@@ -536,3 +536,15 @@ Tests:
     OutcomeCounts:
       - Filter: {a: 1}
         Count: 1
+
+  - Description: set WriteConcern 1 on an InsertOne
+    Operations:
+      - OperationName: insertOne
+        OperationCommand:
+          Document: {a: 1}
+        OperationOptions:
+          WriteConcern: { Level: 1 }
+          Timeout: 6000 milliseconds
+    OutcomeCounts:
+      - Filter: {a: 1}
+        Count: 1
