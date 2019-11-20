@@ -57,16 +57,16 @@ GlobalDefaults:
   RollingReads2: &RollingReads2 100 per 1 second             # x1 thread
 
   # We want about 200 bytes, 9 fields (they will all be indexed).
-  RollingDocument: &RollingDocument {
-    a: *rand_30b_string,
-    b: *rand_30b_string,
-    c: *rand_30b_string,
-    d: *rand_30b_string,
-    e: *rand_30b_string,
-    f: *rand_30b_string,
-    g: *rand_4b_int,
-    h: *rand_4b_int,
-    i: *rand_4b_int }
+  RollingDocument: &RollingDocument
+    a: *rand_30b_string
+    b: *rand_30b_string
+    c: *rand_30b_string
+    d: *rand_30b_string
+    e: *rand_30b_string
+    f: *rand_30b_string
+    g: *rand_4b_int
+    h: *rand_4b_int
+    i: *rand_4b_int
   RollingIndexes: &RollingIndexes
     - keys: {a: 1}
     - keys: {b: 1}
@@ -366,40 +366,6 @@ Actors:
       a19: *rand_100b_string
   - {Nop: true}
   - {Nop: true}
-
-#- Name: CountScanner
-#  Type: CollectionScanner
-#  Threads: 1
-#  Database: *ScannerColdDB
-#  CollectionCount: 60
-#  Phases:
-#  - {Nop: true}
-#  - {Nop: true}
-#  - Duration: *Duration
-#    # Optionally skip the first iteration of the collection scanner
-#    SkipFirstLoop: true
-#    GlobalRate: 1 per 10 seconds
-#    ScanType: count
-
-#- Name: StandardScanner
-#  Type: CollectionScanner
-#  Threads: 10
-#  Database: *ScannerHotDB
-#  Phases:
-#  - {Nop: true}
-#  - {Nop: true}
-#  - Duration: *Duration
-#    # Scan size bytes will scan up to this many bytes per scan iteration
-#    # once the limit is hit it will exit the scan loop.
-#    ScanSizeBytes: 100000
-#    GlobalRate: 10 per 30 seconds
-#    ScanType: standard
-#  - Duration: *Duration
-#    # The Documents configuration specifies the max number of documents we
-#    # want to scan per scan loop. Once we hit this limit we exit the loop.
-#    Documents: 1000
-#    ScanType: standard
-#    GlobalRate: 10 per 10 seconds
 
 # A snapshot scanner begins a transaction prior to starting its scan
 # with read concern majority, which should pin the read for the
