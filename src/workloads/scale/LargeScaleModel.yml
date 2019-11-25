@@ -1,0 +1,435 @@
+SchemaVersion: 2018-07-01
+Owner: Storage Engines
+
+# This is the "model" workload for the Large Scale Workload Automation project.
+# At present, it is set up to run the basic workload, but will evolve.
+# The primary points we expect to change are marked by a CHANGE comment.
+
+# This section contains shared definitions that are used in the workload.
+GlobalDefaults:
+  Random10KInt: &rand_10k_int {^RandomInt: {min: 0, max: 10000}}
+  Random10KInt: &rand_1k_int {^RandomInt: {min: 0, max: 1000}}
+  Random4ByteInt: &rand_4b_int {^RandomInt: {min: 0, max: 2147483647}}
+  Random30String: &rand_30b_string {^RandomString: {length: 30}}
+  Random130String: &rand_100b_string {^RandomString: {length: 100}}
+
+  # CHANGE: set to 300 minutes or longer
+  Duration: &Duration 70 minutes   # set low, so we can see the effect of scans
+  TrackProportion: &TrackProportion 0
+
+  LongLivedDB: &LongLivedDB longlived  # name of the long lived database
+  LongLivedDocumentCount: &LongLivedDocumentCount 1000
+  LongLivedCollectionCount: &LongLivedCollectionCount 1000
+
+  RollingDB: &RollingDB rolling
+
+  # Note: if HotCollectionDB and HotDocumentDB reference the same
+  # database name, only one of their loaders should be enabled.
+  HotCollectionDB: &HotCollectionDB hotcoll
+  HotDocumentDB: &HotDocumentDB hotdoc
+
+  ScannerColdDB: &ScannerColdDB scancold
+  ScannerHotDB: &ScannerHotDB rolling
+
+  # Set to how many gigabytes we want the "cold" database to be.
+  # This database is initially created, but not used for anything,
+  # except for the snapshot scanner that scans all databases.
+  # We expect this to be larger than the amount of physical memory,
+  # so that we'll displace lots of hot data in the cache.
+  # CHANGE: the spec says 10TB of live data (total in all databases).
+  ScannerColdDBGigabytes: &ScannerColdDBGigabytes 150
+
+  # This list is used to scan all databases. By putting first the hot databases,
+  # which have high concentrations of updates, we'll be referencing more
+  # and "older" updates. That should stress the WiredTiger version history.
+  AllDB: &AllDB hotdoc,hotcoll,rolling,longlived,scancold
+
+  # According to the design, the number of writes should add up to 10K second.
+  LongLivedWrites: &LongLivedWrites 600 per 1 second          #  x5 threads
+  RollingWrites: &RollingWrites 1000 per 1 second             # x40 threads
+  HotDocumentWrites: &HotDocumentWrites 1000 per 1 second     # x40 threads
+  HotCollectionWrites: &HotCollectionWrites 1000 per 1 second # x40 threads
+
+  # According to the design, the number of reads should add up to 1K second.
+  LongLivedReads: &LongLivedReads 20 per 1 second            # x10 threads
+  LongLivedIndexReads: &LongLivedIndexReads 20 per 1 second  # x10 threads
+  RollingReads1: &RollingReads1 50 per 1 second              # x10 threads
+  RollingReads2: &RollingReads2 100 per 1 second             # x1 thread
+
+  # We want about 200 bytes, 9 fields (they will all be indexed).
+  RollingDocument: &RollingDocument
+    a: *rand_30b_string
+    b: *rand_30b_string
+    c: *rand_30b_string
+    d: *rand_30b_string
+    e: *rand_30b_string
+    f: *rand_30b_string
+    g: *rand_4b_int
+    h: *rand_4b_int
+    i: *rand_4b_int
+  RollingIndexes: &RollingIndexes
+    - keys: {a: 1}
+    - keys: {b: 1}
+    - keys: {c: 1}
+    - keys: {d: 1}
+    - keys: {e: 1}
+    - keys: {f: 1}
+    - keys: {i: 1, g: 1}
+    - keys: {g: 1, h: 1}
+    - keys: {h: 1, i: 1}
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 5000
+
+# There are 3 phases in the workload.  The first phase loads the
+# "cold" database, which may be quite large and has a simple structure.
+# The second phase loads all the other databases, which may be done
+# in parallel.  The third phase is the "steady-state" workload that
+# it specified in the "Large Scale Workload Automation" JIRA epic.
+Actors:
+- Name: LongLivedCreator
+  Type: Loader
+  Threads: 10
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - Repeat: 1
+    Database: *LongLivedDB
+    CollectionCount: *LongLivedCollectionCount
+    Threads: 10
+    DocumentCount: *LongLivedDocumentCount
+    BatchSize: 1000
+    Document:
+      # Each document ranges in size from about 90 to 150 bytes (average 120)
+      x0: *rand_10k_int
+      x1: *rand_4b_int
+      x2: *rand_4b_int
+      x3: *rand_4b_int
+      x4: *rand_4b_int
+      x5: *rand_4b_int
+      x6: *rand_4b_int
+      x7: *rand_4b_int
+      x8: *rand_4b_int
+      s0: {^RandomString: {length: {^RandomInt: {min: 20, max: 80}}}}
+    Indexes:
+    - keys: {x0: 1}
+    - keys: {x1: 1}
+    - keys: {x2: 1}
+    - keys: {x3: 1}
+    - keys: {x4: 1}
+    - keys: {x5: 1}
+    - keys: {x6: 1}
+    - keys: {x7: 1}
+    - keys: {x8: 1}
+  - {Nop: true}
+
+- Name: LongLivedIndexReader
+  Type: MultiCollectionQuery
+  Threads: 10
+  GlobalRate: *LongLivedIndexReads
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    Database: *LongLivedDB
+    CollectionCount: *LongLivedCollectionCount
+    DocumentCount: *LongLivedDocumentCount
+    Filter: {x0: *rand_10k_int}
+
+- Name: LongLivedReader
+  Type: MultiCollectionQuery
+  Threads: 10
+  GlobalRate: *LongLivedReads
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    Database: *LongLivedDB
+    CollectionCount: *LongLivedCollectionCount
+    DocumentCount: *LongLivedDocumentCount
+    Filter: {_id: *rand_10k_int}
+
+- Name: LongLivedWriter
+  Type: MultiCollectionUpdate
+  Threads: 5
+  GlobalRate: *LongLivedWrites
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    Database: *LongLivedDB
+    CollectionCount: *LongLivedCollectionCount
+    DocumentCount: *LongLivedDocumentCount
+    UpdateFilter: {_id: *rand_10k_int}
+    Update: {$inc: {x1: 1}}
+
+- Name: RollingSetup
+  Type: RollingCollections
+  # The setup operation creates CollectionWindowSize collections, and populates hem with
+  # DocumentCount documents, each collection will have indexes created as specified in
+  # the index block.
+  Operation: Setup
+  Database: *RollingDB
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - Repeat: 1
+    CollectionWindowSize: 3600
+    Document: *RollingDocument
+    DocumentCount: 10
+    TrackProportion: *TrackProportion
+    Indexes: *RollingIndexes
+  - {Nop: true}
+
+- Name: RollingManage
+  Type: RollingCollections
+  Threads: 1
+  # The manage operation creates and drops one collection per iteration,
+  # it also creates indexes for that collection.
+  Operation: Manage
+  Database: *RollingDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    GlobalRate: 1 per 1 second
+    Indexes: *RollingIndexes
+
+- Name: RollingWriter
+  Type: RollingCollections
+  Threads: 40
+  Operation: Write
+  Database: *RollingDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    TrackProportion: *TrackProportion
+    Document: *RollingDocument
+    GlobalRate: *RollingWrites
+
+- Name: RollingReader1
+  Type: RollingCollections
+  Threads: 10
+  Database: *RollingDB
+  Operation: Read
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    TrackProportion: *TrackProportion
+    # Distribution is a linear distribution from 0 to 1
+    Distribution: 0.8
+    GlobalRate: *RollingReads1
+
+- Name: RollingReader2
+  Type: RollingCollections
+  Threads: 1
+  Database: *RollingDB
+  Operation: Read
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    TrackProportion: *TrackProportion
+    Distribution: 0.25
+    # Filter modifies the find to use whatever filter you pass to it
+    Filter: {a: 1}
+    GlobalRate: *RollingReads2
+
+- Name: HotDocumentLoader
+  Type: Loader
+  TrackProportion: *TrackProportion
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - Repeat: 1
+    Database: *HotDocumentDB
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1
+    BatchSize: 1
+    Document:
+      first: first
+      second: *rand_1k_int
+  - {Nop: true}
+
+- Name: HotDocumentUpdater
+  Type: CrudActor
+  Threads: 40
+  Database: *HotDocumentDB
+  TrackProportion: *TrackProportion
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    Collection: Collection0
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: updateOne
+          Filter: {first : first}
+          Update: {$set: {second: *rand_1k_int}}
+    GlobalRate: *HotDocumentWrites
+
+- Name: HotCollectionLoader
+  Type: Loader
+  TrackProportion: *TrackProportion
+  Threads: 1
+  Phases:
+  - {Nop: true}
+  - Repeat: 1
+    Database: *HotCollectionDB
+    CollectionCount: 1
+    Threads: 1
+    DocumentCount: 1
+    BatchSize: 1
+    Document:
+      first: first
+      second: *rand_1k_int
+  - {Nop: true}
+
+- Name: HotCollectionUpdater
+  Type: CrudActor
+  TrackProportion: *TrackProportion
+  Threads: 40
+  Database: *HotCollectionDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    Collection: Collection0
+    Operations:
+    - OperationName: bulkWrite
+      OperationCommand:
+        WriteOperations:
+        - WriteCommand: insertOne
+          Document: { a : *rand_1k_int}
+    GlobalRate: *HotCollectionWrites
+
+- Name: HotCollectionDeleter
+  Type: Deleter
+  Threads: 40
+  Database: *HotCollectionDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    Collection: Collection0
+    GlobalRate: 1000 per 1 second
+
+# Create the cold database only.  For the hot database, we'll
+# use the rolling collection or the longlived collection, as they
+# are actively being updated and queried.
+- Name: ScannerLoader
+  Type: Loader
+  TrackProportion: *TrackProportion
+  # Note: we've cut down on the number of threads, as this load
+  # can sometimes causes failures.
+  Threads: 5
+  Phases:
+    # Each collection is ~100M.  Assuming N is equal to ScannerColdDBGigabytes.
+    # Each thread has N collections, and with 10 threads, that's
+    # 10*N collections, or N gigabytes of space.
+  - Repeat: 1
+    Database: *ScannerColdDB
+    CollectionCount: *ScannerColdDBGigabytes
+    Threads: 1
+    DocumentCount: 50000
+    BatchSize: 1000
+    Document:
+      a0: *rand_100b_string
+      a1: *rand_100b_string
+      a2: *rand_100b_string
+      a3: *rand_100b_string
+      a4: *rand_100b_string
+      a5: *rand_100b_string
+      a6: *rand_100b_string
+      a7: *rand_100b_string
+      a8: *rand_100b_string
+      a9: *rand_100b_string
+      a10: *rand_100b_string
+      a11: *rand_100b_string
+      a12: *rand_100b_string
+      a13: *rand_100b_string
+      a14: *rand_100b_string
+      a15: *rand_100b_string
+      a16: *rand_100b_string
+      a17: *rand_100b_string
+      a18: *rand_100b_string
+      a19: *rand_100b_string
+  - {Nop: true}
+  - {Nop: true}
+
+# A snapshot scanner begins a transaction prior to starting its scan
+# with read concern majority, which should pin the read for the
+# duration of the scan.
+#
+# We want one of these snapshots to start every minute, and we want each scan
+# to take at least 2 minutes.  The allocated number of threads forms
+# a pool to ensure that overlapping scans will occur on schedule.
+- Name: SnapshotScanner1Gigabytes
+  Type: CollectionScanner
+  Threads: 10
+  Database: *ScannerHotDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    ScanSizeBytes: 1000000000
+    ScanDuration: 2 minutes
+    ScanType: snapshot
+     # starting at 1 minute old, and going older    
+    CollectionSkip: 60
+    CollectionSortOrder: forward
+    GlobalRate: 1 per 1 minute
+    # Note: to peform an index scan use the Filter config.
+    # We'd need to know the layout of the collections we're using.
+    # Filter: {a : 1}
+
+- Name: SnapshotScanner5Gigabytes
+  Type: CollectionScanner
+  Threads: 10
+  Database: *ScannerHotDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    ScanSizeBytes: 5000000000
+    ScanDuration: 10 minutes
+    ScanType: snapshot
+     # starting at 5 minutes old, and going older    
+    CollectionSkip: 300
+    CollectionSortOrder: forward
+    GlobalRate: 1 per 5 minutes
+
+# We scan all the documents in all databases.
+- Name: SnapshotScannerAll
+  Type: CollectionScanner
+  Threads: 10
+  Database: *AllDB
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
+    Documents: 100000000000
+    ScanType: snapshot
+    #GlobalRate: 1 per 24 hours   # CHANGE
+    #Note: using "2 per 1" hour kicks off two scans at the top of the hour!
+    GlobalRate: 1 per 30 minutes
+
+- Name: OplogTailer
+  Type: RollingCollections
+  Database: *RollingDB
+  Threads: 1
+  Operation: OplogTailer
+  Phases:
+  - {Nop: true}
+  - {Nop: true}
+  - Duration: *Duration
