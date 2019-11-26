@@ -329,10 +329,13 @@ def main():
         elif args.modified:
             workloads = modified_workload_files()
             if len(workloads) == 0:
-                raise Exception(
-                    'No modified workloads found, generating no tasks.\n\
+                err_msg = 'No modified workloads found.\n\
                     No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
-                    Ensure that any added/modified workloads have been committed locally.')
+                    Ensure that any added/modified workloads have been committed locally.'
+                if args.forced_workloads is None:
+                    raise Exception(err_msg)
+                else:
+                    print(err_msg, file=sys.stderr)
 
         if args.forced_workloads is not None:
             errs = validate_user_workloads(args.forced_workloads)
