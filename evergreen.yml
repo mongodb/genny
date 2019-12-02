@@ -48,18 +48,6 @@ ignore:
 - "*.md"  # don't schedule tests if a commit only changes markdown files
 
 buildvariants:
-
-- name: archlinux
-  display_name: Arch Linux
-  modules: ~
-  run_on:
-  - archlinux-test
-  expansions:
-    distro: archlinux
-  tasks:
-  - name: tg_compile_and_test
-  - name: t_push
-
 - name: amazon2
   display_name: Amazon Linux 2
   modules: ~
