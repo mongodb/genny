@@ -77,3 +77,13 @@ Actors:
     DocumentCount: *DocumentCount
     UpdateFilter: {_id: *rand_10k_int}
     Update: {$inc: {x1: 1}}
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup:
+        - replica
+        - standalone
+        - shard
+        - single-replica
+        - single-replica-15gbwtcache
