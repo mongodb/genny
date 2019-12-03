@@ -433,3 +433,9 @@ Actors:
   - {Nop: true}
   - {Nop: true}
   - Duration: *Duration
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup:
+        - standalone
