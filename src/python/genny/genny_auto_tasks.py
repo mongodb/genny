@@ -209,6 +209,7 @@ def construct_all_tasks_json():
     :return: json representation of tasks for all workloads in the /src/workloads directory relative to the genny root.
     """
     c = Configuration()
+    c.exec_timeout(64800)  # 18 hours
 
     workload_dir = '{}/src/workloads'.format(get_project_root())
     all_workloads = glob.glob('{}/**/*.yml'.format(workload_dir), recursive=True)
