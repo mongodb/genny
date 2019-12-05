@@ -226,6 +226,11 @@ def validate_user_workloads(workloads):
 
 
 def get_prepare_environment_vars(task_name, fname):
+    """
+    :param task_name: A string representing this task, determined from filename.
+    :param fname: A filename for this workload.
+    :return: A list of environment var dictionaries, one for each mongodb_setup used.
+    """
     autorun_spec = None
     prepare_environment_vars_template = {
         'test': task_name,
