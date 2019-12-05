@@ -305,8 +305,8 @@ def main():
     args = parser.parse_args(sys.argv[1:])
     if args.generate_all_tasks and (args.autorun or args.modified):
         parser.error('arguments --autorun and --modified not allowed with --generate-all-tasks')
-    if args.variants and not (args.autorun or args.modified):
-        parser.error('either --autorun or --modified required with --variants')
+    if args.variants and not (args.autorun or args.modified or args.forced_workloads):
+        parser.error('either --autorun, --modified, or --forced-workloads required with --variants')
 
     original_cwd = os.getcwd()
     cd_genny_root()
@@ -333,6 +333,8 @@ def main():
                 raise Exception('No modified workloads found.\n\
                     No results from command: git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- ../workloads/\n\
                     Ensure that any added/modified workloads have been committed locally.')
+        else:
+            workloads = []
 
         if args.forced_workloads is not None:
             errs = validate_user_workloads(args.forced_workloads)
