@@ -51,6 +51,24 @@ class AutoRunSpec():
 
         return AutoRunSpec(required_dict, prepare_environment_with)
 
+    def get_prepare_environment_vars(prepare_environment_vars_template):
+        """
+        :param prepare_environment_vars_template: An existing template environment to build on.
+        :return: A list of prepare_environment_var dicts, one for each setup.
+        """
+        prepare_environment_vars = []
+        setup = prepare_environment_with['setup']
+        if setup is not None and isinstance(setup, list):
+            for setup_var in setup:
+                curr = prepare_environment_vars.copy()
+                curr.update(self.prepare_environment_with)
+                curr['setup'] = setup_var
+                prepare_environment_vars.append(curr)
+        else:
+            curr = prepare_environment_vars.copy()
+            curr.update(self.prepare_environment_with)
+            prepare_environment_vars.append(curr)
+        return prepare_environment_vars
 
 def to_snake_case(str):
     """
@@ -226,7 +244,7 @@ def construct_all_tasks_json():
         t = c.task(task_name)
         t.priority(5)  # The default priority in system_perf.yml
 
-        prepare_environment_vars = {
+        prepare_environment_vars_template = {
             'test': task_name,
             'auto_workload_path': fname
         }
@@ -236,17 +254,22 @@ def construct_all_tasks_json():
             try:
                 workload_dict = yaml.safe_load(handle)
                 autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
-                if autorun_spec is not None and autorun_spec.prepare_environment_with is not None:
-                    prepare_environment_vars.update(autorun_spec.prepare_environment_with)
             except Exception as e:
                 pass
 
-        t.commands([
-            CommandDefinition().function('prepare environment').vars(prepare_environment_vars),
-            CommandDefinition().function('deploy cluster'),
-            CommandDefinition().function('run test'),
-            CommandDefinition().function('analyze'),
-        ])
+        prepare_environment_vars = []
+        if autorun_spec is not None and autorun_spec.prepare_environment_with is not None:
+            prepare_environment_vars = autorun_spec.get_prepare_environment_vars(prepare_environment_vars_template)
+        else:
+            prepare_environment_vars.append(prepare_environemnt_vars_template)
+
+        for prep_var in prepare_environment_vars:
+            t.commands([
+                CommandDefinition().function('prepare environment').vars(prep_var),
+                CommandDefinition().function('deploy cluster'),
+                CommandDefinition().function('run test'),
+                CommandDefinition().function('analyze'),
+            ])
 
     return c.to_json()
 
