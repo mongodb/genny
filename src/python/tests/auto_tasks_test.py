@@ -86,8 +86,10 @@ class AutoTasksTest(unittest.TestCase):
 
         self.assertDictEqual(expected_json, actual_json)
 
+    @patch('genny.genny_auto_tasks.open', new_callable=mock_open, read_data='')
+    @patch('glob.glob')
     @patch('genny.genny_auto_tasks.modified_workload_files')
-    def test_construct_variant_json(self, mock_modified_workload_files):
+    def test_construct_variant_json(self, mock_glob, mock_modified_workload_files, mock_open):
         """
         This test runs construct_variant_json with static workloads and variants
         and checks that
