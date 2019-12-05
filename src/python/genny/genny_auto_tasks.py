@@ -51,16 +51,16 @@ class AutoRunSpec():
 
         return AutoRunSpec(required_dict, prepare_environment_with)
 
-    def get_prepare_environment_vars(prepare_environment_vars_template):
+    def get_prepare_environment_vars(self, prepare_environment_vars_template):
         """
         :param prepare_environment_vars_template: An existing template environment to build on.
         :return: A list of prepare_environment_var dicts, one for each setup.
         """
         prepare_environment_vars = []
-        setup = prepare_environment_with['setup']
+        setup = self.prepare_environment_with['setup']
         if setup is not None and isinstance(setup, list):
             for setup_var in setup:
-                curr = prepare_environment_vars.copy()
+                curr = prepare_environment_vars_template.copy()
                 curr.update(self.prepare_environment_with)
                 curr['setup'] = setup_var
                 curr['test'] = "{task_name}_{setup_var}".format(
