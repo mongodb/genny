@@ -263,7 +263,7 @@ def construct_all_tasks_json():
         if autorun_spec is not None and autorun_spec.prepare_environment_with is not None:
             prepare_environment_vars = autorun_spec.get_prepare_environment_vars(prepare_environment_vars_template)
         else:
-            prepare_environment_vars.append(prepare_environemnt_vars_template)
+            prepare_environment_vars.append(prepare_environment_vars_template)
 
         for prep_var in prepare_environment_vars:
             t.commands([
