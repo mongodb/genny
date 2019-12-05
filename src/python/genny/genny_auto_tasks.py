@@ -64,7 +64,7 @@ class AutoRunSpec():
                 curr.update(self.prepare_environment_with)
                 curr['setup'] = setup_var
                 curr['test'] = "{task_name}_{setup_var}".format(
-                    task_name=curr['test'], setup_var=setup_var)
+                    task_name=curr['test'], setup_var=to_snake_case(setup_var))
                 prepare_environment_vars.append(curr)
         else:
             curr = prepare_environment_vars.copy()
@@ -79,7 +79,8 @@ def to_snake_case(str):
     :return: snake_case version of str.
     """
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', str)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+    s2 = re.sub('-', '_', s1)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s2).lower()
 
 
 def cd_genny_root():
@@ -224,6 +225,29 @@ def validate_user_workloads(workloads):
     return errors
 
 
+def get_prepare_environment_vars(task_name, fname):
+    autorun_spec = None
+    prepare_environment_vars_template = {
+        'test': task_name,
+        'auto_workload_path': fname
+    }
+
+    full_filename = '{}/src/workloads/{}'.format(get_project_root(), fname)
+    with open(full_filename, 'r') as handle:
+        try:
+            workload_dict = yaml.safe_load(handle)
+            autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
+        except Exception as e:
+            pass
+
+    prepare_environment_vars = []
+    if autorun_spec is not None and autorun_spec.prepare_environment_with is not None:
+        prepare_environment_vars = autorun_spec.get_prepare_environment_vars(prepare_environment_vars_template)
+    else:
+        prepare_environment_vars.append(prepare_environment_vars_template)
+
+    return prepare_environment_vars
+
 def construct_all_tasks_json():
     """
     :return: json representation of tasks for all workloads in the /src/workloads directory relative to the genny root.
@@ -243,29 +267,12 @@ def construct_all_tasks_json():
             continue
 
         task_name = to_snake_case(base_parts[0])
-        t = c.task(task_name)
-        t.priority(5)  # The default priority in system_perf.yml
-
-        prepare_environment_vars_template = {
-            'test': task_name,
-            'auto_workload_path': fname
-        }
-
-        full_filename = '{}/src/workloads/{}'.format(get_project_root(), fname)
-        with open(full_filename, 'r') as handle:
-            try:
-                workload_dict = yaml.safe_load(handle)
-                autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
-            except Exception as e:
-                pass
-
-        prepare_environment_vars = []
-        if autorun_spec is not None and autorun_spec.prepare_environment_with is not None:
-            prepare_environment_vars = autorun_spec.get_prepare_environment_vars(prepare_environment_vars_template)
-        else:
-            prepare_environment_vars.append(prepare_environment_vars_template)
-
+        
+        prepare_environment_vars = get_prepare_environment_vars(task_name, fname)
+        
         for prep_var in prepare_environment_vars:
+            t = c.task(prep_var['test'])
+            t.priority(5)  # The default priority in system_perf.yml
             t.commands([
                 CommandDefinition().function('prepare environment').vars(prep_var),
                 CommandDefinition().function('deploy cluster'),
@@ -294,7 +301,10 @@ def construct_variant_json(workloads, variants):
             continue
 
         task_name = to_snake_case(base_parts[0])
-        task_specs.append(TaskSpec(task_name))
+
+        prepare_environment_vars = get_prepare_environment_vars(task_name, fname) 
+        for prep_var in prepare_environment_vars:
+            task_specs.append(TaskSpec(prep_var['test']))
 
     for v in variants:
         c.variant(v).tasks(task_specs)
