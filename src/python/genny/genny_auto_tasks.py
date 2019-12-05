@@ -63,6 +63,8 @@ class AutoRunSpec():
                 curr = prepare_environment_vars.copy()
                 curr.update(self.prepare_environment_with)
                 curr['setup'] = setup_var
+                curr['test'] = "{task_name}_{setup_var}".format(
+                    task_name=curr['test'], setup_var=setup_var)
                 prepare_environment_vars.append(curr)
         else:
             curr = prepare_environment_vars.copy()
