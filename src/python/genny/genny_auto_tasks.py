@@ -176,10 +176,7 @@ def autorun_workload_files(env_dict):
     matching_files = []
     for fname in candidates:
         with open(fname, 'r') as handle:
-            try:
-                workload_dict = yaml.safe_load(handle)
-            except yaml.composer.ComposerError as e:
-                continue
+            workload_dict = yaml.safe_load(handle)
 
             autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
             if workload_should_autorun(autorun_spec, env_dict):
@@ -239,11 +236,8 @@ def get_prepare_environment_vars(task_name, fname):
 
     full_filename = '{}/src/workloads/{}'.format(get_project_root(), fname)
     with open(full_filename, 'r') as handle:
-        try:
-            workload_dict = yaml.safe_load(handle)
-            autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
-        except yaml.composer.ComposerError as e:
-            pass
+        workload_dict = yaml.safe_load(handle)
+        autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
 
     prepare_environment_vars = []
     if autorun_spec is not None and autorun_spec.prepare_environment_with is not None:
