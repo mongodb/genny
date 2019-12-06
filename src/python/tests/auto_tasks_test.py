@@ -79,6 +79,7 @@ class AutoTasksTest(unittest.TestCase):
                     'priority': 5
                 },
             ],
+            'timeout': 64800,
         }
 
         actual_json_str = construct_all_tasks_json()
