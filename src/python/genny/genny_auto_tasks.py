@@ -178,7 +178,7 @@ def autorun_workload_files(env_dict):
         with open(fname, 'r') as handle:
             try:
                 workload_dict = yaml.safe_load(handle)
-            except Exception as e:
+            except yaml.composer.ComposerError as e:
                 continue
 
             autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
@@ -242,7 +242,7 @@ def get_prepare_environment_vars(task_name, fname):
         try:
             workload_dict = yaml.safe_load(handle)
             autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_dict)
-        except Exception as e:
+        except yaml.composer.ComposerError as e:
             pass
 
     prepare_environment_vars = []
