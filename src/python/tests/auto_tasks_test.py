@@ -188,6 +188,52 @@ class AutoTasksTest(unittest.TestCase):
 
         self.assertDictEqual(expected_json, actual_json)
 
+    @patch('genny.genny_auto_tasks.open', new_callable=mock_open, read_data='')
+    @patch('glob.glob')
+    @patch('yaml.safe_load')
+    @patch('genny.genny_auto_tasks.modified_workload_files')
+    def test_construct_variant_json_multiple_setups(self, mock_glob, mock_safe_load, mock_modified_workload_files, mock_open):
+        """
+        This test runs construct_variant_json with static workloads and variants
+        and checks that
+        the generated json is what evergreen will expect to generate the correct variants.
+        """
+
+        static_variants = ['variant-1', 'variant-2']
+        mock_modified_workload_files.return_value = ["genny/src/workloads/scale/MultipleSetups.yml"]
+        mock_safe_load.return_value = {
+            'AutoRun': {
+                'PrepareEnvironmentWith': {
+                    'setup': ['first', 'second']
+                }
+            }
+        }
+
+        expected_json = {
+            'buildvariants': [
+                {
+                    'name': 'variant-1',
+                    'tasks': [
+                        {'name': 'multiple_setups_first'},
+                        {'name': 'multiple_setups_second'},
+                    ]
+                },
+                {
+                    'name': 'variant-2',
+                    'tasks': [
+                        {'name': 'multiple_setups_first'},
+                        {'name': 'multiple_setups_second'},
+                    ]
+                }
+            ]
+        }
+
+        workloads = mock_modified_workload_files()
+        actual_json_str = construct_variant_json(workloads, static_variants)
+        actual_json = json.loads(actual_json_str)
+
+        self.assertDictEqual(expected_json, actual_json)
+
     @patch('subprocess.check_output')
     def test_modified_workload_files(self, mock_check_output):
         """
