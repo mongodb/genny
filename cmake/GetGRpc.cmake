@@ -12,6 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-## gRPC is not always available.
+find_package(gRPC REQUIRED)
 
-find_package(gRPC CONFIG)
+find_package(protobuf REQUIRED)
+
+#add_library(protobuf INTERFACE IMPORTED)
+#target_link_libraries(protobuf INTERFACE
+#    protobuf::libprotobuf
+#)
+#
+#target_include_directories(protobuf INTERFACE
+#    ${PROTOBUF_INCLUDE_DIRS}
+#)

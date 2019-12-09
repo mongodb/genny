@@ -27,9 +27,11 @@ add_library(poplarlib STATIC
 )
 
 target_link_libraries(poplarlib
-    PRIVATE
+    PUBLIC
         gRPC::grpc++
+        protobuf
 )
+
 
 install(TARGETS  poplarlib
         EXPORT   GennyLibraryConfig
