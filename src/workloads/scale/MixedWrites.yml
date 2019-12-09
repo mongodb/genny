@@ -42,4 +42,6 @@ AutoRun:
     # Arguments to pass to the "prepare environment" evergreen function
     #
     # The 'setup' parameter dictates which mongodb_setup file to use.
-    setup: replica-delay-mixed
+    setup:
+    - replica-delay-mixed
+    - replica

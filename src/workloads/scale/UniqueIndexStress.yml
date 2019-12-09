@@ -46,8 +46,8 @@ Actors:
           name: g
   - &Nop {Nop: true}
   - Repeat: 1
-    Database: &db test
-    Collection: &coll test
+    Database: *db
+    Collection: *coll
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
@@ -72,8 +72,8 @@ Actors:
           name: g
   - *Nop
   - Repeat: 1
-    Database: &db test
-    Collection: &coll test
+    Database: *db
+    Collection: *coll
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
@@ -99,8 +99,8 @@ Actors:
           name: g
   - *Nop
   - Repeat: 1
-    Database: &db test
-    Collection: &coll test
+    Database: *db
+    Collection: *coll
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
@@ -127,8 +127,8 @@ Actors:
           name: g
   - *Nop
   - Repeat: 1
-    Database: &db test
-    Collection: &coll test
+    Database: *db
+    Collection: *coll
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
@@ -156,8 +156,8 @@ Actors:
           name: g
   - *Nop
   - Repeat: 1
-    Database: &db test
-    Collection: &coll test
+    Database: *db
+    Collection: *coll
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
@@ -186,8 +186,8 @@ Actors:
           name: g
   - *Nop
   - Repeat: 1
-    Database: &db test
-    Collection: &coll test
+    Database: *db
+    Collection: *coll
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
@@ -217,8 +217,8 @@ Actors:
           name: g
   - *Nop
   - Repeat: 1
-    Database: &db test
-    Collection: &coll test
+    Database: *db
+    Collection: *coll
     Operations:
     - OperationName: RunCommand
       OperationCommand: {dropDatabase: 1}
