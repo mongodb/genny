@@ -13,7 +13,7 @@
 #include <grpcpp/impl/codegen/client_callback.h>
 #include <grpcpp/impl/codegen/client_context.h>
 #include <grpcpp/impl/codegen/completion_queue.h>
-#include <grpcpp/impl/codegen/method_handler.h>
+#include <grpcpp/impl/codegen/method_handler_impl.h>
 #include <grpcpp/impl/codegen/proto_utils.h>
 #include <grpcpp/impl/codegen/rpc_method.h>
 #include <grpcpp/impl/codegen/server_callback.h>
@@ -550,7 +550,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_CreateRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_CreateRecorder() {
       ::grpc::Service::MarkMethodAsync(0);
@@ -559,7 +559,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateRecorder(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CreateRecorder(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -570,7 +570,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_CloseRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_CloseRecorder() {
       ::grpc::Service::MarkMethodAsync(1);
@@ -579,7 +579,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseRecorder(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CloseRecorder(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -590,7 +590,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_BeginEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_BeginEvent() {
       ::grpc::Service::MarkMethodAsync(2);
@@ -599,7 +599,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status BeginEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status BeginEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -610,7 +610,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_ResetEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_ResetEvent() {
       ::grpc::Service::MarkMethodAsync(3);
@@ -619,7 +619,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status ResetEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -630,7 +630,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_EndEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_EndEvent() {
       ::grpc::Service::MarkMethodAsync(4);
@@ -639,7 +639,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status EndEvent(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status EndEvent(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -650,7 +650,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_SetID : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_SetID() {
       ::grpc::Service::MarkMethodAsync(5);
@@ -659,7 +659,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetID(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetID(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -670,7 +670,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_SetTime : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_SetTime() {
       ::grpc::Service::MarkMethodAsync(6);
@@ -679,7 +679,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTime(::grpc::ServerContext* /*context*/, const ::poplar::EventSendTime* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTime(::grpc::ServerContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -690,7 +690,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_SetDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_SetDuration() {
       ::grpc::Service::MarkMethodAsync(7);
@@ -699,7 +699,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -710,7 +710,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_SetTotalDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_SetTotalDuration() {
       ::grpc::Service::MarkMethodAsync(8);
@@ -719,7 +719,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTotalDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTotalDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -730,7 +730,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_SetState : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_SetState() {
       ::grpc::Service::MarkMethodAsync(9);
@@ -739,7 +739,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetState(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetState(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -750,7 +750,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_SetWorkers : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_SetWorkers() {
       ::grpc::Service::MarkMethodAsync(10);
@@ -759,7 +759,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetWorkers(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetWorkers(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -770,7 +770,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_SetFailed : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_SetFailed() {
       ::grpc::Service::MarkMethodAsync(11);
@@ -779,7 +779,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetFailed(::grpc::ServerContext* /*context*/, const ::poplar::EventSendBool* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetFailed(::grpc::ServerContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -790,7 +790,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_IncOps : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_IncOps() {
       ::grpc::Service::MarkMethodAsync(12);
@@ -799,7 +799,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncOps(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncOps(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -810,7 +810,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_IncSize : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_IncSize() {
       ::grpc::Service::MarkMethodAsync(13);
@@ -819,7 +819,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncSize(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncSize(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -830,7 +830,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_IncError : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_IncError() {
       ::grpc::Service::MarkMethodAsync(14);
@@ -839,7 +839,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncError(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncError(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -850,7 +850,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithAsyncMethod_IncIterations : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_IncIterations() {
       ::grpc::Service::MarkMethodAsync(15);
@@ -859,7 +859,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncIterations(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncIterations(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -871,7 +871,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_CreateRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_CreateRecorder() {
       ::grpc::Service::experimental().MarkMethodCallback(0,
@@ -893,16 +893,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateRecorder(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CreateRecorder(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void CreateRecorder(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void CreateRecorder(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_CloseRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_CloseRecorder() {
       ::grpc::Service::experimental().MarkMethodCallback(1,
@@ -924,16 +924,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseRecorder(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CloseRecorder(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void CloseRecorder(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void CloseRecorder(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_BeginEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_BeginEvent() {
       ::grpc::Service::experimental().MarkMethodCallback(2,
@@ -955,16 +955,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status BeginEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status BeginEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void BeginEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void BeginEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_ResetEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_ResetEvent() {
       ::grpc::Service::experimental().MarkMethodCallback(3,
@@ -986,16 +986,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status ResetEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void ResetEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void ResetEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_EndEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_EndEvent() {
       ::grpc::Service::experimental().MarkMethodCallback(4,
@@ -1017,16 +1017,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status EndEvent(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status EndEvent(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void EndEvent(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void EndEvent(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SetID : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_SetID() {
       ::grpc::Service::experimental().MarkMethodCallback(5,
@@ -1048,16 +1048,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetID(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetID(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetID(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetID(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SetTime : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_SetTime() {
       ::grpc::Service::experimental().MarkMethodCallback(6,
@@ -1079,16 +1079,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTime(::grpc::ServerContext* /*context*/, const ::poplar::EventSendTime* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTime(::grpc::ServerContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetTime(::grpc::ServerContext* /*context*/, const ::poplar::EventSendTime* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetTime(::grpc::ServerContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SetDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_SetDuration() {
       ::grpc::Service::experimental().MarkMethodCallback(7,
@@ -1110,16 +1110,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SetTotalDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_SetTotalDuration() {
       ::grpc::Service::experimental().MarkMethodCallback(8,
@@ -1141,16 +1141,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTotalDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTotalDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetTotalDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetTotalDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SetState : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_SetState() {
       ::grpc::Service::experimental().MarkMethodCallback(9,
@@ -1172,16 +1172,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetState(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetState(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetState(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetState(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SetWorkers : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_SetWorkers() {
       ::grpc::Service::experimental().MarkMethodCallback(10,
@@ -1203,16 +1203,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetWorkers(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetWorkers(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetWorkers(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetWorkers(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SetFailed : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_SetFailed() {
       ::grpc::Service::experimental().MarkMethodCallback(11,
@@ -1234,16 +1234,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetFailed(::grpc::ServerContext* /*context*/, const ::poplar::EventSendBool* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetFailed(::grpc::ServerContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetFailed(::grpc::ServerContext* /*context*/, const ::poplar::EventSendBool* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetFailed(::grpc::ServerContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_IncOps : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_IncOps() {
       ::grpc::Service::experimental().MarkMethodCallback(12,
@@ -1265,16 +1265,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncOps(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncOps(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void IncOps(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void IncOps(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_IncSize : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_IncSize() {
       ::grpc::Service::experimental().MarkMethodCallback(13,
@@ -1296,16 +1296,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncSize(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncSize(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void IncSize(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void IncSize(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_IncError : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_IncError() {
       ::grpc::Service::experimental().MarkMethodCallback(14,
@@ -1327,16 +1327,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncError(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncError(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void IncError(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void IncError(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_IncIterations : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_IncIterations() {
       ::grpc::Service::experimental().MarkMethodCallback(15,
@@ -1358,17 +1358,17 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncIterations(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncIterations(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void IncIterations(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void IncIterations(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   typedef ExperimentalWithCallbackMethod_CreateRecorder<ExperimentalWithCallbackMethod_CloseRecorder<ExperimentalWithCallbackMethod_BeginEvent<ExperimentalWithCallbackMethod_ResetEvent<ExperimentalWithCallbackMethod_EndEvent<ExperimentalWithCallbackMethod_SetID<ExperimentalWithCallbackMethod_SetTime<ExperimentalWithCallbackMethod_SetDuration<ExperimentalWithCallbackMethod_SetTotalDuration<ExperimentalWithCallbackMethod_SetState<ExperimentalWithCallbackMethod_SetWorkers<ExperimentalWithCallbackMethod_SetFailed<ExperimentalWithCallbackMethod_IncOps<ExperimentalWithCallbackMethod_IncSize<ExperimentalWithCallbackMethod_IncError<ExperimentalWithCallbackMethod_IncIterations<Service > > > > > > > > > > > > > > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_CreateRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_CreateRecorder() {
       ::grpc::Service::MarkMethodGeneric(0);
@@ -1377,7 +1377,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateRecorder(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CreateRecorder(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1385,7 +1385,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_CloseRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_CloseRecorder() {
       ::grpc::Service::MarkMethodGeneric(1);
@@ -1394,7 +1394,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseRecorder(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CloseRecorder(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1402,7 +1402,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_BeginEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_BeginEvent() {
       ::grpc::Service::MarkMethodGeneric(2);
@@ -1411,7 +1411,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status BeginEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status BeginEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1419,7 +1419,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_ResetEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_ResetEvent() {
       ::grpc::Service::MarkMethodGeneric(3);
@@ -1428,7 +1428,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status ResetEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1436,7 +1436,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_EndEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_EndEvent() {
       ::grpc::Service::MarkMethodGeneric(4);
@@ -1445,7 +1445,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status EndEvent(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status EndEvent(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1453,7 +1453,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_SetID : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_SetID() {
       ::grpc::Service::MarkMethodGeneric(5);
@@ -1462,7 +1462,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetID(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetID(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1470,7 +1470,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_SetTime : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_SetTime() {
       ::grpc::Service::MarkMethodGeneric(6);
@@ -1479,7 +1479,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTime(::grpc::ServerContext* /*context*/, const ::poplar::EventSendTime* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTime(::grpc::ServerContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1487,7 +1487,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_SetDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_SetDuration() {
       ::grpc::Service::MarkMethodGeneric(7);
@@ -1496,7 +1496,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1504,7 +1504,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_SetTotalDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_SetTotalDuration() {
       ::grpc::Service::MarkMethodGeneric(8);
@@ -1513,7 +1513,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTotalDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTotalDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1521,7 +1521,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_SetState : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_SetState() {
       ::grpc::Service::MarkMethodGeneric(9);
@@ -1530,7 +1530,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetState(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetState(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1538,7 +1538,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_SetWorkers : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_SetWorkers() {
       ::grpc::Service::MarkMethodGeneric(10);
@@ -1547,7 +1547,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetWorkers(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetWorkers(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1555,7 +1555,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_SetFailed : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_SetFailed() {
       ::grpc::Service::MarkMethodGeneric(11);
@@ -1564,7 +1564,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetFailed(::grpc::ServerContext* /*context*/, const ::poplar::EventSendBool* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetFailed(::grpc::ServerContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1572,7 +1572,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_IncOps : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_IncOps() {
       ::grpc::Service::MarkMethodGeneric(12);
@@ -1581,7 +1581,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncOps(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncOps(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1589,7 +1589,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_IncSize : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_IncSize() {
       ::grpc::Service::MarkMethodGeneric(13);
@@ -1598,7 +1598,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncSize(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncSize(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1606,7 +1606,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_IncError : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_IncError() {
       ::grpc::Service::MarkMethodGeneric(14);
@@ -1615,7 +1615,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncError(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncError(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1623,7 +1623,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithGenericMethod_IncIterations : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_IncIterations() {
       ::grpc::Service::MarkMethodGeneric(15);
@@ -1632,7 +1632,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncIterations(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncIterations(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1640,7 +1640,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_CreateRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_CreateRecorder() {
       ::grpc::Service::MarkMethodRaw(0);
@@ -1649,7 +1649,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateRecorder(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CreateRecorder(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1660,7 +1660,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_CloseRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_CloseRecorder() {
       ::grpc::Service::MarkMethodRaw(1);
@@ -1669,7 +1669,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseRecorder(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CloseRecorder(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1680,7 +1680,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_BeginEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_BeginEvent() {
       ::grpc::Service::MarkMethodRaw(2);
@@ -1689,7 +1689,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status BeginEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status BeginEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1700,7 +1700,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_ResetEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_ResetEvent() {
       ::grpc::Service::MarkMethodRaw(3);
@@ -1709,7 +1709,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status ResetEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1720,7 +1720,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_EndEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_EndEvent() {
       ::grpc::Service::MarkMethodRaw(4);
@@ -1729,7 +1729,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status EndEvent(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status EndEvent(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1740,7 +1740,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_SetID : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_SetID() {
       ::grpc::Service::MarkMethodRaw(5);
@@ -1749,7 +1749,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetID(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetID(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1760,7 +1760,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_SetTime : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_SetTime() {
       ::grpc::Service::MarkMethodRaw(6);
@@ -1769,7 +1769,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTime(::grpc::ServerContext* /*context*/, const ::poplar::EventSendTime* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTime(::grpc::ServerContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1780,7 +1780,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_SetDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_SetDuration() {
       ::grpc::Service::MarkMethodRaw(7);
@@ -1789,7 +1789,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1800,7 +1800,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_SetTotalDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_SetTotalDuration() {
       ::grpc::Service::MarkMethodRaw(8);
@@ -1809,7 +1809,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTotalDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTotalDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1820,7 +1820,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_SetState : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_SetState() {
       ::grpc::Service::MarkMethodRaw(9);
@@ -1829,7 +1829,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetState(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetState(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1840,7 +1840,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_SetWorkers : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_SetWorkers() {
       ::grpc::Service::MarkMethodRaw(10);
@@ -1849,7 +1849,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetWorkers(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetWorkers(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1860,7 +1860,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_SetFailed : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_SetFailed() {
       ::grpc::Service::MarkMethodRaw(11);
@@ -1869,7 +1869,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetFailed(::grpc::ServerContext* /*context*/, const ::poplar::EventSendBool* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetFailed(::grpc::ServerContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1880,7 +1880,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_IncOps : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_IncOps() {
       ::grpc::Service::MarkMethodRaw(12);
@@ -1889,7 +1889,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncOps(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncOps(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1900,7 +1900,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_IncSize : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_IncSize() {
       ::grpc::Service::MarkMethodRaw(13);
@@ -1909,7 +1909,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncSize(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncSize(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1920,7 +1920,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_IncError : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_IncError() {
       ::grpc::Service::MarkMethodRaw(14);
@@ -1929,7 +1929,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncError(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncError(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1940,7 +1940,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithRawMethod_IncIterations : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_IncIterations() {
       ::grpc::Service::MarkMethodRaw(15);
@@ -1949,7 +1949,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncIterations(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncIterations(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1960,7 +1960,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_CreateRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_CreateRecorder() {
       ::grpc::Service::experimental().MarkMethodRawCallback(0,
@@ -1976,16 +1976,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CreateRecorder(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CreateRecorder(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void CreateRecorder(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void CreateRecorder(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_CloseRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_CloseRecorder() {
       ::grpc::Service::experimental().MarkMethodRawCallback(1,
@@ -2001,16 +2001,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status CloseRecorder(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CloseRecorder(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void CloseRecorder(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void CloseRecorder(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_BeginEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_BeginEvent() {
       ::grpc::Service::experimental().MarkMethodRawCallback(2,
@@ -2026,16 +2026,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status BeginEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status BeginEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void BeginEvent(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void BeginEvent(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_ResetEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_ResetEvent() {
       ::grpc::Service::experimental().MarkMethodRawCallback(3,
@@ -2051,16 +2051,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ResetEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status ResetEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void ResetEvent(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void ResetEvent(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_EndEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_EndEvent() {
       ::grpc::Service::experimental().MarkMethodRawCallback(4,
@@ -2076,16 +2076,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status EndEvent(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status EndEvent(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void EndEvent(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void EndEvent(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_SetID : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_SetID() {
       ::grpc::Service::experimental().MarkMethodRawCallback(5,
@@ -2101,16 +2101,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetID(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetID(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetID(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetID(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_SetTime : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_SetTime() {
       ::grpc::Service::experimental().MarkMethodRawCallback(6,
@@ -2126,16 +2126,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTime(::grpc::ServerContext* /*context*/, const ::poplar::EventSendTime* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTime(::grpc::ServerContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetTime(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetTime(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_SetDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_SetDuration() {
       ::grpc::Service::experimental().MarkMethodRawCallback(7,
@@ -2151,16 +2151,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetDuration(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetDuration(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_SetTotalDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_SetTotalDuration() {
       ::grpc::Service::experimental().MarkMethodRawCallback(8,
@@ -2176,16 +2176,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetTotalDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTotalDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetTotalDuration(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetTotalDuration(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_SetState : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_SetState() {
       ::grpc::Service::experimental().MarkMethodRawCallback(9,
@@ -2201,16 +2201,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetState(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetState(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetState(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetState(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_SetWorkers : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_SetWorkers() {
       ::grpc::Service::experimental().MarkMethodRawCallback(10,
@@ -2226,16 +2226,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetWorkers(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetWorkers(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetWorkers(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetWorkers(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_SetFailed : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_SetFailed() {
       ::grpc::Service::experimental().MarkMethodRawCallback(11,
@@ -2251,16 +2251,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status SetFailed(::grpc::ServerContext* /*context*/, const ::poplar::EventSendBool* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetFailed(::grpc::ServerContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void SetFailed(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void SetFailed(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_IncOps : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_IncOps() {
       ::grpc::Service::experimental().MarkMethodRawCallback(12,
@@ -2276,16 +2276,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncOps(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncOps(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void IncOps(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void IncOps(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_IncSize : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_IncSize() {
       ::grpc::Service::experimental().MarkMethodRawCallback(13,
@@ -2301,16 +2301,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncSize(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncSize(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void IncSize(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void IncSize(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_IncError : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_IncError() {
       ::grpc::Service::experimental().MarkMethodRawCallback(14,
@@ -2326,16 +2326,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncError(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncError(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void IncError(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void IncError(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_IncIterations : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_IncIterations() {
       ::grpc::Service::experimental().MarkMethodRawCallback(15,
@@ -2351,16 +2351,16 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status IncIterations(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncIterations(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    virtual void IncIterations(::grpc::ServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+    virtual void IncIterations(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_CreateRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_CreateRecorder() {
       ::grpc::Service::MarkMethodStreamed(0,
@@ -2370,7 +2370,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status CreateRecorder(::grpc::ServerContext* /*context*/, const ::poplar::CreateOptions* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CreateRecorder(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2380,7 +2380,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_CloseRecorder : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_CloseRecorder() {
       ::grpc::Service::MarkMethodStreamed(1,
@@ -2390,7 +2390,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status CloseRecorder(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status CloseRecorder(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2400,7 +2400,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_BeginEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_BeginEvent() {
       ::grpc::Service::MarkMethodStreamed(2,
@@ -2410,7 +2410,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status BeginEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status BeginEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2420,7 +2420,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_ResetEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_ResetEvent() {
       ::grpc::Service::MarkMethodStreamed(3,
@@ -2430,7 +2430,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status ResetEvent(::grpc::ServerContext* /*context*/, const ::poplar::PoplarID* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status ResetEvent(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2440,7 +2440,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_EndEvent : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_EndEvent() {
       ::grpc::Service::MarkMethodStreamed(4,
@@ -2450,7 +2450,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status EndEvent(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status EndEvent(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2460,7 +2460,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_SetID : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_SetID() {
       ::grpc::Service::MarkMethodStreamed(5,
@@ -2470,7 +2470,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SetID(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetID(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2480,7 +2480,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_SetTime : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_SetTime() {
       ::grpc::Service::MarkMethodStreamed(6,
@@ -2490,7 +2490,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SetTime(::grpc::ServerContext* /*context*/, const ::poplar::EventSendTime* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTime(::grpc::ServerContext* context, const ::poplar::EventSendTime* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2500,7 +2500,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_SetDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_SetDuration() {
       ::grpc::Service::MarkMethodStreamed(7,
@@ -2510,7 +2510,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SetDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2520,7 +2520,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_SetTotalDuration : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_SetTotalDuration() {
       ::grpc::Service::MarkMethodStreamed(8,
@@ -2530,7 +2530,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SetTotalDuration(::grpc::ServerContext* /*context*/, const ::poplar::EventSendDuration* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetTotalDuration(::grpc::ServerContext* context, const ::poplar::EventSendDuration* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2540,7 +2540,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_SetState : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_SetState() {
       ::grpc::Service::MarkMethodStreamed(9,
@@ -2550,7 +2550,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SetState(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetState(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2560,7 +2560,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_SetWorkers : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_SetWorkers() {
       ::grpc::Service::MarkMethodStreamed(10,
@@ -2570,7 +2570,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SetWorkers(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetWorkers(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2580,7 +2580,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_SetFailed : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_SetFailed() {
       ::grpc::Service::MarkMethodStreamed(11,
@@ -2590,7 +2590,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status SetFailed(::grpc::ServerContext* /*context*/, const ::poplar::EventSendBool* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status SetFailed(::grpc::ServerContext* context, const ::poplar::EventSendBool* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2600,7 +2600,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_IncOps : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_IncOps() {
       ::grpc::Service::MarkMethodStreamed(12,
@@ -2610,7 +2610,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status IncOps(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncOps(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2620,7 +2620,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_IncSize : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_IncSize() {
       ::grpc::Service::MarkMethodStreamed(13,
@@ -2630,7 +2630,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status IncSize(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncSize(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2640,7 +2640,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_IncError : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_IncError() {
       ::grpc::Service::MarkMethodStreamed(14,
@@ -2650,7 +2650,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status IncError(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncError(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -2660,7 +2660,7 @@ class PoplarMetricsRecorder final {
   template <class BaseClass>
   class WithStreamedUnaryMethod_IncIterations : public BaseClass {
    private:
-    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_IncIterations() {
       ::grpc::Service::MarkMethodStreamed(15,
@@ -2670,7 +2670,7 @@ class PoplarMetricsRecorder final {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status IncIterations(::grpc::ServerContext* /*context*/, const ::poplar::EventSendInt* /*request*/, ::poplar::PoplarResponse* /*response*/) override {
+    ::grpc::Status IncIterations(::grpc::ServerContext* context, const ::poplar::EventSendInt* request, ::poplar::PoplarResponse* response) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
