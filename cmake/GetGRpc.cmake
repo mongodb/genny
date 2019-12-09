@@ -16,11 +16,11 @@ find_package(gRPC REQUIRED)
 
 find_package(protobuf REQUIRED)
 
-#add_library(protobuf INTERFACE IMPORTED)
-#target_link_libraries(protobuf INTERFACE
-#    protobuf::libprotobuf
-#)
-#
-#target_include_directories(protobuf INTERFACE
-#    ${PROTOBUF_INCLUDE_DIRS}
-#)
+add_library(protobuf INTERFACE IMPORTED)
+target_link_libraries(protobuf INTERFACE
+    protobuf::libprotobuf
+)
+
+target_include_directories(protobuf INTERFACE
+    ${PROTOBUF_INCLUDE_DIRS}
+)
