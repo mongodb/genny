@@ -6,22 +6,34 @@
 
 #include "jasper.pb.h"
 
+#include <functional>
 #include <grpcpp/impl/codegen/async_generic_service.h>
 #include <grpcpp/impl/codegen/async_stream.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
+#include <grpcpp/impl/codegen/client_callback.h>
+#include <grpcpp/impl/codegen/client_context.h>
+#include <grpcpp/impl/codegen/completion_queue.h>
 #include <grpcpp/impl/codegen/method_handler_impl.h>
 #include <grpcpp/impl/codegen/proto_utils.h>
 #include <grpcpp/impl/codegen/rpc_method.h>
+#include <grpcpp/impl/codegen/server_callback.h>
+#include <grpcpp/impl/codegen/server_context.h>
 #include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/impl/codegen/status.h>
 #include <grpcpp/impl/codegen/stub_options.h>
 #include <grpcpp/impl/codegen/sync_stream.h>
 
-namespace grpc {
+namespace grpc_impl {
 class CompletionQueue;
-class Channel;
 class ServerCompletionQueue;
 class ServerContext;
+}  // namespace grpc_impl
+
+namespace grpc {
+namespace experimental {
+template <typename RequestT, typename ResponseT>
+class MessageAllocator;
+}  // namespace experimental
 }  // namespace grpc
 
 namespace jasper {
@@ -150,6 +162,69 @@ class JasperProcessManager final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::jasper::BuildloggerURLs>> PrepareAsyncGetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::jasper::BuildloggerURLs>>(PrepareAsyncGetBuildloggerURLsRaw(context, request, cq));
     }
+    class experimental_async_interface {
+     public:
+      virtual ~experimental_async_interface() {}
+      virtual void Status(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::StatusResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Status(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::StatusResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Create(::grpc::ClientContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Create(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Create(::grpc::ClientContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Create(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void List(::grpc::ClientContext* context, ::jasper::Filter* request, ::grpc::experimental::ClientReadReactor< ::jasper::ProcessInfo>* reactor) = 0;
+      virtual void Group(::grpc::ClientContext* context, ::jasper::TagName* request, ::grpc::experimental::ClientReadReactor< ::jasper::ProcessInfo>* reactor) = 0;
+      virtual void Get(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Get(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Wait(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Wait(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Wait(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Wait(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Signal(::grpc::ClientContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Signal(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Signal(::grpc::ClientContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Signal(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Close(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Close(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Close(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void Close(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void TagProcess(::grpc::ClientContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void TagProcess(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void TagProcess(::grpc::ClientContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void TagProcess(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void ResetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void ResetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void ResetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void ResetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void GetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessTags* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void GetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessTags* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void DownloadFile(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void DownloadFile(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void DownloadFile(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void DownloadFile(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void DownloadFileAsync(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void DownloadFileAsync(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void DownloadFileAsync(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void DownloadFileAsync(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void DownloadMongoDB(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void DownloadMongoDB(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void DownloadMongoDB(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void DownloadMongoDB(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void ConfigureCache(::grpc::ClientContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void ConfigureCache(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void ConfigureCache(::grpc::ClientContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void ConfigureCache(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void GetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetBuildloggerURLs(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::BuildloggerURLs* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void GetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void GetBuildloggerURLs(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::BuildloggerURLs* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+    };
+    virtual class experimental_async_interface* experimental_async() { return nullptr; }
   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::jasper::StatusResponse>* AsyncStatusRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::jasper::StatusResponse>* PrepareAsyncStatusRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
@@ -305,9 +380,78 @@ class JasperProcessManager final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::jasper::BuildloggerURLs>> PrepareAsyncGetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::jasper::BuildloggerURLs>>(PrepareAsyncGetBuildloggerURLsRaw(context, request, cq));
     }
+    class experimental_async final :
+      public StubInterface::experimental_async_interface {
+     public:
+      void Status(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response, std::function<void(::grpc::Status)>) override;
+      void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::StatusResponse* response, std::function<void(::grpc::Status)>) override;
+      void Status(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::StatusResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Create(::grpc::ClientContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)>) override;
+      void Create(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)>) override;
+      void Create(::grpc::ClientContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Create(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void List(::grpc::ClientContext* context, ::jasper::Filter* request, ::grpc::experimental::ClientReadReactor< ::jasper::ProcessInfo>* reactor) override;
+      void Group(::grpc::ClientContext* context, ::jasper::TagName* request, ::grpc::experimental::ClientReadReactor< ::jasper::ProcessInfo>* reactor) override;
+      void Get(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)>) override;
+      void Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)>) override;
+      void Get(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Wait(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void Wait(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void Wait(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Wait(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Signal(::grpc::ClientContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void Signal(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void Signal(::grpc::ClientContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Signal(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Close(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void Close(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void Close(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void Close(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void TagProcess(::grpc::ClientContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void TagProcess(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void TagProcess(::grpc::ClientContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void TagProcess(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void ResetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void ResetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void ResetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void ResetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void GetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response, std::function<void(::grpc::Status)>) override;
+      void GetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessTags* response, std::function<void(::grpc::Status)>) override;
+      void GetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void GetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessTags* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void DownloadFile(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void DownloadFile(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void DownloadFile(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void DownloadFile(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void DownloadFileAsync(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void DownloadFileAsync(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void DownloadFileAsync(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void DownloadFileAsync(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void DownloadMongoDB(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void DownloadMongoDB(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void DownloadMongoDB(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void DownloadMongoDB(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void ConfigureCache(::grpc::ClientContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void ConfigureCache(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)>) override;
+      void ConfigureCache(::grpc::ClientContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void ConfigureCache(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void GetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response, std::function<void(::grpc::Status)>) override;
+      void GetBuildloggerURLs(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::BuildloggerURLs* response, std::function<void(::grpc::Status)>) override;
+      void GetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void GetBuildloggerURLs(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::BuildloggerURLs* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+     private:
+      friend class Stub;
+      explicit experimental_async(Stub* stub): stub_(stub) { }
+      Stub* stub() { return stub_; }
+      Stub* stub_;
+    };
+    class experimental_async_interface* experimental_async() override { return &async_stub_; }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
+    class experimental_async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::jasper::StatusResponse>* AsyncStatusRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::jasper::StatusResponse>* PrepareAsyncStatusRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::jasper::ProcessInfo>* AsyncCreateRaw(::grpc::ClientContext* context, const ::jasper::CreateOptions& request, ::grpc::CompletionQueue* cq) override;
@@ -703,6 +847,485 @@ class JasperProcessManager final {
     }
   };
   typedef WithAsyncMethod_Status<WithAsyncMethod_Create<WithAsyncMethod_List<WithAsyncMethod_Group<WithAsyncMethod_Get<WithAsyncMethod_Wait<WithAsyncMethod_Signal<WithAsyncMethod_Close<WithAsyncMethod_TagProcess<WithAsyncMethod_ResetTags<WithAsyncMethod_GetTags<WithAsyncMethod_DownloadFile<WithAsyncMethod_DownloadFileAsync<WithAsyncMethod_DownloadMongoDB<WithAsyncMethod_ConfigureCache<WithAsyncMethod_GetBuildloggerURLs<Service > > > > > > > > > > > > > > > > AsyncService;
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Status : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Status() {
+      ::grpc::Service::experimental().MarkMethodCallback(0,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::jasper::StatusResponse>(
+          [this](::grpc::ServerContext* context,
+                 const ::google::protobuf::Empty* request,
+                 ::jasper::StatusResponse* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Status(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_Status(
+        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::jasper::StatusResponse>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::jasper::StatusResponse>*>(
+          ::grpc::Service::experimental().GetHandler(0))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Status() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Status(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Status(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Create : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Create() {
+      ::grpc::Service::experimental().MarkMethodCallback(1,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::CreateOptions, ::jasper::ProcessInfo>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::CreateOptions* request,
+                 ::jasper::ProcessInfo* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Create(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_Create(
+        ::grpc::experimental::MessageAllocator< ::jasper::CreateOptions, ::jasper::ProcessInfo>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::CreateOptions, ::jasper::ProcessInfo>*>(
+          ::grpc::Service::experimental().GetHandler(1))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Create() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Create(::grpc::ServerContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Create(::grpc::ServerContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_List : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_List() {
+      ::grpc::Service::experimental().MarkMethodCallback(2,
+        new ::grpc_impl::internal::CallbackServerStreamingHandler< ::jasper::Filter, ::jasper::ProcessInfo>(
+          [this] { return this->List(); }));
+    }
+    ~ExperimentalWithCallbackMethod_List() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status List(::grpc::ServerContext* context, const ::jasper::Filter* request, ::grpc::ServerWriter< ::jasper::ProcessInfo>* writer) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::experimental::ServerWriteReactor< ::jasper::Filter, ::jasper::ProcessInfo>* List() {
+      return new ::grpc_impl::internal::UnimplementedWriteReactor<
+        ::jasper::Filter, ::jasper::ProcessInfo>;}
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Group : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Group() {
+      ::grpc::Service::experimental().MarkMethodCallback(3,
+        new ::grpc_impl::internal::CallbackServerStreamingHandler< ::jasper::TagName, ::jasper::ProcessInfo>(
+          [this] { return this->Group(); }));
+    }
+    ~ExperimentalWithCallbackMethod_Group() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Group(::grpc::ServerContext* context, const ::jasper::TagName* request, ::grpc::ServerWriter< ::jasper::ProcessInfo>* writer) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::experimental::ServerWriteReactor< ::jasper::TagName, ::jasper::ProcessInfo>* Group() {
+      return new ::grpc_impl::internal::UnimplementedWriteReactor<
+        ::jasper::TagName, ::jasper::ProcessInfo>;}
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Get : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Get() {
+      ::grpc::Service::experimental().MarkMethodCallback(4,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::ProcessInfo>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::JasperProcessID* request,
+                 ::jasper::ProcessInfo* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Get(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_Get(
+        ::grpc::experimental::MessageAllocator< ::jasper::JasperProcessID, ::jasper::ProcessInfo>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::ProcessInfo>*>(
+          ::grpc::Service::experimental().GetHandler(4))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Get() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Get(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Get(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Wait : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Wait() {
+      ::grpc::Service::experimental().MarkMethodCallback(5,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::JasperProcessID* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Wait(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_Wait(
+        ::grpc::experimental::MessageAllocator< ::jasper::JasperProcessID, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(5))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Wait() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Wait(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Wait(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Signal : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Signal() {
+      ::grpc::Service::experimental().MarkMethodCallback(6,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::SignalProcess, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::SignalProcess* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Signal(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_Signal(
+        ::grpc::experimental::MessageAllocator< ::jasper::SignalProcess, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::SignalProcess, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(6))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Signal() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Signal(::grpc::ServerContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Signal(::grpc::ServerContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Close : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_Close() {
+      ::grpc::Service::experimental().MarkMethodCallback(7,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::google::protobuf::Empty* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->Close(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_Close(
+        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(7))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Close() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Close(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Close(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_TagProcess : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_TagProcess() {
+      ::grpc::Service::experimental().MarkMethodCallback(8,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::ProcessTags, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::ProcessTags* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->TagProcess(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_TagProcess(
+        ::grpc::experimental::MessageAllocator< ::jasper::ProcessTags, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::ProcessTags, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(8))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_TagProcess() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TagProcess(::grpc::ServerContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void TagProcess(::grpc::ServerContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_ResetTags : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_ResetTags() {
+      ::grpc::Service::experimental().MarkMethodCallback(9,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::JasperProcessID* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->ResetTags(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_ResetTags(
+        ::grpc::experimental::MessageAllocator< ::jasper::JasperProcessID, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(9))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_ResetTags() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status ResetTags(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void ResetTags(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_GetTags : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_GetTags() {
+      ::grpc::Service::experimental().MarkMethodCallback(10,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::ProcessTags>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::JasperProcessID* request,
+                 ::jasper::ProcessTags* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->GetTags(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_GetTags(
+        ::grpc::experimental::MessageAllocator< ::jasper::JasperProcessID, ::jasper::ProcessTags>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::ProcessTags>*>(
+          ::grpc::Service::experimental().GetHandler(10))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_GetTags() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetTags(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void GetTags(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_DownloadFile : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_DownloadFile() {
+      ::grpc::Service::experimental().MarkMethodCallback(11,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::DownloadInfo, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::DownloadInfo* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->DownloadFile(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_DownloadFile(
+        ::grpc::experimental::MessageAllocator< ::jasper::DownloadInfo, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::DownloadInfo, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(11))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_DownloadFile() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status DownloadFile(::grpc::ServerContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void DownloadFile(::grpc::ServerContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_DownloadFileAsync : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_DownloadFileAsync() {
+      ::grpc::Service::experimental().MarkMethodCallback(12,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::DownloadInfo, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::DownloadInfo* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->DownloadFileAsync(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_DownloadFileAsync(
+        ::grpc::experimental::MessageAllocator< ::jasper::DownloadInfo, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::DownloadInfo, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(12))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_DownloadFileAsync() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status DownloadFileAsync(::grpc::ServerContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void DownloadFileAsync(::grpc::ServerContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_DownloadMongoDB : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_DownloadMongoDB() {
+      ::grpc::Service::experimental().MarkMethodCallback(13,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::MongoDBDownloadOptions, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::MongoDBDownloadOptions* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->DownloadMongoDB(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_DownloadMongoDB(
+        ::grpc::experimental::MessageAllocator< ::jasper::MongoDBDownloadOptions, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::MongoDBDownloadOptions, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(13))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_DownloadMongoDB() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status DownloadMongoDB(::grpc::ServerContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void DownloadMongoDB(::grpc::ServerContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_ConfigureCache : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_ConfigureCache() {
+      ::grpc::Service::experimental().MarkMethodCallback(14,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::CacheOptions, ::jasper::OperationOutcome>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::CacheOptions* request,
+                 ::jasper::OperationOutcome* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->ConfigureCache(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_ConfigureCache(
+        ::grpc::experimental::MessageAllocator< ::jasper::CacheOptions, ::jasper::OperationOutcome>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::CacheOptions, ::jasper::OperationOutcome>*>(
+          ::grpc::Service::experimental().GetHandler(14))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_ConfigureCache() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status ConfigureCache(::grpc::ServerContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void ConfigureCache(::grpc::ServerContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_GetBuildloggerURLs : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_GetBuildloggerURLs() {
+      ::grpc::Service::experimental().MarkMethodCallback(15,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::BuildloggerURLs>(
+          [this](::grpc::ServerContext* context,
+                 const ::jasper::JasperProcessID* request,
+                 ::jasper::BuildloggerURLs* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->GetBuildloggerURLs(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_GetBuildloggerURLs(
+        ::grpc::experimental::MessageAllocator< ::jasper::JasperProcessID, ::jasper::BuildloggerURLs>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::jasper::JasperProcessID, ::jasper::BuildloggerURLs>*>(
+          ::grpc::Service::experimental().GetHandler(15))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_GetBuildloggerURLs() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetBuildloggerURLs(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void GetBuildloggerURLs(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  typedef ExperimentalWithCallbackMethod_Status<ExperimentalWithCallbackMethod_Create<ExperimentalWithCallbackMethod_List<ExperimentalWithCallbackMethod_Group<ExperimentalWithCallbackMethod_Get<ExperimentalWithCallbackMethod_Wait<ExperimentalWithCallbackMethod_Signal<ExperimentalWithCallbackMethod_Close<ExperimentalWithCallbackMethod_TagProcess<ExperimentalWithCallbackMethod_ResetTags<ExperimentalWithCallbackMethod_GetTags<ExperimentalWithCallbackMethod_DownloadFile<ExperimentalWithCallbackMethod_DownloadFileAsync<ExperimentalWithCallbackMethod_DownloadMongoDB<ExperimentalWithCallbackMethod_ConfigureCache<ExperimentalWithCallbackMethod_GetBuildloggerURLs<Service > > > > > > > > > > > > > > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Status : public BaseClass {
    private:
@@ -1294,6 +1917,400 @@ class JasperProcessManager final {
     void RequestGetBuildloggerURLs(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncUnary(15, context, request, response, new_call_cq, notification_cq, tag);
     }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Status : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Status() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(0,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Status(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Status() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Status(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Status(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Create : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Create() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(1,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Create(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Create() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Create(::grpc::ServerContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Create(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_List : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_List() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(2,
+        new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this] { return this->List(); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_List() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status List(::grpc::ServerContext* context, const ::jasper::Filter* request, ::grpc::ServerWriter< ::jasper::ProcessInfo>* writer) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* List() {
+      return new ::grpc_impl::internal::UnimplementedWriteReactor<
+        ::grpc::ByteBuffer, ::grpc::ByteBuffer>;}
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Group : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Group() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(3,
+        new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this] { return this->Group(); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Group() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Group(::grpc::ServerContext* context, const ::jasper::TagName* request, ::grpc::ServerWriter< ::jasper::ProcessInfo>* writer) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* Group() {
+      return new ::grpc_impl::internal::UnimplementedWriteReactor<
+        ::grpc::ByteBuffer, ::grpc::ByteBuffer>;}
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Get : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Get() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(4,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Get(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Get() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Get(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Get(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Wait : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Wait() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(5,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Wait(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Wait() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Wait(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Wait(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Signal : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Signal() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(6,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Signal(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Signal() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Signal(::grpc::ServerContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Signal(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Close : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Close() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(7,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->Close(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Close() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Close(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void Close(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_TagProcess : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_TagProcess() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(8,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->TagProcess(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_TagProcess() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TagProcess(::grpc::ServerContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void TagProcess(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_ResetTags : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_ResetTags() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(9,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->ResetTags(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_ResetTags() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status ResetTags(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void ResetTags(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_GetTags : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_GetTags() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(10,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->GetTags(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_GetTags() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetTags(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void GetTags(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_DownloadFile : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_DownloadFile() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(11,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->DownloadFile(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_DownloadFile() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status DownloadFile(::grpc::ServerContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void DownloadFile(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_DownloadFileAsync : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_DownloadFileAsync() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(12,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->DownloadFileAsync(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_DownloadFileAsync() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status DownloadFileAsync(::grpc::ServerContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void DownloadFileAsync(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_DownloadMongoDB : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_DownloadMongoDB() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(13,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->DownloadMongoDB(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_DownloadMongoDB() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status DownloadMongoDB(::grpc::ServerContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void DownloadMongoDB(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_ConfigureCache : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_ConfigureCache() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(14,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->ConfigureCache(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_ConfigureCache() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status ConfigureCache(::grpc::ServerContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void ConfigureCache(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_GetBuildloggerURLs : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_GetBuildloggerURLs() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(15,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->GetBuildloggerURLs(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_GetBuildloggerURLs() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status GetBuildloggerURLs(::grpc::ServerContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void GetBuildloggerURLs(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_Status : public BaseClass {

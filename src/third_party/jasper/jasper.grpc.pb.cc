@@ -5,12 +5,15 @@
 #include "jasper.pb.h"
 #include "jasper.grpc.pb.h"
 
+#include <functional>
 #include <grpcpp/impl/codegen/async_stream.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
 #include <grpcpp/impl/codegen/channel_interface.h>
 #include <grpcpp/impl/codegen/client_unary_call.h>
+#include <grpcpp/impl/codegen/client_callback.h>
 #include <grpcpp/impl/codegen/method_handler_impl.h>
 #include <grpcpp/impl/codegen/rpc_service_method.h>
+#include <grpcpp/impl/codegen/server_callback.h>
 #include <grpcpp/impl/codegen/service_type.h>
 #include <grpcpp/impl/codegen/sync_stream.h>
 namespace jasper {
@@ -63,192 +66,424 @@ JasperProcessManager::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Status_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::Status(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Status_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::StatusResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Status_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Status(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::StatusResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Status_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::StatusResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Status_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::StatusResponse>* JasperProcessManager::Stub::AsyncStatusRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::StatusResponse>::Create(channel_.get(), cq, rpcmethod_Status_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::StatusResponse>::Create(channel_.get(), cq, rpcmethod_Status_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::StatusResponse>* JasperProcessManager::Stub::PrepareAsyncStatusRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::StatusResponse>::Create(channel_.get(), cq, rpcmethod_Status_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::StatusResponse>::Create(channel_.get(), cq, rpcmethod_Status_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::Create(::grpc::ClientContext* context, const ::jasper::CreateOptions& request, ::jasper::ProcessInfo* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Create_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::Create(::grpc::ClientContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Create_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Create(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Create_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Create(::grpc::ClientContext* context, const ::jasper::CreateOptions* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Create_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::Create(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Create_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::AsyncCreateRaw(::grpc::ClientContext* context, const ::jasper::CreateOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Create_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Create_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::PrepareAsyncCreateRaw(::grpc::ClientContext* context, const ::jasper::CreateOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Create_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Create_, context, request, false);
 }
 
 ::grpc::ClientReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::ListRaw(::grpc::ClientContext* context, const ::jasper::Filter& request) {
-  return ::grpc::internal::ClientReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), rpcmethod_List_, context, request);
+  return ::grpc_impl::internal::ClientReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), rpcmethod_List_, context, request);
+}
+
+void JasperProcessManager::Stub::experimental_async::List(::grpc::ClientContext* context, ::jasper::Filter* request, ::grpc::experimental::ClientReadReactor< ::jasper::ProcessInfo>* reactor) {
+  ::grpc_impl::internal::ClientCallbackReaderFactory< ::jasper::ProcessInfo>::Create(stub_->channel_.get(), stub_->rpcmethod_List_, context, request, reactor);
 }
 
 ::grpc::ClientAsyncReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::AsyncListRaw(::grpc::ClientContext* context, const ::jasper::Filter& request, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_List_, context, request, true, tag);
+  return ::grpc_impl::internal::ClientAsyncReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_List_, context, request, true, tag);
 }
 
 ::grpc::ClientAsyncReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::PrepareAsyncListRaw(::grpc::ClientContext* context, const ::jasper::Filter& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_List_, context, request, false, nullptr);
+  return ::grpc_impl::internal::ClientAsyncReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_List_, context, request, false, nullptr);
 }
 
 ::grpc::ClientReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::GroupRaw(::grpc::ClientContext* context, const ::jasper::TagName& request) {
-  return ::grpc::internal::ClientReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), rpcmethod_Group_, context, request);
+  return ::grpc_impl::internal::ClientReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), rpcmethod_Group_, context, request);
+}
+
+void JasperProcessManager::Stub::experimental_async::Group(::grpc::ClientContext* context, ::jasper::TagName* request, ::grpc::experimental::ClientReadReactor< ::jasper::ProcessInfo>* reactor) {
+  ::grpc_impl::internal::ClientCallbackReaderFactory< ::jasper::ProcessInfo>::Create(stub_->channel_.get(), stub_->rpcmethod_Group_, context, request, reactor);
 }
 
 ::grpc::ClientAsyncReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::AsyncGroupRaw(::grpc::ClientContext* context, const ::jasper::TagName& request, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Group_, context, request, true, tag);
+  return ::grpc_impl::internal::ClientAsyncReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Group_, context, request, true, tag);
 }
 
 ::grpc::ClientAsyncReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::PrepareAsyncGroupRaw(::grpc::ClientContext* context, const ::jasper::TagName& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Group_, context, request, false, nullptr);
+  return ::grpc_impl::internal::ClientAsyncReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Group_, context, request, false, nullptr);
 }
 
 ::grpc::Status JasperProcessManager::Stub::Get(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::jasper::ProcessInfo* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Get_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::Get(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Get_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Get_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Get(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Get_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::Get(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessInfo* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Get_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::AsyncGetRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Get_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Get_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::ProcessInfo>* JasperProcessManager::Stub::PrepareAsyncGetRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Get_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessInfo>::Create(channel_.get(), cq, rpcmethod_Get_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::Wait(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Wait_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::Wait(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Wait_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Wait(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Wait_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Wait(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Wait_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::Wait(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Wait_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncWaitRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Wait_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Wait_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncWaitRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Wait_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Wait_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::Signal(::grpc::ClientContext* context, const ::jasper::SignalProcess& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Signal_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::Signal(::grpc::ClientContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Signal_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Signal(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Signal_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Signal(::grpc::ClientContext* context, const ::jasper::SignalProcess* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Signal_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::Signal(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Signal_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncSignalRaw(::grpc::ClientContext* context, const ::jasper::SignalProcess& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Signal_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Signal_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncSignalRaw(::grpc::ClientContext* context, const ::jasper::SignalProcess& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Signal_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Signal_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::Close(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_Close_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::Close(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Close_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Close(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_Close_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::Close(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Close_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::Close(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_Close_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncCloseRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Close_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Close_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncCloseRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Close_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_Close_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::TagProcess(::grpc::ClientContext* context, const ::jasper::ProcessTags& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_TagProcess_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::TagProcess(::grpc::ClientContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_TagProcess_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::TagProcess(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_TagProcess_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::TagProcess(::grpc::ClientContext* context, const ::jasper::ProcessTags* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_TagProcess_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::TagProcess(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_TagProcess_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncTagProcessRaw(::grpc::ClientContext* context, const ::jasper::ProcessTags& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_TagProcess_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_TagProcess_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncTagProcessRaw(::grpc::ClientContext* context, const ::jasper::ProcessTags& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_TagProcess_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_TagProcess_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::ResetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_ResetTags_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::ResetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_ResetTags_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::ResetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_ResetTags_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::ResetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_ResetTags_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::ResetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_ResetTags_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncResetTagsRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_ResetTags_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_ResetTags_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncResetTagsRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_ResetTags_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_ResetTags_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::GetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::jasper::ProcessTags* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_GetTags_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::GetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_GetTags_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::GetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessTags* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_GetTags_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::GetTags(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::ProcessTags* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_GetTags_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::GetTags(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::ProcessTags* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_GetTags_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::ProcessTags>* JasperProcessManager::Stub::AsyncGetTagsRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessTags>::Create(channel_.get(), cq, rpcmethod_GetTags_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessTags>::Create(channel_.get(), cq, rpcmethod_GetTags_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::ProcessTags>* JasperProcessManager::Stub::PrepareAsyncGetTagsRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessTags>::Create(channel_.get(), cq, rpcmethod_GetTags_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::ProcessTags>::Create(channel_.get(), cq, rpcmethod_GetTags_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::DownloadFile(::grpc::ClientContext* context, const ::jasper::DownloadInfo& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_DownloadFile_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::DownloadFile(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_DownloadFile_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadFile(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_DownloadFile_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadFile(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_DownloadFile_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadFile(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_DownloadFile_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncDownloadFileRaw(::grpc::ClientContext* context, const ::jasper::DownloadInfo& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadFile_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadFile_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncDownloadFileRaw(::grpc::ClientContext* context, const ::jasper::DownloadInfo& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadFile_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadFile_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::DownloadFileAsync(::grpc::ClientContext* context, const ::jasper::DownloadInfo& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_DownloadFileAsync_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::DownloadFileAsync(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_DownloadFileAsync_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadFileAsync(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_DownloadFileAsync_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadFileAsync(::grpc::ClientContext* context, const ::jasper::DownloadInfo* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_DownloadFileAsync_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadFileAsync(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_DownloadFileAsync_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncDownloadFileAsyncRaw(::grpc::ClientContext* context, const ::jasper::DownloadInfo& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadFileAsync_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadFileAsync_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncDownloadFileAsyncRaw(::grpc::ClientContext* context, const ::jasper::DownloadInfo& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadFileAsync_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadFileAsync_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::DownloadMongoDB(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_DownloadMongoDB_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::DownloadMongoDB(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_DownloadMongoDB_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadMongoDB(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_DownloadMongoDB_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadMongoDB(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_DownloadMongoDB_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::DownloadMongoDB(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_DownloadMongoDB_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncDownloadMongoDBRaw(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadMongoDB_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadMongoDB_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncDownloadMongoDBRaw(::grpc::ClientContext* context, const ::jasper::MongoDBDownloadOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadMongoDB_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_DownloadMongoDB_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::ConfigureCache(::grpc::ClientContext* context, const ::jasper::CacheOptions& request, ::jasper::OperationOutcome* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_ConfigureCache_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::ConfigureCache(::grpc::ClientContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_ConfigureCache_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::ConfigureCache(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_ConfigureCache_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::ConfigureCache(::grpc::ClientContext* context, const ::jasper::CacheOptions* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_ConfigureCache_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::ConfigureCache(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::OperationOutcome* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_ConfigureCache_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::AsyncConfigureCacheRaw(::grpc::ClientContext* context, const ::jasper::CacheOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_ConfigureCache_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_ConfigureCache_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::OperationOutcome>* JasperProcessManager::Stub::PrepareAsyncConfigureCacheRaw(::grpc::ClientContext* context, const ::jasper::CacheOptions& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_ConfigureCache_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::OperationOutcome>::Create(channel_.get(), cq, rpcmethod_ConfigureCache_, context, request, false);
 }
 
 ::grpc::Status JasperProcessManager::Stub::GetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::jasper::BuildloggerURLs* response) {
   return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_GetBuildloggerURLs_, context, request, response);
 }
 
+void JasperProcessManager::Stub::experimental_async::GetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_GetBuildloggerURLs_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::GetBuildloggerURLs(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::BuildloggerURLs* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_GetBuildloggerURLs_, context, request, response, std::move(f));
+}
+
+void JasperProcessManager::Stub::experimental_async::GetBuildloggerURLs(::grpc::ClientContext* context, const ::jasper::JasperProcessID* request, ::jasper::BuildloggerURLs* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_GetBuildloggerURLs_, context, request, response, reactor);
+}
+
+void JasperProcessManager::Stub::experimental_async::GetBuildloggerURLs(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::jasper::BuildloggerURLs* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_GetBuildloggerURLs_, context, request, response, reactor);
+}
+
 ::grpc::ClientAsyncResponseReader< ::jasper::BuildloggerURLs>* JasperProcessManager::Stub::AsyncGetBuildloggerURLsRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::BuildloggerURLs>::Create(channel_.get(), cq, rpcmethod_GetBuildloggerURLs_, context, request, true);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::BuildloggerURLs>::Create(channel_.get(), cq, rpcmethod_GetBuildloggerURLs_, context, request, true);
 }
 
 ::grpc::ClientAsyncResponseReader< ::jasper::BuildloggerURLs>* JasperProcessManager::Stub::PrepareAsyncGetBuildloggerURLsRaw(::grpc::ClientContext* context, const ::jasper::JasperProcessID& request, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncResponseReaderFactory< ::jasper::BuildloggerURLs>::Create(channel_.get(), cq, rpcmethod_GetBuildloggerURLs_, context, request, false);
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::jasper::BuildloggerURLs>::Create(channel_.get(), cq, rpcmethod_GetBuildloggerURLs_, context, request, false);
 }
 
 JasperProcessManager::Service::Service() {
@@ -451,3 +686,4 @@ JasperProcessManager::Service::~Service() {
 
 
 }  // namespace jasper
+

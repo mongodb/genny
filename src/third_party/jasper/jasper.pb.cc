@@ -5,236 +5,217 @@
 
 #include <algorithm>
 
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/extension_set.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
-
-namespace protobuf_jasper_2eproto {
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_ArchiveOptions;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_BufferOptions;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_BuildOptions;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_BuildloggerOptions;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_CreateOptions_EnvironmentEntry_DoNotUse;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_JasperProcessID;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<0> scc_info_SplunkOptions;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_Logger;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<1> scc_info_OutputOptions;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<2> scc_info_CreateOptions;
-extern PROTOBUF_INTERNAL_EXPORT_protobuf_jasper_2eproto ::google::protobuf::internal::SCCInfo<3> scc_info_LogOptions;
-}  // namespace protobuf_jasper_2eproto
+#include <google/protobuf/port_def.inc>
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ArchiveOptions_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BufferOptions_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BuildOptions_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BuildloggerOptions_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_CreateOptions_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_CreateOptions_EnvironmentEntry_DoNotUse_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_JasperProcessID_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_LogOptions_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Logger_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_OutputOptions_jasper_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_jasper_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SplunkOptions_jasper_2eproto;
 namespace jasper {
 class LoggerDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<Logger>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Logger> _instance;
 } _Logger_default_instance_;
 class OutputOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<OutputOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<OutputOptions> _instance;
 } _OutputOptions_default_instance_;
 class LogOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<LogOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<LogOptions> _instance;
 } _LogOptions_default_instance_;
 class BufferOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<BufferOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BufferOptions> _instance;
 } _BufferOptions_default_instance_;
 class BuildloggerOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<BuildloggerOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BuildloggerOptions> _instance;
 } _BuildloggerOptions_default_instance_;
 class SplunkOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<SplunkOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<SplunkOptions> _instance;
 } _SplunkOptions_default_instance_;
 class CreateOptions_EnvironmentEntry_DoNotUseDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<CreateOptions_EnvironmentEntry_DoNotUse>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<CreateOptions_EnvironmentEntry_DoNotUse> _instance;
 } _CreateOptions_EnvironmentEntry_DoNotUse_default_instance_;
 class CreateOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<CreateOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<CreateOptions> _instance;
 } _CreateOptions_default_instance_;
 class ProcessInfoDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<ProcessInfo>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ProcessInfo> _instance;
 } _ProcessInfo_default_instance_;
 class StatusResponseDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<StatusResponse>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<StatusResponse> _instance;
 } _StatusResponse_default_instance_;
 class FilterDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<Filter>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<Filter> _instance;
 } _Filter_default_instance_;
 class SignalProcessDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<SignalProcess>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<SignalProcess> _instance;
 } _SignalProcess_default_instance_;
 class TagNameDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<TagName>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<TagName> _instance;
 } _TagName_default_instance_;
 class ProcessTagsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<ProcessTags>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ProcessTags> _instance;
 } _ProcessTags_default_instance_;
 class JasperProcessIDDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<JasperProcessID>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<JasperProcessID> _instance;
 } _JasperProcessID_default_instance_;
 class OperationOutcomeDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<OperationOutcome>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<OperationOutcome> _instance;
 } _OperationOutcome_default_instance_;
 class BuildOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<BuildOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BuildOptions> _instance;
 } _BuildOptions_default_instance_;
 class MongoDBDownloadOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<MongoDBDownloadOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<MongoDBDownloadOptions> _instance;
 } _MongoDBDownloadOptions_default_instance_;
 class CacheOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<CacheOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<CacheOptions> _instance;
 } _CacheOptions_default_instance_;
 class ArchiveOptionsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<ArchiveOptions>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<ArchiveOptions> _instance;
 } _ArchiveOptions_default_instance_;
 class DownloadInfoDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<DownloadInfo>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<DownloadInfo> _instance;
 } _DownloadInfo_default_instance_;
 class BuildloggerURLsDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<BuildloggerURLs>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<BuildloggerURLs> _instance;
 } _BuildloggerURLs_default_instance_;
 }  // namespace jasper
-namespace protobuf_jasper_2eproto {
-static void InitDefaultsLogger() {
+static void InitDefaultsscc_info_ArchiveOptions_jasper_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
-    void* ptr = &::jasper::_Logger_default_instance_;
-    new (ptr) ::jasper::Logger();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    void* ptr = &::jasper::_ArchiveOptions_default_instance_;
+    new (ptr) ::jasper::ArchiveOptions();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::jasper::Logger::InitAsDefaultInstance();
+  ::jasper::ArchiveOptions::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<1> scc_info_Logger =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsLogger}, {
-      &protobuf_jasper_2eproto::scc_info_LogOptions.base,}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ArchiveOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ArchiveOptions_jasper_2eproto}, {}};
 
-static void InitDefaultsOutputOptions() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_OutputOptions_default_instance_;
-    new (ptr) ::jasper::OutputOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::OutputOptions::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<1> scc_info_OutputOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsOutputOptions}, {
-      &protobuf_jasper_2eproto::scc_info_Logger.base,}};
-
-static void InitDefaultsLogOptions() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_LogOptions_default_instance_;
-    new (ptr) ::jasper::LogOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::LogOptions::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<3> scc_info_LogOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 3, InitDefaultsLogOptions}, {
-      &protobuf_jasper_2eproto::scc_info_BufferOptions.base,
-      &protobuf_jasper_2eproto::scc_info_BuildloggerOptions.base,
-      &protobuf_jasper_2eproto::scc_info_SplunkOptions.base,}};
-
-static void InitDefaultsBufferOptions() {
+static void InitDefaultsscc_info_BufferOptions_jasper_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::jasper::_BufferOptions_default_instance_;
     new (ptr) ::jasper::BufferOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::jasper::BufferOptions::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_BufferOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsBufferOptions}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BufferOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_BufferOptions_jasper_2eproto}, {}};
 
-static void InitDefaultsBuildloggerOptions() {
+static void InitDefaultsscc_info_BuildOptions_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_BuildOptions_default_instance_;
+    new (ptr) ::jasper::BuildOptions();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::BuildOptions::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BuildOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_BuildOptions_jasper_2eproto}, {}};
+
+static void InitDefaultsscc_info_BuildloggerOptions_jasper_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::jasper::_BuildloggerOptions_default_instance_;
     new (ptr) ::jasper::BuildloggerOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::jasper::BuildloggerOptions::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_BuildloggerOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsBuildloggerOptions}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BuildloggerOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_BuildloggerOptions_jasper_2eproto}, {}};
 
-static void InitDefaultsSplunkOptions() {
+static void InitDefaultsscc_info_BuildloggerURLs_jasper_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
-    void* ptr = &::jasper::_SplunkOptions_default_instance_;
-    new (ptr) ::jasper::SplunkOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    void* ptr = &::jasper::_BuildloggerURLs_default_instance_;
+    new (ptr) ::jasper::BuildloggerURLs();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::jasper::SplunkOptions::InitAsDefaultInstance();
+  ::jasper::BuildloggerURLs::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_SplunkOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsSplunkOptions}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_BuildloggerURLs_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_BuildloggerURLs_jasper_2eproto}, {}};
 
-static void InitDefaultsCreateOptions_EnvironmentEntry_DoNotUse() {
+static void InitDefaultsscc_info_CacheOptions_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_CacheOptions_default_instance_;
+    new (ptr) ::jasper::CacheOptions();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::CacheOptions::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_CacheOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_CacheOptions_jasper_2eproto}, {}};
+
+static void InitDefaultsscc_info_CreateOptions_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_CreateOptions_default_instance_;
+    new (ptr) ::jasper::CreateOptions();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::CreateOptions::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<2> scc_info_CreateOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 2, 0, InitDefaultsscc_info_CreateOptions_jasper_2eproto}, {
+      &scc_info_CreateOptions_EnvironmentEntry_DoNotUse_jasper_2eproto.base,
+      &scc_info_OutputOptions_jasper_2eproto.base,}};
+
+static void InitDefaultsscc_info_CreateOptions_EnvironmentEntry_DoNotUse_jasper_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
@@ -244,444 +225,409 @@ static void InitDefaultsCreateOptions_EnvironmentEntry_DoNotUse() {
   ::jasper::CreateOptions_EnvironmentEntry_DoNotUse::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_CreateOptions_EnvironmentEntry_DoNotUse =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsCreateOptions_EnvironmentEntry_DoNotUse}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_CreateOptions_EnvironmentEntry_DoNotUse_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_CreateOptions_EnvironmentEntry_DoNotUse_jasper_2eproto}, {}};
 
-static void InitDefaultsCreateOptions() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_CreateOptions_default_instance_;
-    new (ptr) ::jasper::CreateOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::CreateOptions::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<2> scc_info_CreateOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 2, InitDefaultsCreateOptions}, {
-      &protobuf_jasper_2eproto::scc_info_CreateOptions_EnvironmentEntry_DoNotUse.base,
-      &protobuf_jasper_2eproto::scc_info_OutputOptions.base,}};
-
-static void InitDefaultsProcessInfo() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_ProcessInfo_default_instance_;
-    new (ptr) ::jasper::ProcessInfo();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::ProcessInfo::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<1> scc_info_ProcessInfo =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsProcessInfo}, {
-      &protobuf_jasper_2eproto::scc_info_CreateOptions.base,}};
-
-static void InitDefaultsStatusResponse() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_StatusResponse_default_instance_;
-    new (ptr) ::jasper::StatusResponse();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::StatusResponse::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_StatusResponse =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsStatusResponse}, {}};
-
-static void InitDefaultsFilter() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_Filter_default_instance_;
-    new (ptr) ::jasper::Filter();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::Filter::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_Filter =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsFilter}, {}};
-
-static void InitDefaultsSignalProcess() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_SignalProcess_default_instance_;
-    new (ptr) ::jasper::SignalProcess();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::SignalProcess::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<1> scc_info_SignalProcess =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsSignalProcess}, {
-      &protobuf_jasper_2eproto::scc_info_JasperProcessID.base,}};
-
-static void InitDefaultsTagName() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_TagName_default_instance_;
-    new (ptr) ::jasper::TagName();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::TagName::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_TagName =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsTagName}, {}};
-
-static void InitDefaultsProcessTags() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_ProcessTags_default_instance_;
-    new (ptr) ::jasper::ProcessTags();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::ProcessTags::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_ProcessTags =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsProcessTags}, {}};
-
-static void InitDefaultsJasperProcessID() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_JasperProcessID_default_instance_;
-    new (ptr) ::jasper::JasperProcessID();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::JasperProcessID::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_JasperProcessID =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsJasperProcessID}, {}};
-
-static void InitDefaultsOperationOutcome() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_OperationOutcome_default_instance_;
-    new (ptr) ::jasper::OperationOutcome();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::OperationOutcome::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_OperationOutcome =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsOperationOutcome}, {}};
-
-static void InitDefaultsBuildOptions() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_BuildOptions_default_instance_;
-    new (ptr) ::jasper::BuildOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::BuildOptions::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_BuildOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsBuildOptions}, {}};
-
-static void InitDefaultsMongoDBDownloadOptions() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_MongoDBDownloadOptions_default_instance_;
-    new (ptr) ::jasper::MongoDBDownloadOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::MongoDBDownloadOptions::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<1> scc_info_MongoDBDownloadOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsMongoDBDownloadOptions}, {
-      &protobuf_jasper_2eproto::scc_info_BuildOptions.base,}};
-
-static void InitDefaultsCacheOptions() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_CacheOptions_default_instance_;
-    new (ptr) ::jasper::CacheOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::CacheOptions::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_CacheOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsCacheOptions}, {}};
-
-static void InitDefaultsArchiveOptions() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-  {
-    void* ptr = &::jasper::_ArchiveOptions_default_instance_;
-    new (ptr) ::jasper::ArchiveOptions();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::jasper::ArchiveOptions::InitAsDefaultInstance();
-}
-
-::google::protobuf::internal::SCCInfo<0> scc_info_ArchiveOptions =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsArchiveOptions}, {}};
-
-static void InitDefaultsDownloadInfo() {
+static void InitDefaultsscc_info_DownloadInfo_jasper_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
     void* ptr = &::jasper::_DownloadInfo_default_instance_;
     new (ptr) ::jasper::DownloadInfo();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
   ::jasper::DownloadInfo::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<1> scc_info_DownloadInfo =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 1, InitDefaultsDownloadInfo}, {
-      &protobuf_jasper_2eproto::scc_info_ArchiveOptions.base,}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_DownloadInfo_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_DownloadInfo_jasper_2eproto}, {
+      &scc_info_ArchiveOptions_jasper_2eproto.base,}};
 
-static void InitDefaultsBuildloggerURLs() {
+static void InitDefaultsscc_info_Filter_jasper_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   {
-    void* ptr = &::jasper::_BuildloggerURLs_default_instance_;
-    new (ptr) ::jasper::BuildloggerURLs();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    void* ptr = &::jasper::_Filter_default_instance_;
+    new (ptr) ::jasper::Filter();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::jasper::BuildloggerURLs::InitAsDefaultInstance();
+  ::jasper::Filter::InitAsDefaultInstance();
 }
 
-::google::protobuf::internal::SCCInfo<0> scc_info_BuildloggerURLs =
-    {{ATOMIC_VAR_INIT(::google::protobuf::internal::SCCInfoBase::kUninitialized), 0, InitDefaultsBuildloggerURLs}, {}};
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_Filter_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_Filter_jasper_2eproto}, {}};
 
-void InitDefaults() {
-  ::google::protobuf::internal::InitSCC(&scc_info_Logger.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_OutputOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_LogOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_BufferOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_BuildloggerOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_SplunkOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_CreateOptions_EnvironmentEntry_DoNotUse.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_CreateOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_ProcessInfo.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_StatusResponse.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_Filter.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_SignalProcess.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_TagName.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_ProcessTags.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_JasperProcessID.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_OperationOutcome.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_BuildOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_MongoDBDownloadOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_CacheOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_ArchiveOptions.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_DownloadInfo.base);
-  ::google::protobuf::internal::InitSCC(&scc_info_BuildloggerURLs.base);
+static void InitDefaultsscc_info_JasperProcessID_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_JasperProcessID_default_instance_;
+    new (ptr) ::jasper::JasperProcessID();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::JasperProcessID::InitAsDefaultInstance();
 }
 
-::google::protobuf::Metadata file_level_metadata[22];
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[5];
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_JasperProcessID_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_JasperProcessID_jasper_2eproto}, {}};
 
-const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static void InitDefaultsscc_info_LogOptions_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_LogOptions_default_instance_;
+    new (ptr) ::jasper::LogOptions();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::LogOptions::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_LogOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 3, 0, InitDefaultsscc_info_LogOptions_jasper_2eproto}, {
+      &scc_info_BufferOptions_jasper_2eproto.base,
+      &scc_info_BuildloggerOptions_jasper_2eproto.base,
+      &scc_info_SplunkOptions_jasper_2eproto.base,}};
+
+static void InitDefaultsscc_info_Logger_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_Logger_default_instance_;
+    new (ptr) ::jasper::Logger();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::Logger::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_Logger_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_Logger_jasper_2eproto}, {
+      &scc_info_LogOptions_jasper_2eproto.base,}};
+
+static void InitDefaultsscc_info_MongoDBDownloadOptions_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_MongoDBDownloadOptions_default_instance_;
+    new (ptr) ::jasper::MongoDBDownloadOptions();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::MongoDBDownloadOptions::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_MongoDBDownloadOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_MongoDBDownloadOptions_jasper_2eproto}, {
+      &scc_info_BuildOptions_jasper_2eproto.base,}};
+
+static void InitDefaultsscc_info_OperationOutcome_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_OperationOutcome_default_instance_;
+    new (ptr) ::jasper::OperationOutcome();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::OperationOutcome::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_OperationOutcome_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_OperationOutcome_jasper_2eproto}, {}};
+
+static void InitDefaultsscc_info_OutputOptions_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_OutputOptions_default_instance_;
+    new (ptr) ::jasper::OutputOptions();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::OutputOptions::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_OutputOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_OutputOptions_jasper_2eproto}, {
+      &scc_info_Logger_jasper_2eproto.base,}};
+
+static void InitDefaultsscc_info_ProcessInfo_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_ProcessInfo_default_instance_;
+    new (ptr) ::jasper::ProcessInfo();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::ProcessInfo::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_ProcessInfo_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_ProcessInfo_jasper_2eproto}, {
+      &scc_info_CreateOptions_jasper_2eproto.base,}};
+
+static void InitDefaultsscc_info_ProcessTags_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_ProcessTags_default_instance_;
+    new (ptr) ::jasper::ProcessTags();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::ProcessTags::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_ProcessTags_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_ProcessTags_jasper_2eproto}, {}};
+
+static void InitDefaultsscc_info_SignalProcess_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_SignalProcess_default_instance_;
+    new (ptr) ::jasper::SignalProcess();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::SignalProcess::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<1> scc_info_SignalProcess_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 1, 0, InitDefaultsscc_info_SignalProcess_jasper_2eproto}, {
+      &scc_info_JasperProcessID_jasper_2eproto.base,}};
+
+static void InitDefaultsscc_info_SplunkOptions_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_SplunkOptions_default_instance_;
+    new (ptr) ::jasper::SplunkOptions();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::SplunkOptions::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_SplunkOptions_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_SplunkOptions_jasper_2eproto}, {}};
+
+static void InitDefaultsscc_info_StatusResponse_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_StatusResponse_default_instance_;
+    new (ptr) ::jasper::StatusResponse();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::StatusResponse::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_StatusResponse_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_StatusResponse_jasper_2eproto}, {}};
+
+static void InitDefaultsscc_info_TagName_jasper_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::jasper::_TagName_default_instance_;
+    new (ptr) ::jasper::TagName();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::jasper::TagName::InitAsDefaultInstance();
+}
+
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_TagName_jasper_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_TagName_jasper_2eproto}, {}};
+
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_jasper_2eproto[22];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_jasper_2eproto[5];
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_jasper_2eproto = nullptr;
+
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_jasper_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::Logger, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::Logger, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::Logger, log_type_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::Logger, log_options_),
+  PROTOBUF_FIELD_OFFSET(::jasper::Logger, log_type_),
+  PROTOBUF_FIELD_OFFSET(::jasper::Logger, log_options_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OutputOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OutputOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OutputOptions, loggers_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OutputOptions, suppress_output_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OutputOptions, suppress_error_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OutputOptions, redirect_output_to_error_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OutputOptions, redirect_error_to_output_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OutputOptions, loggers_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OutputOptions, suppress_output_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OutputOptions, suppress_error_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OutputOptions, redirect_output_to_error_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OutputOptions, redirect_error_to_output_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, buffer_options_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, buildlogger_options_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, default_prefix_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, file_name_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, format_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, in_memory_cap_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, splunk_options_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::LogOptions, sumo_endpoint_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, buffer_options_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, buildlogger_options_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, default_prefix_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, file_name_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, format_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, in_memory_cap_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, splunk_options_),
+  PROTOBUF_FIELD_OFFSET(::jasper::LogOptions, sumo_endpoint_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BufferOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BufferOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BufferOptions, buffered_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BufferOptions, duration_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BufferOptions, max_size_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BufferOptions, buffered_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BufferOptions, duration_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BufferOptions, max_size_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerOptions, create_test_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerOptions, url_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerOptions, number_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerOptions, phase_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerOptions, builder_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerOptions, test_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerOptions, command_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerOptions, create_test_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerOptions, url_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerOptions, number_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerOptions, phase_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerOptions, builder_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerOptions, test_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerOptions, command_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::SplunkOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::SplunkOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::SplunkOptions, url_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::SplunkOptions, token_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::SplunkOptions, channel_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions_EnvironmentEntry_DoNotUse, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions_EnvironmentEntry_DoNotUse, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::SplunkOptions, url_),
+  PROTOBUF_FIELD_OFFSET(::jasper::SplunkOptions, token_),
+  PROTOBUF_FIELD_OFFSET(::jasper::SplunkOptions, channel_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions_EnvironmentEntry_DoNotUse, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions_EnvironmentEntry_DoNotUse, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions_EnvironmentEntry_DoNotUse, key_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions_EnvironmentEntry_DoNotUse, value_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions_EnvironmentEntry_DoNotUse, key_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions_EnvironmentEntry_DoNotUse, value_),
   0,
   1,
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, args_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, working_directory_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, environment_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, override_environ_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, timeout_seconds_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, tags_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, on_success_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, on_failure_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, on_timeout_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CreateOptions, output_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, args_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, working_directory_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, environment_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, override_environ_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, timeout_seconds_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, tags_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, on_success_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, on_failure_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, on_timeout_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CreateOptions, output_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, pid_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, host_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, running_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, successful_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, complete_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, timedout_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessInfo, options_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, id_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, pid_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, host_id_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, running_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, successful_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, complete_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, timedout_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessInfo, options_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::StatusResponse, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::StatusResponse, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::StatusResponse, host_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::StatusResponse, active_),
+  PROTOBUF_FIELD_OFFSET(::jasper::StatusResponse, host_id_),
+  PROTOBUF_FIELD_OFFSET(::jasper::StatusResponse, active_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::Filter, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::Filter, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::Filter, name_),
+  PROTOBUF_FIELD_OFFSET(::jasper::Filter, name_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::SignalProcess, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::SignalProcess, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::SignalProcess, processid_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::SignalProcess, signal_),
+  PROTOBUF_FIELD_OFFSET(::jasper::SignalProcess, processid_),
+  PROTOBUF_FIELD_OFFSET(::jasper::SignalProcess, signal_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::TagName, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::TagName, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::TagName, value_),
+  PROTOBUF_FIELD_OFFSET(::jasper::TagName, value_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessTags, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessTags, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessTags, processid_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ProcessTags, tags_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessTags, processid_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ProcessTags, tags_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::JasperProcessID, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::JasperProcessID, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::JasperProcessID, value_),
+  PROTOBUF_FIELD_OFFSET(::jasper::JasperProcessID, value_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OperationOutcome, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OperationOutcome, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OperationOutcome, success_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::OperationOutcome, text_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OperationOutcome, success_),
+  PROTOBUF_FIELD_OFFSET(::jasper::OperationOutcome, text_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildOptions, target_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildOptions, arch_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildOptions, edition_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildOptions, debug_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildOptions, target_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildOptions, arch_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildOptions, edition_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildOptions, debug_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::MongoDBDownloadOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::MongoDBDownloadOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::MongoDBDownloadOptions, build_options_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::MongoDBDownloadOptions, path_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::MongoDBDownloadOptions, releases_),
+  PROTOBUF_FIELD_OFFSET(::jasper::MongoDBDownloadOptions, build_options_),
+  PROTOBUF_FIELD_OFFSET(::jasper::MongoDBDownloadOptions, path_),
+  PROTOBUF_FIELD_OFFSET(::jasper::MongoDBDownloadOptions, releases_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CacheOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CacheOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CacheOptions, disabled_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CacheOptions, prune_delay_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::CacheOptions, max_size_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CacheOptions, disabled_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CacheOptions, prune_delay_),
+  PROTOBUF_FIELD_OFFSET(::jasper::CacheOptions, max_size_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ArchiveOptions, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ArchiveOptions, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ArchiveOptions, should_extract_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ArchiveOptions, format_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::ArchiveOptions, target_path_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ArchiveOptions, should_extract_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ArchiveOptions, format_),
+  PROTOBUF_FIELD_OFFSET(::jasper::ArchiveOptions, target_path_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::DownloadInfo, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::DownloadInfo, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::DownloadInfo, url_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::DownloadInfo, path_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::DownloadInfo, archive_opts_),
+  PROTOBUF_FIELD_OFFSET(::jasper::DownloadInfo, url_),
+  PROTOBUF_FIELD_OFFSET(::jasper::DownloadInfo, path_),
+  PROTOBUF_FIELD_OFFSET(::jasper::DownloadInfo, archive_opts_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerURLs, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerURLs, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::jasper::BuildloggerURLs, urls_),
+  PROTOBUF_FIELD_OFFSET(::jasper::BuildloggerURLs, urls_),
 };
-static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::jasper::Logger)},
   { 7, -1, sizeof(::jasper::OutputOptions)},
   { 17, -1, sizeof(::jasper::LogOptions)},
@@ -706,171 +652,171 @@ static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROT
   { 182, -1, sizeof(::jasper::BuildloggerURLs)},
 };
 
-static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_Logger_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_OutputOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_LogOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_BufferOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_BuildloggerOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_SplunkOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_CreateOptions_EnvironmentEntry_DoNotUse_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_CreateOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_ProcessInfo_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_StatusResponse_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_Filter_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_SignalProcess_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_TagName_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_ProcessTags_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_JasperProcessID_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_OperationOutcome_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_BuildOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_MongoDBDownloadOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_CacheOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_ArchiveOptions_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_DownloadInfo_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::jasper::_BuildloggerURLs_default_instance_),
+static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_Logger_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_OutputOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_LogOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_BufferOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_BuildloggerOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_SplunkOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_CreateOptions_EnvironmentEntry_DoNotUse_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_CreateOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_ProcessInfo_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_StatusResponse_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_Filter_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_SignalProcess_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_TagName_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_ProcessTags_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_JasperProcessID_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_OperationOutcome_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_BuildOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_MongoDBDownloadOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_CacheOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_ArchiveOptions_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_DownloadInfo_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::jasper::_BuildloggerURLs_default_instance_),
 };
 
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  AssignDescriptors(
-      "jasper.proto", schemas, file_default_instances, TableStruct::offsets,
-      file_level_metadata, file_level_enum_descriptors, NULL);
-}
+const char descriptor_table_protodef_jasper_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
+  "\n\014jasper.proto\022\006jasper\032\033google/protobuf/"
+  "empty.proto\"T\n\006Logger\022!\n\010log_type\030\001 \001(\0162"
+  "\017.jasper.LogType\022\'\n\013log_options\030\002 \001(\0132\022."
+  "jasper.LogOptions\"\245\001\n\rOutputOptions\022\037\n\007l"
+  "oggers\030\001 \003(\0132\016.jasper.Logger\022\027\n\017suppress"
+  "_output\030\002 \001(\010\022\026\n\016suppress_error\030\003 \001(\010\022 \n"
+  "\030redirect_output_to_error\030\004 \001(\010\022 \n\030redir"
+  "ect_error_to_output\030\005 \001(\010\"\214\002\n\nLogOptions"
+  "\022-\n\016buffer_options\030\001 \001(\0132\025.jasper.Buffer"
+  "Options\0227\n\023buildlogger_options\030\002 \001(\0132\032.j"
+  "asper.BuildloggerOptions\022\026\n\016default_pref"
+  "ix\030\003 \001(\t\022\021\n\tfile_name\030\004 \001(\t\022\016\n\006format\030\005 "
+  "\001(\t\022\025\n\rin_memory_cap\030\006 \001(\003\022-\n\016splunk_opt"
+  "ions\030\007 \001(\0132\025.jasper.SplunkOptions\022\025\n\rsum"
+  "o_endpoint\030\010 \001(\t\"E\n\rBufferOptions\022\020\n\010buf"
+  "fered\030\001 \001(\010\022\020\n\010duration\030\002 \001(\003\022\020\n\010max_siz"
+  "e\030\003 \001(\003\"\205\001\n\022BuildloggerOptions\022\023\n\013create"
+  "_test\030\001 \001(\010\022\013\n\003url\030\002 \001(\t\022\016\n\006number\030\003 \001(\003"
+  "\022\r\n\005phase\030\004 \001(\t\022\017\n\007builder\030\005 \001(\t\022\014\n\004test"
+  "\030\006 \001(\t\022\017\n\007command\030\007 \001(\t\"<\n\rSplunkOptions"
+  "\022\013\n\003url\030\001 \001(\t\022\r\n\005token\030\002 \001(\t\022\017\n\007channel\030"
+  "\003 \001(\t\"\222\003\n\rCreateOptions\022\014\n\004args\030\001 \003(\t\022\031\n"
+  "\021working_directory\030\002 \001(\t\022;\n\013environment\030"
+  "\003 \003(\0132&.jasper.CreateOptions.Environment"
+  "Entry\022\030\n\020override_environ\030\004 \001(\010\022\027\n\017timeo"
+  "ut_seconds\030\005 \001(\003\022\014\n\004tags\030\006 \003(\t\022)\n\non_suc"
+  "cess\030\007 \003(\0132\025.jasper.CreateOptions\022)\n\non_"
+  "failure\030\010 \003(\0132\025.jasper.CreateOptions\022)\n\n"
+  "on_timeout\030\t \003(\0132\025.jasper.CreateOptions\022"
+  "%\n\006output\030\n \001(\0132\025.jasper.OutputOptions\0322"
+  "\n\020EnvironmentEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
+  "\030\002 \001(\t:\0028\001\"\250\001\n\013ProcessInfo\022\n\n\002id\030\001 \001(\t\022\013"
+  "\n\003pid\030\002 \001(\003\022\017\n\007host_id\030\003 \001(\t\022\017\n\007running\030"
+  "\004 \001(\010\022\022\n\nsuccessful\030\005 \001(\010\022\020\n\010complete\030\006 "
+  "\001(\010\022\020\n\010timedout\030\007 \001(\010\022&\n\007options\030\010 \001(\0132\025"
+  ".jasper.CreateOptions\"1\n\016StatusResponse\022"
+  "\017\n\007host_id\030\001 \001(\t\022\016\n\006active\030\002 \001(\010\"4\n\006Filt"
+  "er\022*\n\004name\030\001 \001(\0162\034.jasper.FilterSpecific"
+  "ations\"\\\n\rSignalProcess\022*\n\tProcessID\030\001 \001"
+  "(\0132\027.jasper.JasperProcessID\022\037\n\006signal\030\002 "
+  "\001(\0162\017.jasper.Signals\"\030\n\007TagName\022\r\n\005value"
+  "\030\001 \001(\t\".\n\013ProcessTags\022\021\n\tprocessID\030\001 \001(\t"
+  "\022\014\n\004tags\030\002 \003(\t\" \n\017JasperProcessID\022\r\n\005val"
+  "ue\030\001 \001(\t\"1\n\020OperationOutcome\022\017\n\007success\030"
+  "\001 \001(\010\022\014\n\004text\030\002 \001(\t\"L\n\014BuildOptions\022\016\n\006t"
+  "arget\030\001 \001(\t\022\014\n\004arch\030\002 \001(\t\022\017\n\007edition\030\003 \001"
+  "(\t\022\r\n\005debug\030\004 \001(\010\"e\n\026MongoDBDownloadOpti"
+  "ons\022+\n\rbuild_options\030\001 \001(\0132\024.jasper.Buil"
+  "dOptions\022\014\n\004path\030\002 \001(\t\022\020\n\010releases\030\003 \003(\t"
+  "\"G\n\014CacheOptions\022\020\n\010disabled\030\001 \001(\010\022\023\n\013pr"
+  "une_delay\030\002 \001(\003\022\020\n\010max_size\030\003 \001(\003\"d\n\016Arc"
+  "hiveOptions\022\026\n\016should_extract\030\001 \001(\010\022%\n\006f"
+  "ormat\030\002 \001(\0162\025.jasper.ArchiveFormat\022\023\n\013ta"
+  "rget_path\030\003 \001(\t\"W\n\014DownloadInfo\022\013\n\003url\030\001"
+  " \001(\t\022\014\n\004path\030\002 \001(\t\022,\n\014archive_opts\030\003 \001(\013"
+  "2\026.jasper.ArchiveOptions\"\037\n\017BuildloggerU"
+  "RLs\022\014\n\004urls\030\001 \003(\t*\244\001\n\007LogType\022\016\n\nLOGUNKN"
+  "OWN\020\000\022\024\n\020LOGBUILDLOGGERV2\020\001\022\024\n\020LOGBUILDL"
+  "OGGERV3\020\002\022\016\n\nLOGDEFAULT\020\003\022\013\n\007LOGFILE\020\004\022\016"
+  "\n\nLOGINHERIT\020\005\022\r\n\tLOGSPLUNK\020\006\022\020\n\014LOGSUMO"
+  "LOGIC\020\007\022\017\n\013LOGINMEMORY\020\010*^\n\tLogFormat\022\024\n"
+  "\020LOGFORMATUNKNOWN\020\000\022\024\n\020LOGFORMATDEFAULT\020"
+  "\001\022\021\n\rLOGFORMATJSON\020\002\022\022\n\016LOGFORMATPLAIN\020\003"
+  "*X\n\024FilterSpecifications\022\007\n\003ALL\020\000\022\013\n\007RUN"
+  "NING\020\001\022\016\n\nTERMINATED\020\002\022\n\n\006FAILED\020\003\022\016\n\nSU"
+  "CCESSFUL\020\004*[\n\007Signals\022\013\n\007UNKNOWN\020\000\022\r\n\tTE"
+  "RMINATE\020\001\022\010\n\004KILL\020\002\022\n\n\006HANGUP\020\003\022\010\n\004INIT\020"
+  "\004\022\t\n\005USER1\020\005\022\t\n\005USER2\020\006*V\n\rArchiveFormat"
+  "\022\022\n\016ARCHIVEUNKNOWN\020\000\022\017\n\013ARCHIVEAUTO\020\001\022\020\n"
+  "\014ARCHIVETARGZ\020\002\022\016\n\nARCHIVEZIP\020\0032\336\007\n\024Jasp"
+  "erProcessManager\0228\n\006Status\022\026.google.prot"
+  "obuf.Empty\032\026.jasper.StatusResponse\0224\n\006Cr"
+  "eate\022\025.jasper.CreateOptions\032\023.jasper.Pro"
+  "cessInfo\022-\n\004List\022\016.jasper.Filter\032\023.jaspe"
+  "r.ProcessInfo0\001\022/\n\005Group\022\017.jasper.TagNam"
+  "e\032\023.jasper.ProcessInfo0\001\0223\n\003Get\022\027.jasper"
+  ".JasperProcessID\032\023.jasper.ProcessInfo\0229\n"
+  "\004Wait\022\027.jasper.JasperProcessID\032\030.jasper."
+  "OperationOutcome\0229\n\006Signal\022\025.jasper.Sign"
+  "alProcess\032\030.jasper.OperationOutcome\0229\n\005C"
+  "lose\022\026.google.protobuf.Empty\032\030.jasper.Op"
+  "erationOutcome\022;\n\nTagProcess\022\023.jasper.Pr"
+  "ocessTags\032\030.jasper.OperationOutcome\022>\n\tR"
+  "esetTags\022\027.jasper.JasperProcessID\032\030.jasp"
+  "er.OperationOutcome\0227\n\007GetTags\022\027.jasper."
+  "JasperProcessID\032\023.jasper.ProcessTags\022>\n\014"
+  "DownloadFile\022\024.jasper.DownloadInfo\032\030.jas"
+  "per.OperationOutcome\022C\n\021DownloadFileAsyn"
+  "c\022\024.jasper.DownloadInfo\032\030.jasper.Operati"
+  "onOutcome\022K\n\017DownloadMongoDB\022\036.jasper.Mo"
+  "ngoDBDownloadOptions\032\030.jasper.OperationO"
+  "utcome\022@\n\016ConfigureCache\022\024.jasper.CacheO"
+  "ptions\032\030.jasper.OperationOutcome\022F\n\022GetB"
+  "uildloggerURLs\022\027.jasper.JasperProcessID\032"
+  "\027.jasper.BuildloggerURLsB\nZ\010internalb\006pr"
+  "oto3"
+  ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_jasper_2eproto_deps[1] = {
+  &::descriptor_table_google_2fprotobuf_2fempty_2eproto,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_jasper_2eproto_sccs[22] = {
+  &scc_info_ArchiveOptions_jasper_2eproto.base,
+  &scc_info_BufferOptions_jasper_2eproto.base,
+  &scc_info_BuildOptions_jasper_2eproto.base,
+  &scc_info_BuildloggerOptions_jasper_2eproto.base,
+  &scc_info_BuildloggerURLs_jasper_2eproto.base,
+  &scc_info_CacheOptions_jasper_2eproto.base,
+  &scc_info_CreateOptions_jasper_2eproto.base,
+  &scc_info_CreateOptions_EnvironmentEntry_DoNotUse_jasper_2eproto.base,
+  &scc_info_DownloadInfo_jasper_2eproto.base,
+  &scc_info_Filter_jasper_2eproto.base,
+  &scc_info_JasperProcessID_jasper_2eproto.base,
+  &scc_info_LogOptions_jasper_2eproto.base,
+  &scc_info_Logger_jasper_2eproto.base,
+  &scc_info_MongoDBDownloadOptions_jasper_2eproto.base,
+  &scc_info_OperationOutcome_jasper_2eproto.base,
+  &scc_info_OutputOptions_jasper_2eproto.base,
+  &scc_info_ProcessInfo_jasper_2eproto.base,
+  &scc_info_ProcessTags_jasper_2eproto.base,
+  &scc_info_SignalProcess_jasper_2eproto.base,
+  &scc_info_SplunkOptions_jasper_2eproto.base,
+  &scc_info_StatusResponse_jasper_2eproto.base,
+  &scc_info_TagName_jasper_2eproto.base,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_jasper_2eproto_once;
+static bool descriptor_table_jasper_2eproto_initialized = false;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_jasper_2eproto = {
+  &descriptor_table_jasper_2eproto_initialized, descriptor_table_protodef_jasper_2eproto, "jasper.proto", 3804,
+  &descriptor_table_jasper_2eproto_once, descriptor_table_jasper_2eproto_sccs, descriptor_table_jasper_2eproto_deps, 22, 1,
+  schemas, file_default_instances, TableStruct_jasper_2eproto::offsets,
+  file_level_metadata_jasper_2eproto, 22, file_level_enum_descriptors_jasper_2eproto, file_level_service_descriptors_jasper_2eproto,
+};
 
-void protobuf_AssignDescriptorsOnce() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 22);
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\014jasper.proto\022\006jasper\032\033google/protobuf/"
-      "empty.proto\"T\n\006Logger\022!\n\010log_type\030\001 \001(\0162"
-      "\017.jasper.LogType\022\'\n\013log_options\030\002 \001(\0132\022."
-      "jasper.LogOptions\"\245\001\n\rOutputOptions\022\037\n\007l"
-      "oggers\030\001 \003(\0132\016.jasper.Logger\022\027\n\017suppress"
-      "_output\030\002 \001(\010\022\026\n\016suppress_error\030\003 \001(\010\022 \n"
-      "\030redirect_output_to_error\030\004 \001(\010\022 \n\030redir"
-      "ect_error_to_output\030\005 \001(\010\"\214\002\n\nLogOptions"
-      "\022-\n\016buffer_options\030\001 \001(\0132\025.jasper.Buffer"
-      "Options\0227\n\023buildlogger_options\030\002 \001(\0132\032.j"
-      "asper.BuildloggerOptions\022\026\n\016default_pref"
-      "ix\030\003 \001(\t\022\021\n\tfile_name\030\004 \001(\t\022\016\n\006format\030\005 "
-      "\001(\t\022\025\n\rin_memory_cap\030\006 \001(\003\022-\n\016splunk_opt"
-      "ions\030\007 \001(\0132\025.jasper.SplunkOptions\022\025\n\rsum"
-      "o_endpoint\030\010 \001(\t\"E\n\rBufferOptions\022\020\n\010buf"
-      "fered\030\001 \001(\010\022\020\n\010duration\030\002 \001(\003\022\020\n\010max_siz"
-      "e\030\003 \001(\003\"\205\001\n\022BuildloggerOptions\022\023\n\013create"
-      "_test\030\001 \001(\010\022\013\n\003url\030\002 \001(\t\022\016\n\006number\030\003 \001(\003"
-      "\022\r\n\005phase\030\004 \001(\t\022\017\n\007builder\030\005 \001(\t\022\014\n\004test"
-      "\030\006 \001(\t\022\017\n\007command\030\007 \001(\t\"<\n\rSplunkOptions"
-      "\022\013\n\003url\030\001 \001(\t\022\r\n\005token\030\002 \001(\t\022\017\n\007channel\030"
-      "\003 \001(\t\"\222\003\n\rCreateOptions\022\014\n\004args\030\001 \003(\t\022\031\n"
-      "\021working_directory\030\002 \001(\t\022;\n\013environment\030"
-      "\003 \003(\0132&.jasper.CreateOptions.Environment"
-      "Entry\022\030\n\020override_environ\030\004 \001(\010\022\027\n\017timeo"
-      "ut_seconds\030\005 \001(\003\022\014\n\004tags\030\006 \003(\t\022)\n\non_suc"
-      "cess\030\007 \003(\0132\025.jasper.CreateOptions\022)\n\non_"
-      "failure\030\010 \003(\0132\025.jasper.CreateOptions\022)\n\n"
-      "on_timeout\030\t \003(\0132\025.jasper.CreateOptions\022"
-      "%\n\006output\030\n \001(\0132\025.jasper.OutputOptions\0322"
-      "\n\020EnvironmentEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value"
-      "\030\002 \001(\t:\0028\001\"\250\001\n\013ProcessInfo\022\n\n\002id\030\001 \001(\t\022\013"
-      "\n\003pid\030\002 \001(\003\022\017\n\007host_id\030\003 \001(\t\022\017\n\007running\030"
-      "\004 \001(\010\022\022\n\nsuccessful\030\005 \001(\010\022\020\n\010complete\030\006 "
-      "\001(\010\022\020\n\010timedout\030\007 \001(\010\022&\n\007options\030\010 \001(\0132\025"
-      ".jasper.CreateOptions\"1\n\016StatusResponse\022"
-      "\017\n\007host_id\030\001 \001(\t\022\016\n\006active\030\002 \001(\010\"4\n\006Filt"
-      "er\022*\n\004name\030\001 \001(\0162\034.jasper.FilterSpecific"
-      "ations\"\\\n\rSignalProcess\022*\n\tProcessID\030\001 \001"
-      "(\0132\027.jasper.JasperProcessID\022\037\n\006signal\030\002 "
-      "\001(\0162\017.jasper.Signals\"\030\n\007TagName\022\r\n\005value"
-      "\030\001 \001(\t\".\n\013ProcessTags\022\021\n\tprocessID\030\001 \001(\t"
-      "\022\014\n\004tags\030\002 \003(\t\" \n\017JasperProcessID\022\r\n\005val"
-      "ue\030\001 \001(\t\"1\n\020OperationOutcome\022\017\n\007success\030"
-      "\001 \001(\010\022\014\n\004text\030\002 \001(\t\"L\n\014BuildOptions\022\016\n\006t"
-      "arget\030\001 \001(\t\022\014\n\004arch\030\002 \001(\t\022\017\n\007edition\030\003 \001"
-      "(\t\022\r\n\005debug\030\004 \001(\010\"e\n\026MongoDBDownloadOpti"
-      "ons\022+\n\rbuild_options\030\001 \001(\0132\024.jasper.Buil"
-      "dOptions\022\014\n\004path\030\002 \001(\t\022\020\n\010releases\030\003 \003(\t"
-      "\"G\n\014CacheOptions\022\020\n\010disabled\030\001 \001(\010\022\023\n\013pr"
-      "une_delay\030\002 \001(\003\022\020\n\010max_size\030\003 \001(\003\"d\n\016Arc"
-      "hiveOptions\022\026\n\016should_extract\030\001 \001(\010\022%\n\006f"
-      "ormat\030\002 \001(\0162\025.jasper.ArchiveFormat\022\023\n\013ta"
-      "rget_path\030\003 \001(\t\"W\n\014DownloadInfo\022\013\n\003url\030\001"
-      " \001(\t\022\014\n\004path\030\002 \001(\t\022,\n\014archive_opts\030\003 \001(\013"
-      "2\026.jasper.ArchiveOptions\"\037\n\017BuildloggerU"
-      "RLs\022\014\n\004urls\030\001 \003(\t*\244\001\n\007LogType\022\016\n\nLOGUNKN"
-      "OWN\020\000\022\024\n\020LOGBUILDLOGGERV2\020\001\022\024\n\020LOGBUILDL"
-      "OGGERV3\020\002\022\016\n\nLOGDEFAULT\020\003\022\013\n\007LOGFILE\020\004\022\016"
-      "\n\nLOGINHERIT\020\005\022\r\n\tLOGSPLUNK\020\006\022\020\n\014LOGSUMO"
-      "LOGIC\020\007\022\017\n\013LOGINMEMORY\020\010*^\n\tLogFormat\022\024\n"
-      "\020LOGFORMATUNKNOWN\020\000\022\024\n\020LOGFORMATDEFAULT\020"
-      "\001\022\021\n\rLOGFORMATJSON\020\002\022\022\n\016LOGFORMATPLAIN\020\003"
-      "*X\n\024FilterSpecifications\022\007\n\003ALL\020\000\022\013\n\007RUN"
-      "NING\020\001\022\016\n\nTERMINATED\020\002\022\n\n\006FAILED\020\003\022\016\n\nSU"
-      "CCESSFUL\020\004*[\n\007Signals\022\013\n\007UNKNOWN\020\000\022\r\n\tTE"
-      "RMINATE\020\001\022\010\n\004KILL\020\002\022\n\n\006HANGUP\020\003\022\010\n\004INIT\020"
-      "\004\022\t\n\005USER1\020\005\022\t\n\005USER2\020\006*V\n\rArchiveFormat"
-      "\022\022\n\016ARCHIVEUNKNOWN\020\000\022\017\n\013ARCHIVEAUTO\020\001\022\020\n"
-      "\014ARCHIVETARGZ\020\002\022\016\n\nARCHIVEZIP\020\0032\336\007\n\024Jasp"
-      "erProcessManager\0228\n\006Status\022\026.google.prot"
-      "obuf.Empty\032\026.jasper.StatusResponse\0224\n\006Cr"
-      "eate\022\025.jasper.CreateOptions\032\023.jasper.Pro"
-      "cessInfo\022-\n\004List\022\016.jasper.Filter\032\023.jaspe"
-      "r.ProcessInfo0\001\022/\n\005Group\022\017.jasper.TagNam"
-      "e\032\023.jasper.ProcessInfo0\001\0223\n\003Get\022\027.jasper"
-      ".JasperProcessID\032\023.jasper.ProcessInfo\0229\n"
-      "\004Wait\022\027.jasper.JasperProcessID\032\030.jasper."
-      "OperationOutcome\0229\n\006Signal\022\025.jasper.Sign"
-      "alProcess\032\030.jasper.OperationOutcome\0229\n\005C"
-      "lose\022\026.google.protobuf.Empty\032\030.jasper.Op"
-      "erationOutcome\022;\n\nTagProcess\022\023.jasper.Pr"
-      "ocessTags\032\030.jasper.OperationOutcome\022>\n\tR"
-      "esetTags\022\027.jasper.JasperProcessID\032\030.jasp"
-      "er.OperationOutcome\0227\n\007GetTags\022\027.jasper."
-      "JasperProcessID\032\023.jasper.ProcessTags\022>\n\014"
-      "DownloadFile\022\024.jasper.DownloadInfo\032\030.jas"
-      "per.OperationOutcome\022C\n\021DownloadFileAsyn"
-      "c\022\024.jasper.DownloadInfo\032\030.jasper.Operati"
-      "onOutcome\022K\n\017DownloadMongoDB\022\036.jasper.Mo"
-      "ngoDBDownloadOptions\032\030.jasper.OperationO"
-      "utcome\022@\n\016ConfigureCache\022\024.jasper.CacheO"
-      "ptions\032\030.jasper.OperationOutcome\022F\n\022GetB"
-      "uildloggerURLs\022\027.jasper.JasperProcessID\032"
-      "\027.jasper.BuildloggerURLsB\nZ\010internalb\006pr"
-      "oto3"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 3804);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "jasper.proto", &protobuf_RegisterTypes);
-  ::protobuf_google_2fprotobuf_2fempty_2eproto::AddDescriptors();
-}
-
-void AddDescriptors() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_jasper_2eproto
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_jasper_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_jasper_2eproto), true);
 namespace jasper {
-const ::google::protobuf::EnumDescriptor* LogType_descriptor() {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_jasper_2eproto::file_level_enum_descriptors[0];
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* LogType_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_jasper_2eproto);
+  return file_level_enum_descriptors_jasper_2eproto[0];
 }
 bool LogType_IsValid(int value) {
   switch (value) {
@@ -889,9 +835,9 @@ bool LogType_IsValid(int value) {
   }
 }
 
-const ::google::protobuf::EnumDescriptor* LogFormat_descriptor() {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_jasper_2eproto::file_level_enum_descriptors[1];
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* LogFormat_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_jasper_2eproto);
+  return file_level_enum_descriptors_jasper_2eproto[1];
 }
 bool LogFormat_IsValid(int value) {
   switch (value) {
@@ -905,9 +851,9 @@ bool LogFormat_IsValid(int value) {
   }
 }
 
-const ::google::protobuf::EnumDescriptor* FilterSpecifications_descriptor() {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_jasper_2eproto::file_level_enum_descriptors[2];
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* FilterSpecifications_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_jasper_2eproto);
+  return file_level_enum_descriptors_jasper_2eproto[2];
 }
 bool FilterSpecifications_IsValid(int value) {
   switch (value) {
@@ -922,9 +868,9 @@ bool FilterSpecifications_IsValid(int value) {
   }
 }
 
-const ::google::protobuf::EnumDescriptor* Signals_descriptor() {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_jasper_2eproto::file_level_enum_descriptors[3];
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Signals_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_jasper_2eproto);
+  return file_level_enum_descriptors_jasper_2eproto[3];
 }
 bool Signals_IsValid(int value) {
   switch (value) {
@@ -941,9 +887,9 @@ bool Signals_IsValid(int value) {
   }
 }
 
-const ::google::protobuf::EnumDescriptor* ArchiveFormat_descriptor() {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_jasper_2eproto::file_level_enum_descriptors[4];
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* ArchiveFormat_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_jasper_2eproto);
+  return file_level_enum_descriptors_jasper_2eproto[4];
 }
 bool ArchiveFormat_IsValid(int value) {
   switch (value) {
@@ -964,32 +910,35 @@ void Logger::InitAsDefaultInstance() {
   ::jasper::_Logger_default_instance_._instance.get_mutable()->log_options_ = const_cast< ::jasper::LogOptions*>(
       ::jasper::LogOptions::internal_default_instance());
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int Logger::kLogTypeFieldNumber;
-const int Logger::kLogOptionsFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class Logger::_Internal {
+ public:
+  static const ::jasper::LogOptions& log_options(const Logger* msg);
+};
 
+const ::jasper::LogOptions&
+Logger::_Internal::log_options(const Logger* msg) {
+  return *msg->log_options_;
+}
 Logger::Logger()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_Logger.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.Logger)
 }
 Logger::Logger(const Logger& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  if (from.has_log_options()) {
+  if (from._internal_has_log_options()) {
     log_options_ = new ::jasper::LogOptions(*from.log_options_);
   } else {
-    log_options_ = NULL;
+    log_options_ = nullptr;
   }
   log_type_ = from.log_type_;
   // @@protoc_insertion_point(copy_constructor:jasper.Logger)
 }
 
 void Logger::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_Logger_jasper_2eproto.base);
   ::memset(&log_options_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&log_type_) -
       reinterpret_cast<char*>(&log_options_)) + sizeof(log_type_));
@@ -1007,136 +956,92 @@ void Logger::SharedDtor() {
 void Logger::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* Logger::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const Logger& Logger::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_Logger.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Logger_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void Logger::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.Logger)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  if (GetArenaNoVirtual() == NULL && log_options_ != NULL) {
+  if (GetArenaNoVirtual() == nullptr && log_options_ != nullptr) {
     delete log_options_;
   }
-  log_options_ = NULL;
+  log_options_ = nullptr;
   log_type_ = 0;
   _internal_metadata_.Clear();
 }
 
-bool Logger::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.Logger)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* Logger::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // .jasper.LogType log_type = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_log_type(static_cast< ::jasper::LogType >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+          _internal_set_log_type(static_cast<::jasper::LogType>(val));
+        } else goto handle_unusual;
+        continue;
       // .jasper.LogOptions log_options = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_log_options()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          ptr = ctx->ParseMessage(_internal_mutable_log_options(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.Logger)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.Logger)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void Logger::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.Logger)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // .jasper.LogType log_type = 1;
-  if (this->log_type() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      1, this->log_type(), output);
-  }
-
-  // .jasper.LogOptions log_options = 2;
-  if (this->has_log_options()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      2, this->_internal_log_options(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.Logger)
-}
-
-::google::protobuf::uint8* Logger::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* Logger::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.Logger)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // .jasper.LogType log_type = 1;
   if (this->log_type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      1, this->log_type(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      1, this->_internal_log_type(), target);
   }
 
   // .jasper.LogOptions log_options = 2;
   if (this->has_log_options()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        2, this->_internal_log_options(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        2, _Internal::log_options(this), target, stream);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.Logger)
   return target;
@@ -1146,38 +1051,41 @@ size_t Logger::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.Logger)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // .jasper.LogOptions log_options = 2;
   if (this->has_log_options()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *log_options_);
   }
 
   // .jasper.LogType log_type = 1;
   if (this->log_type() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->log_type());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_log_type());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void Logger::MergeFrom(const ::google::protobuf::Message& from) {
+void Logger::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.Logger)
   GOOGLE_DCHECK_NE(&from, this);
   const Logger* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const Logger>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<Logger>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.Logger)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.Logger)
     MergeFrom(*source);
@@ -1188,18 +1096,18 @@ void Logger::MergeFrom(const Logger& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.Logger)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.has_log_options()) {
-    mutable_log_options()->::jasper::LogOptions::MergeFrom(from.log_options());
+    _internal_mutable_log_options()->::jasper::LogOptions::MergeFrom(from._internal_log_options());
   }
   if (from.log_type() != 0) {
-    set_log_type(from.log_type());
+    _internal_set_log_type(from._internal_log_type());
   }
 }
 
-void Logger::CopyFrom(const ::google::protobuf::Message& from) {
+void Logger::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.Logger)
   if (&from == this) return;
   Clear();
@@ -1217,20 +1125,15 @@ bool Logger::IsInitialized() const {
   return true;
 }
 
-void Logger::Swap(Logger* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void Logger::InternalSwap(Logger* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(log_options_, other->log_options_);
   swap(log_type_, other->log_type_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata Logger::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata Logger::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -1238,24 +1141,18 @@ void Logger::InternalSwap(Logger* other) {
 
 void OutputOptions::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int OutputOptions::kLoggersFieldNumber;
-const int OutputOptions::kSuppressOutputFieldNumber;
-const int OutputOptions::kSuppressErrorFieldNumber;
-const int OutputOptions::kRedirectOutputToErrorFieldNumber;
-const int OutputOptions::kRedirectErrorToOutputFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class OutputOptions::_Internal {
+ public:
+};
 
 OutputOptions::OutputOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_OutputOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.OutputOptions)
 }
 OutputOptions::OutputOptions(const OutputOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       loggers_(from.loggers_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&suppress_output_, &from.suppress_output_,
@@ -1265,6 +1162,7 @@ OutputOptions::OutputOptions(const OutputOptions& from)
 }
 
 void OutputOptions::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_OutputOptions_jasper_2eproto.base);
   ::memset(&suppress_output_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&redirect_error_to_output_) -
       reinterpret_cast<char*>(&suppress_output_)) + sizeof(redirect_error_to_output_));
@@ -1281,20 +1179,15 @@ void OutputOptions::SharedDtor() {
 void OutputOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* OutputOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const OutputOptions& OutputOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_OutputOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_OutputOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void OutputOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.OutputOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -1305,184 +1198,114 @@ void OutputOptions::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool OutputOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.OutputOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* OutputOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // repeated .jasper.Logger loggers = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-                input, add_loggers()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_loggers(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
+        } else goto handle_unusual;
+        continue;
       // bool suppress_output = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &suppress_output_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          suppress_output_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool suppress_error = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &suppress_error_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          suppress_error_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool redirect_output_to_error = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &redirect_output_to_error_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          redirect_output_to_error_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool redirect_error_to_output = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &redirect_error_to_output_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
+          redirect_error_to_output_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.OutputOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.OutputOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void OutputOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.OutputOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // repeated .jasper.Logger loggers = 1;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->loggers_size()); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1,
-      this->loggers(static_cast<int>(i)),
-      output);
-  }
-
-  // bool suppress_output = 2;
-  if (this->suppress_output() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->suppress_output(), output);
-  }
-
-  // bool suppress_error = 3;
-  if (this->suppress_error() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->suppress_error(), output);
-  }
-
-  // bool redirect_output_to_error = 4;
-  if (this->redirect_output_to_error() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->redirect_output_to_error(), output);
-  }
-
-  // bool redirect_error_to_output = 5;
-  if (this->redirect_error_to_output() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->redirect_error_to_output(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.OutputOptions)
-}
-
-::google::protobuf::uint8* OutputOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* OutputOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.OutputOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated .jasper.Logger loggers = 1;
   for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->loggers_size()); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        1, this->loggers(static_cast<int>(i)), deterministic, target);
+      n = static_cast<unsigned int>(this->_internal_loggers_size()); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, this->_internal_loggers(i), target, stream);
   }
 
   // bool suppress_output = 2;
   if (this->suppress_output() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->suppress_output(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(2, this->_internal_suppress_output(), target);
   }
 
   // bool suppress_error = 3;
   if (this->suppress_error() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(3, this->suppress_error(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(3, this->_internal_suppress_error(), target);
   }
 
   // bool redirect_output_to_error = 4;
   if (this->redirect_output_to_error() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->redirect_output_to_error(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(4, this->_internal_redirect_output_to_error(), target);
   }
 
   // bool redirect_error_to_output = 5;
   if (this->redirect_error_to_output() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->redirect_error_to_output(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(5, this->_internal_redirect_error_to_output(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.OutputOptions)
   return target;
@@ -1492,20 +1315,15 @@ size_t OutputOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.OutputOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated .jasper.Logger loggers = 1;
-  {
-    unsigned int count = static_cast<unsigned int>(this->loggers_size());
-    total_size += 1UL * count;
-    for (unsigned int i = 0; i < count; i++) {
-      total_size +=
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          this->loggers(static_cast<int>(i)));
-    }
+  total_size += 1UL * this->_internal_loggers_size();
+  for (const auto& msg : this->loggers_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // bool suppress_output = 2;
@@ -1528,20 +1346,24 @@ size_t OutputOptions::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void OutputOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void OutputOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.OutputOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const OutputOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const OutputOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<OutputOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.OutputOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.OutputOptions)
     MergeFrom(*source);
@@ -1552,25 +1374,25 @@ void OutputOptions::MergeFrom(const OutputOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.OutputOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   loggers_.MergeFrom(from.loggers_);
   if (from.suppress_output() != 0) {
-    set_suppress_output(from.suppress_output());
+    _internal_set_suppress_output(from._internal_suppress_output());
   }
   if (from.suppress_error() != 0) {
-    set_suppress_error(from.suppress_error());
+    _internal_set_suppress_error(from._internal_suppress_error());
   }
   if (from.redirect_output_to_error() != 0) {
-    set_redirect_output_to_error(from.redirect_output_to_error());
+    _internal_set_redirect_output_to_error(from._internal_redirect_output_to_error());
   }
   if (from.redirect_error_to_output() != 0) {
-    set_redirect_error_to_output(from.redirect_error_to_output());
+    _internal_set_redirect_error_to_output(from._internal_redirect_error_to_output());
   }
 }
 
-void OutputOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void OutputOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.OutputOptions)
   if (&from == this) return;
   Clear();
@@ -1588,23 +1410,18 @@ bool OutputOptions::IsInitialized() const {
   return true;
 }
 
-void OutputOptions::Swap(OutputOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void OutputOptions::InternalSwap(OutputOptions* other) {
   using std::swap;
-  CastToBase(&loggers_)->InternalSwap(CastToBase(&other->loggers_));
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  loggers_.InternalSwap(&other->loggers_);
   swap(suppress_output_, other->suppress_output_);
   swap(suppress_error_, other->suppress_error_);
   swap(redirect_output_to_error_, other->redirect_output_to_error_);
   swap(redirect_error_to_output_, other->redirect_error_to_output_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata OutputOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata OutputOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -1618,68 +1435,75 @@ void LogOptions::InitAsDefaultInstance() {
   ::jasper::_LogOptions_default_instance_._instance.get_mutable()->splunk_options_ = const_cast< ::jasper::SplunkOptions*>(
       ::jasper::SplunkOptions::internal_default_instance());
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int LogOptions::kBufferOptionsFieldNumber;
-const int LogOptions::kBuildloggerOptionsFieldNumber;
-const int LogOptions::kDefaultPrefixFieldNumber;
-const int LogOptions::kFileNameFieldNumber;
-const int LogOptions::kFormatFieldNumber;
-const int LogOptions::kInMemoryCapFieldNumber;
-const int LogOptions::kSplunkOptionsFieldNumber;
-const int LogOptions::kSumoEndpointFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class LogOptions::_Internal {
+ public:
+  static const ::jasper::BufferOptions& buffer_options(const LogOptions* msg);
+  static const ::jasper::BuildloggerOptions& buildlogger_options(const LogOptions* msg);
+  static const ::jasper::SplunkOptions& splunk_options(const LogOptions* msg);
+};
 
+const ::jasper::BufferOptions&
+LogOptions::_Internal::buffer_options(const LogOptions* msg) {
+  return *msg->buffer_options_;
+}
+const ::jasper::BuildloggerOptions&
+LogOptions::_Internal::buildlogger_options(const LogOptions* msg) {
+  return *msg->buildlogger_options_;
+}
+const ::jasper::SplunkOptions&
+LogOptions::_Internal::splunk_options(const LogOptions* msg) {
+  return *msg->splunk_options_;
+}
 LogOptions::LogOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_LogOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.LogOptions)
 }
 LogOptions::LogOptions(const LogOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  default_prefix_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.default_prefix().size() > 0) {
-    default_prefix_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.default_prefix_);
+  default_prefix_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_default_prefix().empty()) {
+    default_prefix_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.default_prefix_);
   }
-  file_name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.file_name().size() > 0) {
-    file_name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.file_name_);
+  file_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_file_name().empty()) {
+    file_name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.file_name_);
   }
-  format_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.format().size() > 0) {
-    format_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.format_);
+  format_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_format().empty()) {
+    format_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.format_);
   }
-  sumo_endpoint_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.sumo_endpoint().size() > 0) {
-    sumo_endpoint_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.sumo_endpoint_);
+  sumo_endpoint_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_sumo_endpoint().empty()) {
+    sumo_endpoint_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.sumo_endpoint_);
   }
-  if (from.has_buffer_options()) {
+  if (from._internal_has_buffer_options()) {
     buffer_options_ = new ::jasper::BufferOptions(*from.buffer_options_);
   } else {
-    buffer_options_ = NULL;
+    buffer_options_ = nullptr;
   }
-  if (from.has_buildlogger_options()) {
+  if (from._internal_has_buildlogger_options()) {
     buildlogger_options_ = new ::jasper::BuildloggerOptions(*from.buildlogger_options_);
   } else {
-    buildlogger_options_ = NULL;
+    buildlogger_options_ = nullptr;
   }
-  if (from.has_splunk_options()) {
+  if (from._internal_has_splunk_options()) {
     splunk_options_ = new ::jasper::SplunkOptions(*from.splunk_options_);
   } else {
-    splunk_options_ = NULL;
+    splunk_options_ = nullptr;
   }
   in_memory_cap_ = from.in_memory_cap_;
   // @@protoc_insertion_point(copy_constructor:jasper.LogOptions)
 }
 
 void LogOptions::SharedCtor() {
-  default_prefix_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  file_name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  format_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  sumo_endpoint_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_LogOptions_jasper_2eproto.base);
+  default_prefix_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  file_name_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  format_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  sumo_endpoint_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&buffer_options_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&in_memory_cap_) -
       reinterpret_cast<char*>(&buffer_options_)) + sizeof(in_memory_cap_));
@@ -1691,10 +1515,10 @@ LogOptions::~LogOptions() {
 }
 
 void LogOptions::SharedDtor() {
-  default_prefix_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  file_name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  format_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  sumo_endpoint_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  default_prefix_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  file_name_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  format_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  sumo_endpoint_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete buffer_options_;
   if (this != internal_default_instance()) delete buildlogger_options_;
   if (this != internal_default_instance()) delete splunk_options_;
@@ -1703,343 +1527,208 @@ void LogOptions::SharedDtor() {
 void LogOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* LogOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const LogOptions& LogOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_LogOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_LogOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void LogOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.LogOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  default_prefix_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  file_name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  format_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  sumo_endpoint_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (GetArenaNoVirtual() == NULL && buffer_options_ != NULL) {
+  default_prefix_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  file_name_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  format_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  sumo_endpoint_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == nullptr && buffer_options_ != nullptr) {
     delete buffer_options_;
   }
-  buffer_options_ = NULL;
-  if (GetArenaNoVirtual() == NULL && buildlogger_options_ != NULL) {
+  buffer_options_ = nullptr;
+  if (GetArenaNoVirtual() == nullptr && buildlogger_options_ != nullptr) {
     delete buildlogger_options_;
   }
-  buildlogger_options_ = NULL;
-  if (GetArenaNoVirtual() == NULL && splunk_options_ != NULL) {
+  buildlogger_options_ = nullptr;
+  if (GetArenaNoVirtual() == nullptr && splunk_options_ != nullptr) {
     delete splunk_options_;
   }
-  splunk_options_ = NULL;
-  in_memory_cap_ = GOOGLE_LONGLONG(0);
+  splunk_options_ = nullptr;
+  in_memory_cap_ = PROTOBUF_LONGLONG(0);
   _internal_metadata_.Clear();
 }
 
-bool LogOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.LogOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* LogOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // .jasper.BufferOptions buffer_options = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_buffer_options()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_buffer_options(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .jasper.BuildloggerOptions buildlogger_options = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_buildlogger_options()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          ptr = ctx->ParseMessage(_internal_mutable_buildlogger_options(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string default_prefix = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_default_prefix()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->default_prefix().data(), static_cast<int>(this->default_prefix().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.LogOptions.default_prefix"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          auto str = _internal_mutable_default_prefix();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.LogOptions.default_prefix"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string file_name = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_file_name()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->file_name().data(), static_cast<int>(this->file_name().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.LogOptions.file_name"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+          auto str = _internal_mutable_file_name();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.LogOptions.file_name"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string format = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_format()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->format().data(), static_cast<int>(this->format().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.LogOptions.format"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+          auto str = _internal_mutable_format();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.LogOptions.format"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int64 in_memory_cap = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &in_memory_cap_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
+          in_memory_cap_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .jasper.SplunkOptions splunk_options = 7;
-      case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_splunk_options()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+          ptr = ctx->ParseMessage(_internal_mutable_splunk_options(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string sumo_endpoint = 8;
-      case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_sumo_endpoint()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->sumo_endpoint().data(), static_cast<int>(this->sumo_endpoint().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.LogOptions.sumo_endpoint"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66)) {
+          auto str = _internal_mutable_sumo_endpoint();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.LogOptions.sumo_endpoint"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.LogOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.LogOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void LogOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.LogOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // .jasper.BufferOptions buffer_options = 1;
-  if (this->has_buffer_options()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->_internal_buffer_options(), output);
-  }
-
-  // .jasper.BuildloggerOptions buildlogger_options = 2;
-  if (this->has_buildlogger_options()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      2, this->_internal_buildlogger_options(), output);
-  }
-
-  // string default_prefix = 3;
-  if (this->default_prefix().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->default_prefix().data(), static_cast<int>(this->default_prefix().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.LogOptions.default_prefix");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->default_prefix(), output);
-  }
-
-  // string file_name = 4;
-  if (this->file_name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->file_name().data(), static_cast<int>(this->file_name().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.LogOptions.file_name");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      4, this->file_name(), output);
-  }
-
-  // string format = 5;
-  if (this->format().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->format().data(), static_cast<int>(this->format().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.LogOptions.format");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      5, this->format(), output);
-  }
-
-  // int64 in_memory_cap = 6;
-  if (this->in_memory_cap() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(6, this->in_memory_cap(), output);
-  }
-
-  // .jasper.SplunkOptions splunk_options = 7;
-  if (this->has_splunk_options()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      7, this->_internal_splunk_options(), output);
-  }
-
-  // string sumo_endpoint = 8;
-  if (this->sumo_endpoint().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->sumo_endpoint().data(), static_cast<int>(this->sumo_endpoint().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.LogOptions.sumo_endpoint");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      8, this->sumo_endpoint(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.LogOptions)
-}
-
-::google::protobuf::uint8* LogOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* LogOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.LogOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // .jasper.BufferOptions buffer_options = 1;
   if (this->has_buffer_options()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        1, this->_internal_buffer_options(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        1, _Internal::buffer_options(this), target, stream);
   }
 
   // .jasper.BuildloggerOptions buildlogger_options = 2;
   if (this->has_buildlogger_options()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        2, this->_internal_buildlogger_options(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        2, _Internal::buildlogger_options(this), target, stream);
   }
 
   // string default_prefix = 3;
   if (this->default_prefix().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->default_prefix().data(), static_cast<int>(this->default_prefix().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_default_prefix().data(), static_cast<int>(this->_internal_default_prefix().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.LogOptions.default_prefix");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->default_prefix(), target);
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_default_prefix(), target);
   }
 
   // string file_name = 4;
   if (this->file_name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->file_name().data(), static_cast<int>(this->file_name().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_file_name().data(), static_cast<int>(this->_internal_file_name().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.LogOptions.file_name");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        4, this->file_name(), target);
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_file_name(), target);
   }
 
   // string format = 5;
   if (this->format().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->format().data(), static_cast<int>(this->format().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_format().data(), static_cast<int>(this->_internal_format().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.LogOptions.format");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        5, this->format(), target);
+    target = stream->WriteStringMaybeAliased(
+        5, this->_internal_format(), target);
   }
 
   // int64 in_memory_cap = 6;
   if (this->in_memory_cap() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(6, this->in_memory_cap(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(6, this->_internal_in_memory_cap(), target);
   }
 
   // .jasper.SplunkOptions splunk_options = 7;
   if (this->has_splunk_options()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        7, this->_internal_splunk_options(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        7, _Internal::splunk_options(this), target, stream);
   }
 
   // string sumo_endpoint = 8;
   if (this->sumo_endpoint().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->sumo_endpoint().data(), static_cast<int>(this->sumo_endpoint().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_sumo_endpoint().data(), static_cast<int>(this->_internal_sumo_endpoint().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.LogOptions.sumo_endpoint");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        8, this->sumo_endpoint(), target);
+    target = stream->WriteStringMaybeAliased(
+        8, this->_internal_sumo_endpoint(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.LogOptions)
   return target;
@@ -2049,81 +1738,84 @@ size_t LogOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.LogOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string default_prefix = 3;
   if (this->default_prefix().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->default_prefix());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_default_prefix());
   }
 
   // string file_name = 4;
   if (this->file_name().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->file_name());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_file_name());
   }
 
   // string format = 5;
   if (this->format().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->format());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_format());
   }
 
   // string sumo_endpoint = 8;
   if (this->sumo_endpoint().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->sumo_endpoint());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_sumo_endpoint());
   }
 
   // .jasper.BufferOptions buffer_options = 1;
   if (this->has_buffer_options()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *buffer_options_);
   }
 
   // .jasper.BuildloggerOptions buildlogger_options = 2;
   if (this->has_buildlogger_options()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *buildlogger_options_);
   }
 
   // .jasper.SplunkOptions splunk_options = 7;
   if (this->has_splunk_options()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *splunk_options_);
   }
 
   // int64 in_memory_cap = 6;
   if (this->in_memory_cap() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->in_memory_cap());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_in_memory_cap());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void LogOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void LogOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.LogOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const LogOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const LogOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<LogOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.LogOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.LogOptions)
     MergeFrom(*source);
@@ -2134,40 +1826,40 @@ void LogOptions::MergeFrom(const LogOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.LogOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.default_prefix().size() > 0) {
 
-    default_prefix_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.default_prefix_);
+    default_prefix_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.default_prefix_);
   }
   if (from.file_name().size() > 0) {
 
-    file_name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.file_name_);
+    file_name_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.file_name_);
   }
   if (from.format().size() > 0) {
 
-    format_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.format_);
+    format_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.format_);
   }
   if (from.sumo_endpoint().size() > 0) {
 
-    sumo_endpoint_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.sumo_endpoint_);
+    sumo_endpoint_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.sumo_endpoint_);
   }
   if (from.has_buffer_options()) {
-    mutable_buffer_options()->::jasper::BufferOptions::MergeFrom(from.buffer_options());
+    _internal_mutable_buffer_options()->::jasper::BufferOptions::MergeFrom(from._internal_buffer_options());
   }
   if (from.has_buildlogger_options()) {
-    mutable_buildlogger_options()->::jasper::BuildloggerOptions::MergeFrom(from.buildlogger_options());
+    _internal_mutable_buildlogger_options()->::jasper::BuildloggerOptions::MergeFrom(from._internal_buildlogger_options());
   }
   if (from.has_splunk_options()) {
-    mutable_splunk_options()->::jasper::SplunkOptions::MergeFrom(from.splunk_options());
+    _internal_mutable_splunk_options()->::jasper::SplunkOptions::MergeFrom(from._internal_splunk_options());
   }
   if (from.in_memory_cap() != 0) {
-    set_in_memory_cap(from.in_memory_cap());
+    _internal_set_in_memory_cap(from._internal_in_memory_cap());
   }
 }
 
-void LogOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void LogOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.LogOptions)
   if (&from == this) return;
   Clear();
@@ -2185,30 +1877,25 @@ bool LogOptions::IsInitialized() const {
   return true;
 }
 
-void LogOptions::Swap(LogOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void LogOptions::InternalSwap(LogOptions* other) {
   using std::swap;
-  default_prefix_.Swap(&other->default_prefix_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  default_prefix_.Swap(&other->default_prefix_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  file_name_.Swap(&other->file_name_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  file_name_.Swap(&other->file_name_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  format_.Swap(&other->format_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  format_.Swap(&other->format_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  sumo_endpoint_.Swap(&other->sumo_endpoint_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  sumo_endpoint_.Swap(&other->sumo_endpoint_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(buffer_options_, other->buffer_options_);
   swap(buildlogger_options_, other->buildlogger_options_);
   swap(splunk_options_, other->splunk_options_);
   swap(in_memory_cap_, other->in_memory_cap_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata LogOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata LogOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -2216,22 +1903,18 @@ void LogOptions::InternalSwap(LogOptions* other) {
 
 void BufferOptions::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int BufferOptions::kBufferedFieldNumber;
-const int BufferOptions::kDurationFieldNumber;
-const int BufferOptions::kMaxSizeFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class BufferOptions::_Internal {
+ public:
+};
 
 BufferOptions::BufferOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_BufferOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.BufferOptions)
 }
 BufferOptions::BufferOptions(const BufferOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&duration_, &from.duration_,
     static_cast<size_t>(reinterpret_cast<char*>(&buffered_) -
@@ -2256,20 +1939,15 @@ void BufferOptions::SharedDtor() {
 void BufferOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* BufferOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const BufferOptions& BufferOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_BufferOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BufferOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void BufferOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.BufferOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -2279,131 +1957,81 @@ void BufferOptions::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool BufferOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.BufferOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* BufferOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // bool buffered = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &buffered_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          buffered_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int64 duration = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &duration_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          duration_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int64 max_size = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &max_size_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          max_size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.BufferOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.BufferOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void BufferOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.BufferOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool buffered = 1;
-  if (this->buffered() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->buffered(), output);
-  }
-
-  // int64 duration = 2;
-  if (this->duration() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->duration(), output);
-  }
-
-  // int64 max_size = 3;
-  if (this->max_size() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->max_size(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.BufferOptions)
-}
-
-::google::protobuf::uint8* BufferOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* BufferOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.BufferOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // bool buffered = 1;
   if (this->buffered() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->buffered(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(1, this->_internal_buffered(), target);
   }
 
   // int64 duration = 2;
   if (this->duration() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->duration(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(2, this->_internal_duration(), target);
   }
 
   // int64 max_size = 3;
   if (this->max_size() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(3, this->max_size(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(3, this->_internal_max_size(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.BufferOptions)
   return target;
@@ -2413,23 +2041,22 @@ size_t BufferOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.BufferOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // int64 duration = 2;
   if (this->duration() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->duration());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_duration());
   }
 
   // int64 max_size = 3;
   if (this->max_size() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->max_size());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_max_size());
   }
 
   // bool buffered = 1;
@@ -2437,20 +2064,24 @@ size_t BufferOptions::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void BufferOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void BufferOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.BufferOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const BufferOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const BufferOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<BufferOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.BufferOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.BufferOptions)
     MergeFrom(*source);
@@ -2461,21 +2092,21 @@ void BufferOptions::MergeFrom(const BufferOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.BufferOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.duration() != 0) {
-    set_duration(from.duration());
+    _internal_set_duration(from._internal_duration());
   }
   if (from.max_size() != 0) {
-    set_max_size(from.max_size());
+    _internal_set_max_size(from._internal_max_size());
   }
   if (from.buffered() != 0) {
-    set_buffered(from.buffered());
+    _internal_set_buffered(from._internal_buffered());
   }
 }
 
-void BufferOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void BufferOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.BufferOptions)
   if (&from == this) return;
   Clear();
@@ -2493,21 +2124,16 @@ bool BufferOptions::IsInitialized() const {
   return true;
 }
 
-void BufferOptions::Swap(BufferOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void BufferOptions::InternalSwap(BufferOptions* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(duration_, other->duration_);
   swap(max_size_, other->max_size_);
   swap(buffered_, other->buffered_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata BufferOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata BufferOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -2515,46 +2141,38 @@ void BufferOptions::InternalSwap(BufferOptions* other) {
 
 void BuildloggerOptions::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int BuildloggerOptions::kCreateTestFieldNumber;
-const int BuildloggerOptions::kUrlFieldNumber;
-const int BuildloggerOptions::kNumberFieldNumber;
-const int BuildloggerOptions::kPhaseFieldNumber;
-const int BuildloggerOptions::kBuilderFieldNumber;
-const int BuildloggerOptions::kTestFieldNumber;
-const int BuildloggerOptions::kCommandFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class BuildloggerOptions::_Internal {
+ public:
+};
 
 BuildloggerOptions::BuildloggerOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_BuildloggerOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.BuildloggerOptions)
 }
 BuildloggerOptions::BuildloggerOptions(const BuildloggerOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.url().size() > 0) {
-    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_url().empty()) {
+    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
   }
-  phase_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.phase().size() > 0) {
-    phase_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.phase_);
+  phase_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_phase().empty()) {
+    phase_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.phase_);
   }
-  builder_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.builder().size() > 0) {
-    builder_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.builder_);
+  builder_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_builder().empty()) {
+    builder_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.builder_);
   }
-  test_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.test().size() > 0) {
-    test_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.test_);
+  test_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_test().empty()) {
+    test_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.test_);
   }
-  command_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.command().size() > 0) {
-    command_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.command_);
+  command_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_command().empty()) {
+    command_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.command_);
   }
   ::memcpy(&number_, &from.number_,
     static_cast<size_t>(reinterpret_cast<char*>(&create_test_) -
@@ -2563,11 +2181,12 @@ BuildloggerOptions::BuildloggerOptions(const BuildloggerOptions& from)
 }
 
 void BuildloggerOptions::SharedCtor() {
-  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  phase_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  builder_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  test_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  command_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_BuildloggerOptions_jasper_2eproto.base);
+  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  phase_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  builder_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  test_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  command_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&number_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&create_test_) -
       reinterpret_cast<char*>(&number_)) + sizeof(create_test_));
@@ -2579,330 +2198,196 @@ BuildloggerOptions::~BuildloggerOptions() {
 }
 
 void BuildloggerOptions::SharedDtor() {
-  url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  phase_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  builder_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  test_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  command_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  url_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  phase_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  builder_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  test_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  command_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void BuildloggerOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* BuildloggerOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const BuildloggerOptions& BuildloggerOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_BuildloggerOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BuildloggerOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void BuildloggerOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.BuildloggerOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  phase_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  builder_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  test_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  command_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  url_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  phase_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  builder_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  test_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  command_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&number_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&create_test_) -
       reinterpret_cast<char*>(&number_)) + sizeof(create_test_));
   _internal_metadata_.Clear();
 }
 
-bool BuildloggerOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.BuildloggerOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* BuildloggerOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // bool create_test = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &create_test_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          create_test_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string url = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_url()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->url().data(), static_cast<int>(this->url().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildloggerOptions.url"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_url();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildloggerOptions.url"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int64 number = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &number_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          number_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string phase = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_phase()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->phase().data(), static_cast<int>(this->phase().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildloggerOptions.phase"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+          auto str = _internal_mutable_phase();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildloggerOptions.phase"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string builder = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_builder()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->builder().data(), static_cast<int>(this->builder().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildloggerOptions.builder"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+          auto str = _internal_mutable_builder();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildloggerOptions.builder"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string test = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_test()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->test().data(), static_cast<int>(this->test().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildloggerOptions.test"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+          auto str = _internal_mutable_test();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildloggerOptions.test"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string command = 7;
-      case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_command()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->command().data(), static_cast<int>(this->command().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildloggerOptions.command"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+          auto str = _internal_mutable_command();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildloggerOptions.command"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.BuildloggerOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.BuildloggerOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void BuildloggerOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.BuildloggerOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool create_test = 1;
-  if (this->create_test() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->create_test(), output);
-  }
-
-  // string url = 2;
-  if (this->url().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->url().data(), static_cast<int>(this->url().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildloggerOptions.url");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->url(), output);
-  }
-
-  // int64 number = 3;
-  if (this->number() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->number(), output);
-  }
-
-  // string phase = 4;
-  if (this->phase().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->phase().data(), static_cast<int>(this->phase().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildloggerOptions.phase");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      4, this->phase(), output);
-  }
-
-  // string builder = 5;
-  if (this->builder().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->builder().data(), static_cast<int>(this->builder().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildloggerOptions.builder");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      5, this->builder(), output);
-  }
-
-  // string test = 6;
-  if (this->test().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->test().data(), static_cast<int>(this->test().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildloggerOptions.test");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      6, this->test(), output);
-  }
-
-  // string command = 7;
-  if (this->command().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->command().data(), static_cast<int>(this->command().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildloggerOptions.command");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      7, this->command(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.BuildloggerOptions)
-}
-
-::google::protobuf::uint8* BuildloggerOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* BuildloggerOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.BuildloggerOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // bool create_test = 1;
   if (this->create_test() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->create_test(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(1, this->_internal_create_test(), target);
   }
 
   // string url = 2;
   if (this->url().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->url().data(), static_cast<int>(this->url().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_url().data(), static_cast<int>(this->_internal_url().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildloggerOptions.url");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->url(), target);
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_url(), target);
   }
 
   // int64 number = 3;
   if (this->number() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(3, this->number(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(3, this->_internal_number(), target);
   }
 
   // string phase = 4;
   if (this->phase().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->phase().data(), static_cast<int>(this->phase().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_phase().data(), static_cast<int>(this->_internal_phase().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildloggerOptions.phase");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        4, this->phase(), target);
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_phase(), target);
   }
 
   // string builder = 5;
   if (this->builder().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->builder().data(), static_cast<int>(this->builder().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_builder().data(), static_cast<int>(this->_internal_builder().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildloggerOptions.builder");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        5, this->builder(), target);
+    target = stream->WriteStringMaybeAliased(
+        5, this->_internal_builder(), target);
   }
 
   // string test = 6;
   if (this->test().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->test().data(), static_cast<int>(this->test().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_test().data(), static_cast<int>(this->_internal_test().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildloggerOptions.test");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        6, this->test(), target);
+    target = stream->WriteStringMaybeAliased(
+        6, this->_internal_test(), target);
   }
 
   // string command = 7;
   if (this->command().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->command().data(), static_cast<int>(this->command().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_command().data(), static_cast<int>(this->_internal_command().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildloggerOptions.command");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        7, this->command(), target);
+    target = stream->WriteStringMaybeAliased(
+        7, this->_internal_command(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.BuildloggerOptions)
   return target;
@@ -2912,51 +2397,50 @@ size_t BuildloggerOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.BuildloggerOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string url = 2;
   if (this->url().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->url());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_url());
   }
 
   // string phase = 4;
   if (this->phase().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->phase());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_phase());
   }
 
   // string builder = 5;
   if (this->builder().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->builder());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_builder());
   }
 
   // string test = 6;
   if (this->test().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->test());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_test());
   }
 
   // string command = 7;
   if (this->command().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->command());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_command());
   }
 
   // int64 number = 3;
   if (this->number() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->number());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_number());
   }
 
   // bool create_test = 1;
@@ -2964,20 +2448,24 @@ size_t BuildloggerOptions::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void BuildloggerOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void BuildloggerOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.BuildloggerOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const BuildloggerOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const BuildloggerOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<BuildloggerOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.BuildloggerOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.BuildloggerOptions)
     MergeFrom(*source);
@@ -2988,38 +2476,38 @@ void BuildloggerOptions::MergeFrom(const BuildloggerOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.BuildloggerOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.url().size() > 0) {
 
-    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
   }
   if (from.phase().size() > 0) {
 
-    phase_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.phase_);
+    phase_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.phase_);
   }
   if (from.builder().size() > 0) {
 
-    builder_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.builder_);
+    builder_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.builder_);
   }
   if (from.test().size() > 0) {
 
-    test_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.test_);
+    test_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.test_);
   }
   if (from.command().size() > 0) {
 
-    command_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.command_);
+    command_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.command_);
   }
   if (from.number() != 0) {
-    set_number(from.number());
+    _internal_set_number(from._internal_number());
   }
   if (from.create_test() != 0) {
-    set_create_test(from.create_test());
+    _internal_set_create_test(from._internal_create_test());
   }
 }
 
-void BuildloggerOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void BuildloggerOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.BuildloggerOptions)
   if (&from == this) return;
   Clear();
@@ -3037,30 +2525,25 @@ bool BuildloggerOptions::IsInitialized() const {
   return true;
 }
 
-void BuildloggerOptions::Swap(BuildloggerOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void BuildloggerOptions::InternalSwap(BuildloggerOptions* other) {
   using std::swap;
-  url_.Swap(&other->url_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  url_.Swap(&other->url_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  phase_.Swap(&other->phase_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  phase_.Swap(&other->phase_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  builder_.Swap(&other->builder_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  builder_.Swap(&other->builder_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  test_.Swap(&other->test_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  test_.Swap(&other->test_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  command_.Swap(&other->command_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  command_.Swap(&other->command_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(number_, other->number_);
   swap(create_test_, other->create_test_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata BuildloggerOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata BuildloggerOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -3068,42 +2551,39 @@ void BuildloggerOptions::InternalSwap(BuildloggerOptions* other) {
 
 void SplunkOptions::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int SplunkOptions::kUrlFieldNumber;
-const int SplunkOptions::kTokenFieldNumber;
-const int SplunkOptions::kChannelFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class SplunkOptions::_Internal {
+ public:
+};
 
 SplunkOptions::SplunkOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_SplunkOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.SplunkOptions)
 }
 SplunkOptions::SplunkOptions(const SplunkOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.url().size() > 0) {
-    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_url().empty()) {
+    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
   }
-  token_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.token().size() > 0) {
-    token_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.token_);
+  token_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_token().empty()) {
+    token_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.token_);
   }
-  channel_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.channel().size() > 0) {
-    channel_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.channel_);
+  channel_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_channel().empty()) {
+    channel_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.channel_);
   }
   // @@protoc_insertion_point(copy_constructor:jasper.SplunkOptions)
 }
 
 void SplunkOptions::SharedCtor() {
-  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  token_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  channel_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_SplunkOptions_jasper_2eproto.base);
+  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  token_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  channel_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 SplunkOptions::~SplunkOptions() {
@@ -3112,201 +2592,125 @@ SplunkOptions::~SplunkOptions() {
 }
 
 void SplunkOptions::SharedDtor() {
-  url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  token_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  channel_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  url_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  token_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  channel_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void SplunkOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* SplunkOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const SplunkOptions& SplunkOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_SplunkOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_SplunkOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void SplunkOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.SplunkOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  token_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  channel_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  url_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  token_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  channel_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   _internal_metadata_.Clear();
 }
 
-bool SplunkOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.SplunkOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* SplunkOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // string url = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_url()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->url().data(), static_cast<int>(this->url().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.SplunkOptions.url"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_url();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.SplunkOptions.url"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string token = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_token()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->token().data(), static_cast<int>(this->token().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.SplunkOptions.token"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_token();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.SplunkOptions.token"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string channel = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_channel()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->channel().data(), static_cast<int>(this->channel().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.SplunkOptions.channel"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          auto str = _internal_mutable_channel();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.SplunkOptions.channel"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.SplunkOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.SplunkOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void SplunkOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.SplunkOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string url = 1;
-  if (this->url().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->url().data(), static_cast<int>(this->url().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.SplunkOptions.url");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->url(), output);
-  }
-
-  // string token = 2;
-  if (this->token().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->token().data(), static_cast<int>(this->token().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.SplunkOptions.token");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->token(), output);
-  }
-
-  // string channel = 3;
-  if (this->channel().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->channel().data(), static_cast<int>(this->channel().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.SplunkOptions.channel");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->channel(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.SplunkOptions)
-}
-
-::google::protobuf::uint8* SplunkOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* SplunkOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.SplunkOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string url = 1;
   if (this->url().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->url().data(), static_cast<int>(this->url().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_url().data(), static_cast<int>(this->_internal_url().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.SplunkOptions.url");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->url(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_url(), target);
   }
 
   // string token = 2;
   if (this->token().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->token().data(), static_cast<int>(this->token().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_token().data(), static_cast<int>(this->_internal_token().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.SplunkOptions.token");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->token(), target);
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_token(), target);
   }
 
   // string channel = 3;
   if (this->channel().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->channel().data(), static_cast<int>(this->channel().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_channel().data(), static_cast<int>(this->_internal_channel().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.SplunkOptions.channel");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->channel(), target);
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_channel(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.SplunkOptions)
   return target;
@@ -3316,46 +2720,49 @@ size_t SplunkOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.SplunkOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string url = 1;
   if (this->url().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->url());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_url());
   }
 
   // string token = 2;
   if (this->token().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->token());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_token());
   }
 
   // string channel = 3;
   if (this->channel().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->channel());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_channel());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void SplunkOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void SplunkOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.SplunkOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const SplunkOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const SplunkOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<SplunkOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.SplunkOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.SplunkOptions)
     MergeFrom(*source);
@@ -3366,24 +2773,24 @@ void SplunkOptions::MergeFrom(const SplunkOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.SplunkOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.url().size() > 0) {
 
-    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
   }
   if (from.token().size() > 0) {
 
-    token_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.token_);
+    token_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.token_);
   }
   if (from.channel().size() > 0) {
 
-    channel_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.channel_);
+    channel_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.channel_);
   }
 }
 
-void SplunkOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void SplunkOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.SplunkOptions)
   if (&from == this) return;
   Clear();
@@ -3401,41 +2808,36 @@ bool SplunkOptions::IsInitialized() const {
   return true;
 }
 
-void SplunkOptions::Swap(SplunkOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void SplunkOptions::InternalSwap(SplunkOptions* other) {
   using std::swap;
-  url_.Swap(&other->url_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  token_.Swap(&other->token_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
-  channel_.Swap(&other->channel_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  url_.Swap(&other->url_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  token_.Swap(&other->token_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
+  channel_.Swap(&other->channel_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
 }
 
-::google::protobuf::Metadata SplunkOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata SplunkOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
 // ===================================================================
 
 CreateOptions_EnvironmentEntry_DoNotUse::CreateOptions_EnvironmentEntry_DoNotUse() {}
-CreateOptions_EnvironmentEntry_DoNotUse::CreateOptions_EnvironmentEntry_DoNotUse(::google::protobuf::Arena* arena) : SuperType(arena) {}
+CreateOptions_EnvironmentEntry_DoNotUse::CreateOptions_EnvironmentEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+    : SuperType(arena) {}
 void CreateOptions_EnvironmentEntry_DoNotUse::MergeFrom(const CreateOptions_EnvironmentEntry_DoNotUse& other) {
   MergeFromInternal(other);
 }
-::google::protobuf::Metadata CreateOptions_EnvironmentEntry_DoNotUse::GetMetadata() const {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[6];
+::PROTOBUF_NAMESPACE_ID::Metadata CreateOptions_EnvironmentEntry_DoNotUse::GetMetadata() const {
+  return GetMetadataStatic();
 }
 void CreateOptions_EnvironmentEntry_DoNotUse::MergeFrom(
-    const ::google::protobuf::Message& other) {
-  ::google::protobuf::Message::MergeFrom(other);
+    const ::PROTOBUF_NAMESPACE_ID::Message& other) {
+  ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom(other);
 }
 
 
@@ -3445,29 +2847,23 @@ void CreateOptions::InitAsDefaultInstance() {
   ::jasper::_CreateOptions_default_instance_._instance.get_mutable()->output_ = const_cast< ::jasper::OutputOptions*>(
       ::jasper::OutputOptions::internal_default_instance());
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int CreateOptions::kArgsFieldNumber;
-const int CreateOptions::kWorkingDirectoryFieldNumber;
-const int CreateOptions::kEnvironmentFieldNumber;
-const int CreateOptions::kOverrideEnvironFieldNumber;
-const int CreateOptions::kTimeoutSecondsFieldNumber;
-const int CreateOptions::kTagsFieldNumber;
-const int CreateOptions::kOnSuccessFieldNumber;
-const int CreateOptions::kOnFailureFieldNumber;
-const int CreateOptions::kOnTimeoutFieldNumber;
-const int CreateOptions::kOutputFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class CreateOptions::_Internal {
+ public:
+  static const ::jasper::OutputOptions& output(const CreateOptions* msg);
+};
 
+const ::jasper::OutputOptions&
+CreateOptions::_Internal::output(const CreateOptions* msg) {
+  return *msg->output_;
+}
 CreateOptions::CreateOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_CreateOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.CreateOptions)
 }
 CreateOptions::CreateOptions(const CreateOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       args_(from.args_),
       tags_(from.tags_),
       on_success_(from.on_success_),
@@ -3475,14 +2871,14 @@ CreateOptions::CreateOptions(const CreateOptions& from)
       on_timeout_(from.on_timeout_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   environment_.MergeFrom(from.environment_);
-  working_directory_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.working_directory().size() > 0) {
-    working_directory_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.working_directory_);
+  working_directory_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_working_directory().empty()) {
+    working_directory_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.working_directory_);
   }
-  if (from.has_output()) {
+  if (from._internal_has_output()) {
     output_ = new ::jasper::OutputOptions(*from.output_);
   } else {
-    output_ = NULL;
+    output_ = nullptr;
   }
   ::memcpy(&timeout_seconds_, &from.timeout_seconds_,
     static_cast<size_t>(reinterpret_cast<char*>(&override_environ_) -
@@ -3491,7 +2887,8 @@ CreateOptions::CreateOptions(const CreateOptions& from)
 }
 
 void CreateOptions::SharedCtor() {
-  working_directory_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_CreateOptions_jasper_2eproto.base);
+  working_directory_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&output_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&override_environ_) -
       reinterpret_cast<char*>(&output_)) + sizeof(override_environ_));
@@ -3503,27 +2900,22 @@ CreateOptions::~CreateOptions() {
 }
 
 void CreateOptions::SharedDtor() {
-  working_directory_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  working_directory_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete output_;
 }
 
 void CreateOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* CreateOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const CreateOptions& CreateOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_CreateOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_CreateOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void CreateOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.CreateOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -3533,478 +2925,278 @@ void CreateOptions::Clear() {
   on_success_.Clear();
   on_failure_.Clear();
   on_timeout_.Clear();
-  working_directory_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (GetArenaNoVirtual() == NULL && output_ != NULL) {
+  working_directory_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == nullptr && output_ != nullptr) {
     delete output_;
   }
-  output_ = NULL;
+  output_ = nullptr;
   ::memset(&timeout_seconds_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&override_environ_) -
       reinterpret_cast<char*>(&timeout_seconds_)) + sizeof(override_environ_));
   _internal_metadata_.Clear();
 }
 
-bool CreateOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.CreateOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* CreateOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // repeated string args = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_args()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->args(this->args_size() - 1).data(),
-            static_cast<int>(this->args(this->args_size() - 1).length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.CreateOptions.args"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_args();
+            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.CreateOptions.args"));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
+        } else goto handle_unusual;
+        continue;
       // string working_directory = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_working_directory()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->working_directory().data(), static_cast<int>(this->working_directory().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.CreateOptions.working_directory"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_working_directory();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.CreateOptions.working_directory"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // map<string, string> environment = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          CreateOptions_EnvironmentEntry_DoNotUse::Parser< ::google::protobuf::internal::MapField<
-              CreateOptions_EnvironmentEntry_DoNotUse,
-              ::std::string, ::std::string,
-              ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
-              ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
-              0 >,
-            ::google::protobuf::Map< ::std::string, ::std::string > > parser(&environment_);
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-              input, &parser));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            parser.key().data(), static_cast<int>(parser.key().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.CreateOptions.EnvironmentEntry.key"));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            parser.value().data(), static_cast<int>(parser.value().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.CreateOptions.EnvironmentEntry.value"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(&environment_, ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<26>(ptr));
+        } else goto handle_unusual;
+        continue;
       // bool override_environ = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &override_environ_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          override_environ_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int64 timeout_seconds = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &timeout_seconds_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
+          timeout_seconds_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // repeated string tags = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_tags()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->tags(this->tags_size() - 1).data(),
-            static_cast<int>(this->tags(this->tags_size() - 1).length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.CreateOptions.tags"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_tags();
+            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.CreateOptions.tags"));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<50>(ptr));
+        } else goto handle_unusual;
+        continue;
       // repeated .jasper.CreateOptions on_success = 7;
-      case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(58u /* 58 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-                input, add_on_success()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 58)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_on_success(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<58>(ptr));
+        } else goto handle_unusual;
+        continue;
       // repeated .jasper.CreateOptions on_failure = 8;
-      case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-                input, add_on_failure()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_on_failure(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<66>(ptr));
+        } else goto handle_unusual;
+        continue;
       // repeated .jasper.CreateOptions on_timeout = 9;
-      case 9: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(74u /* 74 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-                input, add_on_timeout()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 74)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_on_timeout(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<74>(ptr));
+        } else goto handle_unusual;
+        continue;
       // .jasper.OutputOptions output = 10;
-      case 10: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(82u /* 82 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_output()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 10:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 82)) {
+          ptr = ctx->ParseMessage(_internal_mutable_output(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.CreateOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.CreateOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void CreateOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.CreateOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // repeated string args = 1;
-  for (int i = 0, n = this->args_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->args(i).data(), static_cast<int>(this->args(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.CreateOptions.args");
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->args(i), output);
-  }
-
-  // string working_directory = 2;
-  if (this->working_directory().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->working_directory().data(), static_cast<int>(this->working_directory().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.CreateOptions.working_directory");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->working_directory(), output);
-  }
-
-  // map<string, string> environment = 3;
-  if (!this->environment().empty()) {
-    typedef ::google::protobuf::Map< ::std::string, ::std::string >::const_pointer
-        ConstPtr;
-    typedef ConstPtr SortItem;
-    typedef ::google::protobuf::internal::CompareByDerefFirst<SortItem> Less;
-    struct Utf8Check {
-      static void Check(ConstPtr p) {
-        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-          p->first.data(), static_cast<int>(p->first.length()),
-          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-          "jasper.CreateOptions.EnvironmentEntry.key");
-        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-          p->second.data(), static_cast<int>(p->second.length()),
-          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-          "jasper.CreateOptions.EnvironmentEntry.value");
-      }
-    };
-
-    if (output->IsSerializationDeterministic() &&
-        this->environment().size() > 1) {
-      ::std::unique_ptr<SortItem[]> items(
-          new SortItem[this->environment().size()]);
-      typedef ::google::protobuf::Map< ::std::string, ::std::string >::size_type size_type;
-      size_type n = 0;
-      for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-          it = this->environment().begin();
-          it != this->environment().end(); ++it, ++n) {
-        items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
-      }
-      ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      ::std::unique_ptr<CreateOptions_EnvironmentEntry_DoNotUse> entry;
-      for (size_type i = 0; i < n; i++) {
-        entry.reset(environment_.NewEntryWrapper(
-            items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
-        ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-            3, *entry, output);
-        Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
-      }
-    } else {
-      ::std::unique_ptr<CreateOptions_EnvironmentEntry_DoNotUse> entry;
-      for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-          it = this->environment().begin();
-          it != this->environment().end(); ++it) {
-        entry.reset(environment_.NewEntryWrapper(
-            it->first, it->second));
-        ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-            3, *entry, output);
-        Utf8Check::Check(&*it);
-      }
-    }
-  }
-
-  // bool override_environ = 4;
-  if (this->override_environ() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->override_environ(), output);
-  }
-
-  // int64 timeout_seconds = 5;
-  if (this->timeout_seconds() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(5, this->timeout_seconds(), output);
-  }
-
-  // repeated string tags = 6;
-  for (int i = 0, n = this->tags_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->tags(i).data(), static_cast<int>(this->tags(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.CreateOptions.tags");
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      6, this->tags(i), output);
-  }
-
-  // repeated .jasper.CreateOptions on_success = 7;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->on_success_size()); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      7,
-      this->on_success(static_cast<int>(i)),
-      output);
-  }
-
-  // repeated .jasper.CreateOptions on_failure = 8;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->on_failure_size()); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      8,
-      this->on_failure(static_cast<int>(i)),
-      output);
-  }
-
-  // repeated .jasper.CreateOptions on_timeout = 9;
-  for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->on_timeout_size()); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      9,
-      this->on_timeout(static_cast<int>(i)),
-      output);
-  }
-
-  // .jasper.OutputOptions output = 10;
-  if (this->has_output()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      10, this->_internal_output(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.CreateOptions)
-}
-
-::google::protobuf::uint8* CreateOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* CreateOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.CreateOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated string args = 1;
-  for (int i = 0, n = this->args_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->args(i).data(), static_cast<int>(this->args(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+  for (int i = 0, n = this->_internal_args_size(); i < n; i++) {
+    const auto& s = this->_internal_args(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.CreateOptions.args");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(1, this->args(i), target);
+    target = stream->WriteString(1, s, target);
   }
 
   // string working_directory = 2;
   if (this->working_directory().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->working_directory().data(), static_cast<int>(this->working_directory().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_working_directory().data(), static_cast<int>(this->_internal_working_directory().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.CreateOptions.working_directory");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->working_directory(), target);
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_working_directory(), target);
   }
 
   // map<string, string> environment = 3;
-  if (!this->environment().empty()) {
-    typedef ::google::protobuf::Map< ::std::string, ::std::string >::const_pointer
+  if (!this->_internal_environment().empty()) {
+    typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_pointer
         ConstPtr;
     typedef ConstPtr SortItem;
-    typedef ::google::protobuf::internal::CompareByDerefFirst<SortItem> Less;
+    typedef ::PROTOBUF_NAMESPACE_ID::internal::CompareByDerefFirst<SortItem> Less;
     struct Utf8Check {
       static void Check(ConstPtr p) {
-        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
           p->first.data(), static_cast<int>(p->first.length()),
-          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+          ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
           "jasper.CreateOptions.EnvironmentEntry.key");
-        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
           p->second.data(), static_cast<int>(p->second.length()),
-          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+          ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
           "jasper.CreateOptions.EnvironmentEntry.value");
       }
     };
 
-    if (deterministic &&
-        this->environment().size() > 1) {
+    if (stream->IsSerializationDeterministic() &&
+        this->_internal_environment().size() > 1) {
       ::std::unique_ptr<SortItem[]> items(
-          new SortItem[this->environment().size()]);
-      typedef ::google::protobuf::Map< ::std::string, ::std::string >::size_type size_type;
+          new SortItem[this->_internal_environment().size()]);
+      typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::size_type size_type;
       size_type n = 0;
-      for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-          it = this->environment().begin();
-          it != this->environment().end(); ++it, ++n) {
+      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
+          it = this->_internal_environment().begin();
+          it != this->_internal_environment().end(); ++it, ++n) {
         items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
       }
       ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      ::std::unique_ptr<CreateOptions_EnvironmentEntry_DoNotUse> entry;
       for (size_type i = 0; i < n; i++) {
-        entry.reset(environment_.NewEntryWrapper(
-            items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
-        target = ::google::protobuf::internal::WireFormatLite::
-                   InternalWriteMessageNoVirtualToArray(
-                       3, *entry, deterministic, target);
-;
-        Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
+        target = CreateOptions_EnvironmentEntry_DoNotUse::Funcs::InternalSerialize(3, items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second, target, stream);
+        Utf8Check::Check(&(*items[static_cast<ptrdiff_t>(i)]));
       }
     } else {
-      ::std::unique_ptr<CreateOptions_EnvironmentEntry_DoNotUse> entry;
-      for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-          it = this->environment().begin();
-          it != this->environment().end(); ++it) {
-        entry.reset(environment_.NewEntryWrapper(
-            it->first, it->second));
-        target = ::google::protobuf::internal::WireFormatLite::
-                   InternalWriteMessageNoVirtualToArray(
-                       3, *entry, deterministic, target);
-;
-        Utf8Check::Check(&*it);
+      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
+          it = this->_internal_environment().begin();
+          it != this->_internal_environment().end(); ++it) {
+        target = CreateOptions_EnvironmentEntry_DoNotUse::Funcs::InternalSerialize(3, it->first, it->second, target, stream);
+        Utf8Check::Check(&(*it));
       }
     }
   }
 
   // bool override_environ = 4;
   if (this->override_environ() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->override_environ(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(4, this->_internal_override_environ(), target);
   }
 
   // int64 timeout_seconds = 5;
   if (this->timeout_seconds() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(5, this->timeout_seconds(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(5, this->_internal_timeout_seconds(), target);
   }
 
   // repeated string tags = 6;
-  for (int i = 0, n = this->tags_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->tags(i).data(), static_cast<int>(this->tags(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+  for (int i = 0, n = this->_internal_tags_size(); i < n; i++) {
+    const auto& s = this->_internal_tags(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.CreateOptions.tags");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(6, this->tags(i), target);
+    target = stream->WriteString(6, s, target);
   }
 
   // repeated .jasper.CreateOptions on_success = 7;
   for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->on_success_size()); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        7, this->on_success(static_cast<int>(i)), deterministic, target);
+      n = static_cast<unsigned int>(this->_internal_on_success_size()); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(7, this->_internal_on_success(i), target, stream);
   }
 
   // repeated .jasper.CreateOptions on_failure = 8;
   for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->on_failure_size()); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        8, this->on_failure(static_cast<int>(i)), deterministic, target);
+      n = static_cast<unsigned int>(this->_internal_on_failure_size()); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(8, this->_internal_on_failure(i), target, stream);
   }
 
   // repeated .jasper.CreateOptions on_timeout = 9;
   for (unsigned int i = 0,
-      n = static_cast<unsigned int>(this->on_timeout_size()); i < n; i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        9, this->on_timeout(static_cast<int>(i)), deterministic, target);
+      n = static_cast<unsigned int>(this->_internal_on_timeout_size()); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(9, this->_internal_on_timeout(i), target, stream);
   }
 
   // .jasper.OutputOptions output = 10;
   if (this->has_output()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        10, this->_internal_output(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        10, _Internal::output(this), target, stream);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.CreateOptions)
   return target;
@@ -4014,93 +3206,75 @@ size_t CreateOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.CreateOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated string args = 1;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->args_size());
-  for (int i = 0, n = this->args_size(); i < n; i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->args(i));
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(args_.size());
+  for (int i = 0, n = args_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      args_.Get(i));
   }
 
   // map<string, string> environment = 3;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->environment_size());
-  {
-    ::std::unique_ptr<CreateOptions_EnvironmentEntry_DoNotUse> entry;
-    for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-        it = this->environment().begin();
-        it != this->environment().end(); ++it) {
-      entry.reset(environment_.NewEntryWrapper(it->first, it->second));
-      total_size += ::google::protobuf::internal::WireFormatLite::
-          MessageSizeNoVirtual(*entry);
-    }
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_environment_size());
+  for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
+      it = this->_internal_environment().begin();
+      it != this->_internal_environment().end(); ++it) {
+    total_size += CreateOptions_EnvironmentEntry_DoNotUse::Funcs::ByteSizeLong(it->first, it->second);
   }
 
   // repeated string tags = 6;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->tags_size());
-  for (int i = 0, n = this->tags_size(); i < n; i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->tags(i));
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(tags_.size());
+  for (int i = 0, n = tags_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      tags_.Get(i));
   }
 
   // repeated .jasper.CreateOptions on_success = 7;
-  {
-    unsigned int count = static_cast<unsigned int>(this->on_success_size());
-    total_size += 1UL * count;
-    for (unsigned int i = 0; i < count; i++) {
-      total_size +=
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          this->on_success(static_cast<int>(i)));
-    }
+  total_size += 1UL * this->_internal_on_success_size();
+  for (const auto& msg : this->on_success_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // repeated .jasper.CreateOptions on_failure = 8;
-  {
-    unsigned int count = static_cast<unsigned int>(this->on_failure_size());
-    total_size += 1UL * count;
-    for (unsigned int i = 0; i < count; i++) {
-      total_size +=
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          this->on_failure(static_cast<int>(i)));
-    }
+  total_size += 1UL * this->_internal_on_failure_size();
+  for (const auto& msg : this->on_failure_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // repeated .jasper.CreateOptions on_timeout = 9;
-  {
-    unsigned int count = static_cast<unsigned int>(this->on_timeout_size());
-    total_size += 1UL * count;
-    for (unsigned int i = 0; i < count; i++) {
-      total_size +=
-        ::google::protobuf::internal::WireFormatLite::MessageSize(
-          this->on_timeout(static_cast<int>(i)));
-    }
+  total_size += 1UL * this->_internal_on_timeout_size();
+  for (const auto& msg : this->on_timeout_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
   }
 
   // string working_directory = 2;
   if (this->working_directory().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->working_directory());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_working_directory());
   }
 
   // .jasper.OutputOptions output = 10;
   if (this->has_output()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *output_);
   }
 
   // int64 timeout_seconds = 5;
   if (this->timeout_seconds() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->timeout_seconds());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_timeout_seconds());
   }
 
   // bool override_environ = 4;
@@ -4108,20 +3282,24 @@ size_t CreateOptions::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void CreateOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void CreateOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.CreateOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const CreateOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const CreateOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<CreateOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.CreateOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.CreateOptions)
     MergeFrom(*source);
@@ -4132,7 +3310,7 @@ void CreateOptions::MergeFrom(const CreateOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.CreateOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   args_.MergeFrom(from.args_);
@@ -4143,20 +3321,20 @@ void CreateOptions::MergeFrom(const CreateOptions& from) {
   on_timeout_.MergeFrom(from.on_timeout_);
   if (from.working_directory().size() > 0) {
 
-    working_directory_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.working_directory_);
+    working_directory_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.working_directory_);
   }
   if (from.has_output()) {
-    mutable_output()->::jasper::OutputOptions::MergeFrom(from.output());
+    _internal_mutable_output()->::jasper::OutputOptions::MergeFrom(from._internal_output());
   }
   if (from.timeout_seconds() != 0) {
-    set_timeout_seconds(from.timeout_seconds());
+    _internal_set_timeout_seconds(from._internal_timeout_seconds());
   }
   if (from.override_environ() != 0) {
-    set_override_environ(from.override_environ());
+    _internal_set_override_environ(from._internal_override_environ());
   }
 }
 
-void CreateOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void CreateOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.CreateOptions)
   if (&from == this) return;
   Clear();
@@ -4174,29 +3352,24 @@ bool CreateOptions::IsInitialized() const {
   return true;
 }
 
-void CreateOptions::Swap(CreateOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void CreateOptions::InternalSwap(CreateOptions* other) {
   using std::swap;
-  args_.InternalSwap(CastToBase(&other->args_));
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  args_.InternalSwap(&other->args_);
   environment_.Swap(&other->environment_);
-  tags_.InternalSwap(CastToBase(&other->tags_));
-  CastToBase(&on_success_)->InternalSwap(CastToBase(&other->on_success_));
-  CastToBase(&on_failure_)->InternalSwap(CastToBase(&other->on_failure_));
-  CastToBase(&on_timeout_)->InternalSwap(CastToBase(&other->on_timeout_));
-  working_directory_.Swap(&other->working_directory_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  tags_.InternalSwap(&other->tags_);
+  on_success_.InternalSwap(&other->on_success_);
+  on_failure_.InternalSwap(&other->on_failure_);
+  on_timeout_.InternalSwap(&other->on_timeout_);
+  working_directory_.Swap(&other->working_directory_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(output_, other->output_);
   swap(timeout_seconds_, other->timeout_seconds_);
   swap(override_environ_, other->override_environ_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata CreateOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata CreateOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -4206,40 +3379,36 @@ void ProcessInfo::InitAsDefaultInstance() {
   ::jasper::_ProcessInfo_default_instance_._instance.get_mutable()->options_ = const_cast< ::jasper::CreateOptions*>(
       ::jasper::CreateOptions::internal_default_instance());
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ProcessInfo::kIdFieldNumber;
-const int ProcessInfo::kPidFieldNumber;
-const int ProcessInfo::kHostIdFieldNumber;
-const int ProcessInfo::kRunningFieldNumber;
-const int ProcessInfo::kSuccessfulFieldNumber;
-const int ProcessInfo::kCompleteFieldNumber;
-const int ProcessInfo::kTimedoutFieldNumber;
-const int ProcessInfo::kOptionsFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class ProcessInfo::_Internal {
+ public:
+  static const ::jasper::CreateOptions& options(const ProcessInfo* msg);
+};
 
+const ::jasper::CreateOptions&
+ProcessInfo::_Internal::options(const ProcessInfo* msg) {
+  return *msg->options_;
+}
 ProcessInfo::ProcessInfo()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_ProcessInfo.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.ProcessInfo)
 }
 ProcessInfo::ProcessInfo(const ProcessInfo& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.id().size() > 0) {
-    id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.id_);
+  id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_id().empty()) {
+    id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.id_);
   }
-  host_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.host_id().size() > 0) {
-    host_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.host_id_);
+  host_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_host_id().empty()) {
+    host_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.host_id_);
   }
-  if (from.has_options()) {
+  if (from._internal_has_options()) {
     options_ = new ::jasper::CreateOptions(*from.options_);
   } else {
-    options_ = NULL;
+    options_ = nullptr;
   }
   ::memcpy(&pid_, &from.pid_,
     static_cast<size_t>(reinterpret_cast<char*>(&timedout_) -
@@ -4248,8 +3417,9 @@ ProcessInfo::ProcessInfo(const ProcessInfo& from)
 }
 
 void ProcessInfo::SharedCtor() {
-  id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  host_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ProcessInfo_jasper_2eproto.base);
+  id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  host_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&options_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&timedout_) -
       reinterpret_cast<char*>(&options_)) + sizeof(timedout_));
@@ -4261,315 +3431,192 @@ ProcessInfo::~ProcessInfo() {
 }
 
 void ProcessInfo::SharedDtor() {
-  id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  host_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  host_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete options_;
 }
 
 void ProcessInfo::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* ProcessInfo::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const ProcessInfo& ProcessInfo::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_ProcessInfo.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ProcessInfo_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void ProcessInfo::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.ProcessInfo)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  host_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (GetArenaNoVirtual() == NULL && options_ != NULL) {
+  id_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  host_id_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == nullptr && options_ != nullptr) {
     delete options_;
   }
-  options_ = NULL;
+  options_ = nullptr;
   ::memset(&pid_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&timedout_) -
       reinterpret_cast<char*>(&pid_)) + sizeof(timedout_));
   _internal_metadata_.Clear();
 }
 
-bool ProcessInfo::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.ProcessInfo)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* ProcessInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // string id = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_id()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->id().data(), static_cast<int>(this->id().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.ProcessInfo.id"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_id();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.ProcessInfo.id"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int64 pid = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &pid_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          pid_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string host_id = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_host_id()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->host_id().data(), static_cast<int>(this->host_id().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.ProcessInfo.host_id"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          auto str = _internal_mutable_host_id();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.ProcessInfo.host_id"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool running = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &running_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          running_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool successful = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &successful_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
+          successful_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool complete = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(48u /* 48 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &complete_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 48)) {
+          complete_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool timedout = 7;
-      case 7: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(56u /* 56 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &timedout_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 56)) {
+          timedout_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .jasper.CreateOptions options = 8;
-      case 8: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(66u /* 66 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_options()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 66)) {
+          ptr = ctx->ParseMessage(_internal_mutable_options(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.ProcessInfo)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.ProcessInfo)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void ProcessInfo::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.ProcessInfo)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string id = 1;
-  if (this->id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->id().data(), static_cast<int>(this->id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.ProcessInfo.id");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->id(), output);
-  }
-
-  // int64 pid = 2;
-  if (this->pid() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->pid(), output);
-  }
-
-  // string host_id = 3;
-  if (this->host_id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->host_id().data(), static_cast<int>(this->host_id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.ProcessInfo.host_id");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->host_id(), output);
-  }
-
-  // bool running = 4;
-  if (this->running() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->running(), output);
-  }
-
-  // bool successful = 5;
-  if (this->successful() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->successful(), output);
-  }
-
-  // bool complete = 6;
-  if (this->complete() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(6, this->complete(), output);
-  }
-
-  // bool timedout = 7;
-  if (this->timedout() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(7, this->timedout(), output);
-  }
-
-  // .jasper.CreateOptions options = 8;
-  if (this->has_options()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      8, this->_internal_options(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.ProcessInfo)
-}
-
-::google::protobuf::uint8* ProcessInfo::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* ProcessInfo::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.ProcessInfo)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string id = 1;
   if (this->id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->id().data(), static_cast<int>(this->id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_id().data(), static_cast<int>(this->_internal_id().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.ProcessInfo.id");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->id(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_id(), target);
   }
 
   // int64 pid = 2;
   if (this->pid() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->pid(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(2, this->_internal_pid(), target);
   }
 
   // string host_id = 3;
   if (this->host_id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->host_id().data(), static_cast<int>(this->host_id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_host_id().data(), static_cast<int>(this->_internal_host_id().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.ProcessInfo.host_id");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->host_id(), target);
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_host_id(), target);
   }
 
   // bool running = 4;
   if (this->running() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->running(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(4, this->_internal_running(), target);
   }
 
   // bool successful = 5;
   if (this->successful() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->successful(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(5, this->_internal_successful(), target);
   }
 
   // bool complete = 6;
   if (this->complete() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(6, this->complete(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(6, this->_internal_complete(), target);
   }
 
   // bool timedout = 7;
   if (this->timedout() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(7, this->timedout(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(7, this->_internal_timedout(), target);
   }
 
   // .jasper.CreateOptions options = 8;
   if (this->has_options()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        8, this->_internal_options(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        8, _Internal::options(this), target, stream);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.ProcessInfo)
   return target;
@@ -4579,37 +3626,36 @@ size_t ProcessInfo::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.ProcessInfo)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string id = 1;
   if (this->id().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->id());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_id());
   }
 
   // string host_id = 3;
   if (this->host_id().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->host_id());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_host_id());
   }
 
   // .jasper.CreateOptions options = 8;
   if (this->has_options()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *options_);
   }
 
   // int64 pid = 2;
   if (this->pid() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->pid());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_pid());
   }
 
   // bool running = 4;
@@ -4632,20 +3678,24 @@ size_t ProcessInfo::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void ProcessInfo::MergeFrom(const ::google::protobuf::Message& from) {
+void ProcessInfo::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.ProcessInfo)
   GOOGLE_DCHECK_NE(&from, this);
   const ProcessInfo* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const ProcessInfo>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<ProcessInfo>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.ProcessInfo)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.ProcessInfo)
     MergeFrom(*source);
@@ -4656,38 +3706,38 @@ void ProcessInfo::MergeFrom(const ProcessInfo& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.ProcessInfo)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.id().size() > 0) {
 
-    id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.id_);
+    id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.id_);
   }
   if (from.host_id().size() > 0) {
 
-    host_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.host_id_);
+    host_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.host_id_);
   }
   if (from.has_options()) {
-    mutable_options()->::jasper::CreateOptions::MergeFrom(from.options());
+    _internal_mutable_options()->::jasper::CreateOptions::MergeFrom(from._internal_options());
   }
   if (from.pid() != 0) {
-    set_pid(from.pid());
+    _internal_set_pid(from._internal_pid());
   }
   if (from.running() != 0) {
-    set_running(from.running());
+    _internal_set_running(from._internal_running());
   }
   if (from.successful() != 0) {
-    set_successful(from.successful());
+    _internal_set_successful(from._internal_successful());
   }
   if (from.complete() != 0) {
-    set_complete(from.complete());
+    _internal_set_complete(from._internal_complete());
   }
   if (from.timedout() != 0) {
-    set_timedout(from.timedout());
+    _internal_set_timedout(from._internal_timedout());
   }
 }
 
-void ProcessInfo::CopyFrom(const ::google::protobuf::Message& from) {
+void ProcessInfo::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.ProcessInfo)
   if (&from == this) return;
   Clear();
@@ -4705,15 +3755,12 @@ bool ProcessInfo::IsInitialized() const {
   return true;
 }
 
-void ProcessInfo::Swap(ProcessInfo* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void ProcessInfo::InternalSwap(ProcessInfo* other) {
   using std::swap;
-  id_.Swap(&other->id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  id_.Swap(&other->id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  host_id_.Swap(&other->host_id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  host_id_.Swap(&other->host_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(options_, other->options_);
   swap(pid_, other->pid_);
@@ -4721,12 +3768,10 @@ void ProcessInfo::InternalSwap(ProcessInfo* other) {
   swap(successful_, other->successful_);
   swap(complete_, other->complete_);
   swap(timedout_, other->timedout_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata ProcessInfo::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata ProcessInfo::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -4734,32 +3779,30 @@ void ProcessInfo::InternalSwap(ProcessInfo* other) {
 
 void StatusResponse::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int StatusResponse::kHostIdFieldNumber;
-const int StatusResponse::kActiveFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class StatusResponse::_Internal {
+ public:
+};
 
 StatusResponse::StatusResponse()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_StatusResponse.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.StatusResponse)
 }
 StatusResponse::StatusResponse(const StatusResponse& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  host_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.host_id().size() > 0) {
-    host_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.host_id_);
+  host_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_host_id().empty()) {
+    host_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.host_id_);
   }
   active_ = from.active_;
   // @@protoc_insertion_point(copy_constructor:jasper.StatusResponse)
 }
 
 void StatusResponse::SharedCtor() {
-  host_id_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_StatusResponse_jasper_2eproto.base);
+  host_id_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   active_ = false;
 }
 
@@ -4769,148 +3812,97 @@ StatusResponse::~StatusResponse() {
 }
 
 void StatusResponse::SharedDtor() {
-  host_id_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  host_id_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void StatusResponse::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* StatusResponse::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const StatusResponse& StatusResponse::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_StatusResponse.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_StatusResponse_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void StatusResponse::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.StatusResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  host_id_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  host_id_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   active_ = false;
   _internal_metadata_.Clear();
 }
 
-bool StatusResponse::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.StatusResponse)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* StatusResponse::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // string host_id = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_host_id()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->host_id().data(), static_cast<int>(this->host_id().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.StatusResponse.host_id"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_host_id();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.StatusResponse.host_id"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool active = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &active_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          active_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.StatusResponse)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.StatusResponse)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void StatusResponse::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.StatusResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string host_id = 1;
-  if (this->host_id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->host_id().data(), static_cast<int>(this->host_id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.StatusResponse.host_id");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->host_id(), output);
-  }
-
-  // bool active = 2;
-  if (this->active() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->active(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.StatusResponse)
-}
-
-::google::protobuf::uint8* StatusResponse::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* StatusResponse::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.StatusResponse)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string host_id = 1;
   if (this->host_id().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->host_id().data(), static_cast<int>(this->host_id().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_host_id().data(), static_cast<int>(this->_internal_host_id().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.StatusResponse.host_id");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->host_id(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_host_id(), target);
   }
 
   // bool active = 2;
   if (this->active() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->active(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(2, this->_internal_active(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.StatusResponse)
   return target;
@@ -4920,16 +3912,15 @@ size_t StatusResponse::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.StatusResponse)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string host_id = 1;
   if (this->host_id().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->host_id());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_host_id());
   }
 
   // bool active = 2;
@@ -4937,20 +3928,24 @@ size_t StatusResponse::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void StatusResponse::MergeFrom(const ::google::protobuf::Message& from) {
+void StatusResponse::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.StatusResponse)
   GOOGLE_DCHECK_NE(&from, this);
   const StatusResponse* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const StatusResponse>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<StatusResponse>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.StatusResponse)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.StatusResponse)
     MergeFrom(*source);
@@ -4961,19 +3956,19 @@ void StatusResponse::MergeFrom(const StatusResponse& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.StatusResponse)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.host_id().size() > 0) {
 
-    host_id_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.host_id_);
+    host_id_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.host_id_);
   }
   if (from.active() != 0) {
-    set_active(from.active());
+    _internal_set_active(from._internal_active());
   }
 }
 
-void StatusResponse::CopyFrom(const ::google::protobuf::Message& from) {
+void StatusResponse::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.StatusResponse)
   if (&from == this) return;
   Clear();
@@ -4991,21 +3986,16 @@ bool StatusResponse::IsInitialized() const {
   return true;
 }
 
-void StatusResponse::Swap(StatusResponse* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void StatusResponse::InternalSwap(StatusResponse* other) {
   using std::swap;
-  host_id_.Swap(&other->host_id_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  host_id_.Swap(&other->host_id_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(active_, other->active_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata StatusResponse::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata StatusResponse::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -5013,20 +4003,18 @@ void StatusResponse::InternalSwap(StatusResponse* other) {
 
 void Filter::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int Filter::kNameFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class Filter::_Internal {
+ public:
+};
 
 Filter::Filter()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_Filter.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.Filter)
 }
 Filter::Filter(const Filter& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   name_ = from.name_;
   // @@protoc_insertion_point(copy_constructor:jasper.Filter)
@@ -5047,20 +4035,15 @@ void Filter::SharedDtor() {
 void Filter::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* Filter::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const Filter& Filter::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_Filter.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_Filter_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void Filter::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.Filter)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -5068,86 +4051,57 @@ void Filter::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool Filter::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.Filter)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* Filter::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // .jasper.FilterSpecifications name = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_name(static_cast< ::jasper::FilterSpecifications >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+          _internal_set_name(static_cast<::jasper::FilterSpecifications>(val));
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.Filter)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.Filter)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void Filter::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.Filter)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // .jasper.FilterSpecifications name = 1;
-  if (this->name() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      1, this->name(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.Filter)
-}
-
-::google::protobuf::uint8* Filter::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* Filter::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.Filter)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // .jasper.FilterSpecifications name = 1;
   if (this->name() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      1, this->name(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      1, this->_internal_name(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.Filter)
   return target;
@@ -5157,31 +4111,34 @@ size_t Filter::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.Filter)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // .jasper.FilterSpecifications name = 1;
   if (this->name() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->name());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_name());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void Filter::MergeFrom(const ::google::protobuf::Message& from) {
+void Filter::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.Filter)
   GOOGLE_DCHECK_NE(&from, this);
   const Filter* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const Filter>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<Filter>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.Filter)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.Filter)
     MergeFrom(*source);
@@ -5192,15 +4149,15 @@ void Filter::MergeFrom(const Filter& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.Filter)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.name() != 0) {
-    set_name(from.name());
+    _internal_set_name(from._internal_name());
   }
 }
 
-void Filter::CopyFrom(const ::google::protobuf::Message& from) {
+void Filter::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.Filter)
   if (&from == this) return;
   Clear();
@@ -5218,19 +4175,14 @@ bool Filter::IsInitialized() const {
   return true;
 }
 
-void Filter::Swap(Filter* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void Filter::InternalSwap(Filter* other) {
   using std::swap;
-  swap(name_, other->name_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(name_, other->name_);
 }
 
-::google::protobuf::Metadata Filter::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata Filter::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -5240,32 +4192,35 @@ void SignalProcess::InitAsDefaultInstance() {
   ::jasper::_SignalProcess_default_instance_._instance.get_mutable()->processid_ = const_cast< ::jasper::JasperProcessID*>(
       ::jasper::JasperProcessID::internal_default_instance());
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int SignalProcess::kProcessIDFieldNumber;
-const int SignalProcess::kSignalFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class SignalProcess::_Internal {
+ public:
+  static const ::jasper::JasperProcessID& processid(const SignalProcess* msg);
+};
 
+const ::jasper::JasperProcessID&
+SignalProcess::_Internal::processid(const SignalProcess* msg) {
+  return *msg->processid_;
+}
 SignalProcess::SignalProcess()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_SignalProcess.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.SignalProcess)
 }
 SignalProcess::SignalProcess(const SignalProcess& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  if (from.has_processid()) {
+  if (from._internal_has_processid()) {
     processid_ = new ::jasper::JasperProcessID(*from.processid_);
   } else {
-    processid_ = NULL;
+    processid_ = nullptr;
   }
   signal_ = from.signal_;
   // @@protoc_insertion_point(copy_constructor:jasper.SignalProcess)
 }
 
 void SignalProcess::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_SignalProcess_jasper_2eproto.base);
   ::memset(&processid_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&signal_) -
       reinterpret_cast<char*>(&processid_)) + sizeof(signal_));
@@ -5283,136 +4238,92 @@ void SignalProcess::SharedDtor() {
 void SignalProcess::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* SignalProcess::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const SignalProcess& SignalProcess::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_SignalProcess.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_SignalProcess_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void SignalProcess::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.SignalProcess)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  if (GetArenaNoVirtual() == NULL && processid_ != NULL) {
+  if (GetArenaNoVirtual() == nullptr && processid_ != nullptr) {
     delete processid_;
   }
-  processid_ = NULL;
+  processid_ = nullptr;
   signal_ = 0;
   _internal_metadata_.Clear();
 }
 
-bool SignalProcess::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.SignalProcess)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* SignalProcess::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // .jasper.JasperProcessID ProcessID = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_processid()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_processid(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .jasper.Signals signal = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_signal(static_cast< ::jasper::Signals >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+          _internal_set_signal(static_cast<::jasper::Signals>(val));
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.SignalProcess)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.SignalProcess)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void SignalProcess::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.SignalProcess)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // .jasper.JasperProcessID ProcessID = 1;
-  if (this->has_processid()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->_internal_processid(), output);
-  }
-
-  // .jasper.Signals signal = 2;
-  if (this->signal() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      2, this->signal(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.SignalProcess)
-}
-
-::google::protobuf::uint8* SignalProcess::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* SignalProcess::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.SignalProcess)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // .jasper.JasperProcessID ProcessID = 1;
   if (this->has_processid()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        1, this->_internal_processid(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        1, _Internal::processid(this), target, stream);
   }
 
   // .jasper.Signals signal = 2;
   if (this->signal() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      2, this->signal(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      2, this->_internal_signal(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.SignalProcess)
   return target;
@@ -5422,38 +4333,41 @@ size_t SignalProcess::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.SignalProcess)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // .jasper.JasperProcessID ProcessID = 1;
   if (this->has_processid()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *processid_);
   }
 
   // .jasper.Signals signal = 2;
   if (this->signal() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->signal());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_signal());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void SignalProcess::MergeFrom(const ::google::protobuf::Message& from) {
+void SignalProcess::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.SignalProcess)
   GOOGLE_DCHECK_NE(&from, this);
   const SignalProcess* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const SignalProcess>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<SignalProcess>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.SignalProcess)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.SignalProcess)
     MergeFrom(*source);
@@ -5464,18 +4378,18 @@ void SignalProcess::MergeFrom(const SignalProcess& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.SignalProcess)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.has_processid()) {
-    mutable_processid()->::jasper::JasperProcessID::MergeFrom(from.processid());
+    _internal_mutable_processid()->::jasper::JasperProcessID::MergeFrom(from._internal_processid());
   }
   if (from.signal() != 0) {
-    set_signal(from.signal());
+    _internal_set_signal(from._internal_signal());
   }
 }
 
-void SignalProcess::CopyFrom(const ::google::protobuf::Message& from) {
+void SignalProcess::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.SignalProcess)
   if (&from == this) return;
   Clear();
@@ -5493,20 +4407,15 @@ bool SignalProcess::IsInitialized() const {
   return true;
 }
 
-void SignalProcess::Swap(SignalProcess* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void SignalProcess::InternalSwap(SignalProcess* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(processid_, other->processid_);
   swap(signal_, other->signal_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata SignalProcess::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata SignalProcess::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -5514,30 +4423,29 @@ void SignalProcess::InternalSwap(SignalProcess* other) {
 
 void TagName::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int TagName::kValueFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class TagName::_Internal {
+ public:
+};
 
 TagName::TagName()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_TagName.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.TagName)
 }
 TagName::TagName(const TagName& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.value().size() > 0) {
-    value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.value_);
+  value_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_value().empty()) {
+    value_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.value_);
   }
   // @@protoc_insertion_point(copy_constructor:jasper.TagName)
 }
 
 void TagName::SharedCtor() {
-  value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_TagName_jasper_2eproto.base);
+  value_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 TagName::~TagName() {
@@ -5546,123 +4454,83 @@ TagName::~TagName() {
 }
 
 void TagName::SharedDtor() {
-  value_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  value_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void TagName::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* TagName::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const TagName& TagName::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_TagName.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_TagName_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void TagName::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.TagName)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  value_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   _internal_metadata_.Clear();
 }
 
-bool TagName::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.TagName)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* TagName::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // string value = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_value()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->value().data(), static_cast<int>(this->value().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.TagName.value"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_value();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.TagName.value"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.TagName)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.TagName)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void TagName::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.TagName)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string value = 1;
-  if (this->value().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->value().data(), static_cast<int>(this->value().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.TagName.value");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->value(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.TagName)
-}
-
-::google::protobuf::uint8* TagName::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* TagName::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.TagName)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string value = 1;
   if (this->value().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->value().data(), static_cast<int>(this->value().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_value().data(), static_cast<int>(this->_internal_value().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.TagName.value");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->value(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_value(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.TagName)
   return target;
@@ -5672,32 +4540,35 @@ size_t TagName::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.TagName)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string value = 1;
   if (this->value().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->value());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_value());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void TagName::MergeFrom(const ::google::protobuf::Message& from) {
+void TagName::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.TagName)
   GOOGLE_DCHECK_NE(&from, this);
   const TagName* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const TagName>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<TagName>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.TagName)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.TagName)
     MergeFrom(*source);
@@ -5708,16 +4579,16 @@ void TagName::MergeFrom(const TagName& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.TagName)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.value().size() > 0) {
 
-    value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.value_);
+    value_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.value_);
   }
 }
 
-void TagName::CopyFrom(const ::google::protobuf::Message& from) {
+void TagName::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.TagName)
   if (&from == this) return;
   Clear();
@@ -5735,20 +4606,15 @@ bool TagName::IsInitialized() const {
   return true;
 }
 
-void TagName::Swap(TagName* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void TagName::InternalSwap(TagName* other) {
   using std::swap;
-  value_.Swap(&other->value_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  value_.Swap(&other->value_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
 }
 
-::google::protobuf::Metadata TagName::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata TagName::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -5756,32 +4622,30 @@ void TagName::InternalSwap(TagName* other) {
 
 void ProcessTags::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ProcessTags::kProcessIDFieldNumber;
-const int ProcessTags::kTagsFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class ProcessTags::_Internal {
+ public:
+};
 
 ProcessTags::ProcessTags()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_ProcessTags.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.ProcessTags)
 }
 ProcessTags::ProcessTags(const ProcessTags& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       tags_(from.tags_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  processid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.processid().size() > 0) {
-    processid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.processid_);
+  processid_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_processid().empty()) {
+    processid_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.processid_);
   }
   // @@protoc_insertion_point(copy_constructor:jasper.ProcessTags)
 }
 
 void ProcessTags::SharedCtor() {
-  processid_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ProcessTags_jasper_2eproto.base);
+  processid_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 ProcessTags::~ProcessTags() {
@@ -5790,161 +4654,108 @@ ProcessTags::~ProcessTags() {
 }
 
 void ProcessTags::SharedDtor() {
-  processid_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  processid_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void ProcessTags::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* ProcessTags::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const ProcessTags& ProcessTags::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_ProcessTags.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ProcessTags_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void ProcessTags::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.ProcessTags)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   tags_.Clear();
-  processid_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  processid_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   _internal_metadata_.Clear();
 }
 
-bool ProcessTags::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.ProcessTags)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* ProcessTags::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // string processID = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_processid()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->processid().data(), static_cast<int>(this->processid().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.ProcessTags.processID"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_processid();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.ProcessTags.processID"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // repeated string tags = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_tags()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->tags(this->tags_size() - 1).data(),
-            static_cast<int>(this->tags(this->tags_size() - 1).length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.ProcessTags.tags"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_tags();
+            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.ProcessTags.tags"));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<18>(ptr));
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.ProcessTags)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.ProcessTags)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void ProcessTags::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.ProcessTags)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string processID = 1;
-  if (this->processid().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->processid().data(), static_cast<int>(this->processid().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.ProcessTags.processID");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->processid(), output);
-  }
-
-  // repeated string tags = 2;
-  for (int i = 0, n = this->tags_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->tags(i).data(), static_cast<int>(this->tags(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.ProcessTags.tags");
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      2, this->tags(i), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.ProcessTags)
-}
-
-::google::protobuf::uint8* ProcessTags::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* ProcessTags::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.ProcessTags)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string processID = 1;
   if (this->processid().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->processid().data(), static_cast<int>(this->processid().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_processid().data(), static_cast<int>(this->_internal_processid().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.ProcessTags.processID");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->processid(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_processid(), target);
   }
 
   // repeated string tags = 2;
-  for (int i = 0, n = this->tags_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->tags(i).data(), static_cast<int>(this->tags(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+  for (int i = 0, n = this->_internal_tags_size(); i < n; i++) {
+    const auto& s = this->_internal_tags(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.ProcessTags.tags");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(2, this->tags(i), target);
+    target = stream->WriteString(2, s, target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.ProcessTags)
   return target;
@@ -5954,40 +4765,43 @@ size_t ProcessTags::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.ProcessTags)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated string tags = 2;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->tags_size());
-  for (int i = 0, n = this->tags_size(); i < n; i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->tags(i));
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(tags_.size());
+  for (int i = 0, n = tags_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      tags_.Get(i));
   }
 
   // string processID = 1;
   if (this->processid().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->processid());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_processid());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void ProcessTags::MergeFrom(const ::google::protobuf::Message& from) {
+void ProcessTags::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.ProcessTags)
   GOOGLE_DCHECK_NE(&from, this);
   const ProcessTags* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const ProcessTags>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<ProcessTags>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.ProcessTags)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.ProcessTags)
     MergeFrom(*source);
@@ -5998,17 +4812,17 @@ void ProcessTags::MergeFrom(const ProcessTags& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.ProcessTags)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   tags_.MergeFrom(from.tags_);
   if (from.processid().size() > 0) {
 
-    processid_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.processid_);
+    processid_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.processid_);
   }
 }
 
-void ProcessTags::CopyFrom(const ::google::protobuf::Message& from) {
+void ProcessTags::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.ProcessTags)
   if (&from == this) return;
   Clear();
@@ -6026,21 +4840,16 @@ bool ProcessTags::IsInitialized() const {
   return true;
 }
 
-void ProcessTags::Swap(ProcessTags* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void ProcessTags::InternalSwap(ProcessTags* other) {
   using std::swap;
-  tags_.InternalSwap(CastToBase(&other->tags_));
-  processid_.Swap(&other->processid_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  tags_.InternalSwap(&other->tags_);
+  processid_.Swap(&other->processid_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
 }
 
-::google::protobuf::Metadata ProcessTags::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata ProcessTags::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -6048,30 +4857,29 @@ void ProcessTags::InternalSwap(ProcessTags* other) {
 
 void JasperProcessID::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int JasperProcessID::kValueFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class JasperProcessID::_Internal {
+ public:
+};
 
 JasperProcessID::JasperProcessID()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_JasperProcessID.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.JasperProcessID)
 }
 JasperProcessID::JasperProcessID(const JasperProcessID& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.value().size() > 0) {
-    value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.value_);
+  value_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_value().empty()) {
+    value_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.value_);
   }
   // @@protoc_insertion_point(copy_constructor:jasper.JasperProcessID)
 }
 
 void JasperProcessID::SharedCtor() {
-  value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_JasperProcessID_jasper_2eproto.base);
+  value_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 JasperProcessID::~JasperProcessID() {
@@ -6080,123 +4888,83 @@ JasperProcessID::~JasperProcessID() {
 }
 
 void JasperProcessID::SharedDtor() {
-  value_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  value_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void JasperProcessID::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* JasperProcessID::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const JasperProcessID& JasperProcessID::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_JasperProcessID.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_JasperProcessID_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void JasperProcessID::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.JasperProcessID)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  value_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   _internal_metadata_.Clear();
 }
 
-bool JasperProcessID::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.JasperProcessID)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* JasperProcessID::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // string value = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_value()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->value().data(), static_cast<int>(this->value().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.JasperProcessID.value"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_value();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.JasperProcessID.value"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.JasperProcessID)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.JasperProcessID)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void JasperProcessID::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.JasperProcessID)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string value = 1;
-  if (this->value().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->value().data(), static_cast<int>(this->value().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.JasperProcessID.value");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->value(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.JasperProcessID)
-}
-
-::google::protobuf::uint8* JasperProcessID::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* JasperProcessID::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.JasperProcessID)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string value = 1;
   if (this->value().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->value().data(), static_cast<int>(this->value().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_value().data(), static_cast<int>(this->_internal_value().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.JasperProcessID.value");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->value(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_value(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.JasperProcessID)
   return target;
@@ -6206,32 +4974,35 @@ size_t JasperProcessID::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.JasperProcessID)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string value = 1;
   if (this->value().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->value());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_value());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void JasperProcessID::MergeFrom(const ::google::protobuf::Message& from) {
+void JasperProcessID::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.JasperProcessID)
   GOOGLE_DCHECK_NE(&from, this);
   const JasperProcessID* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const JasperProcessID>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<JasperProcessID>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.JasperProcessID)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.JasperProcessID)
     MergeFrom(*source);
@@ -6242,16 +5013,16 @@ void JasperProcessID::MergeFrom(const JasperProcessID& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.JasperProcessID)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.value().size() > 0) {
 
-    value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.value_);
+    value_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.value_);
   }
 }
 
-void JasperProcessID::CopyFrom(const ::google::protobuf::Message& from) {
+void JasperProcessID::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.JasperProcessID)
   if (&from == this) return;
   Clear();
@@ -6269,20 +5040,15 @@ bool JasperProcessID::IsInitialized() const {
   return true;
 }
 
-void JasperProcessID::Swap(JasperProcessID* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void JasperProcessID::InternalSwap(JasperProcessID* other) {
   using std::swap;
-  value_.Swap(&other->value_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-    GetArenaNoVirtual());
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  value_.Swap(&other->value_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
 }
 
-::google::protobuf::Metadata JasperProcessID::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata JasperProcessID::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -6290,32 +5056,30 @@ void JasperProcessID::InternalSwap(JasperProcessID* other) {
 
 void OperationOutcome::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int OperationOutcome::kSuccessFieldNumber;
-const int OperationOutcome::kTextFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class OperationOutcome::_Internal {
+ public:
+};
 
 OperationOutcome::OperationOutcome()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_OperationOutcome.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.OperationOutcome)
 }
 OperationOutcome::OperationOutcome(const OperationOutcome& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  text_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.text().size() > 0) {
-    text_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.text_);
+  text_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_text().empty()) {
+    text_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.text_);
   }
   success_ = from.success_;
   // @@protoc_insertion_point(copy_constructor:jasper.OperationOutcome)
 }
 
 void OperationOutcome::SharedCtor() {
-  text_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_OperationOutcome_jasper_2eproto.base);
+  text_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   success_ = false;
 }
 
@@ -6325,148 +5089,97 @@ OperationOutcome::~OperationOutcome() {
 }
 
 void OperationOutcome::SharedDtor() {
-  text_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  text_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void OperationOutcome::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* OperationOutcome::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const OperationOutcome& OperationOutcome::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_OperationOutcome.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_OperationOutcome_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void OperationOutcome::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.OperationOutcome)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  text_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  text_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   success_ = false;
   _internal_metadata_.Clear();
 }
 
-bool OperationOutcome::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.OperationOutcome)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* OperationOutcome::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // bool success = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &success_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          success_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string text = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_text()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->text().data(), static_cast<int>(this->text().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.OperationOutcome.text"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_text();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.OperationOutcome.text"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.OperationOutcome)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.OperationOutcome)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void OperationOutcome::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.OperationOutcome)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool success = 1;
-  if (this->success() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->success(), output);
-  }
-
-  // string text = 2;
-  if (this->text().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->text().data(), static_cast<int>(this->text().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.OperationOutcome.text");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->text(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.OperationOutcome)
-}
-
-::google::protobuf::uint8* OperationOutcome::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* OperationOutcome::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.OperationOutcome)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // bool success = 1;
   if (this->success() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->success(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(1, this->_internal_success(), target);
   }
 
   // string text = 2;
   if (this->text().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->text().data(), static_cast<int>(this->text().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_text().data(), static_cast<int>(this->_internal_text().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.OperationOutcome.text");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->text(), target);
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_text(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.OperationOutcome)
   return target;
@@ -6476,16 +5189,15 @@ size_t OperationOutcome::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.OperationOutcome)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string text = 2;
   if (this->text().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->text());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_text());
   }
 
   // bool success = 1;
@@ -6493,20 +5205,24 @@ size_t OperationOutcome::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void OperationOutcome::MergeFrom(const ::google::protobuf::Message& from) {
+void OperationOutcome::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.OperationOutcome)
   GOOGLE_DCHECK_NE(&from, this);
   const OperationOutcome* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const OperationOutcome>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<OperationOutcome>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.OperationOutcome)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.OperationOutcome)
     MergeFrom(*source);
@@ -6517,19 +5233,19 @@ void OperationOutcome::MergeFrom(const OperationOutcome& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.OperationOutcome)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.text().size() > 0) {
 
-    text_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.text_);
+    text_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.text_);
   }
   if (from.success() != 0) {
-    set_success(from.success());
+    _internal_set_success(from._internal_success());
   }
 }
 
-void OperationOutcome::CopyFrom(const ::google::protobuf::Message& from) {
+void OperationOutcome::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.OperationOutcome)
   if (&from == this) return;
   Clear();
@@ -6547,21 +5263,16 @@ bool OperationOutcome::IsInitialized() const {
   return true;
 }
 
-void OperationOutcome::Swap(OperationOutcome* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void OperationOutcome::InternalSwap(OperationOutcome* other) {
   using std::swap;
-  text_.Swap(&other->text_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  text_.Swap(&other->text_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(success_, other->success_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata OperationOutcome::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata OperationOutcome::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -6569,44 +5280,40 @@ void OperationOutcome::InternalSwap(OperationOutcome* other) {
 
 void BuildOptions::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int BuildOptions::kTargetFieldNumber;
-const int BuildOptions::kArchFieldNumber;
-const int BuildOptions::kEditionFieldNumber;
-const int BuildOptions::kDebugFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class BuildOptions::_Internal {
+ public:
+};
 
 BuildOptions::BuildOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_BuildOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.BuildOptions)
 }
 BuildOptions::BuildOptions(const BuildOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  target_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.target().size() > 0) {
-    target_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.target_);
+  target_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_target().empty()) {
+    target_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.target_);
   }
-  arch_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.arch().size() > 0) {
-    arch_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.arch_);
+  arch_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_arch().empty()) {
+    arch_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.arch_);
   }
-  edition_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.edition().size() > 0) {
-    edition_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.edition_);
+  edition_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_edition().empty()) {
+    edition_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.edition_);
   }
   debug_ = from.debug_;
   // @@protoc_insertion_point(copy_constructor:jasper.BuildOptions)
 }
 
 void BuildOptions::SharedCtor() {
-  target_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  arch_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  edition_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_BuildOptions_jasper_2eproto.base);
+  target_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  arch_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  edition_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   debug_ = false;
 }
 
@@ -6616,226 +5323,139 @@ BuildOptions::~BuildOptions() {
 }
 
 void BuildOptions::SharedDtor() {
-  target_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  arch_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  edition_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  target_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  arch_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  edition_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void BuildOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* BuildOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const BuildOptions& BuildOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_BuildOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BuildOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void BuildOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.BuildOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  target_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  arch_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  edition_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  target_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  arch_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  edition_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   debug_ = false;
   _internal_metadata_.Clear();
 }
 
-bool BuildOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.BuildOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* BuildOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // string target = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_target()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->target().data(), static_cast<int>(this->target().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildOptions.target"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_target();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildOptions.target"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string arch = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_arch()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->arch().data(), static_cast<int>(this->arch().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildOptions.arch"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_arch();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildOptions.arch"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string edition = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_edition()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->edition().data(), static_cast<int>(this->edition().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildOptions.edition"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          auto str = _internal_mutable_edition();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildOptions.edition"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool debug = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &debug_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          debug_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.BuildOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.BuildOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void BuildOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.BuildOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string target = 1;
-  if (this->target().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->target().data(), static_cast<int>(this->target().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildOptions.target");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->target(), output);
-  }
-
-  // string arch = 2;
-  if (this->arch().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->arch().data(), static_cast<int>(this->arch().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildOptions.arch");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->arch(), output);
-  }
-
-  // string edition = 3;
-  if (this->edition().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->edition().data(), static_cast<int>(this->edition().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildOptions.edition");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->edition(), output);
-  }
-
-  // bool debug = 4;
-  if (this->debug() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->debug(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.BuildOptions)
-}
-
-::google::protobuf::uint8* BuildOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* BuildOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.BuildOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string target = 1;
   if (this->target().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->target().data(), static_cast<int>(this->target().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_target().data(), static_cast<int>(this->_internal_target().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildOptions.target");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->target(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_target(), target);
   }
 
   // string arch = 2;
   if (this->arch().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->arch().data(), static_cast<int>(this->arch().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_arch().data(), static_cast<int>(this->_internal_arch().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildOptions.arch");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->arch(), target);
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_arch(), target);
   }
 
   // string edition = 3;
   if (this->edition().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->edition().data(), static_cast<int>(this->edition().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_edition().data(), static_cast<int>(this->_internal_edition().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildOptions.edition");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->edition(), target);
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_edition(), target);
   }
 
   // bool debug = 4;
   if (this->debug() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(4, this->debug(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(4, this->_internal_debug(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.BuildOptions)
   return target;
@@ -6845,30 +5465,29 @@ size_t BuildOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.BuildOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string target = 1;
   if (this->target().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->target());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_target());
   }
 
   // string arch = 2;
   if (this->arch().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->arch());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_arch());
   }
 
   // string edition = 3;
   if (this->edition().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->edition());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_edition());
   }
 
   // bool debug = 4;
@@ -6876,20 +5495,24 @@ size_t BuildOptions::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void BuildOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void BuildOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.BuildOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const BuildOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const BuildOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<BuildOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.BuildOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.BuildOptions)
     MergeFrom(*source);
@@ -6900,27 +5523,27 @@ void BuildOptions::MergeFrom(const BuildOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.BuildOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.target().size() > 0) {
 
-    target_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.target_);
+    target_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.target_);
   }
   if (from.arch().size() > 0) {
 
-    arch_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.arch_);
+    arch_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.arch_);
   }
   if (from.edition().size() > 0) {
 
-    edition_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.edition_);
+    edition_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.edition_);
   }
   if (from.debug() != 0) {
-    set_debug(from.debug());
+    _internal_set_debug(from._internal_debug());
   }
 }
 
-void BuildOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void BuildOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.BuildOptions)
   if (&from == this) return;
   Clear();
@@ -6938,25 +5561,20 @@ bool BuildOptions::IsInitialized() const {
   return true;
 }
 
-void BuildOptions::Swap(BuildOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void BuildOptions::InternalSwap(BuildOptions* other) {
   using std::swap;
-  target_.Swap(&other->target_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  target_.Swap(&other->target_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  arch_.Swap(&other->arch_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  arch_.Swap(&other->arch_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  edition_.Swap(&other->edition_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  edition_.Swap(&other->edition_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(debug_, other->debug_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata BuildOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata BuildOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -6966,39 +5584,41 @@ void MongoDBDownloadOptions::InitAsDefaultInstance() {
   ::jasper::_MongoDBDownloadOptions_default_instance_._instance.get_mutable()->build_options_ = const_cast< ::jasper::BuildOptions*>(
       ::jasper::BuildOptions::internal_default_instance());
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int MongoDBDownloadOptions::kBuildOptionsFieldNumber;
-const int MongoDBDownloadOptions::kPathFieldNumber;
-const int MongoDBDownloadOptions::kReleasesFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class MongoDBDownloadOptions::_Internal {
+ public:
+  static const ::jasper::BuildOptions& build_options(const MongoDBDownloadOptions* msg);
+};
 
+const ::jasper::BuildOptions&
+MongoDBDownloadOptions::_Internal::build_options(const MongoDBDownloadOptions* msg) {
+  return *msg->build_options_;
+}
 MongoDBDownloadOptions::MongoDBDownloadOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_MongoDBDownloadOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.MongoDBDownloadOptions)
 }
 MongoDBDownloadOptions::MongoDBDownloadOptions(const MongoDBDownloadOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       releases_(from.releases_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.path().size() > 0) {
-    path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.path_);
+  path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_path().empty()) {
+    path_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.path_);
   }
-  if (from.has_build_options()) {
+  if (from._internal_has_build_options()) {
     build_options_ = new ::jasper::BuildOptions(*from.build_options_);
   } else {
-    build_options_ = NULL;
+    build_options_ = nullptr;
   }
   // @@protoc_insertion_point(copy_constructor:jasper.MongoDBDownloadOptions)
 }
 
 void MongoDBDownloadOptions::SharedCtor() {
-  path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  build_options_ = NULL;
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_MongoDBDownloadOptions_jasper_2eproto.base);
+  path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  build_options_ = nullptr;
 }
 
 MongoDBDownloadOptions::~MongoDBDownloadOptions() {
@@ -7007,191 +5627,128 @@ MongoDBDownloadOptions::~MongoDBDownloadOptions() {
 }
 
 void MongoDBDownloadOptions::SharedDtor() {
-  path_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  path_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete build_options_;
 }
 
 void MongoDBDownloadOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* MongoDBDownloadOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const MongoDBDownloadOptions& MongoDBDownloadOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_MongoDBDownloadOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_MongoDBDownloadOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void MongoDBDownloadOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.MongoDBDownloadOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   releases_.Clear();
-  path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (GetArenaNoVirtual() == NULL && build_options_ != NULL) {
+  path_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == nullptr && build_options_ != nullptr) {
     delete build_options_;
   }
-  build_options_ = NULL;
+  build_options_ = nullptr;
   _internal_metadata_.Clear();
 }
 
-bool MongoDBDownloadOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.MongoDBDownloadOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* MongoDBDownloadOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // .jasper.BuildOptions build_options = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_build_options()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr = ctx->ParseMessage(_internal_mutable_build_options(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string path = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_path()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->path().data(), static_cast<int>(this->path().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.MongoDBDownloadOptions.path"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_path();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.MongoDBDownloadOptions.path"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // repeated string releases = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_releases()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->releases(this->releases_size() - 1).data(),
-            static_cast<int>(this->releases(this->releases_size() - 1).length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.MongoDBDownloadOptions.releases"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_releases();
+            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.MongoDBDownloadOptions.releases"));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<26>(ptr));
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.MongoDBDownloadOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.MongoDBDownloadOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void MongoDBDownloadOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.MongoDBDownloadOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // .jasper.BuildOptions build_options = 1;
-  if (this->has_build_options()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      1, this->_internal_build_options(), output);
-  }
-
-  // string path = 2;
-  if (this->path().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->path().data(), static_cast<int>(this->path().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.MongoDBDownloadOptions.path");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->path(), output);
-  }
-
-  // repeated string releases = 3;
-  for (int i = 0, n = this->releases_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->releases(i).data(), static_cast<int>(this->releases(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.MongoDBDownloadOptions.releases");
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      3, this->releases(i), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.MongoDBDownloadOptions)
-}
-
-::google::protobuf::uint8* MongoDBDownloadOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* MongoDBDownloadOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.MongoDBDownloadOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // .jasper.BuildOptions build_options = 1;
   if (this->has_build_options()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        1, this->_internal_build_options(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        1, _Internal::build_options(this), target, stream);
   }
 
   // string path = 2;
   if (this->path().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->path().data(), static_cast<int>(this->path().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_path().data(), static_cast<int>(this->_internal_path().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.MongoDBDownloadOptions.path");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->path(), target);
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_path(), target);
   }
 
   // repeated string releases = 3;
-  for (int i = 0, n = this->releases_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->releases(i).data(), static_cast<int>(this->releases(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+  for (int i = 0, n = this->_internal_releases_size(); i < n; i++) {
+    const auto& s = this->_internal_releases(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.MongoDBDownloadOptions.releases");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(3, this->releases(i), target);
+    target = stream->WriteString(3, s, target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.MongoDBDownloadOptions)
   return target;
@@ -7201,47 +5758,50 @@ size_t MongoDBDownloadOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.MongoDBDownloadOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated string releases = 3;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->releases_size());
-  for (int i = 0, n = this->releases_size(); i < n; i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->releases(i));
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(releases_.size());
+  for (int i = 0, n = releases_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      releases_.Get(i));
   }
 
   // string path = 2;
   if (this->path().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->path());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_path());
   }
 
   // .jasper.BuildOptions build_options = 1;
   if (this->has_build_options()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *build_options_);
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void MongoDBDownloadOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void MongoDBDownloadOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.MongoDBDownloadOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const MongoDBDownloadOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const MongoDBDownloadOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<MongoDBDownloadOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.MongoDBDownloadOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.MongoDBDownloadOptions)
     MergeFrom(*source);
@@ -7252,20 +5812,20 @@ void MongoDBDownloadOptions::MergeFrom(const MongoDBDownloadOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.MongoDBDownloadOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   releases_.MergeFrom(from.releases_);
   if (from.path().size() > 0) {
 
-    path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.path_);
+    path_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.path_);
   }
   if (from.has_build_options()) {
-    mutable_build_options()->::jasper::BuildOptions::MergeFrom(from.build_options());
+    _internal_mutable_build_options()->::jasper::BuildOptions::MergeFrom(from._internal_build_options());
   }
 }
 
-void MongoDBDownloadOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void MongoDBDownloadOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.MongoDBDownloadOptions)
   if (&from == this) return;
   Clear();
@@ -7283,22 +5843,17 @@ bool MongoDBDownloadOptions::IsInitialized() const {
   return true;
 }
 
-void MongoDBDownloadOptions::Swap(MongoDBDownloadOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void MongoDBDownloadOptions::InternalSwap(MongoDBDownloadOptions* other) {
   using std::swap;
-  releases_.InternalSwap(CastToBase(&other->releases_));
-  path_.Swap(&other->path_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  releases_.InternalSwap(&other->releases_);
+  path_.Swap(&other->path_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(build_options_, other->build_options_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata MongoDBDownloadOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata MongoDBDownloadOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -7306,22 +5861,18 @@ void MongoDBDownloadOptions::InternalSwap(MongoDBDownloadOptions* other) {
 
 void CacheOptions::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int CacheOptions::kDisabledFieldNumber;
-const int CacheOptions::kPruneDelayFieldNumber;
-const int CacheOptions::kMaxSizeFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class CacheOptions::_Internal {
+ public:
+};
 
 CacheOptions::CacheOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_CacheOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.CacheOptions)
 }
 CacheOptions::CacheOptions(const CacheOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&prune_delay_, &from.prune_delay_,
     static_cast<size_t>(reinterpret_cast<char*>(&disabled_) -
@@ -7346,20 +5897,15 @@ void CacheOptions::SharedDtor() {
 void CacheOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* CacheOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const CacheOptions& CacheOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_CacheOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_CacheOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void CacheOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.CacheOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -7369,131 +5915,81 @@ void CacheOptions::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool CacheOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.CacheOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* CacheOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // bool disabled = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &disabled_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          disabled_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int64 prune_delay = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &prune_delay_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          prune_delay_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int64 max_size = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
-                 input, &max_size_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          max_size_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.CacheOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.CacheOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void CacheOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.CacheOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool disabled = 1;
-  if (this->disabled() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->disabled(), output);
-  }
-
-  // int64 prune_delay = 2;
-  if (this->prune_delay() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->prune_delay(), output);
-  }
-
-  // int64 max_size = 3;
-  if (this->max_size() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->max_size(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.CacheOptions)
-}
-
-::google::protobuf::uint8* CacheOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* CacheOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.CacheOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // bool disabled = 1;
   if (this->disabled() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->disabled(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(1, this->_internal_disabled(), target);
   }
 
   // int64 prune_delay = 2;
   if (this->prune_delay() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->prune_delay(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(2, this->_internal_prune_delay(), target);
   }
 
   // int64 max_size = 3;
   if (this->max_size() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(3, this->max_size(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt64ToArray(3, this->_internal_max_size(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.CacheOptions)
   return target;
@@ -7503,23 +5999,22 @@ size_t CacheOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.CacheOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // int64 prune_delay = 2;
   if (this->prune_delay() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->prune_delay());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_prune_delay());
   }
 
   // int64 max_size = 3;
   if (this->max_size() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int64Size(
-        this->max_size());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int64Size(
+        this->_internal_max_size());
   }
 
   // bool disabled = 1;
@@ -7527,20 +6022,24 @@ size_t CacheOptions::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void CacheOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void CacheOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.CacheOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const CacheOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const CacheOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<CacheOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.CacheOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.CacheOptions)
     MergeFrom(*source);
@@ -7551,21 +6050,21 @@ void CacheOptions::MergeFrom(const CacheOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.CacheOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.prune_delay() != 0) {
-    set_prune_delay(from.prune_delay());
+    _internal_set_prune_delay(from._internal_prune_delay());
   }
   if (from.max_size() != 0) {
-    set_max_size(from.max_size());
+    _internal_set_max_size(from._internal_max_size());
   }
   if (from.disabled() != 0) {
-    set_disabled(from.disabled());
+    _internal_set_disabled(from._internal_disabled());
   }
 }
 
-void CacheOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void CacheOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.CacheOptions)
   if (&from == this) return;
   Clear();
@@ -7583,21 +6082,16 @@ bool CacheOptions::IsInitialized() const {
   return true;
 }
 
-void CacheOptions::Swap(CacheOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void CacheOptions::InternalSwap(CacheOptions* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(prune_delay_, other->prune_delay_);
   swap(max_size_, other->max_size_);
   swap(disabled_, other->disabled_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata CacheOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata CacheOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -7605,26 +6099,22 @@ void CacheOptions::InternalSwap(CacheOptions* other) {
 
 void ArchiveOptions::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ArchiveOptions::kShouldExtractFieldNumber;
-const int ArchiveOptions::kFormatFieldNumber;
-const int ArchiveOptions::kTargetPathFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class ArchiveOptions::_Internal {
+ public:
+};
 
 ArchiveOptions::ArchiveOptions()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_ArchiveOptions.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.ArchiveOptions)
 }
 ArchiveOptions::ArchiveOptions(const ArchiveOptions& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  target_path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.target_path().size() > 0) {
-    target_path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.target_path_);
+  target_path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_target_path().empty()) {
+    target_path_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.target_path_);
   }
   ::memcpy(&should_extract_, &from.should_extract_,
     static_cast<size_t>(reinterpret_cast<char*>(&format_) -
@@ -7633,7 +6123,8 @@ ArchiveOptions::ArchiveOptions(const ArchiveOptions& from)
 }
 
 void ArchiveOptions::SharedCtor() {
-  target_path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_ArchiveOptions_jasper_2eproto.base);
+  target_path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&should_extract_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&format_) -
       reinterpret_cast<char*>(&should_extract_)) + sizeof(format_));
@@ -7645,177 +6136,114 @@ ArchiveOptions::~ArchiveOptions() {
 }
 
 void ArchiveOptions::SharedDtor() {
-  target_path_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  target_path_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void ArchiveOptions::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* ArchiveOptions::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const ArchiveOptions& ArchiveOptions::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_ArchiveOptions.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_ArchiveOptions_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void ArchiveOptions::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.ArchiveOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  target_path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  target_path_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&should_extract_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&format_) -
       reinterpret_cast<char*>(&should_extract_)) + sizeof(format_));
   _internal_metadata_.Clear();
 }
 
-bool ArchiveOptions::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.ArchiveOptions)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* ArchiveOptions::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // bool should_extract = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &should_extract_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          should_extract_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .jasper.ArchiveFormat format = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_format(static_cast< ::jasper::ArchiveFormat >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+          _internal_set_format(static_cast<::jasper::ArchiveFormat>(val));
+        } else goto handle_unusual;
+        continue;
       // string target_path = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_target_path()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->target_path().data(), static_cast<int>(this->target_path().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.ArchiveOptions.target_path"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          auto str = _internal_mutable_target_path();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.ArchiveOptions.target_path"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.ArchiveOptions)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.ArchiveOptions)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void ArchiveOptions::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.ArchiveOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // bool should_extract = 1;
-  if (this->should_extract() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->should_extract(), output);
-  }
-
-  // .jasper.ArchiveFormat format = 2;
-  if (this->format() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      2, this->format(), output);
-  }
-
-  // string target_path = 3;
-  if (this->target_path().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->target_path().data(), static_cast<int>(this->target_path().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.ArchiveOptions.target_path");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      3, this->target_path(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.ArchiveOptions)
-}
-
-::google::protobuf::uint8* ArchiveOptions::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* ArchiveOptions::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.ArchiveOptions)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // bool should_extract = 1;
   if (this->should_extract() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(1, this->should_extract(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(1, this->_internal_should_extract(), target);
   }
 
   // .jasper.ArchiveFormat format = 2;
   if (this->format() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      2, this->format(), target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      2, this->_internal_format(), target);
   }
 
   // string target_path = 3;
   if (this->target_path().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->target_path().data(), static_cast<int>(this->target_path().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_target_path().data(), static_cast<int>(this->_internal_target_path().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.ArchiveOptions.target_path");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->target_path(), target);
+    target = stream->WriteStringMaybeAliased(
+        3, this->_internal_target_path(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.ArchiveOptions)
   return target;
@@ -7825,16 +6253,15 @@ size_t ArchiveOptions::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.ArchiveOptions)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string target_path = 3;
   if (this->target_path().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->target_path());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_target_path());
   }
 
   // bool should_extract = 1;
@@ -7845,23 +6272,27 @@ size_t ArchiveOptions::ByteSizeLong() const {
   // .jasper.ArchiveFormat format = 2;
   if (this->format() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->format());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_format());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void ArchiveOptions::MergeFrom(const ::google::protobuf::Message& from) {
+void ArchiveOptions::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.ArchiveOptions)
   GOOGLE_DCHECK_NE(&from, this);
   const ArchiveOptions* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const ArchiveOptions>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<ArchiveOptions>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.ArchiveOptions)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.ArchiveOptions)
     MergeFrom(*source);
@@ -7872,22 +6303,22 @@ void ArchiveOptions::MergeFrom(const ArchiveOptions& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.ArchiveOptions)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.target_path().size() > 0) {
 
-    target_path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.target_path_);
+    target_path_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.target_path_);
   }
   if (from.should_extract() != 0) {
-    set_should_extract(from.should_extract());
+    _internal_set_should_extract(from._internal_should_extract());
   }
   if (from.format() != 0) {
-    set_format(from.format());
+    _internal_set_format(from._internal_format());
   }
 }
 
-void ArchiveOptions::CopyFrom(const ::google::protobuf::Message& from) {
+void ArchiveOptions::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.ArchiveOptions)
   if (&from == this) return;
   Clear();
@@ -7905,22 +6336,17 @@ bool ArchiveOptions::IsInitialized() const {
   return true;
 }
 
-void ArchiveOptions::Swap(ArchiveOptions* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void ArchiveOptions::InternalSwap(ArchiveOptions* other) {
   using std::swap;
-  target_path_.Swap(&other->target_path_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  target_path_.Swap(&other->target_path_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(should_extract_, other->should_extract_);
   swap(format_, other->format_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata ArchiveOptions::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata ArchiveOptions::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -7930,43 +6356,45 @@ void DownloadInfo::InitAsDefaultInstance() {
   ::jasper::_DownloadInfo_default_instance_._instance.get_mutable()->archive_opts_ = const_cast< ::jasper::ArchiveOptions*>(
       ::jasper::ArchiveOptions::internal_default_instance());
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int DownloadInfo::kUrlFieldNumber;
-const int DownloadInfo::kPathFieldNumber;
-const int DownloadInfo::kArchiveOptsFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class DownloadInfo::_Internal {
+ public:
+  static const ::jasper::ArchiveOptions& archive_opts(const DownloadInfo* msg);
+};
 
+const ::jasper::ArchiveOptions&
+DownloadInfo::_Internal::archive_opts(const DownloadInfo* msg) {
+  return *msg->archive_opts_;
+}
 DownloadInfo::DownloadInfo()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_DownloadInfo.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.DownloadInfo)
 }
 DownloadInfo::DownloadInfo(const DownloadInfo& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.url().size() > 0) {
-    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_url().empty()) {
+    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
   }
-  path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.path().size() > 0) {
-    path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.path_);
+  path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_path().empty()) {
+    path_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.path_);
   }
-  if (from.has_archive_opts()) {
+  if (from._internal_has_archive_opts()) {
     archive_opts_ = new ::jasper::ArchiveOptions(*from.archive_opts_);
   } else {
-    archive_opts_ = NULL;
+    archive_opts_ = nullptr;
   }
   // @@protoc_insertion_point(copy_constructor:jasper.DownloadInfo)
 }
 
 void DownloadInfo::SharedCtor() {
-  url_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  path_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  archive_opts_ = NULL;
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_DownloadInfo_jasper_2eproto.base);
+  url_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  path_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  archive_opts_ = nullptr;
 }
 
 DownloadInfo::~DownloadInfo() {
@@ -7975,192 +6403,124 @@ DownloadInfo::~DownloadInfo() {
 }
 
 void DownloadInfo::SharedDtor() {
-  url_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  path_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  url_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  path_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) delete archive_opts_;
 }
 
 void DownloadInfo::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* DownloadInfo::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const DownloadInfo& DownloadInfo::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_DownloadInfo.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_DownloadInfo_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void DownloadInfo::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.DownloadInfo)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  url_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  path_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (GetArenaNoVirtual() == NULL && archive_opts_ != NULL) {
+  url_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  path_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == nullptr && archive_opts_ != nullptr) {
     delete archive_opts_;
   }
-  archive_opts_ = NULL;
+  archive_opts_ = nullptr;
   _internal_metadata_.Clear();
 }
 
-bool DownloadInfo::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.DownloadInfo)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* DownloadInfo::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // string url = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_url()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->url().data(), static_cast<int>(this->url().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.DownloadInfo.url"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          auto str = _internal_mutable_url();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.DownloadInfo.url"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string path = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_path()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->path().data(), static_cast<int>(this->path().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.DownloadInfo.path"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          auto str = _internal_mutable_path();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.DownloadInfo.path"));
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .jasper.ArchiveOptions archive_opts = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_archive_opts()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 26)) {
+          ptr = ctx->ParseMessage(_internal_mutable_archive_opts(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.DownloadInfo)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.DownloadInfo)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void DownloadInfo::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.DownloadInfo)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // string url = 1;
-  if (this->url().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->url().data(), static_cast<int>(this->url().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.DownloadInfo.url");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->url(), output);
-  }
-
-  // string path = 2;
-  if (this->path().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->path().data(), static_cast<int>(this->path().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.DownloadInfo.path");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->path(), output);
-  }
-
-  // .jasper.ArchiveOptions archive_opts = 3;
-  if (this->has_archive_opts()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      3, this->_internal_archive_opts(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.DownloadInfo)
-}
-
-::google::protobuf::uint8* DownloadInfo::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* DownloadInfo::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.DownloadInfo)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // string url = 1;
   if (this->url().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->url().data(), static_cast<int>(this->url().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_url().data(), static_cast<int>(this->_internal_url().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.DownloadInfo.url");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->url(), target);
+    target = stream->WriteStringMaybeAliased(
+        1, this->_internal_url(), target);
   }
 
   // string path = 2;
   if (this->path().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->path().data(), static_cast<int>(this->path().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_path().data(), static_cast<int>(this->_internal_path().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.DownloadInfo.path");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->path(), target);
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_path(), target);
   }
 
   // .jasper.ArchiveOptions archive_opts = 3;
   if (this->has_archive_opts()) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      InternalWriteMessageToArray(
-        3, this->_internal_archive_opts(), deterministic, target);
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        3, _Internal::archive_opts(this), target, stream);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.DownloadInfo)
   return target;
@@ -8170,46 +6530,49 @@ size_t DownloadInfo::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.DownloadInfo)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string url = 1;
   if (this->url().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->url());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_url());
   }
 
   // string path = 2;
   if (this->path().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->path());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_path());
   }
 
   // .jasper.ArchiveOptions archive_opts = 3;
   if (this->has_archive_opts()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
         *archive_opts_);
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void DownloadInfo::MergeFrom(const ::google::protobuf::Message& from) {
+void DownloadInfo::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.DownloadInfo)
   GOOGLE_DCHECK_NE(&from, this);
   const DownloadInfo* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const DownloadInfo>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<DownloadInfo>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.DownloadInfo)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.DownloadInfo)
     MergeFrom(*source);
@@ -8220,23 +6583,23 @@ void DownloadInfo::MergeFrom(const DownloadInfo& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.DownloadInfo)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.url().size() > 0) {
 
-    url_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.url_);
+    url_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.url_);
   }
   if (from.path().size() > 0) {
 
-    path_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.path_);
+    path_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.path_);
   }
   if (from.has_archive_opts()) {
-    mutable_archive_opts()->::jasper::ArchiveOptions::MergeFrom(from.archive_opts());
+    _internal_mutable_archive_opts()->::jasper::ArchiveOptions::MergeFrom(from._internal_archive_opts());
   }
 }
 
-void DownloadInfo::CopyFrom(const ::google::protobuf::Message& from) {
+void DownloadInfo::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.DownloadInfo)
   if (&from == this) return;
   Clear();
@@ -8254,23 +6617,18 @@ bool DownloadInfo::IsInitialized() const {
   return true;
 }
 
-void DownloadInfo::Swap(DownloadInfo* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void DownloadInfo::InternalSwap(DownloadInfo* other) {
   using std::swap;
-  url_.Swap(&other->url_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  url_.Swap(&other->url_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
-  path_.Swap(&other->path_, &::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  path_.Swap(&other->path_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
     GetArenaNoVirtual());
   swap(archive_opts_, other->archive_opts_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
 }
 
-::google::protobuf::Metadata DownloadInfo::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata DownloadInfo::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -8278,26 +6636,25 @@ void DownloadInfo::InternalSwap(DownloadInfo* other) {
 
 void BuildloggerURLs::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int BuildloggerURLs::kUrlsFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class BuildloggerURLs::_Internal {
+ public:
+};
 
 BuildloggerURLs::BuildloggerURLs()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  ::google::protobuf::internal::InitSCC(
-      &protobuf_jasper_2eproto::scc_info_BuildloggerURLs.base);
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:jasper.BuildloggerURLs)
 }
 BuildloggerURLs::BuildloggerURLs(const BuildloggerURLs& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr),
       urls_(from.urls_) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:jasper.BuildloggerURLs)
 }
 
 void BuildloggerURLs::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_BuildloggerURLs_jasper_2eproto.base);
 }
 
 BuildloggerURLs::~BuildloggerURLs() {
@@ -8311,20 +6668,15 @@ void BuildloggerURLs::SharedDtor() {
 void BuildloggerURLs::SetCachedSize(int size) const {
   _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* BuildloggerURLs::descriptor() {
-  ::protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const BuildloggerURLs& BuildloggerURLs::default_instance() {
-  ::google::protobuf::internal::InitSCC(&protobuf_jasper_2eproto::scc_info_BuildloggerURLs.base);
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_BuildloggerURLs_jasper_2eproto.base);
   return *internal_default_instance();
 }
 
 
 void BuildloggerURLs::Clear() {
 // @@protoc_insertion_point(message_clear_start:jasper.BuildloggerURLs)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
@@ -8332,96 +6684,66 @@ void BuildloggerURLs::Clear() {
   _internal_metadata_.Clear();
 }
 
-bool BuildloggerURLs::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:jasper.BuildloggerURLs)
-  for (;;) {
-    ::std::pair<::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* BuildloggerURLs::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // repeated string urls = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u /* 10 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->add_urls()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->urls(this->urls_size() - 1).data(),
-            static_cast<int>(this->urls(this->urls_size() - 1).length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "jasper.BuildloggerURLs.urls"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 10)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            auto str = _internal_add_urls();
+            ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+            CHK_(::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "jasper.BuildloggerURLs.urls"));
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:jasper.BuildloggerURLs)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:jasper.BuildloggerURLs)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void BuildloggerURLs::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:jasper.BuildloggerURLs)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // repeated string urls = 1;
-  for (int i = 0, n = this->urls_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->urls(i).data(), static_cast<int>(this->urls(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "jasper.BuildloggerURLs.urls");
-    ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->urls(i), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:jasper.BuildloggerURLs)
-}
-
-::google::protobuf::uint8* BuildloggerURLs::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* BuildloggerURLs::_InternalSerialize(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:jasper.BuildloggerURLs)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // repeated string urls = 1;
-  for (int i = 0, n = this->urls_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->urls(i).data(), static_cast<int>(this->urls(i).length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+  for (int i = 0, n = this->_internal_urls_size(); i < n; i++) {
+    const auto& s = this->_internal_urls(i);
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      s.data(), static_cast<int>(s.length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "jasper.BuildloggerURLs.urls");
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(1, this->urls(i), target);
+    target = stream->WriteString(1, s, target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:jasper.BuildloggerURLs)
   return target;
@@ -8431,33 +6753,36 @@ size_t BuildloggerURLs::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:jasper.BuildloggerURLs)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // repeated string urls = 1;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->urls_size());
-  for (int i = 0, n = this->urls_size(); i < n; i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
-      this->urls(i));
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(urls_.size());
+  for (int i = 0, n = urls_.size(); i < n; i++) {
+    total_size += ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+      urls_.Get(i));
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
   return total_size;
 }
 
-void BuildloggerURLs::MergeFrom(const ::google::protobuf::Message& from) {
+void BuildloggerURLs::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:jasper.BuildloggerURLs)
   GOOGLE_DCHECK_NE(&from, this);
   const BuildloggerURLs* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const BuildloggerURLs>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<BuildloggerURLs>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:jasper.BuildloggerURLs)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:jasper.BuildloggerURLs)
     MergeFrom(*source);
@@ -8468,13 +6793,13 @@ void BuildloggerURLs::MergeFrom(const BuildloggerURLs& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:jasper.BuildloggerURLs)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   urls_.MergeFrom(from.urls_);
 }
 
-void BuildloggerURLs::CopyFrom(const ::google::protobuf::Message& from) {
+void BuildloggerURLs::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:jasper.BuildloggerURLs)
   if (&from == this) return;
   Clear();
@@ -8492,93 +6817,87 @@ bool BuildloggerURLs::IsInitialized() const {
   return true;
 }
 
-void BuildloggerURLs::Swap(BuildloggerURLs* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void BuildloggerURLs::InternalSwap(BuildloggerURLs* other) {
   using std::swap;
-  urls_.InternalSwap(CastToBase(&other->urls_));
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  urls_.InternalSwap(&other->urls_);
 }
 
-::google::protobuf::Metadata BuildloggerURLs::GetMetadata() const {
-  protobuf_jasper_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_jasper_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata BuildloggerURLs::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace jasper
-namespace google {
-namespace protobuf {
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::Logger* Arena::CreateMaybeMessage< ::jasper::Logger >(Arena* arena) {
+PROTOBUF_NAMESPACE_OPEN
+template<> PROTOBUF_NOINLINE ::jasper::Logger* Arena::CreateMaybeMessage< ::jasper::Logger >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::Logger >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::OutputOptions* Arena::CreateMaybeMessage< ::jasper::OutputOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::OutputOptions* Arena::CreateMaybeMessage< ::jasper::OutputOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::OutputOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::LogOptions* Arena::CreateMaybeMessage< ::jasper::LogOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::LogOptions* Arena::CreateMaybeMessage< ::jasper::LogOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::LogOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::BufferOptions* Arena::CreateMaybeMessage< ::jasper::BufferOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::BufferOptions* Arena::CreateMaybeMessage< ::jasper::BufferOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::BufferOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::BuildloggerOptions* Arena::CreateMaybeMessage< ::jasper::BuildloggerOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::BuildloggerOptions* Arena::CreateMaybeMessage< ::jasper::BuildloggerOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::BuildloggerOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::SplunkOptions* Arena::CreateMaybeMessage< ::jasper::SplunkOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::SplunkOptions* Arena::CreateMaybeMessage< ::jasper::SplunkOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::SplunkOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::CreateOptions_EnvironmentEntry_DoNotUse* Arena::CreateMaybeMessage< ::jasper::CreateOptions_EnvironmentEntry_DoNotUse >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::CreateOptions_EnvironmentEntry_DoNotUse* Arena::CreateMaybeMessage< ::jasper::CreateOptions_EnvironmentEntry_DoNotUse >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::CreateOptions_EnvironmentEntry_DoNotUse >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::CreateOptions* Arena::CreateMaybeMessage< ::jasper::CreateOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::CreateOptions* Arena::CreateMaybeMessage< ::jasper::CreateOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::CreateOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::ProcessInfo* Arena::CreateMaybeMessage< ::jasper::ProcessInfo >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::ProcessInfo* Arena::CreateMaybeMessage< ::jasper::ProcessInfo >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::ProcessInfo >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::StatusResponse* Arena::CreateMaybeMessage< ::jasper::StatusResponse >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::StatusResponse* Arena::CreateMaybeMessage< ::jasper::StatusResponse >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::StatusResponse >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::Filter* Arena::CreateMaybeMessage< ::jasper::Filter >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::Filter* Arena::CreateMaybeMessage< ::jasper::Filter >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::Filter >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::SignalProcess* Arena::CreateMaybeMessage< ::jasper::SignalProcess >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::SignalProcess* Arena::CreateMaybeMessage< ::jasper::SignalProcess >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::SignalProcess >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::TagName* Arena::CreateMaybeMessage< ::jasper::TagName >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::TagName* Arena::CreateMaybeMessage< ::jasper::TagName >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::TagName >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::ProcessTags* Arena::CreateMaybeMessage< ::jasper::ProcessTags >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::ProcessTags* Arena::CreateMaybeMessage< ::jasper::ProcessTags >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::ProcessTags >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::JasperProcessID* Arena::CreateMaybeMessage< ::jasper::JasperProcessID >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::JasperProcessID* Arena::CreateMaybeMessage< ::jasper::JasperProcessID >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::JasperProcessID >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::OperationOutcome* Arena::CreateMaybeMessage< ::jasper::OperationOutcome >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::OperationOutcome* Arena::CreateMaybeMessage< ::jasper::OperationOutcome >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::OperationOutcome >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::BuildOptions* Arena::CreateMaybeMessage< ::jasper::BuildOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::BuildOptions* Arena::CreateMaybeMessage< ::jasper::BuildOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::BuildOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::MongoDBDownloadOptions* Arena::CreateMaybeMessage< ::jasper::MongoDBDownloadOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::MongoDBDownloadOptions* Arena::CreateMaybeMessage< ::jasper::MongoDBDownloadOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::MongoDBDownloadOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::CacheOptions* Arena::CreateMaybeMessage< ::jasper::CacheOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::CacheOptions* Arena::CreateMaybeMessage< ::jasper::CacheOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::CacheOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::ArchiveOptions* Arena::CreateMaybeMessage< ::jasper::ArchiveOptions >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::ArchiveOptions* Arena::CreateMaybeMessage< ::jasper::ArchiveOptions >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::ArchiveOptions >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::DownloadInfo* Arena::CreateMaybeMessage< ::jasper::DownloadInfo >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::DownloadInfo* Arena::CreateMaybeMessage< ::jasper::DownloadInfo >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::DownloadInfo >(arena);
 }
-template<> GOOGLE_PROTOBUF_ATTRIBUTE_NOINLINE ::jasper::BuildloggerURLs* Arena::CreateMaybeMessage< ::jasper::BuildloggerURLs >(Arena* arena) {
+template<> PROTOBUF_NOINLINE ::jasper::BuildloggerURLs* Arena::CreateMaybeMessage< ::jasper::BuildloggerURLs >(Arena* arena) {
   return Arena::CreateInternal< ::jasper::BuildloggerURLs >(arena);
 }
-}  // namespace protobuf
-}  // namespace google
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>
