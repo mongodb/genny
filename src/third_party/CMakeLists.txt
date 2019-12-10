@@ -11,6 +11,8 @@ find_package(MongoCxx)
 include(GetGRpc)
 # </gRPC>
 
+add_subdirectory(poplar)
+
 # <Jasper>
 if(ENABLE_JASPER)
     add_subdirectory(jasper)

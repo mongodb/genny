@@ -22,6 +22,7 @@ CreateGennyTargets(
         yaml-cpp
         Boost::boost
         Boost::log
+        poplarlib
     TEST_DEPENDS
         testlib
 )
