@@ -1,5 +1,5 @@
 SchemaVersion: 2018-07-01
-Owner: "@mongodb/server-execution"
+Owner: "@mongodb/sharding"
 
 Actors:
 - Name: InsertData
@@ -9,7 +9,83 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: InsertData
+      Parameters:
+        db: &db test
   - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: EnableSharding
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: EnableSharding
+      OperationName: AdminCommand
+      OperationCommand:
+        enableSharding: *db
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: CreateShardKeyIndex
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationMetricsName: CreateShardKeyIndex
+      OperationName: RunCommand
+      OperationCommand:
+        createIndexes: Collection0 # This is the default collection populated by the Loader.
+        indexes:
+        - key:
+            _id: hashed
+          name: _id_1
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: ShardCollection
+  Type: AdminCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationMetricsName: ShardCollection
+      OperationName: AdminCommand
+      OperationCommand:
+        shardCollection: test.Collection0
+        key:
+          _id: hashed
   - *Nop
   - *Nop
   - *Nop
@@ -22,6 +98,9 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
+  - *Nop
+  - *Nop
+  - *Nop
   - *Nop
   - ExternalPhaseConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
@@ -51,11 +130,6 @@ Actors:
   - ExternalPhaseConfig:
       Path: ../../phases/execution/CreateIndexPhase.yml
       Key: CreateTextIndexesCmd
-      Parameters:
-        Duration: 5 minutes
-  - ExternalPhaseConfig:
-      Path: ../../phases/execution/CreateIndexPhase.yml
-      Key: CreateUniqueIndexesCmd
       Parameters:
         Duration: 5 minutes
   - ExternalPhaseConfig:

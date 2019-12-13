@@ -5,7 +5,7 @@ Owner: "@mongodb/server-execution"
 
 InsertData:
   Repeat: 1
-  Database: &db test
+  Database: &db {^Parameter: {Name: "db", Default: test}}
   Threads: 1
   CollectionCount: 1
   DocumentCount: 150000
