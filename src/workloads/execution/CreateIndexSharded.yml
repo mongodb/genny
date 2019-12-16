@@ -2,65 +2,18 @@ SchemaVersion: 2018-07-01
 Owner: "@mongodb/sharding"
 
 Actors:
-- Name: InsertData
-  Type: Loader
-  Threads: 1
-  Phases:
-  - ExternalPhaseConfig:
-      Path: ../../phases/execution/CreateIndexPhase.yml
-      Key: InsertData
-      Parameters:
-        db: &db test
-  - &Nop {Nop: true}
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
 - Name: EnableSharding
   Type: AdminCommand
   Threads: 1
   Phases:
-  - *Nop
   - Repeat: 1
     Database: admin
     Operations:
     - OperationMetricsName: EnableSharding
       OperationName: AdminCommand
       OperationCommand:
-        enableSharding: *db
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-  - *Nop
-
-- Name: CreateShardKeyIndex
-  Type: RunCommand
-  Threads: 1
-  Phases:
-  - *Nop
-  - *Nop
-  - Repeat: 1
-    Database: *db
-    Operations:
-    - OperationMetricsName: CreateShardKeyIndex
-      OperationName: RunCommand
-      OperationCommand:
-        createIndexes: Collection0 # This is the default collection populated by the Loader.
-        indexes:
-        - key:
-            _id: hashed
-          name: _id_1
+        enableSharding: &db test
+  - &Nop {Nop: true}
   - *Nop
   - *Nop
   - *Nop
@@ -75,17 +28,35 @@ Actors:
   Threads: 1
   Phases:
   - *Nop
-  - *Nop
-  - *Nop
   - Repeat: 1
     Database: admin
     Operations:
     - OperationMetricsName: ShardCollection
       OperationName: AdminCommand
       OperationCommand:
-        shardCollection: test.Collection0
+        shardCollection: test.Collection0 # Collection0 is the default collection populated by the Loader.
         key:
           _id: hashed
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - ExternalPhaseConfig:
+      Path: ../../phases/execution/CreateIndexPhase.yml
+      Key: InsertData
+      Parameters:
+        db: *db
   - *Nop
   - *Nop
   - *Nop
@@ -98,7 +69,6 @@ Actors:
   Type: RunCommand
   Threads: 1
   Phases:
-  - *Nop
   - *Nop
   - *Nop
   - *Nop
