@@ -187,3 +187,7 @@ AutoRun:
         - replica
         - single-replica
         - replica-noflowcontrol
+  PrepareEnvironmentWith:
+    setup:
+    - replica-delay-mixed
+    - replica
