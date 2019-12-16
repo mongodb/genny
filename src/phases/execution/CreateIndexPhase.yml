@@ -1,0 +1,176 @@
+# This Phase has 2 actors, InsertData and IndexCollection. InsertData inserts documents containing all types of indexes, and IndexCollection creates indexes for each of them, one at a time.
+
+PhaseSchemaVersion: 2018-07-01
+Owner: "@mongodb/server-execution"
+
+InsertData:
+  Repeat: 1
+  Database: &db {^Parameter: {Name: "db", Default: test}}
+  Threads: 1
+  CollectionCount: 1
+  DocumentCount: 150000
+  BatchSize: 10000
+  Document:
+    loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+    loc2dSphere: &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
+    point: &point { type: Point, coordinates: [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}] }
+    randomString: &randomString {^RandomString: {length: 20}}
+    randomInt: &randomInt {^RandomInt: {min: -10000000, max: 10000000}}
+    attributes: &attributes { color: *randomString, size: *randomString, inside: { bookmark: *randomInt, postitnote: *randomInt }, outside: { dustcover: *randomString }}
+
+Create2dIndexesCmd:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
+  Database: *db
+  Operations:
+  - OperationMetricsName: Create2dIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      createIndexes: Collection0
+      indexes:
+      - key:
+          loc2d: "2d"
+        min: -180
+        max: 180
+        bits: 32
+        name: 2dIndex
+  - OperationMetricsName: DropCreated2dIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: Collection0
+      index: 2dIndex
+
+Create2dSphereIndexesCoordCmd:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
+  Database: *db
+  Operations:
+  - OperationMetricsName: Create2dSphereIndexesCoordCmd
+    OperationName: RunCommand
+    OperationCommand:
+      createIndexes: Collection0
+      indexes:
+      - key:
+          loc2dSphere: "2dsphere"
+        name: 2dsphereCoordIndex
+  - OperationMetricsName: DropCreated2dSpCreate2dSphereIndexesCoordCmdhereIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: Collection0
+      index: 2dsphereCoordIndex
+
+Create2dSphereGeoJsonIndexesCmd:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
+  Database: *db
+  Operations:
+  - OperationMetricsName: Create2dSphereGeoJsonIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      createIndexes: Collection0
+      indexes:
+      - key:
+          point: "2dsphere"
+        name: 2dsphereGeoJsonIndex
+  - OperationMetricsName: Create2dSphereGeoJsonIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: Collection0
+      index: 2dsphereGeoJsonIndex
+
+CreateGeoHaystackIndexesCmd:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
+  Database: *db
+  Operations:
+  - OperationMetricsName: CreateGeoHaystackIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      createIndexes: Collection0
+      indexes:
+      - key:
+          loc2d: "geoHaystack"
+          randomString: 1
+        bucketSize: 5
+        name: geoHaystackIndex
+  - OperationMetricsName: DropCreatedGeoHaystackIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: Collection0
+      index: geoHaystackIndex
+
+CreateHashedIndexesCmd:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
+  Database: *db
+  Operations:
+  - OperationMetricsName: CreateHashedIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      createIndexes: Collection0
+      indexes:
+      - key:
+          randomString: "hashed"
+        name: hashedIndex
+  - OperationMetricsName: DropCreatedHashedIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: Collection0
+      index: hashedIndex
+
+CreateTextIndexesCmd:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
+  Database: *db
+  Operations:
+  - OperationMetricsName: CreateTextIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      createIndexes: Collection0
+      indexes:
+      - key:
+          randomString: "text"
+        name: textIndex
+  - OperationMetricsName: DropCreatedTextIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: Collection0
+      index: textIndex
+
+CreateUniqueIndexesCmd:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
+  Database: *db
+  Operations:
+  - OperationMetricsName: CreateUniqueIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      createIndexes: Collection0
+      indexes:
+      - key:
+          randomString: 1
+        name: uniqueIndex
+        unique: true
+  - OperationMetricsName: DropCreatedUniqueIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: Collection0
+      index: uniqueIndex
+
+CreateWildCardIndexesCmd:
+  Repeat: {^Parameter: {Name: "Repeat", Default: 5}}
+  Duration: {^Parameter: {Name: "Duration", Default: 60 seconds}}
+  Database: *db
+  Operations:
+  - OperationMetricsName: CreateWildCardIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      createIndexes: Collection0
+      indexes:
+      - key: { "attributes.$**": 1 }
+        name: wildCardIndex
+  - OperationMetricsName: DropCreatedWildCardIndexesCmd
+    OperationName: RunCommand
+    OperationCommand:
+      dropIndexes: Collection0
+      index: wildCardIndex
