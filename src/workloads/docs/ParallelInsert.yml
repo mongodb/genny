@@ -185,7 +185,6 @@ AutoRun:
     bootstrap:
       mongodb_setup:
         - replica
-        - single-replica
         - replica-noflowcontrol
   PrepareEnvironmentWith:
     setup:
