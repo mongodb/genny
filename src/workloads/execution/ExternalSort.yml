@@ -1,0 +1,103 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 100000
+    BatchSize: 10000
+    Document:
+      integer: &integer {^RandomInt: {min: 0, max: 2147483647}}
+      double: &double {^RandomInt: {distribution: geometric, p: 0.1}}
+      string: &string {^RandomString: {length: {^RandomInt: {min: 1100, max: 2000}}}}
+      array:
+      - *integer
+      - *integer
+      - subInteger: *integer
+        subString: *string
+        subArray:
+        - *integer
+        - *integer
+      - subInteger: *integer
+        subString: *string
+        subArray:
+        - *integer
+        - *integer
+      loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+      loc2dSphere: &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
+      sortByInt: *integer
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: ExternalSort
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 20
+    Database: *db
+    Operations:
+    - OperationMetricsName: ExternalSortUsingFind
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          find: Collection0
+          sort: {sortByInt: 1}
+          allowDiskUse: true
+        verbosity:
+          executionStats
+  - Repeat: 20
+    Database: *db
+    Operations:
+    - OperationMetricsName: ExternalSortUsingAgg
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline: [{$sort: {sortByInt: 1}}]
+          cursor: {batchSize: 101}  # The default batch size
+          allowDiskUse: true
+        verbosity:
+          executionStats
+  - Repeat: 20
+    Database: *db
+    Operations:
+    - OperationMetricsName: ExternalSortOnComputedFieldUsingAgg
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline: [{$addFields: {computed: {$add: ["$sortByInt", "$integer"]}}}, {$sort: {computed: 1}}]
+          cursor: {batchSize: 101}  # The default batch size
+          allowDiskUse: true
+        verbosity:
+          executionStats
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup: standalone
