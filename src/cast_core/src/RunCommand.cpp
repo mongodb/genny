@@ -245,7 +245,7 @@ void actor::RunCommand::run() {
                         throw;
                     }
 
-                    if (!op->isQuiet) {
+                    if (!op->isQuiet()) {
                         BOOST_LOG_TRIVIAL(info)
                             << "Caught error: " << boost::diagnostic_information(ex);
                     }
