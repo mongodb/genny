@@ -172,23 +172,30 @@ public:
             _operation ? std::make_optional(std::move(_operation->start())) : std::nullopt;
 
         try {
-            if (_options.awaitStepdown) {
-                runThenAwaitStepdown(_database, view);
+            try {
+                if (_options.awaitStepdown) {
+                    runThenAwaitStepdown(_database, view);
+                } else {
+                    _database.run_command(view);
+                }
+
                 if (maybeWatch) {
                     maybeWatch->success();
                 }
-            } else {
-                _database.run_command(view);
-                if (maybeWatch) {
-                    maybeWatch->success();
-                }
+            } catch (mongocxx::operation_exception& e) {
+                BOOST_THROW_EXCEPTION(MongoException(e, view));
             }
-        } catch (mongocxx::operation_exception& e) {
+        } catch (...) {
             if (maybeWatch) {
-                maybeWatch->discard();
+                maybeWatch->failure();
             }
-            BOOST_THROW_EXCEPTION(MongoException(e, view));
+
+            throw;
         }
+    }
+
+    bool isQuiet() const {
+        return _options.isQuiet;
     }
 
 private:
@@ -236,8 +243,10 @@ void actor::RunCommand::run() {
                 } catch (const boost::exception& ex) {
                     if (config->throwOnFailure) {
                         throw;
-                    } else {
-                        BOOST_LOG_TRIVIAL(debug)
+                    }
+
+                    if (!op->isQuiet) {
+                        BOOST_LOG_TRIVIAL(info)
                             << "Caught error: " << boost::diagnostic_information(ex);
                     }
                 }
