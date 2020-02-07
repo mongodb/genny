@@ -98,7 +98,7 @@ public:
                                       ActorId actorId,
                                       genny::TimeSpec threshold,
                                       double_t percentage,
-                                      std::optional<genny::PhaseNumber> phase = std::nullopt 
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt
                                       ) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
