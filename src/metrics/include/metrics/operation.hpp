@@ -170,8 +170,8 @@ public:
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : _actorName(std::move(actorName)), _opName(std::move(opName)), _phase(std::move(phase)), 
-          _threshold(threshold){};
+        : _actorName(std::move(actorName)), _actorCount(actorCount), _opName(std::move(opName)), 
+          _phase(std::move(phase)), _threshold(threshold){};
 
     /**
      * @return the name of the actor running the operation.
@@ -216,7 +216,12 @@ public:
     }
 
 private:
+    /*
+     * Actor count and phase number will be used in Poplar metrics. Right now they 
+     * are unused.
+     */
     const std::string _actorName;
+    const actor_count_t _actorCount;
     const std::string _opName;
     OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
