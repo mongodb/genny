@@ -85,10 +85,11 @@ public:
 
     explicit RegistryT() = default;
 
-    OperationT<ClockSource> operation(std::string actorName, std::string opName, ActorId actorId) {
+    OperationT<ClockSource> operation(std::string actorName, std::string opName, ActorId actorId, std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        auto opIt = opsByThread.try_emplace(actorId, std::move(actorName), std::move(opName)).first;
+        auto opIt = opsByThread.try_emplace(actorId, std::move(actorName), std::move(opName), 
+                std::move(phase)).first;
         return OperationT{opIt->second};
     }
 
@@ -96,7 +97,9 @@ public:
                                       std::string opName,
                                       ActorId actorId,
                                       genny::TimeSpec threshold,
-                                      double_t percentage) {
+                                      double_t percentage,
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt 
+                                      ) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt =
@@ -105,6 +108,7 @@ public:
                     actorId,
                     std::move(actorName),
                     std::move(opName),
+                    std::move(phase),
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;

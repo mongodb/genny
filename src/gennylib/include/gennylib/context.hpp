@@ -24,6 +24,7 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
 #include <boost/noncopyable.hpp>
 #include <boost/throw_exception.hpp>
@@ -477,7 +478,7 @@ public:
         }
 
         return this->workload()._registry->operation(
-            this->_actor->operator[]("Name").to<std::string>(), stm.str(), id);
+            this->_actor->operator[]("Name").to<std::string>(), stm.str(), id, _phaseNumber);
     }
 
     const auto getPhaseNumber() const {

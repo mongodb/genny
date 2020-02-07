@@ -161,11 +161,14 @@ public:
     };
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
+    using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
 
     OperationImpl(std::string actorName,
                   std::string opName,
+                  std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : _actorName(std::move(actorName)), _opName(std::move(opName)), _threshold(threshold){};
+        : _actorName(std::move(actorName)), _opName(std::move(opName)), _phase(std::move(phase)), 
+          _threshold(threshold){};
 
     /**
      * @return the name of the actor running the operation.
@@ -212,6 +215,7 @@ public:
 private:
     const std::string _actorName;
     const std::string _opName;
+    OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
     EventSeries _events;
 };
