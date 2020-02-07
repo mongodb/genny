@@ -33,6 +33,8 @@ namespace genny::metrics {
 
 using count_type = long long;
 
+using actor_count_t = uint32_t;
+
 enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
 /**
@@ -164,6 +166,7 @@ public:
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
 
     OperationImpl(std::string actorName,
+                  actor_count_t actorCount,
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)
