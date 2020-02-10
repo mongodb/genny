@@ -24,7 +24,6 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
-#include <optional>
 
 #include <boost/noncopyable.hpp>
 #include <boost/throw_exception.hpp>
