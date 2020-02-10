@@ -111,6 +111,9 @@ struct OperationEventT final {
  */
 namespace v1 {
 
+template <typename Clocksource>
+class RegistryT;
+
 /**
  * Throw this to indicate the percentage of operations exceeding the
  * time limit went above the threshold.
@@ -167,6 +170,7 @@ public:
 
     OperationImpl(std::string actorName,
                   actor_count_t actorCount,
+                  const RegistryT<ClockSource>& registry,
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)

@@ -34,6 +34,9 @@ namespace genny::metrics {
  */
 namespace v1 {
 
+template <typename Clocksource>
+class OperationImpl;
+
 class MetricsClockSource {
 private:
     using clock_type = std::chrono::steady_clock;
@@ -89,7 +92,7 @@ public:
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt = opsByThread.try_emplace(actorId,  std::move(actorName), std::move(opsByThread.size()),
-                std::move(opName), std::move(phase)).first;
+                *this, std::move(opName), std::move(phase)).first;
         return OperationT{opIt->second};
     }
 
@@ -108,6 +111,7 @@ public:
                     actorId,
                     std::move(actorName),
                     std::move(opsByThread.size()),
+                    *this,
                     std::move(opName),
                     std::move(phase),
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
