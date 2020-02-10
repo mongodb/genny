@@ -91,8 +91,8 @@ public:
     OperationT<ClockSource> operation(std::string actorName, std::string opName, ActorId actorId, std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        auto opIt = opsByThread.try_emplace(actorId,  std::move(actorName), std::move(opsByThread.size()),
-                *this, std::move(opName), std::move(phase)).first;
+        auto opIt = opsByThread.try_emplace(actorId,  std::move(actorName), *this, 
+                std::move(opName), std::move(phase)).first;
         return OperationT{opIt->second};
     }
 
@@ -110,7 +110,6 @@ public:
                 .try_emplace(
                     actorId,
                     std::move(actorName),
-                    std::move(opsByThread.size()),
                     *this,
                     std::move(opName),
                     std::move(phase),

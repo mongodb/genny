@@ -41,7 +41,7 @@ TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
     auto dummy_metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto op = v1::OperationImpl<RegistryClockSourceStub>{"Actor", 1, dummy_metrics, "Op", std::nullopt};
+    auto op = v1::OperationImpl<RegistryClockSourceStub>{"Actor", dummy_metrics, "Op", std::nullopt};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(&op);
