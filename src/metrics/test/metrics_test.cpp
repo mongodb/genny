@@ -483,5 +483,24 @@ TEST_CASE("Phases can set metrics") {
     }
 }
 
+TEST_CASE("Registry counts the number of workers") {
+    RegistryClockSourceStub::reset();
+    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+
+    metrics.operation("actor1", "op1", 1u);
+    metrics.operation("actor1", "op1", 2u);
+    metrics.operation("actor1", "op1", 3u);
+
+    metrics.operation("actor2", "op1", 4u);
+    metrics.operation("actor2", "op1", 5u);
+
+    std::size_t expected1 = 3;
+    std::size_t expected2 = 2;
+
+    REQUIRE(metrics.getWorkerCount("actor1", "op1") == expected1);
+    REQUIRE(metrics.getWorkerCount("actor2", "op1") == expected2);
+
+}
+
 }  // namespace
 }  // namespace genny::metrics

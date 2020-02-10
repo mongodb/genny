@@ -127,8 +127,8 @@ public:
         return ClockSource::now();
     }
 
-    std::size_t threadCount(const std::string& actorName, const std::string& opName) const {
-        return _ops[actorName][opName].size();
+    std::size_t getWorkerCount(const std::string& actorName, const std::string& opName) const {
+        return (_ops.at(actorName).at(opName)).size();
     }
 
 private:
