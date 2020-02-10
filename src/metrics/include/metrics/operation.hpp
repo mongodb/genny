@@ -174,8 +174,8 @@ public:
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : _actorName(std::move(actorName)), _actorCount(actorCount), _opName(std::move(opName)),
-          _phase(std::move(phase)), _threshold(threshold){};
+        : _actorName(std::move(actorName)), _actorCount(actorCount), _registry(registry),
+          _opName(std::move(opName)), _phase(std::move(phase)), _threshold(threshold){};
 
     /**
      * @return the name of the actor running the operation.
@@ -226,6 +226,7 @@ private:
      */
     const std::string _actorName;
     const actor_count_t _actorCount;
+    const RegistryT<ClockSource>& _registry;
     const std::string _opName;
     OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
