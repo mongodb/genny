@@ -173,7 +173,7 @@ public:
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : _actorName(std::move(actorName)), _registry(registry), _opName(std::move(opName)), 
+        : _actorName(std::move(actorName)), _registry(registry), _opName(std::move(opName)),
           _phase(std::move(phase)), _threshold(threshold){};
 
     /**
