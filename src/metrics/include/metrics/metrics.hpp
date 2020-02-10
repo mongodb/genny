@@ -127,6 +127,10 @@ public:
         return ClockSource::now();
     }
 
+    std::size_t threadCount(const std::string& actorName, const std::string& opName) const {
+        return _ops[actorName][opName].size();
+    }
+
 private:
     OperationsMap _ops;
 };
