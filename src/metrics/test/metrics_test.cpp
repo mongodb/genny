@@ -41,7 +41,8 @@ TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
     auto dummy_metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto op = v1::OperationImpl<RegistryClockSourceStub>{"Actor", dummy_metrics, "Op", std::nullopt};
+    auto op =
+        v1::OperationImpl<RegistryClockSourceStub>{"Actor", dummy_metrics, "Op", std::nullopt};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(&op);
@@ -497,9 +498,8 @@ TEST_CASE("Registry counts the number of workers") {
     std::size_t expected1 = 3;
     std::size_t expected2 = 2;
 
-    REQUIRE(metrics.getWorkerCount("actor1", "op1") == expected1);
-    REQUIRE(metrics.getWorkerCount("actor2", "op1") == expected2);
-
+    REQUIRE(metrics.getWorkerCount("actor1", "op1") == 3);
+    REQUIRE(metrics.getWorkerCount("actor2", "op1") == 2);
 }
 
 }  // namespace

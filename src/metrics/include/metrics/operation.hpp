@@ -33,7 +33,7 @@ namespace genny::metrics {
 
 using count_type = long long;
 
-using actor_count_t = uint32_t;
+using actor_count_t = size_t;
 
 enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
@@ -173,8 +173,11 @@ public:
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : _actorName(std::move(actorName)), _registry(registry), _opName(std::move(opName)),
-          _phase(std::move(phase)), _threshold(threshold){};
+        : _actorName(std::move(actorName)),
+          _registry(registry),
+          _opName(std::move(opName)),
+          _phase(std::move(phase)),
+          _threshold(threshold){};
 
     /**
      * @return the name of the actor running the operation.

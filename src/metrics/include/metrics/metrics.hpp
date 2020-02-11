@@ -88,11 +88,17 @@ public:
 
     explicit RegistryT() = default;
 
-    OperationT<ClockSource> operation(std::string actorName, std::string opName, ActorId actorId, std::optional<genny::PhaseNumber> phase = std::nullopt) {
+    OperationT<ClockSource> operation(std::string actorName,
+                                      std::string opName,
+                                      ActorId actorId,
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        auto opIt = opsByThread.try_emplace(actorId,  std::move(actorName), *this,
-                std::move(opName), std::move(phase)).first;
+        auto opIt =
+            opsByThread
+                .try_emplace(
+                    actorId, std::move(actorName), *this, std::move(opName), std::move(phase))
+                .first;
         return OperationT{opIt->second};
     }
 
@@ -101,8 +107,7 @@ public:
                                       ActorId actorId,
                                       genny::TimeSpec threshold,
                                       double_t percentage,
-                                      std::optional<genny::PhaseNumber> phase = std::nullopt
-                                      ) {
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt =
@@ -127,6 +132,10 @@ public:
         return ClockSource::now();
     }
 
+    /**
+     * Returns the number of workers performing a given operation.
+     * Assumes the count is constant across phases for a given (actor, operation).
+     */
     std::size_t getWorkerCount(const std::string& actorName, const std::string& opName) const {
         return (_ops.at(actorName).at(opName)).size();
     }
