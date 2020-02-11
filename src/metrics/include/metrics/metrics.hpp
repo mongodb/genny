@@ -34,6 +34,9 @@ namespace genny::metrics {
  */
 namespace v1 {
 
+template <typename Clocksource>
+class OperationImpl;
+
 class MetricsClockSource {
 private:
     using clock_type = std::chrono::steady_clock;
@@ -85,10 +88,17 @@ public:
 
     explicit RegistryT() = default;
 
-    OperationT<ClockSource> operation(std::string actorName, std::string opName, ActorId actorId) {
+    OperationT<ClockSource> operation(std::string actorName,
+                                      std::string opName,
+                                      ActorId actorId,
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        auto opIt = opsByThread.try_emplace(actorId, std::move(actorName), std::move(opName)).first;
+        auto opIt =
+            opsByThread
+                .try_emplace(
+                    actorId, std::move(actorName), *this, std::move(opName), std::move(phase))
+                .first;
         return OperationT{opIt->second};
     }
 
@@ -96,7 +106,8 @@ public:
                                       std::string opName,
                                       ActorId actorId,
                                       genny::TimeSpec threshold,
-                                      double_t percentage) {
+                                      double_t percentage,
+                                      std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt =
@@ -104,7 +115,9 @@ public:
                 .try_emplace(
                     actorId,
                     std::move(actorName),
+                    *this,
                     std::move(opName),
+                    std::move(phase),
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;
@@ -117,6 +130,14 @@ public:
 
     [[nodiscard]] const typename ClockSource::time_point now(Permission) const {
         return ClockSource::now();
+    }
+
+    /**
+     * Returns the number of workers performing a given operation.
+     * Assumes the count is constant across phases for a given (actor, operation).
+     */
+    std::size_t getWorkerCount(const std::string& actorName, const std::string& opName) const {
+        return (_ops.at(actorName).at(opName)).size();
     }
 
 private:

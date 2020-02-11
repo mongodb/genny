@@ -33,6 +33,8 @@ namespace genny::metrics {
 
 using count_type = long long;
 
+using actor_count_t = size_t;
+
 enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
 
 /**
@@ -109,6 +111,9 @@ struct OperationEventT final {
  */
 namespace v1 {
 
+template <typename Clocksource>
+class RegistryT;
+
 /**
  * Throw this to indicate the percentage of operations exceeding the
  * time limit went above the threshold.
@@ -161,11 +166,18 @@ public:
     };
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
+    using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
 
     OperationImpl(std::string actorName,
+                  const RegistryT<ClockSource>& registry,
                   std::string opName,
+                  std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : _actorName(std::move(actorName)), _opName(std::move(opName)), _threshold(threshold){};
+        : _actorName(std::move(actorName)),
+          _registry(registry),
+          _opName(std::move(opName)),
+          _phase(std::move(phase)),
+          _threshold(threshold){};
 
     /**
      * @return the name of the actor running the operation.
@@ -210,8 +222,14 @@ public:
     }
 
 private:
+    /*
+     * Actor count and phase number will be used in Poplar metrics. Right now they
+     * are unused.
+     */
     const std::string _actorName;
+    const RegistryT<ClockSource>& _registry;
     const std::string _opName;
+    OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
     EventSeries _events;
 };
