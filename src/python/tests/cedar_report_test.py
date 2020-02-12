@@ -19,13 +19,13 @@ _FIXED_DATETIME = datetime.datetime(year=2000, month=1, day=1).isoformat()
 
 
 class CedarReportTest(unittest.TestCase):
+
     @patch('gennylib.cedar_report.ShellCuratorRunner.run')
     def test_cedar_report(self, mock_uploader_run):
         """
         This test documents the environment variables needed to run cedar_report.py and checks that
         the environment variables are correctly used.
         """
-
         class MatchAnyString(object):
             def __eq__(self, other):
                 return type(other) == str
@@ -39,9 +39,12 @@ class CedarReportTest(unittest.TestCase):
             'task_id': 'my_task_id',
             'execution': '1',
             'is_patch': 'true',  # This should get converted to mainline = False in the report.
+
             'test_name': 'my_test_name',
+
             'perf_jira_user': 'my_username',
             'perf_jira_pw': 'my_password',
+
             'terraform_key': 'my_aws_key',
             'terraform_secret': 'my_aws_secret'
         }
@@ -49,26 +52,17 @@ class CedarReportTest(unittest.TestCase):
         expected_uploader_run_args = [
             'curator', 'poplar', 'send', '--service', 'cedar.mongodb.com:7070', '--cert',
             'cedar.user.crt', '--key', 'cedar.user.key', '--ca', 'cedar.ca.pem', '--path',
-            'cedar_report.json'
-        ]
+            'cedar_report.json']
 
         expected_json = {
-            'project':
-                'my_project',
-            'version':
-                'my_version',
-            'order':
-                1,
-            'variant':
-                'my_variant',
-            'task_name':
-                'my_task_name',
-            'task_id':
-                'my_task_id',
-            'execution_number':
-                1,
-            'mainline':
-                False,
+            'project': 'my_project',
+            'version': 'my_version',
+            'order': 1,
+            'variant': 'my_variant',
+            'task_name': 'my_task_name',
+            'task_id': 'my_task_id',
+            'execution_number': 1,
+            'mainline': False,
             'tests': [{
                 'info': {
                     'test_name': 'my_task_name',
@@ -76,13 +70,10 @@ class CedarReportTest(unittest.TestCase):
                     'tags': [],
                     'args': {}
                 },
-                'created_at':
-                    _FIXED_DATETIME,
-                'completed_at':
-                    _FIXED_DATETIME,
+                'created_at': _FIXED_DATETIME,
+                'completed_at': _FIXED_DATETIME,
                 'artifacts': [],
-                'metrics':
-                    None,
+                'metrics': None,
                 'sub_tests': [{
                     'info': {
                         'test_name': 'HelloWorld-Greetings',
@@ -90,10 +81,8 @@ class CedarReportTest(unittest.TestCase):
                         'tags': [],
                         'args': {}
                     },
-                    'created_at':
-                        MatchAnyString(),
-                    'completed_at':
-                        MatchAnyString(),
+                    'created_at': MatchAnyString(),
+                    'completed_at': MatchAnyString(),
                     'artifacts': [{
                         'bucket': 'genny-metrics',
                         'path': 'HelloWorld-Greetings',
@@ -104,63 +93,51 @@ class CedarReportTest(unittest.TestCase):
                         'permissions': 'public-read',
                         'prefix': 'my_task_id_1'
                     }],
-                    'metrics':
-                        None,
-                    'sub_tests':
-                        None
-                },
-                              {
-                                  'info': {
-                                      'test_name': 'InsertRemove-Insert',
-                                      'trial': 0,
-                                      'tags': [],
-                                      'args': {}
-                                  },
-                                  'created_at':
-                                      MatchAnyString(),
-                                  'completed_at':
-                                      MatchAnyString(),
-                                  'artifacts': [{
-                                      'bucket': 'genny-metrics',
-                                      'path': 'InsertRemove-Insert',
-                                      'tags': [],
-                                      'local_path': MatchAnyString(),
-                                      'created_at': MatchAnyString(),
-                                      'convert_bson_to_ftdc': True,
-                                      'permissions': 'public-read',
-                                      'prefix': 'my_task_id_1'
-                                  }],
-                                  'metrics':
-                                      None,
-                                  'sub_tests':
-                                      None
-                              },
-                              {
-                                  'info': {
-                                      'test_name': 'InsertRemove-Remove',
-                                      'trial': 0,
-                                      'tags': [],
-                                      'args': {}
-                                  },
-                                  'created_at':
-                                      MatchAnyString(),
-                                  'completed_at':
-                                      MatchAnyString(),
-                                  'artifacts': [{
-                                      'bucket': 'genny-metrics',
-                                      'path': 'InsertRemove-Remove',
-                                      'tags': [],
-                                      'local_path': MatchAnyString(),
-                                      'created_at': MatchAnyString(),
-                                      'convert_bson_to_ftdc': True,
-                                      'permissions': 'public-read',
-                                      'prefix': 'my_task_id_1'
-                                  }],
-                                  'metrics':
-                                      None,
-                                  'sub_tests':
-                                      None
-                              }]
+                    'metrics': None,
+                    'sub_tests': None
+                }, {
+                    'info': {
+                        'test_name': 'InsertRemove-Insert',
+                        'trial': 0,
+                        'tags': [],
+                        'args': {}
+                    },
+                    'created_at': MatchAnyString(),
+                    'completed_at': MatchAnyString(),
+                    'artifacts': [{
+                        'bucket': 'genny-metrics',
+                        'path': 'InsertRemove-Insert',
+                        'tags': [],
+                        'local_path': MatchAnyString(),
+                        'created_at': MatchAnyString(),
+                        'convert_bson_to_ftdc': True,
+                        'permissions': 'public-read',
+                        'prefix': 'my_task_id_1'
+                    }],
+                    'metrics': None,
+                    'sub_tests': None
+                }, {
+                    'info': {
+                        'test_name': 'InsertRemove-Remove',
+                        'trial': 0,
+                        'tags': [],
+                        'args': {}
+                    },
+                    'created_at': MatchAnyString(),
+                    'completed_at': MatchAnyString(),
+                    'artifacts': [{
+                        'bucket': 'genny-metrics',
+                        'path': 'InsertRemove-Remove',
+                        'tags': [],
+                        'local_path': MatchAnyString(),
+                        'created_at': MatchAnyString(),
+                        'convert_bson_to_ftdc': True,
+                        'permissions': 'public-read',
+                        'prefix': 'my_task_id_1'
+                    }],
+                    'metrics': None,
+                    'sub_tests': None
+                }]
             }],
             'bucket': {
                 'api_key': 'my_aws_key',
@@ -197,3 +174,4 @@ class CedarReportTest(unittest.TestCase):
             main__cedar_report(argv, mock_env, _NoopCertRetriever)
 
         mock_uploader_run.assert_not_called()
+

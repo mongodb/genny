@@ -14,6 +14,7 @@ from tests.fixtures.auto_tasks_fixtures import workload_should_autorun_cases
 
 
 class AutoTasksTest(unittest.TestCase):
+
     @patch('gennylib.genny_auto_tasks.open', new_callable=mock_open, read_data='')
     @patch('glob.glob')
     def test_construct_all_tasks_json(self, mock_glob, mock_open):
@@ -23,73 +24,61 @@ class AutoTasksTest(unittest.TestCase):
         the generated json is what evergreen will expect to generate the correct tasks.
         """
 
-        mock_glob.return_value = [
-            "genny/src/workloads/scale/NewWorkload.yml",
-            "genny/src/workloads/subdir1/subdir2/subdir3/NestedTest.yml",
-            "/the/full/path/to/genny/src/workloads/execution/ExecutionTask.yml"
-        ]
+        mock_glob.return_value = ["genny/src/workloads/scale/NewWorkload.yml",
+                                  "genny/src/workloads/subdir1/subdir2/subdir3/NestedTest.yml",
+                                  "/the/full/path/to/genny/src/workloads/execution/ExecutionTask.yml"]
         expected_json = {
             'tasks': [
                 {
-                    'name':
-                        'new_workload',
-                    'commands': [{
-                        'func': 'prepare environment',
-                        'vars': {
-                            'test': 'new_workload',
-                            'auto_workload_path': 'scale/NewWorkload.yml'
-                        }
-                    }, {
-                        'func': 'deploy cluster'
-                    }, {
-                        'func': 'run test'
-                    }, {
-                        'func': 'analyze'
-                    }],
-                    'priority':
-                        5
+                    'name': 'new_workload',
+                    'commands': [
+                        {
+                            'func': 'prepare environment',
+                            'vars': {
+                                'test': 'new_workload',
+                                'auto_workload_path': 'scale/NewWorkload.yml'
+                            }
+                        },
+                        {'func': 'deploy cluster'},
+                        {'func': 'run test'},
+                        {'func': 'analyze'}
+                    ],
+                    'priority': 5
                 },
                 {
-                    'name':
-                        'nested_test',
-                    'commands': [{
-                        'func': 'prepare environment',
-                        'vars': {
-                            'test': 'nested_test',
-                            'auto_workload_path': 'subdir1/subdir2/subdir3/NestedTest.yml'
-                        }
-                    }, {
-                        'func': 'deploy cluster'
-                    }, {
-                        'func': 'run test'
-                    }, {
-                        'func': 'analyze'
-                    }],
-                    'priority':
-                        5
+                    'name': 'nested_test',
+                    'commands': [
+                        {
+                            'func': 'prepare environment',
+                            'vars': {
+                                'test': 'nested_test',
+                                'auto_workload_path': 'subdir1/subdir2/subdir3/NestedTest.yml'
+                            }
+                        },
+                        {'func': 'deploy cluster'},
+                        {'func': 'run test'},
+                        {'func': 'analyze'}
+                    ],
+                    'priority': 5
                 },
                 {
-                    'name':
-                        'execution_task',
-                    'commands': [{
-                        'func': 'prepare environment',
-                        'vars': {
-                            'test': 'execution_task',
-                            'auto_workload_path': 'execution/ExecutionTask.yml'
-                        }
-                    }, {
-                        'func': 'deploy cluster'
-                    }, {
-                        'func': 'run test'
-                    }, {
-                        'func': 'analyze'
-                    }],
-                    'priority':
-                        5
+                    'name': 'execution_task',
+                    'commands': [
+                        {
+                            'func': 'prepare environment',
+                            'vars': {
+                                'test': 'execution_task',
+                                'auto_workload_path': 'execution/ExecutionTask.yml'
+                            }
+                        },
+                        {'func': 'deploy cluster'},
+                        {'func': 'run test'},
+                        {'func': 'analyze'}
+                    ],
+                    'priority': 5
                 },
             ],
-            'timeout':
-                64800,
+            'timeout': 64800,
         }
 
         actual_json_str = construct_all_tasks_json()
@@ -116,48 +105,43 @@ class AutoTasksTest(unittest.TestCase):
         expected_json = {
             'tasks': [
                 {
-                    'name':
-                        'multiple_setups_first',
-                    'commands': [{
-                        'func': 'prepare environment',
-                        'vars': {
-                            'test': 'multiple_setups_first',
-                            'auto_workload_path': 'scale/MultipleSetups.yml',
-                            'setup': 'first'
-                        }
-                    }, {
-                        'func': 'deploy cluster'
-                    }, {
-                        'func': 'run test'
-                    }, {
-                        'func': 'analyze'
-                    }],
-                    'priority':
-                        5
+                    'name': 'multiple_setups_first',
+                    'commands': [
+                        {
+                            'func': 'prepare environment',
+                            'vars': {
+                                'test': 'multiple_setups_first',
+                                'auto_workload_path': 'scale/MultipleSetups.yml',
+                                'setup': 'first'
+                            }
+                        },
+                        {'func': 'deploy cluster'},
+                        {'func': 'run test'},
+                        {'func': 'analyze'}
+                    ],
+                    'priority': 5
                 },
                 {
-                    'name':
-                        'multiple_setups_second',
-                    'commands': [{
-                        'func': 'prepare environment',
-                        'vars': {
-                            'test': 'multiple_setups_second',
-                            'auto_workload_path': 'scale/MultipleSetups.yml',
-                            'setup': 'second'
-                        }
-                    }, {
-                        'func': 'deploy cluster'
-                    }, {
-                        'func': 'run test'
-                    }, {
-                        'func': 'analyze'
-                    }],
-                    'priority':
-                        5
+                    'name': 'multiple_setups_second',
+                    'commands': [
+                        {
+                            'func': 'prepare environment',
+                            'vars': {
+                                'test': 'multiple_setups_second',
+                                'auto_workload_path': 'scale/MultipleSetups.yml',
+                                'setup': 'second'
+                            }
+                        },
+                        {'func': 'deploy cluster'},
+                        {'func': 'run test'},
+                        {'func': 'analyze'}
+                    ],
+                    'priority': 5
                 },
+
+
             ],
-            'timeout':
-                64800,
+            'timeout': 64800,
         }
 
         actual_json_str = construct_all_tasks_json()
@@ -175,27 +159,27 @@ class AutoTasksTest(unittest.TestCase):
         the generated json is what evergreen will expect to generate the correct variants.
         """
 
-        mock_modified_workload_files.return_value = [
-            "scale/NewWorkload.yml", "subdir1/subdir2/subdir3/NestedTest.yml", "non-yaml-file.md"
-        ]
+        mock_modified_workload_files.return_value = ["scale/NewWorkload.yml", "subdir1/subdir2/subdir3/NestedTest.yml",
+                                                     "non-yaml-file.md"]
         static_variants = ['variant-1', 'variant-2']
 
         expected_json = {
-            'buildvariants': [{
-                'name': 'variant-1',
-                'tasks': [{
-                    'name': 'new_workload'
-                }, {
-                    'name': 'nested_test'
-                }]
-            }, {
-                'name': 'variant-2',
-                'tasks': [{
-                    'name': 'new_workload'
-                }, {
-                    'name': 'nested_test'
-                }]
-            }]
+            'buildvariants': [
+                {
+                    'name': 'variant-1',
+                    'tasks': [
+                        {'name': 'new_workload'},
+                        {'name': 'nested_test'}
+                    ]
+                },
+                {
+                    'name': 'variant-2',
+                    'tasks': [
+                        {'name': 'new_workload'},
+                        {'name': 'nested_test'}
+                    ]
+                }
+            ]
         }
 
         workloads = mock_modified_workload_files()
@@ -208,8 +192,7 @@ class AutoTasksTest(unittest.TestCase):
     @patch('glob.glob')
     @patch('yaml.safe_load')
     @patch('gennylib.genny_auto_tasks.modified_workload_files')
-    def test_construct_variant_json_multiple_setups(self, mock_glob, mock_safe_load,
-                                                    mock_modified_workload_files, mock_open):
+    def test_construct_variant_json_multiple_setups(self, mock_glob, mock_safe_load, mock_modified_workload_files, mock_open):
         """
         This test runs construct_variant_json with static workloads and variants
         and checks that
@@ -227,29 +210,22 @@ class AutoTasksTest(unittest.TestCase):
         }
 
         expected_json = {
-            'buildvariants': [{
-                'name': 'variant-1',
-                'tasks': [
-                    {
-                        'name': 'multiple_setups_first'
-                    },
-                    {
-                        'name': 'multiple_setups_second'
-                    },
-                ]
-            },
-                              {
-                                  'name':
-                                      'variant-2',
-                                  'tasks': [
-                                      {
-                                          'name': 'multiple_setups_first'
-                                      },
-                                      {
-                                          'name': 'multiple_setups_second'
-                                      },
-                                  ]
-                              }]
+            'buildvariants': [
+                {
+                    'name': 'variant-1',
+                    'tasks': [
+                        {'name': 'multiple_setups_first'},
+                        {'name': 'multiple_setups_second'},
+                    ]
+                },
+                {
+                    'name': 'variant-2',
+                    'tasks': [
+                        {'name': 'multiple_setups_first'},
+                        {'name': 'multiple_setups_second'},
+                    ]
+                }
+            ]
         }
 
         workloads = mock_modified_workload_files()
@@ -268,12 +244,20 @@ class AutoTasksTest(unittest.TestCase):
 
         # Cases that should be executed successfully.
         cases = [
-            (b'../workloads/sub/abc.yml\n', ['sub/abc.yml']),
-            (b'../workloads/sub1/foo.yml\n\
+            (
+                b'../workloads/sub/abc.yml\n',
+                ['sub/abc.yml']
+            ),
+            (
+                b'../workloads/sub1/foo.yml\n\
                 ../workloads/sub2/bar.yml\n\
                 ../workloads/a/very/very/nested/file.yml\n',
-             ['sub1/foo.yml', 'sub2/bar.yml', 'a/very/very/nested/file.yml']),
-            (b'', []),
+                ['sub1/foo.yml', 'sub2/bar.yml', 'a/very/very/nested/file.yml']
+            ),
+            (
+                b'',
+                []
+            ),
         ]
 
         for tc in cases:
@@ -289,11 +273,26 @@ class AutoTasksTest(unittest.TestCase):
 
     def test_validate_user_workloads(self):
         cases = [
-            (['scale/BigUpdate.yml'], []),
-            (['scale/InsertBigDocs.yml', 'selftests/GennyOverhead.yml'], []),
-            (['networking/NonExistent.yml'], ['no file']),
-            (['scale/BigUpdate.yml', 'docs'], ['no file']),
-            (['CMakeLists.txt'], ['not a .yml']),
+            (
+                ['scale/BigUpdate.yml'],
+                []
+            ),
+            (
+                ['scale/InsertBigDocs.yml', 'selftests/GennyOverhead.yml'],
+                []
+            ),
+            (
+                ['networking/NonExistent.yml'],
+                ['no file']
+            ),
+            (
+                ['scale/BigUpdate.yml', 'docs'],
+                ['no file']
+            ),
+            (
+                ['CMakeLists.txt'],
+                ['not a .yml']
+            ),
         ]
 
         for tc in cases:
