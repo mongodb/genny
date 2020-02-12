@@ -25,7 +25,7 @@ from os.path import join as pjoin
 from bson import BSON
 from bson.int64 import Int64
 
-from genny.parsers.csv2 import CSV2, IntermediateCSVColumns
+from gennylib.parsers.csv2 import CSV2, IntermediateCSVColumns
 from third_party.csvsort import csvsort
 
 """
