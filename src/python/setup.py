@@ -17,8 +17,8 @@ from setuptools import setup
 setup(name='genny',
       version='1.0',
       packages=[
-          'genny',
-          'genny.parsers',
+          'gennylib',
+          'gennylib.parsers',
           'third_party'
       ],
       install_requires=[
@@ -35,10 +35,11 @@ setup(name='genny',
       ],
       entry_points={
           'console_scripts': [
-              'genny-metrics-report = genny.cedar_report:main__cedar_report',
-              'genny-metrics-legacy-report = genny.legacy_report:main__legacy_report',
-              'lint-yaml = genny.yaml_linter:main',
-              'genny-auto-tasks = genny.genny_auto_tasks:main'
+              'genny-metrics-report = gennylib.cedar_report:main__cedar_report',
+              'genny-metrics-legacy-report = gennylib.legacy_report:main__legacy_report',
+              'lint-yaml = gennylib.yaml_linter:main',
+              'genny = gennylib.genny_runner:main_genny_runner',
+              'genny-auto-tasks = gennylib.genny_auto_tasks:main'
           ]
       },
       )

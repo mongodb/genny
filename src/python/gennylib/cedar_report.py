@@ -10,7 +10,7 @@ from collections import namedtuple
 
 import requests
 
-from genny.parsers import cedar
+from gennylib.parsers import cedar
 
 CedarBucketConfig = namedtuple('CedarBucketConfig', [
     'api_key',
