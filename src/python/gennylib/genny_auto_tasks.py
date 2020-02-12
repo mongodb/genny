@@ -46,7 +46,8 @@ class AutoRunSpec():
                     break
 
         prepare_environment_with = None
-        if 'PrepareEnvironmentWith' in autorun and isinstance(autorun['PrepareEnvironmentWith'], dict):
+        if 'PrepareEnvironmentWith' in autorun and isinstance(autorun['PrepareEnvironmentWith'],
+                                                              dict):
             prepare_environment_with = autorun['PrepareEnvironmentWith']
 
         return AutoRunSpec(required_dict, prepare_environment_with)
@@ -71,6 +72,7 @@ class AutoRunSpec():
             curr.update(self.prepare_environment_with)
             prepare_environment_vars.append(curr)
         return prepare_environment_vars
+
 
 def to_snake_case(str):
     """
@@ -116,7 +118,8 @@ def modified_workload_files():
     try:
         # Returns the names of files in src/workloads/ that have been added/modified/renamed since the common ancestor of HEAD and origin/master
         out = subprocess.check_output(
-            'git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- src/workloads/', shell=True)
+            'git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- src/workloads/',
+            shell=True)
     except subprocess.CalledProcessError as e:
         print(e.output, file=sys.stderr)
         raise e
@@ -229,10 +232,7 @@ def get_prepare_environment_vars(task_name, fname):
     :return: A list of environment var dictionaries, one for each mongodb_setup used.
     """
     autorun_spec = None
-    prepare_environment_vars_template = {
-        'test': task_name,
-        'auto_workload_path': fname
-    }
+    prepare_environment_vars_template = {'test': task_name, 'auto_workload_path': fname}
 
     full_filename = '{}/src/workloads/{}'.format(get_project_root(), fname)
     with open(full_filename, 'r') as handle:
@@ -241,11 +241,13 @@ def get_prepare_environment_vars(task_name, fname):
 
     prepare_environment_vars = []
     if autorun_spec is not None and autorun_spec.prepare_environment_with is not None:
-        prepare_environment_vars = autorun_spec.get_prepare_environment_vars(prepare_environment_vars_template)
+        prepare_environment_vars = autorun_spec.get_prepare_environment_vars(
+            prepare_environment_vars_template)
     else:
         prepare_environment_vars.append(prepare_environment_vars_template)
 
     return prepare_environment_vars
+
 
 def construct_all_tasks_json():
     """
@@ -266,9 +268,9 @@ def construct_all_tasks_json():
             continue
 
         task_name = to_snake_case(base_parts[0])
-        
+
         prepare_environment_vars = get_prepare_environment_vars(task_name, fname)
-        
+
         for prep_var in prepare_environment_vars:
             t = c.task(prep_var['test'])
             t.priority(5)  # The default priority in system_perf.yml
@@ -301,7 +303,7 @@ def construct_variant_json(workloads, variants):
 
         task_name = to_snake_case(base_parts[0])
 
-        prepare_environment_vars = get_prepare_environment_vars(task_name, fname) 
+        prepare_environment_vars = get_prepare_environment_vars(task_name, fname)
         for prep_var in prepare_environment_vars:
             task_specs.append(TaskSpec(prep_var['test']))
 
@@ -319,22 +321,44 @@ def main():
     These two invocations are separate to ensure that no task will be generated more than once (which would cause generate.tasks to throw an error, even across different buildvariants).
     """
     parser = argparse.ArgumentParser(
-        description="Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run")
+        description=
+        "Generates json that can be used as input to evergreen's generate.tasks, representing genny workloads to be run"
+    )
 
     op_group = parser.add_mutually_exclusive_group(required=True)
-    op_group.add_argument('--variants', nargs='+', help='buildvariants that workloads should run on')
-    op_group.add_argument('--generate-all-tasks', action='store_true',
-                          help='generates JSON task definitions for all genny workloads, does not attach them to any buildvariants')
+    op_group.add_argument(
+        '--variants', nargs='+', help='buildvariants that workloads should run on')
+    op_group.add_argument(
+        '--generate-all-tasks',
+        action='store_true',
+        help=
+        'generates JSON task definitions for all genny workloads, does not attach them to any buildvariants'
+    )
 
     workload_group = parser.add_mutually_exclusive_group()
-    workload_group.add_argument('--autorun', action='store_true', default=False,
-                                help='if set, the script will generate tasks based on workloads\' AutoRun section and bootstrap.yml/runtime.yml files in the working directory')
-    workload_group.add_argument('--modified', action='store_true', default=False,
-                                help='if set, the script will generate tasks for workloads that have been added/modifed locally, relative to origin/master')
-    parser.add_argument('--forced-workloads', nargs='+',
-                        help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
-    parser.add_argument('-o', '--output', default='build/generated_tasks.json',
-                        help='path of file to output result json to, relative to the genny root directory')
+    workload_group.add_argument(
+        '--autorun',
+        action='store_true',
+        default=False,
+        help=
+        'if set, the script will generate tasks based on workloads\' AutoRun section and bootstrap.yml/runtime.yml files in the working directory'
+    )
+    workload_group.add_argument(
+        '--modified',
+        action='store_true',
+        default=False,
+        help=
+        'if set, the script will generate tasks for workloads that have been added/modifed locally, relative to origin/master'
+    )
+    parser.add_argument(
+        '--forced-workloads',
+        nargs='+',
+        help='paths of workloads to run, relative to src/workloads/ in the genny repository root')
+    parser.add_argument(
+        '-o',
+        '--output',
+        default='build/generated_tasks.json',
+        help='path of file to output result json to, relative to the genny root directory')
 
     args = parser.parse_args(sys.argv[1:])
     if args.generate_all_tasks and (args.autorun or args.modified):

@@ -11,8 +11,9 @@ from gennylib.parsers.csv2 import CSV2, IntermediateCSVColumns
 
 def build_parser():
     parser = argparse.ArgumentParser(description='Convert cedar-csv output into legacy perf.json'
-                                                 'report file format')
-    parser.add_argument('--report-file', default='perf.json', help='path to the perf.json report file')
+                                     'report file format')
+    parser.add_argument(
+        '--report-file', default='perf.json', help='path to the perf.json report file')
     parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 perf data')
 
     return parser

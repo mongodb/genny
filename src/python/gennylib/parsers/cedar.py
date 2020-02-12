@@ -27,7 +27,6 @@ from bson.int64 import Int64
 
 from gennylib.parsers.csv2 import CSV2, IntermediateCSVColumns
 from third_party.csvsort import csvsort
-
 """
 Convert raw genny csv output to a format expected by Cedar
 (a.k.a. MongoDB Evergreen Expanded Metrics)
@@ -123,23 +122,20 @@ class IntermediateCSVReader:
         ts = datetime.utcfromtimestamp(line[IntermediateCSVColumns.UNIX_TIME] / 1000)
         op = line[IntermediateCSVColumns.OPERATION]
 
-        res = OrderedDict([
-            ('ts', ts),
-            ('id', Int64(line[IntermediateCSVColumns.THREAD])),
-            ('counters', OrderedDict([
-                ('n', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.N])),
-                ('ops', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.OPS])),
-                ('size', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.SIZE])),
-                ('errors', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.ERRORS]))
-            ])),
-            ('timers', OrderedDict([
-                ('duration', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.DURATION])),
-                ('total', Int64(self.total_for_op[op]))
-            ])),
-            ('gauges', OrderedDict([
-                ('workers', Int64(line[IntermediateCSVColumns.WORKERS]))
-            ]))
-        ])
+        res = OrderedDict(
+            [('ts', ts), ('id', Int64(line[IntermediateCSVColumns.THREAD])),
+             ('counters',
+              OrderedDict([('n', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.N])),
+                           ('ops', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.OPS])),
+                           ('size',
+                            Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.SIZE])),
+                           ('errors',
+                            Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.ERRORS]))])),
+             ('timers',
+              OrderedDict([('duration',
+                            Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.DURATION])),
+                           ('total', Int64(self.total_for_op[op]))])),
+             ('gauges', OrderedDict([('workers', Int64(line[IntermediateCSVColumns.WORKERS]))]))])
 
         return res, op
 
@@ -215,20 +211,19 @@ def split_into_actor_csv_files(data_reader, out_dir):
 
 def sort_csv_file(file_name, out_dir):
     # Sort on Timestamp and Thread.
-    csvsort(pjoin(out_dir, file_name),
-            [IntermediateCSVColumns.TS, IntermediateCSVColumns.THREAD],
-            quoting=csv.QUOTE_NONNUMERIC,
-            has_header=True,
-            show_progress=True)
+    csvsort(
+        pjoin(out_dir, file_name), [IntermediateCSVColumns.TS, IntermediateCSVColumns.THREAD],
+        quoting=csv.QUOTE_NONNUMERIC,
+        has_header=True,
+        show_progress=True)
 
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description='Convert Genny csv2 perf data to Cedar BSON format',
-    )
+        description='Convert Genny csv2 perf data to Cedar BSON format', )
     parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 perf data')
-    parser.add_argument('output_dir', metavar='output-dir',
-                        help='directory to store output BSON files')
+    parser.add_argument(
+        'output_dir', metavar='output-dir', help='directory to store output BSON files')
     return parser
 
 
