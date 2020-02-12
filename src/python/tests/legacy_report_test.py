@@ -3,7 +3,7 @@ import os
 import tempfile
 import unittest
 
-from genny.legacy_report import main__legacy_report
+from gennylib.legacy_report import main__legacy_report
 
 
 class LegacyReportTest(unittest.TestCase):
