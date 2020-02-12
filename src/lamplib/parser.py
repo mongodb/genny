@@ -14,7 +14,8 @@ def parse_args(args, os_family):
     # Python can't natively check the distros of our supported platforms.
     # See https://bugs.python.org/issue18872 for more info.
     parser.add_argument('-d', '--linux-distro',
-                        choices=['ubuntu1804', 'archlinux', 'rhel70', 'rhel62', 'amazon2', 'not-linux'],
+                        choices=['ubuntu1804', 'archlinux', 'rhel80', 'rhel70', 'rhel62',
+                                 'amazon2', 'not-linux'],
                         help='specify the linux distro you\'re on; if your system isn\'t available,'
                              ' please contact us at #workload-generation')
     parser.add_argument('-v', '--verbose', action='store_true')
