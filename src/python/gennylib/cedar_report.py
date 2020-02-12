@@ -235,10 +235,9 @@ class ShellCuratorRunner(object):
         self.retriever = retriever
         self.report_file = report_file
 
-    def get_command(self):
+    def get_send_command(self):
         """
-        Do your magic.
-        :return: output from host.run_command(the-generated-command)
+        Gets command for calling poplar send.
         """
 
         command = [
@@ -257,6 +256,19 @@ class ShellCuratorRunner(object):
             self.report_file,
         ]
         return command
+
+    def get_grpc_command(self):
+        """
+        Gets command for activating poplar grpc.
+        """
+
+        command = [
+            'curator',
+            'poplar',
+            'grpc',
+        ]
+        return command
+
 
     @staticmethod
     def run(cmd):
@@ -326,7 +338,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
 
     cr = cert_retriever_cls(jira_user, jira_pwd)
     runner = ShellCuratorRunner(cr, args.report_file)
-    runner.run(runner.get_command())
+    runner.run(runner.get_send_command())
 
 
 if __name__ == '__main__':
