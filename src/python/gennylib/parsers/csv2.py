@@ -215,7 +215,10 @@ class CSV2:
 
         line = next(reader)
 
-        times = {'SystemTime': None, 'MetricsTime': None}
+        times = {
+            'SystemTime': None,
+            'MetricsTime': None
+        }
 
         while line:
             times[line[_ClockColumns.CLOCK]] = int(line[_ClockColumns.NANOSECONDS])
@@ -269,7 +272,5 @@ class IntermediateCSVColumns(CSVColumns):
         Ordered list of default columns to write to the CSV, must match the column names in
         the class attributes.
         """
-        return [
-            'unix_time', 'ts', 'thread', 'operation', 'duration', 'outcome', 'n', 'ops', 'errors',
-            'size', 'workers'
-        ]
+        return ['unix_time', 'ts', 'thread', 'operation', 'duration', 'outcome', 'n',
+                'ops', 'errors', 'size', 'workers']

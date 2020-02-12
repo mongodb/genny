@@ -19,7 +19,9 @@ def main():
         path.join(os.getcwd(), 'src', 'resmokeconfig')
     ]
 
-    yaml_files = [path.join(os.getcwd(), 'evergreen.yml')]
+    yaml_files = [
+        path.join(os.getcwd(), 'evergreen.yml')
+    ]
 
     has_error = False
 
@@ -27,8 +29,7 @@ def main():
         for dirpath, dirnames, filenames in os.walk(yaml_dir):
             for filename in filenames:
                 if filename.endswith('.yaml'):
-                    logging.error('All YAML files should have the .yml extension, found %s',
-                                  filename)
+                    logging.error('All YAML files should have the .yml extension, found %s', filename)
                     # Don't error immediately so all violations can be printed with one run
                     # of this script.
                     has_error = True
@@ -39,17 +40,15 @@ def main():
         sys.exit(1)
 
     if len(yaml_files) == 0:
-        logging.error('Did not find any YAML files to lint in the directories: %s',
-                      ' '.join(yaml_dirs))
+        logging.error('Did not find any YAML files to lint in the directories: %s', ' '.join(yaml_dirs))
         sys.exit(1)
 
     config_file_path = path.join(os.getcwd(), '.yamllint')
 
     yamllint_argv = sys.argv[1:] + [
-        '--strict',
-        '--config-file',
-        config_file_path,
-    ] + yaml_files
+                        '--strict',
+                        '--config-file', config_file_path,
+                    ] + yaml_files
 
     print('Linting {} Genny workload YAML files with yamllint'.format(len(yaml_files)))
 
