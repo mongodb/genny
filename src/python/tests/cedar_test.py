@@ -30,9 +30,8 @@ def get_fixture(*csv_file_path):
 
 
 class CedarTest(unittest.TestCase):
-
     def test_split_csv2(self):
-        large_precise_float = 10 ** 15
+        large_precise_float = 10**15
         num_cols = len(gennylib.parsers.csv2.IntermediateCSVColumns.default_columns())
         mock_data_reader = [
             (['first' for _ in range(num_cols)], 'a1'),
@@ -41,7 +40,6 @@ class CedarTest(unittest.TestCase):
             # numbers to floats by default, which has 2^53 or 10^15 precision. Unix time in
             # milliseconds is currently 10^13.
             ([large_precise_float for _ in range(num_cols)], 'a2')
-
         ]
         with tempfile.TemporaryDirectory() as output_dir:
             output_files = cedar.split_into_actor_csv_files(mock_data_reader, output_dir)
@@ -84,147 +82,75 @@ class CedarIntegrationTest(unittest.TestCase):
                     index += 1
 
     def test_cedar_main(self):
-        expected_result_insert = OrderedDict([
-            ('ts', datetime(1970, 1, 1, 2, 46, 40)),
-            ('id', 0),
-            ('counters', OrderedDict([
-                ('n', 9),
-                ('ops', 58),
-                ('size', 350),
-                ('errors', 23)
-            ])),
-            ('timers', OrderedDict([
-                ('duration', 1320),
-                ('total', 1518)
-            ])),
-            ('gauges', OrderedDict([('workers', 5)]))
-        ])
+        expected_result_insert = OrderedDict([('ts', datetime(1970, 1, 1, 2, 46, 40)), ('id', 0),
+                                              ('counters',
+                                               OrderedDict([('n', 9), ('ops', 58), ('size', 350),
+                                                            ('errors', 23)])),
+                                              ('timers',
+                                               OrderedDict([('duration', 1320), ('total', 1518)])),
+                                              ('gauges', OrderedDict([('workers', 5)]))])
 
-        expected_result_remove = OrderedDict([
-            ('ts', datetime(1970, 1, 1, 2, 46, 40)),
-            ('id', 0),
-            ('counters', OrderedDict([
-                ('n', 9),
-                ('ops', 58),
-                ('size', 257),
-                ('errors', 25)
-            ])),
-            ('timers', OrderedDict([
-                ('duration', 1392),
-                ('total', 1598)
-            ])),
-            ('gauges', OrderedDict([('workers', 5)]))
-        ])
+        expected_result_remove = OrderedDict([('ts', datetime(1970, 1, 1, 2, 46, 40)), ('id', 0),
+                                              ('counters',
+                                               OrderedDict([('n', 9), ('ops', 58), ('size', 257),
+                                                            ('errors', 25)])),
+                                              ('timers',
+                                               OrderedDict([('duration', 1392), ('total', 1598)])),
+                                              ('gauges', OrderedDict([('workers', 5)]))])
 
         with tempfile.TemporaryDirectory() as output_dir:
-            args = [
-                get_fixture('cedar', 'two_op.csv'),
-                output_dir
-            ]
+            args = [get_fixture('cedar', 'two_op.csv'), output_dir]
 
             cedar.main__cedar(args)
 
             self.verify_output(
                 pjoin(output_dir, 'InsertRemove-Insert.bson'),
                 expected_result_insert,
-                check_last_row_only=True
-            )
+                check_last_row_only=True)
 
             self.verify_output(
                 pjoin(output_dir, 'InsertRemove-Remove.bson'),
                 expected_result_remove,
-                check_last_row_only=True
-            )
+                check_last_row_only=True)
 
     def test_cedar_main_2(self):
         expected_result_greetings = OrderedDict([
             # The operation duration can be ignored because they're a few ns.
             ('ts', datetime.utcfromtimestamp(42 / 1000)),
             ('id', 3),
-            ('counters', OrderedDict([
-                ('n', 2),
-                ('ops', 0),
-                ('size', 0),
-                ('errors', 0)
-            ])),
-            ('timers', OrderedDict([
-                ('duration', 13),
-                ('total', 13)
-            ])),
+            ('counters', OrderedDict([('n', 2), ('ops', 0), ('size', 0), ('errors', 0)])),
+            ('timers', OrderedDict([('duration', 13), ('total', 13)])),
             ('gauges', OrderedDict([('workers', 1)]))
         ])
 
         expected_result_insert = [
-            OrderedDict([
-                ('ts', datetime.utcfromtimestamp(42 / 1000)),
-                ('id', 1),
-                ('counters', OrderedDict([
-                    ('n', 1),
-                    ('ops', 9),
-                    ('size', 300),
-                    ('errors', 0)
-                ])),
-                ('timers', OrderedDict([
-                    ('duration', 23),
-                    ('total', 23)
-                ])),
-                ('gauges', OrderedDict([('workers', 2)]))
-            ]),
-            OrderedDict([
-                ('ts', datetime.utcfromtimestamp(42 / 1000)),
-                ('id', 2),
-                ('counters', OrderedDict([
-                    ('n', 2),
-                    ('ops', 17),
-                    ('size', 500),
-                    ('errors', 0)
-                ])),
-                ('timers', OrderedDict([
-                    ('duration', 43),
-                    ('total', 43)
-                ])),
-                ('gauges', OrderedDict([('workers', 2)]))
-            ]),
+            OrderedDict([('ts', datetime.utcfromtimestamp(42 / 1000)), ('id', 1),
+                         ('counters',
+                          OrderedDict([('n', 1), ('ops', 9), ('size', 300), ('errors', 0)])),
+                         ('timers', OrderedDict([('duration', 23), ('total', 23)])),
+                         ('gauges', OrderedDict([('workers', 2)]))]),
+            OrderedDict([('ts', datetime.utcfromtimestamp(42 / 1000)), ('id', 2),
+                         ('counters',
+                          OrderedDict([('n', 2), ('ops', 17), ('size', 500), ('errors', 0)])),
+                         ('timers', OrderedDict([('duration', 43), ('total', 43)])),
+                         ('gauges', OrderedDict([('workers', 2)]))]),
         ]
 
         expected_result_remove = [
-            OrderedDict([
-                ('ts', datetime.utcfromtimestamp(42 / 1000)),
-                ('id', 2),
-                ('counters', OrderedDict([
-                    ('n', 1),
-                    ('ops', 7),
-                    ('size', 30),
-                    ('errors', 0)
-                ])),
-                ('timers', OrderedDict([
-                    ('duration', 10),
-                    ('total', 10)
-                ])),
-                ('gauges', OrderedDict([('workers', 2)]))
-            ]),
-            OrderedDict([
-                ('ts', datetime.utcfromtimestamp(42 / 1000)),
-                ('id', 1),
-                ('counters', OrderedDict([
-                    ('n', 2),
-                    ('ops', 13),
-                    ('size', 70),
-                    ('errors', 0)
-                ])),
-                ('timers', OrderedDict([
-                    ('duration', 27),
-                    ('total', 27)
-                ])),
-                ('gauges', OrderedDict([('workers', 2)]))
-            ]),
+            OrderedDict([('ts', datetime.utcfromtimestamp(42 / 1000)), ('id', 2),
+                         ('counters',
+                          OrderedDict([('n', 1), ('ops', 7), ('size', 30), ('errors', 0)])),
+                         ('timers', OrderedDict([('duration', 10), ('total', 10)])),
+                         ('gauges', OrderedDict([('workers', 2)]))]),
+            OrderedDict([('ts', datetime.utcfromtimestamp(42 / 1000)), ('id', 1),
+                         ('counters',
+                          OrderedDict([('n', 2), ('ops', 13), ('size', 70), ('errors', 0)])),
+                         ('timers', OrderedDict([('duration', 27), ('total', 27)])),
+                         ('gauges', OrderedDict([('workers', 2)]))]),
         ]
 
         with tempfile.TemporaryDirectory() as output_dir:
-            args = [
-                get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'),
-                output_dir
-            ]
+            args = [get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'), output_dir]
 
             cedar.main__cedar(args)
 

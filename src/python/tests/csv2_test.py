@@ -5,7 +5,6 @@ from gennylib.parsers import csv2
 
 
 class CSV2Test(unittest.TestCase):
-
     @staticmethod
     def get_fixture(*file_path):
         return os.path.join('tests', 'fixtures', 'cedar', *file_path)
@@ -13,16 +12,16 @@ class CSV2Test(unittest.TestCase):
     def test_basic_parsing(self):
         test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))
         with test_csv.data_reader() as _:
-            self.assertEqual(test_csv._unix_epoch_offset_ns, 90 * (10 ** 9))
+            self.assertEqual(test_csv._unix_epoch_offset_ns, 90 * (10**9))
             op_map = test_csv._operation_thread_count_map
             self.assertDictEqual(op_map, {('MyActor', 'MyOperation'): 2})
 
     def test_data_reader(self):
         test_csv = csv2.CSV2(self.get_fixture('barebones.csv'))
         with test_csv.data_reader() as dr:
-            self.assertEqual(next(dr),
-                             ([102345.0, 12345000000, 0, 'MyOperation', 100, 0, 1, 6, 2, 40, 2],
-                              'MyActor'))
+            self.assertEqual(
+                next(dr),
+                ([102345.0, 12345000000, 0, 'MyOperation', 100, 0, 1, 6, 2, 40, 2], 'MyActor'))
 
     def test_error_outcome(self):
         test_csv = csv2.CSV2(self.get_fixture('error_outcome.csv'))
