@@ -74,11 +74,11 @@ buildvariants:
   - name: tg_compile
   - name: t_push
 
-- name: rhel80
+- name: rhel8
   display_name: RHEL 8
   modules: ~
   expansions:
-    distro: rhel80
+    distro: rhel8
   run_on:
   - rhel80-test
   tasks:
