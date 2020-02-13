@@ -16,6 +16,9 @@ def get_poplar_args():
     return ['curator', 'poplar', 'grpc']
 
 def main_genny_runner():
+    """
+    Intended to be the main entry point for running Genny.
+    """
 
     poplar = subprocess.Popen(get_poplar_args())
 
@@ -23,7 +26,8 @@ def main_genny_runner():
     res.check_returncode()
 
     poplar.terminate()
-    poplar.wait(timeout=5)
+    if (poplar.wait(timeout=5) != 0):
+        raise OSError("Poplar failed to terminate correctly.")
 
 if __name__ == '__main__':
     main_genny_runner()
