@@ -389,7 +389,7 @@ functions:
       args:
       - ${workdir}/src/scripts/dry-run-workloads.sh
       env:
-        GENNY: ${workdir}/dist/bin/genny
+        GENNY: genny
 
   ##
   # Runs tests via ctest.
