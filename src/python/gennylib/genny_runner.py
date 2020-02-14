@@ -1,5 +1,6 @@
 import sys
 import subprocess
+from contextlib import contextmanager
 
 def get_genny_args():
     """
@@ -15,19 +16,24 @@ def get_poplar_args():
     """
     return ['curator', 'poplar', 'grpc']
 
+@contextmanager
+def poplar_grpc():
+    poplar = subprocess.Popen(get_poplar_args())
+    try:
+        yield poplar
+    finally:
+        poplar.terminate()
+        if (poplar.wait(timeout=5) != 0):
+            raise OSError("Poplar failed to terminate correctly.")
+
 def main_genny_runner():
     """
     Intended to be the main entry point for running Genny.
     """
-
-    poplar = subprocess.Popen(get_poplar_args())
-
-    res = subprocess.run(get_genny_args())
-    res.check_returncode()
-
-    poplar.terminate()
-    if (poplar.wait(timeout=5) != 0):
-        raise OSError("Poplar failed to terminate correctly.")
-
+    
+    with poplar_grpc():
+        res = subprocess.run(get_genny_args())
+        res.check_returncode()
+    
 if __name__ == '__main__':
     main_genny_runner()

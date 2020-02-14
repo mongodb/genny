@@ -40,9 +40,8 @@ def validate_environment():
 def check_venv():
     if not 'VIRTUAL_ENV' in os.environ:
         return False
-    else:
-        logging.info('Found virtualenv: %s', os.environ['VIRTUAL_ENV'])
-        return True
+    logging.info('Found virtualenv: %s', os.environ['VIRTUAL_ENV'])
+    return True
 
 def main():
     validate_environment()
