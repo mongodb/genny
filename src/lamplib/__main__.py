@@ -66,13 +66,13 @@ def main():
     if args.subcommand == 'self-test':
         run_self_test()
 
-    toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro) 
+    toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro)
     if not toolchain_downloader.fetch_and_install():
         sys.exit(1)
     toolchain_dir = toolchain_downloader.result_dir
     compile_env = context.get_compile_environment(toolchain_dir)
 
-    curator_downloader = CuratorDownloader(os_family, args.linux_distro) 
+    curator_downloader = CuratorDownloader(os_family, args.linux_distro)
     if not curator_downloader.fetch_and_install():
         sys.exit(1)
     curator_path = curator_downloader.result_dir

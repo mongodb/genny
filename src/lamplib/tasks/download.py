@@ -33,7 +33,7 @@ class Downloader():
             logging.critical(
                 'Please create the parent directory for %s: '
                 '`sudo mkdir -p %s; sudo chown $USER %s`', self._name, self._install_dir, self._install_dir)
-            return False 
+            return False
 
         if not os.access(self._install_dir, os.W_OK):
             logging.critical(
@@ -104,7 +104,7 @@ class CuratorDownloader(Downloader):
             self._distro = 'macos'
 
         return 'https://s3.amazonaws.com/mciuploads/curator/' \
-               'curator_{distro}_{build}_{date}-{distro}/curator-dist-{build}.tar.gz'.format(distro=self._distro, build=Context.CURATOR_VERSION, date=Context.CURATOR_BUILD_DATE) 
+               'curator_{distro}_{build}_{date}-{distro}/curator-dist-{build}.tar.gz'.format(distro=self._distro, build=Context.CURATOR_VERSION, date=Context.CURATOR_BUILD_DATE)
 
     def _can_ignore(self):
         # If the toolchain dir is outdated or we ignore the toolchain version.
