@@ -11,13 +11,19 @@ from tasks.download import ToolchainDownloader, CuratorDownloader
 from context import Context
 from parser import add_args_to_context
 
+def check_venv(args):
+    if not 'VIRTUAL_ENV' in os.environ and not args.run_global:
+        logging.error('Tried to execute without active virtualenv. If you want to run lamp '
+                      'without a virtualenv, use the --run-global option.')
+        sys.exit(1)
+    elif 'VIRTUAL_ENV' in os.environ:
+        logging.info('Found virtualenv: %s', os.environ['VIRTUAL_ENV'])
 
 def run_self_test():
     res = subprocess.run(['python3', '-m', 'unittest'],
                          cwd=os.path.dirname(os.path.abspath(__file__)))
     res.check_returncode()
     sys.exit(0)
-
 
 def validate_environment():
     # Check Python version
@@ -37,12 +43,6 @@ def validate_environment():
             sys.exit(1)
     return
 
-def check_venv():
-    if not 'VIRTUAL_ENV' in os.environ:
-        return False
-    logging.info('Found virtualenv: %s', os.environ['VIRTUAL_ENV'])
-    return True
-
 def main():
     validate_environment()
 
@@ -53,13 +53,6 @@ def main():
     add_args_to_context(args)
     # Pass around Context instead of using the global one to facilitate testing.
     context = Context
-
-    if not check_venv() and not args.run_global:
-        logging.error('Tried to execute without active virtualenv. If you want to run lamp '
-                      'without a virtualenv, use the --run-global option.')
-
-        sys.exit(1)
-
 
     # Execute the minimum amount of code possible to run self tests to minimize
     # untestable code (i.e. code that runs the self-test).
@@ -79,6 +72,7 @@ def main():
 
 
     if not args.subcommand:
+        check_venv(args)        
         logging.info('No subcommand specified; running cmake, compile and install')
         tasks.cmake(context, toolchain_dir=toolchain_dir,
                     env=compile_env, cmdline_cmake_args=cmake_args)
@@ -88,8 +82,8 @@ def main():
         tasks.clean(context, compile_env)
     else:
         tasks.compile_all(context, compile_env)
-
         if args.subcommand == 'install':
+            check_venv(args)
             tasks.install(context, compile_env)
         elif args.subcommand == 'cmake-test':
             tasks.run_tests.cmake_test(compile_env)

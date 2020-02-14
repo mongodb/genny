@@ -47,8 +47,8 @@ def compile_all(context, env):
     logging.info('Compiling: %s', ' '.join(compile_cmd))
     subprocess.run(compile_cmd, env=env)
 
-
 def install(context, env):
+    
     install_cmd = [context.BUILD_SYSTEM, '-C', 'build', 'install']
     logging.info('Running install: %s', ' '.join(install_cmd))
     subprocess.run(install_cmd, env=env)

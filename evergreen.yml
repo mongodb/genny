@@ -371,7 +371,7 @@ functions:
 
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
 
-        ./scripts/lamp \
+        ./scripts/lamp -g \
           -d=${distro|not-linux} \
           -DENABLE_JASPER:BOOL=ON \
           -DGENNY_INSTALL_DIR:PATH=${workdir}/dist \
