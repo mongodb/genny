@@ -18,6 +18,8 @@ def parse_args(args, os_family):
                         help='specify the linux distro you\'re on; if your system isn\'t available,'
                              ' please contact us at #workload-generation')
     parser.add_argument('-v', '--verbose', action='store_true')
+    parser.add_argument('-g', '--run-global', action='store_true',
+                        help='allow installation outside of a virtualenv')
     parser.add_argument('-i', '--ignore-toolchain-version', action='store_true',
                         help='ignore the toolchain version, useful for testing toolchain changes')
     parser.add_argument('-b', '--build-system',

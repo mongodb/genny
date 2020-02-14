@@ -37,6 +37,12 @@ def validate_environment():
             sys.exit(1)
     return
 
+def check_venv():
+    if not 'VIRTUAL_ENV' in os.environ:
+        return False
+    else:
+        logging.info('Found virtualenv: %s', os.environ['VIRTUAL_ENV'])
+        return True
 
 def main():
     validate_environment()
@@ -48,6 +54,13 @@ def main():
     add_args_to_context(args)
     # Pass around Context instead of using the global one to facilitate testing.
     context = Context
+
+    if not check_venv() and not args.run_global:
+        logging.error('Tried to execute without active virtualenv. If you want to run lamp '
+                      'without a virtualenv, use the --run-global option.')
+
+        sys.exit(1)
+
 
     # Execute the minimum amount of code possible to run self tests to minimize
     # untestable code (i.e. code that runs the self-test).
