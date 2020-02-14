@@ -7,7 +7,7 @@ import sys
 import parser
 import tasks
 import tasks.run_tests
-from tasks.download import ToolchainDownloader
+from tasks.download import ToolchainDownloader, CuratorDownloader
 from context import Context
 from parser import add_args_to_context
 
@@ -54,11 +54,17 @@ def main():
     if args.subcommand == 'self-test':
         run_self_test()
 
-    downloader = ToolchainDownloader(os_family, args.linux_distro) 
-    if not downloader.fetch_and_install():
+    toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro) 
+    if not toolchain_downloader.fetch_and_install():
         sys.exit(1)
-    toolchain_dir = downloader.result_dir
+    toolchain_dir = toolchain_downloader.result_dir
     compile_env = context.get_compile_environment(toolchain_dir)
+
+    curator_downloader = CuratorDownloader(os_family, args.linux_distro) 
+    if not curator_downloader.fetch_and_install():
+        sys.exit(1)
+    curator_path = curator_downloader.result_dir
+
 
     if not args.subcommand:
         logging.info('No subcommand specified; running cmake, compile and install')
