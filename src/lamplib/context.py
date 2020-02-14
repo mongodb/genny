@@ -43,7 +43,7 @@ class Context:
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split('_')[0]
     TOOLCHAIN_ROOT = '/data/mci'  # TODO BUILD-7624 change this to /opt.
 
-    CURATOR_BUILD_ID = '9fee6c2020c3d85bbe8fffa03e1d0e224c9652f5'
+    CURATOR_VERSION = '9fee6c2020c3d85bbe8fffa03e1d0e224c9652f5'
     CURATOR_BUILD_DATE = '20_02_12_21_20_42'
     CURATOR_ROOT = '/data/mci'
 
