@@ -7,9 +7,9 @@ import sys
 import parser
 import tasks
 import tasks.run_tests
+from tasks.download import ToolchainDownloader
 from context import Context
 from parser import add_args_to_context
-from tasks.toolchain import get_toolchain_url, fetch_and_install_toolchain
 
 
 def run_self_test():
@@ -54,8 +54,10 @@ def main():
     if args.subcommand == 'self-test':
         run_self_test()
 
-    url = get_toolchain_url(os_family, args.linux_distro)
-    toolchain_dir = fetch_and_install_toolchain(url, Context.TOOLCHAIN_ROOT)
+    downloader = ToolchainDownloader(os_family, args.linux_distro) 
+    if not downloader.fetch_and_install():
+        sys.exit(1)
+    toolchain_dir = downloader.result_dir
     compile_env = context.get_compile_environment(toolchain_dir)
 
     if not args.subcommand:
