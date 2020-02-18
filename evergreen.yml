@@ -371,13 +371,14 @@ functions:
         rm -rf /data/mci/curator*
 
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
-        export PATH=${workdir}/dist/bin:$PATH
 
-        ./scripts/lamp -g \
+        ./scripts/lamp \
           -d=${distro|not-linux} \
           -DENABLE_JASPER:BOOL=ON \
           -DGENNY_INSTALL_DIR:PATH=${workdir}/dist \
           -DGENNY_INSTALL_SSL:BOOL=ON
+        
+        source genny_venv/bin/activate
 
   ##
   # Runs each workload as a dry run
