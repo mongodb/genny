@@ -106,7 +106,7 @@ class CuratorDownloader(Downloader):
         if 'ubuntu' in self._distro:
             self._distro = 'ubuntu1604'
 
-        if self.distro in ('amazon2', 'rhel8', 'rhel62'):
+        if self._distro in ('amazon2', 'rhel8', 'rhel62'):
             self._distro = 'rhel70'
 
         return 'https://s3.amazonaws.com/mciuploads/curator/' \
