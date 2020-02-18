@@ -74,6 +74,17 @@ buildvariants:
   - name: tg_compile
   - name: t_push
 
+- name: rhel8
+  display_name: RHEL 8
+  modules: ~
+  expansions:
+    distro: rhel8
+  run_on:
+  - rhel80-test
+  tasks:
+  - name: tg_compile
+  - name: t_push
+
 - name: ubuntu1804
   display_name: Ubuntu 18.04
   modules: ~
