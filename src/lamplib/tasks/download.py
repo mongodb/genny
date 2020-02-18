@@ -98,10 +98,13 @@ class CuratorDownloader(Downloader):
         super().__init__(os_family, distro, Context.CURATOR_ROOT, "curator")
 
     def _get_url(self):
-        # These build IDs are from the genny-toolchain Evergreen task.
+        # These build IDs are from the Curator Evergreen task.
         # https://evergreen.mongodb.com/waterfall/genny-toolchain
         if self._os_family == 'Darwin':
             self._distro = 'macos'
+
+        if 'ubuntu' in 'self._distro':
+            self._distro = 'ubuntu1604'
 
         return 'https://s3.amazonaws.com/mciuploads/curator/' \
                'curator_{distro}_{build}_{date}-{distro}/curator-dist-{build}.tar.gz'.format(distro=self._distro, build=Context.CURATOR_VERSION, date=Context.CURATOR_BUILD_DATE)
