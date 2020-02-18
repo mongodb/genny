@@ -106,6 +106,9 @@ class CuratorDownloader(Downloader):
         if 'ubuntu' in self._distro:
             self._distro = 'ubuntu1604'
 
+        if self.distro in ('amazon2', 'rhel8', 'rhel62'):
+            self._distro = 'rhel70'
+
         return 'https://s3.amazonaws.com/mciuploads/curator/' \
                'curator_{distro}_{build}_{date}-{distro}/curator-dist-{build}.tar.gz'.format(distro=self._distro, build=Context.CURATOR_VERSION, date=Context.CURATOR_BUILD_DATE)
 
