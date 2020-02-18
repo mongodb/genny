@@ -22,7 +22,10 @@ then
     echo "creating new env with python: ${python_path}"
     _pip install virtualenv
     /usr/bin/env virtualenv -q "${DIR}/genny_venv" --python="${python_path}"
+fi
 
+if [[ "$*" != *-g* &&  -d genny_venv ]]
+then
     set +u
         source "${DIR}/genny_venv/bin/activate"
     set -u

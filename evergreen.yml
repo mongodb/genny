@@ -385,12 +385,12 @@ functions:
   f_dry_run_workloads:
   - command: subprocess.exec
     params:
-      working_dir: .
+      working_dir: src
       binary: /bin/bash
       args:
-      - ${workdir}/src/scripts/dry-run-workloads.sh
+      - ${workdir}/scripts/dry-run-workloads.sh
       env:
-        GENNY: ${workdir}/src/scripts/genny
+        GENNY: ${workdir}/scripts/genny
 
   ##
   # Runs tests via ctest.
