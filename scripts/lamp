@@ -10,22 +10,22 @@ DIR=$(pwd)
 # for mongodbtoolchain python3
 export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
-if [[ "$*" != *-g* && ! -d genny_venv ]]
+if [[ "$*" != *-g* ]]
 then
-    echo "Installing virtual environment."
-    echo "To run without a virtual environment, use the -g or --run-global option."
-    python_path=/opt/mongodbtoolchain/v3/bin/python3
-    if [[ ! -e "$python_path" ]]; then
-        echo "${python_path} does not exist"
-        python_path="$(command -v python3.7)"
+    if [[ ! -d genny_venv ]]
+    then
+        echo "Installing virtual environment."
+        echo "To run without a virtual environment, use the -g or --run-global option."
+        python_path=/opt/mongodbtoolchain/v3/bin/python3
+        if [[ ! -e "$python_path" ]]; then
+            echo "${python_path} does not exist"
+            python_path="$(command -v python3.7)"
+        fi
+        echo "creating new env with python: ${python_path}"
+        _pip install virtualenv
+        /usr/bin/env virtualenv -q "${DIR}/genny_venv" --python="${python_path}"
     fi
-    echo "creating new env with python: ${python_path}"
-    _pip install virtualenv
-    /usr/bin/env virtualenv -q "${DIR}/genny_venv" --python="${python_path}"
-fi
 
-if [[ "$*" != *-g* &&  -d genny_venv ]]
-then
     set +u
         source "${DIR}/genny_venv/bin/activate"
     set -u
