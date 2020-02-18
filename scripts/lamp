@@ -24,12 +24,10 @@ then
     /usr/bin/env virtualenv -q "${DIR}/genny_venv" --python="${python_path}"
 
     set +u
-        # shellcheck source=/dev/null
         source "${DIR}/genny_venv/bin/activate"
     set -u
 fi
 
-#echo "RUN LAMP"
 python3 "$PWD/src/lamplib" "$@"
 
 echo "Genny installed with virtual environment ${DIR}/genny_venv"

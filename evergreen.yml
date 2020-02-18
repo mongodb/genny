@@ -378,8 +378,6 @@ functions:
           -DGENNY_INSTALL_DIR:PATH=${workdir}/dist \
           -DGENNY_INSTALL_SSL:BOOL=ON
         
-        source genny_venv/bin/activate
-
   ##
   # Runs each workload as a dry run
   # Requires f_compile to have been run first.
@@ -392,7 +390,7 @@ functions:
       args:
       - ${workdir}/src/scripts/dry-run-workloads.sh
       env:
-        GENNY: genny
+        GENNY: ${workdir}/src/scripts/genny
 
   ##
   # Runs tests via ctest.

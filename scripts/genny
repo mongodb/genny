@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Runs the genny python wrapper in the venv which runs the binary.
+
+set -eou pipefail
+
+source genny_venv/bin/activate
+
+genny "$@"
