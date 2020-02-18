@@ -388,9 +388,9 @@ functions:
       working_dir: src
       binary: /bin/bash
       args:
-      - ${workdir}/scripts/dry-run-workloads.sh
+      - scripts/dry-run-workloads.sh
       env:
-        GENNY: ${workdir}/scripts/genny
+        GENNY: scripts/genny
 
   ##
   # Runs tests via ctest.

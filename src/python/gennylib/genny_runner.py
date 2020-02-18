@@ -13,7 +13,7 @@ def get_genny_args():
     args = sys.argv
     genny_core = "genny_core"
 
-    local_core = "dist/bin/genny_core"
+    local_core = "./dist/bin/genny_core"
     if os.path.exists(local_core):
         genny_core = local_core
     args[0] = genny_core
