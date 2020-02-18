@@ -355,7 +355,7 @@ functions:
   ##
   # Compile the project in src/build.
   #
-  # We always remove the toolchain directory because hosts
+  # We always remove the toolchain and curator directories because hosts
   # may have incomplete or invalid toolchain directories from
   # previous (unsuccessful) builds in the gennytoolchain project.
   ##
@@ -368,8 +368,10 @@ functions:
         set -eo pipefail
 
         rm -rf /data/mci/gennytoolchain*
+        rm -rf /data/mci/curator*
 
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
+        export PATH=${workdir}/dist/bin:$PATH
 
         ./scripts/lamp -g \
           -d=${distro|not-linux} \
