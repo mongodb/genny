@@ -103,7 +103,7 @@ class CuratorDownloader(Downloader):
         if self._os_family == 'Darwin':
             self._distro = 'macos'
 
-        if 'ubuntu' in 'self._distro':
+        if 'ubuntu' in self._distro:
             self._distro = 'ubuntu1604'
 
         return 'https://s3.amazonaws.com/mciuploads/curator/' \
