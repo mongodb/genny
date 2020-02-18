@@ -117,7 +117,7 @@ tasks:
     vars:
       display_name: Genny
       short_name: genny
-      install_dir: dist
+      install_dir: src/dist
 
 - name: t_push
   depends_on: t_compile
@@ -375,7 +375,7 @@ functions:
         ./scripts/lamp \
           -d=${distro|not-linux} \
           -DENABLE_JASPER:BOOL=ON \
-          -DGENNY_INSTALL_DIR:PATH=${workdir}/dist \
+          -DGENNY_INSTALL_DIR:PATH=${workdir}/src/dist \
           -DGENNY_INSTALL_SSL:BOOL=ON
         
   ##
