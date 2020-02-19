@@ -379,7 +379,6 @@ functions:
         set -eo pipefail
 
         rm -rf /data/mci/gennytoolchain*
-        rm -rf /data/mci/curator*
 
         export DEVELOPER_DIR="/Applications/Xcode10.1.app"
 
