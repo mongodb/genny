@@ -42,15 +42,16 @@ def poplar_grpc():
     try:
         yield poplar
     finally:
-        poplar.terminate()
-        exit_code = 0
         try:
+            poplar.terminate()
             exit_code = poplar.wait(timeout=10)
             if exit_code not in (0, -15): # Termination or exit.
                 raise OSError("Poplar exited with code: {code}.".format(code=(exit_code)))
 
         except:
-            poplar.kill()
+            # If Poplar doesn't die then future runs can be broken.
+            if poplar.poll is None:
+                poplar.kill()
             raise
 
         
