@@ -75,7 +75,7 @@ class Downloader():
         raise NotImplementedError
 
 class ToolchainDownloader(Downloader):
-    TOOLCHAIN_BUILD_ID = '33dc76c0e76a845ced7d06de87245d2158cde222_19_12_09_20_47_26'
+    TOOLCHAIN_BUILD_ID = 'cd5a4031b1dc93e47d598ad41521fd2e8aa865a0_20_02_12_20_07_30'
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split('_')[0]
     TOOLCHAIN_ROOT = '/data/mci'  # TODO BUILD-7624 change this to /opt.
 
