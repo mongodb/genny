@@ -37,16 +37,23 @@ def get_poplar_args():
 def poplar_grpc():
     poplar = subprocess.Popen(get_poplar_args())
     if poplar.poll() is not None:
-        raise OSError("Poplar failed to start.")
+        raise OSError("Failed to start Poplar.")
 
     try:
         yield poplar
     finally:
         poplar.terminate()
-        if (poplar.wait(timeout=10) != 0):
-            poplar.kill()
-            raise OSError("Poplar failed to terminate correctly.")
+        exit_code = 0
+        try:
+            exit_code = poplar.wait(timeout=10)
+            if (exit_code != 0):
+                raise OSError("Poplar exited with code: {code}.".format(code=(exit_code))
 
+        except subprocess.TimeoutExpired:
+            poplar.kill()
+            raise OSError("Poplar termination timed out.")
+
+        
 def main_genny_runner():
     """
     Intended to be the main entry point for running Genny.
