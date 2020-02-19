@@ -2,9 +2,7 @@
 # Because genies come from lamps.
 
 set -eou pipefail
-_pip() {
-    /usr/bin/env pip "$@" --isolated -q -q
-}
+
 DIR=$(pwd)
 
 # for mongodbtoolchain python3
