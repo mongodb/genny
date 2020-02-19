@@ -257,19 +257,6 @@ class ShellCuratorRunner(object):
         ]
         return command
 
-    def get_grpc_command(self):
-        """
-        Gets command for activating poplar grpc.
-        """
-
-        command = [
-            'curator',
-            'poplar',
-            'grpc',
-        ]
-        return command
-
-
     @staticmethod
     def run(cmd):
         """
