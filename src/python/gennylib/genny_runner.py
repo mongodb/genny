@@ -46,8 +46,8 @@ def poplar_grpc():
         exit_code = 0
         try:
             exit_code = poplar.wait(timeout=10)
-            if (exit_code != 0):
-                raise OSError("Poplar exited with code: {code}.".format(code=(exit_code))
+            if exit_code not in (0, -15): # Termination or exit.
+                raise OSError("Poplar exited with code: {code}.".format(code=(exit_code)))
 
         except subprocess.TimeoutExpired:
             poplar.kill()
