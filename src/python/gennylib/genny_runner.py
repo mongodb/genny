@@ -50,7 +50,7 @@ def poplar_grpc():
 
         except:
             # If Poplar doesn't die then future runs can be broken.
-            if poplar.poll is None:
+            if poplar.poll() is None:
                 poplar.kill()
             raise
 
