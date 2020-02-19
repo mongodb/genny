@@ -12,25 +12,23 @@ export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
 if [[ "$*" != *-g* ]]
 then
-    if [[ ! -d genny_venv ]]
+    if [[ ! -d venv ]]
     then
         echo "Installing virtual environment."
         echo "To run without a virtual environment, use the -g or --run-global option."
         python_path=/opt/mongodbtoolchain/v3/bin/python3
         if [[ ! -e "$python_path" ]]; then
-            echo "${python_path} does not exist"
-            python_path="$(command -v python3.7)"
+            python_path="$(command -v python3)"
         fi
         echo "creating new env with python: ${python_path}"
-        _pip install virtualenv
-        /usr/bin/env virtualenv -q "${DIR}/genny_venv" --python="${python_path}"
+        /usr/bin/env virtualenv -q "${DIR}/venv" --python="${python_path}"
     fi
 
     set +u
-        source "${DIR}/genny_venv/bin/activate"
+        source "${DIR}/venv/bin/activate"
     set -u
 fi
 
 python3 "$PWD/src/lamplib" "$@"
 
-echo "Genny installed with virtual environment ${DIR}/genny_venv"
+echo "Genny installed with virtual environment ${DIR}/venv"

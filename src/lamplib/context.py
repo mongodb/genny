@@ -38,15 +38,6 @@ def _create_compile_environment(triplet_os, toolchain_dir):
 
 
 class Context:
-    # Permanent constants.
-    TOOLCHAIN_BUILD_ID = '33dc76c0e76a845ced7d06de87245d2158cde222_19_12_09_20_47_26'
-    TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split('_')[0]
-    TOOLCHAIN_ROOT = '/data/mci'  # TODO BUILD-7624 change this to /opt.
-
-    CURATOR_VERSION = '9fee6c2020c3d85bbe8fffa03e1d0e224c9652f5'
-    CURATOR_BUILD_DATE = '20_02_12_21_20_42'
-    CURATOR_ROOT = '/data/mci'
-
 
     # Command line configurable and runtime values.
     IGNORE_TOOLCHAIN_VERSION = False

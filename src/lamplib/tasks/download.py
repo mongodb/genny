@@ -75,9 +75,12 @@ class Downloader():
         raise NotImplementedError
 
 class ToolchainDownloader(Downloader):
+    TOOLCHAIN_BUILD_ID = '33dc76c0e76a845ced7d06de87245d2158cde222_19_12_09_20_47_26'
+    TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split('_')[0]
+    TOOLCHAIN_ROOT = '/data/mci'  # TODO BUILD-7624 change this to /opt.
 
     def __init__(self, os_family, distro):
-        super().__init__(os_family, distro, Context.TOOLCHAIN_ROOT, "gennytoolchain")
+        super().__init__(os_family, distro, ToolchainDownloader.TOOLCHAIN_ROOT, "gennytoolchain")
 
     def _get_url(self):
         # These build IDs are from the genny-toolchain Evergreen task.
@@ -86,16 +89,24 @@ class ToolchainDownloader(Downloader):
             self._distro = 'macos_1014'
 
         return 'https://s3.amazonaws.com/mciuploads/genny-toolchain/' \
-               'genny_toolchain_{}_{}/gennytoolchain.tgz'.format(self._distro, Context.TOOLCHAIN_BUILD_ID)
+               'genny_toolchain_{}_{}/gennytoolchain.tgz'.format(self._distro, ToolchainDownloader.TOOLCHAIN_BUILD_ID)
 
     def _can_ignore(self):
         # If the toolchain dir is outdated or we ignore the toolchain version.
-        return os.path.exists(self.result_dir) and (Context.IGNORE_TOOLCHAIN_VERSION or _check_toolchain_githash(self.result_dir))
+        return os.path.exists(self.result_dir) and (Context.IGNORE_TOOLCHAIN_VERSION or self._check_toolchain_githash())
+
+    def _check_toolchain_githash(self):
+        res = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=self.result_dir, capture_output=True, text=True)
+        return res.stdout.strip() == ToolchainDownloader.TOOLCHAIN_GIT_HASH
+
 
 class CuratorDownloader(Downloader):
+    CURATOR_VERSION = '9fee6c2020c3d85bbe8fffa03e1d0e224c9652f5'
+    CURATOR_BUILD_DATE = '20_02_12_21_20_42'
+    CURATOR_ROOT = os.getcwd()
 
     def __init__(self, os_family, distro):
-        super().__init__(os_family, distro, Context.CURATOR_ROOT, "curator")
+        super().__init__(os_family, distro, CuratorDownloader.CURATOR_ROOT, "curator")
 
     def _get_url(self):
         # These build IDs are from the Curator Evergreen task.
@@ -110,17 +121,14 @@ class CuratorDownloader(Downloader):
             self._distro = 'rhel70'
 
         return 'https://s3.amazonaws.com/mciuploads/curator/' \
-               'curator_{distro}_{build}_{date}-{distro}/curator-dist-{build}.tar.gz'.format(distro=self._distro, build=Context.CURATOR_VERSION, date=Context.CURATOR_BUILD_DATE)
+               'curator_{distro}_{build}_{date}-{distro}/curator-dist-{build}.tar.gz'.format(distro=self._distro, build=CuratorDownloader.CURATOR_VERSION, date=CuratorDownloader.CURATOR_BUILD_DATE)
 
     def _can_ignore(self):
         # If the toolchain dir is outdated or we ignore the toolchain version.
-        return os.path.exists(self.result_dir) and (Context.IGNORE_TOOLCHAIN_VERSION or _check_curator_version(self.result_dir))
+        return os.path.exists(self.result_dir) and (Context.IGNORE_TOOLCHAIN_VERSION or self._check_curator_version())
+
+    def _check_curator_version(self):
+        res = subprocess.run(['./curator', '-v'], cwd=self.result_dir, capture_output=True, text=True)
+        return res.stdout.split()[2] == CuratorDownloader.CURATOR_VERSION
 
 
-def _check_toolchain_githash(toolchain_dir):
-    res = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=toolchain_dir, capture_output=True, text=True)
-    return res.stdout.strip() == Context.TOOLCHAIN_GIT_HASH
-
-def _check_curator_version(curator_dir):
-    res = subprocess.run(['./curator', '-v'], cwd=curator_dir, capture_output=True, text=True)
-    return res.stdout.split()[2] == Context.CURATOR_VERSION

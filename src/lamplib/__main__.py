@@ -16,8 +16,6 @@ def check_venv(args):
         logging.error('Tried to execute without active virtualenv. If you want to run lamp '
                       'without a virtualenv, use the --run-global option.')
         sys.exit(1)
-    elif 'VIRTUAL_ENV' in os.environ:
-        logging.info('Found virtualenv: %s', os.environ['VIRTUAL_ENV'])
 
 def run_self_test():
     res = subprocess.run(['python3', '-m', 'unittest'],
@@ -28,7 +26,8 @@ def run_self_test():
 def validate_environment():
     # Check Python version
     if not sys.version_info >= (3, 7):
-        logging.error('Please run this script with Python 3.7 or newer')
+        logging.error('Detected Python version less than 3.7. Please delete '
+                      'the virtualenv and run lamp again.')
         sys.exit(1)
 
     # Check the macOS version. Non-mac platforms return a tuple of empty strings

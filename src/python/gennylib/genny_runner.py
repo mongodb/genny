@@ -11,9 +11,9 @@ def get_genny_args():
     Otherwise we search the PATH.
     """
     args = sys.argv
-    genny_core = "genny_core"
+    genny_core = 'genny_core'
 
-    local_core = "./dist/bin/genny_core"
+    local_core = './dist/bin/genny_core'
     if os.path.exists(local_core):
         genny_core = local_core
     args[0] = genny_core
@@ -22,17 +22,29 @@ def get_genny_args():
 def get_poplar_args():
     """
     Returns the argument list used to create the Poplar gRPC process.
+
+    If we are in the root of the genny repo, use the local executable. 
+    Otherwise we search the PATH.
     """
-    return ['/data/mci/curator/curator', 'poplar', 'grpc']
+    curator = 'curator'
+
+    local_curator = './curator/curator'
+    if os.path.exists(local_curator):
+        curator = local_curator
+    return [curator, 'poplar', 'grpc']
 
 @contextmanager
 def poplar_grpc():
     poplar = subprocess.Popen(get_poplar_args())
+    if poplar.poll() is not None:
+        raise OSError("Poplar failed to start.")
+
     try:
         yield poplar
     finally:
         poplar.terminate()
         if (poplar.wait(timeout=5) != 0):
+            poplar.kill()
             raise OSError("Poplar failed to terminate correctly.")
 
 def main_genny_runner():

@@ -377,7 +377,7 @@ functions:
           -DENABLE_JASPER:BOOL=ON \
           -DGENNY_INSTALL_DIR:PATH=${workdir}/src/dist \
           -DGENNY_INSTALL_SSL:BOOL=ON
-        
+
   ##
   # Runs each workload as a dry run
   # Requires f_compile to have been run first.

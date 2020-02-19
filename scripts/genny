@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 # Runs the genny python wrapper in the venv which runs the binary.
 
-source genny_venv/bin/activate
+source venv/bin/activate
 genny "$@"

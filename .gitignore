@@ -20,5 +20,5 @@ dist
 __pycache__
 venv
 
-# virtualenv
-genny_venv
+# tools
+curator
