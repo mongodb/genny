@@ -385,7 +385,7 @@ functions:
         ./scripts/lamp \
           -d=${distro|not-linux} \
           -DENABLE_JASPER:BOOL=ON \
-          -DGENNY_INSTALL_DIR:PATH=${workdir}/src/dist \
+          -DGENNY_INSTALL_DIR:PATH=$PWD/dist \
           -DGENNY_INSTALL_SSL:BOOL=ON
 
   ##

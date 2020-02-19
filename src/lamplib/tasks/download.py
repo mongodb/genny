@@ -102,7 +102,6 @@ class ToolchainDownloader(Downloader):
 
 class CuratorDownloader(Downloader):
     CURATOR_VERSION = '9fee6c2020c3d85bbe8fffa03e1d0e224c9652f5'
-    CURATOR_BUILD_DATE = '20_02_12_21_20_42'
     CURATOR_ROOT = os.getcwd()
 
     def __init__(self, os_family, distro):
@@ -120,11 +119,10 @@ class CuratorDownloader(Downloader):
         if self._distro in ('amazon2', 'rhel8', 'rhel62'):
             self._distro = 'rhel70'
 
-        return 'https://s3.amazonaws.com/mciuploads/curator/' \
-               'curator_{distro}_{build}_{date}-{distro}/curator-dist-{build}.tar.gz'.format(distro=self._distro, build=CuratorDownloader.CURATOR_VERSION, date=CuratorDownloader.CURATOR_BUILD_DATE)
+        return 'https://s3.amazonaws.com/boxes.10gen.com/build/curator/' \
+               'curator-dist-{distro}-{build}.tar.gz'.format(distro=self._distro, build=CuratorDownloader.CURATOR_VERSION)
 
     def _can_ignore(self):
-        # If the toolchain dir is outdated or we ignore the toolchain version.
         return os.path.exists(self.result_dir) and (Context.IGNORE_TOOLCHAIN_VERSION or self._check_curator_version())
 
     def _check_curator_version(self):
