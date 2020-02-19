@@ -43,7 +43,7 @@ def poplar_grpc():
         yield poplar
     finally:
         poplar.terminate()
-        if (poplar.wait(timeout=5) != 0):
+        if (poplar.wait(timeout=10) != 0):
             poplar.kill()
             raise OSError("Poplar failed to terminate correctly.")
 
