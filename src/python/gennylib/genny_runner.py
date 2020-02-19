@@ -49,9 +49,9 @@ def poplar_grpc():
             if exit_code not in (0, -15): # Termination or exit.
                 raise OSError("Poplar exited with code: {code}.".format(code=(exit_code)))
 
-        except subprocess.TimeoutExpired:
+        except:
             poplar.kill()
-            raise OSError("Poplar termination timed out.")
+            raise
 
         
 def main_genny_runner():
