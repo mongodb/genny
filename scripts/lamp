@@ -14,12 +14,8 @@ then
     then
         echo "Installing virtual environment."
         echo "To run without a virtual environment, use the -g or --run-global option."
-        python_path=/opt/mongodbtoolchain/v3/bin/python3
-        if [[ ! -e "$python_path" ]]; then
-            python_path="$(command -v python3)"
-        fi
-        echo "creating new env with python: ${python_path}"
-        /usr/bin/env virtualenv -q "${DIR}/venv" --python="${python_path}"
+        echo "creating new env with python: $(command -v python3)"
+        python3 -m venv venv
     fi
 
     set +u
