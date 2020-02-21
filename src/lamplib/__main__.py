@@ -23,12 +23,14 @@ def run_self_test():
     res.check_returncode()
     sys.exit(0)
 
+def python_version_string():
+    return '.'.join(map(str, sys.version_info))[0:5]
+
 def validate_environment():
     # Check Python version
     if not sys.version_info >= (3, 7):
-        logging.error('Detected Python version less than 3.7. Please delete '
-                      'the virtualenv and run lamp again.')
-        sys.exit(1)
+        raise OSError('Detected Python version {version} less than 3.7. Please delete '
+                      'the virtualenv and run lamp again.'.format(version=python_version_string()))
 
     # Check the macOS version. Non-mac platforms return a tuple of empty strings
     # for platform.mac_ver().
@@ -53,6 +55,8 @@ def main():
     # Pass around Context instead of using the global one to facilitate testing.
     context = Context
 
+    check_venv(args)        
+
     # Execute the minimum amount of code possible to run self tests to minimize
     # untestable code (i.e. code that runs the self-test).
     if args.subcommand == 'self-test':
@@ -71,7 +75,6 @@ def main():
 
 
     if not args.subcommand:
-        check_venv(args)        
         logging.info('No subcommand specified; running cmake, compile and install')
         tasks.cmake(context, toolchain_dir=toolchain_dir,
                     env=compile_env, cmdline_cmake_args=cmake_args)
@@ -82,7 +85,6 @@ def main():
     else:
         tasks.compile_all(context, compile_env)
         if args.subcommand == 'install':
-            check_venv(args)
             tasks.install(context, compile_env)
         elif args.subcommand == 'cmake-test':
             tasks.run_tests.cmake_test(compile_env)

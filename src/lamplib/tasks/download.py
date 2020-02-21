@@ -7,7 +7,7 @@ import urllib.request
 
 from context import Context
 
-class Downloader():
+class Downloader:
     """
     Abstract base class for things that can be downloaded.
 
@@ -15,6 +15,12 @@ class Downloader():
     """
 
     def __init__(self, os_family, distro, install_dir, name):
+        """
+        :param os_family: string
+        :param distro: string
+        :param install_dir: the directory the target will be installed to
+        :param name: name of the target being downloaded
+        """
         self._os_family = os_family
         self._distro = distro
         self._name = name
@@ -32,7 +38,11 @@ class Downloader():
         if not os.path.exists(self._install_dir):
             logging.critical(
                 'Please create the parent directory for %s: '
-                '`sudo mkdir -p %s; sudo chown $USER %s`', self._name, self._install_dir, self._install_dir)
+                '`sudo mkdir -p "%s"; sudo chown "$USER" "%s"`', self._name, self._install_dir, self._install_dir)
+            return False
+
+        if not os.path.isdir(self._install_dir):
+            logging.critical("Install dir %s is not a directory.", self._install_dir)
             return False
 
         if not os.access(self._install_dir, os.W_OK):
@@ -75,6 +85,9 @@ class Downloader():
         raise NotImplementedError
 
 class ToolchainDownloader(Downloader):
+    # These build IDs are from the genny-toolchain Evergreen task.
+    # https://evergreen.mongodb.com/waterfall/genny-toolchain
+
     TOOLCHAIN_BUILD_ID = 'cd5a4031b1dc93e47d598ad41521fd2e8aa865a0_20_02_12_20_07_30'
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split('_')[0]
     TOOLCHAIN_ROOT = '/data/mci'  # TODO BUILD-7624 change this to /opt.
@@ -83,8 +96,6 @@ class ToolchainDownloader(Downloader):
         super().__init__(os_family, distro, ToolchainDownloader.TOOLCHAIN_ROOT, "gennytoolchain")
 
     def _get_url(self):
-        # These build IDs are from the genny-toolchain Evergreen task.
-        # https://evergreen.mongodb.com/waterfall/genny-toolchain
         if self._os_family == 'Darwin':
             self._distro = 'macos_1014'
 
@@ -101,6 +112,9 @@ class ToolchainDownloader(Downloader):
 
 
 class CuratorDownloader(Downloader):
+    # These build IDs are from the Curator Evergreen task.
+    # https://evergreen.mongodb.com/waterfall/curator
+
     CURATOR_VERSION = '9fee6c2020c3d85bbe8fffa03e1d0e224c9652f5'
     CURATOR_ROOT = os.getcwd()
 
@@ -108,8 +122,6 @@ class CuratorDownloader(Downloader):
         super().__init__(os_family, distro, CuratorDownloader.CURATOR_ROOT, "curator")
 
     def _get_url(self):
-        # These build IDs are from the Curator Evergreen task.
-        # https://evergreen.mongodb.com/waterfall/genny-toolchain
         if self._os_family == 'Darwin':
             self._distro = 'macos'
 
