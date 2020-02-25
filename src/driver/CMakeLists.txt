@@ -22,5 +22,5 @@ CreateGennyTargets(
         gennylib
         Boost::program_options
     TEST_DEPENDS    testlib
-    EXECUTABLE      genny
+    EXECUTABLE      genny_core
 )

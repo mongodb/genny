@@ -249,6 +249,7 @@ boost::log::trivial::severity_level parseVerbosity(const std::string& level) {
 
 }  // namespace
 
+const std::string RUNNER_NAME = "genny";
 
 DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     namespace po = boost::program_options;
@@ -256,7 +257,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
     std::ostringstream progDescStream;
     // Section headers are prefaced with new lines.
     progDescStream << u8"\n🧞 Usage:\n";
-    progDescStream << "    " << argv[0] << " <subcommand> [options] <workload-file>\n";
+    progDescStream << "    " << RUNNER_NAME << " <subcommand> [options] <workload-file>\n";
     progDescStream << u8"\n🧞 Subcommands:‍";
     progDescStream << u8R"(
     run          Run the workload normally

@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import subprocess
 
 def _sanitizer_flags(context):
@@ -46,11 +47,15 @@ def compile_all(context, env):
     logging.info('Compiling: %s', ' '.join(compile_cmd))
     subprocess.run(compile_cmd, env=env)
 
-
 def install(context, env):
+    
     install_cmd = [context.BUILD_SYSTEM, '-C', 'build', 'install']
     logging.info('Running install: %s', ' '.join(install_cmd))
     subprocess.run(install_cmd, env=env)
+
+    # Install python scripts
+    python_cmd = ['python3', 'setup.py', 'develop']
+    subprocess.run(python_cmd, cwd='src/python')
 
 
 def clean(context, env):

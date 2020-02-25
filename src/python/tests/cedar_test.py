@@ -21,8 +21,8 @@ from os.path import join as pjoin
 
 from bson import CodecOptions, decode_file_iter
 
-import genny.parsers.csv2
-from genny.parsers import cedar
+import gennylib.parsers.csv2
+from gennylib.parsers import cedar
 
 
 def get_fixture(*csv_file_path):
@@ -33,7 +33,7 @@ class CedarTest(unittest.TestCase):
 
     def test_split_csv2(self):
         large_precise_float = 10 ** 15
-        num_cols = len(genny.parsers.csv2.IntermediateCSVColumns.default_columns())
+        num_cols = len(gennylib.parsers.csv2.IntermediateCSVColumns.default_columns())
         mock_data_reader = [
             (['first' for _ in range(num_cols)], 'a1'),
             ([1 for _ in range(num_cols)], 'a1'),

@@ -4,18 +4,18 @@ import unittest
 
 from unittest.mock import patch, mock_open
 from unittest.mock import Mock
-from genny.genny_auto_tasks import construct_all_tasks_json
-from genny.genny_auto_tasks import construct_variant_json
-from genny.genny_auto_tasks import modified_workload_files
-from genny.genny_auto_tasks import validate_user_workloads
-from genny.genny_auto_tasks import workload_should_autorun
-from genny.genny_auto_tasks import AutoRunSpec
+from gennylib.genny_auto_tasks import construct_all_tasks_json
+from gennylib.genny_auto_tasks import construct_variant_json
+from gennylib.genny_auto_tasks import modified_workload_files
+from gennylib.genny_auto_tasks import validate_user_workloads
+from gennylib.genny_auto_tasks import workload_should_autorun
+from gennylib.genny_auto_tasks import AutoRunSpec
 from tests.fixtures.auto_tasks_fixtures import workload_should_autorun_cases
 
 
 class AutoTasksTest(unittest.TestCase):
 
-    @patch('genny.genny_auto_tasks.open', new_callable=mock_open, read_data='')
+    @patch('gennylib.genny_auto_tasks.open', new_callable=mock_open, read_data='')
     @patch('glob.glob')
     def test_construct_all_tasks_json(self, mock_glob, mock_open):
         """
@@ -86,7 +86,7 @@ class AutoTasksTest(unittest.TestCase):
 
         self.assertDictEqual(expected_json, actual_json)
 
-    @patch('genny.genny_auto_tasks.open', new_callable=mock_open, read_data='')
+    @patch('gennylib.genny_auto_tasks.open', new_callable=mock_open, read_data='')
     @patch('yaml.safe_load')
     @patch('glob.glob')
     def test_construct_all_tasks_json_multiple_setups(self, mock_glob, mock_safe_load, mock_open):
@@ -149,9 +149,9 @@ class AutoTasksTest(unittest.TestCase):
 
         self.assertDictEqual(expected_json, actual_json)
 
-    @patch('genny.genny_auto_tasks.open', new_callable=mock_open, read_data='')
+    @patch('gennylib.genny_auto_tasks.open', new_callable=mock_open, read_data='')
     @patch('glob.glob')
-    @patch('genny.genny_auto_tasks.modified_workload_files')
+    @patch('gennylib.genny_auto_tasks.modified_workload_files')
     def test_construct_variant_json(self, mock_glob, mock_modified_workload_files, mock_open):
         """
         This test runs construct_variant_json with static workloads and variants
@@ -188,10 +188,10 @@ class AutoTasksTest(unittest.TestCase):
 
         self.assertDictEqual(expected_json, actual_json)
 
-    @patch('genny.genny_auto_tasks.open', new_callable=mock_open, read_data='')
+    @patch('gennylib.genny_auto_tasks.open', new_callable=mock_open, read_data='')
     @patch('glob.glob')
     @patch('yaml.safe_load')
-    @patch('genny.genny_auto_tasks.modified_workload_files')
+    @patch('gennylib.genny_auto_tasks.modified_workload_files')
     def test_construct_variant_json_multiple_setups(self, mock_glob, mock_safe_load, mock_modified_workload_files, mock_open):
         """
         This test runs construct_variant_json with static workloads and variants

@@ -30,12 +30,17 @@ Here're the steps to get Genny up and running locally:
 3.  `./scripts/lamp [--linux-distro ubuntu1804/rhel7/amazon2/arch]` once
     you have Python 3.7+ installed.
 
-    This command downloads Genny's toolchain, compiles Genny, and
+    This command downloads Genny's toolchain, compiles Genny, creates its
+    virtualenv, and
     installs Genny to `dist/`. You can rerun this command at any time to
     rebuild Genny. If your OS isn't the supported, please let us know in
     `#workload-generation` slack or on GitHub.
 
     Note that the `--linux-distro` argument is not needed on macOS.
+
+    To avoid polluting your system with python changes, lamp creates a 
+    virtualenv. Installing globally is not recommended, but may be done
+    with the `-g` or `--run-global` option.
 
     You can also specify `--build-system make` if you prefer to build
     using `make` rather than `ninja`. Building using `make` may make
@@ -169,7 +174,7 @@ Then build Genny (see [above](#build-and-install) for details):
 And then run a workload:
 
 ```sh
-./build/src/driver/genny run                                        \
+./scripts/genny run                                                 \
     --workload-file       ./src/workloads/scale/InsertRemove.yml    \
     --metrics-format      csv                                       \
     --metrics-output-file build/genny-metrics.csv                   \

@@ -7,10 +7,15 @@ import sys
 import parser
 import tasks
 import tasks.run_tests
+from tasks.download import ToolchainDownloader, CuratorDownloader
 from context import Context
 from parser import add_args_to_context
-from tasks.toolchain import get_toolchain_url, fetch_and_install_toolchain
 
+def check_venv(args):
+    if not 'VIRTUAL_ENV' in os.environ and not args.run_global:
+        logging.error('Tried to execute without active virtualenv. If you want to run lamp '
+                      'without a virtualenv, use the --run-global option.')
+        sys.exit(1)
 
 def run_self_test():
     res = subprocess.run(['python3', '-m', 'unittest'],
@@ -18,12 +23,14 @@ def run_self_test():
     res.check_returncode()
     sys.exit(0)
 
+def python_version_string():
+    return '.'.join(map(str, sys.version_info))[0:5]
 
 def validate_environment():
     # Check Python version
     if not sys.version_info >= (3, 7):
-        logging.error('Please run this script with Python 3.7 or newer')
-        sys.exit(1)
+        raise OSError('Detected Python version {version} less than 3.7. Please delete '
+                      'the virtualenv and run lamp again.'.format(version=python_version_string()))
 
     # Check the macOS version. Non-mac platforms return a tuple of empty strings
     # for platform.mac_ver().
@@ -37,7 +44,6 @@ def validate_environment():
             sys.exit(1)
     return
 
-
 def main():
     validate_environment()
 
@@ -49,14 +55,24 @@ def main():
     # Pass around Context instead of using the global one to facilitate testing.
     context = Context
 
+    check_venv(args)        
+
     # Execute the minimum amount of code possible to run self tests to minimize
     # untestable code (i.e. code that runs the self-test).
     if args.subcommand == 'self-test':
         run_self_test()
 
-    url = get_toolchain_url(os_family, args.linux_distro)
-    toolchain_dir = fetch_and_install_toolchain(url, Context.TOOLCHAIN_ROOT)
+    toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro)
+    if not toolchain_downloader.fetch_and_install():
+        sys.exit(1)
+    toolchain_dir = toolchain_downloader.result_dir
     compile_env = context.get_compile_environment(toolchain_dir)
+
+    curator_downloader = CuratorDownloader(os_family, args.linux_distro)
+    if not curator_downloader.fetch_and_install():
+        sys.exit(1)
+    curator_path = curator_downloader.result_dir
+
 
     if not args.subcommand:
         logging.info('No subcommand specified; running cmake, compile and install')
@@ -68,7 +84,6 @@ def main():
         tasks.clean(context, compile_env)
     else:
         tasks.compile_all(context, compile_env)
-
         if args.subcommand == 'install':
             tasks.install(context, compile_env)
         elif args.subcommand == 'cmake-test':

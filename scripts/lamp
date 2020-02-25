@@ -1,7 +1,27 @@
 #!/usr/bin/env bash
 # Because genies come from lamps.
 
+set -eou pipefail
+
+DIR=$(pwd)
+
 # for mongodbtoolchain python3
 export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
+# Check if not called with -g or --run-global flag
+if [[ "$*" != *-g* ]]; then
+    if [[ ! -d venv ]]; then
+        echo "Installing virtual environment."
+        echo "To run without a virtual environment, use the -g or --run-global option."
+        echo "creating new env with python: $(command -v python3)"
+        python3 -m venv venv
+    fi
+
+    set +u
+        source "${DIR}/venv/bin/activate"
+    set -u
+fi
+
 python3 "$PWD/src/lamplib" "$@"
+
+echo "Genny installed with virtual environment ${DIR}/venv"

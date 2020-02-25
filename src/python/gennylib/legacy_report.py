@@ -6,7 +6,7 @@ import json
 import logging
 import sys
 
-from genny.parsers.csv2 import CSV2, IntermediateCSVColumns
+from gennylib.parsers.csv2 import CSV2, IntermediateCSVColumns
 
 
 def build_parser():

@@ -128,7 +128,7 @@ tasks:
     vars:
       display_name: Genny
       short_name: genny
-      install_dir: dist
+      install_dir: src/dist
 
 - name: t_push
   depends_on: t_compile
@@ -366,7 +366,7 @@ functions:
   ##
   # Compile the project in src/build.
   #
-  # We always remove the toolchain directory because hosts
+  # We always remove the toolchain and curator directories because hosts
   # may have incomplete or invalid toolchain directories from
   # previous (unsuccessful) builds in the gennytoolchain project.
   ##
@@ -385,7 +385,7 @@ functions:
         ./scripts/lamp \
           -d=${distro|not-linux} \
           -DENABLE_JASPER:BOOL=ON \
-          -DGENNY_INSTALL_DIR:PATH=${workdir}/dist \
+          -DGENNY_INSTALL_DIR:PATH="$PWD"/dist \
           -DGENNY_INSTALL_SSL:BOOL=ON
 
   ##
@@ -395,12 +395,12 @@ functions:
   f_dry_run_workloads:
   - command: subprocess.exec
     params:
-      working_dir: .
+      working_dir: src
       binary: /bin/bash
       args:
-      - ${workdir}/src/scripts/dry-run-workloads.sh
+      - scripts/dry-run-workloads.sh
       env:
-        GENNY: ${workdir}/dist/bin/genny
+        GENNY: scripts/genny
 
   ##
   # Runs tests via ctest.

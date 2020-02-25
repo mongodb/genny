@@ -5,7 +5,7 @@ import unittest
 
 from unittest.mock import patch
 
-from genny.cedar_report import CertRetriever, main__cedar_report
+from gennylib.cedar_report import CertRetriever, main__cedar_report
 from tests.cedar_test import get_fixture
 
 
@@ -20,7 +20,7 @@ _FIXED_DATETIME = datetime.datetime(year=2000, month=1, day=1).isoformat()
 
 class CedarReportTest(unittest.TestCase):
 
-    @patch('genny.cedar_report.ShellCuratorRunner.run')
+    @patch('gennylib.cedar_report.ShellCuratorRunner.run')
     def test_cedar_report(self, mock_uploader_run):
         """
         This test documents the environment variables needed to run cedar_report.py and checks that
@@ -163,7 +163,7 @@ class CedarReportTest(unittest.TestCase):
 
         mock_uploader_run.assert_called_with(expected_uploader_run_args)
 
-    @patch('genny.cedar_report.ShellCuratorRunner.run')
+    @patch('gennylib.cedar_report.ShellCuratorRunner.run')
     def test_cedar_mode_skip(self, mock_uploader_run):
         mock_env = {
             'cedar_mode': 'skip',
