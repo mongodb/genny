@@ -255,7 +255,7 @@ Then, set the Genny module in DSI with your local Genny repo.
 
 ```sh
 cd genny
-evergreen set-module -m dsi -i <ID> # Use the build ID from the previous step.
+evergreen set-module -m genny -i <ID> # Use the build ID from the previous step.
 ```
 
 In the browser window, select either `genny_patch_tasks` or `genny_auto_tasks`.
