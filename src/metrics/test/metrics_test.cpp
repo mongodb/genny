@@ -40,12 +40,12 @@ void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
 TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
-    auto dummy_metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto dummy_metrics = internals::RegistryT<RegistryClockSourceStub>{};
     auto op =
-        v1::OperationImpl<RegistryClockSourceStub>{"Actor", dummy_metrics, "Op", std::nullopt};
+        internals::OperationImpl<RegistryClockSourceStub>{"Actor", dummy_metrics, "Op", std::nullopt};
 
     RegistryClockSourceStub::advance(5ns);
-    auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(&op);
+    auto ctx = std::make_optional<internals::OperationContextT<RegistryClockSourceStub>>(&op);
 
     ctx->addDocuments(200);
     ctx->addBytes(3000);
@@ -118,8 +118,8 @@ TEST_CASE("metrics::OperationContext interface") {
 
 TEST_CASE("metrics output format") {
     RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto reporter = genny::metrics::v1::ReporterT{metrics};
+    auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::internals::v1::ReporterT{metrics};
 
     //           +---------------------+----------------+
     // Thread 1: |        Insert       |     Remove     |
@@ -256,8 +256,8 @@ TEST_CASE("metrics output format") {
 
 TEST_CASE("Genny.Setup metric") {
     RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto reporter = genny::metrics::v1::ReporterT{metrics};
+    auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::internals::v1::ReporterT{metrics};
 
     // Mimic what the DefaultDriver would be doing.
     auto setup = metrics.operation("Genny", "Setup", 0u);
@@ -310,8 +310,8 @@ TEST_CASE("Genny.Setup metric") {
 
 TEST_CASE("Genny.ActiveActors metric") {
     RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto reporter = genny::metrics::v1::ReporterT{metrics};
+    auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::internals::v1::ReporterT{metrics};
 
     // Mimic what the DefaultDriver would be doing.
     auto startedActors = metrics.operation("Genny", "ActorStarted", 0u);
@@ -390,14 +390,14 @@ TEST_CASE("Operation with threshold") {
 
     auto setup = []() {
         RegistryClockSourceStub::reset();
-        auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+        auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
 
-        genny::metrics::v1::ReporterT{metrics};
+        genny::metrics::internals::v1::ReporterT{metrics};
 
         return metrics;
     };
 
-    auto runActor = [](v1::OperationT<RegistryClockSourceStub>& actor,
+    auto runActor = [](internals::OperationT<RegistryClockSourceStub>& actor,
                        std::chrono::nanoseconds advance) {
         auto ctx = actor.start();
         RegistryClockSourceStub::advance(advance);
@@ -412,7 +412,7 @@ TEST_CASE("Operation with threshold") {
         runActor(actor, 1ns);
         runActor(actor, 51ns);
         runActor(actor, 51ns);
-        REQUIRE_THROWS_AS(runActor(actor, 51ns), v1::OperationThresholdExceededException);
+        REQUIRE_THROWS_AS(runActor(actor, 51ns), internals::OperationThresholdExceededException);
     }
 
     SECTION("100% threshold") {
@@ -436,7 +436,7 @@ TEST_CASE("Operation with threshold") {
         runActor(actor, 1ns);
         runActor(actor, 1ns);
         runActor(actor, 1ns);
-        REQUIRE_THROWS_AS(runActor(actor, 11ns), v1::OperationThresholdExceededException);
+        REQUIRE_THROWS_AS(runActor(actor, 11ns), internals::OperationThresholdExceededException);
     }
 }
 
@@ -486,7 +486,7 @@ TEST_CASE("Phases can set metrics") {
 
 TEST_CASE("Registry counts the number of workers") {
     RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
 
     metrics.operation("actor1", "op1", 1u);
     metrics.operation("actor1", "op1", 2u);

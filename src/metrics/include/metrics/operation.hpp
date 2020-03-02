@@ -105,11 +105,11 @@ struct OperationEventT final {
 };
 
 /**
- * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
+ * @namespace genny::metrics::internals this namespace is private and only intended to be used by genny's
  * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
  * the implementation of an actor.
  */
-namespace v1 {
+namespace internals {
 
 template <typename Clocksource>
 class RegistryT;
@@ -139,7 +139,7 @@ private:  // Data members.
 
 public:
     using time_point = typename ClockSource::time_point;
-    using EventSeries = TimeSeries<ClockSource, OperationEventT<ClockSource>>;
+    using EventSeries = v1::TimeSeries<ClockSource, OperationEventT<ClockSource>>;
 
     struct OperationThreshold {
         std::chrono::nanoseconds maxDuration;
@@ -244,7 +244,7 @@ class OperationContextT final : private boost::noncopyable {
 public:
     using time_point = typename ClockSource::time_point;
 
-    explicit OperationContextT(v1::OperationImpl<ClockSource>* op)
+    explicit OperationContextT(internals::OperationImpl<ClockSource>* op)
         : _op{op}, _started{ClockSource::now()} {}
 
     OperationContextT(OperationContextT<ClockSource>&& other) noexcept
@@ -336,7 +336,7 @@ private:
         _isClosed = true;
     }
 
-    v1::OperationImpl<ClockSource>* const _op;
+    internals::OperationImpl<ClockSource>* const _op;
     const time_point _started;
 
     OperationEventT<ClockSource> _event;
@@ -349,7 +349,7 @@ class OperationT final {
     using time_point = typename ClockSource::time_point;
 
 public:
-    explicit OperationT(v1::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
+    explicit OperationT(internals::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
 
     OperationContextT<ClockSource> start() {
         return OperationContextT<ClockSource>{this->_op};
@@ -435,10 +435,10 @@ public:
 
 
 private:
-    v1::OperationImpl<ClockSource>* _op;
+    internals::OperationImpl<ClockSource>* _op;
 };
 
-}  // namespace v1
+}  // namespace internals
 }  // namespace genny::metrics
 
 #endif  // HEADER_3D319F23_C539_4B6B_B4E7_23D23E2DCD52_INCLUDED

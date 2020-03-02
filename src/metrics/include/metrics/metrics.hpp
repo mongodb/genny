@@ -28,11 +28,11 @@
 namespace genny::metrics {
 
 /**
- * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
+ * @namespace genny::metrics::internals this namespace is private and only intended to be used by genny's
+ * own internals. No types from the genny::metrics::internals namespace should ever be typed directly into
  * the implementation of an actor.
  */
-namespace v1 {
+namespace internals {
 
 template <typename Clocksource>
 class OperationImpl;
@@ -124,11 +124,11 @@ public:
         return OperationT{opIt->second};
     }
 
-    [[nodiscard]] const OperationsMap& getOps(Permission) const {
+    [[nodiscard]] const OperationsMap& getOps(v1::Permission) const {
         return this->_ops;
     };
 
-    [[nodiscard]] const typename ClockSource::time_point now(Permission) const {
+    [[nodiscard]] const typename ClockSource::time_point now(v1::Permission) const {
         return ClockSource::now();
     }
 
@@ -144,9 +144,9 @@ private:
     OperationsMap _ops;
 };
 
-}  // namespace v1
+}  // namespace internals 
 
-using Registry = v1::RegistryT<v1::MetricsClockSource>;
+using Registry = internals::RegistryT<internals::MetricsClockSource>;
 
 static_assert(std::is_move_constructible<Registry>::value, "move");
 static_assert(std::is_move_assignable<Registry>::value, "move");
@@ -155,8 +155,8 @@ static_assert(std::is_move_assignable<Registry>::value, "move");
 // clock_type in a roundabout way by going through the time_point type it exposes.
 static_assert(Registry::clock::time_point::clock::is_steady, "clock must be steady");
 
-using Operation = v1::OperationT<Registry::clock>;
-using OperationContext = v1::OperationContextT<Registry::clock>;
+using Operation = internals::OperationT<Registry::clock>;
+using OperationContext = internals::OperationContextT<Registry::clock>;
 using OperationEvent = OperationEventT<Registry::clock>;
 
 // Convenience types
