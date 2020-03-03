@@ -230,6 +230,7 @@ public:
             _threshold->check(started, finished);
         }
         _events.addAt(finished, event);
+        _stream->addAt(event);
     }
 
     void reportSynthetic(time_point finished,

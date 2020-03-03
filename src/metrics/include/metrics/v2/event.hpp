@@ -30,7 +30,13 @@
  * own internals. No types from the genny::metrics::v2 namespace should ever be typed directly into
  * the implementation of an actor.
  */
-namespace genny::metrics::internals::v2 {
+
+namespace genny::metrics {
+
+template <typename Clocksource>
+class OperationEventT;
+
+namespace internals::v2 {
 
 // TODO: Add gRPC call deadline constant.
 
@@ -181,8 +187,6 @@ private:
 
 };
 
-template <typename Clocksource>
-class OperationEventT;
 
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
@@ -204,16 +208,13 @@ public:
                 //std::cout << "DEBUG: Constructing EventStream" << "\n";
             }
 
-    // TODO: Add phase / state, maybe ID?
-    void add(const OperationEventT<ClockSource>& event) {
+    void addAt(OperationEventT<ClockSource>& event) {
         _metrics.mutable_counters()->set_number(event.iters);
         _metrics.mutable_counters()->set_ops(event.ops);
         _metrics.mutable_counters()->set_size(event.size);
         _metrics.mutable_counters()->set_errors(event.errors);
-        _metrics.mutable_timers()->mutable_duration()->set_seconds(
-                secondsCount(static_cast<duration>(event.duration)));
-        _metrics.mutable_timers()->mutable_duration()->set_nanos(
-                nanosecondsCount(static_cast<duration>(event.duration)));
+        _metrics.mutable_timers()->mutable_duration()->set_seconds(event.duration.getSeconds().count());
+        _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getNanoseconds().count());
         _metrics.mutable_gauges()->set_failed(event.isFailure());
         _stream.write(_metrics);
         _reset();
@@ -256,6 +257,8 @@ private:
 };
 
 
-} // namespace genny::metrics::v2
+} // namespace internals::v2
+
+} // namespace genny::metrics
 
 #endif // HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED
