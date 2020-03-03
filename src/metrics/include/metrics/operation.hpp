@@ -28,6 +28,7 @@
 
 #include <metrics/Period.hpp>
 #include <metrics/v1/TimeSeries.hpp>
+#include <metrics/v2/event.hpp>
 
 namespace genny::metrics {
 
@@ -43,6 +44,7 @@ enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
  * @tparam ClockSource a wrapper type around a std::chrono::steady_clock, should always be
  * MetricsClockSource other than during testing.
  */
+// TODO: Include reference to EventMetrics wrapper
 template <typename ClockSource>
 struct OperationEventT final {
 
@@ -95,6 +97,10 @@ struct OperationEventT final {
           errors{errors},
           duration{duration},
           outcome{outcome} {}
+
+    bool isFailure() {
+        return outcome == OutcomeType::kFailure;
+    }
 
     count_type iters;              // corresponds to the 'n' field in Cedar
     count_type ops;                // corresponds to the 'ops' field in Cedar
