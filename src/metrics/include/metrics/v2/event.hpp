@@ -119,6 +119,11 @@ public:
         : _name{std::move(name)}, _stub{stub}, _id{} {
         _id.set_name(_name);
 
+        //std::cout << "DEBUG: Creating collector with name " << _name << "\n";
+        if (_name == "") {
+            //std::cout << "DEBUG: Name is empty" << "\n";
+        }
+
         grpc::ClientContext context;
         poplar::PoplarResponse response;
         poplar::CreateOptions options = createOptions(_name);
@@ -126,7 +131,7 @@ public:
 
         // TODO: Better error handling.
         if (!status.ok()) {
-            std::cout << "Status not okay\n" << status.error_message();
+            std::cout << "Status not okay\n" << status.error_message() << "\n";
             throw std::bad_function_call();
         }
     }
@@ -185,12 +190,19 @@ class OperationEventT;
 template <typename ClockSource>
 class EventStream {
     using duration = typename ClockSource::duration;
+    using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
 public:
-    explicit EventStream(std::string name) 
-        : _stub{}, _collector{_stub, std::move(name)}, _stream{_stub} {
-            _metrics.set_name(name);
-            this->_reset();
-        }
+    explicit EventStream(const ActorId& actorId, std::string actor_name, std::string op_name, OptionalPhaseNumber phase) 
+        : 
+            _stub{}, 
+            _name{std::move(createName(actorId, actor_name, op_name, phase))},
+            _collector{_stub, _name}, 
+            _stream{_stub}, 
+            _phase{phase} {
+                _metrics.set_name(_name);
+                this->_reset();
+                //std::cout << "DEBUG: Constructing EventStream" << "\n";
+            }
 
     // TODO: Add phase / state, maybe ID?
     void add(const OperationEventT<ClockSource>& event) {
@@ -222,13 +234,25 @@ private:
         _metrics.mutable_time()->set_nanos(0);
     }
 
+    std::string createName(ActorId actor_id, std::string actor_name, std::string op_name, OptionalPhaseNumber phase) {
+        std::stringstream str;
+        std::cout << "DEBUG: Creating name. \n\tactor_name: " << actor_name << "\n\tactor_id: " << actor_id << " \n\top_name: " << op_name << " \n\tphase: " << *phase << "\n";
+        str << actor_name << '.' << actor_id << '.' << op_name;
+        if (phase) {
+            str << '.' << *phase;
+        }
+        return str.str();
+    }
+
     
 private:
     
     CollectorStubInterface _stub;
+    std::string _name;
     Collector _collector;
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
+    std::optional<genny::PhaseNumber> _phase;
 };
 
 

@@ -42,7 +42,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
     auto dummy_metrics = internals::RegistryT<RegistryClockSourceStub>{};
     auto op =
-        internals::OperationImpl<RegistryClockSourceStub>{"Actor", dummy_metrics, "Op", std::nullopt};
+        internals::OperationImpl<RegistryClockSourceStub>{5, "Actor", dummy_metrics, "Op", std::nullopt};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<internals::OperationContextT<RegistryClockSourceStub>>(&op);

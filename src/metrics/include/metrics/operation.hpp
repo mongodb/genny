@@ -33,6 +33,8 @@
 
 namespace genny::metrics {
 
+const bool USE_POPLAR = true;
+
 using count_type = long long;
 
 using actor_count_t = size_t;
@@ -45,7 +47,6 @@ enum class OutcomeType : uint8_t { kSuccess = 0, kFailure = 1, kUnknown = 2 };
  * @tparam ClockSource a wrapper type around a std::chrono::steady_clock, should always be
  * MetricsClockSource other than during testing.
  */
-// TODO: Include reference to EventMetrics wrapper
 template <typename ClockSource>
 struct OperationEventT final {
 
@@ -118,7 +119,6 @@ struct OperationEventT final {
  */
 namespace internals {
 
-const bool USE_POPLAR = false;
 
 namespace v2 {
 
@@ -185,18 +185,21 @@ public:
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     using stream_t = internals::v2::EventStream<ClockSource>;
 
-    OperationImpl(std::string actorName,
+    OperationImpl(const ActorId& actorId,
+                  std::string actorName,
                   const RegistryT<ClockSource>& registry,
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : _actorName(std::move(actorName)),
+        : 
+          _actorName(std::move(actorName)),
           _registry(registry),
           _opName(std::move(opName)),
           _phase(std::move(phase)),
           _threshold(threshold){
+              //std::cout << "DEBUG: Constructing operation" << "\n";
               if (USE_POPLAR) {
-                  _stream.reset(new stream_t(this->_opName));
+                  _stream.reset(new stream_t(actorId, this->_actorName, this->_opName, this->_phase));
               }
           
           };

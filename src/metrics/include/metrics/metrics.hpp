@@ -97,7 +97,7 @@ public:
         auto opIt =
             opsByThread
                 .try_emplace(
-                    actorId, std::move(actorName), *this, std::move(opName), std::move(phase))
+                    actorId, actorId, std::move(actorName), *this, std::move(opName), std::move(phase))
                 .first;
         return OperationT{opIt->second};
     }
@@ -113,6 +113,7 @@ public:
         auto opIt =
             opsByThread
                 .try_emplace(
+                    actorId,
                     actorId,
                     std::move(actorName),
                     *this,
