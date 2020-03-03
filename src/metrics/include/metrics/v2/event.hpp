@@ -55,6 +55,10 @@ private:
     static std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 };
 
+
+/**
+ * Manages the stream of poplar EventMetrics.
+ */
 class StreamInterface {
 public:
     StreamInterface(CollectorStubInterface stub) :
@@ -185,7 +189,7 @@ public:
     explicit EventStream(std::string name) 
         : _stub{}, _collector{_stub, std::move(name)}, _stream{_stub} {
             _metrics.set_name(name);
-            this->reset(false);
+            this->_reset();
         }
 
     // TODO: Add phase / state, maybe ID?

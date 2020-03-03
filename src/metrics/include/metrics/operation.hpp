@@ -25,6 +25,7 @@
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/Orchestrator.hpp>
 
 #include <metrics/Period.hpp>
 #include <metrics/v1/TimeSeries.hpp>
@@ -117,6 +118,15 @@ struct OperationEventT final {
  */
 namespace internals {
 
+const bool USE_POPLAR = false;
+
+namespace v2 {
+
+template <typename Clocksource>
+class EventStream;
+
+}
+
 template <typename Clocksource>
 class RegistryT;
 
@@ -173,6 +183,7 @@ public:
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
+    using stream_t = internals::v2::EventStream<ClockSource>;
 
     OperationImpl(std::string actorName,
                   const RegistryT<ClockSource>& registry,
@@ -183,7 +194,12 @@ public:
           _registry(registry),
           _opName(std::move(opName)),
           _phase(std::move(phase)),
-          _threshold(threshold){};
+          _threshold(threshold){
+              if (USE_POPLAR) {
+                  _stream.reset(new stream_t(this->_opName));
+              }
+          
+          };
 
     /**
      * @return the name of the actor running the operation.
@@ -238,6 +254,7 @@ private:
     OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
     EventSeries _events;
+    std::unique_ptr<stream_t> _stream;
 };
 
 /**
