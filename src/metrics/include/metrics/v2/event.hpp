@@ -17,6 +17,7 @@
 #define HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED
 
 #include <cstdlib>
+#include <atomic>
 
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
@@ -125,11 +126,6 @@ public:
         : _name{std::move(name)}, _stub{stub}, _id{} {
         _id.set_name(_name);
 
-        //std::cout << "DEBUG: Creating collector with name " << _name << "\n";
-        if (_name == "") {
-            //std::cout << "DEBUG: Name is empty" << "\n";
-        }
-
         grpc::ClientContext context;
         poplar::PoplarResponse response;
         poplar::CreateOptions options = createOptions(_name);
@@ -166,16 +162,10 @@ private:
         poplar::CreateOptions options;
         options.set_name(name);
         options.set_events(poplar::CreateOptions_EventsCollectorType_BASIC);
-        // end in .ftdc -- each stream should have a different path -- unique id for the stream
         options.set_path(createPath(name));
-        // how many events between compression and write events
-        options.set_chunksize(1000);  // probably not less than 10k maybe more - play with it; less
-        // means more time in cpu&io to compress
-        // flush to disk intermittently
+        options.set_chunksize(1000);
         options.set_streaming(true);
-        // dynamic means shape changes over time
         options.set_dynamic(false);
-        // may not matter but shrug it works
         options.set_recorder(poplar::CreateOptions_RecorderType_PERF);
         options.set_events(poplar::CreateOptions_EventsCollectorType_BASIC);
         return options;
@@ -187,6 +177,19 @@ private:
 
 };
 
+template <typename ClockSource>
+struct DurationCounter {
+
+    void update(Period<ClockSource> duration_in) {
+        this->duration += duration_in.getNanoseconds().count();
+        this->total = Period<ClockSource>(ClockSource::now() - _start).getNanoseconds().count();
+    }
+    std::atomic_uint32_t duration;
+    std::atomic_uint32_t total;
+
+private:
+    typename ClockSource::time_point _start = ClockSource::now();
+};
 
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
@@ -205,16 +208,17 @@ public:
             _phase{phase} {
                 _metrics.set_name(_name);
                 this->_reset();
-                //std::cout << "DEBUG: Constructing EventStream" << "\n";
             }
 
+    // TODO: Add time, pipe in actor count
     void addAt(OperationEventT<ClockSource>& event) {
+        _counter.update(event.duration);
+        _metrics.mutable_timers()->mutable_duration()->set_nanos(_counter.duration);
+        _metrics.mutable_timers()->mutable_total()->set_nanos(_counter.total);
         _metrics.mutable_counters()->set_number(event.iters);
         _metrics.mutable_counters()->set_ops(event.ops);
         _metrics.mutable_counters()->set_size(event.size);
         _metrics.mutable_counters()->set_errors(event.errors);
-        _metrics.mutable_timers()->mutable_duration()->set_seconds(event.duration.getSeconds().count());
-        _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getNanoseconds().count());
         _metrics.mutable_gauges()->set_failed(event.isFailure());
         _stream.write(_metrics);
         _reset();
@@ -223,7 +227,7 @@ public:
 private:
     void _reset() {
         _metrics.mutable_timers()->mutable_duration()->set_nanos(0);
-        _metrics.mutable_timers()->mutable_duration()->set_seconds(0);
+        _metrics.mutable_timers()->mutable_total()->set_nanos(0);
         _metrics.mutable_counters()->set_errors(0);
         _metrics.mutable_counters()->set_number(0);
         _metrics.mutable_counters()->set_ops(0);
@@ -231,13 +235,11 @@ private:
         _metrics.mutable_gauges()->set_state(0);
         _metrics.mutable_gauges()->set_workers(0);
         _metrics.mutable_gauges()->set_failed(false);
-        _metrics.mutable_time()->set_seconds(0);
         _metrics.mutable_time()->set_nanos(0);
     }
 
     std::string createName(ActorId actor_id, std::string actor_name, std::string op_name, OptionalPhaseNumber phase) {
         std::stringstream str;
-        std::cout << "DEBUG: Creating name. \n\tactor_name: " << actor_name << "\n\tactor_id: " << actor_id << " \n\top_name: " << op_name << " \n\tphase: " << *phase << "\n";
         str << actor_name << '.' << actor_id << '.' << op_name;
         if (phase) {
             str << '.' << *phase;
@@ -247,13 +249,13 @@ private:
 
     
 private:
-    
     CollectorStubInterface _stub;
     std::string _name;
     Collector _collector;
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
     std::optional<genny::PhaseNumber> _phase;
+    DurationCounter<ClockSource> _counter;
 };
 
 

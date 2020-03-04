@@ -65,14 +65,9 @@ public:
         return os << period._duration.count();
     }
 
-    std::chrono::seconds getSeconds() {
-        return std::chrono::duration_cast<std::chrono::seconds>(_duration);
-    }
-
     std::chrono::nanoseconds getNanoseconds() {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(_duration);
     }
-
 
 private:
     duration _duration;
