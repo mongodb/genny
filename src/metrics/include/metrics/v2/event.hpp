@@ -19,6 +19,8 @@
 #include <cstdlib>
 #include <atomic>
 
+#include <boost/log/trivial.hpp>
+
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
@@ -39,7 +41,11 @@ class OperationEventT;
 
 namespace internals::v2 {
 
-// TODO: Add gRPC call deadline constant.
+class PoplarRequestError : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
 
 /**
  * Manages the collector stub and its interactions.
@@ -59,6 +65,7 @@ public:
     }
 
 private:
+    // We should only have one channel across all threads.
     static std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 };
 
@@ -68,44 +75,43 @@ private:
  */
 class StreamInterface {
 public:
-    StreamInterface(CollectorStubInterface stub) :
-        _stub{stub},
+    StreamInterface(CollectorStubInterface& stub) :
         _options{},
         _response{},
         _context{},
-        _stream{_stub->StreamEvents(&_context, &_response)} {
+        _stream{stub->StreamEvents(&_context, &_response)} {
             _options.set_no_compression().set_buffer_hint();
         }
 
     void write(const poplar::EventMetrics& event) {
         auto success = _stream->Write(event, _options);
 
-        // TODO: Better error handling.
         if (!success) {
-            std::cout << "Couldn't write: stream was closed";
-            throw std::bad_function_call();
+            BOOST_THROW_EXCEPTION(PoplarRequestError("Failed to write to stream."));
         }
     }
 
     ~StreamInterface() {
         // TODO: Better debug logs.
         if (!_stream) {
-            std::cout << "No _stream." << std::endl;
+            BOOST_LOG_TRIVIAL(error)
+                << "Tried to close grpc stream, but none existed.";
             return;
         }
         if (!_stream->WritesDone()) {
             // TODO: barf
-            std::cout << "Errors in doing the writes?" << std::endl;
+            BOOST_LOG_TRIVIAL(warning)
+                << "Closing grpc stream, but not all writes completed.";
         }
         auto status = _stream->Finish();
         if (!status.ok()) {
-            std::cout << "Problem closing the stream:\n"
-                      << _context.debug_error_string() << std::endl;
+            BOOST_LOG_TRIVIAL(error) 
+                << "Problem closing grpc stream: "
+                << _context.debug_error_string();
         }
     }
 
 private:
-    CollectorStubInterface _stub;
     grpc::WriteOptions _options;
     poplar::PoplarResponse _response;
     grpc::ClientContext _context;
@@ -133,8 +139,9 @@ public:
 
         // TODO: Better error handling.
         if (!status.ok()) {
-            std::cout << "Status not okay\n" << status.error_message() << "\n";
-            throw std::bad_function_call();
+            std::ostringstream os;
+            os << "Collector status not okay: " << status.error_message();
+            BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
         }
     }
 
@@ -144,16 +151,16 @@ public:
         // TODO: Better error handling
         auto status = _stub->CloseCollector(&context, _id, &response);
         if (!status.ok()) {
-            std::cout << "Couldn't close collector: " << status.error_message();
+            BOOST_LOG_TRIVIAL(error) << "Couldn't close collector: " << status.error_message();
         }
     }
 
     CollectorStubInterface& _stub;
 
 private:
-    // TODO: Add path prefix
     static auto createPath(const std::string& name, const std::string& path_prefix) {
         std::stringstream str;
+        // TODO: Check for /
         str << path_prefix << '/';
         str << name << ".ftdc";
         return str.str();
@@ -173,11 +180,13 @@ private:
     }
 
     std::string _name;
-    // _id should always be the same as the name in the options to createcollector
     poplar::PoplarID _id;
 
 };
 
+/**
+ * Class that keeps track of the duration and totals for an operation across all threads.
+ */
 template <typename ClockSource>
 struct DurationCounter {
 
@@ -200,8 +209,8 @@ class EventStream {
     using duration = typename ClockSource::duration;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
 public:
-    explicit EventStream(const ActorId& actorId, std::string actor_name, std::string op_name, 
-            OptionalPhaseNumber phase, const std::string& path_prefix) 
+    explicit EventStream(const ActorId& actorId, const std::string& actor_name, const std::string& op_name, 
+            const OptionalPhaseNumber& phase, const std::string& path_prefix) 
         : 
             _stub{}, 
             _name{std::move(createName(actorId, actor_name, op_name, phase))},
@@ -213,7 +222,7 @@ public:
                 this->_reset();
             }
 
-    void addAt(OperationEventT<ClockSource>& event, size_t workerCount) {
+    void addAt(const OperationEventT<ClockSource>& event, size_t workerCount) {
         _counter.update(event.duration);
         _metrics.mutable_timers()->mutable_duration()->set_nanos(_counter.duration);
         _metrics.mutable_timers()->mutable_total()->set_nanos(_counter.total);
@@ -246,7 +255,7 @@ private:
         _metrics.mutable_time()->set_nanos(0);
     }
 
-    std::string createName(ActorId actor_id, std::string actor_name, std::string op_name, OptionalPhaseNumber phase) {
+    std::string createName(const ActorId& actor_id, const std::string& actor_name, const std::string& op_name, const OptionalPhaseNumber& phase) {
         std::stringstream str;
         str << actor_name << '.' << actor_id << '.' << op_name;
         if (phase) {

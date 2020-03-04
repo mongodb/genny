@@ -33,8 +33,6 @@
 
 namespace genny::metrics {
 
-const bool USE_POPLAR = true;
-
 using count_type = long long;
 
 using actor_count_t = size_t;
@@ -100,7 +98,7 @@ struct OperationEventT final {
           duration{duration},
           outcome{outcome} {}
 
-    bool isFailure() {
+    bool isFailure() const {
         return outcome == OutcomeType::kFailure;
     }
 
