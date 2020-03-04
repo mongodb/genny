@@ -207,19 +207,25 @@ public:
             _stream{_stub}, 
             _phase{phase} {
                 _metrics.set_name(_name);
+                _metrics.set_id(actorId);
                 this->_reset();
             }
 
-    // TODO: Add time, pipe in actor count
-    void addAt(OperationEventT<ClockSource>& event) {
+    void addAt(OperationEventT<ClockSource>& event, size_t workerCount) {
         _counter.update(event.duration);
         _metrics.mutable_timers()->mutable_duration()->set_nanos(_counter.duration);
         _metrics.mutable_timers()->mutable_total()->set_nanos(_counter.total);
+
         _metrics.mutable_counters()->set_number(event.iters);
         _metrics.mutable_counters()->set_ops(event.ops);
         _metrics.mutable_counters()->set_size(event.size);
         _metrics.mutable_counters()->set_errors(event.errors);
+
         _metrics.mutable_gauges()->set_failed(event.isFailure());
+        _metrics.mutable_gauges()->set_workers(workerCount);
+        if (_phase) {
+            _metrics.mutable_gauges()->set_state(*_phase);
+        }
         _stream.write(_metrics);
         _reset();
     }

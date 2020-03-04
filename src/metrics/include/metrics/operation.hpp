@@ -230,7 +230,7 @@ public:
             _threshold->check(started, finished);
         }
         _events.addAt(finished, event);
-        _stream->addAt(event);
+        _stream->addAt(event, _registry.getWorkerCount(_actorName, _opName));
     }
 
     void reportSynthetic(time_point finished,
