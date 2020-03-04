@@ -89,13 +89,11 @@ public:
     }
 
     ~StreamInterface() {
-        // TODO: Better debug logs.
         if (!_stream) {
             BOOST_LOG_TRIVIAL(error) << "Tried to close grpc stream, but none existed.";
             return;
         }
         if (!_stream->WritesDone()) {
-            // TODO: barf
             BOOST_LOG_TRIVIAL(warning) << "Closing grpc stream, but not all writes completed.";
         }
         auto status = _stream->Finish();
@@ -132,7 +130,6 @@ public:
         poplar::CreateOptions options = createOptions(_name, path_prefix);
         auto status = _stub->CreateCollector(&context, options, &response);
 
-        // TODO: Better error handling.
         if (!status.ok()) {
             std::ostringstream os;
             os << "Collector status not okay: " << status.error_message();
@@ -143,7 +140,6 @@ public:
     ~Collector() {
         grpc::ClientContext context;
         poplar::PoplarResponse response;
-        // TODO: Better error handling
         auto status = _stub->CloseCollector(&context, _id, &response);
         if (!status.ok()) {
             BOOST_LOG_TRIVIAL(error) << "Couldn't close collector: " << status.error_message();
@@ -155,7 +151,6 @@ public:
 private:
     static auto createPath(const std::string& name, const std::string& path_prefix) {
         std::stringstream str;
-        // TODO: Check for /
         str << path_prefix << '/';
         str << name << ".ftdc";
         return str.str();
