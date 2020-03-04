@@ -42,7 +42,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
     auto dummy_metrics = internals::RegistryT<RegistryClockSourceStub>{};
     auto op =
-        internals::OperationImpl<RegistryClockSourceStub>{5, "Actor", dummy_metrics, "Op", std::nullopt};
+        internals::OperationImpl<RegistryClockSourceStub>{5, "Actor", dummy_metrics, "Op", std::nullopt, "output"};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<internals::OperationContextT<RegistryClockSourceStub>>(&op);
@@ -221,7 +221,7 @@ TEST_CASE("metrics output format") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("csv"));
         REQUIRE(out.str() == expected);
     }
 
@@ -249,7 +249,7 @@ TEST_CASE("metrics output format") {
             "28,InsertRemove,1,Insert,23,0,1,9,0,300\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("cedar-csv"));
         REQUIRE(out.str() == expected);
     }
 }
@@ -283,7 +283,7 @@ TEST_CASE("Genny.Setup metric") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("csv"));
         REQUIRE(out.str() == expected);
     }
 
@@ -303,7 +303,7 @@ TEST_CASE("Genny.Setup metric") {
             "15,Genny,0,Setup,10,0,1,0,0,0\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("cedar-csv"));
         REQUIRE(out.str() == expected);
     }
 }
@@ -363,7 +363,7 @@ TEST_CASE("Genny.ActiveActors metric") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("csv"));
         REQUIRE(out.str() == expected);
     }
 
@@ -381,7 +381,7 @@ TEST_CASE("Genny.ActiveActors metric") {
             "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("cedar-csv"));
         REQUIRE(out.str() == expected);
     }
 }

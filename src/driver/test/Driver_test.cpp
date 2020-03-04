@@ -134,7 +134,6 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
 
     DefaultDriver::ProgramOptions opts;
 
-    opts.metricsFormat = "csv";
     opts.metricsOutputFileName = metricsOutputFileName;
     opts.mongoUri = "mongodb://localhost:27017";
     opts.workloadSourceType = DefaultDriver::ProgramOptions::YamlSource::kString;

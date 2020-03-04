@@ -69,7 +69,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     // setup logging as the first thing we do.
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= options.logVerbosity);
 
-    genny::metrics::Registry metrics;
+    genny::metrics::Registry metrics(options.metricsFormat, options.metricsPathPrefix);
 
     const auto workloadName = fs::path(options.workloadSource).stem().string();
     auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
@@ -147,8 +147,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::mutex reporting;
     std::vector<std::thread> threads;
     std::transform(cbegin(workloadContext.actors()),
-                   cend(workloadContext.actors()),
-                   std::back_inserter(threads),
+                   cend(workloadContext.actors()), std::back_inserter(threads),
                    [&](const auto& actor) {
                        return std::thread{[&]() {
                            {
@@ -174,13 +173,15 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     for (auto& thread : threads)
         thread.join();
 
-    const auto reporter = genny::metrics::Reporter{metrics};
+    if (options.metricsFormat.use_csv()) {
+        const auto reporter = genny::metrics::Reporter{metrics};
 
-    {
-        std::ofstream metricsOutput;
-        metricsOutput.open(options.metricsOutputFileName,
-                           std::ofstream::out | std::ofstream::trunc);
-        reporter.report(metricsOutput, options.metricsFormat);
+        {
+            std::ofstream metricsOutput;
+            metricsOutput.open(options.metricsOutputFileName,
+                               std::ofstream::out | std::ofstream::trunc);
+            reporter.report(metricsOutput, options.metricsFormat);
+        }
     }
 
     return outcomeCode;
@@ -281,7 +282,11 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
              "Metrics format to use")
             ("metrics-output-file,o",
              po::value<std::string>()->default_value("/dev/stdout"),
-             "Save metrics data to this file. Use `-` or `/dev/stdout` for stdout.")
+             "Save metrics data to this file when using csv format. Use `-` or `/dev/stdout` for stdout.")
+            ("metrics-path-prefix,o",
+             po::value<std::string>()->default_value("."),
+             "Save metrics data to this directory when using ftdc format. Defaults to current directory.")
+
             ("workload-file,w",
              po::value<std::string>(),
              "Path to workload configuration yaml file. "
@@ -343,9 +348,10 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         this->runMode = RunMode::kHelp;
 
     this->logVerbosity = parseVerbosity(vm["verbosity"].as<std::string>());
-    this->metricsFormat = vm["metrics-format"].as<std::string>();
+    this->metricsFormat = metrics::MetricsFormat(vm["metrics-format"].as<std::string>());
     this->isSmokeTest = vm["smoke-test"].as<bool>();
     this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
+    this->metricsPathPrefix = normalizeOutputFile(vm["metrics-path-prefix"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 
     if (vm.count("workload-file") > 0) {

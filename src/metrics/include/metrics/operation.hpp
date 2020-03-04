@@ -190,6 +190,7 @@ public:
                   const RegistryT<ClockSource>& registry,
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
+                  const std::string& path_prefix,
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : 
           _actorName(std::move(actorName)),
@@ -197,9 +198,11 @@ public:
           _opName(std::move(opName)),
           _phase(std::move(phase)),
           _threshold(threshold){
-              //std::cout << "DEBUG: Constructing operation" << "\n";
-              if (USE_POPLAR) {
-                  _stream.reset(new stream_t(actorId, this->_actorName, this->_opName, this->_phase));
+              if (_registry.getFormat().use_grpc()) {
+                  _stream.reset(new stream_t(actorId, this->_actorName, this->_opName, this->_phase, path_prefix));
+              }
+              if (_registry.getFormat().use_csv()) {
+                 _events.reset(new EventSeries());
               }
           
           };
@@ -222,15 +225,19 @@ public:
      * @return the time series for the operation being run.
      */
     const EventSeries& getEvents() const {
-        return _events;
+        return *_events;
     }
 
     void reportAt(time_point started, time_point finished, OperationEventT<ClockSource>&& event) {
         if (_threshold) {
             _threshold->check(started, finished);
         }
-        _events.addAt(finished, event);
-        _stream->addAt(event, _registry.getWorkerCount(_actorName, _opName));
+        if (_registry.getFormat().use_grpc()) {
+            _stream->addAt(event, _registry.getWorkerCount(_actorName, _opName));
+        }
+        if (_registry.getFormat().use_csv()) {
+            _events->addAt(finished, event);
+        }
     }
 
     void reportSynthetic(time_point finished,
@@ -257,7 +264,7 @@ private:
     const std::string _opName;
     OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
-    EventSeries _events;
+    std::unique_ptr<EventSeries> _events;
     std::unique_ptr<stream_t> _stream;
 };
 

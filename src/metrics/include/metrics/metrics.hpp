@@ -19,6 +19,7 @@
 #include <optional>
 #include <type_traits>
 #include <unordered_map>
+#include <boost/filesystem.hpp>
 
 #include <gennylib/conventions.hpp>
 
@@ -26,6 +27,46 @@
 #include <metrics/v1/passkey.hpp>
 
 namespace genny::metrics {
+
+/**
+ * Class wrapping the logic involving metrics formats.
+ */
+class MetricsFormat {
+public:
+    enum class Format {
+        csv = 0,
+        cedar_csv = 1,
+        ftdc = 2,
+        csv_ftdc = 3,
+    };
+
+    MetricsFormat() : _format{Format::csv} {}
+
+    MetricsFormat(const std::string& to_convert) : _format{str_to_enum(to_convert)} {}
+
+    bool use_grpc() const { return _format == Format::ftdc || _format == Format::csv_ftdc; }
+
+    bool use_csv() const { return _format == Format::csv || _format == Format::cedar_csv 
+        || _format == Format::csv_ftdc; }
+
+    Format get() const {return _format;}
+
+private:
+    Format _format;
+    Format str_to_enum(const std::string& to_convert) {
+        if (to_convert == "csv") {
+            return Format::csv;
+        } else if (to_convert == "cedar-csv") {
+            return Format::cedar_csv;
+        } else if (to_convert == "ftdc") {
+            return Format::ftdc;
+        } else if (to_convert == "csv-ftdc") {
+            return Format::csv_ftdc;
+        } else {
+            throw std::invalid_argument(std::string("Unknown metrics format ") + to_convert);
+        }
+    }
+};
 
 /**
  * @namespace genny::metrics::internals this namespace is private and only intended to be used by genny's
@@ -88,6 +129,13 @@ public:
 
     explicit RegistryT() = default;
 
+    RegistryT(const MetricsFormat& format, const std::string& path_prefix) : _format{format}, 
+        _path_prefix{path_prefix} {
+            if (_format.use_grpc()) {
+                boost::filesystem::create_directory(path_prefix); 
+            }
+        }
+
     OperationT<ClockSource> operation(std::string actorName,
                                       std::string opName,
                                       ActorId actorId,
@@ -97,7 +145,7 @@ public:
         auto opIt =
             opsByThread
                 .try_emplace(
-                    actorId, actorId, std::move(actorName), *this, std::move(opName), std::move(phase))
+                    actorId, actorId, std::move(actorName), *this, std::move(opName), std::move(phase), _path_prefix)
                 .first;
         return OperationT{opIt->second};
     }
@@ -119,6 +167,7 @@ public:
                     *this,
                     std::move(opName),
                     std::move(phase),
+                    _path_prefix,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;
@@ -141,8 +190,12 @@ public:
         return (_ops.at(actorName).at(opName)).size();
     }
 
+    const MetricsFormat& getFormat() const {return _format;}
+
 private:
     OperationsMap _ops;
+    MetricsFormat _format;
+    std::string _path_prefix;
 };
 
 }  // namespace internals 

@@ -122,13 +122,13 @@ class Collector {
 public:
     Collector(const Collector&) = delete;
 
-    explicit Collector(CollectorStubInterface& stub, std::string name)
+    explicit Collector(CollectorStubInterface& stub, std::string name, const std::string& path_prefix)
         : _name{std::move(name)}, _stub{stub}, _id{} {
         _id.set_name(_name);
 
         grpc::ClientContext context;
         poplar::PoplarResponse response;
-        poplar::CreateOptions options = createOptions(_name);
+        poplar::CreateOptions options = createOptions(_name, path_prefix);
         auto status = _stub->CreateCollector(&context, options, &response);
 
         // TODO: Better error handling.
@@ -152,17 +152,18 @@ public:
 
 private:
     // TODO: Add path prefix
-    static auto createPath(const std::string& name) {
+    static auto createPath(const std::string& name, const std::string& path_prefix) {
         std::stringstream str;
+        str << path_prefix << '/';
         str << name << ".ftdc";
         return str.str();
     }
 
-    static poplar::CreateOptions createOptions(const std::string& name) {
+    static poplar::CreateOptions createOptions(const std::string& name, const std::string& path_prefix) {
         poplar::CreateOptions options;
         options.set_name(name);
         options.set_events(poplar::CreateOptions_EventsCollectorType_BASIC);
-        options.set_path(createPath(name));
+        options.set_path(createPath(name, path_prefix));
         options.set_chunksize(1000);
         options.set_streaming(true);
         options.set_dynamic(false);
@@ -199,11 +200,12 @@ class EventStream {
     using duration = typename ClockSource::duration;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
 public:
-    explicit EventStream(const ActorId& actorId, std::string actor_name, std::string op_name, OptionalPhaseNumber phase) 
+    explicit EventStream(const ActorId& actorId, std::string actor_name, std::string op_name, 
+            OptionalPhaseNumber phase, const std::string& path_prefix) 
         : 
             _stub{}, 
             _name{std::move(createName(actorId, actor_name, op_name, phase))},
-            _collector{_stub, _name}, 
+            _collector{_stub, _name, path_prefix}, 
             _stream{_stub}, 
             _phase{phase} {
                 _metrics.set_name(_name);

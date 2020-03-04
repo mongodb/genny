@@ -83,7 +83,7 @@ public:
      * @param metricsFormat the format to use. Must be "csv".
      */
     template <typename ReporterClockSource = SystemClockSource>
-    void report(std::ostream& out, const std::string& metricsFormat) const {
+    void report(std::ostream& out, const MetricsFormat&  metricsFormat) const {
         v1::Permission perm;
 
         BOOST_LOG_TRIVIAL(debug) << "Beginning metrics reporting.";
@@ -95,12 +95,12 @@ public:
 
         // if this lives more than a hot-second, put the formats into an enum and do this
         // check & throw in the driver/main program
-        if (metricsFormat == "csv") {
+        if (metricsFormat.get() == MetricsFormat::Format::csv) {
             reportLegacyCsv(out, systemTime, metricsTime, perm);
-        } else if (metricsFormat == "cedar-csv") {
+        } else if (metricsFormat.get() == MetricsFormat::Format::cedar_csv || metricsFormat.get() == MetricsFormat::Format::csv_ftdc) {
             reportCedarCsv(out, systemTime, metricsTime, perm);
         } else {
-            throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
+            throw std::invalid_argument(std::string("Received unknown csv metrics format."));
         }
 
         BOOST_LOG_TRIVIAL(debug) << "Finished metrics reporting.";
