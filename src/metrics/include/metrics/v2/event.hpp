@@ -16,8 +16,8 @@
 #ifndef HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED
 #define HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED
 
-#include <cstdlib>
 #include <atomic>
+#include <cstdlib>
 
 #include <boost/log/trivial.hpp>
 
@@ -25,13 +25,13 @@
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
 
-#include <poplarlib/collector.grpc.pb.h>
 #include <metrics/operation.hpp>
+#include <poplarlib/collector.grpc.pb.h>
 
 /**
- * @namespace genny::metrics::internals::v2 this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::v2 namespace should ever be typed directly into
- * the implementation of an actor.
+ * @namespace genny::metrics::internals::v2 this namespace is private and only intended to be used
+ * by genny's own internals. No types from the genny::metrics::v2 namespace should ever be typed
+ * directly into the implementation of an actor.
  */
 
 namespace genny::metrics {
@@ -52,10 +52,10 @@ public:
  */
 class CollectorStubInterface {
 public:
-
     CollectorStubInterface() {
         if (!_stub) {
-            auto channel = grpc::CreateChannel("localhost:2288", grpc::InsecureChannelCredentials());
+            auto channel =
+                grpc::CreateChannel("localhost:2288", grpc::InsecureChannelCredentials());
             _stub = poplar::PoplarEventCollector::NewStub(channel);
         }
     }
@@ -75,13 +75,10 @@ private:
  */
 class StreamInterface {
 public:
-    StreamInterface(CollectorStubInterface& stub) :
-        _options{},
-        _response{},
-        _context{},
-        _stream{stub->StreamEvents(&_context, &_response)} {
-            _options.set_no_compression().set_buffer_hint();
-        }
+    StreamInterface(CollectorStubInterface& stub)
+        : _options{}, _response{}, _context{}, _stream{stub->StreamEvents(&_context, &_response)} {
+        _options.set_no_compression().set_buffer_hint();
+    }
 
     void write(const poplar::EventMetrics& event) {
         auto success = _stream->Write(event, _options);
@@ -94,20 +91,17 @@ public:
     ~StreamInterface() {
         // TODO: Better debug logs.
         if (!_stream) {
-            BOOST_LOG_TRIVIAL(error)
-                << "Tried to close grpc stream, but none existed.";
+            BOOST_LOG_TRIVIAL(error) << "Tried to close grpc stream, but none existed.";
             return;
         }
         if (!_stream->WritesDone()) {
             // TODO: barf
-            BOOST_LOG_TRIVIAL(warning)
-                << "Closing grpc stream, but not all writes completed.";
+            BOOST_LOG_TRIVIAL(warning) << "Closing grpc stream, but not all writes completed.";
         }
         auto status = _stream->Finish();
         if (!status.ok()) {
-            BOOST_LOG_TRIVIAL(error) 
-                << "Problem closing grpc stream: "
-                << _context.debug_error_string();
+            BOOST_LOG_TRIVIAL(error)
+                << "Problem closing grpc stream: " << _context.debug_error_string();
         }
     }
 
@@ -119,8 +113,7 @@ private:
 };
 
 
-
-/** 
+/**
  * Manages the gRPC-side collector for each operation.
  * Exists for construction / destruction resource management only.
  */
@@ -128,7 +121,9 @@ class Collector {
 public:
     Collector(const Collector&) = delete;
 
-    explicit Collector(CollectorStubInterface& stub, std::string name, const std::string& path_prefix)
+    explicit Collector(CollectorStubInterface& stub,
+                       std::string name,
+                       const std::string& path_prefix)
         : _name{std::move(name)}, _stub{stub}, _id{} {
         _id.set_name(_name);
 
@@ -166,7 +161,8 @@ private:
         return str.str();
     }
 
-    static poplar::CreateOptions createOptions(const std::string& name, const std::string& path_prefix) {
+    static poplar::CreateOptions createOptions(const std::string& name,
+                                               const std::string& path_prefix) {
         poplar::CreateOptions options;
         options.set_name(name);
         options.set_events(poplar::CreateOptions_EventsCollectorType_BASIC);
@@ -181,7 +177,6 @@ private:
 
     std::string _name;
     poplar::PoplarID _id;
-
 };
 
 /**
@@ -208,19 +203,22 @@ template <typename ClockSource>
 class EventStream {
     using duration = typename ClockSource::duration;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
+
 public:
-    explicit EventStream(const ActorId& actorId, const std::string& actor_name, const std::string& op_name, 
-            const OptionalPhaseNumber& phase, const std::string& path_prefix) 
-        : 
-            _stub{}, 
-            _name{std::move(createName(actorId, actor_name, op_name, phase))},
-            _collector{_stub, _name, path_prefix}, 
-            _stream{_stub}, 
-            _phase{phase} {
-                _metrics.set_name(_name);
-                _metrics.set_id(actorId);
-                this->_reset();
-            }
+    explicit EventStream(const ActorId& actorId,
+                         const std::string& actor_name,
+                         const std::string& op_name,
+                         const OptionalPhaseNumber& phase,
+                         const std::string& path_prefix)
+        : _stub{},
+          _name{std::move(createName(actorId, actor_name, op_name, phase))},
+          _collector{_stub, _name, path_prefix},
+          _stream{_stub},
+          _phase{phase} {
+        _metrics.set_name(_name);
+        _metrics.set_id(actorId);
+        this->_reset();
+    }
 
     void addAt(const OperationEventT<ClockSource>& event, size_t workerCount) {
         _counter.update(event.duration);
@@ -240,7 +238,7 @@ public:
         _stream.write(_metrics);
         _reset();
     }
-    
+
 private:
     void _reset() {
         _metrics.mutable_timers()->mutable_duration()->set_nanos(0);
@@ -255,7 +253,10 @@ private:
         _metrics.mutable_time()->set_nanos(0);
     }
 
-    std::string createName(const ActorId& actor_id, const std::string& actor_name, const std::string& op_name, const OptionalPhaseNumber& phase) {
+    std::string createName(const ActorId& actor_id,
+                           const std::string& actor_name,
+                           const std::string& op_name,
+                           const OptionalPhaseNumber& phase) {
         std::stringstream str;
         str << actor_name << '.' << actor_id << '.' << op_name;
         if (phase) {
@@ -264,7 +265,7 @@ private:
         return str.str();
     }
 
-    
+
 private:
     CollectorStubInterface _stub;
     std::string _name;
@@ -276,8 +277,8 @@ private:
 };
 
 
-} // namespace internals::v2
+}  // namespace internals::v2
 
-} // namespace genny::metrics
+}  // namespace genny::metrics
 
-#endif // HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED
+#endif  // HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED

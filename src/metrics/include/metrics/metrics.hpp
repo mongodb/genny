@@ -15,11 +15,11 @@
 #ifndef HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
+#include <boost/filesystem.hpp>
 #include <chrono>
 #include <optional>
 #include <type_traits>
 #include <unordered_map>
-#include <boost/filesystem.hpp>
 
 #include <gennylib/conventions.hpp>
 
@@ -44,12 +44,18 @@ public:
 
     MetricsFormat(const std::string& to_convert) : _format{str_to_enum(to_convert)} {}
 
-    bool use_grpc() const { return _format == Format::ftdc || _format == Format::csv_ftdc; }
+    bool use_grpc() const {
+        return _format == Format::ftdc || _format == Format::csv_ftdc;
+    }
 
-    bool use_csv() const { return _format == Format::csv || _format == Format::cedar_csv 
-        || _format == Format::csv_ftdc; }
+    bool use_csv() const {
+        return _format == Format::csv || _format == Format::cedar_csv ||
+            _format == Format::csv_ftdc;
+    }
 
-    Format get() const {return _format;}
+    Format get() const {
+        return _format;
+    }
 
 private:
     Format _format;
@@ -69,9 +75,9 @@ private:
 };
 
 /**
- * @namespace genny::metrics::internals this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::internals namespace should ever be typed directly into
- * the implementation of an actor.
+ * @namespace genny::metrics::internals this namespace is private and only intended to be used by
+ * genny's own internals. No types from the genny::metrics::internals namespace should ever be typed
+ * directly into the implementation of an actor.
  */
 namespace internals {
 
@@ -133,12 +139,12 @@ public:
     /**
      * Constructor for using poplar metrics.
      */
-    RegistryT(const MetricsFormat& format, const std::string& path_prefix) : _format{format}, 
-        _path_prefix{path_prefix} {
-            if (_format.use_grpc()) {
-                boost::filesystem::create_directory(path_prefix); 
-            }
+    RegistryT(const MetricsFormat& format, const std::string& path_prefix)
+        : _format{format}, _path_prefix{path_prefix} {
+        if (_format.use_grpc()) {
+            boost::filesystem::create_directory(path_prefix);
         }
+    }
 
     OperationT<ClockSource> operation(std::string actorName,
                                       std::string opName,
@@ -146,11 +152,15 @@ public:
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        auto opIt =
-            opsByThread
-                .try_emplace(
-                    actorId, actorId, std::move(actorName), *this, std::move(opName), std::move(phase), _path_prefix)
-                .first;
+        auto opIt = opsByThread
+                        .try_emplace(actorId,
+                                     actorId,
+                                     std::move(actorName),
+                                     *this,
+                                     std::move(opName),
+                                     std::move(phase),
+                                     _path_prefix)
+                        .first;
         return OperationT{opIt->second};
     }
 
@@ -194,7 +204,9 @@ public:
         return (_ops.at(actorName).at(opName)).size();
     }
 
-    const MetricsFormat& getFormat() const {return _format;}
+    const MetricsFormat& getFormat() const {
+        return _format;
+    }
 
 private:
     OperationsMap _ops;
@@ -202,7 +214,7 @@ private:
     std::string _path_prefix;
 };
 
-}  // namespace internals 
+}  // namespace internals
 
 using Registry = internals::RegistryT<internals::MetricsClockSource>;
 

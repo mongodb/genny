@@ -147,7 +147,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     std::mutex reporting;
     std::vector<std::thread> threads;
     std::transform(cbegin(workloadContext.actors()),
-                   cend(workloadContext.actors()), std::back_inserter(threads),
+                   cend(workloadContext.actors()),
+                   std::back_inserter(threads),
                    [&](const auto& actor) {
                        return std::thread{[&]() {
                            {

@@ -111,9 +111,9 @@ struct OperationEventT final {
 };
 
 /**
- * @namespace genny::metrics::internals this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
- * the implementation of an actor.
+ * @namespace genny::metrics::internals this namespace is private and only intended to be used by
+ * genny's own internals. No types from the genny::metrics::v1 namespace should ever be typed
+ * directly into the implementation of an actor.
  */
 namespace internals {
 
@@ -190,20 +190,19 @@ public:
                   std::optional<genny::PhaseNumber> phase,
                   const std::string& path_prefix,
                   std::optional<OperationThreshold> threshold = std::nullopt)
-        : 
-          _actorName(std::move(actorName)),
+        : _actorName(std::move(actorName)),
           _registry(registry),
           _opName(std::move(opName)),
           _phase(std::move(phase)),
-          _threshold(threshold){
-              if (_registry.getFormat().use_grpc()) {
-                  _stream.reset(new stream_t(actorId, this->_actorName, this->_opName, this->_phase, path_prefix));
-              }
-              if (_registry.getFormat().use_csv()) {
-                 _events.reset(new EventSeries());
-              }
-          
-          };
+          _threshold(threshold) {
+        if (_registry.getFormat().use_grpc()) {
+            _stream.reset(
+                new stream_t(actorId, this->_actorName, this->_opName, this->_phase, path_prefix));
+        }
+        if (_registry.getFormat().use_csv()) {
+            _events.reset(new EventSeries());
+        }
+    };
 
     /**
      * @return the name of the actor running the operation.

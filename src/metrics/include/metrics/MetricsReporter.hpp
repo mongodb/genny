@@ -25,9 +25,9 @@
 namespace genny::metrics {
 
 /**
- * @namespace genny::metrics::internals::v1 this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::internals::v1 namespace should ever be typed directly into
- * the implementation of an actor.
+ * @namespace genny::metrics::internals::v1 this namespace is private and only intended to be used
+ * by genny's own internals. No types from the genny::metrics::internals::v1 namespace should ever
+ * be typed directly into the implementation of an actor.
  */
 namespace internals::v1 {
 
@@ -83,7 +83,7 @@ public:
      * @param metricsFormat the format to use. Must be "csv".
      */
     template <typename ReporterClockSource = SystemClockSource>
-    void report(std::ostream& out, const MetricsFormat&  metricsFormat) const {
+    void report(std::ostream& out, const MetricsFormat& metricsFormat) const {
         v1::Permission perm;
 
         BOOST_LOG_TRIVIAL(debug) << "Beginning metrics reporting.";
@@ -97,7 +97,8 @@ public:
         // check & throw in the driver/main program
         if (metricsFormat.get() == MetricsFormat::Format::csv) {
             reportLegacyCsv(out, systemTime, metricsTime, perm);
-        } else if (metricsFormat.get() == MetricsFormat::Format::cedar_csv || metricsFormat.get() == MetricsFormat::Format::csv_ftdc) {
+        } else if (metricsFormat.get() == MetricsFormat::Format::cedar_csv ||
+                   metricsFormat.get() == MetricsFormat::Format::csv_ftdc) {
             reportCedarCsv(out, systemTime, metricsTime, perm);
         } else {
             throw std::invalid_argument(std::string("Received unknown csv metrics format."));

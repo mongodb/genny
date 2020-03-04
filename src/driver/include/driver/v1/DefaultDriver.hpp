@@ -49,7 +49,7 @@ public:
         kUnknownException = 10,
     };
 
-    
+
     struct ProgramOptions {
         explicit ProgramOptions() = default;
 
