@@ -127,8 +127,12 @@ private:
 public:
     using clock = ClockSource;
 
+    // Can use the default constructor if not using poplar metrics.
     explicit RegistryT() = default;
 
+    /**
+     * Constructor for using poplar metrics.
+     */
     RegistryT(const MetricsFormat& format, const std::string& path_prefix) : _format{format}, 
         _path_prefix{path_prefix} {
             if (_format.use_grpc()) {
