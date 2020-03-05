@@ -53,11 +53,7 @@ public:
 class CollectorStubInterface {
 public:
     CollectorStubInterface() {
-        if (!_stub) {
-            auto channel =
-                grpc::CreateChannel("localhost:2288", grpc::InsecureChannelCredentials());
-            _stub = poplar::PoplarEventCollector::NewStub(channel);
-        }
+        getStub();
     }
 
     poplar::PoplarEventCollector::StubInterface* operator->() {
@@ -67,6 +63,18 @@ public:
 private:
     // We should only have one channel across all threads.
     static std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
+
+    auto createStub() {
+        auto channel =
+            grpc::CreateChannel("localhost:2288", grpc::InsecureChannelCredentials());
+        _stub = poplar::PoplarEventCollector::NewStub(channel);
+        return true;
+    }
+
+    void getStub() {
+        static bool stub_created = createStub();
+        return;
+    }
 };
 
 
@@ -177,6 +185,7 @@ private:
 /**
  * Class that keeps track of the duration and totals for an operation across all threads.
  */
+// TODO: fix clock
 template <typename ClockSource>
 struct DurationCounter {
 
@@ -184,8 +193,8 @@ struct DurationCounter {
         this->duration += duration_in.getNanoseconds().count();
         this->total = Period<ClockSource>(ClockSource::now() - _start).getNanoseconds().count();
     }
-    std::atomic_uint32_t duration;
-    std::atomic_uint32_t total;
+    std::int32_t duration;
+    std::uint32_t total;
 
 private:
     typename ClockSource::time_point _start = ClockSource::now();
@@ -217,6 +226,7 @@ public:
 
     void addAt(const OperationEventT<ClockSource>& event, size_t workerCount) {
         _counter.update(event.duration);
+        //TODO add seconds
         _metrics.mutable_timers()->mutable_duration()->set_nanos(_counter.duration);
         _metrics.mutable_timers()->mutable_total()->set_nanos(_counter.total);
 
