@@ -124,6 +124,7 @@ private:
  * Exists for construction / destruction resource management only.
  */
 class Collector {
+    // TODO: Create only once per actor-operation
 public:
     Collector(const Collector&) = delete;
 
@@ -183,31 +184,12 @@ private:
 };
 
 /**
- * Class that keeps track of the duration and totals for an operation across all threads.
- */
-// TODO: fix clock
-template <typename ClockSource>
-struct DurationCounter {
-
-    void update(Period<ClockSource> duration_in) {
-        this->duration += duration_in.getNanoseconds().count();
-        this->total = Period<ClockSource>(ClockSource::now() - _start).getNanoseconds().count();
-    }
-    std::int32_t duration;
-    std::uint32_t total;
-
-private:
-    typename ClockSource::time_point _start = ClockSource::now();
-};
-
-/**
  * Primary point of interaction between v2 poplar internals and the metrics system.
  */
 template <typename ClockSource>
 class EventStream {
     using duration = typename ClockSource::duration;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
-
 public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& actor_name,
@@ -218,17 +200,19 @@ public:
           _name{std::move(createName(actorId, actor_name, op_name, phase))},
           _collector{_stub, _name, path_prefix},
           _stream{_stub},
-          _phase{phase} {
+          _phase{phase},
+          _last_finish{ClockSource::now()} {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
         this->_reset();
     }
 
-    void addAt(const OperationEventT<ClockSource>& event, size_t workerCount) {
-        _counter.update(event.duration);
-        //TODO add seconds
-        _metrics.mutable_timers()->mutable_duration()->set_nanos(_counter.duration);
-        _metrics.mutable_timers()->mutable_total()->set_nanos(_counter.total);
+    void addAt(const typename ClockSource::time_point& finish, const OperationEventT<ClockSource>& event, size_t workerCount) {
+        //TODO: Is the nanosecond component just the leftover from the second component?
+        _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getSecondsCount());
+        _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getNanosecondsCount());
+        _metrics.mutable_timers()->mutable_total()->set_nanos(Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
+        _metrics.mutable_timers()->mutable_total()->set_nanos(Period<ClockSource>(finish - _last_finish).getSecondsCount());
 
         _metrics.mutable_counters()->set_number(event.iters);
         _metrics.mutable_counters()->set_ops(event.ops);
@@ -241,7 +225,7 @@ public:
             _metrics.mutable_gauges()->set_state(*_phase);
         }
         _stream.write(_metrics);
-        _reset();
+        _last_finish = finish;
     }
 
 private:
@@ -278,7 +262,7 @@ private:
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
     std::optional<genny::PhaseNumber> _phase;
-    DurationCounter<ClockSource> _counter;
+    typename ClockSource::time_point _last_finish;
 };
 
 

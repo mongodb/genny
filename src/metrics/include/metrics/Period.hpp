@@ -21,6 +21,8 @@
 
 namespace genny::metrics {
 
+const auto NANO_PER_SECOND = 1000000000;
+
 /**
  * A wrapper class around std::chrono::duration. It implements operator<<(std::ostream& os) for
  * convenience during testing.
@@ -65,10 +67,18 @@ public:
         return os << period._duration.count();
     }
 
-    std::chrono::nanoseconds getNanoseconds() {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(_duration);
+    std::chrono::seconds::rep getSecondsCount() const {
+        return std::chrono::duration_cast<std::chrono::seconds>(_duration).count();
     }
 
+    /**
+     * Gets the nanosecond component that wouldn't be counted in seconds.
+     */
+    std::chrono::nanoseconds::rep getNanosecondsCount() const {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(_duration).count() - (getSecondsCount() * NANO_PER_SECOND);
+    }
+
+    
 private:
     duration _duration;
 };

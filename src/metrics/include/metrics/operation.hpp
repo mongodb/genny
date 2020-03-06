@@ -230,7 +230,7 @@ public:
             _threshold->check(started, finished);
         }
         if (_registry.getFormat().use_grpc()) {
-            _stream->addAt(event, _registry.getWorkerCount(_actorName, _opName));
+            _stream->addAt(finished, event, _registry.getWorkerCount(_actorName, _opName));
         }
         if (_registry.getFormat().use_csv()) {
             _events->addAt(finished, event);
