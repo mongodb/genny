@@ -284,7 +284,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
             ("metrics-output-file,o",
              po::value<std::string>()->default_value("/dev/stdout"),
              "Save metrics data to this file when using csv format. Use `-` or `/dev/stdout` for stdout.")
-            ("metrics-path-prefix,o",
+            ("metrics-path-prefix,p",
              po::value<std::string>()->default_value("."),
              "Save metrics data to this directory when using ftdc format. Defaults to current directory.")
 
