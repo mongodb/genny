@@ -109,8 +109,7 @@ public:
             BOOST_LOG_TRIVIAL(error)
                 << "Problem closing grpc stream: " << _context.debug_error_string();
         }
-    }
-
+    } 
 private:
     grpc::WriteOptions _options;
     poplar::PoplarResponse _response;
@@ -124,14 +123,12 @@ private:
  * Exists for construction / destruction resource management only.
  */
 class Collector {
-    // TODO: Create only once per actor-operation
 public:
     Collector(const Collector&) = delete;
 
-    explicit Collector(CollectorStubInterface& stub,
-                       std::string name,
+    explicit Collector(const std::string& name,
                        const std::string& path_prefix)
-        : _name{std::move(name)}, _stub{stub}, _id{} {
+        : _name{name}, _id{} {
         _id.set_name(_name);
 
         grpc::ClientContext context;
@@ -155,7 +152,6 @@ public:
         }
     }
 
-    CollectorStubInterface& _stub;
 
 private:
     static auto createPath(const std::string& name, const std::string& path_prefix) {
@@ -181,6 +177,7 @@ private:
 
     std::string _name;
     poplar::PoplarID _id;
+    CollectorStubInterface _stub;
 };
 
 /**
@@ -192,13 +189,11 @@ class EventStream {
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
 public:
     explicit EventStream(const ActorId& actorId,
-                         const std::string& actor_name,
-                         const std::string& op_name,
+                         const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const std::string& path_prefix)
         : _stub{},
-          _name{std::move(createName(actorId, actor_name, op_name, phase))},
-          _collector{_stub, _name, path_prefix},
+          _name{name},
           _stream{_stub},
           _phase{phase},
           _last_finish{ClockSource::now()} {
@@ -208,7 +203,6 @@ public:
     }
 
     void addAt(const typename ClockSource::time_point& finish, const OperationEventT<ClockSource>& event, size_t workerCount) {
-        //TODO: Is the nanosecond component just the leftover from the second component?
         _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getSecondsCount());
         _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getNanosecondsCount());
         _metrics.mutable_timers()->mutable_total()->set_nanos(Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
@@ -242,23 +236,9 @@ private:
         _metrics.mutable_time()->set_nanos(0);
     }
 
-    std::string createName(const ActorId& actor_id,
-                           const std::string& actor_name,
-                           const std::string& op_name,
-                           const OptionalPhaseNumber& phase) {
-        std::stringstream str;
-        str << actor_name << '.' << actor_id << '.' << op_name;
-        if (phase) {
-            str << '.' << *phase;
-        }
-        return str.str();
-    }
-
-
 private:
     CollectorStubInterface _stub;
     std::string _name;
-    Collector _collector;
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
     std::optional<genny::PhaseNumber> _phase;

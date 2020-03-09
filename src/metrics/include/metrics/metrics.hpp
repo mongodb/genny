@@ -129,6 +129,7 @@ private:
     // OperationsMap is a map of
     // actor name -> operation name -> actor id -> OperationImpl (time series).
     using OperationsMap = std::unordered_map<std::string, OperationsByType>;
+    using CollectorsMap = std::unordered_map<std::string, v2::Collector>;
 
 public:
     using clock = ClockSource;
@@ -150,6 +151,11 @@ public:
                                       std::string opName,
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
+        std::string name;
+        if (_format.use_grpc()) {
+            name = createName(actorName, opName, phase);
+            _collectors.try_emplace(name, name, _path_prefix);
+        }
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt = opsByThread
@@ -159,7 +165,8 @@ public:
                                      *this,
                                      std::move(opName),
                                      std::move(phase),
-                                     _path_prefix)
+                                     _path_prefix,
+                                     name)
                         .first;
         return OperationT{opIt->second};
     }
@@ -172,6 +179,11 @@ public:
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
+        std::string name;
+        if (_format.use_grpc()) {
+            name = createName(actorName, opName, phase);
+            _collectors.try_emplace(name, name, _path_prefix);
+        }
         auto opIt =
             opsByThread
                 .try_emplace(
@@ -182,6 +194,7 @@ public:
                     std::move(opName),
                     std::move(phase),
                     _path_prefix,
+                    name,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;
@@ -209,6 +222,19 @@ public:
     }
 
 private:
+
+    std::string createName(const std::string& actor_name,
+                           const std::string& op_name,
+                           const std::optional<genny::PhaseNumber>& phase) {
+        std::stringstream str;
+        str << actor_name << '.' << op_name;
+        if (phase) {
+            str << '.' << *phase;
+        }
+        return str.str();
+    }
+
+    CollectorsMap _collectors;
     OperationsMap _ops;
     MetricsFormat _format;
     std::string _path_prefix;
