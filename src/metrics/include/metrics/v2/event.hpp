@@ -64,8 +64,9 @@ private:
     // We should only have one channel across all threads.
     static std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 
-    grpc::ChannelArguments args;
     auto createStub() {
+        grpc::ChannelArguments args;
+        args.SetInt("GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA", -1);
         auto channel =
             grpc::CreateCustomChannel("localhost:2288", grpc::InsecureChannelCredentials(), args);
         _stub = poplar::PoplarEventCollector::NewStub(channel);
