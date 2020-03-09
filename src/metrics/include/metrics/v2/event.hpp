@@ -66,7 +66,8 @@ private:
 
     auto createStub() {
         grpc::ChannelArguments args;
-        args.SetInt("GRPC_ARG_HTTP2_MAX_PINGS_WITHOUT_DATA", -1);
+        // The BDP estimator overwhelms the server with pings on a heavy workload.
+        args.SetInt("GRPC_ARG_HTTP2_BDP_PROBE", 0);
         auto channel =
             grpc::CreateCustomChannel("localhost:2288", grpc::InsecureChannelCredentials(), args);
         _stub = poplar::PoplarEventCollector::NewStub(channel);
