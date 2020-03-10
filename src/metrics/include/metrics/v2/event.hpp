@@ -220,6 +220,9 @@ public:
     }
 
     void addAt(const typename ClockSource::time_point& finish, const OperationEventT<ClockSource>& event, size_t workerCount) {
+        _metrics.mutable_time()->set_seconds(std::chrono::time_point_cast<std::chrono::seconds>(finish).time_since_epoch().count());
+        _metrics.mutable_time()->set_nanos(std::chrono::time_point_cast<std::chrono::nanoseconds>(finish).time_since_epoch().count());
+
         _metrics.mutable_timers()->mutable_duration()->set_seconds(event.duration.getSecondsCount());
         _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getNanosecondsCount());
 

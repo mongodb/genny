@@ -551,6 +551,10 @@ TEST_CASE("Events stream to gRPC") {
             poplar::EventMetrics metric;
             metric.set_name("EventName");
             metric.set_id(1);
+
+            metric.mutable_time()->set_seconds(0);
+            metric.mutable_time()->set_nanos(5000);
+
             metric.mutable_timers()->mutable_duration()->set_seconds(0);
             metric.mutable_timers()->mutable_duration()->set_nanos(5000);
             metric.mutable_timers()->mutable_total()->set_seconds(0);
@@ -582,6 +586,10 @@ TEST_CASE("Events stream to gRPC") {
             poplar::EventMetrics metric;
             metric.set_name("EventName");
             metric.set_id(1);
+
+            metric.mutable_time()->set_seconds(0);
+            metric.mutable_time()->set_nanos(12000);
+
             metric.mutable_timers()->mutable_duration()->set_seconds(0);
             metric.mutable_timers()->mutable_duration()->set_nanos(6000);
             metric.mutable_timers()->mutable_total()->set_seconds(0);
