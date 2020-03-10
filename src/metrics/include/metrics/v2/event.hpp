@@ -53,7 +53,7 @@ public:
 class CollectorStubInterface {
 public:
     CollectorStubInterface() {
-        getStub();
+        setStub();
     }
 
     poplar::PoplarEventCollector::StubInterface* operator->() {
@@ -74,7 +74,7 @@ private:
         return true;
     }
 
-    void getStub() {
+    void setStub() {
         static bool stub_created = createStub();
         return;
     }
@@ -84,10 +84,10 @@ private:
 /**
  * Manages the stream of poplar EventMetrics.
  */
-class StreamInterface {
+class StreamInterfaceImpl {
 public:
-    StreamInterface(CollectorStubInterface& stub)
-        : _options{}, _response{}, _context{}, _stream{stub->StreamEvents(&_context, &_response)} {
+    StreamInterfaceImpl()
+        : _options{}, _response{}, _context{}, _stream{_stub->StreamEvents(&_context, &_response)} {
         _options.set_no_compression().set_buffer_hint();
     }
 
@@ -99,7 +99,7 @@ public:
         }
     }
 
-    ~StreamInterface() {
+    ~StreamInterfaceImpl() {
         if (!_stream) {
             BOOST_LOG_TRIVIAL(error) << "Tried to close grpc stream, but none existed.";
             return;
@@ -114,10 +114,26 @@ public:
         }
     } 
 private:
+    CollectorStubInterface _stub;
     grpc::WriteOptions _options;
     poplar::PoplarResponse _response;
     grpc::ClientContext _context;
     std::unique_ptr<grpc::ClientWriterInterface<poplar::EventMetrics>> _stream;
+};
+
+/**
+ * Very basic mock for tests.
+ */
+class MockStreamInterface {
+public:
+    MockStreamInterface() {}
+    
+    void write(const poplar::EventMetrics& event) {
+        events.push_back(event);
+    }
+
+    // We make this static so we can access it even several private objects deep.
+    static std::vector<poplar::EventMetrics> events;
 };
 
 
@@ -186,7 +202,7 @@ private:
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
  */
-template <typename ClockSource>
+template <typename ClockSource, typename StreamInterface>
 class EventStream {
     using duration = typename ClockSource::duration;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
@@ -195,9 +211,7 @@ public:
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const std::string& path_prefix)
-        : _stub{},
-          _name{name},
-          _stream{_stub},
+        : _name{name},
           _phase{phase},
           _last_finish{ClockSource::now()} {
         _metrics.set_name(_name);
@@ -206,10 +220,11 @@ public:
     }
 
     void addAt(const typename ClockSource::time_point& finish, const OperationEventT<ClockSource>& event, size_t workerCount) {
-        _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getSecondsCount());
+        _metrics.mutable_timers()->mutable_duration()->set_seconds(event.duration.getSecondsCount());
         _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getNanosecondsCount());
+
+        _metrics.mutable_timers()->mutable_total()->set_seconds(Period<ClockSource>(finish - _last_finish).getSecondsCount());
         _metrics.mutable_timers()->mutable_total()->set_nanos(Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
-        _metrics.mutable_timers()->mutable_total()->set_nanos(Period<ClockSource>(finish - _last_finish).getSecondsCount());
 
         _metrics.mutable_counters()->set_number(event.iters);
         _metrics.mutable_counters()->set_ops(event.ops);
@@ -236,11 +251,10 @@ private:
         _metrics.mutable_gauges()->set_state(0);
         _metrics.mutable_gauges()->set_workers(0);
         _metrics.mutable_gauges()->set_failed(false);
-        _metrics.mutable_time()->set_nanos(0);
+        //_metrics.mutable_time()->set_nanos(0);
     }
 
 private:
-    CollectorStubInterface _stub;
     std::string _name;
     StreamInterface _stream;
     poplar::EventMetrics _metrics;

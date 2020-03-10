@@ -15,8 +15,11 @@
 #include <iomanip>
 #include <optional>
 
+#include <google/protobuf/util/message_differencer.h>
+
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
+#include <metrics/v2/event.hpp>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/clocks.hpp>
@@ -24,6 +27,9 @@
 
 
 namespace genny::metrics {
+
+std::vector<poplar::EventMetrics> internals::v2::MockStreamInterface::events;
+
 namespace {
 
 using namespace std::literals::chrono_literals;
@@ -500,6 +506,102 @@ TEST_CASE("Registry counts the number of workers") {
 
     REQUIRE(metrics.getWorkerCount("actor1", "op1") == 3);
     REQUIRE(metrics.getWorkerCount("actor2", "op1") == 2);
+}
+
+TEST_CASE("Events stream to gRPC") {
+    using EventVec = std::vector<poplar::EventMetrics>;
+
+    auto compareEventsAndClear = [](const EventVec& events_in) {
+        internals::v2::MockStreamInterface interface;
+        REQUIRE(events_in.size() == interface.events.size());
+        for (int i = 0; i < events_in.size(); i++) {
+            REQUIRE(google::protobuf::util::MessageDifferencer::Equals(events_in[i], interface.events[i]));
+            //REQUIRE(2 == 1);
+        };
+        interface.events.clear();
+    };
+
+    SECTION("Empty stream") {
+        RegistryClockSourceStub::reset();
+        auto stream = internals::v2::EventStream<RegistryClockSourceStub, 
+             internals::v2::MockStreamInterface>{1, "TestName", 1, "/test/prefix"};
+
+        EventVec expected;
+        compareEventsAndClear(expected);
+    }
+
+    SECTION("Two events") {
+        RegistryClockSourceStub::reset();
+        auto stream = internals::v2::EventStream<RegistryClockSourceStub, 
+             internals::v2::MockStreamInterface>{1, "EventName", 9, "/test/prefix"};
+        EventVec expected;
+
+
+        // First Event
+        RegistryClockSourceStub::advance(std::chrono::microseconds(5));
+        {
+            OperationEventT<RegistryClockSourceStub> event(2, 3, 7, 0, 
+                    Period<RegistryClockSourceStub>{std::chrono::microseconds(5)}, OutcomeType::kSuccess);
+            stream.addAt(RegistryClockSourceStub::now(), event, 1);
+
+            // Streamed Event
+            // ---------------
+            // Expected event
+
+            poplar::EventMetrics metric;
+            metric.set_name("EventName");
+            metric.set_id(1);
+            metric.mutable_timers()->mutable_duration()->set_seconds(0);
+            metric.mutable_timers()->mutable_duration()->set_nanos(5000);
+            metric.mutable_timers()->mutable_total()->set_seconds(0);
+            metric.mutable_timers()->mutable_total()->set_nanos(5000);
+
+            metric.mutable_counters()->set_number(2);
+            metric.mutable_counters()->set_ops(3);
+            metric.mutable_counters()->set_size(7);
+            metric.mutable_counters()->set_errors(0);
+
+            metric.mutable_gauges()->set_failed(false);
+            metric.mutable_gauges()->set_workers(1);
+            metric.mutable_gauges()->set_state(9);
+
+            expected.push_back(metric);
+        }
+
+        // Second Event
+        RegistryClockSourceStub::advance(std::chrono::microseconds(7));
+        {
+            OperationEventT<RegistryClockSourceStub> event(2, 3, 90, 1, 
+                    Period<RegistryClockSourceStub>{std::chrono::microseconds(6)}, OutcomeType::kFailure);
+            stream.addAt(RegistryClockSourceStub::now(), event, 1);
+
+            // Streamed Event
+            // ---------------
+            // Expected event
+
+            poplar::EventMetrics metric;
+            metric.set_name("EventName");
+            metric.set_id(1);
+            metric.mutable_timers()->mutable_duration()->set_seconds(0);
+            metric.mutable_timers()->mutable_duration()->set_nanos(6000);
+            metric.mutable_timers()->mutable_total()->set_seconds(0);
+            metric.mutable_timers()->mutable_total()->set_nanos(7000);
+
+            metric.mutable_counters()->set_number(2);
+            metric.mutable_counters()->set_ops(3);
+            metric.mutable_counters()->set_size(90);
+            metric.mutable_counters()->set_errors(1);
+
+            metric.mutable_gauges()->set_failed(true);
+            metric.mutable_gauges()->set_workers(1);
+            metric.mutable_gauges()->set_state(9);
+
+            expected.push_back(metric);
+        }
+
+
+        compareEventsAndClear(expected);
+    }
 }
 
 }  // namespace

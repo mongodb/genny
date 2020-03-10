@@ -120,7 +120,8 @@ namespace internals {
 
 namespace v2 {
 
-template <typename Clocksource>
+class StreamInterfaceImpl;
+template <typename Clocksource, typename StreamInterface>
 class EventStream;
 
 }
@@ -181,7 +182,7 @@ public:
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
-    using stream_t = internals::v2::EventStream<ClockSource>;
+    using stream_t = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>;
 
     OperationImpl(const ActorId& actorId,
                   std::string actorName,
