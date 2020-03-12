@@ -19,7 +19,3 @@ Actors:
       Key: UseMe  # Only load the YAML structure from this top-level key.
       Parameters:
         Repeat: 2
-
-Metrics:
-  format: ftdc
-  path: build/genny-metrics
