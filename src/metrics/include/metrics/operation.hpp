@@ -124,7 +124,7 @@ class StreamInterfaceImpl;
 template <typename Clocksource, typename StreamInterface>
 class EventStream;
 
-}
+}  // namespace v2
 
 template <typename Clocksource>
 class RegistryT;
@@ -198,8 +198,7 @@ public:
           _phase(std::move(phase)),
           _threshold(threshold) {
         if (_registry.getFormat().use_grpc()) {
-            _stream.reset(
-                new stream_t(actorId, *collector_name, this->_phase, path_prefix));
+            _stream.reset(new stream_t(actorId, *collector_name, this->_phase, path_prefix));
         }
         if (_registry.getFormat().use_csv()) {
             _events.reset(new EventSeries());

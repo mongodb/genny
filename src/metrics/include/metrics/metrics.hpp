@@ -135,7 +135,7 @@ public:
     using clock = ClockSource;
 
     explicit RegistryT() = default;
-    
+
     OperationT<ClockSource> operation(std::string actorName,
                                       std::string opName,
                                       ActorId actorId,
@@ -223,7 +223,6 @@ public:
     }
 
 private:
-
     std::string createName(const std::string& actor_name,
                            const std::string& op_name,
                            const std::optional<genny::PhaseNumber>& phase) {

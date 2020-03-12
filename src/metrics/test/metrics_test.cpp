@@ -515,16 +515,18 @@ TEST_CASE("Events stream to gRPC") {
         internals::v2::MockStreamInterface interface;
         REQUIRE(events_in.size() == interface.events.size());
         for (int i = 0; i < events_in.size(); i++) {
-            REQUIRE(google::protobuf::util::MessageDifferencer::Equals(events_in[i], interface.events[i]));
-            //REQUIRE(2 == 1);
+            REQUIRE(google::protobuf::util::MessageDifferencer::Equals(events_in[i],
+                                                                       interface.events[i]));
+            // REQUIRE(2 == 1);
         };
         interface.events.clear();
     };
 
     SECTION("Empty stream") {
         RegistryClockSourceStub::reset();
-        auto stream = internals::v2::EventStream<RegistryClockSourceStub, 
-             internals::v2::MockStreamInterface>{1, "TestName", 1, "/test/prefix"};
+        auto stream =
+            internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
+                1, "TestName", 1, "/test/prefix"};
 
         EventVec expected;
         compareEventsAndClear(expected);
@@ -532,16 +534,22 @@ TEST_CASE("Events stream to gRPC") {
 
     SECTION("Two events") {
         RegistryClockSourceStub::reset();
-        auto stream = internals::v2::EventStream<RegistryClockSourceStub, 
-             internals::v2::MockStreamInterface>{1, "EventName", 9, "/test/prefix"};
+        auto stream =
+            internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
+                1, "EventName", 9, "/test/prefix"};
         EventVec expected;
 
 
         // First Event
         RegistryClockSourceStub::advance(std::chrono::microseconds(5));
         {
-            OperationEventT<RegistryClockSourceStub> event(2, 3, 7, 0, 
-                    Period<RegistryClockSourceStub>{std::chrono::microseconds(5)}, OutcomeType::kSuccess);
+            OperationEventT<RegistryClockSourceStub> event(
+                2,
+                3,
+                7,
+                0,
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(5)},
+                OutcomeType::kSuccess);
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
 
             // Streamed Event
@@ -575,8 +583,13 @@ TEST_CASE("Events stream to gRPC") {
         // Second Event
         RegistryClockSourceStub::advance(std::chrono::microseconds(7));
         {
-            OperationEventT<RegistryClockSourceStub> event(2, 3, 90, 1, 
-                    Period<RegistryClockSourceStub>{std::chrono::microseconds(6)}, OutcomeType::kFailure);
+            OperationEventT<RegistryClockSourceStub> event(
+                2,
+                3,
+                90,
+                1,
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},
+                OutcomeType::kFailure);
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
 
             // Streamed Event

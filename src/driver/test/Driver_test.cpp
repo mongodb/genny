@@ -57,7 +57,7 @@ std::string metricsContents(const std::string& metrics_path) {
 // Ideally this would use std::filesystem::file_size but
 // <filesystem> isn't yet available on all the platforms
 // we support (I'm looking at you, Apple Clang).
-bool hasMetrics(const std::string& metrics_path ) {
+bool hasMetrics(const std::string& metrics_path) {
     return !metricsContents(metrics_path).empty();
 }
 
@@ -137,8 +137,7 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     return opts;
 }
 
-std::pair<DefaultDriver::OutcomeCode, std::string> outcome(
-    const std::string& yaml) {
+std::pair<DefaultDriver::OutcomeCode, std::string> outcome(const std::string& yaml) {
     Fails::state.clear();
 
     boost::filesystem::path ph =
@@ -149,7 +148,8 @@ std::pair<DefaultDriver::OutcomeCode, std::string> outcome(
     std::string metrics_section = R"(
         Metrics:
             format: csv
-            path: )" + metrics_path + R"( 
+            path: )" +
+        metrics_path + R"( 
         )";
     DefaultDriver driver;
     auto opts = create(yaml + metrics_section);

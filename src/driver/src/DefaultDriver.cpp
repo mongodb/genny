@@ -65,7 +65,10 @@ void runActor(Actor&& actor,
     }
 }
 
-void reportMetrics(genny::metrics::Registry& metrics, const std::string& workloadName, bool success, metrics::clock::time_point start_time) {
+void reportMetrics(genny::metrics::Registry& metrics,
+                   const std::string& workloadName,
+                   bool success,
+                   metrics::clock::time_point start_time) {
     auto finish_time = metrics::clock::now();
     auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
     auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;

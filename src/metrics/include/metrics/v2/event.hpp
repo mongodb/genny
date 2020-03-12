@@ -112,7 +112,8 @@ public:
             BOOST_LOG_TRIVIAL(error)
                 << "Problem closing grpc stream: " << _context.debug_error_string();
         }
-    } 
+    }
+
 private:
     CollectorStubInterface _stub;
     grpc::WriteOptions _options;
@@ -127,7 +128,7 @@ private:
 class MockStreamInterface {
 public:
     MockStreamInterface() {}
-    
+
     void write(const poplar::EventMetrics& event) {
         events.push_back(event);
     }
@@ -145,8 +146,7 @@ class Collector {
 public:
     Collector(const Collector&) = delete;
 
-    explicit Collector(const std::string& name,
-                       const std::string& path_prefix)
+    explicit Collector(const std::string& name, const std::string& path_prefix)
         : _name{name}, _id{} {
         _id.set_name(_name);
 
@@ -206,28 +206,37 @@ template <typename ClockSource, typename StreamInterface>
 class EventStream {
     using duration = typename ClockSource::duration;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
+
 public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const std::string& path_prefix)
-        : _name{name},
-          _phase{phase},
-          _last_finish{ClockSource::now()} {
+        : _name{name}, _phase{phase}, _last_finish{ClockSource::now()} {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
         this->_reset();
     }
 
-    void addAt(const typename ClockSource::time_point& finish, const OperationEventT<ClockSource>& event, size_t workerCount) {
-        _metrics.mutable_time()->set_seconds(std::chrono::time_point_cast<std::chrono::seconds>(finish).time_since_epoch().count());
-        _metrics.mutable_time()->set_nanos(std::chrono::time_point_cast<std::chrono::nanoseconds>(finish).time_since_epoch().count());
+    void addAt(const typename ClockSource::time_point& finish,
+               const OperationEventT<ClockSource>& event,
+               size_t workerCount) {
+        _metrics.mutable_time()->set_seconds(
+            std::chrono::time_point_cast<std::chrono::seconds>(finish).time_since_epoch().count());
+        _metrics.mutable_time()->set_nanos(
+            std::chrono::time_point_cast<std::chrono::nanoseconds>(finish)
+                .time_since_epoch()
+                .count());
 
-        _metrics.mutable_timers()->mutable_duration()->set_seconds(event.duration.getSecondsCount());
-        _metrics.mutable_timers()->mutable_duration()->set_nanos(event.duration.getNanosecondsCount());
+        _metrics.mutable_timers()->mutable_duration()->set_seconds(
+            event.duration.getSecondsCount());
+        _metrics.mutable_timers()->mutable_duration()->set_nanos(
+            event.duration.getNanosecondsCount());
 
-        _metrics.mutable_timers()->mutable_total()->set_seconds(Period<ClockSource>(finish - _last_finish).getSecondsCount());
-        _metrics.mutable_timers()->mutable_total()->set_nanos(Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
+        _metrics.mutable_timers()->mutable_total()->set_seconds(
+            Period<ClockSource>(finish - _last_finish).getSecondsCount());
+        _metrics.mutable_timers()->mutable_total()->set_nanos(
+            Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
 
         _metrics.mutable_counters()->set_number(event.iters);
         _metrics.mutable_counters()->set_ops(event.ops);

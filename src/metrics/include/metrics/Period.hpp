@@ -75,10 +75,11 @@ public:
      * Gets the nanosecond component that wouldn't be counted in seconds.
      */
     std::chrono::nanoseconds::rep getNanosecondsCount() const {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(_duration).count() - (getSecondsCount() * NANO_PER_SECOND);
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(_duration).count() -
+            (getSecondsCount() * NANO_PER_SECOND);
     }
 
-    
+
 private:
     duration _duration;
 };
