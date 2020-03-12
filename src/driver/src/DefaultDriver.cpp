@@ -65,6 +65,14 @@ void runActor(Actor&& actor,
     }
 }
 
+void reportMetrics(genny::metrics::Registry& metrics, const std::string& workloadName, bool success, metrics::clock::time_point start_time) {
+    auto finish_time = metrics::clock::now();
+    auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
+    auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish_time - start_time);
+    actorSetup.report(std::move(finish_time), std::move(duration), std::move(outcome));
+}
+
 DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& options) {
     // setup logging as the first thing we do.
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= options.logVerbosity);
@@ -72,18 +80,17 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     genny::metrics::Registry metrics;
 
     const auto workloadName = fs::path(options.workloadSource).stem().string();
-    auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
-    auto setupCtx = actorSetup.start();
+    auto start_time = metrics::clock::now();
 
     if (options.runMode == DefaultDriver::RunMode::kListActors) {
         globalCast().streamProducersTo(std::cout);
-        setupCtx.success();
+        reportMetrics(metrics, workloadName, true, start_time);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     if (options.workloadSource.empty()) {
         std::cerr << "Must specify a workload YAML file" << std::endl;
-        setupCtx.failure();
+        reportMetrics(metrics, workloadName, false, start_time);
         return DefaultDriver::OutcomeCode::kUserException;
     }
 
@@ -115,7 +122,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
         std::cout << YAML::Dump(yaml) << std::endl;
-        setupCtx.success();
+        reportMetrics(metrics, workloadName, true, start_time);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
@@ -130,14 +137,14 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     if (options.runMode == DefaultDriver::RunMode::kDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;
-        setupCtx.success();
+        reportMetrics(metrics, workloadName, true, start_time);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
-    setupCtx.success();
+    reportMetrics(metrics, workloadName, true, start_time);
 
     auto startedActors = metrics.operation(workloadName, "ActorStarted", 0u);
     auto finishedActors = metrics.operation(workloadName, "ActorFinished", 0u);
