@@ -217,8 +217,20 @@ public:
         return (_ops.at(actorName).at(opName)).size();
     }
 
+    void initializeMetrics(MetricsFormat format, std::string path_prefix) {
+        _format = std::move(format);
+        _path_prefix = std::move(path_prefix);
+        if (_format.use_grpc()) {
+            boost::filesystem::create_directory(_path_prefix);
+        }
+    }
+
     const MetricsFormat& getFormat() const {
         return _format;
+    }
+
+    const std::string& getPathPrefix() const {
+        return _path_prefix;
     }
 
 private:

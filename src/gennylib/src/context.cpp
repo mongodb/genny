@@ -23,6 +23,7 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 
@@ -51,6 +52,11 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     // Make sure we have a valid mongocxx instance happening here
     mongocxx::instance::current();
+
+    // Set the metrics format information.
+    auto format = ((*this)["Metrics"]["format"]).maybe<std::string>().value_or("csv");
+    auto metrics_path = ((*this)["Metrics"]["path"]).maybe<std::string>().value_or("build/genny-metrics");
+    _registry->initializeMetrics(std::move(format), std::move(metrics_path));
 
     // Make a bunch of actor contexts
     for (const auto& [k, actor] : (*this)["Actors"]) {

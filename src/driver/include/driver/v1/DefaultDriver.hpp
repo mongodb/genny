@@ -63,9 +63,6 @@ public:
         YamlSource workloadSourceType = YamlSource::kFile;
         std::string workloadSource;  // either file name or yaml
 
-        metrics::MetricsFormat metricsFormat;
-        std::string metricsOutputFileName;
-        std::string metricsPathPrefix;
         std::string mongoUri;
         std::string description;
         bool isSmokeTest;

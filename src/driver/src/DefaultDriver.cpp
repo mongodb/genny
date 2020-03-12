@@ -69,7 +69,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     // setup logging as the first thing we do.
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= options.logVerbosity);
 
-    genny::metrics::Registry metrics(options.metricsFormat, options.metricsPathPrefix);
+    genny::metrics::Registry metrics;
 
     const auto workloadName = fs::path(options.workloadSource).stem().string();
     auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
@@ -174,14 +174,14 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     for (auto& thread : threads)
         thread.join();
 
-    if (options.metricsFormat.use_csv()) {
+    if (metrics.getFormat().use_csv()) {
         const auto reporter = genny::metrics::Reporter{metrics};
 
         {
             std::ofstream metricsOutput;
-            metricsOutput.open(options.metricsOutputFileName,
+            metricsOutput.open(metrics.getPathPrefix() + ".csv",
                                std::ofstream::out | std::ofstream::trunc);
-            reporter.report(metricsOutput, options.metricsFormat);
+            reporter.report(metricsOutput, metrics.getFormat());
         }
     }
 
@@ -278,15 +278,6 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
             ("subcommand", po::value<std::string>(), "1st positional argument")
             ("help,h",
              "Show help message")
-            ("metrics-format,m",
-             po::value<std::string>()->default_value("csv"),
-             "Metrics format to use")
-            ("metrics-output-file,o",
-             po::value<std::string>()->default_value("/dev/stdout"),
-             "Save metrics data to this file when using csv format. Use `-` or `/dev/stdout` for stdout.")
-            ("metrics-path-prefix,p",
-             po::value<std::string>()->default_value("."),
-             "Save metrics data to this directory when using ftdc format. Defaults to current directory.")
 
             ("workload-file,w",
              po::value<std::string>(),
@@ -349,10 +340,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         this->runMode = RunMode::kHelp;
 
     this->logVerbosity = parseVerbosity(vm["verbosity"].as<std::string>());
-    this->metricsFormat = metrics::MetricsFormat(vm["metrics-format"].as<std::string>());
     this->isSmokeTest = vm["smoke-test"].as<bool>();
-    this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
-    this->metricsPathPrefix = normalizeOutputFile(vm["metrics-path-prefix"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 
     if (vm.count("workload-file") > 0) {
