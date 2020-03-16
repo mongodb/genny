@@ -147,8 +147,8 @@ std::pair<DefaultDriver::OutcomeCode, std::string> outcome(const std::string& ya
 
     std::string metrics_section = R"(
         Metrics:
-            format: csv
-            path: )" +
+            Format: csv
+            Path: )" +
         metrics_path + R"( 
         )";
     DefaultDriver driver;
