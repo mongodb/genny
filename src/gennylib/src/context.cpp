@@ -54,9 +54,9 @@ WorkloadContext::WorkloadContext(const Node& node,
     mongocxx::instance::current();
 
     // Set the metrics format information.
-    auto format = ((*this)["Metrics"]["format"]).maybe<std::string>().value_or("cedar-csv");
+    auto format = ((*this)["Metrics"]["Format"]).maybe<std::string>().value_or("cedar-csv");
     auto metrics_path =
-        ((*this)["Metrics"]["path"]).maybe<std::string>().value_or("build/genny-metrics");
+        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/genny-metrics");
     _registry->initializeMetrics(std::move(format), std::move(metrics_path));
 
     // Make a bunch of actor contexts

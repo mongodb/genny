@@ -184,7 +184,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     for (auto& thread : threads)
         thread.join();
 
-    if (metrics.getFormat().use_csv()) {
+    if (metrics.getFormat().useCsv()) {
         const auto reporter = genny::metrics::Reporter{metrics};
 
         {

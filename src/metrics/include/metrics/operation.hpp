@@ -197,10 +197,10 @@ public:
           _opName(std::move(opName)),
           _phase(std::move(phase)),
           _threshold(threshold) {
-        if (_registry.getFormat().use_grpc()) {
+        if (_registry.getFormat().useGrpc()) {
             _stream.reset(new stream_t(actorId, *collector_name, this->_phase, path_prefix));
         }
-        if (_registry.getFormat().use_csv()) {
+        if (_registry.getFormat().useCsv()) {
             _events.reset(new EventSeries());
         }
     };
@@ -230,10 +230,10 @@ public:
         if (_threshold) {
             _threshold->check(started, finished);
         }
-        if (_registry.getFormat().use_grpc()) {
+        if (_registry.getFormat().useGrpc()) {
             _stream->addAt(finished, event, _registry.getWorkerCount(_actorName, _opName));
         }
-        if (_registry.getFormat().use_csv()) {
+        if (_registry.getFormat().useCsv()) {
             _events->addAt(finished, event);
         }
     }

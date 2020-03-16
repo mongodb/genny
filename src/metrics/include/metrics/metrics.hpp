@@ -44,11 +44,11 @@ public:
 
     MetricsFormat(const std::string& to_convert) : _format{str_to_enum(to_convert)} {}
 
-    bool use_grpc() const {
+    bool useGrpc() const {
         return _format == Format::ftdc || _format == Format::csv_ftdc;
     }
 
-    bool use_csv() const {
+    bool useCsv() const {
         return _format == Format::csv || _format == Format::cedar_csv ||
             _format == Format::csv_ftdc;
     }
@@ -141,7 +141,7 @@ public:
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         std::string name;
-        if (_format.use_grpc()) {
+        if (_format.useGrpc()) {
             name = createName(actorName, opName, phase);
             _collectors.try_emplace(name, name, _path_prefix);
         }
@@ -169,7 +169,7 @@ public:
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         std::string name;
-        if (_format.use_grpc()) {
+        if (_format.useGrpc()) {
             name = createName(actorName, opName, phase);
             _collectors.try_emplace(name, name, _path_prefix);
         }
@@ -209,7 +209,7 @@ public:
     void initializeMetrics(MetricsFormat format, std::string path_prefix) {
         _format = std::move(format);
         _path_prefix = std::move(path_prefix);
-        if (_format.use_grpc()) {
+        if (_format.useGrpc()) {
             boost::filesystem::create_directory(_path_prefix);
         }
     }
