@@ -28,6 +28,8 @@ namespace genny::metrics {
  * @namespace genny::metrics::internals::v1 this namespace is private and only intended to be used
  * by genny's own internals. No types from the genny::metrics::internals::v1 namespace should ever
  * be typed directly into the implementation of an actor.
+ *
+ * After transitioning to only using ftdc-based metrics, the namespace hierarchy can be simplified.
  */
 namespace internals::v1 {
 
