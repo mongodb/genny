@@ -552,7 +552,7 @@ TEST_CASE("Events stream to gRPC") {
         compareEventsAndClear(expected);
     }
 
-    SECTION("Two events") {
+    SECTION("Three events") {
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
