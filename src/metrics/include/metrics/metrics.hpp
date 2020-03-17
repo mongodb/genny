@@ -22,9 +22,11 @@
 #include <unordered_map>
 
 #include <gennylib/conventions.hpp>
+#include <gennylib/Node.hpp>
 
 #include <metrics/operation.hpp>
 #include <metrics/v1/passkey.hpp>
+
 
 namespace genny::metrics {
 
@@ -34,23 +36,25 @@ namespace genny::metrics {
 class MetricsFormat {
 public:
     enum class Format {
-        csv = 0,
-        cedar_csv = 1,
-        ftdc = 2,
-        csv_ftdc = 3,
+        kCsv,
+        kCedarCsv,
+        kFtdc,
+        kCsvFtdc,
     };
 
-    MetricsFormat() : _format{Format::csv} {}
+    MetricsFormat() : _format{Format::kCsv} {}
+    
+    MetricsFormat(const Node& node) : _format{str_to_enum(node.to<std::string>())} {}
 
     MetricsFormat(const std::string& to_convert) : _format{str_to_enum(to_convert)} {}
 
     bool useGrpc() const {
-        return _format == Format::ftdc || _format == Format::csv_ftdc;
+        return _format == Format::kFtdc || _format == Format::kCsvFtdc;
     }
 
     bool useCsv() const {
-        return _format == Format::csv || _format == Format::cedar_csv ||
-            _format == Format::csv_ftdc;
+        return _format == Format::kCsv || _format == Format::kCedarCsv ||
+            _format == Format::kCsvFtdc;
     }
 
     Format get() const {
@@ -61,13 +65,13 @@ private:
     Format _format;
     Format str_to_enum(const std::string& to_convert) {
         if (to_convert == "csv") {
-            return Format::csv;
+            return Format::kCsv;
         } else if (to_convert == "cedar-csv") {
-            return Format::cedar_csv;
+            return Format::kCedarCsv;
         } else if (to_convert == "ftdc") {
-            return Format::ftdc;
+            return Format::kFtdc;
         } else if (to_convert == "csv-ftdc") {
-            return Format::csv_ftdc;
+            return Format::kCsvFtdc;
         } else {
             throw std::invalid_argument(std::string("Unknown metrics format ") + to_convert);
         }
@@ -135,6 +139,15 @@ public:
     using clock = ClockSource;
 
     explicit RegistryT() = default;
+
+    explicit RegistryT(MetricsFormat format, std::string path_prefix) {
+        _format = std::move(format);
+        _path_prefix = std::move(path_prefix);
+        if (_format.useGrpc()) {
+            boost::filesystem::create_directory(_path_prefix);
+        }
+    }
+
 
     OperationT<ClockSource> operation(std::string actorName,
                                       std::string opName,
@@ -206,14 +219,7 @@ public:
         return (_ops.at(actorName).at(opName)).size();
     }
 
-    void initializeMetrics(MetricsFormat format, std::string path_prefix) {
-        _format = std::move(format);
-        _path_prefix = std::move(path_prefix);
-        if (_format.useGrpc()) {
-            boost::filesystem::create_directory(_path_prefix);
-        }
-    }
-
+    
     const MetricsFormat& getFormat() const {
         return _format;
     }

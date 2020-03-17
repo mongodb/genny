@@ -28,13 +28,11 @@
 namespace genny {
 
 WorkloadContext::WorkloadContext(const Node& node,
-                                 metrics::Registry& registry,
                                  Orchestrator& orchestrator,
                                  const std::string& mongoUri,
                                  const Cast& cast,
                                  v1::PoolManager::OnCommandStartCallback apmCallback)
     : v1::HasNode{node},
-      _registry{&registry},
       _orchestrator{&orchestrator},
       _rateLimiters{10},
       _poolManager{mongoUri, apmCallback} {
@@ -54,10 +52,10 @@ WorkloadContext::WorkloadContext(const Node& node,
     mongocxx::instance::current();
 
     // Set the metrics format information.
-    auto format = ((*this)["Metrics"]["Format"]).maybe<std::string>().value_or("cedar-csv");
+    auto format = ((*this)["Metrics"]["Format"]).maybe<metrics::MetricsFormat>().value_or(metrics::MetricsFormat());
     auto metrics_path =
         ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/genny-metrics");
-    _registry->initializeMetrics(std::move(format), std::move(metrics_path));
+    _registry = genny::metrics::Registry(std::move(format), std::move(metrics_path));
 
     // Make a bunch of actor contexts
     for (const auto& [k, actor] : (*this)["Actors"]) {

@@ -97,10 +97,10 @@ public:
 
         // if this lives more than a hot-second, put the formats into an enum and do this
         // check & throw in the driver/main program
-        if (metricsFormat.get() == MetricsFormat::Format::csv) {
+        if (metricsFormat.get() == MetricsFormat::Format::kCsv) {
             reportLegacyCsv(out, systemTime, metricsTime, perm);
-        } else if (metricsFormat.get() == MetricsFormat::Format::cedar_csv ||
-                   metricsFormat.get() == MetricsFormat::Format::csv_ftdc) {
+        } else if (metricsFormat.get() == MetricsFormat::Format::kCedarCsv ||
+                   metricsFormat.get() == MetricsFormat::Format::kCsvFtdc) {
             reportCedarCsv(out, systemTime, metricsTime, perm);
         } else {
             throw std::invalid_argument(std::string("Received unknown csv metrics format."));
