@@ -642,6 +642,48 @@ TEST_CASE("Events stream to gRPC") {
             expected.push_back(metric);
         }
 
+        // Third Event
+        RegistryClockSourceStub::advance(std::chrono::seconds(9));
+        RegistryClockSourceStub::advance(std::chrono::microseconds(3));
+        {
+            OperationEventT<RegistryClockSourceStub> event(
+                3, // number
+                1, // ops
+                10, // size
+                0, // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(3)}, // duration
+                OutcomeType::kSuccess // outcome
+                );
+            stream.addAt(RegistryClockSourceStub::now(), event, 1);
+
+            // Streamed Event
+            // ---------------
+            // Expected event
+
+            poplar::EventMetrics metric;
+            metric.set_name("EventName");
+            metric.set_id(1);
+
+            metric.mutable_time()->set_seconds(9);
+            metric.mutable_time()->set_nanos(15000);
+
+            metric.mutable_timers()->mutable_duration()->set_seconds(0);
+            metric.mutable_timers()->mutable_duration()->set_nanos(3000);
+            metric.mutable_timers()->mutable_total()->set_seconds(9);
+            metric.mutable_timers()->mutable_total()->set_nanos(3000);
+
+            metric.mutable_counters()->set_number(3);
+            metric.mutable_counters()->set_ops(1);
+            metric.mutable_counters()->set_size(10);
+            metric.mutable_counters()->set_errors(0);
+
+            metric.mutable_gauges()->set_failed(false);
+            metric.mutable_gauges()->set_workers(1);
+            metric.mutable_gauges()->set_state(9);
+
+            expected.push_back(metric);
+        }
+
 
         compareEventsAndClear(expected);
     }
