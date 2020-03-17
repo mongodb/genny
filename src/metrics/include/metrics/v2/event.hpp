@@ -48,7 +48,10 @@ public:
 
 
 /**
- * Manages the collector stub and its interactions.
+ * Wraps the channel-owning gRPC stub.
+ *
+ * RAII class that exists for construction / destruction resource management during 
+ * setup/teardown execution phase only so efficiency isn't as much of a concern as correctness.
  */
 class CollectorStubInterface {
 public:
@@ -64,6 +67,8 @@ private:
     // We should only have one channel across all threads.
     static std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 
+    // Should only be called by setStub(), is statically guarded 
+    // so only one thread will execute.
     auto createStub() {
         grpc::ChannelArguments args;
         // The BDP estimator overwhelms the server with pings on a heavy workload.
@@ -86,8 +91,9 @@ private:
  */
 class StreamInterfaceImpl {
 public:
-    StreamInterfaceImpl()
-        : _options{}, _response{}, _context{}, _stream{_stub->StreamEvents(&_context, &_response)} {
+    StreamInterfaceImpl(const std::string& name, const ActorId& actorId)
+        : _name{name}, _actorId{actorId}, _options{}, _response{}, _context{}, 
+        _stream{_stub->StreamEvents(&_context, &_response)} {
         _options.set_no_compression().set_buffer_hint();
     }
 
@@ -95,26 +101,36 @@ public:
         auto success = _stream->Write(event, _options);
 
         if (!success) {
-            BOOST_THROW_EXCEPTION(PoplarRequestError("Failed to write to stream."));
+            std::ostringstream os;
+            os << "Failed to write to stream for operation name "
+               << _name << " and actor ID " << _actorId 
+               << ". EventMetrics object: " << event.ShortDebugString();
+
+            BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
         }
     }
 
     ~StreamInterfaceImpl() {
         if (!_stream) {
-            BOOST_LOG_TRIVIAL(error) << "Tried to close grpc stream, but none existed.";
+            BOOST_LOG_TRIVIAL(error) << "Tried to close gRPC stream for operation name "
+                << _name << " and actor ID " << _actorId << ", but no stream existed.";
             return;
         }
         if (!_stream->WritesDone()) {
-            BOOST_LOG_TRIVIAL(warning) << "Closing grpc stream, but not all writes completed.";
+            BOOST_LOG_TRIVIAL(warning) << "Closing gRPC stream for operation name "
+                << _name << " and actor ID " << _actorId << ", but not all writes completed.";
         }
         auto status = _stream->Finish();
         if (!status.ok()) {
             BOOST_LOG_TRIVIAL(error)
-                << "Problem closing grpc stream: " << _context.debug_error_string();
+                << "Problem closing grpc stream for operation name "
+                << _name << " and actor ID " << _actorId << ": " << _context.debug_error_string();
         }
     }
 
 private:
+    std::string _name;
+    ActorId _actorId;
     CollectorStubInterface _stub;
     grpc::WriteOptions _options;
     poplar::PoplarResponse _response;
@@ -122,25 +138,13 @@ private:
     std::unique_ptr<grpc::ClientWriterInterface<poplar::EventMetrics>> _stream;
 };
 
-/**
- * Very basic mock for tests.
- */
-class MockStreamInterface {
-public:
-    MockStreamInterface() {}
-
-    void write(const poplar::EventMetrics& event) {
-        events.push_back(event);
-    }
-
-    // We make this static so we can access it even several private objects deep.
-    static std::vector<poplar::EventMetrics> events;
-};
 
 
 /**
  * Manages the gRPC-side collector for each operation.
- * Exists for construction / destruction resource management only.
+ *
+ * RAII class that exists for construction / destruction resource management during 
+ * setup/teardown execution phase only so efficiency isn't as much of a concern as correctness.
  */
 class Collector {
 public:
@@ -157,7 +161,7 @@ public:
 
         if (!status.ok()) {
             std::ostringstream os;
-            os << "Collector status not okay: " << status.error_message();
+            os << "Collector " << _name << " status not okay: " << status.error_message();
             BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
         }
     }
@@ -167,7 +171,7 @@ public:
         poplar::PoplarResponse response;
         auto status = _stub->CloseCollector(&context, _id, &response);
         if (!status.ok()) {
-            BOOST_LOG_TRIVIAL(error) << "Couldn't close collector: " << status.error_message();
+            BOOST_LOG_TRIVIAL(error) << "Couldn't close collector " << _name << ": " << status.error_message();
         }
     }
 
@@ -212,7 +216,7 @@ public:
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const std::string& path_prefix)
-        : _name{name}, _phase{phase}, _last_finish{ClockSource::now()} {
+        : _name{name}, _stream{name, actorId}, _phase{phase}, _last_finish{ClockSource::now()} {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
         this->_reset();

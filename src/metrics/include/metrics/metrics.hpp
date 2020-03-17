@@ -133,6 +133,7 @@ private:
     // OperationsMap is a map of
     // actor name -> operation name -> actor id -> OperationImpl (time series).
     using OperationsMap = std::unordered_map<std::string, OperationsByType>;
+    // Map from "Actor.Operation.Phase" to a Collector.
     using CollectorsMap = std::unordered_map<std::string, v2::Collector>;
 
 public:

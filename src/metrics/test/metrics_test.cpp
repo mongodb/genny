@@ -28,6 +28,25 @@
 
 namespace genny::metrics {
 
+namespace internals::v2 {
+
+/**
+ * Very basic mock for tests.
+ */
+class MockStreamInterface {
+public:
+    MockStreamInterface(const std::string& name, const ActorId& actorId) {}
+
+    void write(const poplar::EventMetrics& event) {
+        events.push_back(event);
+    }
+
+    // We make this static so we can access it even several private objects deep.
+    static std::vector<poplar::EventMetrics> events;
+};
+
+} // namespace internals::v2
+
 std::vector<poplar::EventMetrics> internals::v2::MockStreamInterface::events;
 
 namespace {
@@ -508,11 +527,13 @@ TEST_CASE("Registry counts the number of workers") {
     REQUIRE(metrics.getWorkerCount("actor2", "op1") == 2);
 }
 
+
+
 TEST_CASE("Events stream to gRPC") {
     using EventVec = std::vector<poplar::EventMetrics>;
 
     auto compareEventsAndClear = [](const EventVec& events_in) {
-        internals::v2::MockStreamInterface interface;
+        internals::v2::MockStreamInterface interface("dummy_debug_name", 5);
         REQUIRE(events_in.size() == interface.events.size());
         for (int i = 0; i < events_in.size(); i++) {
             REQUIRE(google::protobuf::util::MessageDifferencer::Equals(events_in[i],

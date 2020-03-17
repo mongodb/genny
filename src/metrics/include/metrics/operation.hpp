@@ -194,13 +194,15 @@ public:
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
           _registry(registry),
+          _useGrpc(registry.getFormat().useGrpc()),
+          _useCsv(registry.getFormat().useCsv()),
           _opName(std::move(opName)),
           _phase(std::move(phase)),
           _threshold(threshold) {
-        if (_registry.getFormat().useGrpc()) {
+        if (_useGrpc) {
             _stream.reset(new stream_t(actorId, *collector_name, this->_phase, path_prefix));
         }
-        if (_registry.getFormat().useCsv()) {
+        if (_useCsv) {
             _events.reset(new EventSeries());
         }
     };
@@ -230,10 +232,10 @@ public:
         if (_threshold) {
             _threshold->check(started, finished);
         }
-        if (_registry.getFormat().useGrpc()) {
+        if (_useGrpc) {
             _stream->addAt(finished, event, _registry.getWorkerCount(_actorName, _opName));
         }
-        if (_registry.getFormat().useCsv()) {
+        if (_useCsv) {
             _events->addAt(finished, event);
         }
     }
@@ -259,6 +261,8 @@ private:
      */
     const std::string _actorName;
     const RegistryT<ClockSource>& _registry;
+    const bool _useGrpc;
+    const bool _useCsv;
     const std::string _opName;
     OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
