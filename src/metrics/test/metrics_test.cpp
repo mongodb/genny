@@ -80,7 +80,7 @@ TEST_CASE("metrics::OperationContext interface") {
     REQUIRE(op.getEvents().size() == 0);
 
     auto expected = OperationEventT<RegistryClockSourceStub>{};
-    expected.iters = 1;
+    expected.number = 1;
     expected.ops = 200;
     expected.size = 3000;
     expected.errors = 4;
@@ -124,7 +124,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         REQUIRE(op.getEvents().size() == 0);
 
-        expected.iters = 17;
+        expected.number = 17;
         expected.ops += 200;
         expected.size += 3000;
         expected.errors += 4;

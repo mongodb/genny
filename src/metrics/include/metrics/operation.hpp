@@ -49,13 +49,13 @@ template <typename ClockSource>
 struct OperationEventT final {
 
     bool operator==(const OperationEventT<ClockSource>& other) const {
-        return iters == other.iters && ops == other.ops && size == other.size &&
+        return number == other.number && ops == other.ops && size == other.size &&
             errors == other.errors && duration == other.duration && outcome == other.outcome;
     }
 
     friend std::ostream& operator<<(std::ostream& out, const OperationEventT<ClockSource>& event) {
         out << "OperationEventT{";
-        out << "iters:" << event.iters;
+        out << "iters:" << event.number;
         out << ",ops:" << event.ops;
         out << ",size:" << event.size;
         out << ",errors:" << event.errors;
@@ -68,7 +68,7 @@ struct OperationEventT final {
     }
 
     /**
-     * @param iters
+     * @param number 
      *     The number of iterations that occurred before the operation was reported. This member
      * will almost always be 1 unless an actor decides to periodically report an operation in its
      * for loop.
@@ -85,13 +85,13 @@ struct OperationEventT final {
      * @param outcome
      *      Whether the operation succeeded.
      */
-    explicit OperationEventT(count_type iters = 0,
+    explicit OperationEventT(count_type number = 0,
                              count_type ops = 0,
                              count_type size = 0,
                              count_type errors = 0,
                              Period<ClockSource> duration = {},
                              OutcomeType outcome = OutcomeType::kUnknown)
-        : iters{iters},
+        : number{number},
           ops{ops},
           size{size},
           errors{errors},
@@ -102,7 +102,7 @@ struct OperationEventT final {
         return outcome == OutcomeType::kFailure;
     }
 
-    count_type iters;              // corresponds to the 'n' field in Cedar
+    count_type number;              // corresponds to the 'n' field in Cedar
     count_type ops;                // corresponds to the 'ops' field in Cedar
     count_type size;               // corresponds to the 'size' field in Cedar
     count_type errors;             // corresponds to the 'errors' field in Cedar
@@ -242,7 +242,7 @@ public:
 
     void reportSynthetic(time_point finished,
                          std::chrono::microseconds duration,
-                         count_type iters,
+                         count_type number,
                          count_type ops,
                          count_type size,
                          count_type errors,
@@ -251,7 +251,7 @@ public:
         this->reportAt(started,
                        finished,
                        OperationEventT<ClockSource>{
-                           iters, ops, size, errors, Period<ClockSource>{duration}, outcome});
+                           number, ops, size, errors, Period<ClockSource>{duration}, outcome});
     }
 
 private:
@@ -300,11 +300,11 @@ public:
 
     /**
      * Increments the counter for the number of iterations. This method only needs to be called if
-     * an actor is periodically reporting its operations. By default an `iters = 1` value is
+     * an actor is periodically reporting its operations. By default an `number = 1` value is
      * automatically reported.
      */
-    void addIterations(count_type iters) {
-        _event.iters += iters;
+    void addIterations(count_type number) {
+        _event.number += number;
     }
 
     /**
@@ -362,10 +362,10 @@ private:
         _event.duration = finished - _started;
         _event.outcome = outcome;
 
-        if (_event.iters == 0) {
+        if (_event.number == 0) {
             // We default the event to represent a single iteration of a loop if addIterations() was
             // never called.
-            _event.iters = 1;
+            _event.number = 1;
         }
 
         _op->reportAt(_started, finished, std::move(_event));
@@ -406,7 +406,7 @@ public:
      * operation.report(
      *     end,
      *     end - started,
-     *     iters,
+     *     number,
      *     ops,
      *     size,
      *     errors,
@@ -418,7 +418,7 @@ public:
      *     when the operation finished. This will be used as the time point the event
      *     occurred and `finished - duration` will be used as when the event started.
      *
-     * @param iters
+     * @paramnumber 
      *     The number of iterations that occurred before the operation was reported. This
      *     member will almost always be 1 unless an actor decides to periodically report
      *     an operation in its for loop.
@@ -464,9 +464,9 @@ public:
                 // based on ops and errors params?
                 count_type ops = 1,
                 count_type errors = 0,
-                count_type iters = 1,
+                count_type number = 1,
                 count_type size = 0) {
-        _op->reportSynthetic(finished, duration, iters, ops, size, errors, outcome);
+        _op->reportSynthetic(finished, duration, number, ops, size, errors, outcome);
     }
 
 

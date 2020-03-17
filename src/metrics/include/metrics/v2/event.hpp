@@ -240,7 +240,7 @@ public:
         _metrics.mutable_timers()->mutable_total()->set_nanos(
             Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
 
-        _metrics.mutable_counters()->set_number(event.iters);
+        _metrics.mutable_counters()->set_number(event.number);
         _metrics.mutable_counters()->set_ops(event.ops);
         _metrics.mutable_counters()->set_size(event.size);
         _metrics.mutable_counters()->set_errors(event.errors);

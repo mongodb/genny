@@ -132,7 +132,7 @@ private:
             });
         writeMetricValuesLegacy(
             out, "_iters", perm, [](const OperationEventT<MetricsClockSource>& event) {
-                return event.iters;
+                return event.number;
             });
         out << std::endl;
 
@@ -325,7 +325,7 @@ private:
                         out << nanosecondsCount(static_cast<duration>(event.second.duration))
                             << ",";
                         out << static_cast<unsigned>(event.second.outcome) << ",";
-                        out << event.second.iters << ",";
+                        out << event.second.number << ",";
                         out << event.second.ops << ",";
                         out << event.second.errors << ",";
                         out << event.second.size << std::endl;
