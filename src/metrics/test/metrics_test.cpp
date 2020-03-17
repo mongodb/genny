@@ -541,6 +541,13 @@ TEST_CASE("Events stream to gRPC") {
         interface.events.clear();
     };
 
+    auto getMetricsPath = []() {
+        boost::filesystem::path ph =
+            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        return (ph / "genny-metrics").string();
+    };
+
+
     SECTION("Empty stream") {
         RegistryClockSourceStub::reset();
         auto stream =
@@ -688,25 +695,41 @@ TEST_CASE("Events stream to gRPC") {
     }
 
     SECTION("Create folder for ftdc output") {
-        RegistryClockSourceStub::reset();
-
-        boost::filesystem::path ph =
-            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-        auto metrics_path = (ph / "genny-metrics").string();
+        auto metrics_path = getMetricsPath();
 
         REQUIRE(!boost::filesystem::exists(metrics_path));
         auto ftdc_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metrics_path};
         REQUIRE(boost::filesystem::exists(metrics_path));
 
-        boost::filesystem::path never_constructed_ph =
-            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-        auto never_constructed_metrics_path = (never_constructed_ph / "genny-metrics").string();
+        auto never_constructed_metrics_path = getMetricsPath();
 
         REQUIRE(!boost::filesystem::exists(never_constructed_metrics_path));
         auto csv_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("csv"), metrics_path};
         REQUIRE(!boost::filesystem::exists(never_constructed_metrics_path));
 
         REQUIRE(boost::filesystem::remove_all(metrics_path));
+    }
+
+    SECTION("One Collector is created per actor-operation.") {
+        auto metrics_path = getMetricsPath();
+        auto metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metrics_path};
+        
+        metrics.operation("dummyActorName", "dummyOpName", 1, 2);
+        metrics.operation("dummyActorName", "dummyOpName", 2, 2);
+        metrics.operation("dummyActorName", "dummyOpName", 2, 3);
+        metrics.operation("dummyActorName", "anotherDummyOpName", 2, 4);
+
+        REQUIRE(boost::filesystem::exists(metrics_path + "/dummyActorName.dummyOpName.2.ftdc"));
+        REQUIRE(boost::filesystem::exists(metrics_path + "/dummyActorName.dummyOpName.3.ftdc"));
+        REQUIRE(boost::filesystem::exists(metrics_path + "/dummyActorName.anotherDummyOpName.4.ftdc"));
+
+        //auto iterator = boost::filesystem::directory_iterator(metrics_path);
+        int file_count = 0;
+        for (boost::filesystem::directory_iterator it(metrics_path); it != boost::filesystem::directory_iterator(); ++it) {
+            file_count++;
+        }
+
+        REQUIRE(file_count == 3);
     }
 }
 
