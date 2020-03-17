@@ -226,11 +226,9 @@ public:
                const OperationEventT<ClockSource>& event,
                size_t workerCount) {
         _metrics.mutable_time()->set_seconds(
-            std::chrono::time_point_cast<std::chrono::seconds>(finish).time_since_epoch().count());
+            Period<ClockSource>(finish.time_since_epoch()).getSecondsCount());
         _metrics.mutable_time()->set_nanos(
-            std::chrono::time_point_cast<std::chrono::nanoseconds>(finish)
-                .time_since_epoch()
-                .count());
+            Period<ClockSource>(finish.time_since_epoch()).getNanosecondsCount());
 
         _metrics.mutable_timers()->mutable_duration()->set_seconds(
             event.duration.getSecondsCount());
