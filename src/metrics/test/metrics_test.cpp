@@ -528,6 +528,14 @@ TEST_CASE("Registry counts the number of workers") {
 }
 
 
+/**
+ * These tests work for the happy cases, but after we remove legacy
+ * CSV formats we should make the pieces of the metrics API more
+ * unit-testable. Examples of things to test:
+ * - What happens to the metrics if an exception is thrown while 
+ *   an operation context is open?
+ * - What happens if there's a gRPC error?
+ */
 TEST_CASE("Events stream to gRPC") {
     using EventVec = std::vector<poplar::EventMetrics>;
 
