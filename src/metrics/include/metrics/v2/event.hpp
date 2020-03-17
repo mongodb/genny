@@ -219,7 +219,6 @@ public:
         : _name{name}, _stream{name, actorId}, _phase{phase}, _last_finish{ClockSource::now()} {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
-        this->_reset();
     }
 
     void addAt(const typename ClockSource::time_point& finish,
@@ -252,20 +251,6 @@ public:
         }
         _stream.write(_metrics);
         _last_finish = finish;
-    }
-
-private:
-    void _reset() {
-        _metrics.mutable_timers()->mutable_duration()->set_nanos(0);
-        _metrics.mutable_timers()->mutable_total()->set_nanos(0);
-        _metrics.mutable_counters()->set_errors(0);
-        _metrics.mutable_counters()->set_number(0);
-        _metrics.mutable_counters()->set_ops(0);
-        _metrics.mutable_counters()->set_size(0);
-        _metrics.mutable_gauges()->set_state(0);
-        _metrics.mutable_gauges()->set_workers(0);
-        _metrics.mutable_gauges()->set_failed(false);
-        //_metrics.mutable_time()->set_nanos(0);
     }
 
 private:

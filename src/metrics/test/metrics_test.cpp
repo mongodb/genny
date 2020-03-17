@@ -538,7 +538,6 @@ TEST_CASE("Events stream to gRPC") {
         for (int i = 0; i < events_in.size(); i++) {
             REQUIRE(google::protobuf::util::MessageDifferencer::Equals(events_in[i],
                                                                        interface.events[i]));
-            // REQUIRE(2 == 1);
         };
         interface.events.clear();
     };
@@ -565,12 +564,13 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::advance(std::chrono::microseconds(5));
         {
             OperationEventT<RegistryClockSourceStub> event(
-                2,
-                3,
-                7,
-                0,
-                Period<RegistryClockSourceStub>{std::chrono::microseconds(5)},
-                OutcomeType::kSuccess);
+                2, // number
+                3, // ops
+                7, // size
+                0, // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(5)}, // duration
+                OutcomeType::kSuccess // outcome
+                );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
 
             // Streamed Event
@@ -605,12 +605,13 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::advance(std::chrono::microseconds(7));
         {
             OperationEventT<RegistryClockSourceStub> event(
-                2,
-                3,
-                90,
-                1,
-                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},
-                OutcomeType::kFailure);
+                2, // number
+                3, // ops
+                90, // size
+                1, // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)}, // duration
+                OutcomeType::kFailure // outcome
+                );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
 
             // Streamed Event
