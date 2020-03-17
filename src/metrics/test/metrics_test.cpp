@@ -528,7 +528,6 @@ TEST_CASE("Registry counts the number of workers") {
 }
 
 
-
 TEST_CASE("Events stream to gRPC") {
     using EventVec = std::vector<poplar::EventMetrics>;
 
@@ -686,6 +685,28 @@ TEST_CASE("Events stream to gRPC") {
 
 
         compareEventsAndClear(expected);
+    }
+
+    SECTION("Create folder for ftdc output") {
+        RegistryClockSourceStub::reset();
+
+        boost::filesystem::path ph =
+            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        auto metrics_path = (ph / "genny-metrics").string();
+
+        REQUIRE(!boost::filesystem::exists(metrics_path));
+        auto ftdc_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metrics_path};
+        REQUIRE(boost::filesystem::exists(metrics_path));
+
+        boost::filesystem::path never_constructed_ph =
+            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        auto never_constructed_metrics_path = (never_constructed_ph / "genny-metrics").string();
+
+        REQUIRE(!boost::filesystem::exists(never_constructed_metrics_path));
+        auto csv_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("csv"), metrics_path};
+        REQUIRE(!boost::filesystem::exists(never_constructed_metrics_path));
+
+        REQUIRE(boost::filesystem::remove_all(metrics_path));
     }
 }
 

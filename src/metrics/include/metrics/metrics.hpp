@@ -145,7 +145,7 @@ public:
         _format = std::move(format);
         _path_prefix = std::move(path_prefix);
         if (_format.useGrpc()) {
-            boost::filesystem::create_directory(_path_prefix);
+            boost::filesystem::create_directories(_path_prefix);
         }
     }
 
