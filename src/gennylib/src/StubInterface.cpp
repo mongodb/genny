@@ -7,6 +7,7 @@ namespace genny::metrics::internals::v2 {
  *
  * Located in some random cpp file because it can't be initialized in the declaration header.
  */
-std::unique_ptr<poplar::PoplarEventCollector::StubInterface> CollectorStubInterface::_stub = nullptr;
+std::unique_ptr<poplar::PoplarEventCollector::StubInterface> CollectorStubInterface::_stub =
+    nullptr;
 
-}
+}  // namespace genny::metrics::internals::v2

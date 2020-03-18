@@ -50,7 +50,7 @@ public:
 /**
  * Wraps the channel-owning gRPC stub.
  *
- * RAII class that exists for construction / destruction resource management during 
+ * RAII class that exists for construction / destruction resource management during
  * setup/teardown execution phase only so efficiency isn't as much of a concern as correctness.
  */
 class CollectorStubInterface {
@@ -67,7 +67,7 @@ private:
     // We should only have one channel across all threads.
     static std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 
-    // Should only be called by setStub(), is statically guarded 
+    // Should only be called by setStub(), is statically guarded
     // so only one thread will execute.
     auto createStub() {
         grpc::ChannelArguments args;
@@ -89,14 +89,18 @@ private:
 /**
  * Manages the stream of poplar EventMetrics.
  *
- * RAII class that exists for construction / destruction resource management during 
+ * RAII class that exists for construction / destruction resource management during
  * setup/teardown execution phase only so efficiency isn't as much of a concern as correctness.
  */
 class StreamInterfaceImpl {
 public:
     StreamInterfaceImpl(const std::string& name, const ActorId& actorId)
-        : _name{name}, _actorId{actorId}, _options{}, _response{}, _context{}, 
-        _stream{_stub->StreamEvents(&_context, &_response)} {
+        : _name{name},
+          _actorId{actorId},
+          _options{},
+          _response{},
+          _context{},
+          _stream{_stub->StreamEvents(&_context, &_response)} {
         _options.set_no_compression().set_buffer_hint();
     }
 
@@ -105,9 +109,8 @@ public:
 
         if (!success) {
             std::ostringstream os;
-            os << "Failed to write to stream for operation name "
-               << _name << " and actor ID " << _actorId 
-               << ". EventMetrics object: " << event.ShortDebugString();
+            os << "Failed to write to stream for operation name " << _name << " and actor ID "
+               << _actorId << ". EventMetrics object: " << event.ShortDebugString();
 
             BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
         }
@@ -115,19 +118,20 @@ public:
 
     ~StreamInterfaceImpl() {
         if (!_stream) {
-            BOOST_LOG_TRIVIAL(error) << "Tried to close gRPC stream for operation name "
-                << _name << " and actor ID " << _actorId << ", but no stream existed.";
+            BOOST_LOG_TRIVIAL(error) << "Tried to close gRPC stream for operation name " << _name
+                                     << " and actor ID " << _actorId << ", but no stream existed.";
             return;
         }
         if (!_stream->WritesDone()) {
-            BOOST_LOG_TRIVIAL(warning) << "Closing gRPC stream for operation name "
-                << _name << " and actor ID " << _actorId << ", but not all writes completed.";
+            BOOST_LOG_TRIVIAL(warning)
+                << "Closing gRPC stream for operation name " << _name << " and actor ID "
+                << _actorId << ", but not all writes completed.";
         }
         auto status = _stream->Finish();
         if (!status.ok()) {
             BOOST_LOG_TRIVIAL(error)
-                << "Problem closing grpc stream for operation name "
-                << _name << " and actor ID " << _actorId << ": " << _context.debug_error_string();
+                << "Problem closing grpc stream for operation name " << _name << " and actor ID "
+                << _actorId << ": " << _context.debug_error_string();
         }
     }
 
@@ -142,11 +146,10 @@ private:
 };
 
 
-
 /**
  * Manages the gRPC-side collector for each operation.
  *
- * RAII class that exists for construction / destruction resource management during 
+ * RAII class that exists for construction / destruction resource management during
  * setup/teardown execution phase only so efficiency isn't as much of a concern as correctness.
  */
 class Collector {
@@ -174,7 +177,8 @@ public:
         poplar::PoplarResponse response;
         auto status = _stub->CloseCollector(&context, _id, &response);
         if (!status.ok()) {
-            BOOST_LOG_TRIVIAL(error) << "Couldn't close collector " << _name << ": " << status.error_message();
+            BOOST_LOG_TRIVIAL(error)
+                << "Couldn't close collector " << _name << ": " << status.error_message();
         }
     }
 

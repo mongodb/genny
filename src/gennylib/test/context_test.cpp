@@ -127,9 +127,7 @@ Actors:
     SECTION("Invalid Schema Version") {
         auto yaml = NodeSource("SchemaVersion: 2018-06-27\nActors: []", "");
 
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
     }
 
@@ -160,9 +158,7 @@ Actors:
             "]",
             "");
 
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast2);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast2); };
         test();
 
         REQUIRE(calls == 2);
@@ -223,9 +219,7 @@ Actors:
 
     SECTION("Empty Yaml") {
         auto yaml = NodeSource("Actors: []", "");
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         REQUIRE_THROWS_WITH(
             test(),
             Matches(
@@ -233,9 +227,7 @@ Actors:
     }
     SECTION("No Actors") {
         auto yaml = NodeSource("SchemaVersion: 2018-07-01", "");
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         test();
     }
 
@@ -670,9 +662,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
                            "");
 
     SECTION("Incorrect type value inputted") {
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         REQUIRE_THROWS_WITH(
             test(), Matches(R"(Unable to construct actors: No producer for 'Bar'(.*\n*)*)"));
     }

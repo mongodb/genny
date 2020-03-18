@@ -21,8 +21,8 @@
 #include <type_traits>
 #include <unordered_map>
 
-#include <gennylib/conventions.hpp>
 #include <gennylib/Node.hpp>
+#include <gennylib/conventions.hpp>
 
 #include <metrics/operation.hpp>
 #include <metrics/v1/passkey.hpp>
@@ -43,7 +43,7 @@ public:
     };
 
     MetricsFormat() : _format{Format::kCsv} {}
-    
+
     MetricsFormat(const Node& node) : _format{strToEnum(node.to<std::string>())} {}
 
     MetricsFormat(const std::string& toConvert) : _format{strToEnum(toConvert)} {}
@@ -141,7 +141,7 @@ public:
 
     explicit RegistryT() = default;
 
-    explicit RegistryT(MetricsFormat format, std::string pathPrefix) 
+    explicit RegistryT(MetricsFormat format, std::string pathPrefix)
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
@@ -219,7 +219,7 @@ public:
         return (_ops.at(actorName).at(opName)).size();
     }
 
-    
+
     const MetricsFormat& getFormat() const {
         return _format;
     }

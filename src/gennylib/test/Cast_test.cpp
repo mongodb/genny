@@ -49,10 +49,9 @@ public:
           _registration{globalCast().registerCustom(_producer)},
           _nodeSource{createWorkloadYaml(name, actorYaml)},
           _orchestrator{},
-          _workloadContext{_nodeSource.root(),
-                           _orchestrator,
-                           "mongodb://localhost:27017",
-                           genny::globalCast()} {}
+          _workloadContext{
+              _nodeSource.root(), _orchestrator, "mongodb://localhost:27017", genny::globalCast()} {
+    }
 
     void run() {
         for (auto&& actor : _workloadContext.actors()) {

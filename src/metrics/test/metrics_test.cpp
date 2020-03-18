@@ -45,7 +45,7 @@ public:
     static std::vector<poplar::EventMetrics> events;
 };
 
-} // namespace internals::v2
+}  // namespace internals::v2
 
 std::vector<poplar::EventMetrics> internals::v2::MockStreamInterface::events;
 
@@ -532,7 +532,7 @@ TEST_CASE("Registry counts the number of workers") {
  * These tests work for the happy cases, but after we remove legacy
  * CSV formats we should make the pieces of the metrics API more
  * unit-testable. Examples of things to test:
- * - What happens to the metrics if an exception is thrown while 
+ * - What happens to the metrics if an exception is thrown while
  *   an operation context is open?
  * - What happens if there's a gRPC error?
  */
@@ -578,13 +578,13 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::advance(std::chrono::microseconds(5));
         {
             OperationEventT<RegistryClockSourceStub> event(
-                2, // number
-                3, // ops
-                7, // size
-                0, // errors
-                Period<RegistryClockSourceStub>{std::chrono::microseconds(5)}, // duration
-                OutcomeType::kSuccess // outcome
-                );
+                2,                                                              // number
+                3,                                                              // ops
+                7,                                                              // size
+                0,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(5)},  // duration
+                OutcomeType::kSuccess                                           // outcome
+            );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
 
             // Streamed Event
@@ -619,13 +619,13 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::advance(std::chrono::microseconds(7));
         {
             OperationEventT<RegistryClockSourceStub> event(
-                2, // number
-                3, // ops
-                90, // size
-                1, // errors
-                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)}, // duration
-                OutcomeType::kFailure // outcome
-                );
+                2,                                                              // number
+                3,                                                              // ops
+                90,                                                             // size
+                1,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},  // duration
+                OutcomeType::kFailure                                           // outcome
+            );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
 
             // Streamed Event
@@ -661,13 +661,13 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::advance(std::chrono::microseconds(3));
         {
             OperationEventT<RegistryClockSourceStub> event(
-                3, // number
-                1, // ops
-                10, // size
-                0, // errors
-                Period<RegistryClockSourceStub>{std::chrono::microseconds(3)}, // duration
-                OutcomeType::kSuccess // outcome
-                );
+                3,                                                              // number
+                1,                                                              // ops
+                10,                                                             // size
+                0,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(3)},  // duration
+                OutcomeType::kSuccess                                           // outcome
+            );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
 
             // Streamed Event
@@ -706,13 +706,15 @@ TEST_CASE("Events stream to gRPC") {
         auto metricsPath = getMetricsPath();
 
         REQUIRE(!boost::filesystem::exists(metricsPath));
-        auto ftdc_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metricsPath};
+        auto ftdc_metrics =
+            internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metricsPath};
         REQUIRE(boost::filesystem::exists(metricsPath));
 
         auto neverConstructedMetricsPath = getMetricsPath();
 
         REQUIRE(!boost::filesystem::exists(neverConstructedMetricsPath));
-        auto csv_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("csv"), metricsPath};
+        auto csv_metrics =
+            internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("csv"), metricsPath};
         REQUIRE(!boost::filesystem::exists(neverConstructedMetricsPath));
 
         REQUIRE(boost::filesystem::remove_all(metricsPath));
@@ -720,8 +722,9 @@ TEST_CASE("Events stream to gRPC") {
 
     SECTION("One Collector is created per actor-operation.") {
         auto metricsPath = getMetricsPath();
-        auto metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metricsPath};
-        
+        auto metrics =
+            internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metricsPath};
+
         metrics.operation("dummyActorName", "dummyOpName", 1, 2);
         metrics.operation("dummyActorName", "dummyOpName", 2, 2);
         metrics.operation("dummyActorName", "dummyOpName", 2, 3);
@@ -729,10 +732,13 @@ TEST_CASE("Events stream to gRPC") {
 
         REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.dummyOpName.2.ftdc"));
         REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.dummyOpName.3.ftdc"));
-        REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.anotherDummyOpName.4.ftdc"));
+        REQUIRE(
+            boost::filesystem::exists(metricsPath + "/dummyActorName.anotherDummyOpName.4.ftdc"));
 
         int file_count = 0;
-        for (boost::filesystem::directory_iterator it(metricsPath); it != boost::filesystem::directory_iterator(); ++it) {
+        for (boost::filesystem::directory_iterator it(metricsPath);
+             it != boost::filesystem::directory_iterator();
+             ++it) {
             file_count++;
         }
 

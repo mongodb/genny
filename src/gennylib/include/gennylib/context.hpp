@@ -250,7 +250,9 @@ public:
      */
     v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
 
-    metrics::Registry& getMetrics() {return _registry;}
+    metrics::Registry& getMetrics() {
+        return _registry;
+    }
 
 private:
     friend class ActorContext;

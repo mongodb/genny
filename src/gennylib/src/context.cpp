@@ -52,7 +52,9 @@ WorkloadContext::WorkloadContext(const Node& node,
     mongocxx::instance::current();
 
     // Set the metrics format information.
-    auto format = ((*this)["Metrics"]["Format"]).maybe<metrics::MetricsFormat>().value_or(metrics::MetricsFormat());
+    auto format = ((*this)["Metrics"]["Format"])
+                      .maybe<metrics::MetricsFormat>()
+                      .value_or(metrics::MetricsFormat());
     auto metricsPath =
         ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/genny-metrics");
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));

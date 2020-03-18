@@ -41,8 +41,7 @@ ActorHelper::ActorHelper(const Node& config,
 
     _cast = std::make_unique<Cast>(castInitializer);
     try {
-        _wlc = std::make_unique<WorkloadContext>(
-            config, *_orchestrator, uri, *_cast, apmCallback);
+        _wlc = std::make_unique<WorkloadContext>(config, *_orchestrator, uri, *_cast, apmCallback);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(fatal) << boost::diagnostic_information(x, true);
         throw;

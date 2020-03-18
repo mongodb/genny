@@ -68,7 +68,7 @@ struct OperationEventT final {
     }
 
     /**
-     * @param number 
+     * @param number
      *     The number of iterations that occurred before the operation was reported. This member
      * will almost always be 1 unless an actor decides to periodically report an operation in its
      * for loop.
@@ -102,7 +102,7 @@ struct OperationEventT final {
         return outcome == OutcomeType::kFailure;
     }
 
-    count_type number;              // corresponds to the 'n' field in Cedar
+    count_type number;             // corresponds to the 'n' field in Cedar
     count_type ops;                // corresponds to the 'ops' field in Cedar
     count_type size;               // corresponds to the 'size' field in Cedar
     count_type errors;             // corresponds to the 'errors' field in Cedar
@@ -418,7 +418,7 @@ public:
      *     when the operation finished. This will be used as the time point the event
      *     occurred and `finished - duration` will be used as when the event started.
      *
-     * @paramnumber 
+     * @paramnumber
      *     The number of iterations that occurred before the operation was reported. This
      *     member will almost always be 1 unless an actor decides to periodically report
      *     an operation in its for loop.
