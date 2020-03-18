@@ -88,6 +88,9 @@ private:
 
 /**
  * Manages the stream of poplar EventMetrics.
+ *
+ * RAII class that exists for construction / destruction resource management during 
+ * setup/teardown execution phase only so efficiency isn't as much of a concern as correctness.
  */
 class StreamInterfaceImpl {
 public:
