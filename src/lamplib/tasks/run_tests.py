@@ -2,8 +2,6 @@ import logging
 import os
 import subprocess
 
-from gennylib.genny_runner import poplar_grpc
-
 # We rely on catch2 to report test failures, but it doesn't always do so.
 # See https://github.com/catchorg/Catch2/issues/1210
 # As a workaround, we generate a dummy report with a failed test that is
@@ -44,6 +42,9 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
 
 
 def cmake_test(env):
+    # This can only be imported after the setup script has installed gennylib.
+    from gennylib.genny_runner import poplar_grpc
+
     workdir = os.path.join(os.getcwd(), 'build')
 
     ctest_cmd = [
