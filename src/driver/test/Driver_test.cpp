@@ -50,15 +50,15 @@ std::string readFile(const std::string& fileName) {
     return str;
 }
 
-std::string metricsContents(const std::string& metrics_path) {
-    return readFile(metrics_path);
+std::string metricsContents(const std::string& metricsPath) {
+    return readFile(metricsPath);
 }
 
 // Ideally this would use std::filesystem::file_size but
 // <filesystem> isn't yet available on all the platforms
 // we support (I'm looking at you, Apple Clang).
-bool hasMetrics(const std::string& metrics_path) {
-    return !metricsContents(metrics_path).empty();
+bool hasMetrics(const std::string& metricsPath) {
+    return !metricsContents(metricsPath).empty();
 }
 
 class SomeException : public virtual boost::exception, public virtual std::exception {};
@@ -143,17 +143,17 @@ std::pair<DefaultDriver::OutcomeCode, std::string> outcome(const std::string& ya
     boost::filesystem::path ph =
         boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     boost::filesystem::create_directories(ph);
-    auto metrics_path = (ph / "genny-metrics").string();
+    auto metricsPath = (ph / "genny-metrics").string();
 
-    std::string metrics_section = R"(
+    std::string metricsSection = R"(
         Metrics:
             Format: csv
             Path: )" +
-        metrics_path + R"( 
+        metricsPath + R"( 
         )";
     DefaultDriver driver;
-    auto opts = create(yaml + metrics_section);
-    return {driver.run(opts), metrics_path + ".csv"};
+    auto opts = create(yaml + metricsSection);
+    return {driver.run(opts), metricsPath + ".csv"};
 }
 
 }  // namespace

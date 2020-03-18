@@ -539,11 +539,11 @@ TEST_CASE("Registry counts the number of workers") {
 TEST_CASE("Events stream to gRPC") {
     using EventVec = std::vector<poplar::EventMetrics>;
 
-    auto compareEventsAndClear = [](const EventVec& events_in) {
-        internals::v2::MockStreamInterface interface("dummy_debug_name", 5);
-        REQUIRE(events_in.size() == interface.events.size());
-        for (int i = 0; i < events_in.size(); i++) {
-            REQUIRE(google::protobuf::util::MessageDifferencer::Equals(events_in[i],
+    auto compareEventsAndClear = [](const EventVec& eventsIn) {
+        internals::v2::MockStreamInterface interface("dummyDebugName", 5);
+        REQUIRE(eventsIn.size() == interface.events.size());
+        for (int i = 0; i < eventsIn.size(); i++) {
+            REQUIRE(google::protobuf::util::MessageDifferencer::Equals(eventsIn[i],
                                                                        interface.events[i]));
         };
         interface.events.clear();
@@ -703,43 +703,42 @@ TEST_CASE("Events stream to gRPC") {
     }
 
     SECTION("Create folder for ftdc output") {
-        auto metrics_path = getMetricsPath();
+        auto metricsPath = getMetricsPath();
 
-        REQUIRE(!boost::filesystem::exists(metrics_path));
-        auto ftdc_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metrics_path};
-        REQUIRE(boost::filesystem::exists(metrics_path));
+        REQUIRE(!boost::filesystem::exists(metricsPath));
+        auto ftdc_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metricsPath};
+        REQUIRE(boost::filesystem::exists(metricsPath));
 
-        auto never_constructed_metrics_path = getMetricsPath();
+        auto neverConstructedMetricsPath = getMetricsPath();
 
-        REQUIRE(!boost::filesystem::exists(never_constructed_metrics_path));
-        auto csv_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("csv"), metrics_path};
-        REQUIRE(!boost::filesystem::exists(never_constructed_metrics_path));
+        REQUIRE(!boost::filesystem::exists(neverConstructedMetricsPath));
+        auto csv_metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("csv"), metricsPath};
+        REQUIRE(!boost::filesystem::exists(neverConstructedMetricsPath));
 
-        REQUIRE(boost::filesystem::remove_all(metrics_path));
+        REQUIRE(boost::filesystem::remove_all(metricsPath));
     }
 
     SECTION("One Collector is created per actor-operation.") {
-        auto metrics_path = getMetricsPath();
-        auto metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metrics_path};
+        auto metricsPath = getMetricsPath();
+        auto metrics = internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metricsPath};
         
         metrics.operation("dummyActorName", "dummyOpName", 1, 2);
         metrics.operation("dummyActorName", "dummyOpName", 2, 2);
         metrics.operation("dummyActorName", "dummyOpName", 2, 3);
         metrics.operation("dummyActorName", "anotherDummyOpName", 2, 4);
 
-        REQUIRE(boost::filesystem::exists(metrics_path + "/dummyActorName.dummyOpName.2.ftdc"));
-        REQUIRE(boost::filesystem::exists(metrics_path + "/dummyActorName.dummyOpName.3.ftdc"));
-        REQUIRE(boost::filesystem::exists(metrics_path + "/dummyActorName.anotherDummyOpName.4.ftdc"));
+        REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.dummyOpName.2.ftdc"));
+        REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.dummyOpName.3.ftdc"));
+        REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.anotherDummyOpName.4.ftdc"));
 
-        //auto iterator = boost::filesystem::directory_iterator(metrics_path);
         int file_count = 0;
-        for (boost::filesystem::directory_iterator it(metrics_path); it != boost::filesystem::directory_iterator(); ++it) {
+        for (boost::filesystem::directory_iterator it(metricsPath); it != boost::filesystem::directory_iterator(); ++it) {
             file_count++;
         }
 
         REQUIRE(file_count == 3);
 
-        REQUIRE(boost::filesystem::remove_all(metrics_path));
+        REQUIRE(boost::filesystem::remove_all(metricsPath));
     }
 }
 

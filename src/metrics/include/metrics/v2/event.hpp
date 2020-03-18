@@ -80,7 +80,7 @@ private:
     }
 
     void setStub() {
-        static bool stub_created = createStub();
+        static bool stubCreated = createStub();
         return;
     }
 };
@@ -150,13 +150,13 @@ class Collector {
 public:
     Collector(const Collector&) = delete;
 
-    explicit Collector(const std::string& name, const std::string& path_prefix)
+    explicit Collector(const std::string& name, const std::string& pathPrefix)
         : _name{name}, _id{} {
         _id.set_name(_name);
 
         grpc::ClientContext context;
         poplar::PoplarResponse response;
-        poplar::CreateOptions options = createOptions(_name, path_prefix);
+        poplar::CreateOptions options = createOptions(_name, pathPrefix);
         auto status = _stub->CreateCollector(&context, options, &response);
 
         if (!status.ok()) {
@@ -177,19 +177,19 @@ public:
 
 
 private:
-    static auto createPath(const std::string& name, const std::string& path_prefix) {
+    static auto createPath(const std::string& name, const std::string& pathPrefix) {
         std::stringstream str;
-        str << path_prefix << '/';
+        str << pathPrefix << '/';
         str << name << ".ftdc";
         return str.str();
     }
 
     static poplar::CreateOptions createOptions(const std::string& name,
-                                               const std::string& path_prefix) {
+                                               const std::string& pathPrefix) {
         poplar::CreateOptions options;
         options.set_name(name);
         options.set_events(poplar::CreateOptions_EventsCollectorType_BASIC);
-        options.set_path(createPath(name, path_prefix));
+        options.set_path(createPath(name, pathPrefix));
         options.set_chunksize(1000);
         options.set_streaming(true);
         options.set_dynamic(false);
@@ -215,7 +215,7 @@ public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
-                         const std::string& path_prefix)
+                         const std::string& pathPrefix)
         : _name{name}, _stream{name, actorId}, _phase{phase}, _last_finish{ClockSource::now()} {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);

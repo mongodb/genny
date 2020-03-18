@@ -68,12 +68,12 @@ void runActor(Actor&& actor,
 void reportMetrics(genny::metrics::Registry& metrics,
                    const std::string& workloadName,
                    bool success,
-                   metrics::clock::time_point start_time) {
-    auto finish_time = metrics::clock::now();
+                   metrics::clock::time_point startTime) {
+    auto finishTime = metrics::clock::now();
     auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
     auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finish_time - start_time);
-    actorSetup.report(std::move(finish_time), std::move(duration), std::move(outcome));
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
+    actorSetup.report(std::move(finishTime), std::move(duration), std::move(outcome));
 }
 
 DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& options) {
@@ -81,19 +81,19 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= options.logVerbosity);
 
     const auto workloadName = fs::path(options.workloadSource).stem().string();
-    auto start_time = genny::metrics::Registry::clock::now();
+    auto startTime = genny::metrics::Registry::clock::now();
 
     if (options.runMode == DefaultDriver::RunMode::kListActors) {
         globalCast().streamProducersTo(std::cout);
         genny::metrics::Registry metrics;
-        reportMetrics(metrics, workloadName, true, start_time);
+        reportMetrics(metrics, workloadName, true, startTime);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     if (options.workloadSource.empty()) {
         std::cerr << "Must specify a workload YAML file" << std::endl;
         genny::metrics::Registry metrics;
-        reportMetrics(metrics, workloadName, false, start_time);
+        reportMetrics(metrics, workloadName, false, startTime);
         return DefaultDriver::OutcomeCode::kUserException;
     }
 
@@ -126,7 +126,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
         std::cout << YAML::Dump(yaml) << std::endl;
         genny::metrics::Registry metrics;
-        reportMetrics(metrics, workloadName, true, start_time);
+        reportMetrics(metrics, workloadName, true, startTime);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
@@ -144,14 +144,14 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     if (options.runMode == DefaultDriver::RunMode::kDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;
-        reportMetrics(metrics, workloadName, true, start_time);
+        reportMetrics(metrics, workloadName, true, startTime);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
-    reportMetrics(metrics, workloadName, true, start_time);
+    reportMetrics(metrics, workloadName, true, startTime);
 
     auto startedActors = metrics.operation(workloadName, "ActorStarted", 0u);
     auto finishedActors = metrics.operation(workloadName, "ActorFinished", 0u);

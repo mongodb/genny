@@ -44,9 +44,9 @@ public:
 
     MetricsFormat() : _format{Format::kCsv} {}
     
-    MetricsFormat(const Node& node) : _format{str_to_enum(node.to<std::string>())} {}
+    MetricsFormat(const Node& node) : _format{strToEnum(node.to<std::string>())} {}
 
-    MetricsFormat(const std::string& to_convert) : _format{str_to_enum(to_convert)} {}
+    MetricsFormat(const std::string& toConvert) : _format{strToEnum(toConvert)} {}
 
     bool useGrpc() const {
         return _format == Format::kFtdc || _format == Format::kCsvFtdc;
@@ -63,17 +63,17 @@ public:
 
 private:
     Format _format;
-    Format str_to_enum(const std::string& to_convert) {
-        if (to_convert == "csv") {
+    Format strToEnum(const std::string& toConvert) {
+        if (toConvert == "csv") {
             return Format::kCsv;
-        } else if (to_convert == "cedar-csv") {
+        } else if (toConvert == "cedar-csv") {
             return Format::kCedarCsv;
-        } else if (to_convert == "ftdc") {
+        } else if (toConvert == "ftdc") {
             return Format::kFtdc;
-        } else if (to_convert == "csv-ftdc") {
+        } else if (toConvert == "csv-ftdc") {
             return Format::kCsvFtdc;
         } else {
-            throw std::invalid_argument(std::string("Unknown metrics format ") + to_convert);
+            throw std::invalid_argument(std::string("Unknown metrics format ") + toConvert);
         }
     }
 };
@@ -141,11 +141,11 @@ public:
 
     explicit RegistryT() = default;
 
-    explicit RegistryT(MetricsFormat format, std::string path_prefix) {
+    explicit RegistryT(MetricsFormat format, std::string pathPrefix) {
         _format = std::move(format);
-        _path_prefix = std::move(path_prefix);
+        _pathPrefix = std::move(pathPrefix);
         if (_format.useGrpc()) {
-            boost::filesystem::create_directories(_path_prefix);
+            boost::filesystem::create_directories(_pathPrefix);
         }
     }
 
@@ -157,7 +157,7 @@ public:
         std::string name;
         if (_format.useGrpc()) {
             name = createName(actorName, opName, phase);
-            _collectors.try_emplace(name, name, _path_prefix);
+            _collectors.try_emplace(name, name, _pathPrefix);
         }
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
@@ -168,7 +168,7 @@ public:
                                      *this,
                                      std::move(opName),
                                      std::move(phase),
-                                     _path_prefix,
+                                     _pathPrefix,
                                      name)
                         .first;
         return OperationT{opIt->second};
@@ -185,7 +185,7 @@ public:
         std::string name;
         if (_format.useGrpc()) {
             name = createName(actorName, opName, phase);
-            _collectors.try_emplace(name, name, _path_prefix);
+            _collectors.try_emplace(name, name, _pathPrefix);
         }
         auto opIt =
             opsByThread
@@ -196,7 +196,7 @@ public:
                     *this,
                     std::move(opName),
                     std::move(phase),
-                    _path_prefix,
+                    _pathPrefix,
                     name,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
@@ -226,15 +226,15 @@ public:
     }
 
     const std::string& getPathPrefix() const {
-        return _path_prefix;
+        return _pathPrefix;
     }
 
 private:
-    std::string createName(const std::string& actor_name,
-                           const std::string& op_name,
+    std::string createName(const std::string& actorName,
+                           const std::string& opName,
                            const std::optional<genny::PhaseNumber>& phase) {
         std::stringstream str;
-        str << actor_name << '.' << op_name;
+        str << actorName << '.' << opName;
         if (phase) {
             str << '.' << *phase;
         }
@@ -244,7 +244,7 @@ private:
     CollectorsMap _collectors;
     OperationsMap _ops;
     MetricsFormat _format;
-    std::string _path_prefix;
+    std::string _pathPrefix;
 };
 
 }  // namespace internals
