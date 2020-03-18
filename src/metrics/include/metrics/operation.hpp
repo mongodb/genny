@@ -189,7 +189,7 @@ public:
                   const RegistryT<ClockSource>& registry,
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
-                  const std::string& path_prefix,
+                  const std::string& pathPrefix,
                   const std::optional<std::string>& collector_name = std::nullopt,
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
@@ -200,7 +200,7 @@ public:
           _phase(std::move(phase)),
           _threshold(threshold) {
         if (_useGrpc) {
-            _stream.reset(new stream_t(actorId, *collector_name, this->_phase, path_prefix));
+            _stream.reset(new stream_t(actorId, *collector_name, this->_phase, pathPrefix));
         }
         if (_useCsv) {
             _events.reset(new EventSeries());

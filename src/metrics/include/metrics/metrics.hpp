@@ -141,9 +141,8 @@ public:
 
     explicit RegistryT() = default;
 
-    explicit RegistryT(MetricsFormat format, std::string pathPrefix) {
-        _format = std::move(format);
-        _pathPrefix = std::move(pathPrefix);
+    explicit RegistryT(MetricsFormat format, std::string pathPrefix) 
+        : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
         }
@@ -154,10 +153,10 @@ public:
                                       std::string opName,
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
-        std::string name;
+        std::optional<std::string> name;
         if (_format.useGrpc()) {
             name = createName(actorName, opName, phase);
-            _collectors.try_emplace(name, name, _pathPrefix);
+            _collectors.try_emplace(*name, *name, _pathPrefix);
         }
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
@@ -182,10 +181,10 @@ public:
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        std::string name;
+        std::optional<std::string> name;
         if (_format.useGrpc()) {
             name = createName(actorName, opName, phase);
-            _collectors.try_emplace(name, name, _pathPrefix);
+            _collectors.try_emplace(*name, *name, _pathPrefix);
         }
         auto opIt =
             opsByThread
