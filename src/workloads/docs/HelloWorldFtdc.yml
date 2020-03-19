@@ -1,0 +1,25 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+
+Actors:
+- Name: HelloWorld
+  Type: HelloWorld
+  Threads: 2
+  Phases:
+  - Message: Hello Phase 0 🐳
+    Duration: 50 milliseconds
+    # GlobalRate: 99 per 88 nanoseconds
+    # SleepBefore: 11 milliseconds
+    # SleepAfter: 17 microseconds
+    # MetricsName: 🐳Message
+  - Message: Hello Phase 1 👬
+    Repeat: 100
+  - ExternalPhaseConfig:
+      Path: ../../phases/HelloWorld/ExamplePhase2.yml
+      Key: UseMe  # Only load the YAML structure from this top-level key.
+      Parameters:
+        Repeat: 2
+
+Metrics:
+  Format: ftdc
+  Path: build/genny-metrics
