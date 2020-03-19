@@ -54,7 +54,7 @@ WorkloadContext::WorkloadContext(const Node& node,
     // Set the metrics format information.
     auto format = ((*this)["Metrics"]["Format"])
                       .maybe<metrics::MetricsFormat>()
-                      .value_or(metrics::MetricsFormat());
+                      .value_or(metrics::MetricsFormat("cedar-csv"));
     auto metricsPath =
         ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/genny-metrics");
     _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
