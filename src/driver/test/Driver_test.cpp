@@ -50,15 +50,15 @@ std::string readFile(const std::string& fileName) {
     return str;
 }
 
-std::string metricsContents(DefaultDriver::ProgramOptions& options) {
-    return readFile(options.metricsOutputFileName);
+std::string metricsContents(const std::string& metricsPath) {
+    return readFile(metricsPath);
 }
 
 // Ideally this would use std::filesystem::file_size but
 // <filesystem> isn't yet available on all the platforms
 // we support (I'm looking at you, Apple Clang).
-bool hasMetrics(DefaultDriver::ProgramOptions& options) {
-    return !metricsContents(options).empty();
+bool hasMetrics(const std::string& metricsPath) {
+    return !metricsContents(metricsPath).empty();
 }
 
 class SomeException : public virtual boost::exception, public virtual std::exception {};
@@ -127,15 +127,8 @@ StaticFailsInfo Fails::state = {};
 
 
 DefaultDriver::ProgramOptions create(const std::string& yaml) {
-    boost::filesystem::path ph =
-        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
-    boost::filesystem::create_directories(ph);
-    auto metricsOutputFileName = (ph / "metrics.csv").string();
-
     DefaultDriver::ProgramOptions opts;
 
-    opts.metricsFormat = "csv";
-    opts.metricsOutputFileName = metricsOutputFileName;
     opts.mongoUri = "mongodb://localhost:27017";
     opts.workloadSourceType = DefaultDriver::ProgramOptions::YamlSource::kString;
     opts.workloadSource = yaml;
@@ -144,14 +137,23 @@ DefaultDriver::ProgramOptions create(const std::string& yaml) {
     return opts;
 }
 
-std::pair<DefaultDriver::OutcomeCode, DefaultDriver::ProgramOptions> outcome(
-    const std::string& yaml) {
+std::pair<DefaultDriver::OutcomeCode, std::string> outcome(const std::string& yaml) {
     Fails::state.clear();
 
+    boost::filesystem::path ph =
+        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    boost::filesystem::create_directories(ph);
+    auto metricsPath = (ph / "genny-metrics").string();
+
+    std::string metricsSection = R"(
+        Metrics:
+            Format: csv
+            Path: )" +
+        metricsPath + R"( 
+        )";
     DefaultDriver driver;
-    auto opts = create(yaml);
-    remove(opts.metricsOutputFileName.c_str());
-    return {driver.run(opts), opts};
+    auto opts = create(yaml + metricsSection);
+    return {driver.run(opts), metricsPath + ".csv"};
 }
 
 }  // namespace

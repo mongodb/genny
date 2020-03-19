@@ -28,8 +28,6 @@
 #include <gennylib/PhaseLoop.hpp>
 #include <gennylib/context.hpp>
 
-#include <metrics/metrics.hpp>
-
 #include <testlib/ActorHelper.hpp>
 #include <testlib/helpers.hpp>
 #include <testlib/yamlToBson.hpp>
@@ -58,12 +56,11 @@ auto& applyBracket(const T& t, Arg&& arg, Rest&&... rest) {
 
 template <class Out, class... Args>
 void errors(const string& yaml, string message, Args... args) {
-    genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     NodeSource ns{modified, "errors-testcase"};
     auto test = [&]() {
-        auto context = WorkloadContext{ns.root(), metrics, orchestrator, mongoUri.data(), Cast{}};
+        auto context = WorkloadContext{ns.root(), orchestrator, mongoUri.data(), Cast{}};
         return applyBracket(context, std::forward<Args>(args)...).template to<Out>();
     };
     CHECK_THROWS_WITH(test(), StartsWith(message));
@@ -73,12 +70,11 @@ template <class Out,
           class OutV = typename std::conditional<Required, Out, std::optional<Out>>::type,
           class... Args>
 void gives(const string& yaml, OutV expect, Args... args) {
-    genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
     string modified = "SchemaVersion: 2018-07-01\nActors: []\n" + yaml;
     NodeSource ns{modified, "gives-test"};
     auto test = [&]() {
-        auto context = WorkloadContext{ns.root(), metrics, orchestrator, mongoUri.data(), Cast{}};
+        auto context = WorkloadContext{ns.root(), orchestrator, mongoUri.data(), Cast{}};
         if constexpr (Required) {
             return applyBracket(context, std::forward<Args>(args)...).template to<Out>();
         } else {
@@ -108,7 +104,6 @@ struct OpProducer : public ActorProducer {
 };
 
 TEST_CASE("loads configuration okay") {
-    genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
@@ -125,16 +120,14 @@ Actors:
         )",
                                "");
 
-        WorkloadContext w{yaml.root(), metrics, orchestrator, mongoUri.data(), cast};
+        WorkloadContext w{yaml.root(), orchestrator, mongoUri.data(), cast};
         auto& actors = w["Actors"];
     }
 
     SECTION("Invalid Schema Version") {
         auto yaml = NodeSource("SchemaVersion: 2018-06-27\nActors: []", "");
 
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         REQUIRE_THROWS_WITH(test(), Matches("Invalid Schema Version: 2018-06-27"));
     }
 
@@ -165,9 +158,7 @@ Actors:
             "]",
             "");
 
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast2);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast2); };
         test();
 
         REQUIRE(calls == 2);
@@ -228,9 +219,7 @@ Actors:
 
     SECTION("Empty Yaml") {
         auto yaml = NodeSource("Actors: []", "");
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         REQUIRE_THROWS_WITH(
             test(),
             Matches(
@@ -238,9 +227,7 @@ Actors:
     }
     SECTION("No Actors") {
         auto yaml = NodeSource("SchemaVersion: 2018-07-01", "");
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         test();
     }
 
@@ -293,7 +280,7 @@ Actors:
         };
         auto& yaml = ns.root();
 
-        auto context = WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), twoActorCast};
+        auto context = WorkloadContext{yaml, orchestrator, mongoUri.data(), twoActorCast};
 
         REQUIRE(someListProducer->calls == 1);
         REQUIRE(countProducer->calls == 1);
@@ -314,7 +301,6 @@ Actors:
 }
 
 void onContext(const NodeSource& yaml, std::function<void(ActorContext&)> op) {
-    genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
@@ -322,7 +308,7 @@ void onContext(const NodeSource& yaml, std::function<void(ActorContext&)> op) {
         {"Nop", std::make_shared<NopProducer>()},
     };
 
-    WorkloadContext{yaml.root(), metrics, orchestrator, mongoUri.data(), cast};
+    WorkloadContext{yaml.root(), orchestrator, mongoUri.data(), cast};
 }
 
 TEST_CASE("PhaseContexts constructed as expected") {
@@ -393,7 +379,6 @@ TEST_CASE("PhaseContexts constructed as expected") {
 }
 
 TEST_CASE("Duplicate Phase Numbers") {
-    metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
@@ -413,7 +398,7 @@ TEST_CASE("Duplicate Phase Numbers") {
                       "");
         auto& yaml = ns.root();
 
-        REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
+        REQUIRE_THROWS_WITH((WorkloadContext{yaml, orchestrator, mongoUri.data(), cast}),
                             Catch::Matches("Duplicate phase 0"));
     }
 
@@ -430,7 +415,7 @@ TEST_CASE("Duplicate Phase Numbers") {
                       "");
         auto& yaml = ns.root();
 
-        REQUIRE_THROWS_WITH((WorkloadContext{yaml, metrics, orchestrator, mongoUri.data(), cast}),
+        REQUIRE_THROWS_WITH((WorkloadContext{yaml, orchestrator, mongoUri.data(), cast}),
                             Catch::Matches("Duplicate phase 0"));
     }
 }
@@ -661,7 +646,6 @@ Actors: [{}]
 }
 
 TEST_CASE("If no producer exists for an actor, then we should throw an error") {
-    genny::metrics::Registry metrics;
     genny::Orchestrator orchestrator{};
 
     auto cast = Cast{
@@ -678,9 +662,7 @@ TEST_CASE("If no producer exists for an actor, then we should throw an error") {
                            "");
 
     SECTION("Incorrect type value inputted") {
-        auto test = [&]() {
-            WorkloadContext w(yaml.root(), metrics, orchestrator, mongoUri.data(), cast);
-        };
+        auto test = [&]() { WorkloadContext w(yaml.root(), orchestrator, mongoUri.data(), cast); };
         REQUIRE_THROWS_WITH(
             test(), Matches(R"(Unable to construct actors: No producer for 'Bar'(.*\n*)*)"));
     }

@@ -42,6 +42,9 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
 
 
 def cmake_test(env):
+    # This can only be imported after the setup script has installed gennylib.
+    from gennylib.genny_runner import poplar_grpc
+
     workdir = os.path.join(os.getcwd(), 'build')
 
     ctest_cmd = [
@@ -51,7 +54,8 @@ def cmake_test(env):
         '(standalone|sharded|single_node_replset|three_node_replset|benchmark)'
     ]
 
-    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+    with poplar_grpc():
+        _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
 
 
 def benchmark_test(env):

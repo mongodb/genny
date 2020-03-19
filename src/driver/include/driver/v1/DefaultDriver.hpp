@@ -23,6 +23,7 @@
 
 #include <gennylib/ActorProducer.hpp>
 #include <gennylib/ActorVector.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny::driver {
 
@@ -48,6 +49,7 @@ public:
         kUnknownException = 10,
     };
 
+
     struct ProgramOptions {
         explicit ProgramOptions() = default;
 
@@ -61,8 +63,6 @@ public:
         YamlSource workloadSourceType = YamlSource::kFile;
         std::string workloadSource;  // either file name or yaml
 
-        std::string metricsFormat;
-        std::string metricsOutputFileName;
         std::string mongoUri;
         std::string description;
         bool isSmokeTest;

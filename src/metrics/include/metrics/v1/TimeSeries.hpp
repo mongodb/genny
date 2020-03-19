@@ -26,7 +26,7 @@
  * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
  * the implementation of an actor.
  */
-namespace genny::metrics::v1 {
+namespace genny::metrics::internals::v1 {
 
 /**
  * A class for storing time series data (TSD) values.
@@ -77,6 +77,6 @@ private:
     VectorType _vals;
 };
 
-}  // namespace genny::metrics::v1
+}  // namespace genny::metrics::internals::v1
 
 #endif  // HEADER_9ECECB02_6528_456C_B390_AFBAA5229D3D_INCLUDED

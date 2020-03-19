@@ -25,9 +25,11 @@
 #include <boost/log/trivial.hpp>
 
 #include <gennylib/Actor.hpp>
+#include <gennylib/Orchestrator.hpp>
 
 #include <metrics/Period.hpp>
 #include <metrics/v1/TimeSeries.hpp>
+#include <metrics/v2/event.hpp>
 
 namespace genny::metrics {
 
@@ -47,13 +49,13 @@ template <typename ClockSource>
 struct OperationEventT final {
 
     bool operator==(const OperationEventT<ClockSource>& other) const {
-        return iters == other.iters && ops == other.ops && size == other.size &&
+        return number == other.number && ops == other.ops && size == other.size &&
             errors == other.errors && duration == other.duration && outcome == other.outcome;
     }
 
     friend std::ostream& operator<<(std::ostream& out, const OperationEventT<ClockSource>& event) {
         out << "OperationEventT{";
-        out << "iters:" << event.iters;
+        out << "iters:" << event.number;
         out << ",ops:" << event.ops;
         out << ",size:" << event.size;
         out << ",errors:" << event.errors;
@@ -66,7 +68,7 @@ struct OperationEventT final {
     }
 
     /**
-     * @param iters
+     * @param number
      *     The number of iterations that occurred before the operation was reported. This member
      * will almost always be 1 unless an actor decides to periodically report an operation in its
      * for loop.
@@ -83,20 +85,24 @@ struct OperationEventT final {
      * @param outcome
      *      Whether the operation succeeded.
      */
-    explicit OperationEventT(count_type iters = 0,
+    explicit OperationEventT(count_type number = 0,
                              count_type ops = 0,
                              count_type size = 0,
                              count_type errors = 0,
                              Period<ClockSource> duration = {},
                              OutcomeType outcome = OutcomeType::kUnknown)
-        : iters{iters},
+        : number{number},
           ops{ops},
           size{size},
           errors{errors},
           duration{duration},
           outcome{outcome} {}
 
-    count_type iters;              // corresponds to the 'n' field in Cedar
+    bool isFailure() const {
+        return outcome == OutcomeType::kFailure;
+    }
+
+    count_type number;             // corresponds to the 'n' field in Cedar
     count_type ops;                // corresponds to the 'ops' field in Cedar
     count_type size;               // corresponds to the 'size' field in Cedar
     count_type errors;             // corresponds to the 'errors' field in Cedar
@@ -105,11 +111,20 @@ struct OperationEventT final {
 };
 
 /**
- * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
- * the implementation of an actor.
+ * @namespace genny::metrics::internals this namespace is private and only intended to be used by
+ * genny's own internals. No types from the genny::metrics::v1 namespace should ever be typed
+ * directly into the implementation of an actor.
  */
-namespace v1 {
+namespace internals {
+
+
+namespace v2 {
+
+class StreamInterfaceImpl;
+template <typename Clocksource, typename StreamInterface>
+class EventStream;
+
+}  // namespace v2
 
 template <typename Clocksource>
 class RegistryT;
@@ -139,7 +154,7 @@ private:  // Data members.
 
 public:
     using time_point = typename ClockSource::time_point;
-    using EventSeries = TimeSeries<ClockSource, OperationEventT<ClockSource>>;
+    using EventSeries = v1::TimeSeries<ClockSource, OperationEventT<ClockSource>>;
 
     struct OperationThreshold {
         std::chrono::nanoseconds maxDuration;
@@ -167,17 +182,30 @@ public:
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
+    using stream_t = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>;
 
-    OperationImpl(std::string actorName,
+    OperationImpl(const ActorId& actorId,
+                  std::string actorName,
                   const RegistryT<ClockSource>& registry,
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
+                  const std::string& pathPrefix,
+                  const std::optional<std::string>& collector_name = std::nullopt,
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
           _registry(registry),
+          _useGrpc(registry.getFormat().useGrpc()),
+          _useCsv(registry.getFormat().useCsv()),
           _opName(std::move(opName)),
           _phase(std::move(phase)),
-          _threshold(threshold){};
+          _threshold(threshold) {
+        if (_useGrpc) {
+            _stream.reset(new stream_t(actorId, *collector_name, this->_phase, pathPrefix));
+        }
+        if (_useCsv) {
+            _events.reset(new EventSeries());
+        }
+    };
 
     /**
      * @return the name of the actor running the operation.
@@ -197,19 +225,24 @@ public:
      * @return the time series for the operation being run.
      */
     const EventSeries& getEvents() const {
-        return _events;
+        return *_events;
     }
 
     void reportAt(time_point started, time_point finished, OperationEventT<ClockSource>&& event) {
         if (_threshold) {
             _threshold->check(started, finished);
         }
-        _events.addAt(finished, event);
+        if (_useGrpc) {
+            _stream->addAt(finished, event, _registry.getWorkerCount(_actorName, _opName));
+        }
+        if (_useCsv) {
+            _events->addAt(finished, event);
+        }
     }
 
     void reportSynthetic(time_point finished,
                          std::chrono::microseconds duration,
-                         count_type iters,
+                         count_type number,
                          count_type ops,
                          count_type size,
                          count_type errors,
@@ -218,7 +251,7 @@ public:
         this->reportAt(started,
                        finished,
                        OperationEventT<ClockSource>{
-                           iters, ops, size, errors, Period<ClockSource>{duration}, outcome});
+                           number, ops, size, errors, Period<ClockSource>{duration}, outcome});
     }
 
 private:
@@ -228,10 +261,13 @@ private:
      */
     const std::string _actorName;
     const RegistryT<ClockSource>& _registry;
+    const bool _useGrpc;
+    const bool _useCsv;
     const std::string _opName;
     OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
-    EventSeries _events;
+    std::unique_ptr<EventSeries> _events;
+    std::unique_ptr<stream_t> _stream;
 };
 
 /**
@@ -244,7 +280,7 @@ class OperationContextT final : private boost::noncopyable {
 public:
     using time_point = typename ClockSource::time_point;
 
-    explicit OperationContextT(v1::OperationImpl<ClockSource>* op)
+    explicit OperationContextT(internals::OperationImpl<ClockSource>* op)
         : _op{op}, _started{ClockSource::now()} {}
 
     OperationContextT(OperationContextT<ClockSource>&& other) noexcept
@@ -264,11 +300,11 @@ public:
 
     /**
      * Increments the counter for the number of iterations. This method only needs to be called if
-     * an actor is periodically reporting its operations. By default an `iters = 1` value is
+     * an actor is periodically reporting its operations. By default an `number = 1` value is
      * automatically reported.
      */
-    void addIterations(count_type iters) {
-        _event.iters += iters;
+    void addIterations(count_type number) {
+        _event.number += number;
     }
 
     /**
@@ -326,17 +362,17 @@ private:
         _event.duration = finished - _started;
         _event.outcome = outcome;
 
-        if (_event.iters == 0) {
+        if (_event.number == 0) {
             // We default the event to represent a single iteration of a loop if addIterations() was
             // never called.
-            _event.iters = 1;
+            _event.number = 1;
         }
 
         _op->reportAt(_started, finished, std::move(_event));
         _isClosed = true;
     }
 
-    v1::OperationImpl<ClockSource>* const _op;
+    internals::OperationImpl<ClockSource>* const _op;
     const time_point _started;
 
     OperationEventT<ClockSource> _event;
@@ -349,7 +385,7 @@ class OperationT final {
     using time_point = typename ClockSource::time_point;
 
 public:
-    explicit OperationT(v1::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
+    explicit OperationT(internals::OperationImpl<ClockSource>& op) : _op{std::addressof(op)} {}
 
     OperationContextT<ClockSource> start() {
         return OperationContextT<ClockSource>{this->_op};
@@ -370,7 +406,7 @@ public:
      * operation.report(
      *     end,
      *     end - started,
-     *     iters,
+     *     number,
      *     ops,
      *     size,
      *     errors,
@@ -382,7 +418,7 @@ public:
      *     when the operation finished. This will be used as the time point the event
      *     occurred and `finished - duration` will be used as when the event started.
      *
-     * @param iters
+     * @paramnumber
      *     The number of iterations that occurred before the operation was reported. This
      *     member will almost always be 1 unless an actor decides to periodically report
      *     an operation in its for loop.
@@ -428,17 +464,17 @@ public:
                 // based on ops and errors params?
                 count_type ops = 1,
                 count_type errors = 0,
-                count_type iters = 1,
+                count_type number = 1,
                 count_type size = 0) {
-        _op->reportSynthetic(finished, duration, iters, ops, size, errors, outcome);
+        _op->reportSynthetic(finished, duration, number, ops, size, errors, outcome);
     }
 
 
 private:
-    v1::OperationImpl<ClockSource>* _op;
+    internals::OperationImpl<ClockSource>* _op;
 };
 
-}  // namespace v1
+}  // namespace internals
 }  // namespace genny::metrics
 
 #endif  // HEADER_3D319F23_C539_4B6B_B4E7_23D23E2DCD52_INCLUDED

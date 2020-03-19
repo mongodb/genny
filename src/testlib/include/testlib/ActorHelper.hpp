@@ -87,7 +87,6 @@ public:
 private:
     // These are only used when constructing the workload context, but the context doesn't own
     // them.
-    std::unique_ptr<metrics::Registry> _registry;
     std::unique_ptr<Orchestrator> _orchestrator;
     std::unique_ptr<Cast> _cast;
 

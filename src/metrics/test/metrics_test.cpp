@@ -15,8 +15,11 @@
 #include <iomanip>
 #include <optional>
 
+#include <google/protobuf/util/message_differencer.h>
+
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
+#include <metrics/v2/event.hpp>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/clocks.hpp>
@@ -24,6 +27,28 @@
 
 
 namespace genny::metrics {
+
+namespace internals::v2 {
+
+/**
+ * Very basic mock for tests.
+ */
+class MockStreamInterface {
+public:
+    MockStreamInterface(const std::string& name, const ActorId& actorId) {}
+
+    void write(const poplar::EventMetrics& event) {
+        events.push_back(event);
+    }
+
+    // We make this static so we can access it even several private objects deep.
+    static std::vector<poplar::EventMetrics> events;
+};
+
+}  // namespace internals::v2
+
+std::vector<poplar::EventMetrics> internals::v2::MockStreamInterface::events;
+
 namespace {
 
 using namespace std::literals::chrono_literals;
@@ -40,12 +65,12 @@ void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
 TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
-    auto dummy_metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto op =
-        v1::OperationImpl<RegistryClockSourceStub>{"Actor", dummy_metrics, "Op", std::nullopt};
+    auto dummy_metrics = internals::RegistryT<RegistryClockSourceStub>{};
+    auto op = internals::OperationImpl<RegistryClockSourceStub>{
+        5, "Actor", dummy_metrics, "Op", std::nullopt, "output"};
 
     RegistryClockSourceStub::advance(5ns);
-    auto ctx = std::make_optional<v1::OperationContextT<RegistryClockSourceStub>>(&op);
+    auto ctx = std::make_optional<internals::OperationContextT<RegistryClockSourceStub>>(&op);
 
     ctx->addDocuments(200);
     ctx->addBytes(3000);
@@ -55,7 +80,7 @@ TEST_CASE("metrics::OperationContext interface") {
     REQUIRE(op.getEvents().size() == 0);
 
     auto expected = OperationEventT<RegistryClockSourceStub>{};
-    expected.iters = 1;
+    expected.number = 1;
     expected.ops = 200;
     expected.size = 3000;
     expected.errors = 4;
@@ -99,7 +124,7 @@ TEST_CASE("metrics::OperationContext interface") {
 
         REQUIRE(op.getEvents().size() == 0);
 
-        expected.iters = 17;
+        expected.number = 17;
         expected.ops += 200;
         expected.size += 3000;
         expected.errors += 4;
@@ -118,8 +143,8 @@ TEST_CASE("metrics::OperationContext interface") {
 
 TEST_CASE("metrics output format") {
     RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto reporter = genny::metrics::v1::ReporterT{metrics};
+    auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::internals::v1::ReporterT{metrics};
 
     //           +---------------------+----------------+
     // Thread 1: |        Insert       |     Remove     |
@@ -221,7 +246,7 @@ TEST_CASE("metrics output format") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("csv"));
         REQUIRE(out.str() == expected);
     }
 
@@ -249,15 +274,15 @@ TEST_CASE("metrics output format") {
             "28,InsertRemove,1,Insert,23,0,1,9,0,300\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("cedar-csv"));
         REQUIRE(out.str() == expected);
     }
 }
 
 TEST_CASE("Genny.Setup metric") {
     RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto reporter = genny::metrics::v1::ReporterT{metrics};
+    auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::internals::v1::ReporterT{metrics};
 
     // Mimic what the DefaultDriver would be doing.
     auto setup = metrics.operation("Genny", "Setup", 0u);
@@ -283,7 +308,7 @@ TEST_CASE("Genny.Setup metric") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("csv"));
         REQUIRE(out.str() == expected);
     }
 
@@ -303,15 +328,15 @@ TEST_CASE("Genny.Setup metric") {
             "15,Genny,0,Setup,10,0,1,0,0,0\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("cedar-csv"));
         REQUIRE(out.str() == expected);
     }
 }
 
 TEST_CASE("Genny.ActiveActors metric") {
     RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
-    auto reporter = genny::metrics::v1::ReporterT{metrics};
+    auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
+    auto reporter = genny::metrics::internals::v1::ReporterT{metrics};
 
     // Mimic what the DefaultDriver would be doing.
     auto startedActors = metrics.operation("Genny", "ActorStarted", 0u);
@@ -363,7 +388,7 @@ TEST_CASE("Genny.ActiveActors metric") {
             "\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("csv"));
         REQUIRE(out.str() == expected);
     }
 
@@ -381,7 +406,7 @@ TEST_CASE("Genny.ActiveActors metric") {
             "timestamp,actor,thread,operation,duration,outcome,n,ops,errors,size\n";
 
         std::ostringstream out;
-        reporter.report<ReporterClockSourceStub>(out, "cedar-csv");
+        reporter.report<ReporterClockSourceStub>(out, MetricsFormat("cedar-csv"));
         REQUIRE(out.str() == expected);
     }
 }
@@ -390,14 +415,14 @@ TEST_CASE("Operation with threshold") {
 
     auto setup = []() {
         RegistryClockSourceStub::reset();
-        auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+        auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
 
-        genny::metrics::v1::ReporterT{metrics};
+        genny::metrics::internals::v1::ReporterT{metrics};
 
         return metrics;
     };
 
-    auto runActor = [](v1::OperationT<RegistryClockSourceStub>& actor,
+    auto runActor = [](internals::OperationT<RegistryClockSourceStub>& actor,
                        std::chrono::nanoseconds advance) {
         auto ctx = actor.start();
         RegistryClockSourceStub::advance(advance);
@@ -412,7 +437,7 @@ TEST_CASE("Operation with threshold") {
         runActor(actor, 1ns);
         runActor(actor, 51ns);
         runActor(actor, 51ns);
-        REQUIRE_THROWS_AS(runActor(actor, 51ns), v1::OperationThresholdExceededException);
+        REQUIRE_THROWS_AS(runActor(actor, 51ns), internals::OperationThresholdExceededException);
     }
 
     SECTION("100% threshold") {
@@ -436,7 +461,7 @@ TEST_CASE("Operation with threshold") {
         runActor(actor, 1ns);
         runActor(actor, 1ns);
         runActor(actor, 1ns);
-        REQUIRE_THROWS_AS(runActor(actor, 11ns), v1::OperationThresholdExceededException);
+        REQUIRE_THROWS_AS(runActor(actor, 11ns), internals::OperationThresholdExceededException);
     }
 }
 
@@ -486,7 +511,7 @@ TEST_CASE("Phases can set metrics") {
 
 TEST_CASE("Registry counts the number of workers") {
     RegistryClockSourceStub::reset();
-    auto metrics = v1::RegistryT<RegistryClockSourceStub>{};
+    auto metrics = internals::RegistryT<RegistryClockSourceStub>{};
 
     metrics.operation("actor1", "op1", 1u);
     metrics.operation("actor1", "op1", 2u);
@@ -500,6 +525,227 @@ TEST_CASE("Registry counts the number of workers") {
 
     REQUIRE(metrics.getWorkerCount("actor1", "op1") == 3);
     REQUIRE(metrics.getWorkerCount("actor2", "op1") == 2);
+}
+
+
+/**
+ * These tests work for the happy cases, but after we remove legacy
+ * CSV formats we should make the pieces of the metrics API more
+ * unit-testable. Examples of things to test:
+ * - What happens to the metrics if an exception is thrown while
+ *   an operation context is open?
+ * - What happens if there's a gRPC error?
+ */
+TEST_CASE("Events stream to gRPC") {
+    using EventVec = std::vector<poplar::EventMetrics>;
+
+    auto compareEventsAndClear = [](const EventVec& eventsIn) {
+        internals::v2::MockStreamInterface interface("dummyDebugName", 5);
+        REQUIRE(eventsIn.size() == interface.events.size());
+        for (int i = 0; i < eventsIn.size(); i++) {
+            REQUIRE(google::protobuf::util::MessageDifferencer::Equals(eventsIn[i],
+                                                                       interface.events[i]));
+        };
+        interface.events.clear();
+    };
+
+    auto getMetricsPath = []() {
+        boost::filesystem::path ph =
+            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        return (ph / "genny-metrics").string();
+    };
+
+
+    SECTION("Empty stream") {
+        RegistryClockSourceStub::reset();
+        auto stream =
+            internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
+                1, "TestName", 1, "/test/prefix"};
+
+        EventVec expected;
+        compareEventsAndClear(expected);
+    }
+
+    SECTION("Three events") {
+        RegistryClockSourceStub::reset();
+        auto stream =
+            internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
+                1, "EventName", 9, "/test/prefix"};
+        EventVec expected;
+
+
+        // First Event
+        RegistryClockSourceStub::advance(std::chrono::microseconds(5));
+        {
+            OperationEventT<RegistryClockSourceStub> event(
+                2,                                                              // number
+                3,                                                              // ops
+                7,                                                              // size
+                0,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(5)},  // duration
+                OutcomeType::kSuccess                                           // outcome
+            );
+            stream.addAt(RegistryClockSourceStub::now(), event, 1);
+
+            // Streamed Event
+            // ---------------
+            // Expected event
+
+            poplar::EventMetrics metric;
+            metric.set_name("EventName");
+            metric.set_id(1);
+
+            metric.mutable_time()->set_seconds(0);
+            metric.mutable_time()->set_nanos(5000);
+
+            metric.mutable_timers()->mutable_duration()->set_seconds(0);
+            metric.mutable_timers()->mutable_duration()->set_nanos(5000);
+            metric.mutable_timers()->mutable_total()->set_seconds(0);
+            metric.mutable_timers()->mutable_total()->set_nanos(5000);
+
+            metric.mutable_counters()->set_number(2);
+            metric.mutable_counters()->set_ops(3);
+            metric.mutable_counters()->set_size(7);
+            metric.mutable_counters()->set_errors(0);
+
+            metric.mutable_gauges()->set_failed(false);
+            metric.mutable_gauges()->set_workers(1);
+            metric.mutable_gauges()->set_state(9);
+
+            expected.push_back(metric);
+        }
+
+        // Second Event
+        RegistryClockSourceStub::advance(std::chrono::microseconds(7));
+        {
+            OperationEventT<RegistryClockSourceStub> event(
+                2,                                                              // number
+                3,                                                              // ops
+                90,                                                             // size
+                1,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},  // duration
+                OutcomeType::kFailure                                           // outcome
+            );
+            stream.addAt(RegistryClockSourceStub::now(), event, 1);
+
+            // Streamed Event
+            // ---------------
+            // Expected event
+
+            poplar::EventMetrics metric;
+            metric.set_name("EventName");
+            metric.set_id(1);
+
+            metric.mutable_time()->set_seconds(0);
+            metric.mutable_time()->set_nanos(12000);
+
+            metric.mutable_timers()->mutable_duration()->set_seconds(0);
+            metric.mutable_timers()->mutable_duration()->set_nanos(6000);
+            metric.mutable_timers()->mutable_total()->set_seconds(0);
+            metric.mutable_timers()->mutable_total()->set_nanos(7000);
+
+            metric.mutable_counters()->set_number(2);
+            metric.mutable_counters()->set_ops(3);
+            metric.mutable_counters()->set_size(90);
+            metric.mutable_counters()->set_errors(1);
+
+            metric.mutable_gauges()->set_failed(true);
+            metric.mutable_gauges()->set_workers(1);
+            metric.mutable_gauges()->set_state(9);
+
+            expected.push_back(metric);
+        }
+
+        // Third Event
+        RegistryClockSourceStub::advance(std::chrono::seconds(9));
+        RegistryClockSourceStub::advance(std::chrono::microseconds(3));
+        {
+            OperationEventT<RegistryClockSourceStub> event(
+                3,                                                              // number
+                1,                                                              // ops
+                10,                                                             // size
+                0,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(3)},  // duration
+                OutcomeType::kSuccess                                           // outcome
+            );
+            stream.addAt(RegistryClockSourceStub::now(), event, 1);
+
+            // Streamed Event
+            // ---------------
+            // Expected event
+
+            poplar::EventMetrics metric;
+            metric.set_name("EventName");
+            metric.set_id(1);
+
+            metric.mutable_time()->set_seconds(9);
+            metric.mutable_time()->set_nanos(15000);
+
+            metric.mutable_timers()->mutable_duration()->set_seconds(0);
+            metric.mutable_timers()->mutable_duration()->set_nanos(3000);
+            metric.mutable_timers()->mutable_total()->set_seconds(9);
+            metric.mutable_timers()->mutable_total()->set_nanos(3000);
+
+            metric.mutable_counters()->set_number(3);
+            metric.mutable_counters()->set_ops(1);
+            metric.mutable_counters()->set_size(10);
+            metric.mutable_counters()->set_errors(0);
+
+            metric.mutable_gauges()->set_failed(false);
+            metric.mutable_gauges()->set_workers(1);
+            metric.mutable_gauges()->set_state(9);
+
+            expected.push_back(metric);
+        }
+
+
+        compareEventsAndClear(expected);
+    }
+
+    SECTION("Create folder for ftdc output") {
+        auto metricsPath = getMetricsPath();
+
+        REQUIRE(!boost::filesystem::exists(metricsPath));
+        auto ftdc_metrics =
+            internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metricsPath};
+        REQUIRE(boost::filesystem::exists(metricsPath));
+
+        auto neverConstructedMetricsPath = getMetricsPath();
+
+        REQUIRE(!boost::filesystem::exists(neverConstructedMetricsPath));
+        auto csv_metrics =
+            internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("csv"), metricsPath};
+        REQUIRE(!boost::filesystem::exists(neverConstructedMetricsPath));
+
+        REQUIRE(boost::filesystem::remove_all(metricsPath));
+    }
+
+    SECTION("One Collector is created per actor-operation.") {
+        auto metricsPath = getMetricsPath();
+        auto metrics =
+            internals::RegistryT<RegistryClockSourceStub>{MetricsFormat("ftdc"), metricsPath};
+
+        metrics.operation("dummyActorName", "dummyOpName", 1, 2);
+        metrics.operation("dummyActorName", "dummyOpName", 2, 2);
+        metrics.operation("dummyActorName", "dummyOpName", 2, 3);
+        metrics.operation("dummyActorName", "anotherDummyOpName", 2, 4);
+
+        REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.dummyOpName.2.ftdc"));
+        REQUIRE(boost::filesystem::exists(metricsPath + "/dummyActorName.dummyOpName.3.ftdc"));
+        REQUIRE(
+            boost::filesystem::exists(metricsPath + "/dummyActorName.anotherDummyOpName.4.ftdc"));
+
+        int file_count = 0;
+        for (boost::filesystem::directory_iterator it(metricsPath);
+             it != boost::filesystem::directory_iterator();
+             ++it) {
+            file_count++;
+        }
+
+        REQUIRE(file_count == 3);
+
+        REQUIRE(boost::filesystem::remove_all(metricsPath));
+    }
 }
 
 }  // namespace

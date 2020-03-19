@@ -65,25 +65,35 @@ void runActor(Actor&& actor,
     }
 }
 
+void reportMetrics(genny::metrics::Registry& metrics,
+                   const std::string& workloadName,
+                   bool success,
+                   metrics::clock::time_point startTime) {
+    auto finishTime = metrics::clock::now();
+    auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
+    auto outcome = success ? metrics::OutcomeType::kSuccess : metrics::OutcomeType::kFailure;
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(finishTime - startTime);
+    actorSetup.report(std::move(finishTime), std::move(duration), std::move(outcome));
+}
+
 DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& options) {
     // setup logging as the first thing we do.
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= options.logVerbosity);
 
-    genny::metrics::Registry metrics;
-
     const auto workloadName = fs::path(options.workloadSource).stem().string();
-    auto actorSetup = metrics.operation(workloadName, "Setup", 0u);
-    auto setupCtx = actorSetup.start();
+    auto startTime = genny::metrics::Registry::clock::now();
 
     if (options.runMode == DefaultDriver::RunMode::kListActors) {
         globalCast().streamProducersTo(std::cout);
-        setupCtx.success();
+        genny::metrics::Registry metrics;
+        reportMetrics(metrics, workloadName, true, startTime);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     if (options.workloadSource.empty()) {
         std::cerr << "Must specify a workload YAML file" << std::endl;
-        setupCtx.failure();
+        genny::metrics::Registry metrics;
+        reportMetrics(metrics, workloadName, false, startTime);
         return DefaultDriver::OutcomeCode::kUserException;
     }
 
@@ -115,7 +125,8 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
     if (options.runMode == DefaultDriver::RunMode::kEvaluate) {
         std::cout << YAML::Dump(yaml) << std::endl;
-        setupCtx.success();
+        genny::metrics::Registry metrics;
+        reportMetrics(metrics, workloadName, true, startTime);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
@@ -125,19 +136,22 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
                               ? options.workloadSource
                               : "inline-yaml"};
 
+
     auto workloadContext =
-        WorkloadContext{nodeSource.root(), metrics, orchestrator, options.mongoUri, globalCast()};
+        WorkloadContext{nodeSource.root(), orchestrator, options.mongoUri, globalCast()};
+
+    genny::metrics::Registry& metrics = workloadContext.getMetrics();
 
     if (options.runMode == DefaultDriver::RunMode::kDryRun) {
         std::cout << "Workload context constructed without errors." << std::endl;
-        setupCtx.success();
+        reportMetrics(metrics, workloadName, true, startTime);
         return DefaultDriver::OutcomeCode::kSuccess;
     }
 
     orchestrator.addRequiredTokens(
         int(std::distance(workloadContext.actors().begin(), workloadContext.actors().end())));
 
-    setupCtx.success();
+    reportMetrics(metrics, workloadName, true, startTime);
 
     auto startedActors = metrics.operation(workloadName, "ActorStarted", 0u);
     auto finishedActors = metrics.operation(workloadName, "ActorFinished", 0u);
@@ -174,13 +188,15 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
     for (auto& thread : threads)
         thread.join();
 
-    const auto reporter = genny::metrics::Reporter{metrics};
+    if (metrics.getFormat().useCsv()) {
+        const auto reporter = genny::metrics::Reporter{metrics};
 
-    {
-        std::ofstream metricsOutput;
-        metricsOutput.open(options.metricsOutputFileName,
-                           std::ofstream::out | std::ofstream::trunc);
-        reporter.report(metricsOutput, options.metricsFormat);
+        {
+            std::ofstream metricsOutput;
+            metricsOutput.open(metrics.getPathPrefix() + ".csv",
+                               std::ofstream::out | std::ofstream::trunc);
+            reporter.report(metricsOutput, metrics.getFormat());
+        }
     }
 
     return outcomeCode;
@@ -276,12 +292,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
             ("subcommand", po::value<std::string>(), "1st positional argument")
             ("help,h",
              "Show help message")
-            ("metrics-format,m",
-             po::value<std::string>()->default_value("csv"),
-             "Metrics format to use")
-            ("metrics-output-file,o",
-             po::value<std::string>()->default_value("/dev/stdout"),
-             "Save metrics data to this file. Use `-` or `/dev/stdout` for stdout.")
+
             ("workload-file,w",
              po::value<std::string>(),
              "Path to workload configuration yaml file. "
@@ -343,9 +354,7 @@ DefaultDriver::ProgramOptions::ProgramOptions(int argc, char** argv) {
         this->runMode = RunMode::kHelp;
 
     this->logVerbosity = parseVerbosity(vm["verbosity"].as<std::string>());
-    this->metricsFormat = vm["metrics-format"].as<std::string>();
     this->isSmokeTest = vm["smoke-test"].as<bool>();
-    this->metricsOutputFileName = normalizeOutputFile(vm["metrics-output-file"].as<std::string>());
     this->mongoUri = vm["mongo-uri"].as<std::string>();
 
     if (vm.count("workload-file") > 0) {

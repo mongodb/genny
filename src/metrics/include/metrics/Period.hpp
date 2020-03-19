@@ -65,6 +65,20 @@ public:
         return os << period._duration.count();
     }
 
+    std::chrono::seconds::rep getSecondsCount() const {
+        return std::chrono::duration_cast<std::chrono::seconds>(_duration).count();
+    }
+
+    /**
+     * Gets the nanosecond component that wouldn't be counted in seconds.
+     */
+    std::chrono::nanoseconds::rep getNanosecondsCount() const {
+        using namespace std::chrono;
+        return duration_cast<nanoseconds>(_duration).count() -
+            duration_cast<nanoseconds>(duration_cast<seconds>(_duration)).count();
+    }
+
+
 private:
     duration _duration;
 };

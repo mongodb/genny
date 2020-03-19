@@ -136,7 +136,6 @@ public:
      * from the cast at construction-time.
      */
     WorkloadContext(const Node& node,
-                    metrics::Registry& registry,
                     Orchestrator& orchestrator,
                     const std::string& mongoUri,
                     const Cast& cast,
@@ -251,6 +250,10 @@ public:
      */
     v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
 
+    metrics::Registry& getMetrics() {
+        return _registry;
+    }
+
 private:
     friend class ActorContext;
     friend class PhaseContext;
@@ -259,7 +262,7 @@ private:
     static ActorVector _constructActors(const Cast& cast,
                                         const std::unique_ptr<ActorContext>& contexts);
 
-    metrics::Registry* _registry;
+    metrics::Registry _registry;
     Orchestrator* _orchestrator;
 
     v1::PoolManager _poolManager;
@@ -411,7 +414,7 @@ public:
      * @param id the id of this Actor.
      */
     auto operation(const std::string& operationName, ActorId id) const {
-        return this->_workload->_registry->operation(
+        return this->_workload->_registry.operation(
             this->_node["Name"].to<std::string>(), operationName, id);
     }
 
@@ -476,7 +479,7 @@ public:
             stm << defaultMetricsName << "." << _phaseNumber;
         }
 
-        return this->workload()._registry->operation(
+        return this->workload()._registry.operation(
             this->_actor->operator[]("Name").to<std::string>(), stm.str(), id, _phaseNumber);
     }
 

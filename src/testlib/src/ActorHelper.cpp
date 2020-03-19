@@ -36,15 +36,12 @@ ActorHelper::ActorHelper(const Node& config,
         throw InvalidConfigurationException("Must add a positive number of tokens");
     }
 
-    _registry = std::make_unique<genny::metrics::Registry>();
-
     _orchestrator = std::make_unique<genny::Orchestrator>();
     _orchestrator->addRequiredTokens(tokenCount);
 
     _cast = std::make_unique<Cast>(castInitializer);
     try {
-        _wlc = std::make_unique<WorkloadContext>(
-            config, *_registry, *_orchestrator, uri, *_cast, apmCallback);
+        _wlc = std::make_unique<WorkloadContext>(config, *_orchestrator, uri, *_cast, apmCallback);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(fatal) << boost::diagnostic_information(x, true);
         throw;
@@ -59,14 +56,12 @@ ActorHelper::ActorHelper(const Node& config,
         throw InvalidConfigurationException("Must add a positive number of tokens");
     }
 
-    _registry = std::make_unique<genny::metrics::Registry>();
-
     _orchestrator = std::make_unique<genny::Orchestrator>();
     _orchestrator->addRequiredTokens(tokenCount);
 
     try {
         _wlc = std::make_unique<WorkloadContext>(
-            config, *_registry, *_orchestrator, uri, globalCast(), apmCallback);
+            config, *_orchestrator, uri, globalCast(), apmCallback);
     } catch (const std::exception& x) {
         BOOST_LOG_TRIVIAL(fatal) << boost::diagnostic_information(x, true);
         throw;
@@ -106,8 +101,8 @@ void ActorHelper::doRunThreaded(const WorkloadContext& wl) {
     for (auto& thread : threads)
         thread.join();
 
-    auto reporter = genny::metrics::Reporter{*_registry};
+    auto reporter = genny::metrics::Reporter{_wlc->getMetrics()};
 
-    reporter.report(_metricsOutput, "csv");
+    reporter.report(_metricsOutput, metrics::MetricsFormat("csv"));
 }
 }  // namespace genny

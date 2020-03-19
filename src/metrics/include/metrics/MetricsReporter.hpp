@@ -25,11 +25,13 @@
 namespace genny::metrics {
 
 /**
- * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
- * the implementation of an actor.
+ * @namespace genny::metrics::internals::v1 this namespace is private and only intended to be used
+ * by genny's own internals. No types from the genny::metrics::internals::v1 namespace should ever
+ * be typed directly into the implementation of an actor.
+ *
+ * After transitioning to only using ftdc-based metrics, the namespace hierarchy can be simplified.
  */
-namespace v1 {
+namespace internals::v1 {
 
 // Used in the implementation of outputting metrics. Only at the top of the file
 // because C++ is a delight.
@@ -64,7 +66,7 @@ template <typename MetricsClockSource>
 class ReporterT final {
 
 public:
-    constexpr explicit ReporterT(const v1::RegistryT<MetricsClockSource>& registry)
+    constexpr explicit ReporterT(const internals::RegistryT<MetricsClockSource>& registry)
         : _registry{std::addressof(registry)} {}
 
 private:
@@ -83,7 +85,7 @@ public:
      * @param metricsFormat the format to use. Must be "csv".
      */
     template <typename ReporterClockSource = SystemClockSource>
-    void report(std::ostream& out, const std::string& metricsFormat) const {
+    void report(std::ostream& out, const MetricsFormat& metricsFormat) const {
         v1::Permission perm;
 
         BOOST_LOG_TRIVIAL(debug) << "Beginning metrics reporting.";
@@ -95,12 +97,13 @@ public:
 
         // if this lives more than a hot-second, put the formats into an enum and do this
         // check & throw in the driver/main program
-        if (metricsFormat == "csv") {
+        if (metricsFormat.get() == MetricsFormat::Format::kCsv) {
             reportLegacyCsv(out, systemTime, metricsTime, perm);
-        } else if (metricsFormat == "cedar-csv") {
+        } else if (metricsFormat.get() == MetricsFormat::Format::kCedarCsv ||
+                   metricsFormat.get() == MetricsFormat::Format::kCsvFtdc) {
             reportCedarCsv(out, systemTime, metricsTime, perm);
         } else {
-            throw std::invalid_argument(std::string("Unknown metrics format ") + metricsFormat);
+            throw std::invalid_argument(std::string("Received unknown csv metrics format."));
         }
 
         BOOST_LOG_TRIVIAL(debug) << "Finished metrics reporting.";
@@ -129,7 +132,7 @@ private:
             });
         writeMetricValuesLegacy(
             out, "_iters", perm, [](const OperationEventT<MetricsClockSource>& event) {
-                return event.iters;
+                return event.number;
             });
         out << std::endl;
 
@@ -322,7 +325,7 @@ private:
                         out << nanosecondsCount(static_cast<duration>(event.second.duration))
                             << ",";
                         out << static_cast<unsigned>(event.second.outcome) << ",";
-                        out << event.second.iters << ",";
+                        out << event.second.number << ",";
                         out << event.second.ops << ",";
                         out << event.second.errors << ",";
                         out << event.second.size << std::endl;
@@ -355,9 +358,9 @@ private:
     const RegistryT<MetricsClockSource>* const _registry;
 };
 
-}  // namespace v1
+}  // namespace internals::v1
 
-using Reporter = v1::ReporterT<Registry::clock>;
+using Reporter = internals::v1::ReporterT<Registry::clock>;
 
 }  // namespace genny::metrics
 

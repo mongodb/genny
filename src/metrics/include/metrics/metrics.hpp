@@ -15,24 +15,75 @@
 #ifndef HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 #define HEADER_058638D3_7069_42DC_809F_5DB533FCFBA3_INCLUDED
 
+#include <boost/filesystem.hpp>
 #include <chrono>
 #include <optional>
 #include <type_traits>
 #include <unordered_map>
 
+#include <gennylib/Node.hpp>
 #include <gennylib/conventions.hpp>
 
 #include <metrics/operation.hpp>
 #include <metrics/v1/passkey.hpp>
 
+
 namespace genny::metrics {
 
 /**
- * @namespace genny::metrics::v1 this namespace is private and only intended to be used by genny's
- * own internals. No types from the genny::metrics::v1 namespace should ever be typed directly into
- * the implementation of an actor.
+ * Class wrapping the logic involving metrics formats.
  */
-namespace v1 {
+class MetricsFormat {
+public:
+    enum class Format {
+        kCsv,
+        kCedarCsv,
+        kFtdc,
+        kCsvFtdc,
+    };
+
+    MetricsFormat() : _format{Format::kCsv} {}
+
+    MetricsFormat(const Node& node) : _format{strToEnum(node.to<std::string>())} {}
+
+    MetricsFormat(const std::string& toConvert) : _format{strToEnum(toConvert)} {}
+
+    bool useGrpc() const {
+        return _format == Format::kFtdc || _format == Format::kCsvFtdc;
+    }
+
+    bool useCsv() const {
+        return _format == Format::kCsv || _format == Format::kCedarCsv ||
+            _format == Format::kCsvFtdc;
+    }
+
+    Format get() const {
+        return _format;
+    }
+
+private:
+    Format _format;
+    Format strToEnum(const std::string& toConvert) {
+        if (toConvert == "csv") {
+            return Format::kCsv;
+        } else if (toConvert == "cedar-csv") {
+            return Format::kCedarCsv;
+        } else if (toConvert == "ftdc") {
+            return Format::kFtdc;
+        } else if (toConvert == "csv-ftdc") {
+            return Format::kCsvFtdc;
+        } else {
+            throw std::invalid_argument(std::string("Unknown metrics format ") + toConvert);
+        }
+    }
+};
+
+/**
+ * @namespace genny::metrics::internals this namespace is private and only intended to be used by
+ * genny's own internals. No types from the genny::metrics::internals namespace should ever be typed
+ * directly into the implementation of an actor.
+ */
+namespace internals {
 
 template <typename Clocksource>
 class OperationImpl;
@@ -82,23 +133,43 @@ private:
     // OperationsMap is a map of
     // actor name -> operation name -> actor id -> OperationImpl (time series).
     using OperationsMap = std::unordered_map<std::string, OperationsByType>;
+    // Map from "Actor.Operation.Phase" to a Collector.
+    using CollectorsMap = std::unordered_map<std::string, v2::Collector>;
 
 public:
     using clock = ClockSource;
 
     explicit RegistryT() = default;
 
+    explicit RegistryT(MetricsFormat format, std::string pathPrefix)
+        : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
+        if (_format.useGrpc()) {
+            boost::filesystem::create_directories(_pathPrefix);
+        }
+    }
+
+
     OperationT<ClockSource> operation(std::string actorName,
                                       std::string opName,
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
+        std::optional<std::string> name;
+        if (_format.useGrpc()) {
+            name = createName(actorName, opName, phase);
+            _collectors.try_emplace(*name, *name, _pathPrefix);
+        }
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        auto opIt =
-            opsByThread
-                .try_emplace(
-                    actorId, std::move(actorName), *this, std::move(opName), std::move(phase))
-                .first;
+        auto opIt = opsByThread
+                        .try_emplace(actorId,
+                                     actorId,
+                                     std::move(actorName),
+                                     *this,
+                                     std::move(opName),
+                                     std::move(phase),
+                                     _pathPrefix,
+                                     name)
+                        .first;
         return OperationT{opIt->second};
     }
 
@@ -110,25 +181,33 @@ public:
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
+        std::optional<std::string> name;
+        if (_format.useGrpc()) {
+            name = createName(actorName, opName, phase);
+            _collectors.try_emplace(*name, *name, _pathPrefix);
+        }
         auto opIt =
             opsByThread
                 .try_emplace(
+                    actorId,
                     actorId,
                     std::move(actorName),
                     *this,
                     std::move(opName),
                     std::move(phase),
+                    _pathPrefix,
+                    name,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;
         return OperationT{opIt->second};
     }
 
-    [[nodiscard]] const OperationsMap& getOps(Permission) const {
+    [[nodiscard]] const OperationsMap& getOps(v1::Permission) const {
         return this->_ops;
     };
 
-    [[nodiscard]] const typename ClockSource::time_point now(Permission) const {
+    [[nodiscard]] const typename ClockSource::time_point now(v1::Permission) const {
         return ClockSource::now();
     }
 
@@ -140,13 +219,36 @@ public:
         return (_ops.at(actorName).at(opName)).size();
     }
 
+
+    const MetricsFormat& getFormat() const {
+        return _format;
+    }
+
+    const std::string& getPathPrefix() const {
+        return _pathPrefix;
+    }
+
 private:
+    std::string createName(const std::string& actorName,
+                           const std::string& opName,
+                           const std::optional<genny::PhaseNumber>& phase) {
+        std::stringstream str;
+        str << actorName << '.' << opName;
+        if (phase) {
+            str << '.' << *phase;
+        }
+        return str.str();
+    }
+
+    CollectorsMap _collectors;
     OperationsMap _ops;
+    MetricsFormat _format;
+    std::string _pathPrefix;
 };
 
-}  // namespace v1
+}  // namespace internals
 
-using Registry = v1::RegistryT<v1::MetricsClockSource>;
+using Registry = internals::RegistryT<internals::MetricsClockSource>;
 
 static_assert(std::is_move_constructible<Registry>::value, "move");
 static_assert(std::is_move_assignable<Registry>::value, "move");
@@ -155,8 +257,8 @@ static_assert(std::is_move_assignable<Registry>::value, "move");
 // clock_type in a roundabout way by going through the time_point type it exposes.
 static_assert(Registry::clock::time_point::clock::is_steady, "clock must be steady");
 
-using Operation = v1::OperationT<Registry::clock>;
-using OperationContext = v1::OperationContextT<Registry::clock>;
+using Operation = internals::OperationT<Registry::clock>;
+using OperationContext = internals::OperationContextT<Registry::clock>;
 using OperationEvent = OperationEventT<Registry::clock>;
 
 // Convenience types

@@ -23,17 +23,16 @@
 #include <mongocxx/uri.hpp>
 
 #include <gennylib/Cast.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny {
 
 WorkloadContext::WorkloadContext(const Node& node,
-                                 metrics::Registry& registry,
                                  Orchestrator& orchestrator,
                                  const std::string& mongoUri,
                                  const Cast& cast,
                                  v1::PoolManager::OnCommandStartCallback apmCallback)
     : v1::HasNode{node},
-      _registry{&registry},
       _orchestrator{&orchestrator},
       _rateLimiters{10},
       _poolManager{mongoUri, apmCallback} {
@@ -51,6 +50,14 @@ WorkloadContext::WorkloadContext(const Node& node,
 
     // Make sure we have a valid mongocxx instance happening here
     mongocxx::instance::current();
+
+    // Set the metrics format information.
+    auto format = ((*this)["Metrics"]["Format"])
+                      .maybe<metrics::MetricsFormat>()
+                      .value_or(metrics::MetricsFormat("cedar-csv"));
+    auto metricsPath =
+        ((*this)["Metrics"]["Path"]).maybe<std::string>().value_or("build/genny-metrics");
+    _registry = genny::metrics::Registry(std::move(format), std::move(metricsPath));
 
     // Make a bunch of actor contexts
     for (const auto& [k, actor] : (*this)["Actors"]) {

@@ -48,13 +48,10 @@ public:
         : _producer{std::make_shared<ProducerT>(name)},
           _registration{globalCast().registerCustom(_producer)},
           _nodeSource{createWorkloadYaml(name, actorYaml)},
-          _registry{},
           _orchestrator{},
-          _workloadContext{_nodeSource.root(),
-                           _registry,
-                           _orchestrator,
-                           "mongodb://localhost:27017",
-                           genny::globalCast()} {}
+          _workloadContext{
+              _nodeSource.root(), _orchestrator, "mongodb://localhost:27017", genny::globalCast()} {
+    }
 
     void run() {
         for (auto&& actor : _workloadContext.actors()) {
@@ -68,7 +65,6 @@ private:
     NodeSource _nodeSource;
     std::shared_ptr<ProducerT> _producer;
     Cast::Registration _registration;
-    metrics::Registry _registry;
     Orchestrator _orchestrator;
     WorkloadContext _workloadContext;
 };
