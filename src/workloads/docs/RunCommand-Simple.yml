@@ -1,0 +1,27 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/stm"
+
+Actors:
+- Name: ServerStatusInsertFind
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Repeat: 100
+    Database: test
+    Operations:
+    - OperationMetricsName: ServerStatus
+      OperationName: RunCommand
+      OperationCommand:
+        serverStatus: 1
+    - OperationName: RunCommand
+      OperationCommand:
+        insert: myCollection
+        documents: [{name: {^RandomString: {length: {^RandomInt: {min: 2, max: 5}}}}, rating: 10, address: someAddress, cuisine: italian}]
+    - OperationMetricsName: Find
+      OperationCommand:
+        find: restaurants
+        filter: {rating: {$gte: 9}, cuisine: italian}
+        projection: {name: 1, rating: 1, address: 1}
+        sort: {name: 1}
+        limit: 5
+      OperationName: RunCommand
