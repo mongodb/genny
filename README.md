@@ -176,14 +176,11 @@ And then run a workload:
 ```sh
 ./scripts/genny run                                                 \
     --workload-file       ./src/workloads/scale/InsertRemove.yml    \
-    --metrics-format      csv                                       \
-    --metrics-output-file build/genny-metrics.csv                   \
     --mongo-uri           'mongodb://localhost:27017'
 ```
 
-Logging currently goes to stdout, and time-series metrics data is
-written to the file indicated by the `-o` flag (`./genny-metrics.csv`
-in the above example).
+Logging currently goes to stdout, and in this example, metrics data is
+written to `./build/genny-metrics.csv`.
 
 Post-processing of metrics data is done by Python scripts in the
 `src/python` directory. See [the README there](./src/python/README.md).
