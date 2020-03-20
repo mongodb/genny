@@ -180,10 +180,7 @@ And then run a workload:
 ```
 
 Logging currently goes to stdout, and in this example, metrics data is
-written to `./build/genny-metrics.csv`. The metrics format and output
-location can be set in the workload yml itself. (See `./src/workloads/docs/HelloWorldFtdc.yml`
-for an example.) If not set, the format defaults to `cedar-csv` (i.e. a Cedar-compliant CSV format)
-and the path defaults to `./build/genny-metrics.csv`.
+written to `./build/genny-metrics.csv`.
 
 Post-processing of metrics data is done by Python scripts in the
 `src/python` directory. See [the README there](./src/python/README.md).
