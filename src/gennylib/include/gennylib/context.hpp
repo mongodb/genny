@@ -278,7 +278,10 @@ private:
 
     // Actors should always be constructed in a single-threaded context.
     // That said, atomic integral types are very cheap to work with.
-    std::atomic<ActorId> _nextActorId{0};
+    //
+    // We start at 1 because, if we send ID 0 to Poplar, the field
+    // gets used as a monotonically-increasing value.
+    std::atomic<ActorId> _nextActorId{1};
 
     std::unordered_map<ActorId, DefaultRandom> _rngRegistry;
 
