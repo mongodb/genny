@@ -241,10 +241,18 @@ public:
         _metrics.mutable_timers()->mutable_duration()->set_nanos(
             event.duration.getNanosecondsCount());
 
-        _metrics.mutable_timers()->mutable_total()->set_seconds(
-            Period<ClockSource>(finish - _last_finish).getSecondsCount());
-        _metrics.mutable_timers()->mutable_total()->set_nanos(
-            Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
+        // If the EventStream was constructed after the end time was recorded.
+        if (finish < _last_finish) {
+            _metrics.mutable_timers()->mutable_total()->set_seconds(
+                event.duration.getSecondsCount());
+            _metrics.mutable_timers()->mutable_total()->set_nanos(
+                event.duration.getNanosecondsCount());
+        } else {
+            _metrics.mutable_timers()->mutable_total()->set_seconds(
+                Period<ClockSource>(finish - _last_finish).getSecondsCount());
+            _metrics.mutable_timers()->mutable_total()->set_nanos(
+                Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
+        }
 
         _metrics.mutable_counters()->set_number(event.number);
         _metrics.mutable_counters()->set_ops(event.ops);
