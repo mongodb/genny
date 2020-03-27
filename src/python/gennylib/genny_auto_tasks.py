@@ -40,10 +40,6 @@ class AutoRunSpec():
         required_dict = None
         if 'Requires' in workload_yaml['AutoRun'] and isinstance(autorun['Requires'], dict):
             required_dict = autorun['Requires']
-            for module, config in required_dict.items():
-                if not isinstance(config, dict):
-                    required_dict = None
-                    break
 
         prepare_environment_with = None
         if 'PrepareEnvironmentWith' in autorun and isinstance(autorun['PrepareEnvironmentWith'], dict):
@@ -71,6 +67,7 @@ class AutoRunSpec():
             curr.update(self.prepare_environment_with)
             prepare_environment_vars.append(curr)
         return prepare_environment_vars
+
 
 def to_snake_case(str):
     """
@@ -130,6 +127,13 @@ def modified_workload_files():
     return short_filenames
 
 
+def _simplified_env_dict(env_dict: dict) -> dict:
+    out = {}
+    for value in env_dict.values():
+        out.update(value)
+    return out
+
+
 def workload_should_autorun(autorun_spec, env_dict):
     """
     Check if the given workload's AutoRun conditions are met by the current environment
@@ -140,27 +144,14 @@ def workload_should_autorun(autorun_spec, env_dict):
     if autorun_spec is None or autorun_spec.required_dict is None:
         return False
 
-    for module, required_config in autorun_spec.required_dict.items():
-        if module not in env_dict:
+    simplified = _simplified_env_dict(env_dict)
+    for key, values in autorun_spec.required_dict.items():
+        if not isinstance(values, list):
+            raise Exception(f"Must give a list for key {key}")
+        if key not in simplified:
             return False
-        if not isinstance(required_config, dict):
+        if not any([simplified[key] == value for value in values]):
             return False
-
-        # True if set of config key-vaue pairs is subset of env_dict key-value pairs
-        # This will be false if the AutoRun yaml uses a list to represent multiple matching criteria, but it is efficient so we use it for a first-pass.
-        if not required_config.items() <= env_dict[module].items():
-            # Now have to check all k, v pairs individually
-            for key, autorun_val in required_config.items():
-                if key not in env_dict[module]:
-                    return False
-                if autorun_val == env_dict[module][key]:
-                    continue
-
-                # Values not exactly equal, but the AutoRun value could be a list of possibilities.
-                if not isinstance(autorun_val, list):
-                    return False
-                if env_dict[module][key] not in autorun_val:
-                    return False
 
     return True
 

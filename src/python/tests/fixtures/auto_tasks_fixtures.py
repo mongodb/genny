@@ -5,14 +5,10 @@ workload_should_autorun_cases = [
                 {
                     'AutoRun': {
                         'Requires': {
-                            'bootstrap': {
-                                'platform': 'linux',
-                                'storageEngine': 'wiredTiger'
-                            },
-                            'runtime': {
-                                'build_variant': 'variant1',
-                                'is_patch': 'true'
-                            }
+                                'platform': ['linux'],
+                                'storageEngine': ['wiredTiger'],
+                                'build_variant': ['variant1'],
+                                'is_patch': ['true']
                         }
                     }
                 },
@@ -32,16 +28,14 @@ workload_should_autorun_cases = [
                 {
                     'AutoRun': {
                         'Requires': {
-                            'bootstrap': {
-                                'platform': 'linux'
-                            }
+                                'platform': ['linux']
                         }
                     }
                 },
                 {
                     'bootstrap': {
                         'platform': 'linux',
-                        'storageEngine': 'wiredTiger'
+                        'storageEngine': 'wiredTiger',
                     },
                     'runtime': {
                         'build_variant': 'variant1',
@@ -53,10 +47,7 @@ workload_should_autorun_cases = [
             (
                 {
                     'AutoRun': {
-                        'Requires': {
-                            'runtime': {},
-                            'bootstrap': {}
-                        }
+                        'Requires': {}
                     }
                 },
                 {
@@ -93,13 +84,9 @@ workload_should_autorun_cases = [
                 {
                     'AutoRun': {
                         'Requires': {
-                            'bootstrap': {
-                                'platform': ['osx', 'windows', 'linux']
-                            },
-                            'runtime': {
-                                'build_variant': 'variant1',
-                                'is_patch': 'true'
-                            }
+                                'platform': ['osx', 'windows', 'linux'],
+                                'build_variant': ['variant1'],
+                                'is_patch': ['true']
                         }
                     }
                 },
@@ -119,13 +106,31 @@ workload_should_autorun_cases = [
                 {
                     'AutoRun': {
                         'Requires': {
-                            'bootstrap': {
-                                'platform': ['osx', 'windows', 'debian']
-                            },
-                            'runtime': {
-                                'build_variant': 'variant1',
-                                'is_patch': 'true'
+                                'platform': ['osx', 'windows', 'debian'],
+                                'build_variant': ['variant1'],
+                                'is_patch': ['true']
                             }
+                        }
+                },
+                {
+                    'bootstrap': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger'
+                    },
+                    'runtime': {
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                False
+            ),
+            (
+                {
+                    'AutoRun': {
+                        'Requires': {
+                                'platform': ['osx', 'windows', 'linux'],
+                                'build_variant': ['variant1'],
+                                'is_patch': ['false']
                         }
                     }
                 },
@@ -145,42 +150,12 @@ workload_should_autorun_cases = [
                 {
                     'AutoRun': {
                         'Requires': {
-                            'bootstrap': {
-                                'platform': ['osx', 'windows', 'linux']
-                            },
-                            'runtime': {
-                                'build_variant': 'variant1',
-                                'is_patch': 'false'
+                                'platform': ['linux'],
+                                'storageEngine': ['wiredTiger'],
+                                'build_variant': ['variant1'],
+                                'is_patch': ['true']
                             }
                         }
-                    }
-                },
-                {
-                    'bootstrap': {
-                        'platform': 'linux',
-                        'storageEngine': 'wiredTiger'
-                    },
-                    'runtime': {
-                        'build_variant': 'variant1',
-                        'is_patch': 'true'
-                    }
-                },
-                False
-            ),
-            (
-                {
-                    'AutoRun': {
-                        'Requires': {
-                            'bootstrap': {
-                                'platform': 'linux',
-                                'storageEngine': 'wiredTiger'
-                            },
-                            'runtime': {
-                                'build_variant': 'variant1',
-                                'is_patch': 'true'
-                            }
-                        }
-                    }
                 },
                 {
                     'bootstrap': {
@@ -198,19 +173,13 @@ workload_should_autorun_cases = [
                 {
                     'AutoRun': {
                         'Requires': {
-                            'bootstrap': {
-                                'platform': 'linux',
-                                'storageEngine': 'wiredTiger'
-                            },
-                            'runtime': {
-                                'build_variant': 'variant1',
-                                'is_patch': 'true'
-                            },
-                            'other': {
-                                'key': 'value'
+                                'platform': ['linux'],
+                                'storageEngine': ['wiredTiger'],
+                                'build_variant': ['variant1'],
+                                'is_patch': ['true'],
+                                'key': ['value']
                             }
                         }
-                    }
                 },
                 {
                     'bootstrap': {
@@ -228,11 +197,8 @@ workload_should_autorun_cases = [
                 {
                     'AutoRun': {
                         'Requires': {
-                            'bootstrap': {
-                                'platform': 'linux',
-                                'storageEngine': 'other'
-                            },
-
+                                'platform': ['linux'],
+                                'storageEngine': ['other']
                         }
                     }
                 },
@@ -252,8 +218,8 @@ workload_should_autorun_cases = [
                 {},
                 {
                     'bootstrap': {
-                        'platform': 'linux',
-                        'storageEngine': 'wiredTiger'
+                        'platform': ['linux'],
+                        'storageEngine': ['wiredTiger']
                     },
                     'runtime': {
                         'build_variant': 'variant1',
@@ -298,11 +264,9 @@ workload_should_autorun_cases = [
                 {
                     'AutoRun': {
                         'Requires': {
-                            'bootstrap': {
-                                'platform': 'linux',
-                                'storageEngine': 'wiredTiger'
-                            },
-                            'runtime': 'string-runtime'
+                                'platform': ['linux'],
+                                'storageEngine': ['wiredTiger'],
+                                'runtime': ['string-runtime']
                         }
                     }
                 },

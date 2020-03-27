@@ -16,9 +16,8 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup: 
-        - replica
-        - single-replica
-        - standalone
-        - shard
+    mongodb_setup: 
+    - replica
+    - single-replica
+    - standalone
+    - shard

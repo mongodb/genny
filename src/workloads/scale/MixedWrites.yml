@@ -37,11 +37,8 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap: { infrastructure_provisioning: [replica] }
+    infrastructure_provisioning: [replica]
   PrepareEnvironmentWith:
-    # Arguments to pass to the "prepare environment" evergreen function
-    #
-    # The 'setup' parameter dictates which mongodb_setup file to use.
-    setup:
+    mongodb_setup:
     - replica-delay-mixed
     - replica

@@ -80,10 +80,9 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup:
-        - replica
-        - standalone
-        - shard
-        - single-replica
-        - single-replica-15gbwtcache
+    mongodb_setup:
+    - replica
+    - standalone
+    - shard
+    - single-replica
+    - single-replica-15gbwtcache
