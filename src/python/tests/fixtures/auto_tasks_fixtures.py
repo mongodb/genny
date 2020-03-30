@@ -47,6 +47,24 @@ workload_should_autorun_cases = [
             (
                 {
                     'AutoRun': {
+                        'Requires': {
+                                'platform': ['linux']
+                        }
+                    }
+                },
+                {
+                    'expansions': {
+                        'platform': 'linux',
+                        'storageEngine': 'wiredTiger',
+                        'build_variant': 'variant1',
+                        'is_patch': 'true'
+                    }
+                },
+                True
+            ),
+            (
+                {
+                    'AutoRun': {
                         'Requires': {}
                     }
                 },
