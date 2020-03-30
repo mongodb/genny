@@ -55,4 +55,4 @@ Actors:
 
 AutoRun:
   Requires:
-    mongodb_setup: single-replica-15gbwtcache
+    mongodb_setup: [single-replica-15gbwtcache]
