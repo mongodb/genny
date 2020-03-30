@@ -224,28 +224,18 @@ def sort_csv_file(file_name, out_dir):
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description='Convert Genny csv2 perf data to Cedar BSON format',
+        description='Convert Genny csv2 perf data to Cedar BSON format or retrieve generated FTDC data',
     )
-    parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 perf data')
+    parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 file or FTDC directory')
     parser.add_argument('output_dir', metavar='output-dir',
-                        help='directory to store output BSON files')
+                        help='directory to store output BSON files (if using csv2)')
     return parser
 
-
-def run(args):
-    """
-    Runs the conversion from genny metrics to cedar format.
-
-    :param args: parsed command line args.
-    :return: list of cedar metrics file names and the approximate run time of the test
-             computed using the machine's system_time.
-
-    """
+def do_parse(args, metrics_file_names):
     out_dir = args.output_dir
 
     # Read CSV2 file
     my_csv2 = CSV2(args.input_file)
-    metrics_file_names = []
 
     with my_csv2.data_reader() as data_reader:
         # Separate into actor-operation
@@ -262,6 +252,19 @@ def run(args):
 
     return metrics_file_names, my_csv2.approximate_test_run_time
 
+
+def run(args):
+    """
+    Runs the conversion from genny metrics to cedar format.
+
+    :param args: parsed command line args.
+    :return: list of cedar metrics file names and the approximate run time of the test
+             computed using the machine's system_time.
+
+    """
+
+    metrics_file_names = []
+    return do_parse(args, metrics_file_names)  
 
 def main__cedar(argv=sys.argv[1:]):
     parser = build_parser()
