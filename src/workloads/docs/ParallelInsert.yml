@@ -186,6 +186,6 @@ AutoRun:
     - replica
     - replica-noflowcontrol
   PrepareEnvironmentWith:
-    mongodb_setup:
+    setup:
     - replica-delay-mixed
     - replica
