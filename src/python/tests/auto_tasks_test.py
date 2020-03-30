@@ -98,7 +98,7 @@ class AutoTasksTest(unittest.TestCase):
         mock_safe_load.return_value = {
             'AutoRun': {
                 'PrepareEnvironmentWith': {
-                    'setup': ['first', 'second']
+                    'mongodb_setup': ['first', 'second']
                 }
             }
         }

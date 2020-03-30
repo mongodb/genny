@@ -24,6 +24,20 @@ class AutoRunSpec():
         self.required_dict = required_dict
         # A dictionary representing the yaml within the PrepareEnvironmentWith section of the workload AutoRun yaml
         self.prepare_environment_with = prepare_environment_with
+        AutoRunSpec._rename_prepare_environment(prepare_environment_with)
+
+    @staticmethod
+    def _rename_prepare_environment(prepare_environment_with: dict):
+        # Temporary limitation and workaround until we switch to the new f_run_dsi_workload
+        # (or similarly-named) evergreen function in TIG-2474.
+        if prepare_environment_with is None:
+            return
+        if "mongodb_setup" in prepare_environment_with:
+            prepare_environment_with["setup"] = prepare_environment_with["mongodb_setup"]
+            del(prepare_environment_with["mongodb_setup"])
+        if len(prepare_environment_with) > 1:
+            raise Exception(
+                f"Can only provide 'mongodb_setup' (or 'setup') in PrepareEnvironmentWith")
 
     @staticmethod
     def create_from_workload_yaml(workload_yaml):

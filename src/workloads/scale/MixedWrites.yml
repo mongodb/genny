@@ -39,6 +39,6 @@ AutoRun:
   Requires:
     infrastructure_provisioning: [replica]
   PrepareEnvironmentWith:
-    setup:
+    mongodb_setup:
     - replica-delay-mixed
     - replica
