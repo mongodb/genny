@@ -21,6 +21,8 @@ import sys
 from collections import OrderedDict, defaultdict
 from datetime import datetime
 from os.path import join as pjoin
+from os.path import isdir
+from os import listdir
 
 from bson import BSON
 from bson.int64 import Int64
@@ -231,7 +233,9 @@ def build_parser():
                         help='directory to store output BSON files (if using csv2)')
     return parser
 
-def do_parse(args, metrics_file_names):
+def do_parse(args):
+    metrics_file_names = []
+
     out_dir = args.output_dir
 
     # Read CSV2 file
@@ -252,19 +256,25 @@ def do_parse(args, metrics_file_names):
 
     return metrics_file_names, my_csv2.approximate_test_run_time
 
+def is_ftdc(args):
+    return isdir(args.input_file)
 
 def run(args):
     """
     Runs the conversion from genny metrics to cedar format.
+    If the inputted file is a directory of FTDC data, we just
+    return those.
 
     :param args: parsed command line args.
     :return: list of cedar metrics file names and the approximate run time of the test
              computed using the machine's system_time.
 
     """
+    if is_ftdc(args):
+        time_file = os.path.join(args.input_file, "start_time.txt")
+        return os.listdir(args.input_file), datetime.timedelta(os.path.getmtime(time_file))
 
-    metrics_file_names = []
-    return do_parse(args, metrics_file_names)  
+    return do_parse(args)  
 
 def main__cedar(argv=sys.argv[1:]):
     parser = build_parser()

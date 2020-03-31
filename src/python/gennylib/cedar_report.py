@@ -102,7 +102,7 @@ class _Config(object):
         return self.now - self.test_run_time
 
 
-def build_report(config):
+def build_report(config, args):
     sub_tests = []
 
     bucket_prefix = '{}_{}'.format(config.task_id, config.execution_number)
@@ -117,7 +117,7 @@ def build_report(config):
             tags=[],
             local_path=path,
             created_at=config.created_at,
-            convert_bson_to_ftdc=True,
+            convert_bson_to_ftdc=cedar.is_ftdc(args),
             permissions='public-read',
             prefix=bucket_prefix
         )
