@@ -1,0 +1,292 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 20
+    DocumentCount: 10000
+    BatchSize: 1000
+    Document:
+      integer: &integer {^RandomInt: {min: 0, max: 10000}}
+      double: &double {^RandomInt: {distribution: geometric, p: 0.1}}
+      string: &string {^RandomString: {length: {^RandomInt: {min: 1100, max: 2000}}}}
+      array:
+      - *integer
+      - *integer
+      - subInteger: *integer
+        subString: *string
+        subArray:
+        - *integer
+        - *integer
+      - subInteger: *integer
+        subString: *string
+        subArray:
+        - *integer
+        - *integer
+      loc2d: &loc2d [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -180, max: 180}}]
+      loc2dSphere:
+        &loc2dSphere [{^RandomInt: {min: -180, max: 180}}, {^RandomInt: {min: -90, max: 90}}]
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+
+- Name: AddCollections
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1
+    Database: *db
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{$out: "Collection0_copy"}]
+        cursor: {batchSize: 101}
+    - OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{$out: "Collection1_copy"}]
+        cursor: {batchSize: 101}
+    - OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{$limit: 5000},
+                   {$unionWith: {coll: "Collection1", pipeline: [{$limit: 5000}]}},
+                   {$out: "Collection0_1"}]
+        cursor: {batchSize: 101}
+    - OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection0
+        pipeline: [{$limit: 5000},
+                   {$unionWith: {coll: "Collection2", pipeline: [{$limit: 5000}]}},
+                   {$out: "Collection0_2"}]
+        cursor: {batchSize: 101}
+    - OperationName: RunCommand
+      OperationCommand:
+        aggregate: Collection1
+        pipeline: [{$limit: 5000},
+                   {$unionWith: {coll: "Collection3", pipeline: [{$limit: 5000}]}},
+                   {$out: "Collection1_3"}]
+        cursor: {batchSize: 101}
+  - *Nop
+  - *Nop
+
+- Name: Quiesce
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - Repeat: 1
+    Database: admin
+    Operations:
+    - OperationName: RunCommand
+      OperationCommand:
+        fsync: 1
+  - *Nop
+
+- Name: UnionWith
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 10
+    Database: *db
+    Operations:
+    - OperationMetricsName: UnionWithTwoCollCompleteOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline: [{$unionWith: "Collection0_copy"}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithTwoCollHalfOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0_1
+          pipeline: [{$unionWith: "Collection0_2"}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithTwoCollNoOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline: [{$unionWith: "Collection1"}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithTwoCollSubpipelineCompleteOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline:
+            [{$unionWith: {coll: "Collection0_copy", pipeline: [{$set: {integer: "$integer"}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithTwoCollSubpipelineHalfOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0_1
+          pipeline:
+            [{$unionWith: {coll: "Collection0_2", pipeline: [{$set: {integer: "$integer"}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithTwoCollSubpipelineNoOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline: [{$unionWith: {coll: "Collection1", pipeline: [{$set: {integer: "$integer"}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithThreeCollSequentialHighOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline:
+            [{$unionWith: {coll: "Collection0_copy", pipeline: [{$set: {integer: "$integer"}}]}},
+             {$unionWith: {coll: "Collection1_copy", pipeline: [{$set: {integer: "$integer"}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithThreeCollSequentialPartialOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0_1
+          pipeline:
+            [{$unionWith: {coll: "Collection0_2", pipeline: [{$set: {integer: "$integer"}}]}},
+             {$unionWith: {coll: "Collection1_3", pipeline: [{$set: {integer: "$integer"}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithThreeCollSequentialNoOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline:
+            [{$unionWith: {coll: "Collection1", pipeline: [{$set: {integer: "$integer"}}]}},
+             {$unionWith: {coll: "Collection2", pipeline: [{$set: {integer: "$integer"}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithThreeCollNestedHighOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline:
+            [{$unionWith: {
+              coll: "Collection0_copy",
+              pipeline: [{$set: {integer: "$integer"}},
+                         {$unionWith: {coll: "Collection1_copy",
+                                       pipeline: [{$set: {integer: "$integer"}}]}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithThreeCollNestedPartialOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0_1
+          pipeline:
+            [{$unionWith: {
+              coll: "Collection0_2",
+              pipeline: [{$set: {integer: "$integer"}},
+                         {$unionWith: {coll: "Collection1_3",
+                                       pipeline: [{$set: {integer: "$integer"}}]}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithThreeCollNestedNoOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline:
+            [{$unionWith: {
+              coll: "Collection1",
+              pipeline: [{$set: {integer: "$integer"}},
+                         {$unionWith: {coll: "Collection2",
+                                       pipeline: [{$set: {integer: "$integer"}}]}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithSingleFollowingStageNoOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline: [
+            {$unionWith: "Collection1"},
+            {$unionWith: "Collection2"},
+            {$count: "num_documents"}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithMultipleFollowingStagesNoOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline: [
+            {$unionWith:
+               {coll: "Collection1",
+                pipeline: [
+                  {$match: {"double": {$gte: 2, $lt: 20000000}}},
+                  {$addFields: {collection: "Collection1"}},
+                  {$unionWith:
+                     {coll: "Collection2",
+                      pipeline: [{$addFields: {collection: "Collection2"}}]}}]}},
+            {$group:
+               {_id: {x: "$integer"},
+                count: {$sum: 1},
+                math: {$sum: {$divide: ["$double", "$integer"]}}}},
+            {$sort: {math: -1}},
+            {$addFields: {newField: "newField"}},
+            {$match: {count: {$lt: 5}}},
+            {$project: {_id: 0, count: 0, newField: 0}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+    - OperationMetricsName: UnionWithTwentyCollSequentialNoOverlap
+      OperationName: RunCommand
+      OperationCommand:
+        explain:
+          aggregate: Collection0
+          pipeline: [
+            {$unionWith: {coll: "Collection1", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection2", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection3", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection4", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection5", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection6", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection7", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection8", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection9", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection10", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection11", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection12", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection13", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection14", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection15", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection16", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection17", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection18", pipeline: [{$set: {integer: "$integer"}}]}},
+            {$unionWith: {coll: "Collection19", pipeline: [{$set: {integer: "$integer"}}]}}]
+          cursor: {batchSize: 101}
+        verbosity: executionStats
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup:
+        - standalone
+        - shard-lite
