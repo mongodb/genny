@@ -20,6 +20,7 @@
 #include <cstdlib>
 
 #include <boost/log/trivial.hpp>
+#include <boost/filesystem.hpp>
 
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
@@ -156,13 +157,13 @@ class Collector {
 public:
     Collector(const Collector&) = delete;
 
-    explicit Collector(const std::string& name, const std::string& pathPrefix)
+    explicit Collector(const std::string& name, const boost::filesystem::path& pathPrefix)
         : _name{name}, _id{} {
         _id.set_name(_name);
 
         grpc::ClientContext context;
         poplar::PoplarResponse response;
-        poplar::CreateOptions options = createOptions(_name, pathPrefix);
+        poplar::CreateOptions options = createOptions(_name, pathPrefix.string());
         auto status = _stub->CreateCollector(&context, options, &response);
 
         if (!status.ok()) {
@@ -184,15 +185,14 @@ public:
 
 
 private:
-    static auto createPath(const std::string& name, const std::string& pathPrefix) {
+    static auto createPath(const std::string& name, const boost::filesystem::path& pathPrefix) {
         std::stringstream str;
-        str << pathPrefix << '/';
         str << name << ".ftdc";
-        return str.str();
+        return (pathPrefix / boost::filesystem::path(str.str())).string();
     }
 
     static poplar::CreateOptions createOptions(const std::string& name,
-                                               const std::string& pathPrefix) {
+                                               const boost::filesystem::path& pathPrefix) {
         poplar::CreateOptions options;
         options.set_name(name);
         options.set_events(poplar::CreateOptions_EventsCollectorType_BASIC);
@@ -222,7 +222,7 @@ public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
-                         const std::string& pathPrefix)
+                         const boost::filesystem::path& pathPrefix)
         : _name{name}, _stream{name, actorId}, _phase{phase}, _last_finish{ClockSource::now()} {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);

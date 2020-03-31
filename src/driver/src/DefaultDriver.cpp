@@ -193,7 +193,7 @@ DefaultDriver::OutcomeCode doRunLogic(const DefaultDriver::ProgramOptions& optio
 
         {
             std::ofstream metricsOutput;
-            metricsOutput.open(metrics.getPathPrefix() + ".csv",
+            metricsOutput.open(metrics.getPathPrefix().string() + ".csv",
                                std::ofstream::out | std::ofstream::trunc);
             reporter.report(metricsOutput, metrics.getFormat());
         }
