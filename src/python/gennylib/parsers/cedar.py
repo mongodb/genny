@@ -275,7 +275,13 @@ def run(args):
     if is_ftdc(args):
         time_file = os.path.join(args.input_file, "start_time.txt")
         duration = datetime.now() - datetime.fromtimestamp(os.path.getmtime(time_file))
-        return os.listdir(args.input_file), duration
+
+        metrics_file_names = []
+        for filename in os.listdir(args.input_file):
+            if filename != "start_time.txt":
+                metrics_file_names.append(os.path.join(args.input_file, filename))
+
+        return metrics_file_names, duration
 
     return do_parse(args)  
 
