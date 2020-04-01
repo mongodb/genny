@@ -274,7 +274,8 @@ def run(args):
     """
     if is_ftdc(args):
         time_file = os.path.join(args.input_file, "start_time.txt")
-        return os.listdir(args.input_file), timedelta(datetime.fromtimestamp(os.path.getmtime(time_file)))
+        duration = datetime.now() - datetime.fromtimestamp(os.path.getmtime(time_file))
+        return os.listdir(args.input_file), duration
 
     return do_parse(args)  
 
