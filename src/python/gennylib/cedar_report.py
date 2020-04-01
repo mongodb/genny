@@ -117,7 +117,7 @@ def build_report(config, args):
             tags=[],
             local_path=path,
             created_at=config.created_at,
-            convert_bson_to_ftdc=cedar.is_ftdc(args),
+            convert_bson_to_ftdc= not cedar.is_ftdc(args),
             permissions='public-read',
             prefix=bucket_prefix
         )
