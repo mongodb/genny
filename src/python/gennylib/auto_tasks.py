@@ -34,6 +34,7 @@ class Repo:
     def modified_workload_files(self):
         command = (
             "git diff --name-only --diff-filter=AMR "
+            # TODO: don't use rtimmons/
             "$(git merge-base HEAD rtimmons/master) -- src/workloads/"
         )
         print(f"Command: {command}")
