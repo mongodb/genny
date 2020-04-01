@@ -315,7 +315,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     metrics_file_names, test_run_time = cedar.run(args)
     config = _Config(env, metrics_file_names, test_run_time)
 
-    report_dict = build_report(config)
+    report_dict = build_report(config, args)
 
     with open(args.report_file, 'w') as f:
         json.dump(report_dict, f, cls=RFCDateTimeEncoder)
