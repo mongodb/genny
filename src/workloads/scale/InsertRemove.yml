@@ -22,3 +22,7 @@ AutoRun:
         - single-replica
         - standalone
         - shard
+
+Metrics:
+  Format: ftdc
+  Path: build/genny-metrics

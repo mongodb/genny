@@ -20,7 +20,6 @@ import csv
 import sys
 from collections import OrderedDict, defaultdict
 from datetime import timedelta
-from datetime import fromtimestamp
 from datetime import datetime
 from os.path import join as pjoin
 from os.path import isdir
@@ -275,7 +274,7 @@ def run(args):
     """
     if is_ftdc(args):
         time_file = os.path.join(args.input_file, "start_time.txt")
-        return os.listdir(args.input_file), timedelta(fromtimestamp(os.path.getmtime(time_file)))
+        return os.listdir(args.input_file), timedelta(datetime.fromtimestamp(os.path.getmtime(time_file)))
 
     return do_parse(args)  
 
