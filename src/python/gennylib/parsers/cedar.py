@@ -123,23 +123,42 @@ class IntermediateCSVReader:
         ts = datetime.utcfromtimestamp(line[IntermediateCSVColumns.UNIX_TIME] / 1000)
         op = line[IntermediateCSVColumns.OPERATION]
 
-        res = OrderedDict([
-            ('ts', ts),
-            ('id', Int64(line[IntermediateCSVColumns.THREAD])),
-            ('counters', OrderedDict([
-                ('n', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.N])),
-                ('ops', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.OPS])),
-                ('size', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.SIZE])),
-                ('errors', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.ERRORS]))
-            ])),
-            ('timers', OrderedDict([
-                ('duration', Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.DURATION])),
-                ('total', Int64(self.total_for_op[op]))
-            ])),
-            ('gauges', OrderedDict([
-                ('workers', Int64(line[IntermediateCSVColumns.WORKERS]))
-            ]))
-        ])
+        res = OrderedDict(
+            [
+                ("ts", ts),
+                ("id", Int64(line[IntermediateCSVColumns.THREAD])),
+                (
+                    "counters",
+                    OrderedDict(
+                        [
+                            ("n", Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.N])),
+                            ("ops", Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.OPS])),
+                            (
+                                "size",
+                                Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.SIZE]),
+                            ),
+                            (
+                                "errors",
+                                Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.ERRORS]),
+                            ),
+                        ]
+                    ),
+                ),
+                (
+                    "timers",
+                    OrderedDict(
+                        [
+                            (
+                                "duration",
+                                Int64(self.cumulatives_for_op[op][IntermediateCSVColumns.DURATION]),
+                            ),
+                            ("total", Int64(self.total_for_op[op])),
+                        ]
+                    ),
+                ),
+                ("gauges", OrderedDict([("workers", Int64(line[IntermediateCSVColumns.WORKERS]))])),
+            ]
+        )
 
         return res, op
 
@@ -163,7 +182,7 @@ def split_into_actor_operation_and_transform_to_cedar_format(file_name, out_dir)
             for ordered_dict, op in IntermediateCSVReader(reader):
                 out_file_name = pjoin(out_dir, "{}-{}.bson".format(actor_name, op))
                 if out_file_name not in out_files:
-                    out_files[out_file_name] = open(out_file_name, 'wb')
+                    out_files[out_file_name] = open(out_file_name, "wb")
                 out_files[out_file_name].write(BSON.encode(ordered_dict))
         finally:
             for fh in out_files.values():
@@ -193,9 +212,9 @@ def split_into_actor_csv_files(data_reader, out_dir):
                 cur_out_fh.close()
 
             # Open new csv file.
-            file_name = actor + '.csv'
+            file_name = actor + ".csv"
             output_files.append(file_name)
-            cur_out_fh = open(pjoin(out_dir, file_name), 'w', newline='')
+            cur_out_fh = open(pjoin(out_dir, file_name), "w", newline="")
 
             # Quote non-numeric values so they get converted to float automatically
             cur_out_csv = csv.writer(cur_out_fh, quoting=csv.QUOTE_NONNUMERIC)
@@ -205,7 +224,7 @@ def split_into_actor_csv_files(data_reader, out_dir):
 
         counter += 1
         if counter % 1e6 == 0:
-            print('Parsed {} metrics'.format(counter))
+            print("Parsed {} metrics".format(counter))
 
     if cur_out_fh is not None:
         cur_out_fh.close()
@@ -215,20 +234,23 @@ def split_into_actor_csv_files(data_reader, out_dir):
 
 def sort_csv_file(file_name, out_dir):
     # Sort on Timestamp and Thread.
-    csvsort(pjoin(out_dir, file_name),
-            [IntermediateCSVColumns.TS, IntermediateCSVColumns.THREAD],
-            quoting=csv.QUOTE_NONNUMERIC,
-            has_header=True,
-            show_progress=True)
+    csvsort(
+        pjoin(out_dir, file_name),
+        [IntermediateCSVColumns.TS, IntermediateCSVColumns.THREAD],
+        quoting=csv.QUOTE_NONNUMERIC,
+        has_header=True,
+        show_progress=True,
+    )
 
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description='Convert Genny csv2 perf data to Cedar BSON format',
+        description="Convert Genny csv2 perf data to Cedar BSON format"
     )
-    parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 perf data')
-    parser.add_argument('output_dir', metavar='output-dir',
-                        help='directory to store output BSON files')
+    parser.add_argument("input_file", metavar="input-file", help="path to genny csv2 perf data")
+    parser.add_argument(
+        "output_dir", metavar="output-dir", help="directory to store output BSON files"
+    )
     return parser
 
 
@@ -252,13 +274,14 @@ def run(args):
         files = split_into_actor_csv_files(data_reader, out_dir)
 
         for f in files:
-            logging.info('Processing metrics in file %s', f)
+            logging.info("Processing metrics in file %s", f)
             # csvsort by timestamp, thread
             sort_csv_file(f, out_dir)
 
             # compute cumulative and stream output to bson file
             metrics_file_names.extend(
-                split_into_actor_operation_and_transform_to_cedar_format(f, out_dir))
+                split_into_actor_operation_and_transform_to_cedar_format(f, out_dir)
+            )
 
     return metrics_file_names, my_csv2.approximate_test_run_time
 

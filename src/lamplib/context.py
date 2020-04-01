@@ -2,38 +2,35 @@ import logging
 import os
 
 # Map of platform.system() to vcpkg's OS names.
-_triplet_os_map = {
-    'Darwin': 'osx',
-    'Linux': 'linux',
-    'NT': 'windows'
-}
+_triplet_os_map = {"Darwin": "osx", "Linux": "linux", "NT": "windows"}
 
 
 # Define complex operations as private methods on the module to keep the
 # public Context object clean.
 def _create_compile_environment(triplet_os, toolchain_dir):
     env = os.environ.copy()
-    paths = [env['PATH']]
+    paths = [env["PATH"]]
 
     # For mongodbtoolchain compiler (if there).
-    paths.insert(0, '/opt/mongodbtoolchain/v3/bin')
+    paths.insert(0, "/opt/mongodbtoolchain/v3/bin")
 
     # For cmake and ctest
     cmake_bin_relative_dir = {
-        'linux': 'downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin',
-        'osx': 'downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin'
+        "linux": "downloads/tools/cmake-3.13.3-linux/cmake-3.13.3-Linux-x86_64/bin",
+        "osx": "downloads/tools/cmake-3.13.3-osx/cmake-3.13.3-Darwin-x86_64/CMake.app/Contents/bin",
     }[triplet_os]
     paths.insert(0, os.path.join(toolchain_dir, cmake_bin_relative_dir))
 
     # For ninja
-    ninja_bin_dir = os.path.join(toolchain_dir,
-                                 'downloads/tools/ninja-1.8.2-{}:'.format(triplet_os))
+    ninja_bin_dir = os.path.join(
+        toolchain_dir, "downloads/tools/ninja-1.8.2-{}:".format(triplet_os)
+    )
     paths.insert(0, ninja_bin_dir)
 
-    env['PATH'] = ':'.join(paths)
-    env['NINJA_STATUS'] = '[%f/%t (%p) %es] '  # make the ninja output even nicer
+    env["PATH"] = ":".join(paths)
+    env["NINJA_STATUS"] = "[%f/%t (%p) %es] "  # make the ninja output even nicer
 
-    logging.debug('Using environment: %s', env)
+    logging.debug("Using environment: %s", env)
     return env
 
 
@@ -53,10 +50,12 @@ class Context:
         if not Context._compile_environment:
             if not toolchain_dir:
                 raise ValueError(
-                    'toolchain_dir must be specified when getting the compile environment for the '
-                    'first time')
-            Context._compile_environment = _create_compile_environment(Context.TRIPLET_OS,
-                                                                       toolchain_dir)
+                    "toolchain_dir must be specified when getting the compile environment for the "
+                    "first time"
+                )
+            Context._compile_environment = _create_compile_environment(
+                Context.TRIPLET_OS, toolchain_dir
+            )
         return Context._compile_environment
 
     # Helper methods

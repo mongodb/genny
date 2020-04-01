@@ -33,6 +33,7 @@ class CSVColumns(object):
     """
     Object oriented access to csv header/column mapping.
     """
+
     _COLUMNS = None
 
     @classmethod
@@ -45,10 +46,10 @@ class CSVColumns(object):
         upper_col_name = col_name.upper()  # Python class constants should be uppercase.
 
         if not hasattr(cls, upper_col_name):
-            raise CSV2ParsingError('%s doesn\'t have column %s', cls.__name__, col_name)
+            raise CSV2ParsingError("%s doesn't have column %s", cls.__name__, col_name)
 
         if not isinstance(cls._COLUMNS, set):
-            raise ValueError('Subclass must have the class property `_COLUMN = set()`')
+            raise ValueError("Subclass must have the class property `_COLUMN = set()`")
 
         setattr(cls, upper_col_name, col_index)
         cls._COLUMNS.add(upper_col_name)
@@ -90,8 +91,9 @@ class _DataReader:
 
         # Eagerly error if OUTCOME is > 1
         if line[_OpColumns.OUTCOME] > 1:
-            raise CSV2ParsingError('Unexpected outcome on line %d: %s', self.raw_reader.line_num,
-                                   line)
+            raise CSV2ParsingError(
+                "Unexpected outcome on line %d: %s", self.raw_reader.line_num, line
+            )
 
         op = line[_OpColumns.OPERATION]
         actor = line[_OpColumns.ACTOR]
@@ -172,7 +174,7 @@ class CSV2:
         self._csv2_file_name = csv2_file_name
 
     def metric_to_system_time_ns(self, metric_time):
-        assert self._unix_epoch_offset_ns, 'test run time not available yet'
+        assert self._unix_epoch_offset_ns, "test run time not available yet"
         return metric_time + self._unix_epoch_offset_ns
 
     @property
@@ -183,30 +185,30 @@ class CSV2:
         :raises: AssertionError if the offset has not been set yet.
         :return: datetime.timedelta instance representing the run time.
         """
-        assert self._metrics_time_ns, 'test run time not available yet'
+        assert self._metrics_time_ns, "test run time not available yet"
         return datetime.timedelta(microseconds=(self._metrics_time_ns / 1000))
 
     @contextlib.contextmanager
     def data_reader(self):
         # parsers for newline-delimited sections in genny's csv2 file.
         header_parsers = {
-            'Clocks': self._parse_clocks,
-            'OperationThreadCounts': self._parse_thread_count,
-            'Operations': self._parse_operations
+            "Clocks": self._parse_clocks,
+            "OperationThreadCounts": self._parse_thread_count,
+            "Operations": self._parse_operations,
         }
 
-        with open(self._csv2_file_name, 'r') as csv2_file:
+        with open(self._csv2_file_name, "r") as csv2_file:
             try:
                 reader = csv.reader(csv2_file, dialect=_Dialect)
                 while True:
                     title = next(reader)[0]
                     if title not in header_parsers:
-                        raise CSV2ParsingError('Unknown csv2 section title %s', title)
+                        raise CSV2ParsingError("Unknown csv2 section title %s", title)
                     should_stop = header_parsers[title](reader)
                     if should_stop:
                         break
             except (IndexError, ValueError) as e:
-                raise CSV2ParsingError('Error parsing CSV file: ', self._csv2_file_name) from e
+                raise CSV2ParsingError("Error parsing CSV file: ", self._csv2_file_name) from e
 
             yield self._data_reader
 
@@ -215,17 +217,14 @@ class CSV2:
 
         line = next(reader)
 
-        times = {
-            'SystemTime': None,
-            'MetricsTime': None
-        }
+        times = {"SystemTime": None, "MetricsTime": None}
 
         while line:
             times[line[_ClockColumns.CLOCK]] = int(line[_ClockColumns.NANOSECONDS])
             line = next(reader)
 
-        self._unix_epoch_offset_ns = times['SystemTime'] - times['MetricsTime']
-        self._metrics_time_ns = times['MetricsTime']
+        self._unix_epoch_offset_ns = times["SystemTime"] - times["MetricsTime"]
+        self._metrics_time_ns = times["MetricsTime"]
 
         return False
 
@@ -244,8 +243,9 @@ class CSV2:
 
     def _parse_operations(self, reader):
         _OpColumns.add_columns([h.strip() for h in next(reader)])
-        self._data_reader = _DataReader(reader, self._operation_thread_count_map,
-                                        self._unix_epoch_offset_ns)
+        self._data_reader = _DataReader(
+            reader, self._operation_thread_count_map, self._unix_epoch_offset_ns
+        )
 
         return True
 
@@ -272,5 +272,16 @@ class IntermediateCSVColumns(CSVColumns):
         Ordered list of default columns to write to the CSV, must match the column names in
         the class attributes.
         """
-        return ['unix_time', 'ts', 'thread', 'operation', 'duration', 'outcome', 'n',
-                'ops', 'errors', 'size', 'workers']
+        return [
+            "unix_time",
+            "ts",
+            "thread",
+            "operation",
+            "duration",
+            "outcome",
+            "n",
+            "ops",
+            "errors",
+            "size",
+            "workers",
+        ]
