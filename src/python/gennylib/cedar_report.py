@@ -300,17 +300,17 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    #if not env:
-    #    with open(args.expansions_file, 'r') as f:
-    #        env = yaml.safe_load(f)
+    if not env:
+        with open(args.expansions_file, 'r') as f:
+            env = yaml.safe_load(f)
 
-    #if env.get('cedar_mode', '') == 'skip':
-    #    return
+    if env.get('cedar_mode', '') == 'skip':
+        return
 
-    #if args.test_name:
-    #    env['test_name'] = args.test_name
-    #else:
-    #    env['test_name'] = env['task_name']
+    if args.test_name:
+        env['test_name'] = args.test_name
+    else:
+        env['test_name'] = env['task_name']
 
     metrics_file_names, test_run_time = cedar.run(args)
     config = _Config(env, metrics_file_names, test_run_time)
