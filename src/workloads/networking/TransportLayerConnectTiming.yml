@@ -28,6 +28,5 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup: 
-        - replica-auth-cluster-delay
+    mongodb_setup: 
+    - replica-auth-cluster-delay
