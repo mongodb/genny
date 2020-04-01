@@ -702,6 +702,61 @@ TEST_CASE("Events stream to gRPC") {
         compareEventsAndClear(expected);
     }
 
+    SECTION("Accept events created after end time") {
+        RegistryClockSourceStub::reset();
+
+        RegistryClockSourceStub::advance(std::chrono::microseconds(7));
+        auto endTime = RegistryClockSourceStub::now();
+
+        RegistryClockSourceStub::advance(std::chrono::microseconds(3));
+
+        auto stream =
+            internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
+                3, "LateEventName", 1, "/test/prefix"};
+        EventVec expected;
+        {
+            OperationEventT<RegistryClockSourceStub> event(
+                0,                                                              // number
+                77,                                                             // ops
+                2,                                                              // size
+                0,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},  // duration
+                OutcomeType::kSuccess                                           // outcome
+            );
+            stream.addAt(endTime, event, 1);
+
+            // Streamed Event
+            // ---------------
+            // Expected event
+
+            poplar::EventMetrics metric;
+            metric.set_name("LateEventName");
+            metric.set_id(3);
+
+            metric.mutable_time()->set_seconds(0);
+            metric.mutable_time()->set_nanos(7000);
+
+            metric.mutable_timers()->mutable_duration()->set_seconds(0);
+            metric.mutable_timers()->mutable_duration()->set_nanos(6000);
+            metric.mutable_timers()->mutable_total()->set_seconds(0);
+            metric.mutable_timers()->mutable_total()->set_nanos(6000);
+
+            metric.mutable_counters()->set_number(0);
+            metric.mutable_counters()->set_ops(77);
+            metric.mutable_counters()->set_size(2);
+            metric.mutable_counters()->set_errors(0);
+
+            metric.mutable_gauges()->set_failed(false);
+            metric.mutable_gauges()->set_workers(1);
+            metric.mutable_gauges()->set_state(1);
+
+            expected.push_back(metric);
+        }
+
+        compareEventsAndClear(expected);
+    }
+
+
     SECTION("Create folder for ftdc output") {
         auto metricsPath = getMetricsPath();
 
