@@ -1,18 +1,53 @@
 import os
 import sys
 import glob
-from collections import abc
-from typing import List, Optional
+import subprocess
 
 from shrub.config import Configuration
 
 
-class Repo:
-    def __init__(self, cwd: str):
-        self.cwd = cwd
+def _check_output(cwd, *args, **kwargs):
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(cwd)
+        out = subprocess.check_output(*args, **kwargs)
+    except subprocess.CalledProcessError as e:
+        print(e.output, file=sys.stderr)
+        raise e
+    finally:
+        os.chdir(old_cwd)
 
-    def is_file_modified(self, file_path):
-        return True
+    if out.decode() == "":
+        return []
+    return out.decode().strip().split("\n")
+
+
+class Repo:
+    def __init__(self, repo_root: str):
+        self.repo_root = repo_root
+        self._modified_repo_files = None
+
+    @staticmethod
+    def _normalize_path(filename: str) -> str:
+        return filename.split("workloads/", 1)[1]
+
+    def modified_workload_files(self):
+        command = (
+            "git diff --name-only --diff-filter=AMR "
+            "$(git merge-base HEAD rtimmons/master) -- src/workloads/"
+        )
+        print(f"Command: {command}")
+        lines = _check_output(self.repo_root, command, shell=True)
+        return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
+
+    def all_workload_files(self):
+        pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
+        return {*glob.glob(pattern)}
+
+    def workloads(self):
+        all_files = self.all_workload_files()
+        modified = self.modified_workload_files()
+        return [Workload(fpath, fpath in modified) for fpath in all_files]
 
 
 class Runtime:
@@ -25,19 +60,15 @@ class GeneratedTask:
 
 
 class Workload:
-    def __init__(self, file_path: str, repo: Repo):
+    def __init__(self, file_path: str, is_modified: bool):
         self.file_path = file_path
-        self.repo = repo
+        self.is_modified = is_modified
 
-    def is_modified(self) -> bool:
-        return self.repo.is_file_modified(self.file_path)
+    def __repr__(self):
+        return f"<{self.file_path},{self.is_modified}>"
 
-    @staticmethod
-    def list(genny_root: str, repo: Repo) -> List['Workload']:
-        path = os.path.join(genny_root, "src", "workloads", "*", "*.yml")
-        return [Workload(fpath,repo) for fpath in glob.glob(path)]
 
-class TaskWriter(abc):
+class TaskWriter:
     def write(self) -> Configuration:
         raise NotImplementedError()
 
@@ -49,5 +80,12 @@ class CLI:
 
     def main(self, argv=None):
         argv = argv if argv else sys.argv
+        print(self.repo.workloads())
 
     def all_tasks(self):
+        pass
+
+
+if __name__ == "__main__":
+    cli = CLI("/Users/rtimmons/Projects/genny")
+    cli.main()
