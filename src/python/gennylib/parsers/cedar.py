@@ -240,8 +240,15 @@ def do_parse(args):
 
     out_dir = args.output_dir
 
+    # Users can specify inputs without the suffix, in case
+    # it's actually a directory of FTDC outputs.
+    if not os.path.exists(args.input_file):
+        input_file = args.input_file + ".csv"
+    else:
+        input_file = args.input_file
+
     # Read CSV2 file
-    my_csv2 = CSV2(args.input_file)
+    my_csv2 = CSV2(input_file)
 
     with my_csv2.data_reader() as data_reader:
         # Separate into actor-operation
