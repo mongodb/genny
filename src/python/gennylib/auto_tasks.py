@@ -9,15 +9,16 @@ import re
 
 from shrub.config import Configuration
 from shrub.command import CommandDefinition
+from shrub.variant import TaskSpec
 
 
-def to_snake_case(str):
+def to_snake_case(camel_case):
     """
     Converts str to snake_case, useful for generating test id's
     From: https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
     :return: snake_case version of str.
     """
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", str)
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel_case)
     s2 = re.sub("-", "_", s1)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s2).lower()
 
@@ -79,8 +80,11 @@ class Runtime:
     def __init__(self, cwd: str, conts: Optional[dict] = None):
         self.conts = conts
 
-    def workload_setup(self):
-        pass
+    def has(self, key: str, acceptable_values: List[str]):
+        if key not in self.conts:
+            raise Exception(f"Unknown key {key}. Know about {self.conts.keys()}")
+        actual = self.conts[key]
+        return any(actual == acceptable_value for acceptable_value in acceptable_values)
 
 
 class GeneratedTask(NamedTuple):
@@ -123,14 +127,6 @@ class Workload:
     def relative_path(self):
         return self.file_path.split("src/workloads/")[1]
 
-    # def foo(self):
-    #     curr["test"] = "{task_name}_{setup_var}".format(
-    #         task_name=curr["test"], setup_var=to_snake_case(setup_var)
-    #     )
-
-    def __repr__(self):
-        return f"<{self.file_path},{self.is_modified}>"
-
     def all_tasks(self) -> List[GeneratedTask]:
         base = to_snake_case(self.file_base_name())
         if self.setups is None:
@@ -142,20 +138,24 @@ class Workload:
     def variant_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
         if not self.requires:
             return []
-        for key, acceptable_values in self.requires.items():
-            if not runtime.has(key, acceptable_values):
-                return []
-        # We know we've met all the "Required" values
-        for setup in self.setups:
-            pass
+        return [
+            task
+            for task in self.all_tasks()
+            if all(
+                runtime.has(key, acceptable_values)
+                for key, acceptable_values in self.requires.items()
+            )
+        ]
 
 
 class ConfigWriter(ABC):
     def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
         raise NotImplementedError()
 
-    def variant_tasks(self, tasks: List[GeneratedTask], variant: Optional[str] = None):
-        raise NotImplementedError()
+    def variant_tasks(self, tasks: List[GeneratedTask], variant: str):
+        c = Configuration()
+        c.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
+        return c
 
 
 class LegacyConfigWriter(ConfigWriter):
@@ -180,11 +180,7 @@ class LegacyConfigWriter(ConfigWriter):
                     CommandDefinition().function("analyze"),
                 ]
             )
-
         return c
-
-    def variant_tasks(self, tasks: List[GeneratedTask], variant: Optional[str] = None):
-        pass
 
 
 class CLI:
@@ -192,13 +188,21 @@ class CLI:
         self.cwd = cwd if cwd else os.getcwd()
         self.lister = Lister(self.cwd)
         self.repo = Repo(self.lister)
-        self.runtime = Runtime(cwd)
+        self.runtime = Runtime(
+            cwd,
+            {
+                "mongodb_setup": "single",
+                "platform": "linux",
+                "infrastructure_provisioning": "replica",
+            },
+        )
 
     def main(self, argv=None):
         argv = argv if argv else sys.argv
-        tasks = [task for w in self.repo.all_workloads() for task in w.all_tasks()]
+        # tasks = [task for w in self.repo.all_workloads() for task in w.all_tasks()]
+        tasks = self.variant_tasks()
         writer = LegacyConfigWriter()
-        config = writer.all_tasks(tasks)
+        config = writer.variant_tasks(tasks, "standalone")
         print(config.to_json())
 
     def all_tasks(self) -> List[GeneratedTask]:
