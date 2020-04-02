@@ -2,6 +2,7 @@ import os
 import sys
 import glob
 import subprocess
+from typing import NamedTuple, List, Optional
 
 from shrub.config import Configuration
 
@@ -52,12 +53,16 @@ class Repo:
 
 
 class Runtime:
+    def __init__(self, cwd: str):
+        self.cwd = cwd
+
     def workload_setup(self):
         pass
 
 
-class GeneratedTask:
-    pass
+class GeneratedTask(NamedTuple):
+    mongodb_setup: str
+    workload_path: str
 
 
 class Workload:
@@ -67,6 +72,9 @@ class Workload:
 
     def __repr__(self):
         return f"<{self.file_path},{self.is_modified}>"
+
+    def all_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
+        return []
 
 
 class TaskWriter:
@@ -78,13 +86,32 @@ class CLI:
     def __init__(self, cwd=None):
         self.cwd = cwd if cwd else os.getcwd()
         self.repo = Repo(cwd)
+        self.runtime = Runtime(cwd)
 
     def main(self, argv=None):
         argv = argv if argv else sys.argv
         print(self.repo.workloads())
 
-    def all_tasks(self):
-        pass
+    def all_tasks(self) -> List[GeneratedTask]:
+        workloads = self.repo.all_workload_files()
+        out = []
+        for workload in workloads:
+            out.extend(workload.all_tasks(self.runtime))
+        return out
+
+    def variant_tasks(self):
+        workloads = self.repo.all_workload_files()
+        out = []
+        for workload in workloads:
+            out.extend(workload.variant_tasks(self.runtime))
+        return out
+
+    def patch_tasks(self):
+        workloads = self.repo.modified_workload_files()
+        out = []
+        for workload in workloads:
+            out.extend(workload.variant_tasks(self.runtime))
+        return out
 
 
 if __name__ == "__main__":
