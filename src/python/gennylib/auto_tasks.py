@@ -24,16 +24,15 @@ def _check_output(cwd, *args, **kwargs):
     return out.decode().strip().split("\n")
 
 
-class Repo:
+class Lister:
     def __init__(self, repo_root: str):
         self.repo_root = repo_root
-        self._modified_repo_files = None
 
     @staticmethod
     def _normalize_path(filename: str) -> str:
         return filename.split("workloads/", 1)[1]
 
-    def _modified_workload_files(self):
+    def modified_workload_files(self):
         command = (
             "git diff --name-only --diff-filter=AMR "
             # TODO: don't use rtimmons/
@@ -45,13 +44,19 @@ class Repo:
                 for line in lines
                 if line.endswith(".yml")}
 
-    def _all_workload_files(self):
+    def all_workload_files(self):
         pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
         return {*glob.glob(pattern)}
 
+
+class Repo:
+    def __init__(self, lister: Lister):
+        self._modified_repo_files = None
+        self.lister = lister
+
     def all_workloads(self) -> List['Workload']:
-        all_files = self._all_workload_files()
-        modified = self._modified_workload_files()
+        all_files = self.lister.all_workload_files()
+        modified = self.lister.modified_workload_files()
         return [Workload(fpath, fpath in modified) for fpath in all_files]
 
     def modified_workloads(self) -> List['Workload']:
@@ -110,9 +115,10 @@ class TaskWriter:
 
 
 class CLI:
-    def __init__(self, cwd=None):
+    def __init__(self, cwd: str = None):
         self.cwd = cwd if cwd else os.getcwd()
-        self.repo = Repo(cwd)
+        self.lister = Lister(self.cwd)
+        self.repo = Repo(self.lister)
         self.runtime = Runtime(cwd)
 
     def main(self, argv=None):
