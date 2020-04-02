@@ -86,7 +86,7 @@ class Runtime:
 class GeneratedTask(NamedTuple):
     name: str
     mongodb_setup: Optional[str]
-    workload: 'Workload'
+    workload: "Workload"
 
 
 class Workload:
@@ -111,8 +111,10 @@ class Workload:
         if "PrepareEnvironmentWith" in auto_run:
             prep = auto_run["PrepareEnvironmentWith"]
             if len(prep) != 1 or "mongodb_setup" not in prep:
-                raise ValueError(f"Need exactly mongodb_setup: [list] "
-                                 f"in PrepareEnvironmentWith for file {file_path}")
+                raise ValueError(
+                    f"Need exactly mongodb_setup: [list] "
+                    f"in PrepareEnvironmentWith for file {file_path}"
+                )
             self.setups = prep["mongodb_setup"]
 
     def file_base_name(self):
@@ -134,8 +136,7 @@ class Workload:
         if self.setups is None:
             return [GeneratedTask(base, None, self)]
         return [
-            GeneratedTask(f"{base}_{to_snake_case(setup)}", setup, self)
-            for setup in self.setups
+            GeneratedTask(f"{base}_{to_snake_case(setup)}", setup, self) for setup in self.setups
         ]
 
     def variant_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
@@ -195,11 +196,7 @@ class CLI:
 
     def main(self, argv=None):
         argv = argv if argv else sys.argv
-        tasks = [
-            task
-            for w in self.repo.all_workloads()
-            for task in w.all_tasks()
-        ]
+        tasks = [task for w in self.repo.all_workloads() for task in w.all_tasks()]
         writer = LegacyConfigWriter()
         config = writer.all_tasks(tasks)
         print(config.to_json())
@@ -208,11 +205,7 @@ class CLI:
         """
         :return: All possible tasks
         """
-        return [
-            task
-            for workload in self.repo.all_workloads()
-            for task in workload.all_tasks(j)
-        ]
+        return [task for workload in self.repo.all_workloads() for task in workload.all_tasks()]
 
     def variant_tasks(self):
         """
@@ -229,9 +222,7 @@ class CLI:
         :return: Tasks for modified workloads current variant (runtime)
         """
         return [
-            task
-            for workload in self.repo.modified_workloads()
-            for task in workload.all_tasks()
+            task for workload in self.repo.modified_workloads() for task in workload.all_tasks()
         ]
 
 
