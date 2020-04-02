@@ -32,7 +32,7 @@ class Repo:
     def _normalize_path(filename: str) -> str:
         return filename.split("workloads/", 1)[1]
 
-    def modified_workload_files(self):
+    def _modified_workload_files(self):
         command = (
             "git diff --name-only --diff-filter=AMR "
             # TODO: don't use rtimmons/
@@ -40,16 +40,23 @@ class Repo:
         )
         print(f"Command: {command}")
         lines = _check_output(self.repo_root, command, shell=True)
-        return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
+        return {os.path.join(self.repo_root, line)
+                for line in lines
+                if line.endswith(".yml")}
 
-    def all_workload_files(self):
+    def _all_workload_files(self):
         pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
         return {*glob.glob(pattern)}
 
-    def workloads(self):
-        all_files = self.all_workload_files()
-        modified = self.modified_workload_files()
+    def all_workloads(self) -> List['Workload']:
+        all_files = self._all_workload_files()
+        modified = self._modified_workload_files()
         return [Workload(fpath, fpath in modified) for fpath in all_files]
+
+    def modified_workloads(self) -> List['Workload']:
+        return [workload
+                for workload in self.all_workloads()
+                if workload.is_modified]
 
 
 class Runtime:
@@ -76,6 +83,9 @@ class Workload:
     def all_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
         return []
 
+    def variant_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
+        return []
+
 
 class TaskWriter:
     def write(self) -> Configuration:
@@ -90,28 +100,31 @@ class CLI:
 
     def main(self, argv=None):
         argv = argv if argv else sys.argv
-        print(self.repo.workloads())
+        print(self.repo.all_workloads())
 
     def all_tasks(self) -> List[GeneratedTask]:
-        workloads = self.repo.all_workload_files()
-        out = []
-        for workload in workloads:
-            out.extend(workload.all_tasks(self.runtime))
-        return out
+        """
+        :return: All possible tasks
+        """
+        return [task
+                for workload in self.repo.all_workloads()
+                for task in workload.all_tasks(self.runtime)]
 
     def variant_tasks(self):
-        workloads = self.repo.all_workload_files()
-        out = []
-        for workload in workloads:
-            out.extend(workload.variant_tasks(self.runtime))
-        return out
+        """
+        :return: Tasks to schedule given the current variant (runtime)
+        """
+        return [task
+                for workload in self.repo.all_workloads()
+                for task in workload.variant_tasks(self.runtime)]
 
     def patch_tasks(self):
-        workloads = self.repo.modified_workload_files()
-        out = []
-        for workload in workloads:
-            out.extend(workload.variant_tasks(self.runtime))
-        return out
+        """
+        :return: Tasks for modified workloads current variant (runtime)
+        """
+        return [task
+                for workload in self.repo.modified_workloads()
+                for task in workload.all_tasks(self.runtime)]
 
 
 if __name__ == "__main__":
