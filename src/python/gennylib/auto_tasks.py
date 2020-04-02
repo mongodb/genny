@@ -1,14 +1,15 @@
-import os
-import sys
 import glob
-import subprocess
-from abc import ABC
-from typing import NamedTuple, List, Optional, Tuple
-import yaml
+import os
 import re
+import subprocess
+import sys
+from abc import ABC
+from typing import NamedTuple, List, Optional
 
-from shrub.config import Configuration
+import yaml
+
 from shrub.command import CommandDefinition
+from shrub.config import Configuration
 from shrub.variant import TaskSpec
 
 
@@ -62,6 +63,17 @@ class Lister:
         return {*glob.glob(pattern)}
 
 
+def _yaml_load(files: List[str]) -> dict:
+    out = dict()
+    for file in files:
+        if not os.path.exists(file):
+            continue
+        basename = os.path.basename(file).split(".yml")[0]
+        with open(file) as contents:
+            out[basename] = yaml.safe_load(contents)
+    return out
+
+
 class Repo:
     def __init__(self, lister: Lister):
         self._modified_repo_files = None
@@ -77,7 +89,22 @@ class Repo:
 
 
 class Runtime:
+    use_expansions_yml = False
+
     def __init__(self, cwd: str, conts: Optional[dict] = None):
+        if conts is None:
+            conts = _yaml_load([os.path.join(cwd, f"{b}.yml")
+                                for b in {"bootstrap", "runtime", "expansions"}])
+            if "expansions" in conts:
+                self.use_expansions_yml = True
+                conts = conts["expansions"]
+            else:
+                if "bootstrap" not in conts:
+                    raise Exception(f"Must have either expansions.yml or bootstrap.yml in cwd={cwd}")
+                bootstrap = conts["bootstrap"]  # type: dict
+                runtime = conts["runtime"]  # type: dict
+                bootstrap.update(runtime)
+                conts = bootstrap
         self.conts = conts
 
     def has(self, key: str, acceptable_values: List[str]):
@@ -188,14 +215,7 @@ class CLI:
         self.cwd = cwd if cwd else os.getcwd()
         self.lister = Lister(self.cwd)
         self.repo = Repo(self.lister)
-        self.runtime = Runtime(
-            cwd,
-            {
-                "mongodb_setup": "single",
-                "platform": "linux",
-                "infrastructure_provisioning": "replica",
-            },
-        )
+        self.runtime = Runtime(self.cwd)
 
     def main(self, argv=None):
         argv = argv if argv else sys.argv
@@ -231,5 +251,5 @@ class CLI:
 
 
 if __name__ == "__main__":
-    cli = CLI("/Users/rtimmons/Projects/genny")
+    cli = CLI()
     cli.main()
