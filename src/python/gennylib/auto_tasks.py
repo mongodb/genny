@@ -40,9 +40,7 @@ class Lister:
         )
         print(f"Command: {command}")
         lines = _check_output(self.repo_root, command, shell=True)
-        return {os.path.join(self.repo_root, line)
-                for line in lines
-                if line.endswith(".yml")}
+        return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
 
     def all_workload_files(self):
         pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
@@ -54,15 +52,13 @@ class Repo:
         self._modified_repo_files = None
         self.lister = lister
 
-    def all_workloads(self) -> List['Workload']:
+    def all_workloads(self) -> List["Workload"]:
         all_files = self.lister.all_workload_files()
         modified = self.lister.modified_workload_files()
         return [Workload(fpath, fpath in modified) for fpath in all_files]
 
-    def modified_workloads(self) -> List['Workload']:
-        return [workload
-                for workload in self.all_workloads()
-                if workload.is_modified]
+    def modified_workloads(self) -> List["Workload"]:
+        return [workload for workload in self.all_workloads() if workload.is_modified]
 
 
 class Runtime:
@@ -129,25 +125,31 @@ class CLI:
         """
         :return: All possible tasks
         """
-        return [task
-                for workload in self.repo.all_workloads()
-                for task in workload.all_tasks(self.runtime)]
+        return [
+            task
+            for workload in self.repo.all_workloads()
+            for task in workload.all_tasks(self.runtime)
+        ]
 
     def variant_tasks(self):
         """
         :return: Tasks to schedule given the current variant (runtime)
         """
-        return [task
-                for workload in self.repo.all_workloads()
-                for task in workload.variant_tasks(self.runtime)]
+        return [
+            task
+            for workload in self.repo.all_workloads()
+            for task in workload.variant_tasks(self.runtime)
+        ]
 
     def patch_tasks(self):
         """
         :return: Tasks for modified workloads current variant (runtime)
         """
-        return [task
-                for workload in self.repo.modified_workloads()
-                for task in workload.all_tasks(self.runtime)]
+        return [
+            task
+            for workload in self.repo.modified_workloads()
+            for task in workload.all_tasks(self.runtime)
+        ]
 
 
 if __name__ == "__main__":
