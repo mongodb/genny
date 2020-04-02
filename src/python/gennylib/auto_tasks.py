@@ -3,6 +3,7 @@ import sys
 import glob
 import subprocess
 from typing import NamedTuple, List, Optional
+import yaml
 
 from shrub.config import Configuration
 
@@ -60,8 +61,8 @@ class Repo:
 
 
 class Runtime:
-    def __init__(self, cwd: str):
-        self.cwd = cwd
+    def __init__(self, cwd: str, conts: Optional[dict] = None):
+        self.conts = conts
 
     def workload_setup(self):
         pass
@@ -73,9 +74,25 @@ class GeneratedTask(NamedTuple):
 
 
 class Workload:
-    def __init__(self, file_path: str, is_modified: bool):
+    file_path: str
+    is_modified: bool
+    requires: Optional[dict]
+    task_templates: Optional[dict]
+
+    def __init__(self, file_path: str, is_modified: bool, conts: Optional[dict] = None):
         self.file_path = file_path
         self.is_modified = is_modified
+
+        if not conts:
+            with open(file_path) as conts:
+                conts = yaml.safe_load(conts)
+
+        if "AutoRun" not in conts:
+            return
+
+        auto_run = conts["AutoRun"]
+        self.requires = auto_run["Requires"]
+        self.task_templates = auto_run.get("PrepareEnvironmentWith", {})
 
     def __repr__(self):
         return f"<{self.file_path},{self.is_modified}>"
