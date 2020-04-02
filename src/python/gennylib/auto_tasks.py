@@ -2,11 +2,13 @@ import os
 import sys
 import glob
 import subprocess
+from abc import ABC
 from typing import NamedTuple, List, Optional, Tuple
 import yaml
 import re
 
 from shrub.config import Configuration
+from shrub.command import CommandDefinition
 
 
 def to_snake_case(str):
@@ -83,8 +85,8 @@ class Runtime:
 
 class GeneratedTask(NamedTuple):
     name: str
-    workload_path: str
     mongodb_setup: Optional[str]
+    workload: 'Workload'
 
 
 class Workload:
@@ -116,6 +118,9 @@ class Workload:
     def file_base_name(self):
         return os.path.basename(self.file_path).split(".yml")[0]
 
+    def relative_path(self):
+        return self.file_path.split("src/workloads/")[1]
+
     # def foo(self):
     #     curr["test"] = "{task_name}_{setup_var}".format(
     #         task_name=curr["test"], setup_var=to_snake_case(setup_var)
@@ -127,9 +132,9 @@ class Workload:
     def all_tasks(self) -> List[GeneratedTask]:
         base = to_snake_case(self.file_base_name())
         if self.setups is None:
-            return [GeneratedTask(base, self.file_path, None)]
+            return [GeneratedTask(base, None, self)]
         return [
-            GeneratedTask(f"{base}_{to_snake_case(setup)}", self.file_path, setup)
+            GeneratedTask(f"{base}_{to_snake_case(setup)}", setup, self)
             for setup in self.setups
         ]
 
@@ -144,9 +149,41 @@ class Workload:
             pass
 
 
-class TaskWriter:
-    def write(self) -> Configuration:
+class ConfigWriter(ABC):
+    def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
         raise NotImplementedError()
+
+    def variant_tasks(self, tasks: List[GeneratedTask], variant: Optional[str] = None):
+        raise NotImplementedError()
+
+
+class LegacyConfigWriter(ConfigWriter):
+    def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
+        c = Configuration()
+        c.exec_timeout(64800)  # 18 hours
+        for task in tasks:
+            prep_vars = {
+                "test": task.name,
+                "auto_workload_path": task.workload.relative_path(),
+            }
+            if task.mongodb_setup:
+                prep_vars["setup"] = task.mongodb_setup
+
+            t = c.task(task.name)
+            t.priority(5)
+            t.commands(
+                [
+                    CommandDefinition().function("prepare environment").vars(prep_vars),
+                    CommandDefinition().function("deploy cluster"),
+                    CommandDefinition().function("run test"),
+                    CommandDefinition().function("analyze"),
+                ]
+            )
+
+        return c
+
+    def variant_tasks(self, tasks: List[GeneratedTask], variant: Optional[str] = None):
+        pass
 
 
 class CLI:
@@ -158,7 +195,14 @@ class CLI:
 
     def main(self, argv=None):
         argv = argv if argv else sys.argv
-        print([w.all_tasks() for w in self.repo.all_workloads()])
+        tasks = [
+            task
+            for w in self.repo.all_workloads()
+            for task in w.all_tasks()
+        ]
+        writer = LegacyConfigWriter()
+        config = writer.all_tasks(tasks)
+        print(config.to_json())
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
@@ -167,7 +211,7 @@ class CLI:
         return [
             task
             for workload in self.repo.all_workloads()
-            for task in workload.all_tasks(self.runtime)
+            for task in workload.all_tasks(j)
         ]
 
     def variant_tasks(self):
@@ -187,7 +231,7 @@ class CLI:
         return [
             task
             for workload in self.repo.modified_workloads()
-            for task in workload.all_tasks(self.runtime)
+            for task in workload.all_tasks()
         ]
 
 
