@@ -2,10 +2,22 @@ import os
 import sys
 import glob
 import subprocess
-from typing import NamedTuple, List, Optional
+from typing import NamedTuple, List, Optional, Tuple
 import yaml
+import re
 
 from shrub.config import Configuration
+
+
+def to_snake_case(str):
+    """
+    Converts str to snake_case, useful for generating test id's
+    From: https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
+    :return: snake_case version of str.
+    """
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", str)
+    s2 = re.sub("-", "_", s1)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s2).lower()
 
 
 def _check_output(cwd, *args, **kwargs):
@@ -70,15 +82,16 @@ class Runtime:
 
 
 class GeneratedTask(NamedTuple):
-    mongodb_setup: str
+    name: str
     workload_path: str
+    mongodb_setup: Optional[str]
 
 
 class Workload:
     file_path: str
     is_modified: bool
-    requires: Optional[dict]
-    task_templates: Optional[dict]
+    requires: Optional[dict] = None
+    setups: Optional[List[str]] = None
 
     def __init__(self, file_path: str, is_modified: bool, conts: Optional[dict] = None):
         self.file_path = file_path
@@ -93,16 +106,42 @@ class Workload:
 
         auto_run = conts["AutoRun"]
         self.requires = auto_run["Requires"]
-        self.task_templates = auto_run.get("PrepareEnvironmentWith", {})
+        if "PrepareEnvironmentWith" in auto_run:
+            prep = auto_run["PrepareEnvironmentWith"]
+            if len(prep) != 1 or "mongodb_setup" not in prep:
+                raise ValueError(f"Need exactly mongodb_setup: [list] "
+                                 f"in PrepareEnvironmentWith for file {file_path}")
+            self.setups = prep["mongodb_setup"]
+
+    def file_base_name(self):
+        return os.path.basename(self.file_path).split(".yml")[0]
+
+    # def foo(self):
+    #     curr["test"] = "{task_name}_{setup_var}".format(
+    #         task_name=curr["test"], setup_var=to_snake_case(setup_var)
+    #     )
 
     def __repr__(self):
         return f"<{self.file_path},{self.is_modified}>"
 
-    def all_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
-        return []
+    def all_tasks(self) -> List[GeneratedTask]:
+        base = to_snake_case(self.file_base_name())
+        if self.setups is None:
+            return [GeneratedTask(base, self.file_path, None)]
+        return [
+            GeneratedTask(f"{base}_{to_snake_case(setup)}", self.file_path, setup)
+            for setup in self.setups
+        ]
 
     def variant_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
-        return []
+        if not self.requires:
+            return []
+        for key, acceptable_values in self.requires.items():
+            if not runtime.has(key, acceptable_values):
+                return []
+        # We know we've met all the "Required" values
+        for setup in self.setups:
+            pass
 
 
 class TaskWriter:
@@ -119,7 +158,7 @@ class CLI:
 
     def main(self, argv=None):
         argv = argv if argv else sys.argv
-        print(self.repo.all_workloads())
+        print([w.all_tasks() for w in self.repo.all_workloads()])
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
