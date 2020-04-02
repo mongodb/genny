@@ -320,12 +320,12 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     with open(args.report_file, 'w') as f:
         json.dump(report_dict, f, cls=RFCDateTimeEncoder)
 
-    jira_user = env['perf_jira_user']
-    jira_pwd = env['perf_jira_pw']
+    #jira_user = env['perf_jira_user']
+    #jira_pwd = env['perf_jira_pw']
 
-    cr = cert_retriever_cls(jira_user, jira_pwd)
-    runner = ShellCuratorRunner(cr, args.report_file)
-    runner.run(runner.get_send_command())
+    #cr = cert_retriever_cls(jira_user, jira_pwd)
+    #runner = ShellCuratorRunner(cr, args.report_file)
+    #runner.run(runner.get_send_command())
 
 
 if __name__ == '__main__':
