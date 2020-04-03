@@ -24,6 +24,22 @@ def to_snake_case(camel_case):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s2).lower()
 
 
+def _findup(fpath: str, cwd: str):
+    """
+    Look "up" the directory tree for fpath starting at cwd.
+    Raises if not found.
+    :param fpath:
+    :param cwd:
+    :return:
+    """
+    curr = cwd
+    while os.path.exists(curr):
+        if os.path.exists(os.path.join(curr, fpath)):
+            return os.path.normpath(curr)
+        curr = os.path.join(curr, "..")
+    raise BaseException("Cannot find {} in {} or any parent dirs.".format(fpath, cwd))
+
+
 def _check_output(cwd, *args, **kwargs):
     old_cwd = os.getcwd()
     try:
@@ -89,18 +105,21 @@ class Repo:
 
 
 class Runtime:
-    use_expansions_yml = False
+    use_expansions_yml: bool = False
 
     def __init__(self, cwd: str, conts: Optional[dict] = None):
         if conts is None:
-            conts = _yaml_load([os.path.join(cwd, f"{b}.yml")
-                                for b in {"bootstrap", "runtime", "expansions"}])
+            conts = _yaml_load(
+                [os.path.join(cwd, f"{b}.yml") for b in {"bootstrap", "runtime", "expansions"}]
+            )
             if "expansions" in conts:
                 self.use_expansions_yml = True
                 conts = conts["expansions"]
             else:
                 if "bootstrap" not in conts:
-                    raise Exception(f"Must have either expansions.yml or bootstrap.yml in cwd={cwd}")
+                    raise Exception(
+                        f"Must have either expansions.yml or bootstrap.yml in cwd={cwd}"
+                    )
                 bootstrap = conts["bootstrap"]  # type: dict
                 runtime = conts["runtime"]  # type: dict
                 bootstrap.update(runtime)
@@ -190,10 +209,7 @@ class LegacyConfigWriter(ConfigWriter):
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
         for task in tasks:
-            prep_vars = {
-                "test": task.name,
-                "auto_workload_path": task.workload.relative_path(),
-            }
+            prep_vars = {"test": task.name, "auto_workload_path": task.workload.relative_path()}
             if task.mongodb_setup:
                 prep_vars["setup"] = task.mongodb_setup
 
@@ -217,8 +233,8 @@ class CLI:
         self.repo = Repo(self.lister)
         self.runtime = Runtime(self.cwd)
 
-    def main(self, argv=None):
-        argv = argv if argv else sys.argv
+    def main(self):
+        # argv = argv if argv else sys.argv
         # tasks = [task for w in self.repo.all_workloads() for task in w.all_tasks()]
         tasks = self.variant_tasks()
         writer = LegacyConfigWriter()
