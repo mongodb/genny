@@ -10,10 +10,13 @@ from gennylib.parsers.csv2 import CSV2, IntermediateCSVColumns
 
 
 def build_parser():
-    parser = argparse.ArgumentParser(description='Convert cedar-csv output into legacy perf.json'
-                                                 'report file format')
-    parser.add_argument('--report-file', default='perf.json', help='path to the perf.json report file')
-    parser.add_argument('input_file', metavar='input-file', help='path to genny csv2 perf data')
+    parser = argparse.ArgumentParser(
+        description="Convert cedar-csv output into legacy perf.json" "report file format"
+    )
+    parser.add_argument(
+        "--report-file", default="perf.json", help="path to the perf.json report file"
+    )
+    parser.add_argument("input_file", metavar="input-file", help="path to genny csv2 perf data")
 
     return parser
 
@@ -34,29 +37,31 @@ class _LegacyReportIntermediateFormat(object):
     def _asdict(self):
         # Name derives from the _asdict method of colllections.namedtuple
         return {
-            'started': self.started,
-            'ended': self.ended,
-            'ops_per_ns': self.ops_per_ns,
-            'threads': self.threads
+            "started": self.started,
+            "ended": self.ended,
+            "ops_per_ns": self.ops_per_ns,
+            "threads": self.threads,
         }
 
 
 def _translate_to_perf_json(timers):
     out = []
     for name, timer in timers.items():
-        out.append({
-            'name': name,
-            'workload': name,
-            'start': timer['started'] / 100000,
-            'end': timer['ended'] / 100000,
-            'results': {
-                len(timer['threads']): {
-                    'ops_per_sec': timer['ops_per_ns'] * 1e9,
-                    'ops_per_sec_values': [timer['ops_per_ns'] * 1e9]
-                }
+        out.append(
+            {
+                "name": name,
+                "workload": name,
+                "start": timer["started"] / 100000,
+                "end": timer["ended"] / 100000,
+                "results": {
+                    len(timer["threads"]): {
+                        "ops_per_sec": timer["ops_per_ns"] * 1e9,
+                        "ops_per_sec_values": [timer["ops_per_ns"] * 1e9],
+                    }
+                },
             }
-        })
-    return {'results': out}
+        )
+    return {"results": out}
 
 
 def run(args):
@@ -70,7 +75,7 @@ def run(args):
         report = None
 
         for line, actor in data_reader:
-            cur_metric_name = '{}-{}'.format(actor, line[IntermediateCSVColumns.OPERATION])
+            cur_metric_name = "{}-{}".format(actor, line[IntermediateCSVColumns.OPERATION])
 
             if cur_metric_name != metric_name:
                 if report:
@@ -92,7 +97,7 @@ def run(args):
 
             iterations = iterations + 1
             if iterations % 1e6 == 0:
-                logging.info('Processed %d metrics lines', iterations)
+                logging.info("Processed %d metrics lines", iterations)
 
         if report:
             # pylint: disable=protected-access
@@ -100,7 +105,7 @@ def run(args):
 
     result = _translate_to_perf_json(timers)
 
-    with open(args.report_file, 'w') as f:
+    with open(args.report_file, "w") as f:
         json.dump(result, f)
 
 

@@ -151,6 +151,10 @@ tasks:
   commands:
   - func: f_lint_workloads
 
+- name: t_lint_python
+  commands:
+  - func: f_lint_python
+
 - name: t_cmake_test
   commands:
   - func: f_cmake_test
@@ -219,6 +223,7 @@ task_groups:
   # run after t_compile.
   - t_compile
   - t_python_test
+  - t_lint_python
   - t_lint_workloads
   - t_cmake_test
 
@@ -234,6 +239,7 @@ task_groups:
   - t_compile
   - t_mongo_server
   - t_python_test
+  - t_lint_python
   - t_cmake_test
   - t_integration_test_standalone
   - t_integration_test_single_node_replset
@@ -502,6 +508,31 @@ functions:
         popd
 
         lint-workloads
+
+  ##
+  # Lint python
+  ##
+  f_lint_python:
+  - command: shell.exec
+    params:
+      continue_on_err: true
+      working_dir: src
+      shell: bash
+      script: |
+        set -eo pipefail
+
+        export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+
+        python3 -m virtualenv venv
+        source venv/bin/activate
+
+        # Install Genny python scripts into the virtualenv
+        pushd src/python
+          python3 setup.py install
+        popd
+
+        black --check src/python src/lamplib
+
 
   ##
   # Reports test results to evergreen API.

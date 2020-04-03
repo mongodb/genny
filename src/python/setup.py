@@ -14,32 +14,28 @@
 
 from setuptools import setup
 
-setup(name='genny',
-      version='1.0',
-      packages=[
-          'gennylib',
-          'gennylib.parsers',
-          'third_party'
-      ],
-      install_requires=[
-          'nose==1.3.7',
-          'yapf==0.24.0',
-          'pymongo==3.7.2',
-          'PyYAML==5.1',
-          'requests==2.21.0',
-          'yamllint==1.15.0',
-          'shrub.py==0.2.3'
-      ],
-      setup_requires=[
-          'nose==1.3.7'
-      ],
-      entry_points={
-          'console_scripts': [
-              'genny-metrics-report = gennylib.cedar_report:main__cedar_report',
-              'genny-metrics-legacy-report = gennylib.legacy_report:main__legacy_report',
-              'lint-yaml = gennylib.yaml_linter:main',
-              'genny = gennylib.genny_runner:main_genny_runner',
-              'genny-auto-tasks = gennylib.genny_auto_tasks:main'
-          ]
-      },
-      )
+setup(
+    name="genny",
+    version="1.0",
+    packages=["gennylib", "gennylib.parsers", "third_party"],
+    install_requires=[
+        "nose==1.3.7",
+        "yapf==0.24.0",
+        "pymongo==3.7.2",
+        "PyYAML==5.1",
+        "requests==2.21.0",
+        "yamllint==1.15.0",
+        "shrub.py==0.2.3",
+        "black==19.10b0",
+    ],
+    setup_requires=["nose==1.3.7"],
+    entry_points={
+        "console_scripts": [
+            "genny-metrics-report = gennylib.cedar_report:main__cedar_report",
+            "genny-metrics-legacy-report = gennylib.legacy_report:main__legacy_report",
+            "lint-yaml = gennylib.yaml_linter:main",
+            "genny = gennylib.genny_runner:main_genny_runner",
+            "genny-auto-tasks = gennylib.genny_auto_tasks:main",
+        ]
+    },
+)

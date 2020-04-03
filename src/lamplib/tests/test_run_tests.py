@@ -7,13 +7,12 @@ from tasks.run_tests import cmake_test
 
 
 class TestRunTests(unittest.TestCase):
-
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_cmake_test(self, mock_subprocess_run):
         with tempfile.TemporaryDirectory() as temp_dir:
-            expected_file = os.path.join(temp_dir, 'build', 'sentinel.junit.xml')
+            expected_file = os.path.join(temp_dir, "build", "sentinel.junit.xml")
             os.chdir(temp_dir)
-            os.mkdir('build')  # Simulate build dir in the genny repo.
+            os.mkdir("build")  # Simulate build dir in the genny repo.
 
             def fail(*args, **kwargs):
                 res = unittest.mock.Mock()
