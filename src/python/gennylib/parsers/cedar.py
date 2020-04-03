@@ -283,10 +283,12 @@ def run(args):
         time_file = os.path.join(args.input_file, "start_time.txt")
         duration = datetime.now() - datetime.fromtimestamp(os.path.getmtime(time_file))
 
+        # We expect that, at poplar-send time, the directory of FTDC files is in the CWD.
+        ftdc_dir = os.path.basename(os.path.normpath(args.input_file))
         metrics_file_names = []
         for filename in os.listdir(args.input_file):
             if filename != "start_time.txt":
-                metrics_file_names.append(os.path.join(args.input_file, filename))
+                metrics_file_names.append(os.path.join(ftdc_dir, filename))
 
         return metrics_file_names, duration
 
