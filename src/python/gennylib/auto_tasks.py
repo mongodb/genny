@@ -13,11 +13,11 @@ from shrub.config import Configuration
 from shrub.variant import TaskSpec
 
 
-def to_snake_case(camel_case):
+def _to_snake_case(camel_case):
     """
-    Converts str to snake_case, useful for generating test id's
-    From: https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
-    :return: snake_case version of str.
+    Converts CamelCase to snake_case, useful for generating test IDs
+    https://stackoverflow.com/questions/1175208/
+    :return: snake_case version of camel_case.
     """
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel_case)
     s2 = re.sub("-", "_", s1)
@@ -174,11 +174,11 @@ class Workload:
         return self.file_path.split("src/workloads/")[1]
 
     def all_tasks(self) -> List[GeneratedTask]:
-        base = to_snake_case(self.file_base_name())
+        base = _to_snake_case(self.file_base_name())
         if self.setups is None:
             return [GeneratedTask(base, None, self)]
         return [
-            GeneratedTask(f"{base}_{to_snake_case(setup)}", setup, self) for setup in self.setups
+            GeneratedTask(f"{base}_{_to_snake_case(setup)}", setup, self) for setup in self.setups
         ]
 
     def variant_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
