@@ -289,4 +289,5 @@ AutoRun:
     bootstrap:
       mongodb_setup:
         - standalone
+        - replica
         - shard-lite
