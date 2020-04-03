@@ -1,3 +1,107 @@
+"""
+                                All Tasks Legacy
+
+- Invoked as
+
+        genny/genny/scripts/genny_auto_tasks.sh \
+            --generate-all-tasks \
+            --output build/all_tasks.json
+        cat ../src/genny/genny/build/all_tasks.json
+
+- cwd           `${workdir}/src`
+- genny root    `${workdir}/src/genny/genny`                        == `./genny/genny`
+- output file   `${workdir}/src/genny/genny/build/all_tasks.json`   == `./genny/genny/build/all_tasks.json`
+- Does not rely on any environment yaml files
+
+
+                            Patch Tasks Legacy
+
+- Invoked as
+
+        genny/genny/scripts/genny_auto_tasks.sh \
+            --output build/patch_tasks.json \
+            --variants "${build_variant}" --modified
+        cat genny/genny/build/patch_tasks.json
+
+- cwd           `${workdir}/src`
+- genny root    `${workdir}/src/genny/genny`                        == `./genny/genny`
+- output file   `${workdir}/src/genny/genny/build/patch_tasks.json` == `./genny/genny/build/patch_tasks.json`
+- Does not rely on any environment yaml files
+
+
+                        Variant Tasks Legacy
+
+- Invoked as
+
+        ../src/genny/genny/scripts/genny_auto_tasks.sh \
+            --output build/auto_tasks.json --variants "${build_variant}" \
+            --autorun
+        cat ../src/genny/genny/build/auto_tasks.json
+
+- cwd            `${workdir}/work`
+- genny root     `${workdir}/src/genny/genny`                       == `../src/genny/genny`
+- output file    `${workdir}/src/genny/genny/build/auto_tasks.json` == `../src/genny/genny/build/auto_tasks.json`
+- Relies on bootstrap.yml etc in current directory
+
+
+                    All Tasks Modern
+
+- Invoked as
+
+        ${workdir}/src/genny/genny_all_tasks.sh
+
+- cwd           `${workdir}`
+- genny root    `${workdir}/src/genny`                  == `./src/genny`
+- output file   `${workdir}/run/build/Tasks/Tasks.json  == `./run/build/Tasks/Tasks.json`
+- Does not rely on any environment yaml files
+
+
+                    Patch Tasks Modern
+
+- Invoked as
+
+        ${workdir}/src/genny/genny_patch_tasks.sh
+
+- cwd           `${workdir}`
+- genny root    `${workdir}/src/genny`                  == `./src/genny`
+- output file   `${workdir}/run/build/Tasks/Tasks.json  == `./run/build/Tasks/Tasks.json`
+- Does not rely on any environment yaml files
+
+
+                    Variant Tasks Modern
+
+- Invoked as
+
+        ${workdir}/src/genny/genny_variant_tasks.sh
+
+- cwd           `${workdir}`
+- genny root    `${workdir}/src/genny`                  == `./src/genny`
+- output file   `${workdir}/run/build/Tasks/Tasks.json  == `./run/build/Tasks/Tasks.json`
+- Relies on     `${workdir}/expansions.yml`
+
+
+                    Summary
+
+- If we have `./expansions.yml`, then
+
+    - Genny root is `./src/genny`
+    - List workloads from `./src/genny/src/workloads`
+    - Output to `./run/build/Tasks/Tasks.json`
+
+- If we have `./genny/genny`, then
+
+    - Genny root is `./genny/genny`
+    - List workloads from `./genny/genny/src/workloads`
+    - Output to `./genny/genny/build/*.json`
+
+- Else, we must have `../src/genny/genny` and
+
+    - Genny root is `../src/genny/genny`
+    - List workloads from `../genny/genny/src/workloads`
+    - Output to `../src/genny/genny/build/auto_tasks.json`
+
+"""
+
 import glob
 import os
 import re
@@ -22,22 +126,6 @@ def _to_snake_case(camel_case):
     s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel_case)
     s2 = re.sub("-", "_", s1)
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s2).lower()
-
-
-def _findup(fpath: str, cwd: str):
-    """
-    Look "up" the directory tree for fpath starting at cwd.
-    Raises if not found.
-    :param fpath:
-    :param cwd:
-    :return:
-    """
-    curr = cwd
-    while os.path.exists(curr):
-        if os.path.exists(os.path.join(curr, fpath)):
-            return os.path.normpath(curr)
-        curr = os.path.join(curr, "..")
-    raise BaseException("Cannot find {} in {} or any parent dirs.".format(fpath, cwd))
 
 
 def _check_output(cwd, *args, **kwargs):
@@ -224,7 +312,6 @@ class LegacyConfigWriter(ConfigWriter):
                 ]
             )
         return c
-
 
 class CLI:
     def __init__(self, cwd: str = None):
