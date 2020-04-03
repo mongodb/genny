@@ -110,7 +110,6 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup:
-        - shard
-        - shard-lite
+    mongodb_setup:
+    - shard
+    - shard-lite

@@ -286,8 +286,7 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup:
-        - standalone
-        - replica
-        - shard-lite
+    mongodb_setup:
+    - standalone
+    - replica
+    - shard-lite

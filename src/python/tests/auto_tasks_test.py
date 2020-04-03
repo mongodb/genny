@@ -98,7 +98,7 @@ class AutoTasksTest(unittest.TestCase):
         mock_safe_load.return_value = {
             'AutoRun': {
                 'PrepareEnvironmentWith': {
-                    'setup': ['first', 'second']
+                    'mongodb_setup': ['first', 'second']
                 }
             }
         }
@@ -310,6 +310,7 @@ class AutoTasksTest(unittest.TestCase):
             env_dict = tc[1]
             expected = tc[2]
 
-            autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_yaml)
-            actual = workload_should_autorun(autorun_spec, env_dict)
-            self.assertEqual(expected, actual)
+            with self.subTest(tc):
+                autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_yaml)
+                actual = workload_should_autorun(autorun_spec, env_dict)
+                self.assertEqual(expected, actual)
