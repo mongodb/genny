@@ -5,6 +5,7 @@ import argparse
 import json
 import logging
 import sys
+import os
 
 from gennylib.parsers.csv2 import CSV2, IntermediateCSVColumns
 
