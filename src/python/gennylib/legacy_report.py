@@ -62,6 +62,11 @@ def _translate_to_perf_json(timers):
 def run(args):
     timers = {}
 
+    # There may not be a CSV file and DSI wouldn't
+    # know without reading the workload yml.
+    if not os.path.exists(args.input_file):
+        return
+
     my_csv2 = CSV2(args.input_file)
 
     iterations = 0
