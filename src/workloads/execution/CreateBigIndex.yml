@@ -90,5 +90,4 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup: single-replica
+    mongodb_setup: [single-replica]

@@ -22,9 +22,9 @@ _sentinel_report = """
 
 
 def _run_command_with_sentinel_report(cmd_func, checker_func=None):
-    sentinel_file = os.path.join(os.getcwd(), 'build', 'sentinel.junit.xml')
+    sentinel_file = os.path.join(os.getcwd(), "build", "sentinel.junit.xml")
 
-    with open(sentinel_file, 'w') as f:
+    with open(sentinel_file, "w") as f:
         f.write(_sentinel_report)
 
     res = cmd_func()
@@ -32,26 +32,26 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
     if checker_func:
         success = checker_func()
     else:
-        success = (res.returncode == 0)
+        success = res.returncode == 0
 
     if success:
-        logging.debug('Test succeeded, removing sentinel report')
+        logging.debug("Test succeeded, removing sentinel report")
         os.remove(sentinel_file)
     else:
-        logging.debug('Test failed, leaving sentinel report in place')
+        logging.debug("Test failed, leaving sentinel report in place")
 
 
 def cmake_test(env):
     # This can only be imported after the setup script has installed gennylib.
     from gennylib.genny_runner import poplar_grpc
 
-    workdir = os.path.join(os.getcwd(), 'build')
+    workdir = os.path.join(os.getcwd(), "build")
 
     ctest_cmd = [
-        'ctest',
-        '--verbose',
-        '--label-exclude',
-        '(standalone|sharded|single_node_replset|three_node_replset|benchmark)'
+        "ctest",
+        "--verbose",
+        "--label-exclude",
+        "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
 
     with poplar_grpc():
@@ -59,9 +59,9 @@ def cmake_test(env):
 
 
 def benchmark_test(env):
-    workdir = os.path.join(os.getcwd(), 'build')
+    workdir = os.path.join(os.getcwd(), "build")
 
-    ctest_cmd = ['ctest', '--label-regex', '(benchmark)']
+    ctest_cmd = ["ctest", "--label-regex", "(benchmark)"]
 
     _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
 
@@ -69,13 +69,13 @@ def benchmark_test(env):
 def _check_create_new_actor_test_report(workdir):
     passed = False
 
-    report_file = os.path.join(workdir, 'build', 'create_new_actor_test.junit.xml')
+    report_file = os.path.join(workdir, "build", "create_new_actor_test.junit.xml")
 
     if not os.path.isfile(report_file):
-        logging.error('Failed to find report file: %s', report_file)
+        logging.error("Failed to find report file: %s", report_file)
         return passed
 
-    expected_error = "failure message=\"100 == 101\""
+    expected_error = 'failure message="100 == 101"'
 
     with open(report_file) as f:
         report = f.read()
@@ -84,8 +84,11 @@ def _check_create_new_actor_test_report(workdir):
     if passed:
         os.remove(report_file)  # Remove the report file for the expected failure.
     else:
-        logging.error('test for create-new-actor script did not succeed. Failed to find expected '
-                      'error message %s in report file', expected_error)
+        logging.error(
+            "test for create-new-actor script did not succeed. Failed to find expected "
+            "error message %s in report file",
+            expected_error,
+        )
 
     return passed
 
@@ -95,7 +98,7 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
     checker_func = None
 
     if is_cnats:
-        suites = os.path.join(workdir, 'src', 'resmokeconfig', 'genny_create_new_actor.yml')
+        suites = os.path.join(workdir, "src", "resmokeconfig", "genny_create_new_actor.yml")
         checker_func = lambda: _check_create_new_actor_test_report(workdir)
 
     if (not suites) and (not is_cnats):
@@ -103,19 +106,24 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
 
     if not mongo_dir:
         # Default mongo directory in Evergreen.
-        mongo_dir = os.path.join(workdir, 'build', 'mongo')
+        mongo_dir = os.path.join(workdir, "build", "mongo")
         # Default download location for MongoDB binaries.
-        env['PATH'] += ':' + os.path.join(mongo_dir, 'bin') + ':' + mongo_dir
+        env["PATH"] += ":" + os.path.join(mongo_dir, "bin") + ":" + mongo_dir
 
-    evg_venv_dir = os.path.join(workdir, 'build', 'venv')
+    evg_venv_dir = os.path.join(workdir, "build", "venv")
 
     cmds = []
     if os.path.isdir(evg_venv_dir):
-        cmds.append('source ' + os.path.join(evg_venv_dir, 'bin', 'activate'))
+        cmds.append("source " + os.path.join(evg_venv_dir, "bin", "activate"))
 
     cmds.append(
-        'python ' + os.path.join(mongo_dir, 'buildscripts', 'resmoke.py') + ' --suite ' + suites +
-        ' --mongod mongod --mongo mongo --mongos mongos')
+        "python "
+        + os.path.join(mongo_dir, "buildscripts", "resmoke.py")
+        + " --suite "
+        + suites
+        + " --mongod mongod --mongo mongo --mongos mongos"
+    )
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(';'.join(cmds), cwd=workdir, env=env, shell=True), checker_func)
+        lambda: subprocess.run(";".join(cmds), cwd=workdir, env=env, shell=True), checker_func
+    )

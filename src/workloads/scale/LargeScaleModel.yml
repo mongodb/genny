@@ -436,6 +436,5 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup:
-        - standalone
+    mongodb_setup:
+    - standalone

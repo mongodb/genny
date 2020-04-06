@@ -71,7 +71,6 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup: 
-        - replica
-        - replica-noflowcontrol
+    mongodb_setup: 
+    - replica
+    - replica-noflowcontrol

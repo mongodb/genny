@@ -11,38 +11,48 @@ from tasks.download import ToolchainDownloader, CuratorDownloader
 from context import Context
 from parser import add_args_to_context
 
+
 def check_venv(args):
-    if not 'VIRTUAL_ENV' in os.environ and not args.run_global:
-        logging.error('Tried to execute without active virtualenv. If you want to run lamp '
-                      'without a virtualenv, use the --run-global option.')
+    if not "VIRTUAL_ENV" in os.environ and not args.run_global:
+        logging.error(
+            "Tried to execute without active virtualenv. If you want to run lamp "
+            "without a virtualenv, use the --run-global option."
+        )
         sys.exit(1)
 
+
 def run_self_test():
-    res = subprocess.run(['python3', '-m', 'unittest'],
-                         cwd=os.path.dirname(os.path.abspath(__file__)))
+    res = subprocess.run(
+        ["python3", "-m", "unittest"], cwd=os.path.dirname(os.path.abspath(__file__))
+    )
     res.check_returncode()
     sys.exit(0)
 
+
 def python_version_string():
-    return '.'.join(map(str, sys.version_info))[0:5]
+    return ".".join(map(str, sys.version_info))[0:5]
+
 
 def validate_environment():
     # Check Python version
     if not sys.version_info >= (3, 7):
-        raise OSError('Detected Python version {version} less than 3.7. Please delete '
-                      'the virtualenv and run lamp again.'.format(version=python_version_string()))
+        raise OSError(
+            "Detected Python version {version} less than 3.7. Please delete "
+            "the virtualenv and run lamp again.".format(version=python_version_string())
+        )
 
     # Check the macOS version. Non-mac platforms return a tuple of empty strings
     # for platform.mac_ver().
     if platform.mac_ver()[0]:
-        release_triplet = platform.mac_ver()[0].split('.')
+        release_triplet = platform.mac_ver()[0].split(".")
         if int(release_triplet[1]) < 14:
             # You could technically compile clang or gcc yourself on an older version
             # of macOS, but it's untested so we might as well just enforce
             # a blanket minimum macOS version for simplicity.
-            logging.error('Genny requires macOS 10.14 Mojave or newer')
+            logging.error("Genny requires macOS 10.14 Mojave or newer")
             sys.exit(1)
     return
+
 
 def main():
     validate_environment()
@@ -55,11 +65,11 @@ def main():
     # Pass around Context instead of using the global one to facilitate testing.
     context = Context
 
-    check_venv(args)        
+    check_venv(args)
 
     # Execute the minimum amount of code possible to run self tests to minimize
     # untestable code (i.e. code that runs the self-test).
-    if args.subcommand == 'self-test':
+    if args.subcommand == "self-test":
         run_self_test()
 
     toolchain_downloader = ToolchainDownloader(os_family, args.linux_distro)
@@ -73,29 +83,33 @@ def main():
         sys.exit(1)
     curator_path = curator_downloader.result_dir
 
-
     if not args.subcommand:
-        logging.info('No subcommand specified; running cmake, compile and install')
-        tasks.cmake(context, toolchain_dir=toolchain_dir,
-                    env=compile_env, cmdline_cmake_args=cmake_args)
+        logging.info("No subcommand specified; running cmake, compile and install")
+        tasks.cmake(
+            context, toolchain_dir=toolchain_dir, env=compile_env, cmdline_cmake_args=cmake_args
+        )
         tasks.compile_all(context, compile_env)
         tasks.install(context, compile_env)
-    elif args.subcommand == 'clean':
+    elif args.subcommand == "clean":
         tasks.clean(context, compile_env)
     else:
         tasks.compile_all(context, compile_env)
-        if args.subcommand == 'install':
+        if args.subcommand == "install":
             tasks.install(context, compile_env)
-        elif args.subcommand == 'cmake-test':
+        elif args.subcommand == "cmake-test":
             tasks.run_tests.cmake_test(compile_env)
-        elif args.subcommand == 'benchmark-test':
+        elif args.subcommand == "benchmark-test":
             tasks.run_tests.benchmark_test(compile_env)
-        elif args.subcommand == 'resmoke-test':
-            tasks.run_tests.resmoke_test(compile_env, suites=args.resmoke_suites,
-                                         mongo_dir=args.resmoke_mongo_dir, is_cnats=args.resmoke_cnats)
+        elif args.subcommand == "resmoke-test":
+            tasks.run_tests.resmoke_test(
+                compile_env,
+                suites=args.resmoke_suites,
+                mongo_dir=args.resmoke_mongo_dir,
+                is_cnats=args.resmoke_cnats,
+            )
         else:
-            raise ValueError('Unknown subcommand: ', args.subcommand)
+            raise ValueError("Unknown subcommand: ", args.subcommand)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -55,5 +55,4 @@ Actors:
 
 AutoRun:
   Requires:
-    bootstrap:
-      mongodb_setup: single-replica-15gbwtcache
+    mongodb_setup: [single-replica-15gbwtcache]

@@ -12,56 +12,58 @@ import requests
 
 from gennylib.parsers import cedar
 
-CedarBucketConfig = namedtuple('CedarBucketConfig', [
-    'api_key',
-    'api_secret',
-    'api_token',
-    'region',
-    'name'
-])
+CedarBucketConfig = namedtuple(
+    "CedarBucketConfig", ["api_key", "api_secret", "api_token", "region", "name"]
+)
 
-CedarTestArtifact = namedtuple('CedarTestArtifact', [
-    'bucket',
-    'path',
-    'tags',  # [str]
-    'local_path',
-    'created_at',
-    'convert_bson_to_ftdc',
-    'prefix',
-    'permissions'
-])
+CedarTestArtifact = namedtuple(
+    "CedarTestArtifact",
+    [
+        "bucket",
+        "path",
+        "tags",  # [str]
+        "local_path",
+        "created_at",
+        "convert_bson_to_ftdc",
+        "prefix",
+        "permissions",
+    ],
+)
 
-CedarTestInfo = namedtuple('CedarTestInfo', [
-    'test_name',
-    'trial',
-    'tags',  # [str]
-    'args'  # {str: str}
-])
+CedarTestInfo = namedtuple(
+    "CedarTestInfo", ["test_name", "trial", "tags", "args"]  # [str]  # {str: str}
+)
 
-CedarTest = namedtuple('CedarTest', [
-    'info',  # CedarTestInfo
-    'created_at',
-    'completed_at',
-    'artifacts',  # [CedarTestArtifact]
-    'metrics',  # unused
-    'sub_tests'  # unused
-])
+CedarTest = namedtuple(
+    "CedarTest",
+    [
+        "info",  # CedarTestInfo
+        "created_at",
+        "completed_at",
+        "artifacts",  # [CedarTestArtifact]
+        "metrics",  # unused
+        "sub_tests",  # unused
+    ],
+)
 
-CedarReport = namedtuple('CedarReport', [
-    'project',
-    'version',
-    'order',
-    'variant',
-    'task_name',
-    'task_id',
-    'execution_number',
-    'mainline',
-    'tests',  # [CedarTest]
-    'bucket'  # BucketConfig
-])
+CedarReport = namedtuple(
+    "CedarReport",
+    [
+        "project",
+        "version",
+        "order",
+        "variant",
+        "task_name",
+        "task_id",
+        "execution_number",
+        "mainline",
+        "tests",  # [CedarTest]
+        "bucket",  # BucketConfig
+    ],
+)
 
-DEFAULT_REPORT_FILE = 'cedar_report.json'
-DEFAULT_DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
+DEFAULT_REPORT_FILE = "cedar_report.json"
+DEFAULT_DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 class _Config(object):
@@ -71,31 +73,31 @@ class _Config(object):
 
     def __init__(self, env, metrics_file_names, test_run_time):
         # EVG related.
-        self.project = env['project']
-        self.version = env['version_id']
-        self.variant = env['build_variant']
-        self.task_name = env['task_name']
-        self.task_id = env['task_id']
-        self.execution_number = int(env['execution'])
+        self.project = env["project"]
+        self.version = env["version_id"]
+        self.variant = env["build_variant"]
+        self.task_name = env["task_name"]
+        self.task_id = env["task_id"]
+        self.execution_number = int(env["execution"])
         # This env var is either the string "true" or unset.
-        self.mainline = not (env.get('is_patch', '') == 'true')
+        self.mainline = not (env.get("is_patch", "") == "true")
 
         try:
-            self.order = int(env['revision_order_id'])
+            self.order = int(env["revision_order_id"])
         except (ValueError, TypeError):
             self.order = None
 
         # We set these for convenience.
-        self.test_name = env['test_name']
+        self.test_name = env["test_name"]
         self.metrics_file_names = metrics_file_names
         self.test_run_time = test_run_time
         self.now = datetime.datetime.utcnow()
 
         # AWS related.
-        self.api_key = env['terraform_key']
-        self.api_secret = env['terraform_secret']
-        self.cloud_region = 'us-east-1'  # N. Virginia.
-        self.cloud_bucket = 'genny-metrics'
+        self.api_key = env["terraform_key"]
+        self.api_secret = env["terraform_secret"]
+        self.cloud_region = "us-east-1"  # N. Virginia.
+        self.cloud_bucket = "genny-metrics"
 
     @property
     def created_at(self):
@@ -105,7 +107,7 @@ class _Config(object):
 def build_report(config, args):
     sub_tests = []
 
-    bucket_prefix = '{}_{}'.format(config.task_id, config.execution_number)
+    bucket_prefix = "{}_{}".format(config.task_id, config.execution_number)
 
     for path in config.metrics_file_names:
         base_name = os.path.basename(path)
@@ -117,17 +119,12 @@ def build_report(config, args):
             tags=[],
             local_path=path,
             created_at=config.created_at,
-            convert_bson_to_ftdc= not cedar.is_ftdc(args),
+            convert_bson_to_ftdc = not cedar.is_ftdc(args),
             permissions='public-read',
-            prefix=bucket_prefix
+            prefix=bucket_prefix,
         )
 
-        ti = CedarTestInfo(
-            test_name=test_name,
-            trial=0,
-            tags=[],
-            args={}
-        )
+        ti = CedarTestInfo(test_name=test_name, trial=0, tags=[], args={})
 
         t = CedarTest(
             info=ti._asdict(),
@@ -135,11 +132,9 @@ def build_report(config, args):
             completed_at=config.now,
             artifacts=[a._asdict()],
             metrics=None,
-            sub_tests=None
+            sub_tests=None,
         )
         sub_tests.append(t._asdict())
-
-
 
     bucket_config = CedarBucketConfig(
         api_key=config.api_key,
@@ -149,12 +144,7 @@ def build_report(config, args):
         name=config.cloud_bucket,
     )
 
-    test_info = CedarTestInfo(
-        test_name=config.test_name,
-        trial=0,
-        tags=[],
-        args={}
-    )
+    test_info = CedarTestInfo(test_name=config.test_name, trial=0, tags=[], args={})
 
     test = CedarTest(
         info=test_info._asdict(),
@@ -162,7 +152,7 @@ def build_report(config, args):
         completed_at=config.now,
         artifacts=[],
         metrics=None,
-        sub_tests=sub_tests
+        sub_tests=sub_tests,
     )
 
     report = CedarReport(
@@ -175,7 +165,7 @@ def build_report(config, args):
         execution_number=config.execution_number,
         mainline=config.mainline,
         tests=[test._asdict()],
-        bucket=bucket_config._asdict()
+        bucket=bucket_config._asdict(),
     )
 
     return report._asdict()
@@ -185,10 +175,7 @@ class CertRetriever(object):
     """Retrieves client certificate and key from the cedar API using Jira username and password."""
 
     def __init__(self, username, password):
-        self.auth = json.dumps({
-            'username': username,
-            'password': password
-        })
+        self.auth = json.dumps({"username": username, "password": password})
 
     @staticmethod
     def _fetch(url, output, **kwargs):
@@ -196,7 +183,7 @@ class CertRetriever(object):
             return output
         resp = requests.get(url, **kwargs)
         resp.raise_for_status()
-        with open(output, 'w') as pem:
+        with open(output, "w") as pem:
             pem.write(resp.text)
         return output
 
@@ -204,35 +191,45 @@ class CertRetriever(object):
         """
         :return: the root cert authority pem file from cedar
         """
-        return self._fetch('https://cedar.mongodb.com/rest/v1/admin/ca', 'cedar.ca.pem')
+        return self._fetch("https://cedar.mongodb.com/rest/v1/admin/ca", "cedar.ca.pem")
 
     def user_cert(self):
         """
         :return: the user-level pem
         """
         return self._fetch(
-            'https://cedar.mongodb.com/rest/v1/admin/users/certificate',
-            'cedar.user.crt',
-            data=self.auth)
+            "https://cedar.mongodb.com/rest/v1/admin/users/certificate",
+            "cedar.user.crt",
+            data=self.auth,
+        )
 
     def user_key(self):
         """
         :return: the user-level key
         """
         return self._fetch(
-            'https://cedar.mongodb.com/rest/v1/admin/users/certificate/key',
-            'cedar.user.key',
-            data=self.auth)
+            "https://cedar.mongodb.com/rest/v1/admin/users/certificate/key",
+            "cedar.user.key",
+            data=self.auth,
+        )
 
 
 def build_parser():
     parser = cedar.build_parser()
     parser.description += " and create a cedar report"
-    parser.add_argument('--report-file', default=DEFAULT_REPORT_FILE, help='path to generated report file')
-    parser.add_argument('--test-name', help='human friendly name for this test, defaults to the '
-                                            'EVG_task_name environment variable')
-    parser.add_argument('--expansions-file', default='expansions.yml',
-                        help='expansions-file with configuration needed by cedar')
+    parser.add_argument(
+        "--report-file", default=DEFAULT_REPORT_FILE, help="path to generated report file"
+    )
+    parser.add_argument(
+        "--test-name",
+        help="human friendly name for this test, defaults to the "
+        "EVG_task_name environment variable",
+    )
+    parser.add_argument(
+        "--expansions-file",
+        default="expansions.yml",
+        help="expansions-file with configuration needed by cedar",
+    )
     return parser
 
 
@@ -258,21 +255,21 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     args = parser.parse_args(argv)
 
     if not env:
-        with open(args.expansions_file, 'r') as f:
+        with open(args.expansions_file, "r") as f:
             env = yaml.safe_load(f)
 
     if args.test_name:
-        env['test_name'] = args.test_name
+        env["test_name"] = args.test_name
     else:
-        env['test_name'] = env['task_name']
+        env["test_name"] = env["task_name"]
 
     metrics_file_names, test_run_time = cedar.run(args)
     config = _Config(env, metrics_file_names, test_run_time)
 
     report_dict = build_report(config, args)
 
-    with open(args.report_file, 'w') as f:
+    with open(args.report_file, "w") as f:
         json.dump(report_dict, f, cls=RFCDateTimeEncoder)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main__cedar_report()
