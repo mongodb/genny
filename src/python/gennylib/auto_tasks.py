@@ -127,7 +127,7 @@ import re
 import subprocess
 import sys
 from abc import ABC
-from typing import NamedTuple, List, Optional
+from typing import NamedTuple, List, Optional, Set
 
 import yaml
 
@@ -171,7 +171,7 @@ class Lister:
     def _normalize_path(filename: str) -> str:
         return filename.split("workloads/", 1)[1]
 
-    def modified_workload_files(self):
+    def modified_workload_files(self) -> Set[str]:
         command = (
             "git diff --name-only --diff-filter=AMR "
             # TODO: don't use rtimmons/
@@ -181,7 +181,7 @@ class Lister:
         lines = _check_output(self.repo_root, command, shell=True)
         return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
 
-    def all_workload_files(self):
+    def all_workload_files(self) -> Set[str]:
         pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
         return {*glob.glob(pattern)}
 
@@ -233,7 +233,7 @@ class Runtime:
                 conts = bootstrap
         self.conts = conts
 
-    def has(self, key: str, acceptable_values: List[str]):
+    def has(self, key: str, acceptable_values: List[str]) -> bool:
         if key not in self.conts:
             raise Exception(f"Unknown key {key}. Know about {self.conts.keys()}")
         actual = self.conts[key]
@@ -274,10 +274,10 @@ class Workload:
                 )
             self.setups = prep["mongodb_setup"]
 
-    def file_base_name(self):
-        return os.path.basename(self.file_path).split(".yml")[0]
+    def file_base_name(self) -> str:
+        return str(os.path.basename(self.file_path).split(".yml")[0], encoding="utf-8")
 
-    def relative_path(self):
+    def relative_path(self) -> str:
         return self.file_path.split("src/workloads/")[1]
 
     def all_tasks(self) -> List[GeneratedTask]:
@@ -305,7 +305,7 @@ class ConfigWriter(ABC):
     def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
         raise NotImplementedError()
 
-    def variant_tasks(self, tasks: List[GeneratedTask], variant: str):
+    def variant_tasks(self, tasks: List[GeneratedTask], variant: str) -> Configuration:
         c = Configuration()
         c.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
         return c
@@ -332,6 +332,7 @@ class LegacyConfigWriter(ConfigWriter):
             )
         return c
 
+
 class CLI:
     def __init__(self, cwd: str = None):
         self.cwd = cwd if cwd else os.getcwd()
@@ -339,7 +340,7 @@ class CLI:
         self.repo = Repo(self.lister)
         self.runtime = Runtime(self.cwd)
 
-    def main(self):
+    def main(self) -> None:
         # argv = argv if argv else sys.argv
         # tasks = [task for w in self.repo.all_workloads() for task in w.all_tasks()]
         tasks = self.variant_tasks()
