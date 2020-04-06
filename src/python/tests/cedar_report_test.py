@@ -20,8 +20,7 @@ _FIXED_DATETIME = datetime.datetime(year=2000, month=1, day=1).isoformat()
 
 class CedarReportTest(unittest.TestCase):
 
-    @patch('gennylib.cedar_report.ShellCuratorRunner.run')
-    def test_cedar_report(self, mock_uploader_run):
+    def test_cedar_report(self):
         """
         This test documents the environment variables needed to run cedar_report.py and checks that
         the environment variables are correctly used.
@@ -48,11 +47,6 @@ class CedarReportTest(unittest.TestCase):
             'terraform_key': 'my_aws_key',
             'terraform_secret': 'my_aws_secret'
         }
-
-        expected_uploader_run_args = [
-            'curator', 'poplar', 'send', '--service', 'cedar.mongodb.com:7070', '--cert',
-            'cedar.user.crt', '--key', 'cedar.user.key', '--ca', 'cedar.ca.pem', '--path',
-            'cedar_report.json']
 
         expected_json = {
             'project': 'my_project',
@@ -160,18 +154,3 @@ class CedarReportTest(unittest.TestCase):
             report_json['tests'][0]['completed_at'] = _FIXED_DATETIME
 
             self.assertDictEqual(expected_json, report_json)
-
-        mock_uploader_run.assert_called_with(expected_uploader_run_args)
-
-    @patch('gennylib.cedar_report.ShellCuratorRunner.run')
-    def test_cedar_mode_skip(self, mock_uploader_run):
-        mock_env = {
-            'cedar_mode': 'skip',
-        }
-
-        with tempfile.TemporaryDirectory() as output_dir:
-            argv = [get_fixture('cedar', 'shared_with_cxx_metrics_test.csv'), output_dir]
-            main__cedar_report(argv, mock_env, _NoopCertRetriever)
-
-        mock_uploader_run.assert_not_called()
-
