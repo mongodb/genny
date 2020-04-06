@@ -292,6 +292,10 @@ def do_parse(args):
 def is_ftdc(args):
     return isdir(args.input_file)
 
+def get_ftdc_duration(args):
+    time_file = os.path.join(args.input_file, "start_time.txt")
+    return datetime.now() - datetime.fromtimestamp(os.path.getmtime(time_file))
+
 def run(args):
     """
     Runs the conversion from genny metrics to cedar format.
@@ -304,8 +308,7 @@ def run(args):
 
     """
     if is_ftdc(args):
-        time_file = os.path.join(args.input_file, "start_time.txt")
-        duration = datetime.now() - datetime.fromtimestamp(os.path.getmtime(time_file))
+        duration = get_ftdc_duration(args) 
 
         # We expect that, at poplar-send time, the directory of FTDC files is in the CWD.
         ftdc_dir = os.path.basename(os.path.normpath(args.input_file))

@@ -3,8 +3,6 @@ import json
 import tempfile
 import unittest
 
-from unittest.mock import patch
-
 from gennylib.cedar_report import CertRetriever, main__cedar_report
 from tests.cedar_test import get_fixture
 
