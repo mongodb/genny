@@ -225,49 +225,6 @@ class CertRetriever(object):
             data=self.auth)
 
 
-class ShellCuratorRunner(object):
-    """Runs curator"""
-
-    def __init__(self, retriever=None, report_file=DEFAULT_REPORT_FILE):
-        """
-        :param retriever: CertRetriever to use. Will construct one from given config if None
-        """
-        self.retriever = retriever
-        self.report_file = report_file
-
-    def get_send_command(self):
-        """
-        Gets command for calling poplar send.
-        """
-
-        command = [
-            'curator',
-            'poplar',
-            'send',
-            '--service',
-            'cedar.mongodb.com:7070',
-            '--cert',
-            self.retriever.user_cert(),
-            '--key',
-            self.retriever.user_key(),
-            '--ca',
-            self.retriever.root_ca(),
-            '--path',
-            self.report_file,
-        ]
-        return command
-
-    @staticmethod
-    def run(cmd):
-        """
-        Run curator in a subprocess.
-
-        :raises: CalledProcessError if return code is non-zero.
-        """
-        res = subprocess.run(cmd)
-        res.check_returncode()
-
-
 def build_parser():
     parser = cedar.build_parser()
     parser.description += " and create a cedar report"
@@ -319,14 +276,6 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
 
     with open(args.report_file, 'w') as f:
         json.dump(report_dict, f, cls=RFCDateTimeEncoder)
-
-    #jira_user = env['perf_jira_user']
-    #jira_pwd = env['perf_jira_pw']
-
-    #cr = cert_retriever_cls(jira_user, jira_pwd)
-    #runner = ShellCuratorRunner(cr, args.report_file)
-    #runner.run(runner.get_send_command())
-
 
 if __name__ == '__main__':
     main__cedar_report()

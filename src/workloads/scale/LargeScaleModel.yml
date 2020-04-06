@@ -14,7 +14,7 @@ GlobalDefaults:
   Random130String: &rand_100b_string {^RandomString: {length: 100}}
 
   # CHANGE: set to 300 minutes or longer
-  Duration: &Duration 70 minutes   # set low, so we can see the effect of scans
+  Duration: &Duration 12 hours   # set low, so we can see the effect of scans
   TrackProportion: &TrackProportion 0
 
   LongLivedDB: &LongLivedDB longlived  # name of the long lived database
@@ -439,3 +439,7 @@ AutoRun:
     bootstrap:
       mongodb_setup:
         - standalone
+
+Metrics:
+  Format: ftdc
+  Path: build/genny-metrics
