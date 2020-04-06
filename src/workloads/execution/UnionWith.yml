@@ -288,4 +288,5 @@ AutoRun:
   Requires:
     mongodb_setup:
     - standalone
+    - replica
     - shard-lite
