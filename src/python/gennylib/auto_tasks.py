@@ -121,6 +121,7 @@
 
 """
 
+import enum
 import glob
 import os
 import re
@@ -301,6 +302,12 @@ class Workload:
         ]
 
 
+class OpName(enum.Enum):
+    ALL_TASKS = object()
+    VARIANT_TASKS = object()
+    PATCH_TASKS = object()
+
+
 class ConfigWriter(ABC):
     def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
         raise NotImplementedError()
@@ -333,6 +340,22 @@ class LegacyConfigWriter(ConfigWriter):
         return c
 
 
+class ModernConfigWriter(ConfigWriter):
+    # TODO
+    pass
+
+
+class CLIOperation(NamedTuple):
+    mode: OpName
+    variant: Optional[str]
+    is_legacy: bool
+
+    @staticmethod
+    def parse(argv: List[str]) -> "CLIOperation":
+        # TODO
+        pass
+
+
 class CLI:
     def __init__(self, cwd: str = None):
         self.cwd = cwd if cwd else os.getcwd()
@@ -340,12 +363,23 @@ class CLI:
         self.repo = Repo(self.lister)
         self.runtime = Runtime(self.cwd)
 
-    def main(self) -> None:
-        # argv = argv if argv else sys.argv
-        # tasks = [task for w in self.repo.all_workloads() for task in w.all_tasks()]
-        tasks = self.variant_tasks()
-        writer = LegacyConfigWriter()
-        config = writer.variant_tasks(tasks, "standalone")
+    def main(self, argv: Optional[List[str]] = None) -> None:
+        argv = argv if argv else sys.argv
+        op = CLIOperation.parse(argv)
+        if op.mode == OpName.ALL_TASKS:
+            tasks = self.all_tasks()
+        elif op.mode == OpName.PATCH_TASKS:
+            tasks = self.patch_tasks()
+        elif op.mode == OpName.VARIANT_TASKS:
+            tasks = self.variant_tasks()
+        else:
+            raise Exception("Invalid operation mode")
+        writer = LegacyConfigWriter() if op.is_legacy else ModernConfigWriter()
+        if op.mode != OpName.ALL_TASKS:
+            config = writer.variant_tasks(tasks, op.variant)
+        else:
+            config = writer.variant_tasks(tasks, op.variant)
+        # TODO: write to proper file
         print(config.to_json())
 
     def all_tasks(self) -> List[GeneratedTask]:
@@ -354,7 +388,7 @@ class CLI:
         """
         return [task for workload in self.repo.all_workloads() for task in workload.all_tasks()]
 
-    def variant_tasks(self):
+    def variant_tasks(self) -> List[GeneratedTask]:
         """
         :return: Tasks to schedule given the current variant (runtime)
         """
@@ -364,7 +398,7 @@ class CLI:
             for task in workload.variant_tasks(self.runtime)
         ]
 
-    def patch_tasks(self):
+    def patch_tasks(self) -> List[GeneratedTask]:
         """
         :return: Tasks for modified workloads current variant (runtime)
         """
