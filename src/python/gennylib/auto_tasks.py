@@ -341,8 +341,23 @@ class LegacyConfigWriter(ConfigWriter):
 
 
 class ModernConfigWriter(ConfigWriter):
-    # TODO
-    pass
+    def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
+        c = Configuration()
+        c.exec_timeout(64800)  # 18 hours
+        for task in tasks:
+            bootstrap = {"test_control": task.name,
+                         "auto_workload_path": task.workload.relative_path()}
+            if task.mongodb_setup:
+                bootstrap["mongodb_setup"] = task.mongodb_setup
+
+            t = c.task(task.name)
+            t.priority(5)
+            t.commands(
+                [
+                    CommandDefinition().function("f_run_dsi_workload").vars(bootstrap),
+                ]
+            )
+        return c
 
 
 class CLIOperation(NamedTuple):
@@ -352,8 +367,31 @@ class CLIOperation(NamedTuple):
 
     @staticmethod
     def parse(argv: List[str]) -> "CLIOperation":
-        # TODO
-        pass
+        out = CLIOperation(OpName.ALL_TASKS, None, False)
+        if "--generate-all-tasks" in argv:
+            out.mode = OpName.ALL_TASKS
+            out.is_legacy = True
+        if "--modified" in argv:
+            out.mode = OpName.PATCH_TASKS
+            out.is_legacy = True
+        if "--autorun" in argv:
+            out.mode = OpName.VARIANT_TASKS
+            out.is_legacy = True
+        if out.mode in {OpName.PATCH_TASKS, OpName.VARIANT_TASKS}:
+            variant = argv.index("--variant")
+            out.variant = argv[variant+1]
+
+        if not out.is_legacy:
+            if argv[1] == "all_tasks":
+                out.mode = OpName.ALL_TASKS
+            if argv[1] == "patch_tasks":
+                out.mode = OpName.PATCH_TASKS
+            if argv[1] == "variant_tasks":
+                out.mode = OpName.VARIANT_TASKS
+            with open("expansions.yml") as exp:
+                parsed = yaml.safe_load(exp)
+                out.variant = parsed["build_variant"]
+        return out
 
 
 class CLI:
