@@ -162,6 +162,17 @@ def _check_output(cwd, *args, **kwargs):
     return out.decode().strip().split("\n")
 
 
+def _yaml_load(files: List[str]) -> dict:
+    out = dict()
+    for file in files:
+        if not os.path.exists(file):
+            continue
+        basename = os.path.basename(file).split(".yml")[0]
+        with open(file) as contents:
+            out[basename] = yaml.safe_load(contents)
+    return out
+
+
 class Lister:
     def __init__(self, repo_root: str):
         self.repo_root = repo_root
@@ -185,60 +196,49 @@ class Lister:
         return {*glob.glob(pattern)}
 
 
-def _yaml_load(files: List[str]) -> dict:
-    out = dict()
-    for file in files:
-        if not os.path.exists(file):
-            continue
-        basename = os.path.basename(file).split(".yml")[0]
-        with open(file) as contents:
-            out[basename] = yaml.safe_load(contents)
-    return out
+class OpName(enum.Enum):
+    ALL_TASKS = object()
+    VARIANT_TASKS = object()
+    PATCH_TASKS = object()
 
 
-class Repo:
-    def __init__(self, lister: Lister):
-        self._modified_repo_files = None
-        self.lister = lister
+class CLIOperation(NamedTuple):
+    mode: OpName
+    variant: Optional[str]
+    is_legacy: bool
+    output_file: str
+    repo_root: str  # TODO
 
-    def all_workloads(self) -> List["Workload"]:
-        all_files = self.lister.all_workload_files()
-        modified = self.lister.modified_workload_files()
-        return [Workload(fpath, fpath in modified) for fpath in all_files]
+    @staticmethod
+    def parse(argv: List[str]) -> "CLIOperation":
+        out = CLIOperation(OpName.ALL_TASKS, None, False, "")
+        if "--generate-all-tasks" in argv:
+            out.mode = OpName.ALL_TASKS
+            out.is_legacy = True
+        if "--modified" in argv:
+            out.mode = OpName.PATCH_TASKS
+            out.is_legacy = True
+        if "--autorun" in argv:
+            out.mode = OpName.VARIANT_TASKS
+            out.is_legacy = True
+        if out.mode in {OpName.PATCH_TASKS, OpName.VARIANT_TASKS}:
+            variant = argv.index("--variant")
+            out.variant = argv[variant + 1]
+        if "--output" in argv:
+            out.output_file = argv[argv.index("--output") + 1]
 
-    def modified_workloads(self) -> List["Workload"]:
-        return [workload for workload in self.all_workloads() if workload.is_modified]
-
-    def all_tasks(self) -> List["GeneratedTask"]:
-        """
-        :return: All possible tasks
-        """
-        return [task for workload in self.all_workloads() for task in workload.all_tasks()]
-
-    def variant_tasks(self, runtime: "Runtime"):
-        """
-        :return: Tasks to schedule given the current variant (runtime)
-        """
-        return [
-            task for workload in self.all_workloads() for task in workload.variant_tasks(runtime)
-        ]
-
-    def patch_tasks(self) -> List["GeneratedTask"]:
-        """
-        :return: Tasks for modified workloads current variant (runtime)
-        """
-        return [task for workload in self.modified_workloads() for task in workload.all_tasks()]
-
-    def tasks(self, op: "CLIOperation", runtime: "Runtime") -> List["GeneratedTask"]:
-        if op.mode == OpName.ALL_TASKS:
-            tasks = self.all_tasks()
-        elif op.mode == OpName.PATCH_TASKS:
-            tasks = self.patch_tasks()
-        elif op.mode == OpName.VARIANT_TASKS:
-            tasks = self.variant_tasks(runtime)
-        else:
-            raise Exception("Invalid operation mode")
-        return tasks
+        if not out.is_legacy:
+            out.output_file = "./run/build/Tasks/Tasks.json"
+            if argv[1] == "all_tasks":
+                out.mode = OpName.ALL_TASKS
+            if argv[1] == "patch_tasks":
+                out.mode = OpName.PATCH_TASKS
+            if argv[1] == "variant_tasks":
+                out.mode = OpName.VARIANT_TASKS
+            with open("expansions.yml") as exp:
+                parsed = yaml.safe_load(exp)
+                out.variant = parsed["build_variant"]
+        return out
 
 
 class Runtime:
@@ -331,14 +331,53 @@ class Workload:
         ]
 
 
-class OpName(enum.Enum):
-    ALL_TASKS = object()
-    VARIANT_TASKS = object()
-    PATCH_TASKS = object()
+class Repo:
+    def __init__(self, lister: Lister):
+        self._modified_repo_files = None
+        self.lister = lister
+
+    def all_workloads(self) -> List[Workload]:
+        all_files = self.lister.all_workload_files()
+        modified = self.lister.modified_workload_files()
+        return [Workload(fpath, fpath in modified) for fpath in all_files]
+
+    def modified_workloads(self) -> List[Workload]:
+        return [workload for workload in self.all_workloads() if workload.is_modified]
+
+    def all_tasks(self) -> List[GeneratedTask]:
+        """
+        :return: All possible tasks
+        """
+        return [task for workload in self.all_workloads() for task in workload.all_tasks()]
+
+    def variant_tasks(self, runtime: Runtime):
+        """
+        :return: Tasks to schedule given the current variant (runtime)
+        """
+        return [
+            task for workload in self.all_workloads() for task in workload.variant_tasks(runtime)
+        ]
+
+    def patch_tasks(self) -> List[GeneratedTask]:
+        """
+        :return: Tasks for modified workloads current variant (runtime)
+        """
+        return [task for workload in self.modified_workloads() for task in workload.all_tasks()]
+
+    def tasks(self, op: CLIOperation, runtime: Runtime) -> List[GeneratedTask]:
+        if op.mode == OpName.ALL_TASKS:
+            tasks = self.all_tasks()
+        elif op.mode == OpName.PATCH_TASKS:
+            tasks = self.patch_tasks()
+        elif op.mode == OpName.VARIANT_TASKS:
+            tasks = self.variant_tasks(runtime)
+        else:
+            raise Exception("Invalid operation mode")
+        return tasks
 
 
 class ConfigWriter:
-    def __init__(self, op: "CLIOperation"):
+    def __init__(self, op: CLIOperation):
         self.op = op
 
     def write(self, tasks: List[GeneratedTask]) -> Configuration:
@@ -390,45 +429,6 @@ class ConfigWriter:
             t.priority(5)
             t.commands([CommandDefinition().function("f_run_dsi_workload").vars(bootstrap)])
         return c
-
-
-class CLIOperation(NamedTuple):
-    mode: OpName
-    variant: Optional[str]
-    is_legacy: bool
-    output_file: str
-    repo_root: str  # TODO
-
-    @staticmethod
-    def parse(argv: List[str]) -> "CLIOperation":
-        out = CLIOperation(OpName.ALL_TASKS, None, False, "")
-        if "--generate-all-tasks" in argv:
-            out.mode = OpName.ALL_TASKS
-            out.is_legacy = True
-        if "--modified" in argv:
-            out.mode = OpName.PATCH_TASKS
-            out.is_legacy = True
-        if "--autorun" in argv:
-            out.mode = OpName.VARIANT_TASKS
-            out.is_legacy = True
-        if out.mode in {OpName.PATCH_TASKS, OpName.VARIANT_TASKS}:
-            variant = argv.index("--variant")
-            out.variant = argv[variant + 1]
-        if "--output" in argv:
-            out.output_file = argv[argv.index("--output") + 1]
-
-        if not out.is_legacy:
-            out.output_file = "./run/build/Tasks/Tasks.json"
-            if argv[1] == "all_tasks":
-                out.mode = OpName.ALL_TASKS
-            if argv[1] == "patch_tasks":
-                out.mode = OpName.PATCH_TASKS
-            if argv[1] == "variant_tasks":
-                out.mode = OpName.VARIANT_TASKS
-            with open("expansions.yml") as exp:
-                parsed = yaml.safe_load(exp)
-                out.variant = parsed["build_variant"]
-        return out
 
 
 # def write(path: str, conts: Configuration):
