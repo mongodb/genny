@@ -127,11 +127,9 @@ import os
 import re
 import subprocess
 import sys
-from abc import ABC
 from typing import NamedTuple, List, Optional, Set
 
 import yaml
-
 from shrub.command import CommandDefinition
 from shrub.config import Configuration
 from shrub.variant import TaskSpec
@@ -210,6 +208,41 @@ class Repo:
 
     def modified_workloads(self) -> List["Workload"]:
         return [workload for workload in self.all_workloads() if workload.is_modified]
+
+    def all_tasks(self) -> List["GeneratedTask"]:
+        """
+        :return: All possible tasks
+        """
+        return [task for workload in self.all_workloads() for task in workload.all_tasks()]
+
+    def variant_tasks(self, runtime: "Runtime"):
+        """
+        :return: Tasks to schedule given the current variant (runtime)
+        """
+        return [
+            task
+            for workload in self.all_workloads()
+            for task in workload.variant_tasks(runtime)
+        ]
+
+    def patch_tasks(self) -> List["GeneratedTask"]:
+        """
+        :return: Tasks for modified workloads current variant (runtime)
+        """
+        return [
+            task for workload in self.modified_workloads() for task in workload.all_tasks()
+        ]
+
+    def tasks(self, op: "CLIOperation", runtime: "Runtime") -> List["GeneratedTask"]:
+        if op.mode == OpName.ALL_TASKS:
+            tasks = self.all_tasks()
+        elif op.mode == OpName.PATCH_TASKS:
+            tasks = self.patch_tasks()
+        elif op.mode == OpName.VARIANT_TASKS:
+            tasks = self.variant_tasks(runtime)
+        else:
+            raise Exception("Invalid operation mode")
+        return tasks
 
 
 class Runtime:
@@ -308,18 +341,23 @@ class OpName(enum.Enum):
     PATCH_TASKS = object()
 
 
-class ConfigWriterImpl(ABC):
-    def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
-        raise NotImplementedError()
+class ConfigWriter:
+    def __init__(self, op: "CLIOperation"):
+        self.op = op
+
+    def write(self, tasks: List[GeneratedTask]) -> Configuration:
+        if self.op.mode != OpName.ALL_TASKS:
+            config: Configuration = self.variant_tasks(tasks, self.op.variant)
+        else:
+            config = self.all_tasks_legacy(tasks) if self.op.is_legacy else self.all_tasks_modern(tasks)
+        return config
 
     def variant_tasks(self, tasks: List[GeneratedTask], variant: str) -> Configuration:
         c = Configuration()
         c.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
         return c
 
-
-class LegacyConfigWriter(ConfigWriterImpl):
-    def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
+    def all_tasks_legacy(self, tasks: List[GeneratedTask]) -> Configuration:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
         for task in tasks:
@@ -339,9 +377,7 @@ class LegacyConfigWriter(ConfigWriterImpl):
             )
         return c
 
-
-class ModernConfigWriter(ConfigWriterImpl):
-    def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
+    def all_tasks_modern(self, tasks: List[GeneratedTask]) -> Configuration:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
         for task in tasks:
@@ -365,6 +401,7 @@ class CLIOperation(NamedTuple):
     variant: Optional[str]
     is_legacy: bool
     output_file: str
+    repo_root: str  # TODO
 
     @staticmethod
     def parse(argv: List[str]) -> "CLIOperation":
@@ -398,72 +435,20 @@ class CLIOperation(NamedTuple):
         return out
 
 
-class ConfigWriter:
-    def __init__(self, op: CLIOperation):
-        self.impl: ConfigWriterImpl = LegacyConfigWriter() if op.is_legacy else ModernConfigWriter()
-        self.op = op
-
-    def write(self, tasks: List[GeneratedTask]):
-        if self.op.mode != OpName.ALL_TASKS:
-            config: Configuration = self.impl.variant_tasks(tasks, self.op.variant)
-        else:
-            config = self.impl.all_tasks(tasks)
-        return config
-
-
-def write(path: str, conts: Configuration):
-    # with open(path, "w+") as output:
-    #     output.write(conts.to_json())
-    print(f"To {path} >>\n{conts.to_json()}\n\n")
-
-
-class Finder:
-    def __init__(self, cwd: str = None):
-        self.cwd = cwd if cwd else os.getcwd()
-        self.lister = Lister(self.cwd)
-        self.repo = Repo(self.lister)
-        self.runtime = Runtime(self.cwd)
-
-    def all_tasks(self) -> List[GeneratedTask]:
-        """
-        :return: All possible tasks
-        """
-        return [task for workload in self.repo.all_workloads() for task in workload.all_tasks()]
-
-    def variant_tasks(self) -> List[GeneratedTask]:
-        """
-        :return: Tasks to schedule given the current variant (runtime)
-        """
-        return [
-            task
-            for workload in self.repo.all_workloads()
-            for task in workload.variant_tasks(self.runtime)
-        ]
-
-    def patch_tasks(self) -> List[GeneratedTask]:
-        """
-        :return: Tasks for modified workloads current variant (runtime)
-        """
-        return [
-            task for workload in self.repo.modified_workloads() for task in workload.all_tasks()
-        ]
-
-    def tasks(self, op: CLIOperation) -> List[GeneratedTask]:
-        if op.mode == OpName.ALL_TASKS:
-            tasks = self.all_tasks()
-        elif op.mode == OpName.PATCH_TASKS:
-            tasks = self.patch_tasks()
-        elif op.mode == OpName.VARIANT_TASKS:
-            tasks = self.variant_tasks()
-        else:
-            raise Exception("Invalid operation mode")
-        return tasks
+# def write(path: str, conts: Configuration):
+#     # with open(path, "w+") as output:
+#     #     output.write(conts.to_json())
+#     print(f"To {path} >>\n{conts.to_json()}\n\n")
 
 
 def main(argv: List[str]) -> None:
-    finder = Finder()
     op = CLIOperation.parse(argv)
-    tasks = finder.tasks(op)
+    runtime = Runtime(os.getcwd())
+
+    lister = Lister(op.repo_root)
+    repo = Repo(lister)
+    tasks = repo.tasks(op, runtime)
+
     writer = ConfigWriter(op)
     writer.write(tasks)
 
