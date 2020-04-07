@@ -1,124 +1,59 @@
 """
-                                All Tasks Legacy
+If we have `--generate-all-tasks`
 
-- Invoked as
+    genny/genny/scripts/genny_auto_tasks.sh \
+        --generate-all-tasks \
+        --output build/all_tasks.json
+    # Key: --generate-all-tasks
+    cat ../src/genny/genny/build/all_tasks.json
 
-        genny/genny/scripts/genny_auto_tasks.sh \
-            --generate-all-tasks \
-            --output build/all_tasks.json
-        # Key: --generate-all-tasks
-        cat ../src/genny/genny/build/all_tasks.json
-
-- cwd           `${workdir}/src`
-- genny root    `${workdir}/src/genny/genny`                        == `./genny/genny`
-- output file   `${workdir}/src/genny/genny/build/all_tasks.json`   == `./genny/genny/build/all_tasks.json`
-- Does not rely on any environment yaml files
-- Does not need variant info
+- cwd            `${workdir}/src`
+- genny root     `${workdir}/src/genny/genny`                       == `./genny/genny`
+- output file    `${workdir}/src/genny/genny/build/auto_tasks.json` == `./genny/genny/build/auto_tasks.json`
+- OpMode         `ALL_TASKS`
 
 
-                            Variant Patch Tasks Legacy
+If we have `--modified`
 
-- Invoked as
-
-        genny/genny/scripts/genny_auto_tasks.sh \
-            --output build/patch_tasks.json \
-            --variants "${build_variant}" --modified
-        # key: --modified
-        cat genny/genny/build/patch_tasks.json
+    genny/genny/scripts/genny_auto_tasks.sh \
+        --output build/patch_tasks.json \
+        --variants "${build_variant}" --modified
+    # key: --modified
+    cat genny/genny/build/patch_tasks.json
 
 - cwd           `${workdir}/src`
 - genny root    `${workdir}/src/genny/genny`                        == `./genny/genny`
 - output file   `${workdir}/src/genny/genny/build/patch_tasks.json` == `./genny/genny/build/patch_tasks.json`
-- Does not rely on any environment yaml files
-- Passes in variant through `--variants` flag.
+- OpMode        `PATCH_TASKS`
+- Get variant from `--variants` flag.
 
 
-                        Variant Tasks Legacy
+If we have `--autorun`
 
-- Invoked as
-
-        ../src/genny/genny/scripts/genny_auto_tasks.sh \
-            --output build/auto_tasks.json --variants "${build_variant}" \
-            --autorun
-        # key: --autorun
-        cat ../src/genny/genny/build/auto_tasks.json
+    ../src/genny/genny/scripts/genny_auto_tasks.sh \
+        --output build/auto_tasks.json --variants "${build_variant}" \
+        --autorun
+    # key: --autorun
+    cat ../src/genny/genny/build/auto_tasks.json
 
 - cwd            `${workdir}/work`
 - genny root     `${workdir}/src/genny/genny`                       == `../src/genny/genny`
 - output file    `${workdir}/src/genny/genny/build/auto_tasks.json` == `../src/genny/genny/build/auto_tasks.json`
-- Passes in variant through `--variants` command-line
+- Get variant from `--variants` flag.
+- OpMode is VARIANT_TASKS
 
+Else we're the "modern" style.
 
-                    All Tasks Modern
-
-- Invoked as
-
-        ${workdir}/src/genny/genny_all_tasks.sh
-
-- cwd           `${workdir}`
-- genny root    `${workdir}/src/genny`                  == `./src/genny`
-- output file   `${workdir}/run/build/Tasks/Tasks.json  == `./run/build/Tasks/Tasks.json`
-- Does not rely on any environment yaml files
-
-                    Variant Patch Tasks Modern
-
-- Invoked as
-
-        ${workdir}/src/genny/genny_patch_tasks.sh
+    ./src/genny/dsi-tasks [all | variant | patch]
 
 - cwd           `${workdir}`
 - genny root    `${workdir}/src/genny`                  == `./src/genny`
 - output file   `${workdir}/run/build/Tasks/Tasks.json  == `./run/build/Tasks/Tasks.json`
 - Relies on     `${workdir}/expansions.yml`
+- OpMode depends on arg given
 - Gets variant from expansions.yml
 
-
-                    Variant Tasks Modern
-
-- Invoked as
-
-        ${workdir}/src/genny/genny_variant_tasks.sh
-
-- cwd           `${workdir}`
-- genny root    `${workdir}/src/genny`                  == `./src/genny`
-- output file   `${workdir}/run/build/Tasks/Tasks.json  == `./run/build/Tasks/Tasks.json`
-- Relies on     `${workdir}/expansions.yml`
-- Gets variant from expansions.yml
-
-
-                    Summary
-
-- If we have `--generate-all-tasks`
-
-    - cwd            `${workdir}/work`
-    - genny root     `${workdir}/src/genny/genny`                       == `../src/genny/genny`
-    - output file    `${workdir}/src/genny/genny/build/auto_tasks.json` == `../src/genny/genny/build/auto_tasks.json`
-    - Passes in variant through `--variants` command-line
-
-- If we have `--modified`
-
-    - cwd           `${workdir}/src`
-    - genny root    `${workdir}/src/genny/genny`                        == `./genny/genny`
-    - output file   `${workdir}/src/genny/genny/build/patch_tasks.json` == `./genny/genny/build/patch_tasks.json`
-    - Get variant from `--variants` flag.
-
-- If we have `--autorun`
-
-    - cwd            `${workdir}/work`
-    - genny root     `${workdir}/src/genny/genny`                       == `../src/genny/genny`
-    - output file    `${workdir}/src/genny/genny/build/auto_tasks.json` == `../src/genny/genny/build/auto_tasks.json`
-    - Get variant from `--variants` flag.
-
-- Else we're the "modern" style.
-
-    - cwd           `${workdir}`
-    - genny root    `${workdir}/src/genny`                  == `./src/genny`
-    - output file   `${workdir}/run/build/Tasks/Tasks.json  == `./run/build/Tasks/Tasks.json`
-    - Relies on     `${workdir}/expansions.yml`
-    - Gets variant from expansions.yml
-
-    Assert we have `./expansions.yml`
-
+Assert we have `./expansions.yml`
 """
 
 import enum
@@ -162,13 +97,13 @@ def _yaml_load(files: List[str]) -> dict:
     return out
 
 
-class Lister:
+class DirectoryStructure:
     def __init__(self, repo_root: str):
         self.repo_root = repo_root
 
-    @staticmethod
-    def _normalize_path(filename: str) -> str:
-        return filename.split("workloads/", 1)[1]
+    def all_workload_files(self) -> Set[str]:
+        pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
+        return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
         command = (
@@ -179,10 +114,6 @@ class Lister:
         print(f"Command: {command}")
         lines = _check_output(self.repo_root, command, shell=True)
         return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
-
-    def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
-        return {*glob.glob(pattern)}
 
 
 class OpName(enum.Enum):
@@ -196,11 +127,18 @@ class CLIOperation(NamedTuple):
     variant: Optional[str]
     is_legacy: bool
     output_file: str
-    repo_root: str  # TODO
+
+    @property
+    def repo_root(self) -> str:
+        if self.is_legacy:
+            if self.mode == OpName.VARIANT_TASKS:
+                return "./genny/genny"
+            return "../src/genny/genny"
+        return "./src/genny"
 
     @staticmethod
     def parse(argv: List[str]) -> "CLIOperation":
-        out = CLIOperation(OpName.ALL_TASKS, None, False, "", "")
+        out = CLIOperation(OpName.ALL_TASKS, None, False, "")
         if "--generate-all-tasks" in argv:
             out.mode = OpName.ALL_TASKS
             out.is_legacy = True
@@ -334,7 +272,7 @@ class Workload:
 
 
 class Repo:
-    def __init__(self, lister: Lister):
+    def __init__(self, lister: DirectoryStructure):
         self._modified_repo_files = None
         self.lister = lister
 
@@ -446,7 +384,7 @@ def main(argv: List[str]) -> None:
     op = CLIOperation.parse(argv)
     runtime = Runtime(os.getcwd())
 
-    lister = Lister(op.repo_root)
+    lister = DirectoryStructure(op.repo_root)
     repo = Repo(lister)
     tasks = repo.tasks(op, runtime)
 
