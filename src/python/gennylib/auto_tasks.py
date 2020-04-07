@@ -364,10 +364,11 @@ class CLIOperation(NamedTuple):
     mode: OpName
     variant: Optional[str]
     is_legacy: bool
+    output_file: str
 
     @staticmethod
     def parse(argv: List[str]) -> "CLIOperation":
-        out = CLIOperation(OpName.ALL_TASKS, None, False)
+        out = CLIOperation(OpName.ALL_TASKS, None, False, "")
         if "--generate-all-tasks" in argv:
             out.mode = OpName.ALL_TASKS
             out.is_legacy = True
@@ -380,8 +381,11 @@ class CLIOperation(NamedTuple):
         if out.mode in {OpName.PATCH_TASKS, OpName.VARIANT_TASKS}:
             variant = argv.index("--variant")
             out.variant = argv[variant+1]
+        if "--output" in argv:
+            out.output_file = argv[argv.index("--output") + 1]
 
         if not out.is_legacy:
+            out.output_file = "./run/build/Tasks/Tasks.json"
             if argv[1] == "all_tasks":
                 out.mode = OpName.ALL_TASKS
             if argv[1] == "patch_tasks":
@@ -392,6 +396,12 @@ class CLIOperation(NamedTuple):
                 parsed = yaml.safe_load(exp)
                 out.variant = parsed["build_variant"]
         return out
+
+
+def write(path: str, conts: Configuration):
+    # with open(path, "w+") as output:
+    #     output.write(conts.to_json())
+    print(f"To {path} >>\n{conts.to_json()}\n\n")
 
 
 class CLI:
@@ -414,11 +424,10 @@ class CLI:
             raise Exception("Invalid operation mode")
         writer = LegacyConfigWriter() if op.is_legacy else ModernConfigWriter()
         if op.mode != OpName.ALL_TASKS:
-            config = writer.variant_tasks(tasks, op.variant)
+            config: Configuration = writer.variant_tasks(tasks, op.variant)
         else:
-            config = writer.variant_tasks(tasks, op.variant)
-        # TODO: write to proper file
-        print(config.to_json())
+            config = writer.all_tasks(tasks)
+        write(op.output_file, config)
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
