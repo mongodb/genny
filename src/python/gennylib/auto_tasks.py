@@ -200,7 +200,7 @@ class CLIOperation(NamedTuple):
 
     @staticmethod
     def parse(argv: List[str]) -> "CLIOperation":
-        out = CLIOperation(OpName.ALL_TASKS, None, False, "")
+        out = CLIOperation(OpName.ALL_TASKS, None, False, "", "")
         if "--generate-all-tasks" in argv:
             out.mode = OpName.ALL_TASKS
             out.is_legacy = True
@@ -320,6 +320,7 @@ class Workload:
             )
         ]
 
+    # noinspection RegExpAnonymousGroup
     @staticmethod
     def _to_snake_case(camel_case):
         """
@@ -390,12 +391,14 @@ class ConfigWriter:
             )
         return config
 
-    def variant_tasks(self, tasks: List[GeneratedTask], variant: str) -> Configuration:
+    @staticmethod
+    def variant_tasks(tasks: List[GeneratedTask], variant: str) -> Configuration:
         c = Configuration()
         c.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
         return c
 
-    def all_tasks_legacy(self, tasks: List[GeneratedTask]) -> Configuration:
+    @staticmethod
+    def all_tasks_legacy(tasks: List[GeneratedTask]) -> Configuration:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
         for task in tasks:
@@ -415,7 +418,8 @@ class ConfigWriter:
             )
         return c
 
-    def all_tasks_modern(self, tasks: List[GeneratedTask]) -> Configuration:
+    @staticmethod
+    def all_tasks_modern(tasks: List[GeneratedTask]) -> Configuration:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
         for task in tasks:
