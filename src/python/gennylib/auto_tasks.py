@@ -220,18 +220,14 @@ class Repo:
         :return: Tasks to schedule given the current variant (runtime)
         """
         return [
-            task
-            for workload in self.all_workloads()
-            for task in workload.variant_tasks(runtime)
+            task for workload in self.all_workloads() for task in workload.variant_tasks(runtime)
         ]
 
     def patch_tasks(self) -> List["GeneratedTask"]:
         """
         :return: Tasks for modified workloads current variant (runtime)
         """
-        return [
-            task for workload in self.modified_workloads() for task in workload.all_tasks()
-        ]
+        return [task for workload in self.modified_workloads() for task in workload.all_tasks()]
 
     def tasks(self, op: "CLIOperation", runtime: "Runtime") -> List["GeneratedTask"]:
         if op.mode == OpName.ALL_TASKS:
@@ -349,7 +345,9 @@ class ConfigWriter:
         if self.op.mode != OpName.ALL_TASKS:
             config: Configuration = self.variant_tasks(tasks, self.op.variant)
         else:
-            config = self.all_tasks_legacy(tasks) if self.op.is_legacy else self.all_tasks_modern(tasks)
+            config = (
+                self.all_tasks_legacy(tasks) if self.op.is_legacy else self.all_tasks_modern(tasks)
+            )
         return config
 
     def variant_tasks(self, tasks: List[GeneratedTask], variant: str) -> Configuration:
@@ -381,18 +379,16 @@ class ConfigWriter:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
         for task in tasks:
-            bootstrap = {"test_control": task.name,
-                         "auto_workload_path": task.workload.relative_path()}
+            bootstrap = {
+                "test_control": task.name,
+                "auto_workload_path": task.workload.relative_path(),
+            }
             if task.mongodb_setup:
                 bootstrap["mongodb_setup"] = task.mongodb_setup
 
             t = c.task(task.name)
             t.priority(5)
-            t.commands(
-                [
-                    CommandDefinition().function("f_run_dsi_workload").vars(bootstrap),
-                ]
-            )
+            t.commands([CommandDefinition().function("f_run_dsi_workload").vars(bootstrap)])
         return c
 
 
@@ -417,7 +413,7 @@ class CLIOperation(NamedTuple):
             out.is_legacy = True
         if out.mode in {OpName.PATCH_TASKS, OpName.VARIANT_TASKS}:
             variant = argv.index("--variant")
-            out.variant = argv[variant+1]
+            out.variant = argv[variant + 1]
         if "--output" in argv:
             out.output_file = argv[argv.index("--output") + 1]
 
