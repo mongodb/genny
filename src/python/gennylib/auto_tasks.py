@@ -135,17 +135,6 @@ from shrub.config import Configuration
 from shrub.variant import TaskSpec
 
 
-def _to_snake_case(camel_case):
-    """
-    Converts CamelCase to snake_case, useful for generating test IDs
-    https://stackoverflow.com/questions/1175208/
-    :return: snake_case version of camel_case.
-    """
-    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel_case)
-    s2 = re.sub("-", "_", s1)
-    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s2).lower()
-
-
 def _check_output(cwd, *args, **kwargs):
     old_cwd = os.getcwd()
     try:
@@ -311,11 +300,12 @@ class Workload:
         return self.file_path.split("src/workloads/")[1]
 
     def all_tasks(self) -> List[GeneratedTask]:
-        base = _to_snake_case(self.file_base_name())
+        base = self._to_snake_case(self.file_base_name())
         if self.setups is None:
             return [GeneratedTask(base, None, self)]
         return [
-            GeneratedTask(f"{base}_{_to_snake_case(setup)}", setup, self) for setup in self.setups
+            GeneratedTask(f"{base}_{self._to_snake_case(setup)}", setup, self)
+            for setup in self.setups
         ]
 
     def variant_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
@@ -329,6 +319,17 @@ class Workload:
                 for key, acceptable_values in self.requires.items()
             )
         ]
+
+    @staticmethod
+    def _to_snake_case(camel_case):
+        """
+        Converts CamelCase to snake_case, useful for generating test IDs
+        https://stackoverflow.com/questions/1175208/
+        :return: snake_case version of camel_case.
+        """
+        s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel_case)
+        s2 = re.sub("-", "_", s1)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s2).lower()
 
 
 class Repo:
