@@ -308,7 +308,7 @@ class OpName(enum.Enum):
     PATCH_TASKS = object()
 
 
-class ConfigWriter(ABC):
+class ConfigWriterImpl(ABC):
     def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
         raise NotImplementedError()
 
@@ -318,7 +318,7 @@ class ConfigWriter(ABC):
         return c
 
 
-class LegacyConfigWriter(ConfigWriter):
+class LegacyConfigWriter(ConfigWriterImpl):
     def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
@@ -340,7 +340,7 @@ class LegacyConfigWriter(ConfigWriter):
         return c
 
 
-class ModernConfigWriter(ConfigWriter):
+class ModernConfigWriter(ConfigWriterImpl):
     def all_tasks(self, tasks: List[GeneratedTask]) -> Configuration:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
@@ -398,36 +398,31 @@ class CLIOperation(NamedTuple):
         return out
 
 
+class ConfigWriter:
+    def __init__(self, op: CLIOperation):
+        self.impl: ConfigWriterImpl = LegacyConfigWriter() if op.is_legacy else ModernConfigWriter()
+        self.op = op
+
+    def write(self, tasks: List[GeneratedTask]):
+        if self.op.mode != OpName.ALL_TASKS:
+            config: Configuration = self.impl.variant_tasks(tasks, self.op.variant)
+        else:
+            config = self.impl.all_tasks(tasks)
+        return config
+
+
 def write(path: str, conts: Configuration):
     # with open(path, "w+") as output:
     #     output.write(conts.to_json())
     print(f"To {path} >>\n{conts.to_json()}\n\n")
 
 
-class CLI:
+class Finder:
     def __init__(self, cwd: str = None):
         self.cwd = cwd if cwd else os.getcwd()
         self.lister = Lister(self.cwd)
         self.repo = Repo(self.lister)
         self.runtime = Runtime(self.cwd)
-
-    def main(self, argv: Optional[List[str]] = None) -> None:
-        argv = argv if argv else sys.argv
-        op = CLIOperation.parse(argv)
-        if op.mode == OpName.ALL_TASKS:
-            tasks = self.all_tasks()
-        elif op.mode == OpName.PATCH_TASKS:
-            tasks = self.patch_tasks()
-        elif op.mode == OpName.VARIANT_TASKS:
-            tasks = self.variant_tasks()
-        else:
-            raise Exception("Invalid operation mode")
-        writer = LegacyConfigWriter() if op.is_legacy else ModernConfigWriter()
-        if op.mode != OpName.ALL_TASKS:
-            config: Configuration = writer.variant_tasks(tasks, op.variant)
-        else:
-            config = writer.all_tasks(tasks)
-        write(op.output_file, config)
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
@@ -453,7 +448,25 @@ class CLI:
             task for workload in self.repo.modified_workloads() for task in workload.all_tasks()
         ]
 
+    def tasks(self, op: CLIOperation) -> List[GeneratedTask]:
+        if op.mode == OpName.ALL_TASKS:
+            tasks = self.all_tasks()
+        elif op.mode == OpName.PATCH_TASKS:
+            tasks = self.patch_tasks()
+        elif op.mode == OpName.VARIANT_TASKS:
+            tasks = self.variant_tasks()
+        else:
+            raise Exception("Invalid operation mode")
+        return tasks
+
+
+def main(argv: List[str]) -> None:
+    finder = Finder()
+    op = CLIOperation.parse(argv)
+    tasks = finder.tasks(op)
+    writer = ConfigWriter(op)
+    writer.write(tasks)
+
 
 if __name__ == "__main__":
-    cli = CLI()
-    cli.main()
+    main(sys.argv)
