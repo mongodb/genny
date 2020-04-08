@@ -52,6 +52,29 @@ def w(b: str) -> str:
     return f"src/workloads/{b}"
 
 
+MULTI_SETUP_FILE_MODIFIED = MockFile(
+    base_name=w("src/Multi.yml"),
+    modified=True,
+    yaml_conts={
+        "AutoRun": {
+            "Requires": {"mongodb_setup": ["matches"]},
+            "PrepareEnvironmentWith": {"mongodb_setup": ["a", "b"]},
+        }
+    },
+)
+
+MULTI_SETUP_FILE_UNMODIFIED = MockFile(
+    base_name=w("src/MultiUnmodified.yml"),
+    modified=False,
+    yaml_conts={
+        "AutoRun": {
+            "Requires": {"mongodb_setup": ["matches"]},
+            "PrepareEnvironmentWith": {"mongodb_setup": ["c", "d"]},
+        }
+    },
+)
+
+
 def helper(files: List[MockFile], argv: List[str]) -> Scenario:
     # Create "dumb" mocks.
     lister: FileLister = MagicMock(name="lister", spec=FileLister, instance=True)
@@ -83,18 +106,55 @@ class AutoTasksTests(unittest.TestCase):
         scenario = helper(
             [
                 MockFile(base_name=w("scale/Foo.yml"), modified=False, yaml_conts={}),
+                MULTI_SETUP_FILE_MODIFIED,
                 MockFile(base_name="expansions.yml", modified=False, yaml_conts={}),
             ],
             ["all_tasks"],
         )
-        self.assertEqual(["foo"], [task["name"] for task in scenario.parsed["tasks"]])
-        self.assertDictEqual(
-            {
-                "func": "f_run_dsi_workload",
-                "vars": {"test_control": "foo", "auto_workload_path": "scale/Foo.yml"},
-            },
-            scenario.parsed["tasks"][0]["commands"][0],
-        )
+        expected = {
+            "tasks": [
+                {
+                    "name": "foo",
+                    "commands": [
+                        {
+                            "func": "f_run_dsi_workload",
+                            "vars": {"test_control": "foo", "auto_workload_path": "scale/Foo.yml"},
+                        }
+                    ],
+                    "priority": 5,
+                },
+                {
+                    "name": "multi_a",
+                    "commands": [
+                        {
+                            "func": "f_run_dsi_workload",
+                            "vars": {
+                                "test_control": "multi_a",
+                                "auto_workload_path": "src/Multi.yml",
+                                "mongodb_setup": "a",
+                            },
+                        }
+                    ],
+                    "priority": 5,
+                },
+                {
+                    "name": "multi_b",
+                    "commands": [
+                        {
+                            "func": "f_run_dsi_workload",
+                            "vars": {
+                                "test_control": "multi_b",
+                                "auto_workload_path": "src/Multi.yml",
+                                "mongodb_setup": "b",
+                            },
+                        }
+                    ],
+                    "priority": 5,
+                },
+            ],
+            "timeout": 64800,
+        }
+        self.assertDictEqual(scenario.parsed, expected)
 
     def test_variant_tasks(self):
         scenario = helper(
@@ -102,24 +162,32 @@ class AutoTasksTests(unittest.TestCase):
                 MockFile(
                     base_name="expansions.yml",
                     modified=False,
-                    yaml_conts={
-                        "build_variant": "some-build-variant",
-                        "mongodb_setup": "some-setup",
-                    },
+                    yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
                 ),
+                MULTI_SETUP_FILE_UNMODIFIED,
                 MockFile(
                     base_name=w("scale/Foo.yml"),
                     modified=False,
-                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-setup"]}}},
+                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["matches"]}}},
                 ),
             ],
             ["variant_tasks"],
         )
 
-        self.assertEqual(
-            scenario.parsed,
-            {"buildvariants": [{"name": "some-build-variant", "tasks": [{"name": "foo"}]}]},
-        )
+        print(scenario.parsed)
+        expected = {
+            "buildvariants": [
+                {
+                    "name": "some-build-variant",
+                    "tasks": [
+                        {"name": "multi_unmodified_c"},
+                        {"name": "multi_unmodified_d"},
+                        {"name": "foo"},
+                    ],
+                }
+            ]
+        }
+        self.assertEqual(scenario.parsed, expected)
 
     def test_patch_tasks(self):
         scenario = helper(
@@ -132,6 +200,8 @@ class AutoTasksTests(unittest.TestCase):
                         "mongodb_setup": "some-setup",
                     },
                 ),
+                MULTI_SETUP_FILE_MODIFIED,
+                MULTI_SETUP_FILE_UNMODIFIED,
                 MockFile(
                     base_name=w("scale/Foo.yml"),
                     modified=True,
@@ -145,9 +215,17 @@ class AutoTasksTests(unittest.TestCase):
             ],
             ["patch_tasks"],
         )
+        expected = {
+            "buildvariants": [
+                {
+                    "name": "some-build-variant",
+                    "tasks": [{"name": "multi_a"}, {"name": "multi_b"}, {"name": "foo"}],
+                }
+            ]
+        }
         self.assertEqual(
             scenario.parsed,
-            {"buildvariants": [{"name": "some-build-variant", "tasks": [{"name": "foo"}]}]},
+            expected,
             "Patch tasks always run for the selected variant "
             "even if their Requires blocks don't align",
         )
@@ -160,35 +238,70 @@ class LegacyHappyCaseTests(unittest.TestCase):
                 MockFile(base_name="expansions.yml", modified=False, yaml_conts={}),
                 MockFile(base_name=w("src/Foo.yml"), modified=True, yaml_conts={}),
                 MockFile(base_name=w("src/Bar.yml"), modified=False, yaml_conts={}),
+                MULTI_SETUP_FILE_MODIFIED,
             ],
             ["--generate-all-tasks", "--output", "build/all_tasks.json"],
         )
         expected = {
             "tasks": [
                 {
+                    "name": "foo",
                     "commands": [
                         {
                             "func": "prepare environment",
-                            "vars": {"auto_workload_path": "src/Foo.yml", "test": "foo"},
+                            "vars": {"test": "foo", "auto_workload_path": "src/Foo.yml"},
                         },
                         {"func": "deploy cluster"},
                         {"func": "run test"},
                         {"func": "analyze"},
                     ],
-                    "name": "foo",
                     "priority": 5,
                 },
                 {
+                    "name": "bar",
                     "commands": [
                         {
                             "func": "prepare environment",
-                            "vars": {"auto_workload_path": "src/Bar.yml", "test": "bar"},
+                            "vars": {"test": "bar", "auto_workload_path": "src/Bar.yml"},
                         },
                         {"func": "deploy cluster"},
                         {"func": "run test"},
                         {"func": "analyze"},
                     ],
-                    "name": "bar",
+                    "priority": 5,
+                },
+                {
+                    "name": "multi_a",
+                    "commands": [
+                        {
+                            "func": "prepare environment",
+                            "vars": {
+                                "test": "multi_a",
+                                "auto_workload_path": "src/Multi.yml",
+                                "setup": "a",
+                            },
+                        },
+                        {"func": "deploy cluster"},
+                        {"func": "run test"},
+                        {"func": "analyze"},
+                    ],
+                    "priority": 5,
+                },
+                {
+                    "name": "multi_b",
+                    "commands": [
+                        {
+                            "func": "prepare environment",
+                            "vars": {
+                                "test": "multi_b",
+                                "auto_workload_path": "src/Multi.yml",
+                                "setup": "b",
+                            },
+                        },
+                        {"func": "deploy cluster"},
+                        {"func": "run test"},
+                        {"func": "analyze"},
+                    ],
                     "priority": 5,
                 },
             ],
