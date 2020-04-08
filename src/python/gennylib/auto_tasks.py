@@ -51,7 +51,7 @@ class DirectoryStructure:
         command = (
             "git diff --name-only --diff-filter=AMR "
             # TODO: don't use rtimmons/
-            "$(git merge-base HEAD rtimmons/master) -- src/workloads/"
+            "$(git merge-base HEAD origin/master) -- src/workloads/"
         )
         print(f"Command: {command}")
         lines = _check_output(self.repo_root, command, shell=True)
