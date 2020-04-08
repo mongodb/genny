@@ -75,7 +75,7 @@ class CLIOperation(NamedTuple):
             elif self.mode == OpName.ALL_TASKS:
                 return "../src/genny/genny"
             elif self.mode == OpName.PATCH_TASKS:
-                return "genny/genny"
+                return "./genny/genny"
         return "./src/genny"
 
     @property
@@ -94,7 +94,7 @@ class CLIOperation(NamedTuple):
         if "--generate-all-tasks" in argv:
             mode = OpName.ALL_TASKS
             is_legacy = True
-        if "--modified" in argv:
+        if "modified" in argv:
             mode = OpName.PATCH_TASKS
             is_legacy = True
         if "--autorun" in argv:

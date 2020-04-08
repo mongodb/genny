@@ -1,6 +1,6 @@
 import json
 import unittest
-from typing import NamedTuple, Dict, List, Tuple, Optional
+from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
 
 from shrub.config import Configuration
@@ -26,10 +26,7 @@ class MockReader(YamlReader):
         self.files = files
 
     def load(self, path: str):
-        found = self._find_file(path)
-        if not found:
-            raise Exception(f"Couldn't find {path} in {[self.files]}")
-        return found.yaml_conts
+        return self._find_file(path).yaml_conts
 
     def exists(self, path: str) -> bool:
         found = self._find_file(path)
@@ -42,92 +39,21 @@ class MockReader(YamlReader):
         return None
 
 
-class Scenario(NamedTuple):
-    op: CLIOperation
-    config: Configuration
-    parsed: dict
-
-
-BOOTSTRAP = MockFile(
-    base_name="bootstrap.yml", modified=False, yaml_conts={"mongodb_setup": "matches"}
-)
-
-EXPANSIONS = MockFile(
-    base_name="expansions.yml",
-    modified=False,
-    yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
-)
-
-MULTI_MODIFIED = MockFile(
-    base_name="src/workloads/src/Multi.yml",
-    modified=True,
-    yaml_conts={
-        "AutoRun": {
-            "Requires": {"mongodb_setup": ["matches"]},
-            "PrepareEnvironmentWith": {"mongodb_setup": ["a", "b"]},
-        }
-    },
-)
-
-
-MULTI_UNMODIFIED = MockFile(
-    base_name="src/workloads/src/MultiUnmodified.yml",
-    modified=False,
-    yaml_conts={
-        "AutoRun": {
-            "Requires": {"mongodb_setup": ["matches"]},
-            "PrepareEnvironmentWith": {"mongodb_setup": ["c", "d"]},
-        }
-    },
-)
-
-EMPTY_MODIFIED = MockFile(
-    base_name="src/workloads/scale/EmptyModified.yml", modified=True, yaml_conts={}
-)
-EMPTY_UNMODIFIED = MockFile(
-    base_name="src/workloads/scale/EmptyUnmodified.yml", modified=False, yaml_conts={}
-)
-
-
-MATCHES_UNMODIFIED = MockFile(
-    base_name="src/workloads/scale/Foo.yml",
-    modified=False,
-    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["matches"]}}},
-)
-
-NOT_MATCHES_UNMODIFIED = MockFile(
-    base_name="src/workloads/scale/Foo.yml",
-    modified=False,
-    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
-)
-
-
-NOT_MATCHES_MODIFIED = MockFile(
-    base_name="src/workloads/scale/NotMatchesModified.yml",
-    modified=True,
-    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
-)
-
-
 class BaseTestClass(unittest.TestCase):
     def assert_result(
-        self,
-        given_files: List[MockFile],
-        and_args: List[str],
-        then_writes: dict,
-        to_file: Optional[str] = None,
-    ) -> Scenario:
+        self, given_files: List[MockFile], and_args: List[str], then_writes: dict, to_file: str
+    ):
         # Create "dumb" mocks.
         lister: FileLister = MagicMock(name="lister", spec=FileLister, instance=True)
         reader: YamlReader = MockReader(given_files)
 
         # Make them smarter.
         lister.all_workload_files.return_value = [
-            # Hack: Prevent calling expansions.yml as a 'workload' file
-            # (solution would be to pass in workload files as a different
-            # param to this function, but meh)
             v.base_name
             for v in given_files
+            # Hack: Prevent calling e.g. expansions.yml a 'workload' file
+            # (solution would be to pass in workload files as a different
+            # param to this function, but meh)
             if "/" in v.base_name
         ]
         lister.modified_workload_files.return_value = [
@@ -151,9 +77,7 @@ class BaseTestClass(unittest.TestCase):
         except AssertionError:
             print(parsed)
             raise
-        if to_file is not None:
-            self.assertEqual(op.output_file, to_file)
-        return Scenario(op, config, parsed)
+        self.assertEqual(op.output_file, to_file)
 
 
 class AutoTasksTests(BaseTestClass):
@@ -349,6 +273,88 @@ class LegacyHappyCaseTests(BaseTestClass):
             then_writes={"buildvariants": [{"name": "some-variant", "tasks": [{"name": "foo"}]}]},
             to_file="../src/genny/genny/build/auto_tasks.json",
         )
+
+    def test_patch_tasks(self):
+        self.assert_result(
+            given_files=[BOOTSTRAP, MATCHES_UNMODIFIED, MULTI_MODIFIED, MULTI_UNMODIFIED],
+            and_args=[
+                "--output",
+                "build/patch_tasks.json",
+                "--variants",
+                "some-variant",
+                "modified",
+            ],
+            then_writes={
+                "buildvariants": [
+                    {"name": "some-variant", "tasks": [{"name": "multi_a"}, {"name": "multi_b"}]}
+                ]
+            },
+            to_file="./genny/genny/build/patch_tasks.json",
+        )
+
+
+# Example Input Files
+
+
+BOOTSTRAP = MockFile(
+    base_name="bootstrap.yml", modified=False, yaml_conts={"mongodb_setup": "matches"}
+)
+
+EXPANSIONS = MockFile(
+    base_name="expansions.yml",
+    modified=False,
+    yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
+)
+
+MULTI_MODIFIED = MockFile(
+    base_name="src/workloads/src/Multi.yml",
+    modified=True,
+    yaml_conts={
+        "AutoRun": {
+            "Requires": {"mongodb_setup": ["matches"]},
+            "PrepareEnvironmentWith": {"mongodb_setup": ["a", "b"]},
+        }
+    },
+)
+
+
+MULTI_UNMODIFIED = MockFile(
+    base_name="src/workloads/src/MultiUnmodified.yml",
+    modified=False,
+    yaml_conts={
+        "AutoRun": {
+            "Requires": {"mongodb_setup": ["matches"]},
+            "PrepareEnvironmentWith": {"mongodb_setup": ["c", "d"]},
+        }
+    },
+)
+
+EMPTY_MODIFIED = MockFile(
+    base_name="src/workloads/scale/EmptyModified.yml", modified=True, yaml_conts={}
+)
+EMPTY_UNMODIFIED = MockFile(
+    base_name="src/workloads/scale/EmptyUnmodified.yml", modified=False, yaml_conts={}
+)
+
+
+MATCHES_UNMODIFIED = MockFile(
+    base_name="src/workloads/scale/Foo.yml",
+    modified=False,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["matches"]}}},
+)
+
+NOT_MATCHES_UNMODIFIED = MockFile(
+    base_name="src/workloads/scale/Foo.yml",
+    modified=False,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+)
+
+
+NOT_MATCHES_MODIFIED = MockFile(
+    base_name="src/workloads/scale/NotMatchesModified.yml",
+    modified=True,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+)
 
 
 if __name__ == "__main__":
