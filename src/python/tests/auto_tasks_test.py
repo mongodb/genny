@@ -3,8 +3,6 @@ import unittest
 from typing import NamedTuple, List, Optional
 from unittest.mock import MagicMock
 
-from shrub.config import Configuration
-
 from gennylib.auto_tasks import (
     CurrentBuildInfo,
     CLIOperation,
