@@ -11,7 +11,8 @@ Actors:
   Threads: 100
   Phases:
   - Collection: inserts
-    Duration: 3 minutes
+    # TODO: remove - modified to test patch_tasks
+    Duration: 1 minutes
     Database: test
 
 AutoRun:
