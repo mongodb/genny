@@ -70,9 +70,12 @@ class CLIOperation(NamedTuple):
     @property
     def repo_root(self) -> str:
         if self.is_legacy:
-            if self.mode != OpName.VARIANT_TASKS:
-                return "./genny/genny"
-            return "../src/genny/genny"
+            if self.mode == OpName.VARIANT_TASKS:
+                return "../src/genny/genny"
+            elif self.mode == OpName.ALL_TASKS:
+                return "../src/genny/genny"
+            elif self.mode == OpName.PATCH_TASKS:
+                return "genny/genny"
         return "./src/genny"
 
     @property

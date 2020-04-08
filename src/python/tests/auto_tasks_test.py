@@ -111,7 +111,11 @@ NOT_MATCHES_MODIFIED = MockFile(
 
 class BaseTestClass(unittest.TestCase):
     def assert_result(
-        self, given_files: List[MockFile], and_args: List[str], then_writes: dict
+        self,
+        given_files: List[MockFile],
+        and_args: List[str],
+        then_writes: dict,
+        to_file: Optional[str] = None,
     ) -> Scenario:
         # Create "dumb" mocks.
         lister: FileLister = MagicMock(name="lister", spec=FileLister, instance=True)
@@ -119,7 +123,12 @@ class BaseTestClass(unittest.TestCase):
 
         # Make them smarter.
         lister.all_workload_files.return_value = [
-            v.base_name for v in given_files if "/" in v.base_name
+            # Hack: Prevent calling expansions.yml as a 'workload' file
+            # (solution would be to pass in workload files as a different
+            # param to this function, but meh)
+            v.base_name
+            for v in given_files
+            if "/" in v.base_name
         ]
         lister.modified_workload_files.return_value = [
             v.base_name for v in given_files if v.modified and "/" in v.base_name
@@ -142,6 +151,8 @@ class BaseTestClass(unittest.TestCase):
         except AssertionError:
             print(parsed)
             raise
+        if to_file is not None:
+            self.assertEqual(op.output_file, to_file)
         return Scenario(op, config, parsed)
 
 
@@ -196,6 +207,7 @@ class AutoTasksTests(BaseTestClass):
                 ],
                 "timeout": 64800,
             },
+            to_file="./run/build/Tasks/Tasks.json",
         )
 
     def test_variant_tasks(self):
@@ -214,6 +226,7 @@ class AutoTasksTests(BaseTestClass):
                     }
                 ]
             },
+            to_file="./run/build/Tasks/Tasks.json",
         )
 
     def test_patch_tasks(self):
@@ -240,6 +253,7 @@ class AutoTasksTests(BaseTestClass):
                     }
                 ]
             },
+            to_file="./run/build/Tasks/Tasks.json",
         )
 
 
@@ -319,19 +333,21 @@ class LegacyHappyCaseTests(BaseTestClass):
                 ],
                 "timeout": 64800,
             },
+            to_file="../src/genny/genny/build/all_tasks.json",
         )
 
     def test_variant_tasks(self):
         self.assert_result(
             given_files=[BOOTSTRAP, MATCHES_UNMODIFIED, NOT_MATCHES_MODIFIED],
             and_args=[
+                "--output",
+                "build/auto_tasks.json",
                 "--variants",
                 "some-variant",
                 "--autorun",
-                "--output",
-                "build/all_tasks.json",
             ],
             then_writes={"buildvariants": [{"name": "some-variant", "tasks": [{"name": "foo"}]}]},
+            to_file="../src/genny/genny/build/auto_tasks.json",
         )
 
 
