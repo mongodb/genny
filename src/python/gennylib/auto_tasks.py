@@ -1,3 +1,8 @@
+"""
+Generates evergreen tasks based on the current state of the repo.
+"""
+# Anything marked "legacy" in here is due to be removed soon!
+
 import enum
 import glob
 import os
@@ -11,6 +16,7 @@ from shrub.command import CommandDefinition
 from shrub.config import Configuration
 from shrub.variant import TaskSpec
 
+
 # You could argue that YamlReader, FileLister, and maybe even Repo
 # should be the same class - perhaps renamed to System or something?
 # That will be easier once we can kill everything relating to "legacy".
@@ -18,15 +24,27 @@ from shrub.variant import TaskSpec
 
 class YamlReader:
     def load(self, path: str) -> dict:
+        """
+        :param path: path relative to cwd
+        :return: deserialized yaml file
+        """
         if not os.path.exists(path):
             raise Exception(f"No {path} in cwd={os.getcwd()}")
         with open(path) as exp:
             return yaml.safe_load(exp)
 
+    # Really just here for easy mockings
     def exists(self, path: str) -> bool:
         return os.path.exists(path)
 
     def load_set(self, files: List[str]) -> dict:
+        """
+        :param files:
+            files to load relative to cwd
+        :return:
+            Key the basename (no extension) of the file and value the loaded contents.
+            E.g. load_set("expansions") => {"expansions": {"contents":["of","expansions.yml"]}}
+        """
         out = dict()
         for to_load in [f for f in files if self.exists(f)]:
             basename = str(os.path.basename(to_load).split(".yml")[0])
@@ -35,6 +53,11 @@ class YamlReader:
 
 
 class FileLister:
+    """
+    Lists files in the repo dir etc.
+    Separate from the Repo class for easier testing.
+    """
+
     def __init__(self, repo_root: str, reader: YamlReader):
         self.repo_root = repo_root
         self._expansions = None
@@ -47,21 +70,27 @@ class FileLister:
     def modified_workload_files(self) -> Set[str]:
         command = (
             "git diff --name-only --diff-filter=AMR "
-            # TODO: don't use rtimmons/
-            "$(git merge-base HEAD rtimmons/master) -- src/workloads/"
+            "$(git merge-base HEAD origin/master) -- src/workloads/"
         )
-        # print(f"Command: {command}")
         lines = _check_output(self.repo_root, command, shell=True)
         return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
 
 
 class OpName(enum.Enum):
+    """
+    What kind of tasks we're generating in this invocation.
+    """
+
     ALL_TASKS = object()
     VARIANT_TASKS = object()
     PATCH_TASKS = object()
 
 
 class CLIOperation(NamedTuple):
+    """
+    Represents the "input" to what we're doing"
+    """
+
     mode: OpName
     variant: Optional[str]
     is_legacy: bool
@@ -69,6 +98,7 @@ class CLIOperation(NamedTuple):
 
     @property
     def repo_root(self) -> str:
+        # Kill once we kill is_legacy
         if self.is_legacy:
             if self.mode == OpName.VARIANT_TASKS:
                 return "../src/genny/genny"
@@ -80,6 +110,7 @@ class CLIOperation(NamedTuple):
 
     @property
     def output_file(self) -> str:
+        # Kill once we kill is_legacy
         if self.is_legacy:
             return os.path.join(self.repo_root, self.output_file_suffix)
         return self.output_file_suffix
@@ -94,6 +125,7 @@ class CLIOperation(NamedTuple):
         if "--generate-all-tasks" in argv:
             mode = OpName.ALL_TASKS
             is_legacy = True
+        # Yup: not `--modified`. Legacy was v inconsistent.
         if "modified" in argv:
             mode = OpName.PATCH_TASKS
             is_legacy = True
@@ -119,12 +151,10 @@ class CLIOperation(NamedTuple):
 
 
 class CurrentBuildInfo:
-    use_expansions_yml: bool = False
-
     def __init__(self, reader: YamlReader):
+        # Just reader.load("expansions.yml") when killing legacy.
         conts = reader.load_set([f"{b}.yml" for b in {"bootstrap", "runtime", "expansions"}])
         if "expansions" in conts:
-            self.use_expansions_yml = True
             conts = conts["expansions"]
         else:
             if "bootstrap" not in conts:
@@ -139,6 +169,11 @@ class CurrentBuildInfo:
         self.conts = conts
 
     def has(self, key: str, acceptable_values: List[str]) -> bool:
+        """
+        :param key: a key from environment (expansions.yml, bootstrap.yml, etc)
+        :param acceptable_values: possible values we accept
+        :return: if the actual value from env[key] is in the list of acceptable values
+        """
         if key not in self.conts:
             raise Exception(f"Unknown key {key}. Know about {self.conts.keys()}")
         actual = self.conts[key]
@@ -152,10 +187,21 @@ class GeneratedTask(NamedTuple):
 
 
 class Workload:
+    """
+    Represents a workload yaml file.
+    Is a "child" object of Repo.
+    """
+
     file_path: str
+    """Path relative to repo root."""
+
     is_modified: bool
+
     requires: Optional[dict] = None
+    """The `Requires` block, if present"""
+
     setups: Optional[List[str]] = None
+    """The PrepareEnvironmentWith:mongodb_setup block, if any"""
 
     def __init__(self, file_path: str, is_modified: bool, reader: YamlReader):
         self.file_path = file_path
@@ -177,14 +223,19 @@ class Workload:
                 )
             self.setups = prep["mongodb_setup"]
 
+    @property
     def file_base_name(self) -> str:
         return str(os.path.basename(self.file_path).split(".yml")[0])
 
+    @property
     def relative_path(self) -> str:
         return self.file_path.split("src/workloads/")[1]
 
     def all_tasks(self) -> List[GeneratedTask]:
-        base = self._to_snake_case(self.file_base_name())
+        """
+        :return: all possible tasks irrespective of the current build-variant etc.
+        """
+        base = self._to_snake_case(self.file_base_name)
         if self.setups is None:
             return [GeneratedTask(base, None, self)]
         return [
@@ -193,6 +244,10 @@ class Workload:
         ]
 
     def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
+        """
+        :param build: info about current build
+        :return: tasks that we should do given the current build e.g. if we have Requires info etc.
+        """
         if not self.requires:
             return []
         return [
@@ -218,6 +273,10 @@ class Workload:
 
 
 class Repo:
+    """
+    Represents the git checkout.
+    """
+
     def __init__(self, lister: FileLister, reader: YamlReader):
         self._modified_repo_files = None
         self.lister = lister
@@ -233,8 +292,9 @@ class Repo:
 
     def all_tasks(self) -> List[GeneratedTask]:
         """
-        :return: All possible tasks
+        :return: All possible tasks fom all possible workloads
         """
+        # Double list-comprehensions always read backward to me :(
         return [task for workload in self.all_workloads() for task in workload.all_tasks()]
 
     def variant_tasks(self, build: CurrentBuildInfo):
@@ -250,6 +310,11 @@ class Repo:
         return [task for workload in self.modified_workloads() for task in workload.all_tasks()]
 
     def tasks(self, op: CLIOperation, build: CurrentBuildInfo) -> List[GeneratedTask]:
+        """
+        :param op: current cli invocation
+        :param build: current build info
+        :return: tasks that should be scheduled given the above
+        """
         if op.mode == OpName.ALL_TASKS:
             tasks = self.all_tasks()
         elif op.mode == OpName.PATCH_TASKS:
@@ -262,10 +327,19 @@ class Repo:
 
 
 class ConfigWriter:
+    """
+    Takes tasks and converts them to shrub Configuration objects.
+    """
+
     def __init__(self, op: CLIOperation):
         self.op = op
 
     def write(self, tasks: List[GeneratedTask], write: bool = True) -> Configuration:
+        """
+        :param tasks: tasks to write
+        :param write: boolean to actually write the file - exposed for testing
+        :return: the configuration object to write (exposed for testing)
+        """
         if self.op.mode != OpName.ALL_TASKS:
             config: Configuration = self.variant_tasks(tasks, self.op.variant)
         else:
@@ -293,7 +367,7 @@ class ConfigWriter:
         c = Configuration()
         c.exec_timeout(64800)  # 18 hours
         for task in tasks:
-            prep_vars = {"test": task.name, "auto_workload_path": task.workload.relative_path()}
+            prep_vars = {"test": task.name, "auto_workload_path": task.workload.relative_path}
             if task.mongodb_setup:
                 prep_vars["setup"] = task.mongodb_setup
 
@@ -316,7 +390,7 @@ class ConfigWriter:
         for task in tasks:
             bootstrap = {
                 "test_control": task.name,
-                "auto_workload_path": task.workload.relative_path(),
+                "auto_workload_path": task.workload.relative_path,
             }
             if task.mongodb_setup:
                 bootstrap["mongodb_setup"] = task.mongodb_setup
@@ -345,9 +419,8 @@ def _check_output(cwd, *args, **kwargs):
     return out.decode().strip().split("\n")
 
 
-def main(argv: List[str] = None) -> None:
-    if not argv:
-        argv = sys.argv
+def main() -> None:
+    argv = sys.argv
     reader = YamlReader()
     build = CurrentBuildInfo(reader)
     op = CLIOperation.parse(argv, reader)
