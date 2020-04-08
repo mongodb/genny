@@ -96,3 +96,28 @@ class AutoTasksTests(unittest.TestCase):
 
         parsed = json.loads(config.to_json())
         self.assertEqual(parsed,{'buildvariants': [{'name': 'some-build-variant', 'tasks': [{'name': 'foo'}]}]})
+
+    def test_patch_tasks(self):
+        config = self.helper([
+            MockFile("expansions.yml", False, {
+                "build_variant": "some-build-variant",
+                "mongodb_setup": "some-setup",
+            }),
+            MockFile("src/Foo.yml", True, {
+                "AutoRun": {
+                    "Requires": {
+                        "mongodb_setup": ["some-other-setup"]
+                    }
+                }
+            }),
+            MockFile("src/Bar.yml", False, {
+                "AutoRun": {
+                    "Requires": {
+                        "mongodb_setup": ["some-other-setup"]
+                    }
+                }
+            }),
+        ], ["patch_tasks"])
+        parsed = json.loads(config.to_json())
+        self.assertEqual(parsed, {
+            'buildvariants': [{'name': 'some-build-variant', 'tasks': [{'name': 'foo'}]}]})

@@ -123,6 +123,7 @@ class CLIOperation(NamedTuple):
                 mode = OpName.ALL_TASKS
             if argv[1] == "patch_tasks":
                 mode = OpName.PATCH_TASKS
+                variant = reader.load("expansions.yml")["build_variant"]
             if argv[1] == "variant_tasks":
                 mode = OpName.VARIANT_TASKS
                 variant = reader.load("expansions.yml")["build_variant"]
