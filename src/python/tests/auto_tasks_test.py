@@ -52,7 +52,11 @@ def w(b: str) -> str:
     return f"src/workloads/{b}"
 
 
-EXPANSIONS_MATCHES = MockFile(
+BOOTSTRAP = MockFile(
+    base_name="bootstrap.yml", modified=False, yaml_conts={"mongodb_setup": "matches"}
+)
+
+EXPANSIONS = MockFile(
     base_name="expansions.yml",
     modified=False,
     yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
@@ -81,30 +85,27 @@ MULTI_SETUP_FILE_UNMODIFIED = MockFile(
     },
 )
 
-EMPTY_UNMODIFIED = MockFile(base_name=w("scale/Foo.yml"), modified=False, yaml_conts={})
 EMPTY_MODIFIED = MockFile(base_name=w("scale/Bar.yml"), modified=True, yaml_conts={})
+EMPTY_UNMODIFIED = MockFile(base_name=w("scale/Foo.yml"), modified=False, yaml_conts={})
 
-UNMODIFIED_MATCHES = MockFile(
+
+MATCHES_UNMODIFIED = MockFile(
     base_name=w("scale/Foo.yml"),
     modified=False,
     yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["matches"]}}},
 )
 
-UNMODIFIED_NOT_MATCHES = MockFile(
+NOT_MATCHES_UNMODIFIED = MockFile(
     base_name=w("scale/Foo.yml"),
     modified=False,
     yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
 )
 
 
-MODIFIED_NOT_MATCHES = MockFile(
-    base_name=w("scale/Bar.yml"),
+NOT_MATCHES_MODIFIED = MockFile(
+    base_name=w("scale/NotMatchesModified.yml"),
     modified=True,
     yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
-)
-
-BOOTSTRAP = MockFile(
-    base_name="bootstrap.yml", modified=False, yaml_conts={"mongodb_setup": "matches"}
 )
 
 
@@ -136,9 +137,7 @@ def helper(files: List[MockFile], argv: List[str]) -> Scenario:
 
 class AutoTasksTests(unittest.TestCase):
     def test_all_tasks(self):
-        scenario = helper(
-            [EMPTY_UNMODIFIED, MULTI_SETUP_FILE_MODIFIED, EXPANSIONS_MATCHES], ["all_tasks"]
-        )
+        scenario = helper([EMPTY_UNMODIFIED, MULTI_SETUP_FILE_MODIFIED, EXPANSIONS], ["all_tasks"])
         expected = {
             "tasks": [
                 {
@@ -186,7 +185,7 @@ class AutoTasksTests(unittest.TestCase):
 
     def test_variant_tasks(self):
         scenario = helper(
-            [EXPANSIONS_MATCHES, MULTI_SETUP_FILE_UNMODIFIED, UNMODIFIED_MATCHES], ["variant_tasks"]
+            [EXPANSIONS, MULTI_SETUP_FILE_UNMODIFIED, MATCHES_UNMODIFIED], ["variant_tasks"]
         )
         expected = {
             "buildvariants": [
@@ -205,11 +204,11 @@ class AutoTasksTests(unittest.TestCase):
     def test_patch_tasks(self):
         scenario = helper(
             [
-                EXPANSIONS_MATCHES,
+                EXPANSIONS,
                 MULTI_SETUP_FILE_MODIFIED,
                 MULTI_SETUP_FILE_UNMODIFIED,
-                MODIFIED_NOT_MATCHES,
-                UNMODIFIED_NOT_MATCHES,
+                NOT_MATCHES_MODIFIED,
+                NOT_MATCHES_UNMODIFIED,
             ],
             ["patch_tasks"],
         )
@@ -217,7 +216,7 @@ class AutoTasksTests(unittest.TestCase):
             "buildvariants": [
                 {
                     "name": "some-build-variant",
-                    "tasks": [{"name": "multi_a"}, {"name": "multi_b"}, {"name": "bar"}],
+                    "tasks": [{"name": "multi_a"}, {"name": "multi_b"}, {"name": "not_matches_modified"}],
                 }
             ]
         }
@@ -232,7 +231,7 @@ class AutoTasksTests(unittest.TestCase):
 class LegacyHappyCaseTests(unittest.TestCase):
     def test_all_tasks(self):
         scenario = helper(
-            [EXPANSIONS_MATCHES, EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_SETUP_FILE_MODIFIED],
+            [EXPANSIONS, EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_SETUP_FILE_MODIFIED],
             ["--generate-all-tasks", "--output", "build/all_tasks.json"],
         )
         expected = {
@@ -304,7 +303,7 @@ class LegacyHappyCaseTests(unittest.TestCase):
 
     def test_variant_tasks(self):
         scenario = helper(
-            [BOOTSTRAP, UNMODIFIED_MATCHES, MODIFIED_NOT_MATCHES],
+            [BOOTSTRAP, MATCHES_UNMODIFIED, NOT_MATCHES_MODIFIED],
             ["--variants", "some-variant", "--autorun", "--output", "build/all_tasks.json"],
         )
         expected = {"buildvariants": [{"name": "some-variant", "tasks": [{"name": "foo"}]}]}
