@@ -11,8 +11,11 @@ from shrub.command import CommandDefinition
 from shrub.config import Configuration
 from shrub.variant import TaskSpec
 
+# You could argue that YamlReader, FileLister, and maybe even Repo
+# should be the same class - perhaps renamed to System or something?
+# That will be easier once we can kill everything relating to "legacy".
 
-# TODO: combine YamlReader and Runtime?
+
 class YamlReader:
     def load(self, path: str) -> dict:
         if not os.path.exists(path):
@@ -20,11 +23,14 @@ class YamlReader:
         with open(path) as exp:
             return yaml.safe_load(exp)
 
+    def exists(self, path: str) -> bool:
+        return os.path.exists(path)
+
     def load_set(self, files: List[str]) -> dict:
         out = dict()
-        for to_load in [f for f in files if os.path.exists(f)]:
+        for to_load in [f for f in files if self.exists(f)]:
             basename = str(os.path.basename(to_load).split(".yml")[0])
-            out[basename] = self.load(basename)
+            out[basename] = self.load(to_load)
         return out
 
 
@@ -123,8 +129,9 @@ class CurrentBuildInfo:
                     f"Must have either expansions.yml or bootstrap.yml in cwd={os.getcwd()}"
                 )
             bootstrap: dict = conts["bootstrap"]
-            runtime: dict = conts["runtime"]
-            bootstrap.update(runtime)
+            if "runtime" in conts:
+                runtime: dict = conts["runtime"]
+                bootstrap.update(runtime)
             conts = bootstrap
         self.conts = conts
 
