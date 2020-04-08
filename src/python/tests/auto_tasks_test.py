@@ -17,7 +17,5 @@ class Example(NamedTuple):
 
 
 class AutoTasksTests(unittest.TestCase):
-
     def test_foo(self):
         at.main(["some-foo.py", "all"])
-
