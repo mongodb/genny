@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 from typing import NamedTuple, List, Optional, Set
+import pathlib
 
 import yaml
 from shrub.command import CommandDefinition
@@ -15,6 +16,8 @@ from shrub.variant import TaskSpec
 def _check_output(cwd, *args, **kwargs):
     old_cwd = os.getcwd()
     try:
+        if not os.path.exists(cwd):
+            raise Exception(f"Cannot chdir to {cwd} from cwd={os.getcwd()}")
         os.chdir(cwd)
         out = subprocess.check_output(*args, **kwargs)
     except subprocess.CalledProcessError as e:
@@ -51,7 +54,7 @@ class DirectoryStructure:
         command = (
             "git diff --name-only --diff-filter=AMR "
             # TODO: don't use rtimmons/
-            "$(git merge-base HEAD origin/master) -- src/workloads/"
+            "$(git merge-base HEAD rtimmons/master) -- src/workloads/"
         )
         print(f"Command: {command}")
         lines = _check_output(self.repo_root, command, shell=True)
@@ -80,7 +83,9 @@ class CLIOperation(NamedTuple):
 
     @property
     def output_file(self) -> str:
-        return os.path.join(self.repo_root, self.output_file_suffix)
+        if self.is_legacy:
+            return os.path.join(self.repo_root, self.output_file_suffix)
+        return self.output_file_suffix
 
     @staticmethod
     def parse(argv: List[str]) -> "CLIOperation":
@@ -89,7 +94,6 @@ class CLIOperation(NamedTuple):
         variant = None
         output_file = None
 
-        # out = CLIOperation(OpName.ALL_TASKS, None, False, "")
         if "--generate-all-tasks" in argv:
             mode = OpName.ALL_TASKS
             is_legacy = True
@@ -113,6 +117,8 @@ class CLIOperation(NamedTuple):
                 mode = OpName.PATCH_TASKS
             if argv[1] == "variant_tasks":
                 mode = OpName.VARIANT_TASKS
+            if not os.path.exists("expansions.yml"):
+                raise Exception(f"No expansions.yml in cwd={os.getcwd()}")
             with open("expansions.yml") as exp:
                 parsed = yaml.safe_load(exp)
                 variant = parsed["build_variant"]
@@ -284,9 +290,12 @@ class ConfigWriter:
             config = (
                 self.all_tasks_legacy(tasks) if self.op.is_legacy else self.all_tasks_modern(tasks)
             )
-        if self.op.output_file:
+        try:
+            os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
             with open(self.op.output_file, "w") as output:
                 output.write(config.to_json())
+        finally:
+            print(f"Tried to write to {self.op.output_file} from cwd={os.getcwd()}")
         return config
 
     @staticmethod
@@ -332,6 +341,7 @@ class ConfigWriter:
             t.priority(5)
             t.commands([CommandDefinition().function("f_run_dsi_workload").vars(bootstrap)])
         return c
+
 
 def main(argv: List[str] = None) -> None:
     if not argv:
