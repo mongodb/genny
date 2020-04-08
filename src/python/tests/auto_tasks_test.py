@@ -52,6 +52,12 @@ def w(b: str) -> str:
     return f"src/workloads/{b}"
 
 
+EXPANSIONS_MATCHES = MockFile(
+    base_name="expansions.yml",
+    modified=False,
+    yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
+)
+
 MULTI_SETUP_FILE_MODIFIED = MockFile(
     base_name=w("src/Multi.yml"),
     modified=True,
@@ -63,6 +69,7 @@ MULTI_SETUP_FILE_MODIFIED = MockFile(
     },
 )
 
+
 MULTI_SETUP_FILE_UNMODIFIED = MockFile(
     base_name=w("src/MultiUnmodified.yml"),
     modified=False,
@@ -72,6 +79,32 @@ MULTI_SETUP_FILE_UNMODIFIED = MockFile(
             "PrepareEnvironmentWith": {"mongodb_setup": ["c", "d"]},
         }
     },
+)
+
+EMPTY_UNMODIFIED = MockFile(base_name=w("scale/Foo.yml"), modified=False, yaml_conts={})
+EMPTY_MODIFIED = MockFile(base_name=w("scale/Bar.yml"), modified=True, yaml_conts={})
+
+UNMODIFIED_MATCHES = MockFile(
+    base_name=w("scale/Foo.yml"),
+    modified=False,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["matches"]}}},
+)
+
+UNMODIFIED_NOT_MATCHES = MockFile(
+    base_name=w("scale/Foo.yml"),
+    modified=False,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+)
+
+
+MODIFIED_NOT_MATCHES = MockFile(
+    base_name=w("scale/Bar.yml"),
+    modified=True,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+)
+
+BOOTSTRAP = MockFile(
+    base_name="bootstrap.yml", modified=False, yaml_conts={"mongodb_setup": "matches"}
 )
 
 
@@ -104,12 +137,7 @@ def helper(files: List[MockFile], argv: List[str]) -> Scenario:
 class AutoTasksTests(unittest.TestCase):
     def test_all_tasks(self):
         scenario = helper(
-            [
-                MockFile(base_name=w("scale/Foo.yml"), modified=False, yaml_conts={}),
-                MULTI_SETUP_FILE_MODIFIED,
-                MockFile(base_name="expansions.yml", modified=False, yaml_conts={}),
-            ],
-            ["all_tasks"],
+            [EMPTY_UNMODIFIED, MULTI_SETUP_FILE_MODIFIED, EXPANSIONS_MATCHES], ["all_tasks"]
         )
         expected = {
             "tasks": [
@@ -154,27 +182,12 @@ class AutoTasksTests(unittest.TestCase):
             ],
             "timeout": 64800,
         }
-        self.assertDictEqual(scenario.parsed, expected)
+        self.assertDictEqual(expected, scenario.parsed)
 
     def test_variant_tasks(self):
         scenario = helper(
-            [
-                MockFile(
-                    base_name="expansions.yml",
-                    modified=False,
-                    yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
-                ),
-                MULTI_SETUP_FILE_UNMODIFIED,
-                MockFile(
-                    base_name=w("scale/Foo.yml"),
-                    modified=False,
-                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["matches"]}}},
-                ),
-            ],
-            ["variant_tasks"],
+            [EXPANSIONS_MATCHES, MULTI_SETUP_FILE_UNMODIFIED, UNMODIFIED_MATCHES], ["variant_tasks"]
         )
-
-        print(scenario.parsed)
         expected = {
             "buildvariants": [
                 {
@@ -187,31 +200,16 @@ class AutoTasksTests(unittest.TestCase):
                 }
             ]
         }
-        self.assertEqual(scenario.parsed, expected)
+        self.assertDictEqual(expected, scenario.parsed)
 
     def test_patch_tasks(self):
         scenario = helper(
             [
-                MockFile(
-                    base_name="expansions.yml",
-                    modified=False,
-                    yaml_conts={
-                        "build_variant": "some-build-variant",
-                        "mongodb_setup": "some-setup",
-                    },
-                ),
+                EXPANSIONS_MATCHES,
                 MULTI_SETUP_FILE_MODIFIED,
                 MULTI_SETUP_FILE_UNMODIFIED,
-                MockFile(
-                    base_name=w("scale/Foo.yml"),
-                    modified=True,
-                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
-                ),
-                MockFile(
-                    base_name=w("scale/Bar.yml"),
-                    modified=False,
-                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
-                ),
+                MODIFIED_NOT_MATCHES,
+                UNMODIFIED_NOT_MATCHES,
             ],
             ["patch_tasks"],
         )
@@ -219,13 +217,13 @@ class AutoTasksTests(unittest.TestCase):
             "buildvariants": [
                 {
                     "name": "some-build-variant",
-                    "tasks": [{"name": "multi_a"}, {"name": "multi_b"}, {"name": "foo"}],
+                    "tasks": [{"name": "multi_a"}, {"name": "multi_b"}, {"name": "bar"}],
                 }
             ]
         }
-        self.assertEqual(
-            scenario.parsed,
+        self.assertDictEqual(
             expected,
+            scenario.parsed,
             "Patch tasks always run for the selected variant "
             "even if their Requires blocks don't align",
         )
@@ -234,12 +232,7 @@ class AutoTasksTests(unittest.TestCase):
 class LegacyHappyCaseTests(unittest.TestCase):
     def test_all_tasks(self):
         scenario = helper(
-            [
-                MockFile(base_name="expansions.yml", modified=False, yaml_conts={}),
-                MockFile(base_name=w("src/Foo.yml"), modified=True, yaml_conts={}),
-                MockFile(base_name=w("src/Bar.yml"), modified=False, yaml_conts={}),
-                MULTI_SETUP_FILE_MODIFIED,
-            ],
+            [EXPANSIONS_MATCHES, EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_SETUP_FILE_MODIFIED],
             ["--generate-all-tasks", "--output", "build/all_tasks.json"],
         )
         expected = {
@@ -249,7 +242,7 @@ class LegacyHappyCaseTests(unittest.TestCase):
                     "commands": [
                         {
                             "func": "prepare environment",
-                            "vars": {"test": "foo", "auto_workload_path": "src/Foo.yml"},
+                            "vars": {"test": "foo", "auto_workload_path": "scale/Foo.yml"},
                         },
                         {"func": "deploy cluster"},
                         {"func": "run test"},
@@ -262,7 +255,7 @@ class LegacyHappyCaseTests(unittest.TestCase):
                     "commands": [
                         {
                             "func": "prepare environment",
-                            "vars": {"test": "bar", "auto_workload_path": "src/Bar.yml"},
+                            "vars": {"test": "bar", "auto_workload_path": "scale/Bar.yml"},
                         },
                         {"func": "deploy cluster"},
                         {"func": "run test"},
@@ -311,23 +304,7 @@ class LegacyHappyCaseTests(unittest.TestCase):
 
     def test_variant_tasks(self):
         scenario = helper(
-            [
-                MockFile(
-                    base_name="bootstrap.yml",
-                    modified=False,
-                    yaml_conts={"mongodb_setup": "my-setup"},
-                ),
-                MockFile(
-                    base_name="src/Foo.yml",
-                    modified=False,
-                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["my-setup"]}}},
-                ),
-                MockFile(
-                    base_name="src/Bar.yml",
-                    modified=True,
-                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
-                ),
-            ],
+            [BOOTSTRAP, UNMODIFIED_MATCHES, MODIFIED_NOT_MATCHES],
             ["--variants", "some-variant", "--autorun", "--output", "build/all_tasks.json"],
         )
         expected = {"buildvariants": [{"name": "some-variant", "tasks": [{"name": "foo"}]}]}
