@@ -6,12 +6,12 @@ from unittest.mock import MagicMock
 from shrub.config import Configuration
 
 from gennylib.auto_tasks import (
-    Runtime,
+    CurrentBuildInfo,
     CLIOperation,
-    DirectoryStructure,
+    FileLister,
     Repo,
     ConfigWriter,
-    Reader,
+    YamlReader,
 )
 
 
@@ -25,7 +25,7 @@ class MockFile(NamedTuple):
         return "src/workloads/" + self.base_name
 
 
-class MockReader(Reader):
+class MockReader(YamlReader):
     def __init__(self, files: List[MockFile]):
         self.files = files
 
@@ -40,11 +40,9 @@ class AutoTasksTests(unittest.TestCase):
     @staticmethod
     def helper(files: List[MockFile], argv: List[str]) -> Configuration:
         # Create "dumb" mocks.
-        lister: DirectoryStructure = MagicMock(
-            name="lister", spec=DirectoryStructure, instance=True
-        )
-        runtime: Runtime = MagicMock(name="runtime", spec=Runtime, instance=True)
-        reader: Reader = MockReader(files)
+        lister: FileLister = MagicMock(name="lister", spec=FileLister, instance=True)
+        build: CurrentBuildInfo = MagicMock(name="build", spec=CurrentBuildInfo, instance=True)
+        reader: YamlReader = MockReader(files)
 
         # Make them smarter.
         lister.all_workload_files.return_value = [v.repo_path for v in files]
@@ -56,7 +54,7 @@ class AutoTasksTests(unittest.TestCase):
         # And send them off into the world.
         op = CLIOperation.parse(argv, reader)
         repo = Repo(lister, reader)
-        tasks = repo.tasks(op, runtime)
+        tasks = repo.tasks(op, build)
         writer = ConfigWriter(op)
 
         config = writer.write(tasks, write=False)

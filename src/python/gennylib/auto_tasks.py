@@ -12,27 +12,9 @@ from shrub.config import Configuration
 from shrub.variant import TaskSpec
 
 
-def _check_output(cwd, *args, **kwargs):
-    old_cwd = os.getcwd()
-    try:
-        if not os.path.exists(cwd):
-            raise Exception(f"Cannot chdir to {cwd} from cwd={os.getcwd()}")
-        os.chdir(cwd)
-        out = subprocess.check_output(*args, **kwargs)
-    except subprocess.CalledProcessError as e:
-        print(e.output, file=sys.stderr)
-        raise e
-    finally:
-        os.chdir(old_cwd)
-
-    if out.decode() == "":
-        return []
-    return out.decode().strip().split("\n")
-
-
-# TODO: combine Reader and Runtime?
-class Reader:
-    def load(self, path):
+# TODO: combine YamlReader and Runtime?
+class YamlReader:
+    def load(self, path: str) -> dict:
         if not os.path.exists(path):
             raise Exception(f"No {path} in cwd={os.getcwd()}")
         with open(path) as exp:
@@ -41,13 +23,13 @@ class Reader:
     def load_set(self, files: List[str]) -> dict:
         out = dict()
         for to_load in [f for f in files if os.path.exists(f)]:
-            basename = os.path.basename(to_load).split(".yml")[0]
+            basename = str(os.path.basename(to_load).split(".yml")[0])
             out[basename] = self.load(basename)
         return out
 
 
-class DirectoryStructure:
-    def __init__(self, repo_root: str, reader: Reader):
+class FileLister:
+    def __init__(self, repo_root: str, reader: YamlReader):
         self.repo_root = repo_root
         self._expansions = None
         self.reader = reader
@@ -94,7 +76,7 @@ class CLIOperation(NamedTuple):
         return self.output_file_suffix
 
     @staticmethod
-    def parse(argv: List[str], reader: Reader) -> "CLIOperation":
+    def parse(argv: List[str], reader: YamlReader) -> "CLIOperation":
         mode = OpName.ALL_TASKS
         is_legacy = False
         variant = None
@@ -127,22 +109,18 @@ class CLIOperation(NamedTuple):
         return CLIOperation(mode, variant, is_legacy, output_file)
 
 
-class Runtime:
+class CurrentBuildInfo:
     use_expansions_yml: bool = False
 
-    def __init__(self, cwd: str, reader: Reader):
-        self.cwd = cwd
-
-        conts = reader.load_set(
-            [os.path.join(self.cwd, f"{b}.yml") for b in {"bootstrap", "runtime", "expansions"}]
-        )
+    def __init__(self, reader: YamlReader):
+        conts = reader.load_set([f"{b}.yml" for b in {"bootstrap", "runtime", "expansions"}])
         if "expansions" in conts:
             self.use_expansions_yml = True
             conts = conts["expansions"]
         else:
             if "bootstrap" not in conts:
                 raise Exception(
-                    f"Must have either expansions.yml or bootstrap.yml in cwd={self.cwd}"
+                    f"Must have either expansions.yml or bootstrap.yml in cwd={os.getcwd()}"
                 )
             bootstrap: dict = conts["bootstrap"]
             runtime: dict = conts["runtime"]
@@ -169,7 +147,7 @@ class Workload:
     requires: Optional[dict] = None
     setups: Optional[List[str]] = None
 
-    def __init__(self, file_path: str, is_modified: bool, reader: Reader):
+    def __init__(self, file_path: str, is_modified: bool, reader: YamlReader):
         self.file_path = file_path
         self.is_modified = is_modified
 
@@ -204,14 +182,14 @@ class Workload:
             for setup in self.setups
         ]
 
-    def variant_tasks(self, runtime: Runtime) -> List[GeneratedTask]:
+    def variant_tasks(self, build: CurrentBuildInfo) -> List[GeneratedTask]:
         if not self.requires:
             return []
         return [
             task
             for task in self.all_tasks()
             if all(
-                runtime.has(key, acceptable_values)
+                build.has(key, acceptable_values)
                 for key, acceptable_values in self.requires.items()
             )
         ]
@@ -230,7 +208,7 @@ class Workload:
 
 
 class Repo:
-    def __init__(self, lister: DirectoryStructure, reader: Reader):
+    def __init__(self, lister: FileLister, reader: YamlReader):
         self._modified_repo_files = None
         self.lister = lister
         self.reader = reader
@@ -249,13 +227,11 @@ class Repo:
         """
         return [task for workload in self.all_workloads() for task in workload.all_tasks()]
 
-    def variant_tasks(self, runtime: Runtime):
+    def variant_tasks(self, build: CurrentBuildInfo):
         """
         :return: Tasks to schedule given the current variant (runtime)
         """
-        return [
-            task for workload in self.all_workloads() for task in workload.variant_tasks(runtime)
-        ]
+        return [task for workload in self.all_workloads() for task in workload.variant_tasks(build)]
 
     def patch_tasks(self) -> List[GeneratedTask]:
         """
@@ -263,13 +239,13 @@ class Repo:
         """
         return [task for workload in self.modified_workloads() for task in workload.all_tasks()]
 
-    def tasks(self, op: CLIOperation, runtime: Runtime) -> List[GeneratedTask]:
+    def tasks(self, op: CLIOperation, build: CurrentBuildInfo) -> List[GeneratedTask]:
         if op.mode == OpName.ALL_TASKS:
             tasks = self.all_tasks()
         elif op.mode == OpName.PATCH_TASKS:
             tasks = self.patch_tasks()
         elif op.mode == OpName.VARIANT_TASKS:
-            tasks = self.variant_tasks(runtime)
+            tasks = self.variant_tasks(build)
         else:
             raise Exception("Invalid operation mode")
         return tasks
@@ -341,15 +317,33 @@ class ConfigWriter:
         return c
 
 
+def _check_output(cwd, *args, **kwargs):
+    old_cwd = os.getcwd()
+    try:
+        if not os.path.exists(cwd):
+            raise Exception(f"Cannot chdir to {cwd} from cwd={os.getcwd()}")
+        os.chdir(cwd)
+        out = subprocess.check_output(*args, **kwargs)
+    except subprocess.CalledProcessError as e:
+        print(e.output, file=sys.stderr)
+        raise e
+    finally:
+        os.chdir(old_cwd)
+
+    if out.decode() == "":
+        return []
+    return out.decode().strip().split("\n")
+
+
 def main(argv: List[str] = None) -> None:
     if not argv:
         argv = sys.argv
-    reader = Reader()
-    runtime = Runtime(os.getcwd(), reader)
+    reader = YamlReader()
+    build = CurrentBuildInfo(reader)
     op = CLIOperation.parse(argv, reader)
-    lister = DirectoryStructure(op.repo_root, reader)
+    lister = FileLister(op.repo_root, reader)
     repo = Repo(lister, reader)
-    tasks = repo.tasks(op, runtime)
+    tasks = repo.tasks(op, build)
 
     writer = ConfigWriter(op)
     writer.write(tasks)
