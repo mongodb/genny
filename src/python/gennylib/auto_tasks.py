@@ -1,61 +1,3 @@
-"""
-If we have `--generate-all-tasks`
-
-    genny/genny/scripts/genny_auto_tasks.sh \
-        --generate-all-tasks \
-        --output build/all_tasks.json
-    # Key: --generate-all-tasks
-    cat ../src/genny/genny/build/all_tasks.json
-
-- cwd            `${workdir}/src`
-- genny root     `${workdir}/src/genny/genny`                       == `./genny/genny`
-- output file    `${workdir}/src/genny/genny/build/auto_tasks.json` == `./genny/genny/build/auto_tasks.json`
-- OpMode         `ALL_TASKS`
-
-
-If we have `--modified`
-
-    genny/genny/scripts/genny_auto_tasks.sh \
-        --output build/patch_tasks.json \
-        --variants "${build_variant}" --modified
-    # key: --modified
-    cat genny/genny/build/patch_tasks.json
-
-- cwd           `${workdir}/src`
-- genny root    `${workdir}/src/genny/genny`                        == `./genny/genny`
-- output file   `${workdir}/src/genny/genny/build/patch_tasks.json` == `./genny/genny/build/patch_tasks.json`
-- OpMode        `PATCH_TASKS`
-- Get variant from `--variants` flag.
-
-
-If we have `--autorun`
-
-    ../src/genny/genny/scripts/genny_auto_tasks.sh \
-        --output build/auto_tasks.json --variants "${build_variant}" \
-        --autorun
-    # key: --autorun
-    cat ../src/genny/genny/build/auto_tasks.json
-
-- cwd            `${workdir}/work`
-- genny root     `${workdir}/src/genny/genny`                       == `../src/genny/genny`
-- output file    `${workdir}/src/genny/genny/build/auto_tasks.json` == `../src/genny/genny/build/auto_tasks.json`
-- Get variant from `--variants` flag.
-- OpMode is VARIANT_TASKS
-
-Else we're the "modern" style.
-
-    ./src/genny/dsi-tasks [all | variant | patch]
-
-- cwd           `${workdir}`
-- genny root    `${workdir}/src/genny`                  == `./src/genny`
-- output file   `${workdir}/run/build/Tasks/Tasks.json  == `./run/build/Tasks/Tasks.json`
-- Relies on     `${workdir}/expansions.yml`
-- OpMode depends on arg given
-- Gets variant from expansions.yml
-
-Assert we have `./expansions.yml`
-"""
-
 import enum
 import glob
 import os
@@ -126,71 +68,86 @@ class CLIOperation(NamedTuple):
     mode: OpName
     variant: Optional[str]
     is_legacy: bool
-    output_file: str
+    output_file_suffix: str
 
     @property
     def repo_root(self) -> str:
         if self.is_legacy:
-            if self.mode == OpName.VARIANT_TASKS:
+            if self.mode != OpName.VARIANT_TASKS:
                 return "./genny/genny"
             return "../src/genny/genny"
         return "./src/genny"
 
+    @property
+    def output_file(self) -> str:
+        return os.path.join(self.repo_root, self.output_file_suffix)
+
     @staticmethod
     def parse(argv: List[str]) -> "CLIOperation":
-        out = CLIOperation(OpName.ALL_TASKS, None, False, "")
-        if "--generate-all-tasks" in argv:
-            out.mode = OpName.ALL_TASKS
-            out.is_legacy = True
-        if "--modified" in argv:
-            out.mode = OpName.PATCH_TASKS
-            out.is_legacy = True
-        if "--autorun" in argv:
-            out.mode = OpName.VARIANT_TASKS
-            out.is_legacy = True
-        if out.mode in {OpName.PATCH_TASKS, OpName.VARIANT_TASKS}:
-            variant = argv.index("--variant")
-            out.variant = argv[variant + 1]
-        if "--output" in argv:
-            out.output_file = argv[argv.index("--output") + 1]
+        mode = OpName.ALL_TASKS
+        is_legacy = False
+        variant = None
+        output_file = None
 
-        if not out.is_legacy:
-            out.output_file = "./run/build/Tasks/Tasks.json"
+        # out = CLIOperation(OpName.ALL_TASKS, None, False, "")
+        if "--generate-all-tasks" in argv:
+            mode = OpName.ALL_TASKS
+            is_legacy = True
+        if "--modified" in argv:
+            mode = OpName.PATCH_TASKS
+            is_legacy = True
+        if "--autorun" in argv:
+            mode = OpName.VARIANT_TASKS
+            is_legacy = True
+        if mode in {OpName.PATCH_TASKS, OpName.VARIANT_TASKS}:
+            variant = argv.index("--variants")
+            variant = argv[variant + 1]
+        if "--output" in argv:
+            output_file = argv[argv.index("--output") + 1]
+
+        if is_legacy is False:
+            output_file = "./run/build/Tasks/Tasks.json"
             if argv[1] == "all_tasks":
-                out.mode = OpName.ALL_TASKS
+                mode = OpName.ALL_TASKS
             if argv[1] == "patch_tasks":
-                out.mode = OpName.PATCH_TASKS
+                mode = OpName.PATCH_TASKS
             if argv[1] == "variant_tasks":
-                out.mode = OpName.VARIANT_TASKS
+                mode = OpName.VARIANT_TASKS
             with open("expansions.yml") as exp:
                 parsed = yaml.safe_load(exp)
-                out.variant = parsed["build_variant"]
-        return out
+                variant = parsed["build_variant"]
+        return CLIOperation(mode, variant, is_legacy, output_file)
 
 
 class Runtime:
     use_expansions_yml: bool = False
 
     def __init__(self, cwd: str, conts: Optional[dict] = None):
-        if conts is None:
-            conts = _yaml_load(
-                [os.path.join(cwd, f"{b}.yml") for b in {"bootstrap", "runtime", "expansions"}]
-            )
-            if "expansions" in conts:
-                self.use_expansions_yml = True
-                conts = conts["expansions"]
-            else:
-                if "bootstrap" not in conts:
-                    raise Exception(
-                        f"Must have either expansions.yml or bootstrap.yml in cwd={cwd}"
-                    )
-                bootstrap = conts["bootstrap"]  # type: dict
-                runtime = conts["runtime"]  # type: dict
-                bootstrap.update(runtime)
-                conts = bootstrap
+        self.conts = conts
+        self.cwd = cwd
+
+    def _load(self):
+        if self.conts is not None:
+            return
+        conts = _yaml_load(
+            [os.path.join(self.cwd, f"{b}.yml") for b in {"bootstrap", "runtime", "expansions"}]
+        )
+        if "expansions" in conts:
+            self.use_expansions_yml = True
+            conts = conts["expansions"]
+        else:
+            if "bootstrap" not in conts:
+                raise Exception(
+                    f"Must have either expansions.yml or bootstrap.yml in cwd={self.cwd}"
+                )
+            bootstrap = conts["bootstrap"]  # type: dict
+            runtime = conts["runtime"]  # type: dict
+            bootstrap.update(runtime)
+            conts = bootstrap
         self.conts = conts
 
     def has(self, key: str, acceptable_values: List[str]) -> bool:
+        self._load()
         if key not in self.conts:
             raise Exception(f"Unknown key {key}. Know about {self.conts.keys()}")
         actual = self.conts[key]
@@ -232,7 +189,7 @@ class Workload:
             self.setups = prep["mongodb_setup"]
 
     def file_base_name(self) -> str:
-        return str(os.path.basename(self.file_path).split(".yml")[0], encoding="utf-8")
+        return str(os.path.basename(self.file_path).split(".yml")[0])
 
     def relative_path(self) -> str:
         return self.file_path.split("src/workloads/")[1]
@@ -327,6 +284,9 @@ class ConfigWriter:
             config = (
                 self.all_tasks_legacy(tasks) if self.op.is_legacy else self.all_tasks_modern(tasks)
             )
+        if self.op.output_file:
+            with open(self.op.output_file, "w") as output:
+                output.write(config.to_json())
         return config
 
     @staticmethod
@@ -373,16 +333,11 @@ class ConfigWriter:
             t.commands([CommandDefinition().function("f_run_dsi_workload").vars(bootstrap)])
         return c
 
-
-# def write(path: str, conts: Configuration):
-#     # with open(path, "w+") as output:
-#     #     output.write(conts.to_json())
-#     print(f"To {path} >>\n{conts.to_json()}\n\n")
-
-
-def main(argv: List[str]) -> None:
-    op = CLIOperation.parse(argv)
+def main(argv: List[str] = None) -> None:
+    if not argv:
+        argv = sys.argv
     runtime = Runtime(os.getcwd())
+    op = CLIOperation.parse(argv)
 
     lister = DirectoryStructure(op.repo_root)
     repo = Repo(lister)
@@ -393,4 +348,4 @@ def main(argv: List[str]) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()

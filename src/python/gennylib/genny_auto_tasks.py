@@ -131,7 +131,7 @@ def modified_workload_files():
     try:
         # Returns the names of files in src/workloads/ that have been added/modified/renamed since the common ancestor of HEAD and origin/master
         out = subprocess.check_output(
-            "git diff --name-only --diff-filter=AMR $(git merge-base HEAD origin/master) -- src/workloads/",
+            "git diff --name-only --diff-filter=AMR $(git merge-base HEAD rtimmons/master) -- src/workloads/",
             shell=True,
         )
     except subprocess.CalledProcessError as e:
