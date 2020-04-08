@@ -15,12 +15,6 @@ from gennylib.auto_tasks import (
 )
 
 
-class Example(NamedTuple):
-    given_expansions: Dict[str, str]
-    given_args: List[str]
-    expect_output: Tuple[str, dict]
-
-
 class MockFile(NamedTuple):
     base_name: str
     modified: bool
@@ -84,14 +78,17 @@ class AutoTasksTests(unittest.TestCase):
         config = self.helper(
             [
                 MockFile(
-                    "expansions.yml",
-                    False,
-                    {"build_variant": "some-build-variant", "mongodb_setup": "some-setup"},
+                    base_name="expansions.yml",
+                    modified=False,
+                    yaml_conts={
+                        "build_variant": "some-build-variant",
+                        "mongodb_setup": "some-setup",
+                    },
                 ),
                 MockFile(
-                    "src/Foo.yml",
-                    False,
-                    {"AutoRun": {"Requires": {"mongodb_setup": ["some-setup"]}}},
+                    base_name="src/Foo.yml",
+                    modified=False,
+                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-setup"]}}},
                 ),
             ],
             ["variant_tasks"],
@@ -106,24 +103,30 @@ class AutoTasksTests(unittest.TestCase):
         config = self.helper(
             [
                 MockFile(
-                    "expansions.yml",
-                    False,
-                    {"build_variant": "some-build-variant", "mongodb_setup": "some-setup"},
+                    base_name="expansions.yml",
+                    modified=False,
+                    yaml_conts={
+                        "build_variant": "some-build-variant",
+                        "mongodb_setup": "some-setup",
+                    },
                 ),
                 MockFile(
-                    "src/Foo.yml",
-                    True,
-                    {"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+                    base_name="src/Foo.yml",
+                    modified=True,
+                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
                 ),
                 MockFile(
-                    "src/Bar.yml",
-                    False,
-                    {"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+                    base_name="src/Bar.yml",
+                    modified=False,
+                    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
                 ),
             ],
             ["patch_tasks"],
         )
         parsed = json.loads(config.to_json())
         self.assertEqual(
-            parsed, {"buildvariants": [{"name": "some-build-variant", "tasks": [{"name": "foo"}]}]}
+            parsed,
+            {"buildvariants": [{"name": "some-build-variant", "tasks": [{"name": "foo"}]}]},
+            "Patch tasks always run for the selected variant "
+            "even if their Requires blocks don't align",
         )

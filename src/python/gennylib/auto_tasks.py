@@ -40,12 +40,9 @@ class Reader:
 
     def load_set(self, files: List[str]) -> dict:
         out = dict()
-        for file in files:
-            if not os.path.exists(file):
-                continue
-            basename = os.path.basename(file).split(".yml")[0]
-            with open(file) as contents:
-                out[basename] = yaml.safe_load(contents)
+        for to_load in [f for f in files if os.path.exists(f)]:
+            basename = os.path.basename(to_load).split(".yml")[0]
+            out[basename] = self.load(basename)
         return out
 
 
