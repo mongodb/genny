@@ -86,7 +86,7 @@ MULTI_UNMODIFIED = MockFile(
 )
 
 EMPTY_MODIFIED = MockFile(base_name=w("scale/EmptyModified.yml"), modified=True, yaml_conts={})
-EMPTY_UNMODIFIED = MockFile(base_name=w("scale/Foo.yml"), modified=False, yaml_conts={})
+EMPTY_UNMODIFIED = MockFile(base_name=w("scale/EmptyUnmodified.yml"), modified=False, yaml_conts={})
 
 
 MATCHES_UNMODIFIED = MockFile(
@@ -141,11 +141,14 @@ class AutoTasksTests(unittest.TestCase):
         expected = {
             "tasks": [
                 {
-                    "name": "foo",
+                    "name": "empty_unmodified",
                     "commands": [
                         {
                             "func": "f_run_dsi_workload",
-                            "vars": {"test_control": "foo", "auto_workload_path": "scale/Foo.yml"},
+                            "vars": {
+                                "test_control": "empty_unmodified",
+                                "auto_workload_path": "scale/EmptyUnmodified.yml",
+                            },
                         }
                     ],
                     "priority": 5,
@@ -181,6 +184,7 @@ class AutoTasksTests(unittest.TestCase):
             ],
             "timeout": 64800,
         }
+
         self.assertDictEqual(expected, scenario.parsed)
 
     def test_variant_tasks(self):
@@ -239,11 +243,14 @@ class LegacyHappyCaseTests(unittest.TestCase):
         expected = {
             "tasks": [
                 {
-                    "name": "foo",
+                    "name": "empty_unmodified",
                     "commands": [
                         {
                             "func": "prepare environment",
-                            "vars": {"test": "foo", "auto_workload_path": "scale/Foo.yml"},
+                            "vars": {
+                                "test": "empty_unmodified",
+                                "auto_workload_path": "scale/EmptyUnmodified.yml",
+                            },
                         },
                         {"func": "deploy cluster"},
                         {"func": "run test"},
