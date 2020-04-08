@@ -5,7 +5,6 @@ import re
 import subprocess
 import sys
 from typing import NamedTuple, List, Optional, Set
-import pathlib
 
 import yaml
 from shrub.command import CommandDefinition
@@ -31,20 +30,30 @@ def _check_output(cwd, *args, **kwargs):
     return out.decode().strip().split("\n")
 
 
-def _yaml_load(files: List[str]) -> dict:
-    out = dict()
-    for file in files:
-        if not os.path.exists(file):
-            continue
-        basename = os.path.basename(file).split(".yml")[0]
-        with open(file) as contents:
-            out[basename] = yaml.safe_load(contents)
-    return out
+# TODO: combine Reader and Runtime?
+class Reader:
+    def load(self, path):
+        if not os.path.exists(path):
+            raise Exception(f"No {path} in cwd={os.getcwd()}")
+        with open(path) as exp:
+            return yaml.safe_load(exp)
+
+    def load_set(self, files: List[str]) -> dict:
+        out = dict()
+        for file in files:
+            if not os.path.exists(file):
+                continue
+            basename = os.path.basename(file).split(".yml")[0]
+            with open(file) as contents:
+                out[basename] = yaml.safe_load(contents)
+        return out
 
 
 class DirectoryStructure:
-    def __init__(self, repo_root: str):
+    def __init__(self, repo_root: str, reader: Reader):
         self.repo_root = repo_root
+        self._expansions = None
+        self.reader = reader
 
     def all_workload_files(self) -> Set[str]:
         pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
@@ -56,7 +65,7 @@ class DirectoryStructure:
             # TODO: don't use rtimmons/
             "$(git merge-base HEAD rtimmons/master) -- src/workloads/"
         )
-        print(f"Command: {command}")
+        # print(f"Command: {command}")
         lines = _check_output(self.repo_root, command, shell=True)
         return {os.path.join(self.repo_root, line) for line in lines if line.endswith(".yml")}
 
@@ -88,7 +97,7 @@ class CLIOperation(NamedTuple):
         return self.output_file_suffix
 
     @staticmethod
-    def parse(argv: List[str]) -> "CLIOperation":
+    def parse(argv: List[str], reader: Reader) -> "CLIOperation":
         mode = OpName.ALL_TASKS
         is_legacy = False
         variant = None
@@ -108,7 +117,6 @@ class CLIOperation(NamedTuple):
             variant = argv[variant + 1]
         if "--output" in argv:
             output_file = argv[argv.index("--output") + 1]
-
         if is_legacy is False:
             output_file = "./run/build/Tasks/Tasks.json"
             if argv[1] == "all_tasks":
@@ -117,25 +125,17 @@ class CLIOperation(NamedTuple):
                 mode = OpName.PATCH_TASKS
             if argv[1] == "variant_tasks":
                 mode = OpName.VARIANT_TASKS
-            if not os.path.exists("expansions.yml"):
-                raise Exception(f"No expansions.yml in cwd={os.getcwd()}")
-            with open("expansions.yml") as exp:
-                parsed = yaml.safe_load(exp)
-                variant = parsed["build_variant"]
+                variant = reader.load("expansions.yml")["build_variant"]
         return CLIOperation(mode, variant, is_legacy, output_file)
 
 
 class Runtime:
     use_expansions_yml: bool = False
 
-    def __init__(self, cwd: str, conts: Optional[dict] = None):
-        self.conts = conts
+    def __init__(self, cwd: str,  reader: Reader):
         self.cwd = cwd
 
-    def _load(self):
-        if self.conts is not None:
-            return
-        conts = _yaml_load(
+        conts = reader.load_set(
             [os.path.join(self.cwd, f"{b}.yml") for b in {"bootstrap", "runtime", "expansions"}]
         )
         if "expansions" in conts:
@@ -146,14 +146,13 @@ class Runtime:
                 raise Exception(
                     f"Must have either expansions.yml or bootstrap.yml in cwd={self.cwd}"
                 )
-            bootstrap = conts["bootstrap"]  # type: dict
-            runtime = conts["runtime"]  # type: dict
+            bootstrap: dict = conts["bootstrap"]
+            runtime: dict = conts["runtime"]
             bootstrap.update(runtime)
             conts = bootstrap
         self.conts = conts
 
     def has(self, key: str, acceptable_values: List[str]) -> bool:
-        self._load()
         if key not in self.conts:
             raise Exception(f"Unknown key {key}. Know about {self.conts.keys()}")
         actual = self.conts[key]
@@ -172,13 +171,11 @@ class Workload:
     requires: Optional[dict] = None
     setups: Optional[List[str]] = None
 
-    def __init__(self, file_path: str, is_modified: bool, conts: Optional[dict] = None):
+    def __init__(self, file_path: str, is_modified: bool, reader: Reader):
         self.file_path = file_path
         self.is_modified = is_modified
 
-        if not conts:
-            with open(file_path) as conts:
-                conts = yaml.safe_load(conts)
+        conts = reader.load(self.file_path)
 
         if "AutoRun" not in conts:
             return
@@ -235,14 +232,15 @@ class Workload:
 
 
 class Repo:
-    def __init__(self, lister: DirectoryStructure):
+    def __init__(self, lister: DirectoryStructure, reader: Reader):
         self._modified_repo_files = None
         self.lister = lister
+        self.reader = reader
 
     def all_workloads(self) -> List[Workload]:
         all_files = self.lister.all_workload_files()
         modified = self.lister.modified_workload_files()
-        return [Workload(fpath, fpath in modified) for fpath in all_files]
+        return [Workload(fpath, fpath in modified, self.reader) for fpath in all_files]
 
     def modified_workloads(self) -> List[Workload]:
         return [workload for workload in self.all_workloads() if workload.is_modified]
@@ -283,19 +281,21 @@ class ConfigWriter:
     def __init__(self, op: CLIOperation):
         self.op = op
 
-    def write(self, tasks: List[GeneratedTask]) -> Configuration:
+    def write(self, tasks: List[GeneratedTask], write: bool = True) -> Configuration:
         if self.op.mode != OpName.ALL_TASKS:
             config: Configuration = self.variant_tasks(tasks, self.op.variant)
         else:
             config = (
                 self.all_tasks_legacy(tasks) if self.op.is_legacy else self.all_tasks_modern(tasks)
             )
-        try:
-            os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
-            with open(self.op.output_file, "w") as output:
-                output.write(config.to_json())
-        finally:
-            print(f"Tried to write to {self.op.output_file} from cwd={os.getcwd()}")
+        if write:
+            try:
+                os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
+                with open(self.op.output_file, "w") as output:
+                    output.write(config.to_json())
+            except OSError as e:
+                print(f"Tried to write to {self.op.output_file} from cwd={os.getcwd()}")
+                raise e
         return config
 
     @staticmethod
@@ -346,11 +346,11 @@ class ConfigWriter:
 def main(argv: List[str] = None) -> None:
     if not argv:
         argv = sys.argv
-    runtime = Runtime(os.getcwd())
-    op = CLIOperation.parse(argv)
-
-    lister = DirectoryStructure(op.repo_root)
-    repo = Repo(lister)
+    reader = Reader()
+    runtime = Runtime(os.getcwd(), reader)
+    op = CLIOperation.parse(argv, reader)
+    lister = DirectoryStructure(op.repo_root, reader)
+    repo = Repo(lister, reader)
     tasks = repo.tasks(op, runtime)
 
     writer = ConfigWriter(op)
