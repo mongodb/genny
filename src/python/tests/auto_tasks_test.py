@@ -62,7 +62,7 @@ EXPANSIONS = MockFile(
     yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
 )
 
-MULTI_SETUP_FILE_MODIFIED = MockFile(
+MULTI_MODIFIED = MockFile(
     base_name=w("src/Multi.yml"),
     modified=True,
     yaml_conts={
@@ -74,7 +74,7 @@ MULTI_SETUP_FILE_MODIFIED = MockFile(
 )
 
 
-MULTI_SETUP_FILE_UNMODIFIED = MockFile(
+MULTI_UNMODIFIED = MockFile(
     base_name=w("src/MultiUnmodified.yml"),
     modified=False,
     yaml_conts={
@@ -85,7 +85,7 @@ MULTI_SETUP_FILE_UNMODIFIED = MockFile(
     },
 )
 
-EMPTY_MODIFIED = MockFile(base_name=w("scale/Bar.yml"), modified=True, yaml_conts={})
+EMPTY_MODIFIED = MockFile(base_name=w("scale/EmptyModified.yml"), modified=True, yaml_conts={})
 EMPTY_UNMODIFIED = MockFile(base_name=w("scale/Foo.yml"), modified=False, yaml_conts={})
 
 
@@ -137,7 +137,7 @@ def helper(files: List[MockFile], argv: List[str]) -> Scenario:
 
 class AutoTasksTests(unittest.TestCase):
     def test_all_tasks(self):
-        scenario = helper([EMPTY_UNMODIFIED, MULTI_SETUP_FILE_MODIFIED, EXPANSIONS], ["all_tasks"])
+        scenario = helper([EMPTY_UNMODIFIED, MULTI_MODIFIED, EXPANSIONS], ["all_tasks"])
         expected = {
             "tasks": [
                 {
@@ -184,9 +184,7 @@ class AutoTasksTests(unittest.TestCase):
         self.assertDictEqual(expected, scenario.parsed)
 
     def test_variant_tasks(self):
-        scenario = helper(
-            [EXPANSIONS, MULTI_SETUP_FILE_UNMODIFIED, MATCHES_UNMODIFIED], ["variant_tasks"]
-        )
+        scenario = helper([EXPANSIONS, MULTI_UNMODIFIED, MATCHES_UNMODIFIED], ["variant_tasks"])
         expected = {
             "buildvariants": [
                 {
@@ -205,8 +203,8 @@ class AutoTasksTests(unittest.TestCase):
         scenario = helper(
             [
                 EXPANSIONS,
-                MULTI_SETUP_FILE_MODIFIED,
-                MULTI_SETUP_FILE_UNMODIFIED,
+                MULTI_MODIFIED,
+                MULTI_UNMODIFIED,
                 NOT_MATCHES_MODIFIED,
                 NOT_MATCHES_UNMODIFIED,
             ],
@@ -216,7 +214,11 @@ class AutoTasksTests(unittest.TestCase):
             "buildvariants": [
                 {
                     "name": "some-build-variant",
-                    "tasks": [{"name": "multi_a"}, {"name": "multi_b"}, {"name": "not_matches_modified"}],
+                    "tasks": [
+                        {"name": "multi_a"},
+                        {"name": "multi_b"},
+                        {"name": "not_matches_modified"},
+                    ],
                 }
             ]
         }
@@ -231,7 +233,7 @@ class AutoTasksTests(unittest.TestCase):
 class LegacyHappyCaseTests(unittest.TestCase):
     def test_all_tasks(self):
         scenario = helper(
-            [EXPANSIONS, EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_SETUP_FILE_MODIFIED],
+            [EXPANSIONS, EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_MODIFIED],
             ["--generate-all-tasks", "--output", "build/all_tasks.json"],
         )
         expected = {
@@ -250,11 +252,14 @@ class LegacyHappyCaseTests(unittest.TestCase):
                     "priority": 5,
                 },
                 {
-                    "name": "bar",
+                    "name": "empty_modified",
                     "commands": [
                         {
                             "func": "prepare environment",
-                            "vars": {"test": "bar", "auto_workload_path": "scale/Bar.yml"},
+                            "vars": {
+                                "test": "empty_modified",
+                                "auto_workload_path": "scale/EmptyModified.yml",
+                            },
                         },
                         {"func": "deploy cluster"},
                         {"func": "run test"},
