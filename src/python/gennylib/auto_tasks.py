@@ -133,7 +133,7 @@ class CLIOperation(NamedTuple):
 class Runtime:
     use_expansions_yml: bool = False
 
-    def __init__(self, cwd: str,  reader: Reader):
+    def __init__(self, cwd: str, reader: Reader):
         self.cwd = cwd
 
         conts = reader.load_set(

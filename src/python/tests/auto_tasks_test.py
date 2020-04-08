@@ -5,8 +5,14 @@ from unittest.mock import MagicMock
 
 from shrub.config import Configuration
 
-from gennylib.auto_tasks import Runtime, CLIOperation, DirectoryStructure, Repo, ConfigWriter, \
-    Reader
+from gennylib.auto_tasks import (
+    Runtime,
+    CLIOperation,
+    DirectoryStructure,
+    Repo,
+    ConfigWriter,
+    Reader,
+)
 
 
 class Example(NamedTuple):
@@ -38,15 +44,12 @@ class MockReader(Reader):
 
 class AutoTasksTests(unittest.TestCase):
     @staticmethod
-    def helper(files: List[MockFile],
-               argv: List[str]) -> Configuration:
+    def helper(files: List[MockFile], argv: List[str]) -> Configuration:
         # Create "dumb" mocks.
-        lister: DirectoryStructure = MagicMock(name="lister",
-                                               spec=DirectoryStructure,
-                                               instance=True)
-        runtime: Runtime = MagicMock(name="runtime",
-                                     spec=Runtime,
-                                     instance=True)
+        lister: DirectoryStructure = MagicMock(
+            name="lister", spec=DirectoryStructure, instance=True
+        )
+        runtime: Runtime = MagicMock(name="runtime", spec=Runtime, instance=True)
         reader: Reader = MockReader(files)
 
         # Make them smarter.
@@ -66,58 +69,61 @@ class AutoTasksTests(unittest.TestCase):
         return config
 
     def test_all_tasks(self):
-        config = self.helper([
-            MockFile("scale/Foo.yml", False, {})
-        ], ["all_tasks"])
+        config = self.helper([MockFile("scale/Foo.yml", False, {})], ["all_tasks"])
         parsed = json.loads(config.to_json())
         self.assertEqual(["foo"], [task["name"] for task in parsed["tasks"]])
-        self.assertDictEqual({
-            "func": "f_run_dsi_workload",
-            "vars": {
-                "test_control": "foo",
-                "auto_workload_path": "scale/Foo.yml",
+        self.assertDictEqual(
+            {
+                "func": "f_run_dsi_workload",
+                "vars": {"test_control": "foo", "auto_workload_path": "scale/Foo.yml"},
             },
-        }, parsed["tasks"][0]["commands"][0])
+            parsed["tasks"][0]["commands"][0],
+        )
 
     def test_variant_tasks(self):
-        config = self.helper([
-            MockFile("expansions.yml", False, {
-                "build_variant": "some-build-variant",
-                "mongodb_setup": "some-setup",
-            }),
-            MockFile("src/Foo.yml", False, {
-                "AutoRun": {
-                    "Requires": {
-                        "mongodb_setup": ["some-setup"]
-                    }
-                }
-            }),
-        ], ["variant_tasks"])
+        config = self.helper(
+            [
+                MockFile(
+                    "expansions.yml",
+                    False,
+                    {"build_variant": "some-build-variant", "mongodb_setup": "some-setup"},
+                ),
+                MockFile(
+                    "src/Foo.yml",
+                    False,
+                    {"AutoRun": {"Requires": {"mongodb_setup": ["some-setup"]}}},
+                ),
+            ],
+            ["variant_tasks"],
+        )
 
         parsed = json.loads(config.to_json())
-        self.assertEqual(parsed,{'buildvariants': [{'name': 'some-build-variant', 'tasks': [{'name': 'foo'}]}]})
+        self.assertEqual(
+            parsed, {"buildvariants": [{"name": "some-build-variant", "tasks": [{"name": "foo"}]}]}
+        )
 
     def test_patch_tasks(self):
-        config = self.helper([
-            MockFile("expansions.yml", False, {
-                "build_variant": "some-build-variant",
-                "mongodb_setup": "some-setup",
-            }),
-            MockFile("src/Foo.yml", True, {
-                "AutoRun": {
-                    "Requires": {
-                        "mongodb_setup": ["some-other-setup"]
-                    }
-                }
-            }),
-            MockFile("src/Bar.yml", False, {
-                "AutoRun": {
-                    "Requires": {
-                        "mongodb_setup": ["some-other-setup"]
-                    }
-                }
-            }),
-        ], ["patch_tasks"])
+        config = self.helper(
+            [
+                MockFile(
+                    "expansions.yml",
+                    False,
+                    {"build_variant": "some-build-variant", "mongodb_setup": "some-setup"},
+                ),
+                MockFile(
+                    "src/Foo.yml",
+                    True,
+                    {"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+                ),
+                MockFile(
+                    "src/Bar.yml",
+                    False,
+                    {"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+                ),
+            ],
+            ["patch_tasks"],
+        )
         parsed = json.loads(config.to_json())
-        self.assertEqual(parsed, {
-            'buildvariants': [{'name': 'some-build-variant', 'tasks': [{'name': 'foo'}]}]})
+        self.assertEqual(
+            parsed, {"buildvariants": [{"name": "some-build-variant", "tasks": [{"name": "foo"}]}]}
+        )
