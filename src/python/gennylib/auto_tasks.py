@@ -134,8 +134,7 @@ class CLIOperation(NamedTuple):
         if "--generate-all-tasks" in argv:
             mode = OpName.ALL_TASKS
             is_legacy = True
-        # Yup: not `--modified`. Legacy was v inconsistent.
-        if "modified" in argv:
+        if "--modified" in argv:
             mode = OpName.PATCH_TASKS
             is_legacy = True
         if "--autorun" in argv:
@@ -167,9 +166,8 @@ class CurrentBuildInfo:
             conts = conts["expansions"]
         else:
             if "bootstrap" not in conts:
-                raise Exception(
-                    f"Must have either expansions.yml or bootstrap.yml in cwd={os.getcwd()}"
-                )
+                # Dangerous territory, but this goes away once we're done with legacy.
+                return
             bootstrap: dict = conts["bootstrap"]
             if "runtime" in conts:
                 runtime: dict = conts["runtime"]

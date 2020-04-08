@@ -184,7 +184,7 @@ class AutoTasksTests(BaseTestClass):
 class LegacyHappyCaseTests(BaseTestClass):
     def test_all_tasks(self):
         self.assert_result(
-            given_files=[EXPANSIONS, EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_MODIFIED],
+            given_files=[EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_MODIFIED],
             and_args=["--generate-all-tasks", "--output", "build/all_tasks.json"],
             then_writes={
                 "tasks": [
@@ -282,7 +282,7 @@ class LegacyHappyCaseTests(BaseTestClass):
                 "build/patch_tasks.json",
                 "--variants",
                 "some-variant",
-                "modified",
+                "--modified",
             ],
             then_writes={
                 "buildvariants": [
