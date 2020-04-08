@@ -16,13 +16,18 @@ from shrub.command import CommandDefinition
 from shrub.config import Configuration
 from shrub.variant import TaskSpec
 
-
-# You could argue that YamlReader, FileLister, and maybe even Repo
-# should be the same class - perhaps renamed to System or something?
-# That will be easier once we can kill everything relating to "legacy".
+#
+# The classes are listed here in dependency order to avoid having to quote typenames.
+#
+# For comprehension, start at main(), then class Workload, then class Repo. Rest
+# are basically just helpers.
+#
 
 
 class YamlReader:
+    # You could argue that YamlReader, FileLister, and maybe even Repo
+    # should be the same class - perhaps renamed to System or something?
+    # That will be easier once we can kill everything relating to "legacy".
     def load(self, path: str) -> dict:
         """
         :param path: path relative to cwd
@@ -33,7 +38,7 @@ class YamlReader:
         with open(path) as exp:
             return yaml.safe_load(exp)
 
-    # Really just here for easy mockings
+    # Really just here for easy mocking.
     def exists(self, path: str) -> bool:
         return os.path.exists(path)
 
@@ -68,6 +73,7 @@ class FileLister:
         return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
+        """Relies on git to find files in src/workloads modified versus origin/master"""
         command = (
             "git diff --name-only --diff-filter=AMR "
             "$(git merge-base HEAD origin/master) -- src/workloads/"
@@ -97,8 +103,8 @@ class CLIOperation(NamedTuple):
     output_file_suffix: str
 
     @property
+    # Kill once we kill is_legacy
     def repo_root(self) -> str:
-        # Kill once we kill is_legacy
         if self.is_legacy:
             if self.mode == OpName.VARIANT_TASKS:
                 return "../src/genny/genny"
@@ -109,8 +115,8 @@ class CLIOperation(NamedTuple):
         return "./src/genny"
 
     @property
+    # Kill once we kill is_legacy
     def output_file(self) -> str:
-        # Kill once we kill is_legacy
         if self.is_legacy:
             return os.path.join(self.repo_root, self.output_file_suffix)
         return self.output_file_suffix
@@ -122,6 +128,9 @@ class CLIOperation(NamedTuple):
         variant = None
         output_file = None
 
+        # Purposefully not using argparse etc - won't need
+        # it once we switch from legacy. Right now only targeting
+        # the exact invocations in system_perf.yml in the mongo repo.
         if "--generate-all-tasks" in argv:
             mode = OpName.ALL_TASKS
             is_legacy = True
