@@ -15,6 +15,7 @@ import csv
 import os
 import tempfile
 import unittest
+from unittest.mock import patch
 from collections import OrderedDict
 from datetime import datetime
 from os.path import join as pjoin
@@ -192,3 +193,21 @@ class CedarIntegrationTest(unittest.TestCase):
             self.verify_output(
                 pjoin(output_dir, "InsertRemove-Remove.bson"), expected_result_remove
             )
+
+    @patch("gennylib.parsers.cedar.get_ftdc_duration")
+    def test_cedar_ftdc(self, mock_get_duration):
+        mock_get_duration.return_value = "fake_duration"
+        args = [get_fixture("cedar", "ftdc-metrics"), "dummy_output_dir"]
+
+        expected_metrics = ["ftdc-metrics/fake1.ftdc",
+                            "ftdc-metrics/fake2.ftdc",
+                            "ftdc-metrics/fake3.ftdc",]
+
+        parser = cedar.build_parser()
+        args = parser.parse_args(args)
+        actual_metrics, returned_time = cedar.run(args)
+
+        self.assertEqual(len(actual_metrics), 3)
+        for metric in expected_metrics:
+            assert metric in actual_metrics
+        self.assertEqual(returned_time, "fake_duration")

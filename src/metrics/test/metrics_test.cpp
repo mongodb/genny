@@ -797,7 +797,7 @@ TEST_CASE("Events stream to gRPC") {
             file_count++;
         }
 
-        REQUIRE(file_count == 3);
+        REQUIRE(file_count == 4);
 
         REQUIRE(boost::filesystem::remove_all(metricsPath));
     }

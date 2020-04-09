@@ -104,7 +104,7 @@ class _Config(object):
         return self.now - self.test_run_time
 
 
-def build_report(config):
+def build_report(config, args):
     sub_tests = []
 
     bucket_prefix = "{}_{}".format(config.task_id, config.execution_number)
@@ -119,8 +119,8 @@ def build_report(config):
             tags=[],
             local_path=path,
             created_at=config.created_at,
-            convert_bson_to_ftdc=True,
-            permissions="public-read",
+            convert_bson_to_ftdc = not cedar.is_ftdc(args),
+            permissions='public-read',
             prefix=bucket_prefix,
         )
 
@@ -214,49 +214,6 @@ class CertRetriever(object):
         )
 
 
-class ShellCuratorRunner(object):
-    """Runs curator"""
-
-    def __init__(self, retriever=None, report_file=DEFAULT_REPORT_FILE):
-        """
-        :param retriever: CertRetriever to use. Will construct one from given config if None
-        """
-        self.retriever = retriever
-        self.report_file = report_file
-
-    def get_send_command(self):
-        """
-        Gets command for calling poplar send.
-        """
-
-        command = [
-            "curator",
-            "poplar",
-            "send",
-            "--service",
-            "cedar.mongodb.com:7070",
-            "--cert",
-            self.retriever.user_cert(),
-            "--key",
-            self.retriever.user_key(),
-            "--ca",
-            self.retriever.root_ca(),
-            "--path",
-            self.report_file,
-        ]
-        return command
-
-    @staticmethod
-    def run(cmd):
-        """
-        Run curator in a subprocess.
-
-        :raises: CalledProcessError if return code is non-zero.
-        """
-        res = subprocess.run(cmd)
-        res.check_returncode()
-
-
 def build_parser():
     parser = cedar.build_parser()
     parser.description += " and create a cedar report"
@@ -301,9 +258,6 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
         with open(args.expansions_file, "r") as f:
             env = yaml.safe_load(f)
 
-    if env.get("cedar_mode", "") == "skip":
-        return
-
     if args.test_name:
         env["test_name"] = args.test_name
     else:
@@ -312,18 +266,10 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
     metrics_file_names, test_run_time = cedar.run(args)
     config = _Config(env, metrics_file_names, test_run_time)
 
-    report_dict = build_report(config)
+    report_dict = build_report(config, args)
 
     with open(args.report_file, "w") as f:
         json.dump(report_dict, f, cls=RFCDateTimeEncoder)
-
-    jira_user = env["perf_jira_user"]
-    jira_pwd = env["perf_jira_pw"]
-
-    cr = cert_retriever_cls(jira_user, jira_pwd)
-    runner = ShellCuratorRunner(cr, args.report_file)
-    runner.run(runner.get_send_command())
-
 
 if __name__ == "__main__":
     main__cedar_report()
