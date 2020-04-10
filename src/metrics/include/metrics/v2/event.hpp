@@ -128,12 +128,17 @@ public:
                                      << " and actor ID " << _actorId << ", but no stream existed.";
             return;
         }
-
-        _stream->WritesDone(_tag);
         if (!finish_call()) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Closing gRPC stream for operation name " << _name << " and actor ID "
                 << _actorId << ", but not all writes completed.";
+        }
+
+        _stream->WritesDone(_tag);
+        if (!finish_call()) {
+            BOOST_LOG_TRIVIAL(warning)
+                << "Failed to write to stream for operation name " << _name << " and actor ID "
+                << _actorId << ".";       
         }
 
         grpc::Status status; 
