@@ -157,12 +157,12 @@ public:
 private:
     bool finishCall() {
         if (_inFlight) {
-            void* got_tag;
+            void* gotTag;
             bool ok = false;
-            _cq.Next(&got_tag, &ok);
+            _cq.Next(&gotTag, &ok);
 
             _inFlight = false;
-            return got_tag == _grpcTag && ok;
+            return gotTag == _grpcTag && ok;
         }
         return true;
     }
