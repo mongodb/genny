@@ -98,19 +98,19 @@ public:
     StreamInterfaceImpl(const std::string& name, const ActorId& actorId)
         : _name{name},
           _actorId{actorId},
-          _in_flight{true},
+          _inFlight{true},
           _options{},
           _response{},
           _context{},
           _cq{},
-          _tag{(void*)1}, // Doesn't actually matter what this is, just be consistent.
-          _stream{_stub->AsyncStreamEvents(&_context, &_response, &_cq, _tag)} {
+          _grpcTag{(void*)1}, // Doesn't actually matter what this is, just be consistent.
+          _stream{_stub->AsyncStreamEvents(&_context, &_response, &_cq, _grpcTag)} {
         _options.set_no_compression().set_buffer_hint();
-        finish_call();  // We expect a response from the initial construction.
+        finishCall();  // We expect a response from the initial construction.
     }
 
     void write(const poplar::EventMetrics& event) {
-        if (!finish_call()) {
+        if (!finishCall()) {
             std::ostringstream os;
             os << "Failed to write to stream for operation name " << _name << " and actor ID "
                << _actorId << ". EventMetrics object: " << event.ShortDebugString();
@@ -118,8 +118,8 @@ public:
             BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
         }
 
-        _stream->Write(event, _options, _tag);
-        _in_flight = true;
+        _stream->Write(event, _options, _grpcTag);
+        _inFlight = true;
     }
 
     ~StreamInterfaceImpl() {
@@ -128,21 +128,21 @@ public:
                                      << " and actor ID " << _actorId << ", but no stream existed.";
             return;
         }
-        if (!finish_call()) {
+        if (!finishCall()) {
             BOOST_LOG_TRIVIAL(warning)
                 << "Closing gRPC stream for operation name " << _name << " and actor ID "
                 << _actorId << ", but not all writes completed.";
         }
 
-        _stream->WritesDone(_tag);
-        if (!finish_call()) {
+        _stream->WritesDone(_grpcTag);
+        if (!finishCall()) {
             BOOST_LOG_TRIVIAL(warning) << "Failed to write to stream for operation name " << _name
                                        << " and actor ID " << _actorId << ".";
         }
 
         grpc::Status status;
-        _stream->Finish(&status, _tag);
-        if (!finish_call()) {
+        _stream->Finish(&status, _grpcTag);
+        if (!finishCall()) {
             BOOST_LOG_TRIVIAL(error) << "Failed to finish writes to stream for operation name "
                                      << _name << " and actor ID " << _actorId << ".";
             return;
@@ -155,27 +155,27 @@ public:
     }
 
 private:
-    bool finish_call() {
-        if (_in_flight) {
+    bool finishCall() {
+        if (_inFlight) {
             void* got_tag;
             bool ok = false;
             _cq.Next(&got_tag, &ok);
 
-            _in_flight = false;
-            return got_tag == _tag && ok;
+            _inFlight = false;
+            return got_tag == _grpcTag && ok;
         }
         return true;
     }
 
     std::string _name;
     ActorId _actorId;
-    bool _in_flight;
+    bool _inFlight;
     CollectorStubInterface _stub;
     grpc::WriteOptions _options;
     poplar::PoplarResponse _response;
     grpc::ClientContext _context;
     grpc::CompletionQueue _cq;
-    void* _tag;
+    void* _grpcTag;
     std::unique_ptr<grpc::ClientAsyncWriterInterface<poplar::EventMetrics>> _stream;
 };
 
