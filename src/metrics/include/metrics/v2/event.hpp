@@ -103,7 +103,9 @@ public:
           _response{},
           _context{},
           _cq{},
-          _grpcTag{(void*)1}, // Doesn't actually matter what this is, just be consistent.
+          // This is used by the gRPC system to distinguish calls.
+          // We only ever have 1 message in flight at a time, so it doesn't matter to us.
+          _grpcTag{(void*)1},
           _stream{_stub->AsyncStreamEvents(&_context, &_response, &_cq, _grpcTag)} {
         _options.set_no_compression().set_buffer_hint();
         finishCall();  // We expect a response from the initial construction.
@@ -162,6 +164,8 @@ private:
             _cq.Next(&gotTag, &ok);
 
             _inFlight = false;
+            // Basic sanity check that the returned tag is expected.
+            // (and ok status).
             return gotTag == _grpcTag && ok;
         }
         return true;
