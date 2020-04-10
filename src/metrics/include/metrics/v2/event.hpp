@@ -103,7 +103,7 @@ public:
           _response{},
           _context{},
           _cq{},
-          _tag{(void*)1},
+          _tag{(void*)1}, // Doesn't actually matter what this is, just be consistent.
           _stream{_stub->AsyncStreamEvents(&_context, &_response, &_cq, _tag)} {
         _options.set_no_compression().set_buffer_hint();
         finish_call();  // We expect a response from the initial construction.
