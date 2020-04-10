@@ -23,6 +23,7 @@
 
 #include <boost/core/noncopyable.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/filesystem.hpp>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>
@@ -189,7 +190,7 @@ public:
                   const RegistryT<ClockSource>& registry,
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
-                  const std::string& pathPrefix,
+                  const boost::filesystem::path& pathPrefix,
                   const std::optional<std::string>& collector_name = std::nullopt,
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),

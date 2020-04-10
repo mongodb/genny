@@ -19,8 +19,12 @@ import logging
 import csv
 import sys
 from collections import OrderedDict, defaultdict
+from datetime import timedelta
 from datetime import datetime
 from os.path import join as pjoin
+from os.path import isdir
+from os import listdir
+import os
 
 from bson import BSON
 from bson.int64 import Int64
@@ -245,29 +249,29 @@ def sort_csv_file(file_name, out_dir):
 
 def build_parser():
     parser = argparse.ArgumentParser(
-        description="Convert Genny csv2 perf data to Cedar BSON format"
+        description="Convert Genny csv2 perf data to Cedar BSON format or retrieve generated FTDC data"
     )
-    parser.add_argument("input_file", metavar="input-file", help="path to genny csv2 perf data")
+    parser.add_argument("input_file", metavar="input-file", help="path to genny csv2 file or FTDC directory")
     parser.add_argument(
-        "output_dir", metavar="output-dir", help="directory to store output BSON files"
+        "output_dir", metavar="output-dir", help="directory to store output BSON files (if using csv2)"
     )
+
     return parser
 
+def do_parse(args):
+    metrics_file_names = []
 
-def run(args):
-    """
-    Runs the conversion from genny metrics to cedar format.
-
-    :param args: parsed command line args.
-    :return: list of cedar metrics file names and the approximate run time of the test
-             computed using the machine's system_time.
-
-    """
     out_dir = args.output_dir
 
+    # Users can specify inputs without the suffix, in case
+    # it's actually a directory of FTDC outputs.
+    if not os.path.exists(args.input_file):
+        input_file = args.input_file + ".csv"
+    else:
+        input_file = args.input_file
+
     # Read CSV2 file
-    my_csv2 = CSV2(args.input_file)
-    metrics_file_names = []
+    my_csv2 = CSV2(input_file)
 
     with my_csv2.data_reader() as data_reader:
         # Separate into actor-operation
@@ -285,6 +289,37 @@ def run(args):
 
     return metrics_file_names, my_csv2.approximate_test_run_time
 
+def is_ftdc(args):
+    return isdir(args.input_file)
+
+def get_ftdc_duration(args):
+    time_file = os.path.join(args.input_file, "start_time.txt")
+    return datetime.now() - datetime.fromtimestamp(os.path.getmtime(time_file))
+
+def run(args):
+    """
+    Runs the conversion from genny metrics to cedar format.
+    If the inputted file is a directory of FTDC data, we just
+    return those.
+
+    :param args: parsed command line args.
+    :return: list of cedar metrics file names and the approximate run time of the test
+             computed using the machine's system_time.
+
+    """
+    if is_ftdc(args):
+        duration = get_ftdc_duration(args) 
+
+        # We expect that, at poplar-send time, the directory of FTDC files is in the CWD.
+        ftdc_dir = os.path.basename(os.path.normpath(args.input_file))
+        metrics_file_names = []
+        for filename in os.listdir(args.input_file):
+            if filename != "start_time.txt":
+                metrics_file_names.append(os.path.join(ftdc_dir, filename))
+
+        return metrics_file_names, duration
+
+    return do_parse(args)  
 
 def main__cedar(argv=sys.argv[1:]):
     parser = build_parser()

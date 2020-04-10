@@ -141,10 +141,15 @@ public:
 
     explicit RegistryT() = default;
 
-    explicit RegistryT(MetricsFormat format, std::string pathPrefix)
+    explicit RegistryT(MetricsFormat format, boost::filesystem::path pathPrefix)
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
+
+            boost::filesystem::path startTimeFilePath = _pathPrefix / "start_time.txt";
+            std::ofstream startTimeFile(startTimeFilePath.string());
+            startTimeFile << "This file only exists to mark execution start time.";
+            startTimeFile.close();
         }
     }
 
@@ -224,7 +229,7 @@ public:
         return _format;
     }
 
-    const std::string& getPathPrefix() const {
+    const boost::filesystem::path& getPathPrefix() const {
         return _pathPrefix;
     }
 
@@ -243,7 +248,7 @@ private:
     CollectorsMap _collectors;
     OperationsMap _ops;
     MetricsFormat _format;
-    std::string _pathPrefix;
+    boost::filesystem::path _pathPrefix;
 };
 
 }  // namespace internals
