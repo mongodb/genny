@@ -22,8 +22,8 @@
 #include <string>
 
 #include <boost/core/noncopyable.hpp>
-#include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <gennylib/Actor.hpp>
 #include <gennylib/Orchestrator.hpp>

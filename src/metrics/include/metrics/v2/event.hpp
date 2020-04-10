@@ -19,8 +19,8 @@
 #include <atomic>
 #include <cstdlib>
 
-#include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
@@ -103,19 +103,19 @@ public:
           _response{},
           _context{},
           _cq{},
-          _tag{(void*) 1},
+          _tag{(void*)1},
           _stream{_stub->AsyncStreamEvents(&_context, &_response, &_cq, _tag)} {
         _options.set_no_compression().set_buffer_hint();
-        finish_call();
+        finish_call();  // We expect a response from the initial construction.
     }
 
     void write(const poplar::EventMetrics& event) {
         if (!finish_call()) {
-                std::ostringstream os;
-                os << "Failed to write to stream for operation name " << _name << " and actor ID "
-                   << _actorId << ". EventMetrics object: " << event.ShortDebugString();
+            std::ostringstream os;
+            os << "Failed to write to stream for operation name " << _name << " and actor ID "
+               << _actorId << ". EventMetrics object: " << event.ShortDebugString();
 
-                BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
+            BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
         }
 
         _stream->Write(event, _options, _tag);
@@ -136,16 +136,15 @@ public:
 
         _stream->WritesDone(_tag);
         if (!finish_call()) {
-            BOOST_LOG_TRIVIAL(warning)
-                << "Failed to write to stream for operation name " << _name << " and actor ID "
-                << _actorId << ".";       
+            BOOST_LOG_TRIVIAL(warning) << "Failed to write to stream for operation name " << _name
+                                       << " and actor ID " << _actorId << ".";
         }
 
-        grpc::Status status; 
+        grpc::Status status;
         _stream->Finish(&status, _tag);
         if (!finish_call()) {
-            BOOST_LOG_TRIVIAL(error) << "Failed to finish writes to stream for operation name " << _name << " and actor ID "
-                                     << _actorId << ".";
+            BOOST_LOG_TRIVIAL(error) << "Failed to finish writes to stream for operation name "
+                                     << _name << " and actor ID " << _actorId << ".";
             return;
         }
         if (!status.ok()) {
@@ -153,11 +152,9 @@ public:
                 << "Problem closing grpc stream for operation name " << _name << " and actor ID "
                 << _actorId << ": " << _context.debug_error_string();
         }
-
     }
 
 private:
-
     bool finish_call() {
         if (_in_flight) {
             void* got_tag;
