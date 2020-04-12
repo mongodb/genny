@@ -119,8 +119,12 @@ std::vector<Nanosecond> runTest(std::vector<std::string>& loopNames,
                 time = loops.phaseLoop(std::forward<Args>(args)...);
             } else if (loopName == "metrics") {
                 time = loops.metricsLoop(std::forward<Args>(args)...);
+            } else if (loopName == "metrics-ftdc") {
+                time = loops.metricsFtdcLoop(std::forward<Args>(args)...);
             } else if (loopName == "real") {
                 time = loops.metricsPhaseLoop(std::forward<Args>(args)...);
+            } else if (loopName == "real-ftdc") {
+                time = loops.metricsFtdcPhaseLoop(std::forward<Args>(args)...);
             } else {
                 std::ostringstream stm;
                 stm << "Unknown loop type: " << loopName;

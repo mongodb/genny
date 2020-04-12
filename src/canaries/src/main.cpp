@@ -66,8 +66,9 @@ struct ProgramOptions {
     simple   Run native for-loop; used as the control group with no Genny code
     phase    Run just the PhaseLoop
     metrics  Run native for-loop and record one timer metric per iteration
-    real     Run PhaseLoop and record one timer metric per iteration; resembles
-             how a real actor runs
+    metrics-ftdc  Run native for-loop and record one timer metric per iteration, uses FTDC metrics
+    real-ftdc     Run PhaseLoop and record one timer metric per iteration; resembles
+             how a real actor runs, uses FTDC metrics
     )"
                  << "\n";
 
@@ -128,7 +129,7 @@ struct ProgramOptions {
         if (vm.count("loop-type") >= 1)
             _loopNames = vm["loop-name"].as<std::vector<std::string>>();
         else
-            _loopNames = {"simple", "phase", "metrics", "real"};
+            _loopNames = {"simple", "phase", "metrics", "metrics-ftdc", "real", "real-ftdc"};
 
         _iterations = vm["iterations"].as<int64_t>();
         _mongoUri = vm["mongo-uri"].as<std::string>();

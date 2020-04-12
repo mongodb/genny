@@ -33,7 +33,7 @@ using namespace genny::canaries;
  * programs. The CPU cache benchmarks are sensitive to context switching overhead.
  */
 TEST_CASE("Measure Phaseloop Overhead", "[benchmark]") {
-    std::vector<std::string> loopNames{"simple", "metrics", "phase", "real"};
+    std::vector<std::string> loopNames{"simple", "metrics", "metrics-ftdc", "phase", "real", "real-ftdc"};
 
     auto printRes = [&](std::vector<Nanosecond>& loopTimings, std::string_view name) {
         BOOST_LOG_TRIVIAL(info) << "Total duration for " << name << ":";
