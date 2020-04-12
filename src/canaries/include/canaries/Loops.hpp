@@ -66,6 +66,16 @@ public:
     Nanosecond metricsLoop(Args&&... args);
 
     /**
+     *  Run native for-loop and record one timer metric per iteration.
+     *  Uses FTDC-based metrics reporting with gRPC calls.
+     *
+     *  @param args arguments forwarded to the workload being run.
+     *  @return the CPU time this function took, in nanoseconds.
+     */
+    Nanosecond metricsFtdcLoop(Args&&... args);
+
+
+    /**
      * Run PhaseLoop and record one timer metric per iteration.
      *
      * @param args arguments forwarded to the workload being run.
