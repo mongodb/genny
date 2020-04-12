@@ -4,20 +4,20 @@ import subprocess
 from contextlib import contextmanager
 
 
-def get_genny_args():
+def get_program_args(prog_name):
     """
-    Returns the argument list used to create the Genny process.
+    Returns the argument list used to create the given Genny program.
 
     If we are in the root of the genny repo, use the local executable. 
     Otherwise we search the PATH.
     """
     args = sys.argv
-    genny_core = "genny_core"
 
-    local_core = "./dist/bin/genny_core"
-    if os.path.exists(local_core):
-        genny_core = local_core
-    args[0] = genny_core
+    executable = prog_name
+    local_prog = os.path.join("./dist/bin", prog_name)
+    if os.path.exists(local_prog):
+        executable = local_prog
+    args[0] = executable
     return args
 
 
@@ -64,9 +64,8 @@ def main_genny_runner():
     """
 
     with poplar_grpc():
-        res = subprocess.run(get_genny_args())
+        res = subprocess.run(get_program_args("genny_core"))
         res.check_returncode()
-
 
 if __name__ == "__main__":
     main_genny_runner()
