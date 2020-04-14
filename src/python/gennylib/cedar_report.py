@@ -119,8 +119,8 @@ def build_report(config, args):
             tags=[],
             local_path=path,
             created_at=config.created_at,
-            convert_bson_to_ftdc = not cedar.is_ftdc(args),
-            permissions='public-read',
+            convert_bson_to_ftdc=not cedar.is_ftdc(args),
+            permissions="public-read",
             prefix=bucket_prefix,
         )
 
@@ -270,6 +270,7 @@ def main__cedar_report(argv=sys.argv[1:], env=None, cert_retriever_cls=CertRetri
 
     with open(args.report_file, "w") as f:
         json.dump(report_dict, f, cls=RFCDateTimeEncoder)
+
 
 if __name__ == "__main__":
     main__cedar_report()

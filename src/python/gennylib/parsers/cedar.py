@@ -251,12 +251,17 @@ def build_parser():
     parser = argparse.ArgumentParser(
         description="Convert Genny csv2 perf data to Cedar BSON format or retrieve generated FTDC data"
     )
-    parser.add_argument("input_file", metavar="input-file", help="path to genny csv2 file or FTDC directory")
     parser.add_argument(
-        "output_dir", metavar="output-dir", help="directory to store output BSON files (if using csv2)"
+        "input_file", metavar="input-file", help="path to genny csv2 file or FTDC directory"
+    )
+    parser.add_argument(
+        "output_dir",
+        metavar="output-dir",
+        help="directory to store output BSON files (if using csv2)",
     )
 
     return parser
+
 
 def do_parse(args):
     metrics_file_names = []
@@ -289,12 +294,15 @@ def do_parse(args):
 
     return metrics_file_names, my_csv2.approximate_test_run_time
 
+
 def is_ftdc(args):
     return isdir(args.input_file)
+
 
 def get_ftdc_duration(args):
     time_file = os.path.join(args.input_file, "start_time.txt")
     return datetime.now() - datetime.fromtimestamp(os.path.getmtime(time_file))
+
 
 def run(args):
     """
@@ -308,7 +316,7 @@ def run(args):
 
     """
     if is_ftdc(args):
-        duration = get_ftdc_duration(args) 
+        duration = get_ftdc_duration(args)
 
         # We expect that, at poplar-send time, the directory of FTDC files is in the CWD.
         ftdc_dir = os.path.basename(os.path.normpath(args.input_file))
@@ -319,7 +327,8 @@ def run(args):
 
         return metrics_file_names, duration
 
-    return do_parse(args)  
+    return do_parse(args)
+
 
 def main__cedar(argv=sys.argv[1:]):
     parser = build_parser()
