@@ -263,7 +263,6 @@ def construct_all_tasks_json():
     :return: json representation of tasks for all workloads in the /src/workloads directory relative to the genny root.
     """
     c = Configuration()
-    c.exec_timeout(64800)  # 18 hours
 
     workload_dir = "{}/src/workloads".format(get_project_root())
     all_workloads = glob.glob("{}/**/*.yml".format(workload_dir), recursive=True)
@@ -279,12 +278,15 @@ def construct_all_tasks_json():
         task_name = to_snake_case(base_parts[0])
 
         prepare_environment_vars = get_prepare_environment_vars(task_name, fname)
+        timeout_params = {"exec_timeout_secs": 86400, # 24 hours
+                          "timeout_secs": 7200}
 
         for prep_var in prepare_environment_vars:
             t = c.task(prep_var["test"])
             t.priority(5)  # The default priority in system_perf.yml
             t.commands(
                 [
+                    CommandDefinition().command("timeout.update").params(timeout_params),
                     CommandDefinition().function("prepare environment").vars(prep_var),
                     CommandDefinition().function("deploy cluster"),
                     CommandDefinition().function("run test"),
