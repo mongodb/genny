@@ -190,6 +190,10 @@ class LegacyHappyCaseTests(BaseTestClass):
                         "name": "empty_unmodified",
                         "commands": [
                             {
+                                "command": "timeout.update",
+                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+                            },
+                            {
                                 "func": "prepare environment",
                                 "vars": {
                                     "test": "empty_unmodified",
@@ -206,6 +210,10 @@ class LegacyHappyCaseTests(BaseTestClass):
                         "name": "empty_modified",
                         "commands": [
                             {
+                                "command": "timeout.update",
+                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+                            },
+                            {
                                 "func": "prepare environment",
                                 "vars": {
                                     "test": "empty_modified",
@@ -221,6 +229,10 @@ class LegacyHappyCaseTests(BaseTestClass):
                     {
                         "name": "multi_a",
                         "commands": [
+                            {
+                                "command": "timeout.update",
+                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+                            },
                             {
                                 "func": "prepare environment",
                                 "vars": {
@@ -239,6 +251,10 @@ class LegacyHappyCaseTests(BaseTestClass):
                         "name": "multi_b",
                         "commands": [
                             {
+                                "command": "timeout.update",
+                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+                            },
+                            {
                                 "func": "prepare environment",
                                 "vars": {
                                     "test": "multi_b",
@@ -252,8 +268,7 @@ class LegacyHappyCaseTests(BaseTestClass):
                         ],
                         "priority": 5,
                     },
-                ],
-                "timeout": 64800,
+                ]
             },
             to_file="../src/genny/genny/build/all_tasks.json",
         )

@@ -375,7 +375,8 @@ class ConfigWriter:
     @staticmethod
     def all_tasks_legacy(tasks: List[GeneratedTask]) -> Configuration:
         c = Configuration()
-        c.exec_timeout(64800)  # 18 hours
+        # Maybe make this a static/constant thing. It never changes.
+        timeout_params = {"exec_timeout_secs": 86400, "timeout_secs": 7200}  # 24 hours
         for task in tasks:
             prep_vars = {"test": task.name, "auto_workload_path": task.workload.relative_path}
             if task.mongodb_setup:
@@ -385,6 +386,7 @@ class ConfigWriter:
             t.priority(5)
             t.commands(
                 [
+                    CommandDefinition().command("timeout.update").params(timeout_params),
                     CommandDefinition().function("prepare environment").vars(prep_vars),
                     CommandDefinition().function("deploy cluster"),
                     CommandDefinition().function("run test"),
