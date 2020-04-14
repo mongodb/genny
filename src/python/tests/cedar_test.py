@@ -199,9 +199,11 @@ class CedarIntegrationTest(unittest.TestCase):
         mock_get_duration.return_value = "fake_duration"
         args = [get_fixture("cedar", "ftdc-metrics"), "dummy_output_dir"]
 
-        expected_metrics = ["ftdc-metrics/fake1.ftdc",
-                            "ftdc-metrics/fake2.ftdc",
-                            "ftdc-metrics/fake3.ftdc",]
+        expected_metrics = [
+            "ftdc-metrics/fake1.ftdc",
+            "ftdc-metrics/fake2.ftdc",
+            "ftdc-metrics/fake3.ftdc",
+        ]
 
         parser = cedar.build_parser()
         args = parser.parse_args(args)

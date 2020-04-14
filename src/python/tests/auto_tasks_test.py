@@ -1,279 +1,374 @@
 import json
-from subprocess import CalledProcessError
 import unittest
+from typing import NamedTuple, List, Optional
+from unittest.mock import MagicMock
 
-from unittest.mock import patch, mock_open
-from unittest.mock import Mock
-from gennylib.genny_auto_tasks import construct_all_tasks_json
-from gennylib.genny_auto_tasks import construct_variant_json
-from gennylib.genny_auto_tasks import modified_workload_files
-from gennylib.genny_auto_tasks import validate_user_workloads
-from gennylib.genny_auto_tasks import workload_should_autorun
-from gennylib.genny_auto_tasks import AutoRunSpec
-from tests.fixtures.auto_tasks_fixtures import workload_should_autorun_cases
+from gennylib.auto_tasks import (
+    CurrentBuildInfo,
+    CLIOperation,
+    WorkloadLister,
+    Repo,
+    ConfigWriter,
+    YamlReader,
+)
 
 
-class AutoTasksTest(unittest.TestCase):
-    @patch("gennylib.genny_auto_tasks.open", new_callable=mock_open, read_data="")
-    @patch("glob.glob")
-    def test_construct_all_tasks_json(self, mock_glob, mock_open):
-        """
-        This test runs construct_all_tasks_json with static workloads
-        and checks that
-        the generated json is what evergreen will expect to generate the correct tasks.
-        """
+class MockFile(NamedTuple):
+    base_name: str
+    modified: bool
+    yaml_conts: Optional[dict]
 
-        mock_glob.return_value = [
-            "genny/src/workloads/scale/NewWorkload.yml",
-            "genny/src/workloads/subdir1/subdir2/subdir3/NestedTest.yml",
-            "/the/full/path/to/genny/src/workloads/execution/ExecutionTask.yml",
-        ]
-        expected_json = {
-            "tasks": [
-                {
-                    "name": "new_workload",
-                    "commands": [
-                        {
-                            "func": "prepare environment",
-                            "vars": {
-                                "test": "new_workload",
-                                "auto_workload_path": "scale/NewWorkload.yml",
-                            },
-                        },
-                        {"func": "deploy cluster"},
-                        {"func": "run test"},
-                        {"func": "analyze"},
-                    ],
-                    "priority": 5,
-                },
-                {
-                    "name": "nested_test",
-                    "commands": [
-                        {
-                            "func": "prepare environment",
-                            "vars": {
-                                "test": "nested_test",
-                                "auto_workload_path": "subdir1/subdir2/subdir3/NestedTest.yml",
-                            },
-                        },
-                        {"func": "deploy cluster"},
-                        {"func": "run test"},
-                        {"func": "analyze"},
-                    ],
-                    "priority": 5,
-                },
-                {
-                    "name": "execution_task",
-                    "commands": [
-                        {
-                            "func": "prepare environment",
-                            "vars": {
-                                "test": "execution_task",
-                                "auto_workload_path": "execution/ExecutionTask.yml",
-                            },
-                        },
-                        {"func": "deploy cluster"},
-                        {"func": "run test"},
-                        {"func": "analyze"},
-                    ],
-                    "priority": 5,
-                },
-            ],
-            "timeout": 64800,
-        }
 
-        actual_json_str = construct_all_tasks_json()
-        actual_json = json.loads(actual_json_str)
+class MockReader(YamlReader):
+    def __init__(self, files: List[MockFile]):
+        self.files = files
 
-        self.assertDictEqual(expected_json, actual_json)
+    def load(self, path: str):
+        return self._find_file(path).yaml_conts
 
-    @patch("gennylib.genny_auto_tasks.open", new_callable=mock_open, read_data="")
-    @patch("yaml.safe_load")
-    @patch("glob.glob")
-    def test_construct_all_tasks_json_multiple_setups(self, mock_glob, mock_safe_load, mock_open):
-        """
-        Makes sure that the code works when generating tasks with multiple setups.
-        """
+    def exists(self, path: str) -> bool:
+        found = self._find_file(path)
+        return found is not None
 
-        mock_glob.return_value = ["genny/src/workloads/scale/MultipleSetups.yml"]
-        mock_safe_load.return_value = {
-            "AutoRun": {"PrepareEnvironmentWith": {"mongodb_setup": ["first", "second"]}}
-        }
-        expected_json = {
-            "tasks": [
-                {
-                    "name": "multiple_setups_first",
-                    "commands": [
-                        {
-                            "func": "prepare environment",
-                            "vars": {
-                                "test": "multiple_setups_first",
-                                "auto_workload_path": "scale/MultipleSetups.yml",
-                                "setup": "first",
-                            },
-                        },
-                        {"func": "deploy cluster"},
-                        {"func": "run test"},
-                        {"func": "analyze"},
-                    ],
-                    "priority": 5,
-                },
-                {
-                    "name": "multiple_setups_second",
-                    "commands": [
-                        {
-                            "func": "prepare environment",
-                            "vars": {
-                                "test": "multiple_setups_second",
-                                "auto_workload_path": "scale/MultipleSetups.yml",
-                                "setup": "second",
-                            },
-                        },
-                        {"func": "deploy cluster"},
-                        {"func": "run test"},
-                        {"func": "analyze"},
-                    ],
-                    "priority": 5,
-                },
-            ],
-            "timeout": 64800,
-        }
+    def _find_file(self, path: str):
+        found = [f for f in self.files if f.base_name == path]
+        if found:
+            return found[0]
+        return None
 
-        actual_json_str = construct_all_tasks_json()
-        actual_json = json.loads(actual_json_str)
 
-        self.assertDictEqual(expected_json, actual_json)
-
-    @patch("gennylib.genny_auto_tasks.open", new_callable=mock_open, read_data="")
-    @patch("glob.glob")
-    @patch("gennylib.genny_auto_tasks.modified_workload_files")
-    def test_construct_variant_json(self, mock_glob, mock_modified_workload_files, mock_open):
-        """
-        This test runs construct_variant_json with static workloads and variants
-        and checks that
-        the generated json is what evergreen will expect to generate the correct variants.
-        """
-
-        mock_modified_workload_files.return_value = [
-            "scale/NewWorkload.yml",
-            "subdir1/subdir2/subdir3/NestedTest.yml",
-            "non-yaml-file.md",
-        ]
-        static_variants = ["variant-1", "variant-2"]
-
-        expected_json = {
-            "buildvariants": [
-                {"name": "variant-1", "tasks": [{"name": "new_workload"}, {"name": "nested_test"}]},
-                {"name": "variant-2", "tasks": [{"name": "new_workload"}, {"name": "nested_test"}]},
-            ]
-        }
-
-        workloads = mock_modified_workload_files()
-        actual_json_str = construct_variant_json(workloads, static_variants)
-        actual_json = json.loads(actual_json_str)
-
-        self.assertDictEqual(expected_json, actual_json)
-
-    @patch("gennylib.genny_auto_tasks.open", new_callable=mock_open, read_data="")
-    @patch("glob.glob")
-    @patch("yaml.safe_load")
-    @patch("gennylib.genny_auto_tasks.modified_workload_files")
-    def test_construct_variant_json_multiple_setups(
-        self, mock_glob, mock_safe_load, mock_modified_workload_files, mock_open
+class BaseTestClass(unittest.TestCase):
+    def assert_result(
+        self, given_files: List[MockFile], and_args: List[str], then_writes: dict, to_file: str
     ):
-        """
-        This test runs construct_variant_json with static workloads and variants
-        and checks that
-        the generated json is what evergreen will expect to generate the correct variants.
-        """
+        # Create "dumb" mocks.
+        lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
+        reader: YamlReader = MockReader(given_files)
 
-        static_variants = ["variant-1", "variant-2"]
-        mock_modified_workload_files.return_value = ["genny/src/workloads/scale/MultipleSetups.yml"]
-        mock_safe_load.return_value = {
-            "AutoRun": {"PrepareEnvironmentWith": {"setup": ["first", "second"]}}
-        }
-
-        expected_json = {
-            "buildvariants": [
-                {
-                    "name": "variant-1",
-                    "tasks": [
-                        {"name": "multiple_setups_first"},
-                        {"name": "multiple_setups_second"},
-                    ],
-                },
-                {
-                    "name": "variant-2",
-                    "tasks": [
-                        {"name": "multiple_setups_first"},
-                        {"name": "multiple_setups_second"},
-                    ],
-                },
-            ]
-        }
-
-        workloads = mock_modified_workload_files()
-        actual_json_str = construct_variant_json(workloads, static_variants)
-        actual_json = json.loads(actual_json_str)
-
-        self.assertDictEqual(expected_json, actual_json)
-
-    @patch("subprocess.check_output")
-    def test_modified_workload_files(self, mock_check_output):
-        """
-        The test calls modified_workload_files() with a stubbed version of subprocess.check_output returning static git results
-        and checks that
-        the outputted workload_files are as expected based on the git results.
-        """
-
-        # Cases that should be executed successfully.
-        cases = [
-            (b"../workloads/sub/abc.yml\n", ["sub/abc.yml"]),
-            (
-                b"../workloads/sub1/foo.yml\n\
-                ../workloads/sub2/bar.yml\n\
-                ../workloads/a/very/very/nested/file.yml\n",
-                ["sub1/foo.yml", "sub2/bar.yml", "a/very/very/nested/file.yml"],
-            ),
-            (b"", []),
+        # Make them smarter.
+        lister.all_workload_files.return_value = [
+            v.base_name
+            for v in given_files
+            # Hack: Prevent calling e.g. expansions.yml a 'workload' file
+            # (solution would be to pass in workload files as a different
+            # param to this function, but meh)
+            if "/" in v.base_name
+        ]
+        lister.modified_workload_files.return_value = [
+            v.base_name for v in given_files if v.modified and "/" in v.base_name
         ]
 
-        for tc in cases:
-            mock_check_output.return_value = tc[0]
-            expected_files = tc[1]
-            actual_files = modified_workload_files()
-            self.assertEqual(expected_files, actual_files)
+        # Put a dummy argv[0] as test sugar
+        and_args.insert(0, "dummy.py")
 
-        # Check that we handle errors from subprocess.check_output properly.
-        mock_check_output.side_effect = CalledProcessError(127, "cmd")
-        with self.assertRaises(CalledProcessError) as cm:
-            modified_workload_files()
+        # And send them off into the world.
+        build = CurrentBuildInfo(reader)
+        op = CLIOperation.parse(and_args, reader)
+        repo = Repo(lister, reader)
+        tasks = repo.tasks(op, build)
+        writer = ConfigWriter(op)
 
-    def test_validate_user_workloads(self):
-        cases = [
-            (["scale/BigUpdate.yml"], []),
-            (["scale/InsertBigDocs.yml", "selftests/GennyOverhead.yml"], []),
-            (["networking/NonExistent.yml"], ["no file"]),
-            (["scale/BigUpdate.yml", "docs"], ["no file"]),
-            (["CMakeLists.txt"], ["not a .yml"]),
-        ]
+        config = writer.write(tasks, write=False)
+        parsed = json.loads(config.to_json())
+        try:
+            self.assertDictEqual(then_writes, parsed)
+        except AssertionError:
+            print(parsed)
+            raise
+        self.assertEqual(op.output_file, to_file)
 
-        for tc in cases:
-            expected = tc[1]
-            actual = validate_user_workloads(tc[0])
 
-            # expected is either an empty list (no validation errors), or an ordered list of required substrings of the validation errors.
-            self.assertEqual(len(expected), len(actual))
-            for idx, expected_err in enumerate(expected):
-                self.assertTrue(expected_err in actual[idx])
+class AutoTasksTests(BaseTestClass):
+    def test_all_tasks(self):
+        self.assert_result(
+            given_files=[EMPTY_UNMODIFIED, MULTI_MODIFIED, EXPANSIONS],
+            and_args=["all_tasks"],
+            then_writes={
+                "tasks": [
+                    {
+                        "name": "empty_unmodified",
+                        "commands": [
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "empty_unmodified",
+                                    "auto_workload_path": "scale/EmptyUnmodified.yml",
+                                },
+                            }
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "multi_a",
+                        "commands": [
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "multi_a",
+                                    "auto_workload_path": "src/Multi.yml",
+                                    "mongodb_setup": "a",
+                                },
+                            }
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "multi_b",
+                        "commands": [
+                            {
+                                "func": "f_run_dsi_workload",
+                                "vars": {
+                                    "test_control": "multi_b",
+                                    "auto_workload_path": "src/Multi.yml",
+                                    "mongodb_setup": "b",
+                                },
+                            }
+                        ],
+                        "priority": 5,
+                    },
+                ],
+                "timeout": 64800,
+            },
+            to_file="./run/build/Tasks/Tasks.json",
+        )
 
-    def test_workload_should_autorun(self):
-        for tc in workload_should_autorun_cases:
-            workload_yaml = tc[0]
-            env_dict = tc[1]
-            expected = tc[2]
+    def test_variant_tasks(self):
+        self.assert_result(
+            given_files=[EXPANSIONS, MULTI_UNMODIFIED, MATCHES_UNMODIFIED],
+            and_args=["variant_tasks"],
+            then_writes={
+                "buildvariants": [
+                    {
+                        "name": "some-build-variant",
+                        "tasks": [
+                            {"name": "multi_unmodified_c"},
+                            {"name": "multi_unmodified_d"},
+                            {"name": "foo"},
+                        ],
+                    }
+                ]
+            },
+            to_file="./run/build/Tasks/Tasks.json",
+        )
 
-            with self.subTest(tc):
-                autorun_spec = AutoRunSpec.create_from_workload_yaml(workload_yaml)
-                actual = workload_should_autorun(autorun_spec, env_dict)
-                self.assertEqual(expected, actual)
+    def test_patch_tasks(self):
+        # "Patch tasks always run for the selected variant "
+        # "even if their Requires blocks don't align",
+        self.assert_result(
+            given_files=[
+                EXPANSIONS,
+                MULTI_MODIFIED,
+                MULTI_UNMODIFIED,
+                NOT_MATCHES_MODIFIED,
+                NOT_MATCHES_UNMODIFIED,
+            ],
+            and_args=["patch_tasks"],
+            then_writes={
+                "buildvariants": [
+                    {
+                        "name": "some-build-variant",
+                        "tasks": [
+                            {"name": "multi_a"},
+                            {"name": "multi_b"},
+                            {"name": "not_matches_modified"},
+                        ],
+                    }
+                ]
+            },
+            to_file="./run/build/Tasks/Tasks.json",
+        )
+
+
+class LegacyHappyCaseTests(BaseTestClass):
+    def test_all_tasks(self):
+        self.assert_result(
+            given_files=[EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_MODIFIED],
+            and_args=["--generate-all-tasks", "--output", "build/all_tasks.json"],
+            then_writes={
+                "tasks": [
+                    {
+                        "name": "empty_unmodified",
+                        "commands": [
+                            {
+                                "command": "timeout.update",
+                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+                            },
+                            {
+                                "func": "prepare environment",
+                                "vars": {
+                                    "test": "empty_unmodified",
+                                    "auto_workload_path": "scale/EmptyUnmodified.yml",
+                                },
+                            },
+                            {"func": "deploy cluster"},
+                            {"func": "run test"},
+                            {"func": "analyze"},
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "empty_modified",
+                        "commands": [
+                            {
+                                "command": "timeout.update",
+                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+                            },
+                            {
+                                "func": "prepare environment",
+                                "vars": {
+                                    "test": "empty_modified",
+                                    "auto_workload_path": "scale/EmptyModified.yml",
+                                },
+                            },
+                            {"func": "deploy cluster"},
+                            {"func": "run test"},
+                            {"func": "analyze"},
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "multi_a",
+                        "commands": [
+                            {
+                                "command": "timeout.update",
+                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+                            },
+                            {
+                                "func": "prepare environment",
+                                "vars": {
+                                    "test": "multi_a",
+                                    "auto_workload_path": "src/Multi.yml",
+                                    "setup": "a",
+                                },
+                            },
+                            {"func": "deploy cluster"},
+                            {"func": "run test"},
+                            {"func": "analyze"},
+                        ],
+                        "priority": 5,
+                    },
+                    {
+                        "name": "multi_b",
+                        "commands": [
+                            {
+                                "command": "timeout.update",
+                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+                            },
+                            {
+                                "func": "prepare environment",
+                                "vars": {
+                                    "test": "multi_b",
+                                    "auto_workload_path": "src/Multi.yml",
+                                    "setup": "b",
+                                },
+                            },
+                            {"func": "deploy cluster"},
+                            {"func": "run test"},
+                            {"func": "analyze"},
+                        ],
+                        "priority": 5,
+                    },
+                ]
+            },
+            to_file="../src/genny/genny/build/all_tasks.json",
+        )
+
+    def test_variant_tasks(self):
+        self.assert_result(
+            given_files=[BOOTSTRAP, MATCHES_UNMODIFIED, NOT_MATCHES_MODIFIED],
+            and_args=[
+                "--output",
+                "build/auto_tasks.json",
+                "--variants",
+                "some-variant",
+                "--autorun",
+            ],
+            then_writes={"buildvariants": [{"name": "some-variant", "tasks": [{"name": "foo"}]}]},
+            to_file="../src/genny/genny/build/auto_tasks.json",
+        )
+
+    def test_patch_tasks(self):
+        self.assert_result(
+            given_files=[BOOTSTRAP, MATCHES_UNMODIFIED, MULTI_MODIFIED, MULTI_UNMODIFIED],
+            and_args=[
+                "--output",
+                "build/patch_tasks.json",
+                "--variants",
+                "some-variant",
+                "--modified",
+            ],
+            then_writes={
+                "buildvariants": [
+                    {"name": "some-variant", "tasks": [{"name": "multi_a"}, {"name": "multi_b"}]}
+                ]
+            },
+            to_file="./genny/genny/build/patch_tasks.json",
+        )
+
+
+# Example Input Files
+
+
+BOOTSTRAP = MockFile(
+    base_name="bootstrap.yml", modified=False, yaml_conts={"mongodb_setup": "matches"}
+)
+
+EXPANSIONS = MockFile(
+    base_name="expansions.yml",
+    modified=False,
+    yaml_conts={"build_variant": "some-build-variant", "mongodb_setup": "matches"},
+)
+
+MULTI_MODIFIED = MockFile(
+    base_name="src/workloads/src/Multi.yml",
+    modified=True,
+    yaml_conts={
+        "AutoRun": {
+            "Requires": {"mongodb_setup": ["matches"]},
+            "PrepareEnvironmentWith": {"mongodb_setup": ["a", "b"]},
+        }
+    },
+)
+
+
+MULTI_UNMODIFIED = MockFile(
+    base_name="src/workloads/src/MultiUnmodified.yml",
+    modified=False,
+    yaml_conts={
+        "AutoRun": {
+            "Requires": {"mongodb_setup": ["matches"]},
+            "PrepareEnvironmentWith": {"mongodb_setup": ["c", "d"]},
+        }
+    },
+)
+
+EMPTY_MODIFIED = MockFile(
+    base_name="src/workloads/scale/EmptyModified.yml", modified=True, yaml_conts={}
+)
+EMPTY_UNMODIFIED = MockFile(
+    base_name="src/workloads/scale/EmptyUnmodified.yml", modified=False, yaml_conts={}
+)
+
+
+MATCHES_UNMODIFIED = MockFile(
+    base_name="src/workloads/scale/Foo.yml",
+    modified=False,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["matches"]}}},
+)
+
+NOT_MATCHES_UNMODIFIED = MockFile(
+    base_name="src/workloads/scale/Foo.yml",
+    modified=False,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+)
+
+
+NOT_MATCHES_MODIFIED = MockFile(
+    base_name="src/workloads/scale/NotMatchesModified.yml",
+    modified=True,
+    yaml_conts={"AutoRun": {"Requires": {"mongodb_setup": ["some-other-setup"]}}},
+)
+
+
+if __name__ == "__main__":
+    unittest.main()
