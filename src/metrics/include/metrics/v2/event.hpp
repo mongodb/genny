@@ -18,9 +18,12 @@
 
 #include <atomic>
 #include <cstdlib>
+#include <thread>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
 
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
@@ -260,14 +263,30 @@ public:
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const boost::filesystem::path& pathPrefix)
-        : _name{name}, _stream{name, actorId}, _phase{phase}, _last_finish{ClockSource::now()} {
+        : _io{}, 
+        _workGuard{boost::asio::make_work_guard(_io)},
+        _grpcThread{boost::bind(&boost::asio::io_context::run, &_io)}, 
+        _name{name}, 
+        _stream{name, actorId}, 
+        _phase{phase}, 
+        _last_finish{ClockSource::now()} {
+
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
     }
 
     void addAt(const typename ClockSource::time_point& finish,
-               const OperationEventT<ClockSource>& event,
+               const OperationEventT<ClockSource> event,
                size_t workerCount) {
+        
+        boost::asio::post(_io, boost::bind(&EventStream::_addAt, this, finish, std::move(event), workerCount));
+
+    }
+
+    void _addAt(const typename ClockSource::time_point finish,
+               const OperationEventT<ClockSource> event,
+               size_t workerCount) {
+
         _metrics.mutable_time()->set_seconds(
             Period<ClockSource>(finish.time_since_epoch()).getSecondsCount());
         _metrics.mutable_time()->set_nanos(
@@ -303,9 +322,18 @@ public:
         }
         _stream.write(_metrics);
         _last_finish = finish;
+
+    }
+
+    ~EventStream() {
+        _workGuard.reset();
+        _grpcThread.join();
     }
 
 private:
+    boost::asio::io_context _io;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> _workGuard;
+    std::thread _grpcThread;
     std::string _name;
     StreamInterface _stream;
     poplar::EventMetrics _metrics;

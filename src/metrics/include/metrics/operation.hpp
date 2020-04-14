@@ -234,7 +234,7 @@ public:
             _threshold->check(started, finished);
         }
         if (_useGrpc) {
-            _stream->addAt(finished, event, _registry.getWorkerCount(_actorName, _opName));
+            _stream->addAt(finished, std::move(event), _registry.getWorkerCount(_actorName, _opName));
         }
         if (_useCsv) {
             _events->addAt(finished, event);
