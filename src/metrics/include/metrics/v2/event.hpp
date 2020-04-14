@@ -250,6 +250,49 @@ private:
     CollectorStubInterface _stub;
 };
 
+struct ThreadObject {
+    boost::asio::io_context _io;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> _workGuard;
+    std::thread _grpcThread;
+    bool done;
+
+    ThreadObject() :
+        _io{}, 
+        _workGuard{boost::asio::make_work_guard(_io)},
+        _grpcThread{boost::bind(&boost::asio::io_context::run, &_io)} {}
+
+    bool isDone() {return done;}
+
+    void finish() {
+        if (!done) {
+            _workGuard.reset();
+            _grpcThread.join();
+            done = true;
+        }
+    }
+};
+
+class ConstructorClass {
+public:
+    static std::unique_ptr<ThreadObject> _thread;
+
+    ConstructorClass() {
+        setThread();
+    }
+
+private:
+
+    auto createThread() {
+        _thread.reset(new ThreadObject());
+        return true;
+    }
+
+    void setThread() {
+        static bool threadCreated = createThread();
+        return;
+    }
+};
+
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
  */
@@ -263,9 +306,7 @@ public:
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const boost::filesystem::path& pathPrefix)
-        : _io{}, 
-        _workGuard{boost::asio::make_work_guard(_io)},
-        _grpcThread{boost::bind(&boost::asio::io_context::run, &_io)}, 
+        :  
         _name{name}, 
         _stream{name, actorId}, 
         _phase{phase}, 
@@ -279,7 +320,7 @@ public:
                const OperationEventT<ClockSource> event,
                size_t workerCount) {
         
-        boost::asio::post(_io, boost::bind(&EventStream::_addAt, this, finish, std::move(event), workerCount));
+        boost::asio::post((_class._thread)->_io, boost::bind(&EventStream::_addAt, this, finish, std::move(event), workerCount));
 
     }
 
@@ -326,19 +367,21 @@ public:
     }
 
     ~EventStream() {
-        _workGuard.reset();
-        _grpcThread.join();
+        (_class._thread)->finish();
+        while (!((_class._thread)->isDone())) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
     }
 
 private:
-    boost::asio::io_context _io;
-    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> _workGuard;
-    std::thread _grpcThread;
+    
+    ConstructorClass _class;
     std::string _name;
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
     std::optional<genny::PhaseNumber> _phase;
     typename ClockSource::time_point _last_finish;
+    
 };
 
 

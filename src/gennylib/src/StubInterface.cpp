@@ -1,4 +1,5 @@
 #include <metrics/v2/event.hpp>
+#include <metrics/metrics.hpp>
 
 namespace genny::metrics::internals::v2 {
 
@@ -9,5 +10,7 @@ namespace genny::metrics::internals::v2 {
  */
 std::unique_ptr<poplar::PoplarEventCollector::StubInterface> CollectorStubInterface::_stub =
     nullptr;
+
+std::unique_ptr<ThreadObject> ConstructorClass::_thread = nullptr;
 
 }  // namespace genny::metrics::internals::v2
