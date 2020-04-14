@@ -37,7 +37,7 @@ class AutoTasksTest(unittest.TestCase):
                             "command": "timeout.update",
                             "params": {
                                 "exec_timeout_secs": 86400,
-                                "timeout_secs": 86400 
+                                "timeout_secs": 7200 
                             }
                         },
                         {
@@ -60,7 +60,7 @@ class AutoTasksTest(unittest.TestCase):
                             "command": "timeout.update",
                             "params": {
                                 "exec_timeout_secs": 86400,
-                                "timeout_secs": 86400 
+                                "timeout_secs": 7200 
                             }
                         },
 
@@ -84,7 +84,7 @@ class AutoTasksTest(unittest.TestCase):
                             "command": "timeout.update",
                             "params": {
                                 "exec_timeout_secs": 86400,
-                                "timeout_secs": 86400 
+                                "timeout_secs": 7200 
                             }
                         },
                         {
@@ -129,7 +129,7 @@ class AutoTasksTest(unittest.TestCase):
                             "command": "timeout.update",
                             "params": {
                                 "exec_timeout_secs": 86400,
-                                "timeout_secs": 86400 
+                                "timeout_secs": 7200 
                             }
                         },
 
@@ -154,7 +154,7 @@ class AutoTasksTest(unittest.TestCase):
                             "command": "timeout.update",
                             "params": {
                                 "exec_timeout_secs": 86400,
-                                "timeout_secs": 86400 
+                                "timeout_secs": 7200 
                             }
                         },
                         {

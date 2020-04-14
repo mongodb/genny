@@ -279,7 +279,7 @@ def construct_all_tasks_json():
 
         prepare_environment_vars = get_prepare_environment_vars(task_name, fname)
         timeout_params = {"exec_timeout_secs": 86400, # 24 hours
-                          "timeout_secs": 86400}
+                          "timeout_secs": 7200}
 
         for prep_var in prepare_environment_vars:
             t = c.task(prep_var["test"])
