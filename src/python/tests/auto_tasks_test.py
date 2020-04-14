@@ -34,6 +34,13 @@ class AutoTasksTest(unittest.TestCase):
                     "name": "new_workload",
                     "commands": [
                         {
+                            "command": "timeout.update",
+                            "params": {
+                                "exec_timeout_secs": 86400,
+                                "timeout_secs": 86400 
+                            }
+                        },
+                        {
                             "func": "prepare environment",
                             "vars": {
                                 "test": "new_workload",
@@ -49,6 +56,14 @@ class AutoTasksTest(unittest.TestCase):
                 {
                     "name": "nested_test",
                     "commands": [
+                        {
+                            "command": "timeout.update",
+                            "params": {
+                                "exec_timeout_secs": 86400,
+                                "timeout_secs": 86400 
+                            }
+                        },
+
                         {
                             "func": "prepare environment",
                             "vars": {
@@ -66,6 +81,13 @@ class AutoTasksTest(unittest.TestCase):
                     "name": "execution_task",
                     "commands": [
                         {
+                            "command": "timeout.update",
+                            "params": {
+                                "exec_timeout_secs": 86400,
+                                "timeout_secs": 86400 
+                            }
+                        },
+                        {
                             "func": "prepare environment",
                             "vars": {
                                 "test": "execution_task",
@@ -78,8 +100,7 @@ class AutoTasksTest(unittest.TestCase):
                     ],
                     "priority": 5,
                 },
-            ],
-            "timeout": 64800,
+            ]
         }
 
         actual_json_str = construct_all_tasks_json()
@@ -105,6 +126,14 @@ class AutoTasksTest(unittest.TestCase):
                     "name": "multiple_setups_first",
                     "commands": [
                         {
+                            "command": "timeout.update",
+                            "params": {
+                                "exec_timeout_secs": 86400,
+                                "timeout_secs": 86400 
+                            }
+                        },
+
+                        {
                             "func": "prepare environment",
                             "vars": {
                                 "test": "multiple_setups_first",
@@ -122,6 +151,13 @@ class AutoTasksTest(unittest.TestCase):
                     "name": "multiple_setups_second",
                     "commands": [
                         {
+                            "command": "timeout.update",
+                            "params": {
+                                "exec_timeout_secs": 86400,
+                                "timeout_secs": 86400 
+                            }
+                        },
+                        {
                             "func": "prepare environment",
                             "vars": {
                                 "test": "multiple_setups_second",
@@ -136,7 +172,6 @@ class AutoTasksTest(unittest.TestCase):
                     "priority": 5,
                 },
             ],
-            "timeout": 64800,
         }
 
         actual_json_str = construct_all_tasks_json()
