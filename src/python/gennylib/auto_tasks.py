@@ -25,9 +25,10 @@ from shrub.variant import TaskSpec
 
 
 class YamlReader:
-    # You could argue that YamlReader, FileLister, and maybe even Repo
+    # You could argue that YamlReader, WorkloadLister, and maybe even Repo
     # should be the same class - perhaps renamed to System or something?
     # That will be easier once we can kill everything relating to "legacy".
+    # Maybe make these methods static to avoid having to pass an instance around.
     def load(self, path: str) -> dict:
         """
         :param path: path relative to cwd
@@ -57,7 +58,7 @@ class YamlReader:
         return out
 
 
-class FileLister:
+class WorkloadLister:
     """
     Lists files in the repo dir etc.
     Separate from the Repo class for easier testing.
@@ -69,7 +70,7 @@ class FileLister:
         self.reader = reader
 
     def all_workload_files(self) -> Set[str]:
-        pattern = os.path.join(self.repo_root, "src", "workloads", "*", "*.yml")
+        pattern = os.path.join(self.repo_root, "src", "workloads", "**", "*.yml")
         return {*glob.glob(pattern)}
 
     def modified_workload_files(self) -> Set[str]:
@@ -167,6 +168,7 @@ class CurrentBuildInfo:
         else:
             if "bootstrap" not in conts:
                 # Dangerous territory, but this goes away once we're done with legacy.
+                # We don't have a "bootstrap" value in legacy list-all-tasks case.
                 return
             bootstrap: dict = conts["bootstrap"]
             if "runtime" in conts:
@@ -284,7 +286,7 @@ class Repo:
     Represents the git checkout.
     """
 
-    def __init__(self, lister: FileLister, reader: YamlReader):
+    def __init__(self, lister: WorkloadLister, reader: YamlReader):
         self._modified_repo_files = None
         self.lister = lister
         self.reader = reader
@@ -359,8 +361,9 @@ class ConfigWriter:
                 with open(self.op.output_file, "w") as output:
                     output.write(config.to_json())
             except OSError as e:
-                print(f"Tried to write to {self.op.output_file} from cwd={os.getcwd()}")
                 raise e
+            finally:
+                print(f"Tried to write to {self.op.output_file} from cwd={os.getcwd()}")
         return config
 
     @staticmethod
@@ -431,7 +434,7 @@ def main() -> None:
     reader = YamlReader()
     build = CurrentBuildInfo(reader)
     op = CLIOperation.parse(argv, reader)
-    lister = FileLister(op.repo_root, reader)
+    lister = WorkloadLister(op.repo_root, reader)
     repo = Repo(lister, reader)
     tasks = repo.tasks(op, build)
 

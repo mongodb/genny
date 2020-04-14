@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from gennylib.auto_tasks import (
     CurrentBuildInfo,
     CLIOperation,
-    FileLister,
+    WorkloadLister,
     Repo,
     ConfigWriter,
     YamlReader,
@@ -42,7 +42,7 @@ class BaseTestClass(unittest.TestCase):
         self, given_files: List[MockFile], and_args: List[str], then_writes: dict, to_file: str
     ):
         # Create "dumb" mocks.
-        lister: FileLister = MagicMock(name="lister", spec=FileLister, instance=True)
+        lister: WorkloadLister = MagicMock(name="lister", spec=WorkloadLister, instance=True)
         reader: YamlReader = MockReader(given_files)
 
         # Make them smarter.
