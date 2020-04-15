@@ -35,7 +35,8 @@ setup(
             "genny-metrics-legacy-report = gennylib.legacy_report:main__legacy_report",
             "lint-yaml = gennylib.yaml_linter:main",
             "genny = gennylib.genny_runner:main_genny_runner",
-            "genny-auto-tasks = gennylib.auto_tasks:main",
+            "genny-canaries = gennylib.canaries_runner:main_canaries_runner",
+            "genny-auto-tasks = gennylib.auto_tasks:main"        
         ]
     },
 )

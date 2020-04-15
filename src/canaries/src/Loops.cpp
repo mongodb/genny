@@ -109,6 +109,32 @@ Nanosecond Loops<Task, Args...>::metricsLoop(Args&&... args) {
 }
 
 template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::metricsFtdcLoop(Args&&... args) {
+    boost::filesystem::path ph =
+            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    auto metricsPath = (ph / "genny-metrics").string();
+    auto format = genny::metrics::MetricsFormat("ftdc");
+
+    auto metrics = genny::metrics::Registry{format, metricsPath};
+    metrics::Reporter reporter(metrics);
+
+    auto dummyOp = metrics.operation("metricsFtdcLoop", "dummyOp", 0u);
+    auto task = Task(std::forward<Args>(args)...);
+
+    int64_t before = now();
+    for (int i = 0; i < _iterations; i++) {
+        auto ctx = dummyOp.start();
+        task.run();
+        ctx.success();
+    }
+    int64_t after = now();
+
+    boost::filesystem::remove_all(metricsPath);
+    return after - before;
+}
+
+
+template <class Task, class... Args>
 Nanosecond Loops<Task, Args...>::metricsPhaseLoop(Args&&... args) {
 
     // Copy/pasted from phaseLoop() and metricsLoop()
@@ -139,6 +165,45 @@ Nanosecond Loops<Task, Args...>::metricsPhaseLoop(Args&&... args) {
 
     return after - before;
 }
+
+template <class Task, class... Args>
+Nanosecond Loops<Task, Args...>::metricsFtdcPhaseLoop(Args&&... args) {
+
+    // Copy/pasted from phaseLoop() and metricsLoop()
+    Orchestrator o{};
+    v1::ActorPhase<int> loop{
+        o,
+        std::make_unique<v1::IterationChecker>(std::nullopt,
+                                               std::make_optional(IntegerSpec(_iterations)),
+                                               false,
+                                               0_ts,
+                                               0_ts,
+                                               std::nullopt),
+        1};
+    auto task = Task(std::forward<Args>(args)...);
+
+    boost::filesystem::path ph =
+            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+    auto metricsPath = (ph / "genny-metrics").string();
+    auto format = genny::metrics::MetricsFormat("ftdc");
+
+    auto metrics = genny::metrics::Registry{format, metricsPath};
+    metrics::Reporter{metrics};
+
+    auto dummyOp = metrics.operation("metricsLoop", "dummyOp", 0u);
+
+    int64_t before = now();
+    for (auto _ : loop) {
+        auto ctx = dummyOp.start();
+        task.run();
+        ctx.success();
+    }
+    int64_t after = now();
+    boost::filesystem::remove_all(metricsPath);
+
+    return after - before;
+}
+
 
 // "The definition of ... a non-exported member function or static data member
 // of a class template shall be present in every translation unit in which it

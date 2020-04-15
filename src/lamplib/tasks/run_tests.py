@@ -22,12 +22,16 @@ _sentinel_report = """
 
 
 def _run_command_with_sentinel_report(cmd_func, checker_func=None):
+    # This can only be imported after the setup script has installed gennylib.
+    from gennylib.genny_runner import poplar_grpc
+
     sentinel_file = os.path.join(os.getcwd(), "build", "sentinel.junit.xml")
 
     with open(sentinel_file, "w") as f:
         f.write(_sentinel_report)
 
-    res = cmd_func()
+    with poplar_grpc():
+        res = cmd_func()
 
     if checker_func:
         success = checker_func()
@@ -42,9 +46,6 @@ def _run_command_with_sentinel_report(cmd_func, checker_func=None):
 
 
 def cmake_test(env):
-    # This can only be imported after the setup script has installed gennylib.
-    from gennylib.genny_runner import poplar_grpc
-
     workdir = os.path.join(os.getcwd(), "build")
 
     ctest_cmd = [
@@ -54,8 +55,7 @@ def cmake_test(env):
         "(standalone|sharded|single_node_replset|three_node_replset|benchmark)",
     ]
 
-    with poplar_grpc():
-        _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
+    _run_command_with_sentinel_report(lambda: subprocess.run(ctest_cmd, cwd=workdir, env=env))
 
 
 def benchmark_test(env):

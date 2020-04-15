@@ -66,12 +66,32 @@ public:
     Nanosecond metricsLoop(Args&&... args);
 
     /**
+     *  Run native for-loop and record one timer metric per iteration.
+     *  Uses FTDC-based metrics reporting with gRPC calls.
+     *
+     *  @param args arguments forwarded to the workload being run.
+     *  @return the CPU time this function took, in nanoseconds.
+     */
+    Nanosecond metricsFtdcLoop(Args&&... args);
+
+
+    /**
      * Run PhaseLoop and record one timer metric per iteration.
      *
      * @param args arguments forwarded to the workload being run.
      * @return the CPU time this function took, in nanoseconds.
      */
     Nanosecond metricsPhaseLoop(Args&&... args);
+
+    /**
+     * Run PhaseLoop and record one timer metric per iteration.
+     * Uses FTDC-based metrics and reporting with gRPC calls.
+     *
+     * @param args arguments forwarded to the workload being run.
+     * @return the CPU time this function took, in nanoseconds.
+     */
+    Nanosecond metricsFtdcPhaseLoop(Args&&... args);
+
 
 private:
     int64_t _iterations;
@@ -99,8 +119,12 @@ std::vector<Nanosecond> runTest(std::vector<std::string>& loopNames,
                 time = loops.phaseLoop(std::forward<Args>(args)...);
             } else if (loopName == "metrics") {
                 time = loops.metricsLoop(std::forward<Args>(args)...);
+            } else if (loopName == "metrics-ftdc") {
+                time = loops.metricsFtdcLoop(std::forward<Args>(args)...);
             } else if (loopName == "real") {
                 time = loops.metricsPhaseLoop(std::forward<Args>(args)...);
+            } else if (loopName == "real-ftdc") {
+                time = loops.metricsFtdcPhaseLoop(std::forward<Args>(args)...);
             } else {
                 std::ostringstream stm;
                 stm << "Unknown loop type: " << loopName;
