@@ -25,3 +25,9 @@ Actors:
         sort: {name: 1}
         limit: 5
       OperationName: RunCommand
+
+AutoRun:
+  Requires:
+    bootstrap:
+      mongodb_setup:
+      - standalone-dsi-integration-test
