@@ -28,5 +28,6 @@ Actors:
 
 AutoRun:
   Requires:
-    mongodb_setup:
-    - standalone-dsi-integration-test
+    bootstrap:
+      mongodb_setup:
+      - standalone-dsi-integration-test
