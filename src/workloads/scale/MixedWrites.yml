@@ -42,3 +42,7 @@ AutoRun:
     mongodb_setup:
     - replica-delay-mixed
     - replica
+
+Metrics:
+  Format: ftdc
+  Path: build/genny-metrics
