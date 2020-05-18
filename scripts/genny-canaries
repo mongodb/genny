@@ -3,5 +3,10 @@
 
 set -eou pipefail
 
-VIRTUAL_ENV_DISABLE_PROMPT=1 source venv/bin/activate
+pushd "$(dirname "$0")" >/dev/null
+    SCRIPTS_DIR="$(pwd -P)"
+popd > /dev/null
+
+source "$SCRIPTS_DIR/env.sh"
+
 genny-canaries "$@"

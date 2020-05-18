@@ -61,7 +61,7 @@ class Downloader:
 
         self.result_dir = os.path.join(self._install_dir, self._name)
         if self._can_ignore():
-            logging.info("Skipping installing the %s into: %s", self._name, self.result_dir)
+            logging.debug("Skipping installing the %s into: %s", self._name, self.result_dir)
         else:
             tarball = os.path.join(self._install_dir, self._name + ".tgz")
             if os.path.isfile(tarball):

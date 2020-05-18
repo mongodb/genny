@@ -17,31 +17,10 @@
 # This script wraps the genny-auto-tasks entry-point in src/python,
 # running it inside a virtual environment with python3 and required dependencies.
 
-set -eou pipefail
+pushd "$(dirname "$0")" >/dev/null
+    SCRIPTS_DIR="$(pwd -P)"
+popd > /dev/null
 
-SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
-PYTHON_DIR="${SCRIPTS_DIR}/../src/python"
-
-_pip() {
-    /usr/bin/env pip "$@" --isolated -q -q
-}
-
-if [[ ! -d "${PYTHON_DIR}/venv" ]]; then
-	python_path=/opt/mongodbtoolchain/v3/bin/python3
-	if [[ ! -e "$python_path" ]]; then
-		echo "${python_path} does not exist"
-	    python_path="$(command -v python3)"
-	fi
-
-	echo "creating new env with python: ${python_path}"
-	_pip install virtualenv
-	/usr/bin/env virtualenv -q "${PYTHON_DIR}/venv" --python="${python_path}" >/dev/null
-fi
-
-set +u
-	# shellcheck source=/dev/null
-	source "${PYTHON_DIR}/venv/bin/activate"
-set -u
-_pip install -e "${PYTHON_DIR}"
+source "$SCRIPTS_DIR/env.sh"
 
 genny-auto-tasks "$@"
