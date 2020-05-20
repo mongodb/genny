@@ -18,5 +18,8 @@ if [[ "$*" != *-g* ]]; then
 
     set +u
         source "${SCRIPTS_DIR}/venv/bin/activate"
+        pushd "$SCRIPTS_DIR/../src/python" >/dev/null
+            python3 setup.py --quiet develop
+        popd >/dev/null
     set -u
 fi
