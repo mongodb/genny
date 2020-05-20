@@ -9,7 +9,5 @@ popd > /dev/null
 
 source "$SCRIPTS_DIR/env.sh"
 
-python3 "$SCRIPTS_DIR/../src/lamplib" setup
-
 # 'genny' is the python wrapper here.
 genny "$@"
