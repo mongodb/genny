@@ -92,8 +92,6 @@ def main():
         tasks.install(context, compile_env)
     elif args.subcommand == "clean":
         tasks.clean(context, compile_env)
-    elif args.subcommand == "setup":
-        tasks.setup(context, compile_env)
     else:
         tasks.compile_all(context, compile_env)
         if args.subcommand == "install":
