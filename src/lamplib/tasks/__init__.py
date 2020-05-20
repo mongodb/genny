@@ -55,12 +55,6 @@ def install(context, env):
     logging.debug("Running install: %s", " ".join(install_cmd))
     subprocess.run(install_cmd, env=env)
 
-    setup(context, env)
-
-def setup(context, env):
-    # Install python scripts
-    python_cmd = ["python3", "setup.py", "--quiet", "develop"]
-    subprocess.run(python_cmd, cwd="src/python")
 
 def clean(context, env):
     clean_cmd = [context.BUILD_SYSTEM, "-C", "build", "clean"]

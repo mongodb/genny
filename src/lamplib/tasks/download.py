@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
+import platform
 import urllib.request
 
 from context import Context
@@ -44,6 +45,18 @@ class Downloader:
                 self._install_dir,
                 self._install_dir,
             )
+
+            if platform.mac_ver()[0]:
+                release_triplet = platform.mac_ver()[0].split(".")
+                minor_ver = int(release_triplet[1])
+                if minor_ver >= 12:
+                    logging.info(
+                        "On MacOS El Capitan and later, you have to disable System Integrity Protection. "
+                        "See https://apple.stackexchange.com/a/208481 for instructions")
+                if minor_ver >= 16:
+                    logging.info(
+                        "On MacOS Catalina and later, you have to remount the system root as rw: "
+                        "'sudo mount -uw /'")
             return False
 
         if not os.path.isdir(self._install_dir):
