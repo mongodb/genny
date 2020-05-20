@@ -116,13 +116,8 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
     if os.path.isdir(evg_venv_dir):
         cmds.append("source " + os.path.join(evg_venv_dir, "bin", "activate"))
 
-    cmds.append(
-        "python "
-        + os.path.join(mongo_dir, "buildscripts", "resmoke.py")
-        + " --suite "
-        + suites
-        + " --mongod mongod --mongo mongo --mongos mongos"
-    )
+    cmds.append(" ".join(["python", os.path.join(mongo_dir, "buildscripts", "resmoke.py"), "run", "--suite", suites,
+                          "--mongod mongod --mongo mongo --mongos mongos"]))
 
     _run_command_with_sentinel_report(
         lambda: subprocess.run(";".join(cmds), cwd=workdir, env=env, shell=True), checker_func
