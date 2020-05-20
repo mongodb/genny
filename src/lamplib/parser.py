@@ -45,9 +45,6 @@ def parse_args(args, os_family):
         "any subcommand first to initialize the environment",
     )
     subparsers.add_parser(
-        "setup", help="Run python setup and checks."
-    )
-    subparsers.add_parser(
         "cmake-test", help="run cmake unit tests that don't connect to a MongoDB cluster"
     )
     subparsers.add_parser("benchmark-test", help="run benchmark unit tests")
