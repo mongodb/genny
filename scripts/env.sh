@@ -1,6 +1,3 @@
-
-DIR=$(pwd)
-
 # for mongodbtoolchain python3
 export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
@@ -21,7 +18,7 @@ if [[ "$*" != *-g* ]]; then
 
     if [[ ! -e "$SCRIPTS_DIR/venv/.setup-complete" ]]; then
         pushd "$SCRIPTS_DIR/../src/python" >/dev/null
-            python3 setup.py --quiet develop
+            python3 setup.py develop
         popd >/dev/null
         touch "$SCRIPTS_DIR/venv/.setup-complete"
     fi
