@@ -25,7 +25,6 @@ popd > /dev/null
 source "$SCRIPTS_DIR/env.sh"
 
 
-SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
 ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
 VENV_DIR="${ROOT_DIR}/build/venv"

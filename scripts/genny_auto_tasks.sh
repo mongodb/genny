@@ -23,4 +23,7 @@ popd > /dev/null
 
 source "$SCRIPTS_DIR/env.sh"
 
+PYTHON_DIR="${SCRIPTS_DIR}/../src/python"
+python3 -m pip install -e "${PYTHON_DIR}"
+
 genny-auto-tasks "$@"
