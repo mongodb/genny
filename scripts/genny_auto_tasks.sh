@@ -19,11 +19,11 @@
 
 pushd "$(dirname "$0")" >/dev/null
     SCRIPTS_DIR="$(pwd -P)"
-popd > /dev/null
+popd >/dev/null
 
 source "$SCRIPTS_DIR/env.sh"
 
 PYTHON_DIR="${SCRIPTS_DIR}/../src/python"
-python3 -m pip install -e "${PYTHON_DIR}"
+pip install -e "${PYTHON_DIR}"
 
 genny-auto-tasks "$@"
