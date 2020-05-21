@@ -13,13 +13,16 @@ if [[ "$*" != *-g* ]]; then
         pushd "$SCRIPTS_DIR" >/dev/null
             python3 -m venv venv
         popd >/dev/null
-        touch "$SCRIPTS_DIR/venv/.setup-complete"
-        pushd "$SCRIPTS_DIR/../src/python" >/dev/null
-            python3 setup.py --quiet develop
-        popd >/dev/null
     fi
 
     set +u
         source "${SCRIPTS_DIR}/venv/bin/activate"
     set -u
+
+    if [[ ! -e "$SCRIPTS_DIR/venv/.setup-complete" ]]; then
+        pushd "$SCRIPTS_DIR/../src/python" >/dev/null
+            python3 setup.py --quiet develop
+        popd >/dev/null
+        touch "$SCRIPTS_DIR/venv/.setup-complete"
+    fi
 fi
