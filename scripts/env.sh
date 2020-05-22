@@ -1,20 +1,20 @@
 RUN_GLOBAL=0
-ARGS=()
+ARGS=""
 
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
     -g|--run-global)
       RUN_GLOBAL=1
-      ARGS+=("$1")
+      ARGS="$ARGS $1"
       shift
       ;;
     *)
-      ARGS+=("$1")
+      ARGS="$ARGS $1"
       shift
       ;;
   esac
 done
-set -- "${ARGS[@]}"
+set -- "$ARGS"
 
 # for mongodbtoolchain python3
 export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
