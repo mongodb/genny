@@ -1,8 +1,22 @@
+RUN_GLOBAL=0
+
+while (( "$#" )); do
+  case "$1" in
+    -g|--run-global)
+      RUN_GLOBAL=1
+      shift
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
 # for mongodbtoolchain python3
 export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
 # Check if not called with -g or --run-global flag
-if [[ "$*" != *-g* ]]; then
+if [[ $RUN_GLOBAL != 1 ]]; then
     if [[ ! -e "$SCRIPTS_DIR/venv/.setup-complete" ]]; then
         echo "Installing virtual environment."
         echo "To run without a virtual environment, use the -g or --run-global option."
@@ -17,9 +31,7 @@ if [[ "$*" != *-g* ]]; then
     set -u
 
     if [[ ! -e "$SCRIPTS_DIR/venv/.setup-complete" ]]; then
-        pushd "$SCRIPTS_DIR/../src/python" >/dev/null
-            python3 setup.py develop
-        popd >/dev/null
+        python3 -m pip install -e "$SCRIPTS_DIR/../src/python"
         touch "$SCRIPTS_DIR/venv/.setup-complete"
     fi
 fi
