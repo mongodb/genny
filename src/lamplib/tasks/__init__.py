@@ -46,28 +46,23 @@ def cmake(context, toolchain_dir, env, cmdline_cmake_args):
 
 def compile_all(context, env):
     compile_cmd = [context.BUILD_SYSTEM, "-C", "build"]
-    logging.info("Compiling: %s", " ".join(compile_cmd))
+    logging.debug("Compiling: %s", " ".join(compile_cmd))
     subprocess.run(compile_cmd, env=env)
 
 
 def install(context, env):
-
     install_cmd = [context.BUILD_SYSTEM, "-C", "build", "install"]
-    logging.info("Running install: %s", " ".join(install_cmd))
+    logging.debug("Running install: %s", " ".join(install_cmd))
     subprocess.run(install_cmd, env=env)
-
-    # Install python scripts
-    python_cmd = ["python3", "setup.py", "develop"]
-    subprocess.run(python_cmd, cwd="src/python")
 
 
 def clean(context, env):
     clean_cmd = [context.BUILD_SYSTEM, "-C", "build", "clean"]
-    logging.info("Running clean: %s", " ".join(clean_cmd))
+    logging.debug("Running clean: %s", " ".join(clean_cmd))
     subprocess.run(clean_cmd, env=env)
 
     # Physically remove all built files.
-    logging.info("Erasing `build/` and `dist/`")
+    logging.debug("Erasing `build/` and `dist/`")
     subprocess.run(["rm", "-rf", "build"], env=env)
     subprocess.run(["rm", "-rf", "dist"], env=env)
 

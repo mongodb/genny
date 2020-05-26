@@ -3,25 +3,11 @@
 
 set -eou pipefail
 
-DIR=$(pwd)
+pushd "$(dirname "$0")" >/dev/null
+    SCRIPTS_DIR="$(pwd -P)"
+popd > /dev/null
 
-# for mongodbtoolchain python3
-export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
+source "$SCRIPTS_DIR/env.sh"
 
-# Check if not called with -g or --run-global flag
-if [[ "$*" != *-g* ]]; then
-    if [[ ! -d venv ]]; then
-        echo "Installing virtual environment."
-        echo "To run without a virtual environment, use the -g or --run-global option."
-        echo "creating new env with python: $(command -v python3)"
-        python3 -m venv venv
-    fi
+python3 "$SCRIPTS_DIR/../src/lamplib" "$@"
 
-    set +u
-        source "${DIR}/venv/bin/activate"
-    set -u
-fi
-
-python3 "$PWD/src/lamplib" "$@"
-
-echo "Genny installed with virtual environment ${DIR}/venv"

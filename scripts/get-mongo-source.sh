@@ -18,7 +18,13 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
+pushd "$(dirname "$0")" >/dev/null
+    SCRIPTS_DIR="$(pwd -P)"
+popd > /dev/null
+
+source "$SCRIPTS_DIR/env.sh"
+
+
 ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
 VENV_DIR="${ROOT_DIR}/build/venv"
@@ -34,11 +40,5 @@ fi
     # See comment in evergreen.yml - mongodb_archive_url
     git checkout cda363f65bde8d93a7c679757efd3edf7c6e8ad9
 )
-
-virtualenv -p python3 "${VENV_DIR}"
-
-export VIRTUAL_ENV_DISABLE_PROMPT="yes"
-# shellcheck disable=SC1090
-. "${VENV_DIR}/bin/activate"
 
 python3 -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"

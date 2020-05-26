@@ -19,6 +19,8 @@ dist
 # python
 __pycache__
 venv
+.eggs/
+genny.egg-info
 
 # tools
 curator
