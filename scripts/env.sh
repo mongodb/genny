@@ -24,7 +24,7 @@ if [[ $RUN_GLOBAL != 1 ]]; then
     fi
 
     set +u
-        source "${SCRIPTS_DIR}/venv/bin/activate"
+        source "${LAMP_VENV_DIR}/venv/bin/activate"
     set -u
 
     if [[ ! -e "$SCRIPTS_DIR/venv/.setup-complete" ]]; then
