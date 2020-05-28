@@ -126,7 +126,7 @@ class ToolchainDownloader(Downloader):
     # These build IDs are from the genny-toolchain Evergreen task.
     # https://evergreen.mongodb.com/waterfall/genny-toolchain
 
-    TOOLCHAIN_BUILD_ID = "cd5a4031b1dc93e47d598ad41521fd2e8aa865a0_20_02_12_20_07_30"
+    TOOLCHAIN_BUILD_ID = "f26aecf5527c3abdc2ad67e740050bf1f5ae8149_20_05_19_16_54_27"
     TOOLCHAIN_GIT_HASH = TOOLCHAIN_BUILD_ID.split("_")[0]
     TOOLCHAIN_ROOT = "/data/mci"  # TODO BUILD-7624 change this to /opt.
 

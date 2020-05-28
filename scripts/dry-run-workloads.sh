@@ -51,5 +51,9 @@ while read -r FILE; do
     fi;
     1>&2 echo "-- Testing workload at '${FILE}' via --dry-run..."
     "${CMD[@]}" "${FILE}"
+
+    # Clean up metrics between runs to avoid clobbering metrics files from previous workloads
+    # with the same name.
+    rm -rf build/genny-metrics/*
 done <"${WORKLOAD_LIST}"
 
