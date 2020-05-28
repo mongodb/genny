@@ -4,7 +4,7 @@
 set -eou pipefail
 
 pushd "$(dirname "$0")" >/dev/null
-    SCRIPTS_DIR="$(pwd -P)"
+    export SCRIPTS_DIR="$(pwd -P)"
 popd > /dev/null
 
 source "$SCRIPTS_DIR/env.sh"
