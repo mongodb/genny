@@ -14,11 +14,11 @@ export PATH=/opt/mongodbtoolchain/v3/bin:$PATH
 
 # Check if not called with -g or --run-global flag
 if [[ $RUN_GLOBAL != 1 ]]; then
-    if [[ ! -e "$SCRIPTS_DIR/venv/.setup-complete" ]]; then
+    if [[ ! -e "$LAMP_VENV_DIR/venv/.setup-complete" ]]; then
         echo "Installing virtual environment."
         echo "To run without a virtual environment, use the -g or --run-global option."
         echo "creating new env with python: $(command -v python3)"
-        pushd "$SCRIPTS_DIR" >/dev/null
+        pushd "$LAMP_VENV_DIR" >/dev/null
             python3 -m venv venv
         popd >/dev/null
     fi
@@ -27,8 +27,8 @@ if [[ $RUN_GLOBAL != 1 ]]; then
         source "${LAMP_VENV_DIR}/venv/bin/activate"
     set -u
 
-    if [[ ! -e "$SCRIPTS_DIR/venv/.setup-complete" ]]; then
-        python3 -m pip install -e "$SCRIPTS_DIR/../src/python"
-        touch "$SCRIPTS_DIR/venv/.setup-complete"
+    if [[ ! -e "$LAMP_VENV_DIR/venv/.setup-complete" ]]; then
+        python3 -m pip install -e "$LAMP_VENV_DIR/../src/python"
+        touch "$LAMP_VENV_DIR/venv/.setup-complete"
     fi
 fi

@@ -21,6 +21,6 @@ pushd "$(dirname "$0")" >/dev/null
     LAMP_VENV_DIR="$(pwd -P)"
 popd >/dev/null
 
-source "$SCRIPTS_DIR/env.sh"
+source "$LAMP_VENV_DIR/env.sh"
 
 genny-auto-tasks "$@"
