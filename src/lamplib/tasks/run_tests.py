@@ -110,11 +110,11 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
         # Default download location for MongoDB binaries.
         env["PATH"] += ":" + os.path.join(mongo_dir, "bin") + ":" + mongo_dir
 
-    evg_venv_dir = os.path.join(os.environ['LAMP_VENV_DIR'], "venv")
-
-    if not os.path.exists(evg_venv_dir,):
+    if 'LAMP_VENV_DIR' not in os.environ:
         raise ValueError("The venv directory is required for resmoke and does not exist, "
-                         "please ensure you're running Genny in a virtualenv")
+                         "please ensure you're not running Genny with the --run-global flag")
+
+    evg_venv_dir = os.path.join(os.environ['LAMP_VENV_DIR'], "venv")
 
     cmds = []
     if os.path.isdir(evg_venv_dir):
