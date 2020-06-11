@@ -71,7 +71,7 @@ The cmake command is printed when `lamp` runs, you can
 copy and paste the options into Clion. The options
 should look something like this:
 
-```bash
+```sh
 -G some-build-system \
 -DCMAKE_PREFIX_PATH=/data/mci/gennytoolchain/installed/x64-osx-shared \
 -DCMAKE_TOOLCHAIN_FILE=/data/mci/gennytoolchain/scripts/buildsystems/vcpkg.cmake \
@@ -131,6 +131,7 @@ the test binary. The resmoke yaml config files that define the different
 cluster configurations are defined in `src/resmokeconfig`.
 
 resmoke.py can be run locally as follows:
+
 ```sh
 # Set up virtualenv and install resmoke requirements if needed.
 # From Genny's top-level directory.
@@ -219,14 +220,14 @@ For an example external phase config, please see the
 
 A couple of tips on defining external phase configs:
 
-1. Most existing workloads define their options at the `Actor` level, which is one
-level above `Phases`. Because Genny recursively traverses up the YAML to find an
-option, most of the options can be pushed down and defined at the phase level
-instead. The notable exceptions are `Name`, `Type`, and `Threads`,
-which must be defined on `Actor`.
+1.  Most existing workloads define their options at the `Actor` level, which is one
+    level above `Phases`. Because Genny recursively traverses up the YAML to find an
+    option, most of the options can be pushed down and defined at the phase level
+    instead. The notable exceptions are `Name`, `Type`, and `Threads`,
+    which must be defined on `Actor`.
 
-2. `genny evaluate /path/to/your/workload` is your friend. `evaluate` prints out
-the final YAML workload with all external phase definitions inlined.
+2.  `genny evaluate /path/to/your/workload` is your friend. `evaluate` prints out
+    the final YAML workload with all external phase definitions inlined.
 
 
 ## Patch-Testing Genny Changes with Sys-Perf / DSI

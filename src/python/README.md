@@ -7,9 +7,8 @@ doing pre/post-processing of workloads.
 Quick-Start
 -----------
 
-Genny uses the `.python-version` file to determine
-which version of Python to use. Consider using
-[pyenv](https://github.com/pyenv/pyenv).
+The `.python-version` indicates which version of Python to use.
+Consider using [pyenv](https://github.com/pyenv/pyenv).
 
 ```sh
 brew update && brew install pyenv
@@ -21,17 +20,17 @@ Once a suitable python is installed, setup a virtual
 environment and install the `genny` package:
 
 ```sh
-pip install virtualenv
-virtualenv venv
+cd genny/src/python
+python3 -m venv venv
 source ./venv/bin/activate
-pip install .
+python3 -m pip install .
 ```
 
 Or if you wish to install and develop the scripts locally at the same time,
 you can use `setup.py develop` to avoid having to install after every change:
 
 ```sh
-python setup.py develop
+python3 setup.py develop
 ```
 
 
@@ -91,7 +90,7 @@ Produces a summary in legacy JSON format for the Evergreen perf plugin.
 
 ```sh
 ./genny run -o metrics.csv -m cedar-csv InsertRemove.yml
-genny-metrics-legacy-report metrics.csv
+genny-metrics-legacy-report build/metrics.csv
 ```
 
 
@@ -104,9 +103,9 @@ This code snippet is provided for reference only as Cedar does
 not yet support local environments.
 
 ```sh
-./genny run -o metrics.csv -m cedar-csv InsertRemove.yml
+./genny run -m cedar-csv InsertRemove.yml
 # requires expansions.yml in cwd for cedar parameters
-genny-metrics-report metrics.csv
+genny-metrics-report ./build/metrics.csv
 ```
 
 
@@ -114,10 +113,10 @@ Running Self-Tests
 ------------------
 
 ```sh
-pip install virtualenv
-virtualenv venv
+cd genny/src/python
+python3 -m venv venv
 source ./venv/bin/activate
-pip install .
+python3 -m pip install .
 python setup.py nosetests
 ```
 
@@ -127,10 +126,10 @@ Python Formatting
 Genny uses `yapf` for python formatting.
 
 ```sh
-pip install virtualenv
-virtualenv venv
+cd genny/src/python
+python3 -m venv venv
 source ./venv/bin/activate
-pip install .
+python3 -m pip install .
 yapf -i --recursive genny tests
 ```
 
