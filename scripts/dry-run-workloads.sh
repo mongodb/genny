@@ -16,8 +16,8 @@
 
 set -euo pipefail
 
-SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
-ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
+LAMP_VENV_DIR="$(dirname "${BASH_SOURCE[0]}")"
+ROOT_DIR="$(cd "${LAMP_VENV_DIR}/.." && pwd)"
 BUILD_DIR="${ROOT_DIR}/build"
 
 if [[ -z "${GENNY+x}" && -e "$ROOT_DIR/scripts/genny" ]]; then

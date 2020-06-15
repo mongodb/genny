@@ -18,9 +18,9 @@
 # running it inside a virtual environment with python3 and required dependencies.
 
 pushd "$(dirname "$0")" >/dev/null
-    SCRIPTS_DIR="$(pwd -P)"
+    LAMP_VENV_DIR="$(pwd -P)"
 popd >/dev/null
 
-source "$SCRIPTS_DIR/env.sh"
+source "$LAMP_VENV_DIR/env.sh"
 
 genny-auto-tasks "$@"

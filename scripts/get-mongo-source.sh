@@ -19,13 +19,13 @@ set -o pipefail
 set -o nounset
 
 pushd "$(dirname "$0")" >/dev/null
-    SCRIPTS_DIR="$(pwd -P)"
+    LAMP_VENV_DIR="$(pwd -P)"
 popd > /dev/null
 
-source "$SCRIPTS_DIR/env.sh"
+source "$LAMP_VENV_DIR/env.sh"
 
 
-ROOT_DIR="$(cd "${SCRIPTS_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${LAMP_VENV_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
 VENV_DIR="${ROOT_DIR}/build/venv"
 
