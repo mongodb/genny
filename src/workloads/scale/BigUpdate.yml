@@ -98,6 +98,7 @@ Actors:
   Phases:
   - *Nop
   - Duration: &phase2_duration 10 minutes
+    MetricsName: Update
     GlobalRate: 100 per 31 milliseconds
     Database: *DB
     CollectionCount: 10  # This is specifically 1% of collections
@@ -123,3 +124,4 @@ AutoRun:
     - single-replica
     - standalone
     - replica-noflowcontrol
+    - replica-1dayhistory-15gbwtcache

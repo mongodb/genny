@@ -26,6 +26,7 @@ Actors:
       Path: *PhasePath
       Key: Update
     Duration: &Duration 1 hour
+    MetricsName: Update
     GlobalRate: 10 per 1 millisecond  # Target is 10 operations on every millisecond.
 
 - Name: Query

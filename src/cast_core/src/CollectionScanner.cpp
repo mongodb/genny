@@ -18,6 +18,13 @@
 #include <chrono>
 #include <memory>
 
+#include <bsoncxx/array/view.hpp>
+#include <bsoncxx/builder/basic/array.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/json.hpp>
+#include <bsoncxx/types.hpp>
 #include <mongocxx/client.hpp>
 #include <mongocxx/collection.hpp>
 #include <mongocxx/database.hpp>
@@ -33,11 +40,14 @@
 #include <value_generators/DocumentGenerator.hpp>
 
 namespace genny::actor {
-enum class ScanType { kCount, kSnapshot, kStandard };
+enum class ScanType { kCount, kSnapshot, kStandard, kPointInTime };
 enum class SortOrderType { kSortNone, kSortForward, kSortReverse };
 // We don't need a metrics clock, as we're using this for measuring
 // the end of phase durations and scan durations.
 using SteadyClock = std::chrono::steady_clock;
+namespace bson_stream = bsoncxx::builder::stream;
+using bsoncxx::builder::basic::kvp;
+using bsoncxx::builder::basic::make_document;
 
 struct CollectionScanner::PhaseConfig {
     // We keep collection names, not collections here, because the
@@ -56,6 +66,7 @@ struct CollectionScanner::PhaseConfig {
     SortOrderType sortOrder;
     int64_t collectionSkip;
     std::optional<TimeSpec> scanDuration;
+    bool selectClusterTimeOnly = false;
     bool queryCollectionList;
     std::optional<mongocxx::options::transaction> transactionOptions;
 
@@ -73,7 +84,8 @@ struct CollectionScanner::PhaseConfig {
           documents{context["Documents"].maybe<IntegerSpec>().value_or(0)},
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)},
           collectionSkip{context["CollectionSkip"].maybe<IntegerSpec>().value_or(0)},
-          scanDuration{context["ScanDuration"].maybe<TimeSpec>()} {
+          scanDuration{context["ScanDuration"].maybe<TimeSpec>()},
+          selectClusterTimeOnly{context["selectClusterTimeOnly"].maybe<bool>().value_or(false)} {
         // The list of databases is comma separated.
         std::vector<std::string> dbnames;
         boost::split(dbnames, databaseNames, [](char c) { return (c == ','); });
@@ -87,7 +99,7 @@ struct CollectionScanner::PhaseConfig {
         }
 
         // Initialise scan type enum.
-        auto scanTypeString = context["ScanType"].to<std::string>();
+        auto scanTypeString = context["ScanType"].maybe<std::string>().value_or("");
         // Ignore case
         boost::algorithm::to_lower(scanTypeString);
         if (scanTypeString == "count") {
@@ -100,7 +112,9 @@ struct CollectionScanner::PhaseConfig {
             scanType = ScanType::kSnapshot;
         } else if (scanTypeString == "standard") {
             scanType = ScanType::kStandard;
-        } else {
+        } else if (scanTypeString == "point-in-time") {
+            scanType = ScanType::kPointInTime;
+        } else if (!selectClusterTimeOnly) {
             BOOST_THROW_EXCEPTION(InvalidConfigurationException("ScanType is invalid."));
         }
         if (scanDuration) {
@@ -227,9 +241,117 @@ void countScan(CollectionScanner::PhaseConfig* config,
     statTracker.success();
 }
 
+void pointInTimeScan(mongocxx::pool::entry& client,
+                     CollectionScanner::PhaseConfig* config,
+                     std::optional<bsoncxx::types::b_timestamp> readClusterTime) {
+    int64_t docCount = 0;
+    int64_t scanSize = 0;
+    bool scanFinished = false;
+    mongocxx::options::client_session sessionOption;
+    sessionOption.causal_consistency(false);
+    mongocxx::client_session session = client->start_session(sessionOption);
+    if (!readClusterTime) {
+        client->database("admin").run_command(session, make_document(kvp("ping", 1)));
+        readClusterTime = session.operation_time();
+    }
+    bsoncxx::document::value readConcern = bson_stream::document{}
+        << "level"
+        << "snapshot"
+        << "atClusterTime" << readClusterTime.value() << bson_stream::finalize;
+    auto filter =
+        config->filterExpr ? config->filterExpr->evaluate() : bsoncxx::document::view_or_value{};
+    for (auto database : config->databases) {
+        auto collectionNames = [&] {
+            if (config->queryCollectionList) {
+                return database.list_collection_names({});
+            } else {
+                return config->collectionNames;
+            }
+        }();
+        for (auto& collection : collectionNames) {
+            /*
+             * Try-catch this as the collection may have been deleted.
+             * You can still do a find but it'll throw an exception when we iterate.
+             */
+            try {
+                bsoncxx::document::value findCmd = bson_stream::document{}
+                    << "find" << collection << "filter" << filter << "readConcern"
+                    << readConcern.view() << bson_stream::finalize;
+
+                auto findTracker = config->scanOperation.start();
+                auto res = database.run_command(session, findCmd.view());
+                auto cursorId = res.view()["cursor"]["id"].get_int64();
+                bsoncxx::array::view batch{res.view()["cursor"]["firstBatch"].get_array().value};
+                auto count = std::distance(batch.begin(), batch.end());
+                auto size = batch.length();
+                findTracker.addBytes(size);
+                findTracker.addDocuments(count);
+                findTracker.success();
+
+                docCount += count;
+                scanSize += size;
+                if (config->documents != 0 && config->documents == docCount) {
+                    scanFinished = true;
+                    break;
+                }
+                if (config->scanSizeBytes != 0 && scanSize >= config->scanSizeBytes) {
+                    scanFinished = true;
+                    break;
+                }
+
+                while (cursorId) {
+                    bsoncxx::document::value getMoreCmd = bson_stream::document{}
+                        << "getMore" << cursorId << "collection" << collection
+                        << bson_stream::finalize;
+
+                    auto getMoreTracker = config->scanOperation.start();
+                    res = database.run_command(session, getMoreCmd.view());
+                    bsoncxx::array::view batch{res.view()["cursor"]["nextBatch"].get_array().value};
+                    count = std::distance(batch.begin(), batch.end());
+                    size = batch.length();
+                    getMoreTracker.addBytes(size);
+                    getMoreTracker.addDocuments(count);
+                    getMoreTracker.success();
+
+                    cursorId = res.view()["cursor"]["id"].get_int64();
+                    docCount += count;
+                    scanSize += size;
+                    if (config->documents != 0 && config->documents == docCount) {
+                        scanFinished = true;
+                        break;
+                    }
+                    if (config->scanSizeBytes != 0 && scanSize >= config->scanSizeBytes) {
+                        scanFinished = true;
+                        break;
+                    }
+                }
+            } catch (const mongocxx::operation_exception& e) {
+                auto exceptionsCaught = config->exceptionsCaught.start();
+                exceptionsCaught.addDocuments(1);
+                exceptionsCaught.success();
+            }
+            if (scanFinished) {
+                break;
+            }
+        }
+        if (scanFinished) {
+            break;
+        }
+    }
+}
+
 void CollectionScanner::run() {
+    int i = 0;
+    std::optional<bsoncxx::types::b_timestamp> readClusterTime;
     for (auto&& config : _loop) {
         for (const auto&& _ : config) {
+            if (config->selectClusterTimeOnly) {
+                std::this_thread::sleep_for(std::chrono::seconds{1});
+                auto session = _client->start_session({});
+                _client->database("admin").run_command(session, make_document(kvp("ping", 1)));
+                readClusterTime = session.operation_time();
+                continue;
+            }
             if (config->skipFirstLoop) {
                 config->skipFirstLoop = false;
                 std::this_thread::sleep_for(std::chrono::seconds{1});
@@ -279,7 +401,8 @@ void CollectionScanner::run() {
                     }
                 }
                 session.commit_transaction();
-
+            } else if (config->scanType == ScanType::kPointInTime) {
+                pointInTimeScan(_client, config, readClusterTime);
             } else {
                 collectionScan(config, collections);
             }

@@ -21,3 +21,4 @@ AutoRun:
     - single-replica
     - standalone
     - shard
+    - replica-1dayhistory-15gbwtcache

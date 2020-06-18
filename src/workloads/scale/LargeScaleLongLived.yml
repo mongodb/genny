@@ -72,6 +72,7 @@ Actors:
   Phases:
   - {Nop: true}
   - Duration: 10 minutes
+    MetricsName: Update
     Database: *DB
     CollectionCount: *CollectionCount
     DocumentCount: *DocumentCount

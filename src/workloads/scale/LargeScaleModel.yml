@@ -161,6 +161,7 @@ Actors:
   - {Nop: true}
   - {Nop: true}
   - Duration: *Duration
+    MetricsName: Update
     Database: *LongLivedDB
     CollectionCount: *LongLivedCollectionCount
     DocumentCount: *LongLivedDocumentCount
