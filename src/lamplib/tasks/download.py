@@ -58,13 +58,11 @@ class Downloader:
                         "internal volume your Mac. Verify this assumption with `diskutil list`, substituting the "
                         "appropriate volume name if required. \n\n"
 
-                        "echo 'data' | sudo tee -a /etc/synthetic.conf\n"
+                        sudo mkdir /opt/data
+                        sudo chown $USER /opt/data
+                        echo -e 'data\topt/data' | sudo tee -a /etc/synthetic.conf
                         "*Restart your system before continuing*\n\n"
-
-                        "sudo diskutil apfs addVolume disk1 APFSX Data -mountpoint /data \\\n"
-                        "sudo diskutil enableOwnership /data \\\n"
-                        "sudo chflags hidden /data \\\n"
-                        "echo \"LABEL=Data /data apfs rw\" | sudo tee -a /etc/fstab \\\n"
+                        
                         "mkdir /data/mci"
                         )
                     return False
