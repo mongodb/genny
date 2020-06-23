@@ -159,7 +159,7 @@ private:
     class impl;
     std::unique_ptr<impl> _impl;
 
-};
+};  //class Foo
 
 }  // namespace genny
 
