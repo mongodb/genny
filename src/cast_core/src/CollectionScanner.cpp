@@ -85,7 +85,7 @@ struct CollectionScanner::PhaseConfig {
           scanSizeBytes{context["ScanSizeBytes"].maybe<IntegerSpec>().value_or(0)},
           collectionSkip{context["CollectionSkip"].maybe<IntegerSpec>().value_or(0)},
           scanDuration{context["ScanDuration"].maybe<TimeSpec>()},
-          selectClusterTimeOnly{context["selectClusterTimeOnly"].maybe<bool>().value_or(false)} {
+          selectClusterTimeOnly{context["SelectClusterTimeOnly"].maybe<bool>().value_or(false)} {
         // The list of databases is comma separated.
         std::vector<std::string> dbnames;
         boost::split(dbnames, databaseNames, [](char c) { return (c == ','); });
@@ -269,24 +269,62 @@ void pointInTimeScan(mongocxx::pool::entry& client,
             }
         }();
         for (auto& collection : collectionNames) {
-            /*
-             * Try-catch this as the collection may have been deleted.
-             * You can still do a find but it'll throw an exception when we iterate.
-             */
-            try {
-                bsoncxx::document::value findCmd = bson_stream::document{}
-                    << "find" << collection << "filter" << filter << "readConcern"
-                    << readConcern.view() << bson_stream::finalize;
+            bsoncxx::document::value findCmd = bson_stream::document{}
+                << "find" << collection << "filter" << filter << "readConcern" << readConcern.view()
+                << bson_stream::finalize;
 
-                auto findTracker = config->scanOperation.start();
+            int64_t cursorId = 0;
+            int count, size;
+            auto findTracker = config->scanOperation.start();
+            try {
                 auto res = database.run_command(session, findCmd.view());
-                auto cursorId = res.view()["cursor"]["id"].get_int64();
                 bsoncxx::array::view batch{res.view()["cursor"]["firstBatch"].get_array().value};
-                auto count = std::distance(batch.begin(), batch.end());
-                auto size = batch.length();
+                count = std::distance(batch.begin(), batch.end());
+                size = batch.length();
                 findTracker.addBytes(size);
                 findTracker.addDocuments(count);
                 findTracker.success();
+                cursorId = res.view()["cursor"]["id"].get_int64();
+            } catch (const mongocxx::operation_exception& e) {
+                findTracker.failure();
+                auto exceptionsCaught = config->exceptionsCaught.start();
+                exceptionsCaught.addDocuments(1);
+                exceptionsCaught.success();
+                break;
+            }
+
+            docCount += count;
+            scanSize += size;
+            if (config->documents != 0 && config->documents == docCount) {
+                scanFinished = true;
+                break;
+            }
+            if (config->scanSizeBytes != 0 && scanSize >= config->scanSizeBytes) {
+                scanFinished = true;
+                break;
+            }
+
+            while (cursorId) {
+                bsoncxx::document::value getMoreCmd = bson_stream::document{}
+                    << "getMore" << cursorId << "collection" << collection << bson_stream::finalize;
+
+                auto getMoreTracker = config->scanOperation.start();
+                try {
+                    auto res = database.run_command(session, getMoreCmd.view());
+                    bsoncxx::array::view batch{res.view()["cursor"]["nextBatch"].get_array().value};
+                    count = std::distance(batch.begin(), batch.end());
+                    size = batch.length();
+                    getMoreTracker.addBytes(size);
+                    getMoreTracker.addDocuments(count);
+                    getMoreTracker.success();
+                    cursorId = res.view()["cursor"]["id"].get_int64();
+                } catch (const mongocxx::operation_exception& e) {
+                    getMoreTracker.failure();
+                    auto exceptionsCaught = config->exceptionsCaught.start();
+                    exceptionsCaught.addDocuments(1);
+                    exceptionsCaught.success();
+                    break;
+                }
 
                 docCount += count;
                 scanSize += size;
@@ -298,37 +336,6 @@ void pointInTimeScan(mongocxx::pool::entry& client,
                     scanFinished = true;
                     break;
                 }
-
-                while (cursorId) {
-                    bsoncxx::document::value getMoreCmd = bson_stream::document{}
-                        << "getMore" << cursorId << "collection" << collection
-                        << bson_stream::finalize;
-
-                    auto getMoreTracker = config->scanOperation.start();
-                    res = database.run_command(session, getMoreCmd.view());
-                    bsoncxx::array::view batch{res.view()["cursor"]["nextBatch"].get_array().value};
-                    count = std::distance(batch.begin(), batch.end());
-                    size = batch.length();
-                    getMoreTracker.addBytes(size);
-                    getMoreTracker.addDocuments(count);
-                    getMoreTracker.success();
-
-                    cursorId = res.view()["cursor"]["id"].get_int64();
-                    docCount += count;
-                    scanSize += size;
-                    if (config->documents != 0 && config->documents == docCount) {
-                        scanFinished = true;
-                        break;
-                    }
-                    if (config->scanSizeBytes != 0 && scanSize >= config->scanSizeBytes) {
-                        scanFinished = true;
-                        break;
-                    }
-                }
-            } catch (const mongocxx::operation_exception& e) {
-                auto exceptionsCaught = config->exceptionsCaught.start();
-                exceptionsCaught.addDocuments(1);
-                exceptionsCaught.success();
             }
             if (scanFinished) {
                 break;

@@ -63,7 +63,7 @@ Actors:
   - *Nop
   - &select_timestamp
     Repeat: 1
-    selectClusterTimeOnly: true
+    SelectClusterTimeOnly: true
   - Duration: *test_duration
     MetricsName: Scan-Current
     ScanType: point-in-time
