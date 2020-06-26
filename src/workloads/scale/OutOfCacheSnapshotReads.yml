@@ -1,0 +1,80 @@
+SchemaVersion: 2018-07-01
+Owner: Replication
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 400
+
+GlobalDefaults:
+  CollectionCount: &CollectionCount 20
+  DocumentCount: &DocumentCount 1000000
+  RandomRange: &RandomRange 10000   # DocumentCount / 100
+
+Actors:
+- Name: Loader
+  Type: Loader
+  Threads: 20
+  Phases:
+  - Repeat: 1
+    Database: &DB test
+    CollectionCount: *CollectionCount   # 20gb total
+    Threads: 20
+    DocumentCount: *DocumentCount   # 1gb / collection
+    BatchSize: 10000
+    Document:
+      x: &randomInt {^RandomInt: {min: 0, max: *RandomRange}}
+      y: 0
+      a: &randomString {^RandomString: {length: 1000}}
+    Indexes:
+    - keys: {x: 1}
+  - &Nop {Nop: true}
+  - *Nop
+  - *Nop
+  - *Nop
+  - *Nop
+
+- Name: MultiCollectionUpdate
+  Type: MultiCollectionUpdate
+  Threads: 32
+  Phases:
+  - *Nop
+  - *Nop
+  - *Nop
+  - Repeat: 2000
+    MetricsName: Update
+    Database: *DB
+    CollectionCount: *CollectionCount
+    UpdateFilter: &update_filter {x: *randomInt}
+    Update: &update_operation {$inc: {y: 1}, $set: {x: *randomInt, a: *randomString}}
+  - *Nop
+  - Duration: &update_duration 10 minutes
+    MetricsName: Update-With-Scan
+    Database: *DB
+    CollectionCount: *CollectionCount
+    UpdateFilter: *update_filter
+    Update: *update_operation
+
+- Name: PointInTimeScanner
+  Type: CollectionScanner
+  Threads: 16
+  Database: *DB
+  Phases:
+  - *Nop
+  - &select_timestamp
+    Repeat: 1
+    SelectClusterTimeOnly: true
+  - Repeat: 1
+    MetricsName: Scan-Current
+    ScanType: point-in-time
+  - *Nop
+  - Repeat: 1
+    MetricsName: Scan-History
+    ScanType: point-in-time
+  - Duration: *update_duration
+    MetricsName: Scan-History-With-Update
+    ScanType: point-in-time
+
+AutoRun:
+  Requires:
+    mongodb_setup: [replica-1dayhistory-15gbwtcache]

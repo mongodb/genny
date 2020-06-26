@@ -42,7 +42,8 @@ struct MultiCollectionUpdate::PhaseConfig {
           numCollections{context["CollectionCount"].to<IntegerSpec>()},
           queryExpr{context["UpdateFilter"].to<DocumentGenerator>(context, id)},
           updateExpr{context["Update"].to<DocumentGenerator>(context, id)},
-          uniformDistribution{0, numCollections} {}
+          uniformDistribution{0, numCollections - 1},
+          updateOperation{context.operation("Update", id)} {}
 
     mongocxx::database database;
     int64_t numCollections;
@@ -53,6 +54,8 @@ struct MultiCollectionUpdate::PhaseConfig {
 
     // uniform distribution random int for selecting collection
     std::uniform_int_distribution<int64_t> uniformDistribution;
+
+    metrics::Operation updateOperation;
 };
 
 void MultiCollectionUpdate::run() {
@@ -71,7 +74,7 @@ void MultiCollectionUpdate::run() {
             // BOOST_LOG_TRIVIAL(info) << "Collection Name is " << collectionName;
             {
                 // Only time the actual update, not the setup of arguments
-                auto opCtx = _updateOp.start();
+                auto opCtx = config->updateOperation.start();
                 auto result = collection.update_many(std::move(filter), std::move(update));
                 opCtx.addDocuments(result->modified_count());
                 opCtx.success();
@@ -82,7 +85,6 @@ void MultiCollectionUpdate::run() {
 
 MultiCollectionUpdate::MultiCollectionUpdate(genny::ActorContext& context)
     : Actor(context),
-      _updateOp{context.operation("Update", MultiCollectionUpdate::id())},
       _client{std::move(context.client())},
       _loop{context, _client, MultiCollectionUpdate::id()} {}
 
