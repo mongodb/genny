@@ -56,6 +56,10 @@ public:
         }
 
         *this << MongoException::Message(message);
+
+        if (strlen(x.what()) > 0) {
+            *this << MongoException::What(x.what());
+        }
     }
 
 private:
@@ -70,6 +74,7 @@ private:
     using ServerError = boost::error_info<struct ServerResponse, std::string>;
     using Info = boost::error_info<struct InfoObject, std::string>;
     using Message = boost::error_info<struct Message, std::string>;
+    using What = boost::error_info<struct What, std::string>;
 };
 }  // namespace genny
 
