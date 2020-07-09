@@ -1,0 +1,177 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/security"
+Description: Measure user acquisition time on UserCache miss.
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10
+      socketTimeoutMS: 5000
+      connectTimeoutMS: 5000
+
+Actors:
+- Name: UserAcquisitionActors
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - Phase: 0 # Create a user we can pull from the privilege database
+    Repeat: 1
+    Database: admin
+    Operations:
+      # Setup a tree of roles and privileges
+      # The specific roles and privileges are unimportant
+      # so long as they are complex, but non-cyclic.
+      # Note that the yaml parser has some issues
+      # with empty arrays, but createRole must
+      # have `roles` and `privileges` present.
+      # So we use builtin `backup` role and filler privs.
+
+      # Simple leaf roles
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleA'
+          roles: ['backup']
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'A' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleB'
+          roles: ['backup']
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'B' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleC'
+          roles: ['backup']
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'C' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleD'
+          roles: ['backup']
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'D' }
+            actions: ['insert']
+
+      # First degree inheritors
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleAB'
+          roles:
+          - userAcquisitionRoleA
+          - userAcquisitionRoleB
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'AB' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleBC'
+          roles:
+          - userAcquisitionRoleB
+          - userAcquisitionRoleC
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'BC' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleCD'
+          roles:
+          - userAcquisitionRoleC
+          - userAcquisitionRoleD
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'CD' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleDA'
+          roles:
+          - userAcquisitionRoleD
+          - userAcquisitionRoleA
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'DA' }
+            actions: ['insert']
+
+      # 2nd degree inheritors
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleABCD'
+          roles:
+          - userAcquisitionRoleAB
+          - userAcquisitionRoleCD
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'ABCD' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleBCDA'
+          roles:
+          - userAcquisitionRoleBC
+          - userAcquisitionRoleDA
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'BCDA' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleCDAB'
+          roles:
+          - userAcquisitionRoleCD
+          - userAcquisitionRoleAB
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'CDAB' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleDABC'
+          roles:
+          - userAcquisitionRoleDA
+          - userAcquisitionRoleBC
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'DABC' }
+            actions: ['insert']
+
+      # Composite of 2nd degree inheritors
+      - OperationName: RunCommand
+        OperationCommand:
+          createRole: 'userAcquisitionRoleAll'
+          roles:
+          - userAcquisitionRoleABCD
+          - userAcquisitionRoleBCDA
+          - userAcquisitionRoleCDAB
+          - userAcquisitionRoleDABC
+          privileges:
+          - resource: { db: 'userAcquisitionDB', collection: 'All' }
+            actions: ['insert']
+
+      - OperationName: RunCommand
+        OperationCommand:
+          createUser: 'testUserAcquisition'
+          pwd: 'pwd'
+          roles:
+          - { db: 'admin', role: 'userAcquisitionRoleAll' }
+
+  - Phase: 1
+    Duration: 5 minutes
+    Database: admin
+    Operations:
+      # Make sure the user is ejected from the read-through cache.
+    - OperationName: RunCommand
+      OperationCommand: {invalidateUserCache: 1}
+
+      # Pull the user definition from the underlying store
+    - OperationMetricsName: UserInfoExactUser
+      OperationName: RunCommand
+      OperationCommand:
+        usersInfo: {user: "testUserAcquisition", db: "admin"}
+        showPrivileges: true
