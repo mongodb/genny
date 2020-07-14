@@ -1,0 +1,100 @@
+# This workload is a port of the mixed_workloads in the workloads
+# repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js
+
+# Copied from original workload
+# The number of threads to run in parallel. The default is [4, 64, 128, 256, 512].
+# With and without retryable writes and  w:majority
+# Test runs for 7 minutes
+
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+
+dbname: &dbname mix
+runtime: &runtime 7 minutes
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 1000
+
+
+# Setup: Setup a parameterizable number of documents in batch inserts.
+# Add an index on id (not _id)
+# If sharded, shard on id also. 96 initial chunks.
+
+Actors:
+- Name: Setup
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    BatchSize: 100
+    Threads: 1
+    DocumentCount: &NumDocs 100000
+    Database: *dbname
+    CollectionCount: 1
+    Document: &doc
+      id: {^RandomInt: {min: 0, max: *NumDocs}}
+      a: {^RandomInt: {min: 0, max: 1000000}}
+      # Note that in the original workload the string c was perfectly compressable. We can put a
+      # constant there if needed.
+      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
+    Indexes:
+    - keys: {id: 1}
+  - &nop {Nop: true}
+
+- Name: Update
+  Type: CrudActor
+  Database: *dbname
+  Phases:
+  - *nop
+  - Duration: *runtime
+    Threads: 16
+    Collection: Collection0
+    Operations:
+    - OperationName: updateOne
+      OperationCommand:
+        Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
+        Update:
+          $inc: {a: 1}
+          $set: {c: *string}
+
+- Name: Remove
+  Type: CrudActor
+  Database: *dbname
+  Phases:
+  - *nop
+  - Duration: *runtime
+    Threads: 16
+    Collection: Collection0
+    Operations:
+    - OperationName: deleteOne
+      OperationCommand:
+        Filter: *filter
+
+- Name: Insert
+  Type: CrudActor
+  Database: *dbname
+  Phases:
+  - *nop
+  - Duration: *runtime
+    Threads: 16
+    Collection: Collection0
+    Operations:
+    - OperationName: insertOne
+      OperationCommand:
+        Document: *doc
+
+# - Name: FindOne
+#   Type: CrudActor
+#   Database: *dbname
+#   Phases:
+#   - *nop
+#   - Duration: *runtime
+#     Threads: 16
+#     Collection: Collection0
+#     Operations:
+#     - OperationName: findOne
+#       OperationCommand:
+#         Filter: *filter
+
