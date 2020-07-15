@@ -167,3 +167,11 @@ Actors:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
       Key: FindPhase
 
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - replica
+    - single-replica
+    - standalone
+    - replica-noflowcontrol
+    - replica-1dayhistory-15gbwtcache
