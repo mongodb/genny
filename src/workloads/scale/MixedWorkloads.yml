@@ -124,22 +124,22 @@ Actors:
   - Threads: 1
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: RemovePhase
+      Key: InsertPhase
   - *nop
   - Threads: 16
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: RemovePhase
+      Key: InsertPhase
   - *nop
   - Threads: 32
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: RemovePhase
+      Key: InsertPhase
   - *nop
   - Threads: 64
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: RemovePhase
+      Key: InsertPhase
 
 - Name: FindOne
   Type: CrudActor
@@ -150,20 +150,20 @@ Actors:
   - Threads: 1
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: RemovePhase
+      Key: FindPhase
   - *nop
   - Threads: 16
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: RemovePhase
+      Key: FindPhase
   - *nop
   - Threads: 32
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: RemovePhase
+      Key: FindPhase
   - *nop
   - Threads: 64
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
-      Key: RemovePhase
+      Key: FindPhase
 
