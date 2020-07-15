@@ -56,12 +56,12 @@ Actors:
   - *nop
   - *quiesce
   - *nop
-  # - *quiesce
-  # - *nop
-  # - *quiesce
-  # - *nop
-  # - *quiesce
-  # - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
 
 - Name: Update
   Type: CrudActor
