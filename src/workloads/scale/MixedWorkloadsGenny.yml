@@ -63,129 +63,278 @@ Actors:
   - *quiesce
   - *nop
 
-- Name: Update
+- Name: Update_1
   Type: CrudActor
   Database: *dbname
+  Threads: 1
   Phases:
-  - *nop
-  - *nop
+  - Phase: 0..1
+    Nop: true
   - Threads: 1
     ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
       Key: UpdatePhase
-  - *nop
-  - Threads: 16
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
-  - *nop
-  - Threads: 32
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
-  - *nop
-  - Threads: 64
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
-  - *nop
-  - Threads: 128
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
+  - Phase: 3..10
+    Nop: true
 
-- Name: Remove
+- Name: Update_16
   Type: CrudActor
   Database: *dbname
+  Threads: 16
   Phases:
-  - *nop
-  - *nop
+  - Phase: 0..3
+    Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - *nop
-  - Threads: 16
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - *nop
-  - Threads: 32
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - *nop
-  - Threads: 64
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - *nop
-  - Threads: 128
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: UpdatePhase
+  - Phase: 5..10
+    Nop: true
 
-- Name: Insert
+- Name: Update_32
   Type: CrudActor
   Database: *dbname
+  Threads: 32
   Phases:
-  - *nop
-  - *nop
+  - Phase: 0..5
+    Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - *nop
-  - Threads: 16
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - *nop
-  - Threads: 32
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - *nop
-  - Threads: 64
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - *nop
-  - Threads: 128
-    ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: UpdatePhase
+  - Phase: 7..10
+    Nop: true
 
-- Name: FindOne
+- Name: Update_64
   Type: CrudActor
   Database: *dbname
+  Threads: 64
   Phases:
-  - *nop
-  - *nop
+  - Phase: 0..7
+    Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - *nop
-  - Threads: 16
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: UpdatePhase
+  - Phase: 9..10
+    Nop: true
+
+- Name: Update_128
+  Type: CrudActor
+  Database: *dbname
+  Threads: 128
+  Phases:
+  - Phase: 0..9
+    Nop: true
+  - Threads: 1
     ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - *nop
-  - Threads: 32
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: UpdatePhase
+
+- Name: Remove_1
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - Threads: 1
     ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - *nop
-  - Threads: 64
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: RemovePhase
+  - Phase: 3..10
+    Nop: true
+
+- Name: Remove_16
+  Type: CrudActor
+  Database: *dbname
+  Threads: 16
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - Threads: 1
     ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - *nop
-  - Threads: 128
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: RemovePhase
+  - Phase: 5..10
+    Nop: true
+
+- Name: Remove_32
+  Type: CrudActor
+  Database: *dbname
+  Threads: 32
+  Phases:
+  - Phase: 0..5
+    Nop: true
+  - Threads: 1
     ExternalPhaseConfig:
-      Path: *PhasePath
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: RemovePhase
+  - Phase: 7..10
+    Nop: true
+
+- Name: Remove_64
+  Type: CrudActor
+  Database: *dbname
+  Threads: 64
+  Phases:
+  - Phase: 0..7
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: RemovePhase
+  - Phase: 9..10
+    Nop: true
+
+- Name: Remove_128
+  Type: CrudActor
+  Database: *dbname
+  Threads: 128
+  Phases:
+  - Phase: 0..9
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: RemovePhase
+
+- Name: Insert_1
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: InsertPhase
+  - Phase: 3..10
+    Nop: true
+
+- Name: Insert_16
+  Type: CrudActor
+  Database: *dbname
+  Threads: 16
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: InsertPhase
+  - Phase: 5..10
+    Nop: true
+
+- Name: Insert_32
+  Type: CrudActor
+  Database: *dbname
+  Threads: 32
+  Phases:
+  - Phase: 0..5
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: InsertPhase
+  - Phase: 7..10
+    Nop: true
+
+- Name: Insert_64
+  Type: CrudActor
+  Database: *dbname
+  Threads: 64
+  Phases:
+  - Phase: 0..7
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: InsertPhase
+  - Phase: 9..10
+    Nop: true
+
+- Name: Insert_128
+  Type: CrudActor
+  Database: *dbname
+  Threads: 128
+  Phases:
+  - Phase: 0..9
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: InsertPhase
+
+- Name: Find_1
+  Type: CrudActor
+  Database: *dbname
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
       Key: FindPhase
+  - Phase: 3..10
+    Nop: true
+
+- Name: Find_16
+  Type: CrudActor
+  Database: *dbname
+  Threads: 16
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: FindPhase
+  - Phase: 5..10
+    Nop: true
+
+- Name: Find_32
+  Type: CrudActor
+  Database: *dbname
+  Threads: 32
+  Phases:
+  - Phase: 0..5
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: FindPhase
+  - Phase: 7..10
+    Nop: true
+
+- Name: Find_64
+  Type: CrudActor
+  Database: *dbname
+  Threads: 64
+  Phases:
+  - Phase: 0..7
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: FindPhase
+  - Phase: 9..10
+    Nop: true
+
+- Name: Find_128
+  Type: CrudActor
+  Database: *dbname
+  Threads: 128
+  Phases:
+  - Phase: 0..9
+    Nop: true
+  - Threads: 1
+    ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: FindPhase
+
 
 AutoRun:
   Requires:
