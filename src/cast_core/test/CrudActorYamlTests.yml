@@ -443,7 +443,7 @@ Tests:
         OperationCommand:
           Filter: {a: 100}
 
-- Description: simple findOneAndUpdate
+  - Description: simple findOneAndUpdate
     Operations:
       - OperationName: insertOne
         OperationCommand:
