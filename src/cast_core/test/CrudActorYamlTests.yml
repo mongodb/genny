@@ -442,6 +442,8 @@ Tests:
       - OperationName: findOne
         OperationCommand:
           Filter: {a: 100}
+    OutcomeData:
+      - {a: 2}
 
   - Description: simple findOneAndUpdate
     Operations:
