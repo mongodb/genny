@@ -119,6 +119,7 @@ Actors:
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
+  - *nop
   - Threads: 128
     ExternalPhaseConfig:
       Path: *PhasePath
