@@ -88,6 +88,11 @@ Actors:
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: UpdatePhase
+  - *nop
+  - Threads: 128
+    ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: UpdatePhase
 
 - Name: Remove
   Type: CrudActor
@@ -111,6 +116,10 @@ Actors:
       Key: RemovePhase
   - *nop
   - Threads: 64
+    ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: RemovePhase
+  - Threads: 128
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
@@ -140,6 +149,11 @@ Actors:
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
+  - *nop
+  - Threads: 128
+    ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: InsertPhase
 
 - Name: FindOne
   Type: CrudActor
@@ -163,6 +177,11 @@ Actors:
       Key: FindPhase
   - *nop
   - Threads: 64
+    ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: FindPhase
+  - *nop
+  - Threads: 128
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
