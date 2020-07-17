@@ -1,10 +1,16 @@
-# This workload is a port of the mixed_workloads in the workloads
-# repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js
-
-# The original workload had sharding support built in. We don't have that yet
-
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/product-perf"
+Description: |
+  This workload is a port of the mixed_workloads in the workloads
+  repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
+  operations, each with dedicated actors/threads. The 4 operations are insert, findOne, updateOne,
+  and deleteOne. Since each type of operation runs in a dedicated thread it enables interesting
+  behavior, such as reads getting faster because of a write regression, or reads being starved by
+  writes. The origin of the test was as a reproduction for BF-2385 in which reads were starved out
+  by writes.
+
+# This workload does not support sharding yet.
+
 
 # These two values should match those are the top of MixPhases.yml
 dbname: &dbname mix
@@ -93,6 +99,7 @@ Actors:
 
 - Name: Update_32
   Type: CrudActor
+
   Database: *dbname
   Threads: 32
   Phases:
@@ -344,3 +351,7 @@ AutoRun:
     - standalone
     - replica-noflowcontrol
     - replica-1dayhistory-15gbwtcache
+
+Metrics:
+  Format: ftdc
+  Path: build/genny-metrics
