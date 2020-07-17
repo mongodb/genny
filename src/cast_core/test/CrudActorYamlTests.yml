@@ -434,15 +434,6 @@ Tests:
       - Filter: {a: 1}
         Count: 0
 
-  - Description: simple findOne
-    Operations:
-      - OperationName: insertOne
-        OperationCommand:
-          Document: {a: 100}
-      - OperationName: findOne
-        OperationCommand:
-          Filter: {a: 100}
-
   - Description: simple findOneAndUpdate
     Operations:
       - OperationName: insertOne
