@@ -810,6 +810,40 @@ private:
     metrics::Operation _operation;
 };
 
+struct FindOneOperation : public BaseOperation {
+    FindOneOperation(const Node& opNode,
+                     bool onSession,
+                     mongocxx::collection collection,
+                     metrics::Operation operation,
+                     PhaseContext& context,
+                     ActorId id)
+        : BaseOperation(context, opNode),
+          _onSession{onSession},
+          _collection{std::move(collection)},
+          _operation{operation},
+          _filter{opNode["Filter"].to<DocumentGenerator>(context, id)} {}
+
+    void run(mongocxx::client_session& session) override {
+        auto filter = _filter();
+        this->doBlock(_operation, [&](metrics::OperationContext& ctx) {
+            auto result = (_onSession) ? _collection.find_one(session, filter.view(), _options)
+                                       : _collection.find_one(filter.view(), _options);
+            if (result) {
+                ctx.addDocuments(1);
+                ctx.addBytes(result->view().length());
+            }
+            return std::make_optional(std::move(filter));
+        });
+    }
+
+private:
+    bool _onSession;
+    mongocxx::collection _collection;
+    mongocxx::options::find _options;
+    DocumentGenerator _filter;
+    metrics::Operation _operation;
+};
+
 struct FindOneAndUpdateOperation : public BaseOperation {
     FindOneAndUpdateOperation(const Node& opNode,
                               bool onSession,
@@ -1137,6 +1171,7 @@ std::unordered_map<std::string, OpCallback&> opConstructors = {
      baseCallback<BaseOperation, OpCallback, EstimatedDocumentCountOperation>},
     {"createIndex", baseCallback<BaseOperation, OpCallback, CreateIndexOperation>},
     {"find", baseCallback<BaseOperation, OpCallback, FindOperation>},
+    {"findOne", baseCallback<BaseOperation, OpCallback, FindOneOperation>},
     {"findOneAndUpdate", baseCallback<BaseOperation, OpCallback, FindOneAndUpdateOperation>},
     {"findOneAndDelete", baseCallback<BaseOperation, OpCallback, FindOneAndDeleteOperation>},
     {"findOneAndReplace", baseCallback<BaseOperation, OpCallback, FindOneAndReplaceOperation>},
