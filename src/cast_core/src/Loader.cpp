@@ -75,8 +75,6 @@ void genny::actor::Loader::run() {
                  i++) {
                 auto collectionName = "Collection" + std::to_string(i);
                 auto collection = config->database[collectionName];
-                // drop the collection if it already exists
-                collection.drop();
                 // Insert the documents
                 uint remainingInserts = config->numDocuments;
                 {
