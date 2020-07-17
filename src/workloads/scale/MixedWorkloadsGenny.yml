@@ -92,7 +92,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: UpdatePhase
   - Phase: 5..10
     Nop: true
@@ -107,7 +107,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: UpdatePhase
   - Phase: 7..10
     Nop: true
@@ -121,7 +121,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: UpdatePhase
   - Phase: 9..10
     Nop: true
@@ -135,7 +135,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: UpdatePhase
 
 - Name: Remove_1
@@ -147,7 +147,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: RemovePhase
   - Phase: 3..10
     Nop: true
@@ -161,7 +161,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: RemovePhase
   - Phase: 5..10
     Nop: true
@@ -175,7 +175,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: RemovePhase
   - Phase: 7..10
     Nop: true
@@ -189,7 +189,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: RemovePhase
   - Phase: 9..10
     Nop: true
@@ -203,7 +203,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: RemovePhase
 
 - Name: Insert_1
@@ -215,7 +215,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: InsertPhase
   - Phase: 3..10
     Nop: true
@@ -229,7 +229,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: InsertPhase
   - Phase: 5..10
     Nop: true
@@ -243,7 +243,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: InsertPhase
   - Phase: 7..10
     Nop: true
@@ -257,7 +257,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: InsertPhase
   - Phase: 9..10
     Nop: true
@@ -271,7 +271,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: InsertPhase
 
 - Name: Find_1
@@ -283,7 +283,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: FindPhase
   - Phase: 3..10
     Nop: true
@@ -297,7 +297,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: FindPhase
   - Phase: 5..10
     Nop: true
@@ -311,7 +311,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: FindPhase
   - Phase: 7..10
     Nop: true
@@ -325,7 +325,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: FindPhase
   - Phase: 9..10
     Nop: true
@@ -339,7 +339,7 @@ Actors:
     Nop: true
   - Threads: 1
     ExternalPhaseConfig:
-      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Path: *PhasePath
       Key: FindPhase
 
 
