@@ -66,4 +66,7 @@ Actors:
 
 AutoRun:
   Requires:
-    mongodb_setup: [single-replica]
+    mongodb_setup:
+    - standalone
+    - single-replica
+    - replica
