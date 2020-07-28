@@ -1249,10 +1249,10 @@ struct CrudActor::PhaseConfig {
 
 void CrudActor::run() {
     for (auto&& config : _loop) {
+        auto session = _client->start_session();
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
 
-            auto session = _client->start_session();
             for (auto&& op : config->operations) {
                 op->run(session);
             }
