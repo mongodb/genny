@@ -4,13 +4,13 @@ dbname: &dbname mix
 runtime: &runtime 7 minutes
 DocumentCount: &NumDocs 100000
 Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
-string: &string {^RandomString: {length: 50}}
+string: &string {^FastRandomString: {length: 50}}
 Document: &doc
   id: {^RandomInt: {min: 0, max: *NumDocs}}
   a: {^RandomInt: {min: 0, max: 1000000}}
   # Note that in the original workload the string c was perfectly compressable. We can put a
   # constant there if needed.
-  c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
+  c: *string
 
 UpdatePhase:
   Duration: *runtime
