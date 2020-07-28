@@ -19,7 +19,7 @@ DocumentCount: &NumDocs 100000
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 1000
+      maxPoolSize: 2000
 
 
 Actors:
@@ -90,7 +90,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - Threads: 1
+  - Threads: 16
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: UpdatePhase
@@ -105,7 +105,7 @@ Actors:
   Phases:
   - Phase: 0..5
     Nop: true
-  - Threads: 1
+  - Threads: 32
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: UpdatePhase
@@ -119,7 +119,7 @@ Actors:
   Phases:
   - Phase: 0..7
     Nop: true
-  - Threads: 1
+  - Threads: 64
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: UpdatePhase
@@ -159,7 +159,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - Threads: 1
+  - Threads: 16
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
@@ -173,7 +173,7 @@ Actors:
   Phases:
   - Phase: 0..5
     Nop: true
-  - Threads: 1
+  - Threads: 32
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
@@ -187,7 +187,7 @@ Actors:
   Phases:
   - Phase: 0..7
     Nop: true
-  - Threads: 1
+  - Threads: 64
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
@@ -201,7 +201,7 @@ Actors:
   Phases:
   - Phase: 0..9
     Nop: true
-  - Threads: 1
+  - Threads: 128
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
@@ -227,7 +227,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - Threads: 1
+  - Threads: 16
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
@@ -241,7 +241,7 @@ Actors:
   Phases:
   - Phase: 0..5
     Nop: true
-  - Threads: 1
+  - Threads: 32
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
@@ -255,7 +255,7 @@ Actors:
   Phases:
   - Phase: 0..7
     Nop: true
-  - Threads: 1
+  - Threads: 64
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
@@ -269,7 +269,7 @@ Actors:
   Phases:
   - Phase: 0..9
     Nop: true
-  - Threads: 1
+  - Threads: 128
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
@@ -295,7 +295,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - Threads: 1
+  - Threads: 16
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
@@ -309,7 +309,7 @@ Actors:
   Phases:
   - Phase: 0..5
     Nop: true
-  - Threads: 1
+  - Threads: 32
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
@@ -323,7 +323,7 @@ Actors:
   Phases:
   - Phase: 0..7
     Nop: true
-  - Threads: 1
+  - Threads: 64
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
@@ -337,7 +337,7 @@ Actors:
   Phases:
   - Phase: 0..9
     Nop: true
-  - Threads: 1
+  - Threads: 128
     ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
@@ -352,6 +352,3 @@ AutoRun:
     - replica-noflowcontrol
     - replica-1dayhistory-15gbwtcache
 
-Metrics:
-  Format: ftdc
-  Path: build/genny-metrics
