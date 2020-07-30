@@ -76,8 +76,7 @@ Actors:
   Phases:
   - Phase: 0..1
     Nop: true
-  - Threads: 1
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: &PhasePath ../../phases/scale/MixPhases.yml
       Key: UpdatePhase
   - Phase: 3..10
@@ -90,8 +89,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - Threads: 16
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: UpdatePhase
   - Phase: 5..10
@@ -105,8 +103,7 @@ Actors:
   Phases:
   - Phase: 0..5
     Nop: true
-  - Threads: 32
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: UpdatePhase
   - Phase: 7..10
@@ -119,8 +116,7 @@ Actors:
   Phases:
   - Phase: 0..7
     Nop: true
-  - Threads: 64
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: UpdatePhase
   - Phase: 9..10
@@ -133,8 +129,7 @@ Actors:
   Phases:
   - Phase: 0..9
     Nop: true
-  - Threads: 1
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: UpdatePhase
 
@@ -145,8 +140,7 @@ Actors:
   Phases:
   - Phase: 0..1
     Nop: true
-  - Threads: 1
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
   - Phase: 3..10
@@ -159,8 +153,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - Threads: 16
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
   - Phase: 5..10
@@ -173,8 +166,7 @@ Actors:
   Phases:
   - Phase: 0..5
     Nop: true
-  - Threads: 32
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
   - Phase: 7..10
@@ -187,8 +179,7 @@ Actors:
   Phases:
   - Phase: 0..7
     Nop: true
-  - Threads: 64
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
   - Phase: 9..10
@@ -201,8 +192,7 @@ Actors:
   Phases:
   - Phase: 0..9
     Nop: true
-  - Threads: 128
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: RemovePhase
 
@@ -213,8 +203,7 @@ Actors:
   Phases:
   - Phase: 0..1
     Nop: true
-  - Threads: 1
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
   - Phase: 3..10
@@ -227,8 +216,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - Threads: 16
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
   - Phase: 5..10
@@ -241,8 +229,7 @@ Actors:
   Phases:
   - Phase: 0..5
     Nop: true
-  - Threads: 32
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
   - Phase: 7..10
@@ -255,8 +242,7 @@ Actors:
   Phases:
   - Phase: 0..7
     Nop: true
-  - Threads: 64
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
   - Phase: 9..10
@@ -269,8 +255,7 @@ Actors:
   Phases:
   - Phase: 0..9
     Nop: true
-  - Threads: 128
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: InsertPhase
 
@@ -281,8 +266,7 @@ Actors:
   Phases:
   - Phase: 0..1
     Nop: true
-  - Threads: 1
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
   - Phase: 3..10
@@ -295,8 +279,7 @@ Actors:
   Phases:
   - Phase: 0..3
     Nop: true
-  - Threads: 16
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
   - Phase: 5..10
@@ -309,8 +292,7 @@ Actors:
   Phases:
   - Phase: 0..5
     Nop: true
-  - Threads: 32
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
   - Phase: 7..10
@@ -323,8 +305,7 @@ Actors:
   Phases:
   - Phase: 0..7
     Nop: true
-  - Threads: 64
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
   - Phase: 9..10
@@ -337,8 +318,7 @@ Actors:
   Phases:
   - Phase: 0..9
     Nop: true
-  - Threads: 128
-    ExternalPhaseConfig:
+  - ExternalPhaseConfig:
       Path: *PhasePath
       Key: FindPhase
 
