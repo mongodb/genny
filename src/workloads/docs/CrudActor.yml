@@ -1,10 +1,19 @@
 SchemaVersion: 2018-07-01
 Owner: "@mongodb/stm"
 
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 10
+  SomeOtherPool:
+    QueryOptions:
+      maxPoolSize: 400
+
 Actors:
 - Name: CrudActor
   Type: CrudActor
   Database: mydb
+  ClientName: SomeOtherPool # Which connection pool to use. Must be defined in Clients section.
   Phases:
   - Repeat: 10
     Collection: test
