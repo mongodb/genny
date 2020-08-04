@@ -19,7 +19,19 @@ DocumentCount: &NumDocs 100000
 Clients:
   Default:
     QueryOptions:
-      maxPoolSize: 2000
+      maxPoolSize: 500
+  Insert:
+    QueryOptions:
+      maxPoolSize: 500
+  Query:
+    QueryOptions:
+      maxPoolSize: 500
+  Remove:
+    QueryOptions:
+      maxPoolSize: 500
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
 
 
 Actors:
@@ -72,6 +84,7 @@ Actors:
 - Name: Update_1
   Type: CrudActor
   Database: *dbname
+  ClientName: Update
   Threads: 1
   Phases:
   - Phase: 0..1
@@ -85,6 +98,7 @@ Actors:
 - Name: Update_16
   Type: CrudActor
   Database: *dbname
+  ClientName: Update
   Threads: 16
   Phases:
   - Phase: 0..3
@@ -95,36 +109,38 @@ Actors:
   - Phase: 5..10
     Nop: true
 
-- Name: Update_32
-  Type: CrudActor
+# - Name: Update_32
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Update
+#   Threads: 32
+#   Phases:
+#   - Phase: 0..5
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: UpdatePhase
+#   - Phase: 7..10
+#     Nop: true
 
-  Database: *dbname
-  Threads: 32
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
-  - Phase: 7..10
-    Nop: true
-
-- Name: Update_64
-  Type: CrudActor
-  Database: *dbname
-  Threads: 64
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
-  - Phase: 9..10
-    Nop: true
+# - Name: Update_64
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Update
+#   Threads: 64
+#   Phases:
+#   - Phase: 0..7
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: UpdatePhase
+#   - Phase: 9..10
+#     Nop: true
 
 - Name: Update_128
   Type: CrudActor
   Database: *dbname
+  ClientName: Update
   Threads: 128
   Phases:
   - Phase: 0..9
@@ -136,6 +152,7 @@ Actors:
 - Name: Remove_1
   Type: CrudActor
   Database: *dbname
+  ClientName: Remove
   Threads: 1
   Phases:
   - Phase: 0..1
@@ -149,6 +166,7 @@ Actors:
 - Name: Remove_16
   Type: CrudActor
   Database: *dbname
+  ClientName: Remove
   Threads: 16
   Phases:
   - Phase: 0..3
@@ -159,35 +177,38 @@ Actors:
   - Phase: 5..10
     Nop: true
 
-- Name: Remove_32
-  Type: CrudActor
-  Database: *dbname
-  Threads: 32
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - Phase: 7..10
-    Nop: true
+# - Name: Remove_32
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Remove
+#   Threads: 32
+#   Phases:
+#   - Phase: 0..5
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: RemovePhase
+#   - Phase: 7..10
+#     Nop: true
 
-- Name: Remove_64
-  Type: CrudActor
-  Database: *dbname
-  Threads: 64
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
-  - Phase: 9..10
-    Nop: true
+# - Name: Remove_64
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Remove
+#   Threads: 64
+#   Phases:
+#   - Phase: 0..7
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: RemovePhase
+#   - Phase: 9..10
+#     Nop: true
 
 - Name: Remove_128
   Type: CrudActor
   Database: *dbname
+  ClientName: Remove
   Threads: 128
   Phases:
   - Phase: 0..9
@@ -199,6 +220,7 @@ Actors:
 - Name: Insert_1
   Type: CrudActor
   Database: *dbname
+  ClientName: Insert
   Threads: 1
   Phases:
   - Phase: 0..1
@@ -212,6 +234,7 @@ Actors:
 - Name: Insert_16
   Type: CrudActor
   Database: *dbname
+  ClientName: Insert
   Threads: 16
   Phases:
   - Phase: 0..3
@@ -222,35 +245,38 @@ Actors:
   - Phase: 5..10
     Nop: true
 
-- Name: Insert_32
-  Type: CrudActor
-  Database: *dbname
-  Threads: 32
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - Phase: 7..10
-    Nop: true
+# - Name: Insert_32
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Insert
+#   Threads: 32
+#   Phases:
+#   - Phase: 0..5
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: InsertPhase
+#   - Phase: 7..10
+#     Nop: true
 
-- Name: Insert_64
-  Type: CrudActor
-  Database: *dbname
-  Threads: 64
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
-  - Phase: 9..10
-    Nop: true
+# - Name: Insert_64
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Insert
+#   Threads: 64
+#   Phases:
+#   - Phase: 0..7
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: InsertPhase
+#   - Phase: 9..10
+#     Nop: true
 
 - Name: Insert_128
   Type: CrudActor
   Database: *dbname
+  ClientName: Insert
   Threads: 128
   Phases:
   - Phase: 0..9
@@ -262,7 +288,8 @@ Actors:
 - Name: Find_1
   Type: CrudActor
   Database: *dbname
-  Threads: 1
+  ClientName: Query
+  Threads: 16
   Phases:
   - Phase: 0..1
     Nop: true
@@ -275,6 +302,7 @@ Actors:
 - Name: Find_16
   Type: CrudActor
   Database: *dbname
+  ClientName: Query
   Threads: 16
   Phases:
   - Phase: 0..3
@@ -285,35 +313,38 @@ Actors:
   - Phase: 5..10
     Nop: true
 
-- Name: Find_32
-  Type: CrudActor
-  Database: *dbname
-  Threads: 32
-  Phases:
-  - Phase: 0..5
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - Phase: 7..10
-    Nop: true
+# - Name: Find_32
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Query
+#   Threads: 32
+#   Phases:
+#   - Phase: 0..5
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: FindPhase
+#   - Phase: 7..10
+#     Nop: true
 
-- Name: Find_64
-  Type: CrudActor
-  Database: *dbname
-  Threads: 64
-  Phases:
-  - Phase: 0..7
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
-  - Phase: 9..10
-    Nop: true
+# - Name: Find_64
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Query
+#   Threads: 64
+#   Phases:
+#   - Phase: 0..7
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: FindPhase
+#   - Phase: 9..10
+#     Nop: true
 
 - Name: Find_128
   Type: CrudActor
   Database: *dbname
+  ClientName: Query
   Threads: 128
   Phases:
   - Phase: 0..9
