@@ -1,7 +1,7 @@
 PhaseSchemaVersion: 2018-07-01
 
 dbname: &dbname mix
-runtime: &runtime 7 minutes
+runtime: &runtime 2 minutes
 DocumentCount: &NumDocs 100000
 Filter: &filter {id: {^RandomInt: {min: 0, max: *NumDocs}}}
 string: &string {^FastRandomString: {length: 50}}
