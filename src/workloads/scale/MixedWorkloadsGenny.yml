@@ -137,17 +137,17 @@ Actors:
 #   - Phase: 9..10
 #     Nop: true
 
-- Name: Update_128
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Update
-  Threads: 128
-  Phases:
-  - Phase: 0..9
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: UpdatePhase
+# - Name: Update_128
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Update
+#   Threads: 128
+#   Phases:
+#   - Phase: 0..9
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: UpdatePhase
 
 - Name: Remove_1
   Type: CrudActor
@@ -205,17 +205,17 @@ Actors:
 #   - Phase: 9..10
 #     Nop: true
 
-- Name: Remove_128
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Remove
-  Threads: 128
-  Phases:
-  - Phase: 0..9
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: RemovePhase
+# - Name: Remove_128
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Remove
+#   Threads: 128
+#   Phases:
+#   - Phase: 0..9
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: RemovePhase
 
 - Name: Insert_1
   Type: CrudActor
@@ -273,17 +273,17 @@ Actors:
 #   - Phase: 9..10
 #     Nop: true
 
-- Name: Insert_128
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Insert
-  Threads: 128
-  Phases:
-  - Phase: 0..9
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: InsertPhase
+# - Name: Insert_128
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Insert
+#   Threads: 128
+#   Phases:
+#   - Phase: 0..9
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: InsertPhase
 
 - Name: Find_1
   Type: CrudActor
@@ -341,17 +341,17 @@ Actors:
 #   - Phase: 9..10
 #     Nop: true
 
-- Name: Find_128
-  Type: CrudActor
-  Database: *dbname
-  ClientName: Query
-  Threads: 128
-  Phases:
-  - Phase: 0..9
-    Nop: true
-  - ExternalPhaseConfig:
-      Path: *PhasePath
-      Key: FindPhase
+# - Name: Find_128
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Query
+#   Threads: 128
+#   Phases:
+#   - Phase: 0..9
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: FindPhase
 
 
 AutoRun:
