@@ -1,0 +1,366 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/product-perf"
+Description: |
+  This workload is a port of the mixed_workloads in the workloads
+  repo. https://github.com/10gen/workloads/blob/master/workloads/mix.js. It runs 4 sets of
+  operations, each with dedicated actors/threads. The 4 operations are insert, findOne, updateOne,
+  and deleteOne. Since each type of operation runs in a dedicated thread it enables interesting
+  behavior, such as reads getting faster because of a write regression, or reads being starved by
+  writes. The origin of the test was as a reproduction for BF-2385 in which reads were starved out
+  by writes.
+
+# This workload does not support sharding yet.
+
+
+# These two values should match those are the top of MixPhases.yml
+dbname: &dbname mix
+DocumentCount: &NumDocs 100000
+
+Clients:
+  Default:
+    QueryOptions:
+      maxPoolSize: 500
+  Insert:
+    QueryOptions:
+      maxPoolSize: 500
+  Query:
+    QueryOptions:
+      maxPoolSize: 500
+  Remove:
+    QueryOptions:
+      maxPoolSize: 500
+  Update:
+    QueryOptions:
+      maxPoolSize: 500
+
+
+Actors:
+- Name: Setup
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    BatchSize: 100
+    Threads: 1
+    DocumentCount: *NumDocs
+    Database: *dbname
+    CollectionCount: 1
+    Document: &doc
+      id: {^RandomInt: {min: 0, max: *NumDocs}}
+      a: {^RandomInt: {min: 0, max: 1000000}}
+      # Note that in the original workload the string c was perfectly compressable. We can put a
+      # constant there if needed.
+      c: &string {^RandomString: {length: 50}}  # Adjust this so the doc comes out as 100 B.
+    Indexes:
+    - keys: {id: 1}
+    - keys: {a: 1}
+  - Phase: 1..10
+    Nop: true
+
+- Name: QuiesceBetweenLevels
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - &nop {Nop: true}
+  - &quiesce
+    Repeat: 1
+    Database: admin
+    Operations:
+    # Fsync to force a checkpoint and quiesce the system.
+    - OperationMetricsName: FsyncCommand
+      OperationName: AdminCommand
+      OperationCommand:
+        fsync: 1
+  - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
+  - *quiesce
+  - *nop
+
+- Name: Update_1
+  Type: CrudActor
+  Database: *dbname
+  ClientName: Update
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - ExternalPhaseConfig:
+      Path: &PhasePath ../../phases/scale/MixPhases.yml
+      Key: UpdatePhase
+  - Phase: 3..10
+    Nop: true
+
+- Name: Update_16
+  Type: CrudActor
+  Database: *dbname
+  ClientName: Update
+  Threads: 16
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: UpdatePhase
+  - Phase: 5..10
+    Nop: true
+
+# - Name: Update_32
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Update
+#   Threads: 32
+#   Phases:
+#   - Phase: 0..5
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: UpdatePhase
+#   - Phase: 7..10
+#     Nop: true
+
+# - Name: Update_64
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Update
+#   Threads: 64
+#   Phases:
+#   - Phase: 0..7
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: UpdatePhase
+#   - Phase: 9..10
+#     Nop: true
+
+# - Name: Update_128
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Update
+#   Threads: 128
+#   Phases:
+#   - Phase: 0..9
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: UpdatePhase
+
+- Name: Remove_1
+  Type: CrudActor
+  Database: *dbname
+  ClientName: Remove
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: RemovePhase
+  - Phase: 3..10
+    Nop: true
+
+- Name: Remove_16
+  Type: CrudActor
+  Database: *dbname
+  ClientName: Remove
+  Threads: 16
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: RemovePhase
+  - Phase: 5..10
+    Nop: true
+
+# - Name: Remove_32
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Remove
+#   Threads: 32
+#   Phases:
+#   - Phase: 0..5
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: RemovePhase
+#   - Phase: 7..10
+#     Nop: true
+
+# - Name: Remove_64
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Remove
+#   Threads: 64
+#   Phases:
+#   - Phase: 0..7
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: RemovePhase
+#   - Phase: 9..10
+#     Nop: true
+
+# - Name: Remove_128
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Remove
+#   Threads: 128
+#   Phases:
+#   - Phase: 0..9
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: RemovePhase
+
+- Name: Insert_1
+  Type: CrudActor
+  Database: *dbname
+  ClientName: Insert
+  Threads: 1
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: InsertPhase
+  - Phase: 3..10
+    Nop: true
+
+- Name: Insert_16
+  Type: CrudActor
+  Database: *dbname
+  ClientName: Insert
+  Threads: 16
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: InsertPhase
+  - Phase: 5..10
+    Nop: true
+
+# - Name: Insert_32
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Insert
+#   Threads: 32
+#   Phases:
+#   - Phase: 0..5
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: InsertPhase
+#   - Phase: 7..10
+#     Nop: true
+
+# - Name: Insert_64
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Insert
+#   Threads: 64
+#   Phases:
+#   - Phase: 0..7
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: InsertPhase
+#   - Phase: 9..10
+#     Nop: true
+
+# - Name: Insert_128
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Insert
+#   Threads: 128
+#   Phases:
+#   - Phase: 0..9
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: InsertPhase
+
+- Name: Find_1
+  Type: CrudActor
+  Database: *dbname
+  ClientName: Query
+  Threads: 16
+  Phases:
+  - Phase: 0..1
+    Nop: true
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: FindPhase
+  - Phase: 3..10
+    Nop: true
+
+- Name: Find_16
+  Type: CrudActor
+  Database: *dbname
+  ClientName: Query
+  Threads: 16
+  Phases:
+  - Phase: 0..3
+    Nop: true
+  - ExternalPhaseConfig:
+      Path: *PhasePath
+      Key: FindPhase
+  - Phase: 5..10
+    Nop: true
+
+# - Name: Find_32
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Query
+#   Threads: 32
+#   Phases:
+#   - Phase: 0..5
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: FindPhase
+#   - Phase: 7..10
+#     Nop: true
+
+# - Name: Find_64
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Query
+#   Threads: 64
+#   Phases:
+#   - Phase: 0..7
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: FindPhase
+#   - Phase: 9..10
+#     Nop: true
+
+# - Name: Find_128
+#   Type: CrudActor
+#   Database: *dbname
+#   ClientName: Query
+#   Threads: 128
+#   Phases:
+#   - Phase: 0..9
+#     Nop: true
+#   - ExternalPhaseConfig:
+#       Path: *PhasePath
+#       Key: FindPhase
+
+
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - replica
+    - single-replica
+    - standalone
+    - replica-noflowcontrol
+    - replica-1dayhistory-15gbwtcache
+    - replica-maintenance-events
+
