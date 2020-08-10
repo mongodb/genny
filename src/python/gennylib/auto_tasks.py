@@ -113,7 +113,7 @@ class CLIOperation(NamedTuple):
         mode = OpName.ALL_TASKS
         variant = None
 
-        output_file = "./build/EvergreenTasks/Tasks.json"
+        output_file = "./build/TaskJSON/Tasks.json"
         if argv[1] == "all_tasks":
             mode = OpName.ALL_TASKS
         if argv[1] == "patch_tasks":
