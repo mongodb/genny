@@ -30,6 +30,8 @@ Actors:
           Update: {$set: {a: 5}}
         Options:
           Ordered: true
+        # The OnSession: true flag tells the driver to use a logical session. The actor will use the
+        # same session for the duration of a phase.
         OnSession: true
     - OperationName: commitTransaction
   - Repeat: 1

@@ -1249,10 +1249,10 @@ struct CrudActor::PhaseConfig {
 
 void CrudActor::run() {
     for (auto&& config : _loop) {
+        auto session = _client->start_session();
         for (const auto&& _ : config) {
             auto metricsContext = config->metrics.start();
 
-            auto session = _client->start_session();
             for (auto&& op : config->operations) {
                 op->run(session);
             }
@@ -1264,7 +1264,8 @@ void CrudActor::run() {
 
 CrudActor::CrudActor(genny::ActorContext& context)
     : Actor(context),
-      _client{std::move(context.client())},
+      _client{std::move(
+          context.client(context.get("ClientName").maybe<std::string>().value_or("Default")))},
       _loop{context, _client, CrudActor::id()} {}
 
 namespace {
