@@ -311,6 +311,8 @@ class ConfigWriter:
         if write:
             try:
                 os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
+                if os.path.exists(self.op.output_file):
+                    os.unlink(self.op.output_file)
                 with open(self.op.output_file, "w") as output:
                     output.write(config.to_json())
                 success = True
