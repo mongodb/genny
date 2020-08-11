@@ -321,7 +321,7 @@ class ConfigWriter:
                 raised = e
                 raise e
             finally:
-                print(f"{'Tried' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
+                print(f"{'Succeeded' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
                       f"{raised if raised else ''}")
         return config
 
