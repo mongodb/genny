@@ -308,6 +308,7 @@ class ConfigWriter:
                 self.all_tasks_modern(tasks)
             )
         success = False
+        raised = None
         if write:
             try:
                 os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
@@ -316,10 +317,12 @@ class ConfigWriter:
                 with open(self.op.output_file, "w") as output:
                     output.write(config.to_json())
                 success = True
-            except OSError as e:
+            except Exception as e:
+                raised = e
                 raise e
             finally:
-                print(f"{'Tried' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}.")
+                print(f"{'Tried' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
+                      f"{raised if raised else ''}")
         return config
 
     @staticmethod
