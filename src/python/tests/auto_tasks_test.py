@@ -129,7 +129,7 @@ class AutoTasksTests(BaseTestClass):
                 ],
                 "timeout": 64800,
             },
-            to_file="./run/build/Tasks/Tasks.json",
+            to_file="./build/TaskJSON/Tasks.json",
         )
 
     def test_variant_tasks(self):
@@ -148,7 +148,7 @@ class AutoTasksTests(BaseTestClass):
                     }
                 ]
             },
-            to_file="./run/build/Tasks/Tasks.json",
+            to_file="./build/TaskJSON/Tasks.json",
         )
 
     def test_patch_tasks(self):
@@ -175,136 +175,8 @@ class AutoTasksTests(BaseTestClass):
                     }
                 ]
             },
-            to_file="./run/build/Tasks/Tasks.json",
+            to_file="./build/TaskJSON/Tasks.json",
         )
-
-
-class LegacyHappyCaseTests(BaseTestClass):
-    def test_all_tasks(self):
-        self.assert_result(
-            given_files=[EMPTY_UNMODIFIED, EMPTY_MODIFIED, MULTI_MODIFIED],
-            and_args=["--generate-all-tasks", "--output", "build/all_tasks.json"],
-            then_writes={
-                "tasks": [
-                    {
-                        "name": "empty_unmodified",
-                        "commands": [
-                            {
-                                "command": "timeout.update",
-                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
-                            },
-                            {
-                                "func": "prepare environment",
-                                "vars": {
-                                    "test": "empty_unmodified",
-                                    "auto_workload_path": "scale/EmptyUnmodified.yml",
-                                },
-                            },
-                            {"func": "deploy cluster"},
-                            {"func": "run test"},
-                            {"func": "analyze"},
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "empty_modified",
-                        "commands": [
-                            {
-                                "command": "timeout.update",
-                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
-                            },
-                            {
-                                "func": "prepare environment",
-                                "vars": {
-                                    "test": "empty_modified",
-                                    "auto_workload_path": "scale/EmptyModified.yml",
-                                },
-                            },
-                            {"func": "deploy cluster"},
-                            {"func": "run test"},
-                            {"func": "analyze"},
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "multi_a",
-                        "commands": [
-                            {
-                                "command": "timeout.update",
-                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
-                            },
-                            {
-                                "func": "prepare environment",
-                                "vars": {
-                                    "test": "multi_a",
-                                    "auto_workload_path": "src/Multi.yml",
-                                    "setup": "a",
-                                },
-                            },
-                            {"func": "deploy cluster"},
-                            {"func": "run test"},
-                            {"func": "analyze"},
-                        ],
-                        "priority": 5,
-                    },
-                    {
-                        "name": "multi_b",
-                        "commands": [
-                            {
-                                "command": "timeout.update",
-                                "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
-                            },
-                            {
-                                "func": "prepare environment",
-                                "vars": {
-                                    "test": "multi_b",
-                                    "auto_workload_path": "src/Multi.yml",
-                                    "setup": "b",
-                                },
-                            },
-                            {"func": "deploy cluster"},
-                            {"func": "run test"},
-                            {"func": "analyze"},
-                        ],
-                        "priority": 5,
-                    },
-                ]
-            },
-            to_file="../src/genny/genny/build/all_tasks.json",
-        )
-
-    def test_variant_tasks(self):
-        self.assert_result(
-            given_files=[BOOTSTRAP, MATCHES_UNMODIFIED, NOT_MATCHES_MODIFIED],
-            and_args=[
-                "--output",
-                "build/auto_tasks.json",
-                "--variants",
-                "some-variant",
-                "--autorun",
-            ],
-            then_writes={"buildvariants": [{"name": "some-variant", "tasks": [{"name": "foo"}]}]},
-            to_file="../src/genny/genny/build/auto_tasks.json",
-        )
-
-    def test_patch_tasks(self):
-        self.assert_result(
-            given_files=[BOOTSTRAP, MATCHES_UNMODIFIED, MULTI_MODIFIED, MULTI_UNMODIFIED],
-            and_args=[
-                "--output",
-                "build/patch_tasks.json",
-                "--variants",
-                "some-variant",
-                "--modified",
-            ],
-            then_writes={
-                "buildvariants": [
-                    {"name": "some-variant", "tasks": [{"name": "multi_a"}, {"name": "multi_b"}]}
-                ]
-            },
-            to_file="./genny/genny/build/patch_tasks.json",
-        )
-
 
 # Example Input Files
 
