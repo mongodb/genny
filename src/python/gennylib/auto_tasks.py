@@ -304,9 +304,7 @@ class ConfigWriter:
         if self.op.mode != OpName.ALL_TASKS:
             config: Configuration = self.variant_tasks(tasks, self.op.variant)
         else:
-            config = (
-                self.all_tasks_modern(tasks)
-            )
+            config = self.all_tasks_modern(tasks)
         success = False
         raised = None
         if write:
@@ -321,8 +319,10 @@ class ConfigWriter:
                 raised = e
                 raise e
             finally:
-                print(f"{'Succeeded' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
-                      f"{raised if raised else ''}")
+                print(
+                    f"{'Succeeded' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
+                    f"{raised if raised else ''}"
+                )
         return config
 
     @staticmethod
