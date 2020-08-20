@@ -1,7 +1,6 @@
 """
 Generates evergreen tasks based on the current state of the repo.
 """
-# Anything marked "legacy" in here is due to be removed soon!
 
 import enum
 import glob
@@ -27,7 +26,6 @@ from shrub.variant import TaskSpec
 class YamlReader:
     # You could argue that YamlReader, WorkloadLister, and maybe even Repo
     # should be the same class - perhaps renamed to System or something?
-    # That will be easier once we can kill everything relating to "legacy".
     # Maybe make these methods static to avoid having to pass an instance around.
     def load(self, path: str) -> dict:
         """
@@ -100,82 +98,36 @@ class CLIOperation(NamedTuple):
 
     mode: OpName
     variant: Optional[str]
-    is_legacy: bool
     output_file_suffix: str
 
     @property
-    # Kill once we kill is_legacy
     def repo_root(self) -> str:
-        if self.is_legacy:
-            if self.mode == OpName.VARIANT_TASKS:
-                return "../src/genny/genny"
-            elif self.mode == OpName.ALL_TASKS:
-                return "../src/genny/genny"
-            elif self.mode == OpName.PATCH_TASKS:
-                return "./genny/genny"
         return "./src/genny"
 
     @property
-    # Kill once we kill is_legacy
     def output_file(self) -> str:
-        if self.is_legacy:
-            return os.path.join(self.repo_root, self.output_file_suffix)
         return self.output_file_suffix
 
     @staticmethod
     def parse(argv: List[str], reader: YamlReader) -> "CLIOperation":
         mode = OpName.ALL_TASKS
-        is_legacy = False
         variant = None
-        output_file = None
 
-        # Purposefully not using argparse etc - won't need
-        # it once we switch from legacy. Right now only targeting
-        # the exact invocations in system_perf.yml in the mongo repo.
-        if "--generate-all-tasks" in argv:
+        output_file = "./build/TaskJSON/Tasks.json"
+        if argv[1] == "all_tasks":
             mode = OpName.ALL_TASKS
-            is_legacy = True
-        if "--modified" in argv:
+        if argv[1] == "patch_tasks":
             mode = OpName.PATCH_TASKS
-            is_legacy = True
-        if "--autorun" in argv:
+            variant = reader.load("expansions.yml")["build_variant"]
+        if argv[1] == "variant_tasks":
             mode = OpName.VARIANT_TASKS
-            is_legacy = True
-        if mode in {OpName.PATCH_TASKS, OpName.VARIANT_TASKS}:
-            variant = argv.index("--variants")
-            variant = argv[variant + 1]
-        if "--output" in argv:
-            output_file = argv[argv.index("--output") + 1]
-        if is_legacy is False:
-            output_file = "./run/build/Tasks/Tasks.json"
-            if argv[1] == "all_tasks":
-                mode = OpName.ALL_TASKS
-            if argv[1] == "patch_tasks":
-                mode = OpName.PATCH_TASKS
-                variant = reader.load("expansions.yml")["build_variant"]
-            if argv[1] == "variant_tasks":
-                mode = OpName.VARIANT_TASKS
-                variant = reader.load("expansions.yml")["build_variant"]
-        return CLIOperation(mode, variant, is_legacy, output_file)
+            variant = reader.load("expansions.yml")["build_variant"]
+        return CLIOperation(mode, variant, output_file)
 
 
 class CurrentBuildInfo:
     def __init__(self, reader: YamlReader):
-        # Just reader.load("expansions.yml") when killing legacy.
-        conts = reader.load_set([f"{b}.yml" for b in {"bootstrap", "runtime", "expansions"}])
-        if "expansions" in conts:
-            conts = conts["expansions"]
-        else:
-            if "bootstrap" not in conts:
-                # Dangerous territory, but this goes away once we're done with legacy.
-                # We don't have a "bootstrap" value in legacy list-all-tasks case.
-                return
-            bootstrap: dict = conts["bootstrap"]
-            if "runtime" in conts:
-                runtime: dict = conts["runtime"]
-                bootstrap.update(runtime)
-            conts = bootstrap
-        self.conts = conts
+        self.conts = reader.load("expansions.yml")
 
     def has(self, key: str, acceptable_values: List[str]) -> bool:
         """
@@ -352,47 +304,31 @@ class ConfigWriter:
         if self.op.mode != OpName.ALL_TASKS:
             config: Configuration = self.variant_tasks(tasks, self.op.variant)
         else:
-            config = (
-                self.all_tasks_legacy(tasks) if self.op.is_legacy else self.all_tasks_modern(tasks)
-            )
+            config = self.all_tasks_modern(tasks)
+        success = False
+        raised = None
         if write:
             try:
                 os.makedirs(os.path.dirname(self.op.output_file), exist_ok=True)
+                if os.path.exists(self.op.output_file):
+                    os.unlink(self.op.output_file)
                 with open(self.op.output_file, "w") as output:
                     output.write(config.to_json())
-            except OSError as e:
+                success = True
+            except Exception as e:
+                raised = e
                 raise e
             finally:
-                print(f"Tried to write to {self.op.output_file} from cwd={os.getcwd()}")
+                print(
+                    f"{'Succeeded' if success else 'Failed'} to write to {self.op.output_file} from cwd={os.getcwd()}."
+                    f"{raised if raised else ''}"
+                )
         return config
 
     @staticmethod
     def variant_tasks(tasks: List[GeneratedTask], variant: str) -> Configuration:
         c = Configuration()
         c.variant(variant).tasks([TaskSpec(task.name) for task in tasks])
-        return c
-
-    @staticmethod
-    def all_tasks_legacy(tasks: List[GeneratedTask]) -> Configuration:
-        c = Configuration()
-        # Maybe make this a static/constant thing. It never changes.
-        timeout_params = {"exec_timeout_secs": 86400, "timeout_secs": 7200}  # 24 hours
-        for task in tasks:
-            prep_vars = {"test": task.name, "auto_workload_path": task.workload.relative_path}
-            if task.mongodb_setup:
-                prep_vars["setup"] = task.mongodb_setup
-
-            t = c.task(task.name)
-            t.priority(5)
-            t.commands(
-                [
-                    CommandDefinition().command("timeout.update").params(timeout_params),
-                    CommandDefinition().function("prepare environment").vars(prep_vars),
-                    CommandDefinition().function("deploy cluster"),
-                    CommandDefinition().function("run test"),
-                    CommandDefinition().function("analyze"),
-                ]
-            )
         return c
 
     @staticmethod
