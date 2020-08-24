@@ -78,6 +78,12 @@ class BaseTestClass(unittest.TestCase):
         self.assertEqual(op.output_file, to_file)
 
 
+TIMEOUT_COMMAND = {
+    "command": "timeout.update",
+    "params": {"exec_timeout_secs": 86400, "timeout_secs": 7200},
+}
+
+
 class AutoTasksTests(BaseTestClass):
     def test_all_tasks(self):
         self.assert_result(
@@ -88,19 +94,21 @@ class AutoTasksTests(BaseTestClass):
                     {
                         "name": "empty_unmodified",
                         "commands": [
+                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
                                     "test_control": "empty_unmodified",
                                     "auto_workload_path": "scale/EmptyUnmodified.yml",
                                 },
-                            }
+                            },
                         ],
                         "priority": 5,
                     },
                     {
                         "name": "multi_a",
                         "commands": [
+                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -108,13 +116,14 @@ class AutoTasksTests(BaseTestClass):
                                     "auto_workload_path": "src/Multi.yml",
                                     "mongodb_setup": "a",
                                 },
-                            }
+                            },
                         ],
                         "priority": 5,
                     },
                     {
                         "name": "multi_b",
                         "commands": [
+                            TIMEOUT_COMMAND,
                             {
                                 "func": "f_run_dsi_workload",
                                 "vars": {
@@ -122,7 +131,7 @@ class AutoTasksTests(BaseTestClass):
                                     "auto_workload_path": "src/Multi.yml",
                                     "mongodb_setup": "b",
                                 },
-                            }
+                            },
                         ],
                         "priority": 5,
                     },
