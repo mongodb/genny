@@ -1,0 +1,102 @@
+SchemaVersion: 2018-07-01
+Owner: "@mongodb/query"
+
+Actors:
+- Name: InsertData
+  Type: Loader
+  Threads: 1
+  Phases:
+  - Repeat: 1
+    Database: &db test
+    Threads: 1
+    CollectionCount: 1
+    DocumentCount: 10000
+    BatchSize: 2000
+    Document: &Document
+      t: &partitionID {^RandomInt: {min: 0, max: 100}}
+      randomID: &randomID {^RandomInt: {min: 0, max: 10000}}
+      int: &integer {^RandomInt: {min: 0, max: 100}}
+      str: &string {^RandomString: {length: {^RandomInt: {min: 20, max: 50}}}}
+      largeStr: &largeString {^RandomString: {length: 1024}}
+      obj: &object {a: *integer, b: *integer, c: *string}
+      arr: &array [*integer, *string, *object, *largeString]
+      nestedObj: &nestedObject {
+        int: *integer,
+        str: *string,
+        obj: *object,
+        arr: [1, 2, 3],
+        nestedArr: [*integer, *string, *object, *array],
+        largeStr: *largeString}
+    Indexes:
+    - keys: {t: 1}
+  - &Nop {Nop: true}
+  - *Nop
+
+- Name: RunUpdates
+  Type: RunCommand
+  Threads: 1
+  Phases:
+  - *Nop
+  - Repeat: 1000    # Classic updates phase.
+    Database: *db
+    Operations:
+    - OperationMetricsName: ClassicUpdateAddFields
+      OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [{q: {t: *partitionID}, u:
+                     {$set: {int: *integer, string: *string}}, multi: true}]
+        writeConcern: {w: majority}
+    - OperationMetricsName: ClassicUpdateModifyArray
+      OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [{q: {t: *partitionID}, u:
+                     {$set: {nestedObj.arr: [*integer, *integer, *integer]}}, multi: true}]
+        writeConcern: {w: majority}
+    - OperationMetricsName: ClassicUpdateUnset
+      OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [{q: {t: *partitionID}, u: {$unset: {string: "", int: ""}}, multi: true}]
+        writeConcern: {w: majority}
+    - OperationMetricsName: ClassicUpdateReplaceDocument
+      OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [{q: {randomID: *randomID}, u: *Document}]
+        writeConcern: {w: majority}
+  - Repeat: 1000    # Pipeline-based updates phase.
+    Database: *db
+    Operations:
+    - OperationMetricsName: PipelineUpdateAddFields
+      OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [{q: {t: *partitionID}, u: [
+          {$set: {int: *integer, string: *string}}], multi: true}]
+        writeConcern: {w: majority}
+    - OperationMetricsName: PipelineUpdateModifyArray
+      OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [{q: {t: *partitionID}, u: [
+          {$set: {nestedObj.arr: [*integer, *integer, *integer]}}], multi: true}]
+        writeConcern: {w: majority}
+    - OperationMetricsName: PipelineUpdateUnset
+      OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [{q: {t: *partitionID}, u: [{$unset: [string, int]}], multi: true}]
+        writeConcern: {w: majority}
+    - OperationMetricsName: PipelineUpdateReplaceDocument
+      OperationName: RunCommand
+      OperationCommand:
+        update: Collection0
+        updates: [{q: {randomID: *randomID}, u: [{$replaceWith: *Document}]}]
+        writeConcern: {w: majority}
+AutoRun:
+  Requires:
+    mongodb_setup:
+    - standalone
+    - replica
