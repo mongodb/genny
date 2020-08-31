@@ -154,6 +154,8 @@ public:
                 << "Problem closing grpc stream for operation name " << _name << " and actor ID "
                 << _actorId << ": " << _context.debug_error_string();
         }
+
+        shutdownQueue();
     }
 
 private:
@@ -169,6 +171,15 @@ private:
             return gotTag == _grpcTag && ok;
         }
         return true;
+    }
+
+    void shutdownQueue() {
+        _cq.Shutdown();
+        void* gotTag;
+        bool ok = false;
+
+        // Flush the queue.
+        while (_cq.Next(&gotTag, &ok)) {};
     }
 
     std::string _name;
