@@ -10,11 +10,11 @@ Actors:
     Database: &db test
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 10000
-    BatchSize: 2000
-    Document: &smallDocument    # Around 200B size.
-      t: &partitionIDSmall {^RandomInt: {min: 0, max: 1000}}
-      largeStr: &mediumString {^FastRandomString: {length: 128}}
+    DocumentCount: 5000
+    BatchSize: 1000
+    Document: &smallDocument    # Around 10KB size.
+      t: &partitionIDSmall {^RandomInt: {min: 0, max: 5000}}
+      largeStr: {^FastRandomString: {length: 10000}}
       int: &integer {^RandomInt: {min: 0, max: 100}}
       str: &string {^RandomString: {length: {^RandomInt: {min: 10, max: 20}}}}
       obj: &object {a: *integer, b: *integer, c: *string}
@@ -29,28 +29,13 @@ Actors:
     Database: *db
     Threads: 1
     CollectionCount: 1
-    DocumentCount: 10000
-    BatchSize: 2000
-    Document: &mediumDocument   # Around 1KB size.
-      t: &partitionIDMedium {^RandomInt: {min: 1001, max: 2000}}
-      largeStr: &largeString {^FastRandomString: {length: 1024}}
+    DocumentCount: 5000
+    BatchSize: 1000
+    Document: &largeDocument    # Around 500KB Size.
+      t: &partitionIDLarge {^RandomInt: {min: 5001, max: 10000}}
       int: *integer
       str: *string
-      obj: *object
-      nestedObj: *nestedObject
-    Indexes:
-    - keys: {t: 1}
-  - Repeat: 1
-    Database: *db
-    Threads: 1
-    CollectionCount: 1
-    DocumentCount: 10000
-    BatchSize: 2000
-    Document: &largeDocument    # Around 100KB Size.
-      t: &partitionIDLarge {^RandomInt: {min: 2001, max: 3000}}
-      int: *integer
-      str: *string
-      largeStr: &giantString {^FastRandomString: {length: 100000}}
+      largeStr: {^FastRandomString: {length: 500000}}
       obj: *object
       nestedObj: *nestedObject
     Indexes:
@@ -59,17 +44,14 @@ Actors:
   - *Nop
   - *Nop
   - *Nop
-  - *Nop
-  - *Nop
 
 - Name: RunUpdates
   Type: RunCommand
-  Threads: 8
+  Threads: 16
   Phases:
   - *Nop
   - *Nop
-  - *Nop
-  - Repeat: 100    # Classic updates on small documents phase.
+  - Repeat: 500    # Classic updates on small documents phase.
     Database: *db
     Operations:
     - OperationMetricsName: ClassicUpdateAddFieldsSmallDoc
@@ -112,54 +94,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         update: Collection0
-        updates: [{q: {randomID: *partitionIDSmall}, u: *smallDocument, multi: false}]
+        updates: [{q: {t: *partitionIDSmall}, u: *smallDocument, multi: false}]
         writeConcern: {w: majority}
-  - Repeat: 100    # Classic updates on medium documents phase.
-    Database: *db
-    Operations:
-    - OperationMetricsName: ClassicUpdateAddFieldsMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: {$set: {newStr: *string}}, multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: ClassicUpdateModifyFieldsMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: {$set: {int: *integer}}, multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: ClassicUpdateAddElementToArrayMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: {$push: {nestedObj.arr: *integer}}, multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: ClassicUpdateTruncateArrayMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: {$pop: {nestedObj.arr: 1}}, multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: ClassicUpdateUnsetTopLevelFieldsMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: {$unset: {int: "", str: ""}}, multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: ClassicUpdateUnsetNestedFieldsMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: {$unset: {nestedObj.str: ""}}, multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: ClassicUpdateReplaceDocumentMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {randomID: *partitionIDMedium}, u: *mediumDocument, multi: false}]
-        writeConcern: {w: majority}
-  - Repeat: 100    # Classic updates on large documents phase.
+  - Repeat: 500    # Classic updates on large documents phase.
     Database: *db
     Operations:
     - OperationMetricsName: ClassicUpdateAddFieldsLargeDoc
@@ -202,9 +139,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         update: Collection0
-        updates: [{q: {randomID: *partitionIDLarge}, u: *largeDocument, multi: false}]
+        updates: [{q: {t: *partitionIDLarge}, u: *largeDocument, multi: false}]
         writeConcern: {w: majority}
-  - Repeat: 100    # Pipeline-based updates on small documents phase.
+  - Repeat: 500    # Pipeline-based updates on small documents phase.
     Database: *db
     Operations:
     - OperationMetricsName: PipelineUpdateAddFieldsSmallDoc
@@ -249,56 +186,9 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         update: Collection0
-        updates: [{q: {randomID: *partitionIDSmall}, u: [{$replaceWith: *smallDocument}], multi: false}]
+        updates: [{q: {t: *partitionIDSmall}, u: [{$replaceWith: *smallDocument}], multi: false}]
         writeConcern: {w: majority}
-  - Repeat: 100    # Pipeline-based updates on medium documents phase.
-    Database: *db
-    Operations:
-    - OperationMetricsName: PipelineUpdateAddFieldsMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: [{$addFields: {newStr: *string}}], multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: PipelineUpdateModifyFieldsMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: [{$addFields: {int: *integer}}], multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: PipelineUpdateAddElementToArrayMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: [
-          {$set: {nestedObj.arr: {$concatArrays: ["$nestedObj.arr", [*integer]]}}}], multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: PipelineUpdateTruncateArrayMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: [
-          {$set: {nestedObj.arr: {$slice: ["$nestedObj.arr", 2]}}}], multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: PipelineUpdateUnsetTopLevelFieldsMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: [{$unset: [int, str]}], multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: PipelineUpdateUnsetNestedFieldsMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {t: *partitionIDMedium}, u: [{$unset: [nestedObj.str]}], multi: true}]
-        writeConcern: {w: majority}
-    - OperationMetricsName: PipelineUpdateReplaceDocumentMediumDoc
-      OperationName: RunCommand
-      OperationCommand:
-        update: Collection0
-        updates: [{q: {randomID: *partitionIDMedium}, u: [{$replaceWith: *mediumDocument}], multi: false}]
-        writeConcern: {w: majority}
-  - Repeat: 100    # Pipeline-based updates on large documents phase.
+  - Repeat: 500    # Pipeline-based updates on large documents phase.
     Database: *db
     Operations:
     - OperationMetricsName: PipelineUpdateAddFieldsLargeDoc
@@ -343,7 +233,7 @@ Actors:
       OperationName: RunCommand
       OperationCommand:
         update: Collection0
-        updates: [{q: {randomID: *partitionIDLarge}, u: [{$replaceWith: *largeDocument}], multi: false}]
+        updates: [{q: {t: *partitionIDLarge}, u: [{$replaceWith: *largeDocument}], multi: false}]
         writeConcern: {w: majority}
 AutoRun:
   Requires:
