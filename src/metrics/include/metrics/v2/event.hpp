@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <cstdlib>
+#include <climits>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -74,6 +75,8 @@ private:
         grpc::ChannelArguments args;
         // The BDP estimator overwhelms the server with pings on a heavy workload.
         args.SetInt(GRPC_ARG_HTTP2_BDP_PROBE, 0);
+        // Maximum buffer size grpc will allow.
+        args.SetInt(GRPC_ARG_HTTP2_WRITE_BUFFER_SIZE, 67108864);
         auto channel =
             grpc::CreateCustomChannel("localhost:2288", grpc::InsecureChannelCredentials(), args);
         _stub = poplar::PoplarEventCollector::NewStub(channel);
