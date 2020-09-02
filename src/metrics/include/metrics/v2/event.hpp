@@ -20,6 +20,8 @@
 #include <cstdlib>
 #include <cstdint>
 #include <vector>
+#include <optional>
+#include <mutex>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -45,8 +47,15 @@ class OperationEventT;
 namespace internals::v2 {
 
 const int NUM_CHANNELS = 10;
+const int BUFFER_SIZE = 100;
+const double SWAP_BUFFER_PERCENT = .25;
 
 class PoplarRequestError : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
+class MetricsError : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;
 };
@@ -270,6 +279,60 @@ private:
     CollectorStubInterface _stub;
 };
 
+template <typename ClockSource>
+struct MetricsArgs {
+    typename ClockSource::time_point finish;
+    OperationEventT<ClockSource> event;
+    size_t workerCount;
+};
+
+template <typename ClockSource>
+class MetricsBuffer {
+public:
+    explicit MetricsBuffer(size_t size) 
+        : size{size},
+          _loading(new std::vector<MetricsArgs<ClockSource>>()),
+          _draining(new std::vector<MetricsArgs<ClockSource>>()) {
+        _draining->reserve(size);
+        _loading->reserve(size);
+    }
+    void addAt(const typename ClockSource::time_point& finish,
+               const OperationEventT<ClockSource> event,
+               size_t workerCount) {
+        _loading_mutex.lock();
+        _loading.emplace_back(finish, std::move(event), workerCount);
+        _loading_mutex.unlock();
+    }
+
+    auto pop(bool force=false) {
+        swap(force);
+        return empty() ? std::nullopt : std::make_optional(_draining.pop_back());
+    }
+
+    bool empty() const {
+        return _draining.empty();
+    }
+
+    bool overflow() const {
+        return _draining.size() > size;
+    }
+
+    const size_t size;
+
+private:
+    void swap(bool force) {
+        _loading_mutex.lock();
+        if (empty() && (force || _draining.size() >= size * SWAP_BUFFER_PERCENT)) {
+           _draining.swap(_loading);
+        }
+        _loading_mutex.unlock();
+    }
+
+    std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _loading;
+    std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _draining;
+    std::mutex _loading_mutex;
+};
+
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
  */
@@ -283,49 +346,75 @@ public:
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const boost::filesystem::path& pathPrefix)
-        : _name{name}, _stream{name, actorId}, _phase{phase}, _last_finish{ClockSource::now()} {
+        : _name{name}, _stream{name, actorId}, _phase{phase}, _lastFinish{ClockSource::now()},
+        _buffer(new MetricsBuffer<ClockSource>(BUFFER_SIZE)) {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
     }
 
+    // Record a metrics event to the loading buffer.
     void addAt(const typename ClockSource::time_point& finish,
-               const OperationEventT<ClockSource>& event,
+               OperationEventT<ClockSource> event,
                size_t workerCount) {
+
+    }
+
+    // Send one event from the draining buffer to the grpc api.
+    // Returns false if there are no more events to send.
+    bool sendOne() {
+        if (_buffer->overflow()) {
+            std::ostringstream os;
+            os << "Metrics buffer for operation name " << _name << "overflowed" 
+               << ". Expected size: " << _buffer->size
+               << ". Actual size: " << _buffer->finishTimes.size() 
+               << ". This may affect recorded performance.";
+
+            BOOST_THROW_EXCEPTION(MetricsError(os.str()));
+        }
+        if (_buffer->empty()) {
+            return false;
+        }
+        auto metricsArgsOptional = _buffer->pop();
+        if (!metricsArgsOptional) return false;
+        auto metricsArgs = metricsArgsOptional->get();
+
         _metrics.mutable_time()->set_seconds(
-            Period<ClockSource>(finish.time_since_epoch()).getSecondsCount());
+            Period<ClockSource>(metricsArgs.finish.time_since_epoch()).getSecondsCount());
         _metrics.mutable_time()->set_nanos(
-            Period<ClockSource>(finish.time_since_epoch()).getNanosecondsCount());
+            Period<ClockSource>(metricsArgs.finish.time_since_epoch()).getNanosecondsCount());
 
         _metrics.mutable_timers()->mutable_duration()->set_seconds(
-            event.duration.getSecondsCount());
+            metricsArgs.event.duration.getSecondsCount());
         _metrics.mutable_timers()->mutable_duration()->set_nanos(
-            event.duration.getNanosecondsCount());
+            metricsArgs.event.duration.getNanosecondsCount());
 
         // If the EventStream was constructed after the end time was recorded.
-        if (finish < _last_finish) {
+        if (metricsArgs.finish < _lastFinish) {
             _metrics.mutable_timers()->mutable_total()->set_seconds(
-                event.duration.getSecondsCount());
+                metricsArgs.event.duration.getSecondsCount());
             _metrics.mutable_timers()->mutable_total()->set_nanos(
-                event.duration.getNanosecondsCount());
+                metricsArgs.event.duration.getNanosecondsCount());
         } else {
             _metrics.mutable_timers()->mutable_total()->set_seconds(
-                Period<ClockSource>(finish - _last_finish).getSecondsCount());
+                Period<ClockSource>(metricsArgs.finish - _lastFinish).getSecondsCount());
             _metrics.mutable_timers()->mutable_total()->set_nanos(
-                Period<ClockSource>(finish - _last_finish).getNanosecondsCount());
+                Period<ClockSource>(metricsArgs.finish - _lastFinish).getNanosecondsCount());
         }
 
-        _metrics.mutable_counters()->set_number(event.number);
-        _metrics.mutable_counters()->set_ops(event.ops);
-        _metrics.mutable_counters()->set_size(event.size);
-        _metrics.mutable_counters()->set_errors(event.errors);
+        _metrics.mutable_counters()->set_number(metricsArgs.event.number);
+        _metrics.mutable_counters()->set_ops(metricsArgs.event.ops);
+        _metrics.mutable_counters()->set_size(metricsArgs.event.size);
+        _metrics.mutable_counters()->set_errors(metricsArgs.event.errors);
 
-        _metrics.mutable_gauges()->set_failed(event.isFailure());
-        _metrics.mutable_gauges()->set_workers(workerCount);
+        _metrics.mutable_gauges()->set_failed(metricsArgs.event.isFailure());
+        _metrics.mutable_gauges()->set_workers(metricsArgs.workerCount);
         if (_phase) {
             _metrics.mutable_gauges()->set_state(*_phase);
         }
         _stream.write(_metrics);
-        _last_finish = finish;
+        _lastFinish = metricsArgs.finish;
+
+        return true;
     }
 
 private:
@@ -333,7 +422,8 @@ private:
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
     std::optional<genny::PhaseNumber> _phase;
-    typename ClockSource::time_point _last_finish;
+    typename ClockSource::time_point _lastFinish;
+    std::unique_ptr<MetricsBuffer<ClockSource>> _buffer;
 };
 
 
