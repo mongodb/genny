@@ -18,7 +18,8 @@
 
 #include <atomic>
 #include <cstdlib>
-#include <climits>
+#include <cstdint>
+#include <vector>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -43,6 +44,8 @@ class OperationEventT;
 
 namespace internals::v2 {
 
+const int NUM_CHANNELS = 10;
+
 class PoplarRequestError : public std::runtime_error {
 public:
     using std::runtime_error::runtime_error;
@@ -66,25 +69,31 @@ public:
     }
 
 private:
-    // We should only have one channel across all threads.
-    static std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
+
+    static std::vector<std::shared_ptr<grpc::Channel>> _channels;
+    static std::atomic<size_t> _curChannel;
+
+    std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 
     // Should only be called by setStub(), is statically guarded
     // so only one thread will execute.
-    auto createStub() {
+    auto createChannels() {
         grpc::ChannelArguments args;
         // The BDP estimator overwhelms the server with pings on a heavy workload.
         args.SetInt(GRPC_ARG_HTTP2_BDP_PROBE, 0);
         // Maximum buffer size grpc will allow.
         args.SetInt(GRPC_ARG_HTTP2_WRITE_BUFFER_SIZE, 67108864);
-        auto channel =
-            grpc::CreateCustomChannel("localhost:2288", grpc::InsecureChannelCredentials(), args);
-        _stub = poplar::PoplarEventCollector::NewStub(channel);
+        // Local subchannels prohibit global sharing and forces multiple TCP connections.
+        args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
+        for (int i = 0; i < NUM_CHANNELS; i++) {
+            _channels.push_back(grpc::CreateCustomChannel("localhost:2288", grpc::InsecureChannelCredentials(), args));
+        }
         return true;
     }
 
     void setStub() {
-        static bool stubCreated = createStub();
+        static bool channelsCreated = createChannels();
+        _stub = poplar::PoplarEventCollector::NewStub(_channels[_curChannel++ % _channels.size()]);
         return;
     }
 };
