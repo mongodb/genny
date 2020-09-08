@@ -136,6 +136,8 @@ private:
     // Map from "Actor.Operation.Phase" to a Collector.
     using CollectorsMap = std::unordered_map<std::string, v2::Collector>;
 
+    using GrpcClient = v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>;
+
 public:
     using clock = ClockSource;
 
@@ -150,6 +152,8 @@ public:
             std::ofstream startTimeFile(startTimeFilePath.string());
             startTimeFile << "This file only exists to mark execution start time.";
             startTimeFile.close();
+
+            _grpcThread = std::make_shared<GrpcClient>();
         }
     }
 
@@ -173,7 +177,8 @@ public:
                                      std::move(opName),
                                      std::move(phase),
                                      _pathPrefix,
-                                     name)
+                                     name,
+                                     _grpcThread)
                         .first;
         return OperationT{opIt->second};
     }
@@ -202,6 +207,7 @@ public:
                     std::move(phase),
                     _pathPrefix,
                     name,
+                    _grpcThread,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;
@@ -249,6 +255,7 @@ private:
     OperationsMap _ops;
     MetricsFormat _format;
     boost::filesystem::path _pathPrefix;
+    std::shared_ptr<GrpcClient> _grpcThread;
 };
 
 }  // namespace internals
