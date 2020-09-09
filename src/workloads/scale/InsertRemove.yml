@@ -11,7 +11,7 @@ Actors:
   Threads: 100
   Phases:
   - Collection: inserts
-    Duration: 30 minutes
+    Duration: 3 minutes
     Database: test
 
 AutoRun:
