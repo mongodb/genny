@@ -236,7 +236,7 @@ public:
         return *_events;
     }
 
-    void reportAt(time_point started, time_point finished, OperationEventT<ClockSource> event) {
+    void reportAt(time_point started, time_point finished, OperationEventT<ClockSource>&& event) {
         if (_threshold) {
             _threshold->check(started, finished);
         }
