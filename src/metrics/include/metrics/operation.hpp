@@ -187,7 +187,8 @@ public:
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     using stream_t = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>;
-    using grpcThreadPtr = std::shared_ptr<internals::v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>>;
+    using grpcThreadPtr =
+        std::shared_ptr<internals::v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>>;
 
     OperationImpl(const ActorId& actorId,
                   std::string actorName,
@@ -206,7 +207,8 @@ public:
           _phase(std::move(phase)),
           _threshold(threshold) {
         if (_useGrpc) {
-            _stream.reset(new stream_t(actorId, *collector_name, this->_phase, pathPrefix, grpcThread));
+            _stream.reset(
+                new stream_t(actorId, *collector_name, this->_phase, pathPrefix, grpcThread));
         }
         if (_useCsv) {
             _events.reset(new EventSeries());
@@ -239,7 +241,8 @@ public:
             _threshold->check(started, finished);
         }
         if (_useGrpc) {
-            _stream->addAt(finished, std::move(event), _registry.getWorkerCount(_actorName, _opName));
+            _stream->addAt(
+                finished, std::move(event), _registry.getWorkerCount(_actorName, _opName));
         }
         if (_useCsv) {
             _events->addAt(finished, event);

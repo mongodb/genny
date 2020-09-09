@@ -7,7 +7,8 @@ namespace genny::metrics::internals::v2 {
  *
  * Located in some random cpp file because it can't be initialized in the declaration header.
  */
-std::vector<std::shared_ptr<grpc::Channel>> CollectorStubInterface::_channels = std::vector<std::shared_ptr<grpc::Channel>>();
+std::vector<std::shared_ptr<grpc::Channel>> CollectorStubInterface::_channels =
+    std::vector<std::shared_ptr<grpc::Channel>>();
 
 /*
  * Static initialization of the most recently-used channel.

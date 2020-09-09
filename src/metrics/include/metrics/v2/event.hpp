@@ -17,14 +17,14 @@
 #define HEADER_960919A5_5455_4DD2_BC68_EFBAEB228BB0_INCLUDED
 
 #include <atomic>
-#include <cstdlib>
 #include <cstdint>
-#include <vector>
-#include <queue>
-#include <optional>
-#include <thread>
+#include <cstdlib>
 #include <mutex>
+#include <optional>
+#include <queue>
 #include <set>
+#include <thread>
+#include <vector>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -83,7 +83,6 @@ public:
     }
 
 private:
-
     static std::vector<std::shared_ptr<grpc::Channel>> _channels;
     static std::atomic<size_t> _curChannel;
 
@@ -100,7 +99,8 @@ private:
         // Local subchannels prohibit global sharing and forces multiple TCP connections.
         args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
         for (int i = 0; i < NUM_CHANNELS; i++) {
-            _channels.push_back(grpc::CreateCustomChannel("localhost:2288", grpc::InsecureChannelCredentials(), args));
+            _channels.push_back(grpc::CreateCustomChannel(
+                "localhost:2288", grpc::InsecureChannelCredentials(), args));
         }
         return true;
     }
@@ -205,7 +205,8 @@ private:
         bool ok = false;
 
         // Flush the queue.
-        while (_cq.Next(&gotTag, &ok)) {};
+        while (_cq.Next(&gotTag, &ok)) {
+        };
     }
 
     std::string _name;
@@ -291,7 +292,6 @@ class EventStream;
 template <typename ClockSource, typename StreamInterface>
 class GrpcThread {
 public:
-
     GrpcThread() : _thread{&GrpcThread::run, this} {}
 
     typedef EventStream<ClockSource, StreamInterface>* stream_ptr;
@@ -325,11 +325,12 @@ private:
             still_reaping = false;
             const std::lock_guard<std::mutex> lock(_streams_mutex);
             for (auto stream : streams) {
-                if (stream->sendOne()) still_reaping = true;
-            } 
+                if (stream->sendOne())
+                    still_reaping = true;
+            }
         } while (still_reaping);
     }
-    
+
     std::atomic<bool> done = false;
     std::thread _thread;
     std::set<stream_ptr> streams;
@@ -342,8 +343,8 @@ class GrpcClient {
 public:
     GrpcClient() : _threads(CLIENT_THREADS) {}
 
-    // EventStream users manage their own memory and should deregister themselves before destructing, 
-    // so we (carefully) use naked pointers.
+    // EventStream users manage their own memory and should deregister themselves before
+    // destructing, so we (carefully) use naked pointers.
     typedef EventStream<ClockSource, StreamInterface>* stream_ptr;
 
     void registerStream(stream_ptr stream) {
@@ -363,8 +364,10 @@ private:
 
 template <typename ClockSource>
 struct MetricsArgs {
-    MetricsArgs(const typename ClockSource::time_point& finish, OperationEventT<ClockSource> event, size_t workerCount) 
-    : finish(finish), event(std::move(event)), workerCount(workerCount) {}
+    MetricsArgs(const typename ClockSource::time_point& finish,
+                OperationEventT<ClockSource> event,
+                size_t workerCount)
+        : finish(finish), event(std::move(event)), workerCount(workerCount) {}
     typename ClockSource::time_point finish;
     OperationEventT<ClockSource> event;
     size_t workerCount;
@@ -374,8 +377,9 @@ struct MetricsArgs {
 template <typename ClockSource>
 class MetricsBuffer {
 public:
-    explicit MetricsBuffer(size_t size, const std::string& name) 
-        : size{size}, name{name},
+    explicit MetricsBuffer(size_t size, const std::string& name)
+        : size{size},
+          name{name},
           _loading(new std::vector<MetricsArgs<ClockSource>>()),
           _draining(new std::vector<MetricsArgs<ClockSource>>()) {
         _draining->reserve(size);
@@ -418,20 +422,18 @@ private:
         // and errors if it ever backs up enough to slow down an actor thread.
         if (_draining->size() > size) {
             std::ostringstream os;
-            os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space" 
-               << ". Expected size: " << size
-               << ". Actual size: " << _draining->size() 
+            os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space"
+               << ". Expected size: " << size << ". Actual size: " << _draining->size()
                << ". This may affect recorded performance.";
 
             BOOST_THROW_EXCEPTION(MetricsError(os.str()));
         }
-
     }
 
     std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _loading;
     std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _draining;
     std::mutex _loading_mutex;
-}; 
+};
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
  */
@@ -447,8 +449,12 @@ public:
                          const OptionalPhaseNumber& phase,
                          const boost::filesystem::path& pathPrefix,
                          ThreadPtr grpcClient = ThreadPtr(nullptr))
-        : _name{name}, _stream{name, actorId}, _phase{phase}, _lastFinish{ClockSource::now()},
-        _buffer(new MetricsBuffer<ClockSource>(BUFFER_SIZE, _name)), _grpcClient(grpcClient) {
+        : _name{name},
+          _stream{name, actorId},
+          _phase{phase},
+          _lastFinish{ClockSource::now()},
+          _buffer(new MetricsBuffer<ClockSource>(BUFFER_SIZE, _name)),
+          _grpcClient(grpcClient) {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
         registerSelf();
@@ -463,9 +469,10 @@ public:
 
     // Send one event from the draining buffer to the grpc api.
     // Returns false if there are no more events to send.
-    bool sendOne(bool force=false) {
+    bool sendOne(bool force = false) {
         auto metricsArgsOptional = _buffer->pop(force);
-        if (!metricsArgsOptional) return false;
+        if (!metricsArgsOptional)
+            return false;
         auto metricsArgs = *metricsArgsOptional;
 
         _metrics.mutable_time()->set_seconds(
@@ -508,7 +515,8 @@ public:
     }
 
     EventStream(const EventStream<ClockSource, StreamInterface>&) = delete;
-    EventStream<ClockSource, StreamInterface>& operator=(const EventStream<ClockSource, StreamInterface>&) = delete;
+    EventStream<ClockSource, StreamInterface>& operator=(
+        const EventStream<ClockSource, StreamInterface>&) = delete;
 
     ~EventStream() {
         try {
@@ -516,9 +524,11 @@ public:
                 _grpcClient->closeStream(this);
             }
             // Drain the buffer.
-            while (sendOne(true)) {};
-        } catch(...) {
-            BOOST_LOG_TRIVIAL(error) << "Error while closing gRPC stream for operation name " << _name;
+            while (sendOne(true)) {
+            };
+        } catch (...) {
+            BOOST_LOG_TRIVIAL(error)
+                << "Error while closing gRPC stream for operation name " << _name;
         }
     }
 
