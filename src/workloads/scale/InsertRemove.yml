@@ -22,7 +22,3 @@ AutoRun:
     - standalone
     - shard
     - replica-1dayhistory-15gbwtcache
-
-Metrics:
-  Format: ftdc
-  Path: build/genny-metrics

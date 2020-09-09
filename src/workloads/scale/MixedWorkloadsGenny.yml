@@ -363,7 +363,3 @@ AutoRun:
     - replica-noflowcontrol
     - replica-1dayhistory-15gbwtcache
     - replica-maintenance-events
-
-Metrics:
-  Format: ftdc
-  Path: build/genny-metrics
