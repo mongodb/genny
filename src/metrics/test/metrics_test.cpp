@@ -561,6 +561,7 @@ TEST_CASE("Events stream to gRPC") {
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
                 1, "TestName", 1, "/test/prefix"};
+        REQUIRE_FALSE(stream.sendOne(true));
 
         EventVec expected;
         compareEventsAndClear(expected);
@@ -586,6 +587,7 @@ TEST_CASE("Events stream to gRPC") {
                 OutcomeType::kSuccess                                           // outcome
             );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
+            REQUIRE(stream.sendOne(true));
 
             // Streamed Event
             // ---------------
@@ -627,6 +629,9 @@ TEST_CASE("Events stream to gRPC") {
                 OutcomeType::kFailure                                           // outcome
             );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
+            // Drive-by test that we won't send when the buffer is under capacity.
+            REQUIRE_FALSE(stream.sendOne());
+            REQUIRE(stream.sendOne(true));
 
             // Streamed Event
             // ---------------
@@ -669,6 +674,7 @@ TEST_CASE("Events stream to gRPC") {
                 OutcomeType::kSuccess                                           // outcome
             );
             stream.addAt(RegistryClockSourceStub::now(), event, 1);
+            REQUIRE(stream.sendOne(true));
 
             // Streamed Event
             // ---------------
@@ -724,6 +730,7 @@ TEST_CASE("Events stream to gRPC") {
                 OutcomeType::kSuccess                                           // outcome
             );
             stream.addAt(endTime, event, 1);
+            REQUIRE(stream.sendOne(true));
 
             // Streamed Event
             // ---------------
