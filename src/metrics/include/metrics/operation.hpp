@@ -187,7 +187,7 @@ public:
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     using stream_t = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>;
-    using grpcThreadPtr =
+    using grpcClientPtr =
         std::shared_ptr<internals::v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>>;
 
     OperationImpl(const ActorId& actorId,
@@ -197,7 +197,7 @@ public:
                   std::optional<genny::PhaseNumber> phase,
                   const boost::filesystem::path& pathPrefix,
                   const std::optional<std::string>& collector_name = std::nullopt,
-                  grpcThreadPtr grpcThread = grpcThreadPtr(nullptr),
+                  grpcClientPtr grpcClient = grpcClientPtr(nullptr),
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
           _registry(registry),
@@ -208,7 +208,7 @@ public:
           _threshold(threshold) {
         if (_useGrpc) {
             _stream.reset(
-                new stream_t(actorId, *collector_name, this->_phase, pathPrefix, grpcThread));
+                new stream_t(actorId, *collector_name, this->_phase, pathPrefix, grpcClient));
         }
         if (_useCsv) {
             _events.reset(new EventSeries());

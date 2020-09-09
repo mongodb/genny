@@ -11,7 +11,7 @@ Actors:
   Threads: 100
   Phases:
   - Collection: inserts
-    Duration: 3 minutes
+    Duration: 30 minutes
     Database: test
 
 AutoRun:
@@ -22,3 +22,7 @@ AutoRun:
     - standalone
     - shard
     - replica-1dayhistory-15gbwtcache
+
+Metrics:
+  Format: ftdc
+  Path: build/genny-metrics
