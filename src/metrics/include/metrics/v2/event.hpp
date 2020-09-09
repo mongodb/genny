@@ -51,7 +51,7 @@ namespace internals::v2 {
 
 const int NUM_CHANNELS = 4;
 const int BUFFER_SIZE = 1000;
-const int CLIENT_THREADS = 2;
+const int CLIENT_THREADS = 3;
 const int GRPC_THREAD_SLEEP_MS = 50;
 const double SWAP_BUFFER_PERCENT = .25;
 
