@@ -808,6 +808,48 @@ TEST_CASE("Events stream to gRPC") {
 
         REQUIRE(boost::filesystem::remove_all(metricsPath));
     }
+
+    SECTION("Un-forced metrics buffer only pops at capacity.") {
+        auto metricsBuffer = internals::v2::MetricsBuffer<RegistryClockSourceStub>(16, "test_buffer");
+        auto endTime = RegistryClockSourceStub::now();
+        OperationEventT<RegistryClockSourceStub> event(
+                2,                                                              // number
+                77,                                                             // ops
+                2,                                                              // size
+                0,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},  // duration
+                OutcomeType::kSuccess                                           // outcome
+            );
+
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE_FALSE(metricsBuffer.pop(false));
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE_FALSE(metricsBuffer.pop(false));
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE_FALSE(metricsBuffer.pop(false));
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE(metricsBuffer.pop(false));
+    }
+
+    SECTION("Metrics buffer throws when capacity exceeded.") {
+        auto metricsBuffer = internals::v2::MetricsBuffer<RegistryClockSourceStub>(3, "test_buffer");
+        auto endTime = RegistryClockSourceStub::now();
+        OperationEventT<RegistryClockSourceStub> event(
+                2,                                                              // number
+                77,                                                             // ops
+                2,                                                              // size
+                0,                                                              // errors
+                Period<RegistryClockSourceStub>{std::chrono::microseconds(6)},  // duration
+                OutcomeType::kSuccess                                           // outcome
+            );
+
+        metricsBuffer.addAt(endTime, event, 1);
+        metricsBuffer.addAt(endTime, event, 1);
+        metricsBuffer.addAt(endTime, event, 1);
+        metricsBuffer.addAt(endTime, event, 1);
+        REQUIRE_THROWS(metricsBuffer.pop(false));
+    }
+
 }
 
 }  // namespace
