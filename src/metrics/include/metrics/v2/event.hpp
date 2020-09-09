@@ -49,9 +49,9 @@ class OperationEventT;
 
 namespace internals::v2 {
 
-const int NUM_CHANNELS = 8;
+const int NUM_CHANNELS = 4;
 const int BUFFER_SIZE = 1000;
-const int CLIENT_THREADS = 16;
+const int CLIENT_THREADS = 1;
 const int GRPC_THREAD_SLEEP_MS = 50;
 const double SWAP_BUFFER_PERCENT = .25;
 
@@ -370,6 +370,7 @@ struct MetricsArgs {
     size_t workerCount;
 };
 
+// Efficient buffer that should rarely be blocked on insertions.
 template <typename ClockSource>
 class MetricsBuffer {
 public:
@@ -380,6 +381,8 @@ public:
         _draining->reserve(size);
         _loading->reserve(size);
     }
+
+    // Thread-safe.
     void addAt(const typename ClockSource::time_point& finish,
                OperationEventT<ClockSource> event,
                size_t workerCount) {
@@ -388,6 +391,7 @@ public:
         _loading_mutex.unlock();
     }
 
+    // Not thread-safe.
     std::optional<MetricsArgs<ClockSource>> pop(bool force) {
         refresh(force);
         if (_draining->empty()) {
@@ -414,7 +418,7 @@ private:
         // and errors if it ever backs up enough to slow down an actor thread.
         if (_draining->size() > size) {
             std::ostringstream os;
-            os << "Metrics buffer for operation name " << name << " overflowed" 
+            os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space" 
                << ". Expected size: " << size
                << ". Actual size: " << _draining->size() 
                << ". This may affect recorded performance.";
