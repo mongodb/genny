@@ -20,6 +20,8 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 #include <metrics/v2/event.hpp>
+#include <iostream>
+#include <iomanip>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/clocks.hpp>
@@ -62,12 +64,14 @@ void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
     REQUIRE(Period<RegistryClockSourceStub>{dur1} == Period<RegistryClockSourceStub>{dur2});
 }
 
+
 TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
+    std::unique_ptr<internals::v2::GrpcClient<RegistryClockSourceStub, internals::v2::StreamInterfaceImpl>> emptyGrpcPtr;
     auto dummy_metrics = internals::RegistryT<RegistryClockSourceStub>{};
     auto op = internals::OperationImpl<RegistryClockSourceStub>{
-        5, "Actor", dummy_metrics, "Op", std::nullopt, "output"};
+        5, "Actor", dummy_metrics, "Op", std::nullopt, "output", emptyGrpcPtr};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<internals::OperationContextT<RegistryClockSourceStub>>(&op);
@@ -539,6 +543,8 @@ TEST_CASE("Registry counts the number of workers") {
 TEST_CASE("Events stream to gRPC") {
     using EventVec = std::vector<poplar::EventMetrics>;
 
+    std::unique_ptr<internals::v2::GrpcClient<RegistryClockSourceStub, internals::v2::MockStreamInterface>> emptyGrpcPtr;
+
     auto compareEventsAndClear = [](const EventVec& eventsIn) {
         internals::v2::MockStreamInterface interface("dummyDebugName", 5);
         REQUIRE(eventsIn.size() == interface.events.size());
@@ -557,10 +563,11 @@ TEST_CASE("Events stream to gRPC") {
 
 
     SECTION("Empty stream") {
+
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                1, "TestName", 1, "/test/prefix"};
+                1, "TestName", 1, "/test/prefix", emptyGrpcPtr};
         REQUIRE_FALSE(stream.sendOne(true));
 
         EventVec expected;
@@ -568,10 +575,11 @@ TEST_CASE("Events stream to gRPC") {
     }
 
     SECTION("Three events") {
+
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                1, "EventName", 9, "/test/prefix"};
+                1, "EventName", 9, "/test/prefix", emptyGrpcPtr};
         EventVec expected;
 
 
@@ -718,7 +726,7 @@ TEST_CASE("Events stream to gRPC") {
 
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                3, "LateEventName", 1, "/test/prefix"};
+                3, "LateEventName", 1, "/test/prefix", emptyGrpcPtr};
         EventVec expected;
         {
             OperationEventT<RegistryClockSourceStub> event(

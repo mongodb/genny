@@ -446,14 +446,14 @@ template <typename ClockSource, typename StreamInterface>
 class EventStream {
     using duration = typename ClockSource::duration;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
-    using ClientPtr = std::shared_ptr<GrpcClient<ClockSource, StreamInterface>>;
+    using ClientPtrRef = std::unique_ptr<GrpcClient<ClockSource, StreamInterface>>&;
 
 public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const boost::filesystem::path& pathPrefix,
-                         ClientPtr grpcClient = ClientPtr(nullptr))
+                         ClientPtrRef grpcClient)
         : _name{name},
           _stream{name, actorId},
           _phase{phase},
@@ -550,7 +550,7 @@ private:
     std::optional<genny::PhaseNumber> _phase;
     typename ClockSource::time_point _lastFinish;
     std::unique_ptr<MetricsBuffer<ClockSource>> _buffer;
-    ClientPtr _grpcClient;
+    ClientPtrRef _grpcClient;
 };
 
 

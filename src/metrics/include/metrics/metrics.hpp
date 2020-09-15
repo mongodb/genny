@@ -153,7 +153,7 @@ public:
             startTimeFile << "This file only exists to mark execution start time.";
             startTimeFile.close();
 
-            _grpcClient = std::make_shared<GrpcClient>();
+            _grpcClient = std::make_unique<GrpcClient>();
         }
     }
 
@@ -177,8 +177,8 @@ public:
                                      std::move(opName),
                                      std::move(phase),
                                      _pathPrefix,
-                                     name,
-                                     _grpcClient)
+                                     _grpcClient,
+                                     name)
                         .first;
         return OperationT{opIt->second};
     }
@@ -206,8 +206,8 @@ public:
                     std::move(opName),
                     std::move(phase),
                     _pathPrefix,
-                    name,
                     _grpcClient,
+                    name,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;
@@ -255,7 +255,7 @@ private:
     OperationsMap _ops;
     MetricsFormat _format;
     boost::filesystem::path _pathPrefix;
-    std::shared_ptr<GrpcClient> _grpcClient;
+    std::unique_ptr<GrpcClient> _grpcClient;
 };
 
 }  // namespace internals

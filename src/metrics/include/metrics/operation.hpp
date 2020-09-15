@@ -133,6 +133,7 @@ class GrpcClient;
 template <typename Clocksource>
 class RegistryT;
 
+
 /**
  * Throw this to indicate the percentage of operations exceeding the
  * time limit went above the threshold.
@@ -187,8 +188,8 @@ public:
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     using stream_t = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>;
-    using grpcClientPtr =
-        std::shared_ptr<internals::v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>>;
+    using grpcClientPtrRef =
+        std::unique_ptr<internals::v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>>&;
 
     OperationImpl(const ActorId& actorId,
                   std::string actorName,
@@ -196,8 +197,8 @@ public:
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   const boost::filesystem::path& pathPrefix,
+                  grpcClientPtrRef grpcClient,
                   const std::optional<std::string>& collector_name = std::nullopt,
-                  grpcClientPtr grpcClient = grpcClientPtr(nullptr),
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
           _registry(registry),
