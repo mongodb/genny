@@ -83,14 +83,14 @@ public:
     }
 
 private:
-    static std::vector<std::shared_ptr<grpc::Channel>> _channels;
-    static std::atomic<size_t> _curChannel;
 
     std::unique_ptr<poplar::PoplarEventCollector::StubInterface> _stub;
 
     // Should only be called by setStub(), is statically guarded
     // so only one thread will execute.
     auto createChannels() {
+        std::vector<std::shared_ptr<grpc::Channel>> _channels;
+
         grpc::ChannelArguments args;
         // The BDP estimator overwhelms the server with pings on a heavy workload.
         args.SetInt(GRPC_ARG_HTTP2_BDP_PROBE, 0);
@@ -102,11 +102,14 @@ private:
             _channels.push_back(grpc::CreateCustomChannel(
                 "localhost:2288", grpc::InsecureChannelCredentials(), args));
         }
-        return true;
+
+        return _channels;
     }
 
     void setStub() {
-        static bool channelsCreated = createChannels();
+        static auto _channels = createChannels();
+        static std::atomic<size_t> _curChannel = 0;
+
         _stub = poplar::PoplarEventCollector::NewStub(_channels[_curChannel++ % _channels.size()]);
         return;
     }
