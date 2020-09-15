@@ -412,11 +412,13 @@ public:
 
 private:
     void refresh(bool force) {
-        _loading_mutex.lock();
-        if (_draining->empty() && (force || _loading->size() >= size * SWAP_BUFFER_PERCENT)) {
-            _draining.swap(_loading);
+        if (_draining->empty()) {
+            _loading_mutex.lock();
+            if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
+                _draining.swap(_loading);
+            }
+            _loading_mutex.unlock();
         }
-        _loading_mutex.unlock();
 
         // Maybe a bit nuclear, but this draws a box around the entire grpc system
         // and errors if it ever backs up enough to slow down an actor thread.
