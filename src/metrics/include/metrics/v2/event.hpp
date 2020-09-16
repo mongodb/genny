@@ -474,7 +474,7 @@ public:
     // Returns true if there are more events to send.
     bool sendOne(bool force = false) {
         auto metricsArgsOptional = _buffer->pop(force);
-        if (metricsArgsOptional)
+        if (!metricsArgsOptional)
             return false;
         auto metricsArgs = *metricsArgsOptional;
 
