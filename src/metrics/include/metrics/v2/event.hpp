@@ -297,15 +297,15 @@ class GrpcThread {
 public:
     GrpcThread() : _thread{&GrpcThread::run, this} {}
 
-    typedef EventStream<ClockSource, StreamInterface>* stream_ptr;
+    typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
 
-    void registerStream(stream_ptr stream) {
-        const std::lock_guard<std::mutex> lock(_streams_mutex);
+    void registerStream(StreamPtr stream) {
+        const std::lock_guard<std::mutex> lock(_streamsMutex);
         streams.insert(stream);
     }
 
-    void closeStream(stream_ptr stream) {
-        const std::lock_guard<std::mutex> lock(_streams_mutex);
+    void closeStream(StreamPtr stream) {
+        const std::lock_guard<std::mutex> lock(_streamsMutex);
         streams.erase(stream);
     }
 
@@ -317,27 +317,27 @@ public:
 private:
     void run() {
         while (!done || !streams.empty()) {
-            reap_actors();
+            reapActors();
             std::this_thread::sleep_for(std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS));
         }
     }
 
-    void reap_actors() {
-        bool still_reaping = false;
+    void reapActors() {
+        bool stillReaping = false;
         do {
-            still_reaping = false;
-            const std::lock_guard<std::mutex> lock(_streams_mutex);
+            stillReaping = false;
+            const std::lock_guard<std::mutex> lock(_streamsMutex);
             for (const auto stream : streams) {
                 if (stream->sendOne())
-                    still_reaping = true;
+                    stillReaping = true;
             }
-        } while (still_reaping);
+        } while (stillReaping);
     }
 
     std::atomic<bool> done = false;
     std::thread _thread;
-    std::set<stream_ptr> streams;
-    std::mutex _streams_mutex;
+    std::set<StreamPtr> streams;
+    std::mutex _streamsMutex;
 };
 
 // Manages all the grpc threads. Divides the workload evenly between them.
@@ -348,13 +348,13 @@ public:
 
     // EventStream users manage their own memory and should deregister themselves before
     // destructing, so we (carefully) use naked pointers.
-    typedef EventStream<ClockSource, StreamInterface>* stream_ptr;
+    typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
 
-    void registerStream(stream_ptr stream) {
+    void registerStream(StreamPtr stream) {
         _threads[latest_thread++ % _threads.size()].registerStream(stream);
     }
 
-    void closeStream(stream_ptr stream) {
+    void closeStream(StreamPtr stream) {
         for (int i = 0; i < _threads.size(); i++) {
             _threads[i].closeStream(stream);
         }
@@ -393,7 +393,7 @@ public:
     void addAt(const typename ClockSource::time_point& finish,
                OperationEventT<ClockSource> event,
                size_t workerCount) {
-        const std::lock_guard<std::mutex> lock(_loading_mutex);
+        const std::lock_guard<std::mutex> lock(_loadingMutex);
         _loading->emplace_back(finish, std::move(event), workerCount);
     }
 
@@ -415,7 +415,7 @@ public:
 private:
     void refresh(bool force) {
         if (_draining->empty()) {
-            const std::lock_guard<std::mutex> lock(_loading_mutex);
+            const std::lock_guard<std::mutex> lock(_loadingMutex);
             if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
                 _draining.swap(_loading);
             }
@@ -435,7 +435,7 @@ private:
 
     std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _loading;
     std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _draining;
-    std::mutex _loading_mutex;
+    std::mutex _loadingMutex;
 };
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
