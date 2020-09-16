@@ -57,6 +57,7 @@ const int BUFFER_SIZE = 1000;
 const int CLIENT_THREADS = 3;
 const int GRPC_THREAD_SLEEP_MS = 50;
 const double SWAP_BUFFER_PERCENT = .25;
+const int GRPC_BUFFER_SIZE = 67108864;
 
 class PoplarRequestError : public std::runtime_error {
 public:
@@ -98,7 +99,7 @@ private:
         // The BDP estimator overwhelms the server with pings on a heavy workload.
         args.SetInt(GRPC_ARG_HTTP2_BDP_PROBE, 0);
         // Maximum buffer size grpc will allow.
-        args.SetInt(GRPC_ARG_HTTP2_WRITE_BUFFER_SIZE, 67108864);
+        args.SetInt(GRPC_ARG_HTTP2_WRITE_BUFFER_SIZE, GRPC_BUFFER_SIZE);
         // Local subchannels prohibit global sharing and forces multiple TCP connections.
         args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
         for (int i = 0; i < NUM_CHANNELS; i++) {
@@ -314,13 +315,13 @@ public:
     }
 
     ~GrpcThread() {
-        done = true;
+        destructing = true;
         _thread.join();
     }
 
 private:
     void run() {
-        while (!done || !streams.empty()) {
+        while (!destructing || !streams.empty()) {
             reapActors();
             std::this_thread::sleep_for(std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS));
         }
@@ -338,7 +339,7 @@ private:
         } while (stillReaping);
     }
 
-    std::atomic<bool> done = false;
+    std::atomic<bool> destructing = false;
     bool _assertMetricsBuffer;
     std::thread _thread;
     std::set<StreamPtr> streams;
