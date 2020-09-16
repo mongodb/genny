@@ -332,7 +332,7 @@ private:
         do {
             stillReaping = false;
             const std::lock_guard<std::mutex> lock(_streamsMutex);
-            for (const auto stream : streams) {
+            for (const auto& stream : streams) {
                 if (stream->sendOne(false, _assertMetricsBuffer))
                     stillReaping = true;
             }
