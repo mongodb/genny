@@ -20,8 +20,6 @@
 #include <metrics/MetricsReporter.hpp>
 #include <metrics/metrics.hpp>
 #include <metrics/v2/event.hpp>
-#include <iostream>
-#include <iomanip>
 
 #include <testlib/ActorHelper.hpp>
 #include <testlib/clocks.hpp>
@@ -815,6 +813,7 @@ TEST_CASE("Events stream to gRPC") {
         REQUIRE(file_count == 4);
 
         REQUIRE(boost::filesystem::remove_all(metricsPath));
+
     }
 
     SECTION("Un-forced metrics buffer only pops at capacity.") {
