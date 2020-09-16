@@ -327,7 +327,7 @@ private:
         do {
             still_reaping = false;
             const std::lock_guard<std::mutex> lock(_streams_mutex);
-            for (auto stream : streams) {
+            for (const auto stream : streams) {
                 if (stream->sendOne())
                     still_reaping = true;
             }
@@ -344,7 +344,7 @@ private:
 template <typename ClockSource, typename StreamInterface>
 class GrpcClient {
 public:
-    GrpcClient() : _threads(CLIENT_THREADS) {}
+    GrpcClient() : _threads{CLIENT_THREADS} {}
 
     // EventStream users manage their own memory and should deregister themselves before
     // destructing, so we (carefully) use naked pointers.
@@ -370,7 +370,7 @@ struct MetricsArgs {
     MetricsArgs(const typename ClockSource::time_point& finish,
                 OperationEventT<ClockSource> event,
                 size_t workerCount)
-        : finish(finish), event(std::move(event)), workerCount(workerCount) {}
+        : finish{finish}, event{std::move(event)}, workerCount{workerCount} {}
     typename ClockSource::time_point finish;
     OperationEventT<ClockSource> event;
     size_t workerCount;
@@ -383,8 +383,8 @@ public:
     explicit MetricsBuffer(size_t size, const std::string& name)
         : size{size},
           name{name},
-          _loading(new std::vector<MetricsArgs<ClockSource>>()),
-          _draining(new std::vector<MetricsArgs<ClockSource>>()) {
+          _loading{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()},
+          _draining{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()} {
         _draining->reserve(size);
         _loading->reserve(size);
     }
@@ -393,9 +393,8 @@ public:
     void addAt(const typename ClockSource::time_point& finish,
                OperationEventT<ClockSource> event,
                size_t workerCount) {
-        _loading_mutex.lock();
+        const std::lock_guard<std::mutex> lock(_loading_mutex);
         _loading->emplace_back(finish, std::move(event), workerCount);
-        _loading_mutex.unlock();
     }
 
     // Not thread-safe.
@@ -416,11 +415,10 @@ public:
 private:
     void refresh(bool force) {
         if (_draining->empty()) {
-            _loading_mutex.lock();
+            const std::lock_guard<std::mutex> lock(_loading_mutex);
             if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
                 _draining.swap(_loading);
             }
-            _loading_mutex.unlock();
         }
 
         // Maybe a bit nuclear, but this draws a box around the entire grpc system
@@ -458,7 +456,7 @@ public:
           _stream{name, actorId},
           _phase{phase},
           _lastFinish{ClockSource::now()},
-          _buffer(new MetricsBuffer<ClockSource>(BUFFER_SIZE, _name)),
+          _buffer(std::make_unique<MetricsBuffer<ClockSource>>(BUFFER_SIZE, _name)),
           _grpcClient(grpcClient) {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
@@ -473,10 +471,10 @@ public:
     }
 
     // Send one event from the draining buffer to the grpc api.
-    // Returns false if there are no more events to send.
+    // Returns true if there are more events to send.
     bool sendOne(bool force = false) {
         auto metricsArgsOptional = _buffer->pop(force);
-        if (!metricsArgsOptional)
+        if (metricsArgsOptional)
             return false;
         auto metricsArgs = *metricsArgsOptional;
 
