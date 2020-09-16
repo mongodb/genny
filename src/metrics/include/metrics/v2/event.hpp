@@ -22,6 +22,7 @@
 #include <mutex>
 #include <optional>
 #include <queue>
+#include <deque>
 #include <set>
 #include <thread>
 #include <vector>
@@ -295,7 +296,8 @@ class EventStream;
 template <typename ClockSource, typename StreamInterface>
 class GrpcThread {
 public:
-    GrpcThread() : _thread{&GrpcThread::run, this} {}
+    GrpcThread(bool assertMetricsBuffer) : _assertMetricsBuffer{assertMetricsBuffer},
+        _thread{&GrpcThread::run, this} {}
 
     typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
 
@@ -328,13 +330,14 @@ private:
             stillReaping = false;
             const std::lock_guard<std::mutex> lock(_streamsMutex);
             for (const auto stream : streams) {
-                if (stream->sendOne())
+                if (stream->sendOne(false, _assertMetricsBuffer))
                     stillReaping = true;
             }
         } while (stillReaping);
     }
 
     std::atomic<bool> done = false;
+    bool _assertMetricsBuffer;
     std::thread _thread;
     std::set<StreamPtr> streams;
     std::mutex _streamsMutex;
@@ -344,7 +347,11 @@ private:
 template <typename ClockSource, typename StreamInterface>
 class GrpcClient {
 public:
-    GrpcClient() : _threads{CLIENT_THREADS} {}
+    GrpcClient(bool assertMetricsBuffer) {
+        for (int i = 0; i < CLIENT_THREADS; i++) {
+            _threads.emplace_back(assertMetricsBuffer);
+        }
+    }
 
     // EventStream users manage their own memory and should deregister themselves before
     // destructing, so we (carefully) use naked pointers.
@@ -361,7 +368,8 @@ public:
     }
 
 private:
-    std::vector<GrpcThread<ClockSource, StreamInterface>> _threads;
+    // deque avoid copy-constructor calls
+    std::deque<GrpcThread<ClockSource, StreamInterface>> _threads;
     std::atomic<size_t> latest_thread = 0;
 };
 
@@ -398,8 +406,8 @@ public:
     }
 
     // Not thread-safe.
-    std::optional<MetricsArgs<ClockSource>> pop(bool force) {
-        refresh(force);
+    std::optional<MetricsArgs<ClockSource>> pop(bool force, bool assertMetricsBuffer=true) {
+        refresh(force, assertMetricsBuffer);
         if (_draining->empty()) {
             return std::nullopt;
         } else {
@@ -413,7 +421,7 @@ public:
     const size_t size;
 
 private:
-    void refresh(bool force) {
+    void refresh(bool force, bool assertMetricsBuffer) {
         if (_draining->empty()) {
             const std::lock_guard<std::mutex> lock(_loadingMutex);
             if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
@@ -422,7 +430,7 @@ private:
 
             // Maybe a bit nuclear, but this draws a box around the entire grpc system
             // and errors if it ever backs up enough to slow down an actor thread.
-            if (_draining->size() > size) {
+            if (_draining->size() > size && assertMetricsBuffer) {
                 std::ostringstream os;
                 os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space"
                    << ". Expected size: " << size << ". Actual size: " << _draining->size()
@@ -472,8 +480,8 @@ public:
 
     // Send one event from the draining buffer to the grpc api.
     // Returns true if there are more events to send.
-    bool sendOne(bool force = false) {
-        auto metricsArgsOptional = _buffer->pop(force);
+    bool sendOne(bool force = false, bool assertMetricsBuffer = true) {
+        auto metricsArgsOptional = _buffer->pop(force, assertMetricsBuffer);
         if (!metricsArgsOptional)
             return false;
         auto metricsArgs = *metricsArgsOptional;

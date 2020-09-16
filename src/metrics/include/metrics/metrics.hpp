@@ -143,7 +143,7 @@ public:
 
     explicit RegistryT() = default;
 
-    explicit RegistryT(MetricsFormat format, boost::filesystem::path pathPrefix)
+    explicit RegistryT(MetricsFormat format, boost::filesystem::path pathPrefix, bool assertMetricsBuffer = true)
         : _format{std::move(format)}, _pathPrefix{std::move(pathPrefix)} {
         if (_format.useGrpc()) {
             boost::filesystem::create_directories(_pathPrefix);
@@ -153,7 +153,7 @@ public:
             startTimeFile << "This file only exists to mark execution start time.";
             startTimeFile.close();
 
-            _grpcClient = std::make_unique<GrpcClient>();
+            _grpcClient = std::make_unique<GrpcClient>(assertMetricsBuffer);
         }
     }
 
