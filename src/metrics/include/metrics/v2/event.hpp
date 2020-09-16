@@ -419,17 +419,17 @@ private:
             if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
                 _draining.swap(_loading);
             }
-        }
 
-        // Maybe a bit nuclear, but this draws a box around the entire grpc system
-        // and errors if it ever backs up enough to slow down an actor thread.
-        if (_draining->size() > size) {
-            std::ostringstream os;
-            os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space"
-               << ". Expected size: " << size << ". Actual size: " << _draining->size()
-               << ". This may affect recorded performance.";
+            // Maybe a bit nuclear, but this draws a box around the entire grpc system
+            // and errors if it ever backs up enough to slow down an actor thread.
+            if (_draining->size() > size) {
+                std::ostringstream os;
+                os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space"
+                   << ". Expected size: " << size << ". Actual size: " << _draining->size()
+                   << ". This may affect recorded performance.";
 
-            BOOST_THROW_EXCEPTION(MetricsError(os.str()));
+                BOOST_THROW_EXCEPTION(MetricsError(os.str()));
+            }
         }
     }
 
