@@ -50,6 +50,8 @@ class OperationEventT;
 
 namespace internals::v2 {
 
+// There's not a super motivated reason for these values other than running
+// a lot of patches and seeing what worked.
 const int NUM_CHANNELS = 4;
 const int BUFFER_SIZE = 1000;
 const int CLIENT_THREADS = 3;
