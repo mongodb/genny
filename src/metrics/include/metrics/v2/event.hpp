@@ -306,22 +306,22 @@ public:
 
     void registerStream(StreamPtr stream) {
         const std::lock_guard<std::mutex> lock(_streamsMutex);
-        streams.insert(stream);
+        _streams.insert(stream);
     }
 
     void closeStream(StreamPtr stream) {
         const std::lock_guard<std::mutex> lock(_streamsMutex);
-        streams.erase(stream);
+        _streams.erase(stream);
     }
 
     ~GrpcThread() {
-        destructing = true;
+        _destructing = true;
         _thread.join();
     }
 
 private:
     void run() {
-        while (!destructing || !streams.empty()) {
+        while (!_destructing || !_streams.empty()) {
             reapActors();
             std::this_thread::sleep_for(std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS));
         }
@@ -332,17 +332,17 @@ private:
         do {
             stillReaping = false;
             const std::lock_guard<std::mutex> lock(_streamsMutex);
-            for (const auto& stream : streams) {
+            for (const auto& stream : _streams) {
                 if (stream->sendOne(false, _assertMetricsBuffer))
                     stillReaping = true;
             }
         } while (stillReaping);
     }
 
-    std::atomic<bool> destructing = false;
+    std::atomic<bool> _destructing = false;
     bool _assertMetricsBuffer;
     std::thread _thread;
-    std::set<StreamPtr> streams;
+    std::set<StreamPtr> _streams;
     std::mutex _streamsMutex;
 };
 
@@ -361,10 +361,12 @@ public:
     typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
 
     void registerStream(StreamPtr stream) {
-        _threads[latest_thread++ % _threads.size()].registerStream(stream);
+        _threads[_latest_thread++ % _threads.size()].registerStream(stream);
     }
 
     void closeStream(StreamPtr stream) {
+        // We'd like to use a ranged-for here but for some reason
+        // we get lvalue-rvalue binding errors.
         for (int i = 0; i < _threads.size(); i++) {
             _threads[i].closeStream(stream);
         }
@@ -373,16 +375,18 @@ public:
 private:
     // deque avoid copy-constructor calls
     std::deque<GrpcThread<ClockSource, StreamInterface>> _threads;
-    std::atomic<size_t> latest_thread = 0;
+    std::atomic<size_t> _latest_thread = 0;
 };
 
 template <typename ClockSource>
 struct MetricsArgs {
+    using time_point = typename ClockSource::time_point;
+
     MetricsArgs(const typename ClockSource::time_point& finish,
                 OperationEventT<ClockSource> event,
                 size_t workerCount)
         : finish{finish}, event{std::move(event)}, workerCount{workerCount} {}
-    typename ClockSource::time_point finish;
+    time_point finish;
     OperationEventT<ClockSource> event;
     size_t workerCount;
 };
@@ -391,6 +395,8 @@ struct MetricsArgs {
 template <typename ClockSource>
 class MetricsBuffer {
 public:
+    using time_point = typename ClockSource::time_point;
+
     explicit MetricsBuffer(size_t size, const std::string& name)
         : size{size},
           name{name},
@@ -401,7 +407,7 @@ public:
     }
 
     // Thread-safe.
-    void addAt(const typename ClockSource::time_point& finish,
+    void addAt(const time_point& finish,
                OperationEventT<ClockSource> event,
                size_t workerCount) {
         const std::lock_guard<std::mutex> lock(_loadingMutex);
@@ -425,22 +431,23 @@ public:
 
 private:
     void refresh(bool force, bool assertMetricsBuffer) {
-        if (_draining->empty()) {
-            const std::lock_guard<std::mutex> lock(_loadingMutex);
-            if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
-                _draining.swap(_loading);
-            }
+        if (!_draining->empty()) {
+            return;
+        }
+        const std::lock_guard<std::mutex> lock(_loadingMutex);
+        if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
+            _draining.swap(_loading);
+        }
 
-            // Maybe a bit nuclear, but this draws a box around the entire grpc system
-            // and errors if it ever backs up enough to slow down an actor thread.
-            if (_draining->size() > size && assertMetricsBuffer) {
-                std::ostringstream os;
-                os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space"
-                   << ". Expected size: " << size << ". Actual size: " << _draining->size()
-                   << ". This may affect recorded performance.";
+        // Maybe a bit nuclear, but this draws a box around the entire grpc system
+        // and errors if it ever backs up enough to slow down an actor thread.
+        if (_draining->size() > size && assertMetricsBuffer) {
+            std::ostringstream os;
+            os << "Metrics buffer for operation name " << name << " exceeded pre-allocated space"
+               << ". Expected size: " << size << ". Actual size: " << _draining->size()
+               << ". This may affect recorded performance.";
 
-                BOOST_THROW_EXCEPTION(MetricsError(os.str()));
-            }
+            BOOST_THROW_EXCEPTION(MetricsError(os.str()));
         }
     }
 
@@ -454,15 +461,16 @@ private:
 template <typename ClockSource, typename StreamInterface>
 class EventStream {
     using duration = typename ClockSource::duration;
+    using time_point = typename ClockSource::time_point;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
-    using ClientPtrRef = std::unique_ptr<GrpcClient<ClockSource, StreamInterface>>&;
+    using UniqueGrpcClient = std::unique_ptr<GrpcClient<ClockSource, StreamInterface>>&;
 
 public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
                          const boost::filesystem::path& pathPrefix,
-                         ClientPtrRef grpcClient)
+                         UniqueGrpcClient grpcClient)
         : _name{name},
           _stream{name, actorId},
           _phase{phase},
@@ -475,7 +483,7 @@ public:
     }
 
     // Record a metrics event to the loading buffer.
-    void addAt(const typename ClockSource::time_point& finish,
+    void addAt(const time_point& finish,
                OperationEventT<ClockSource> event,
                size_t workerCount) {
         _buffer->addAt(finish, std::move(event), workerCount);
@@ -557,9 +565,9 @@ private:
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
     std::optional<genny::PhaseNumber> _phase;
-    typename ClockSource::time_point _lastFinish;
+    time_point _lastFinish;
     std::unique_ptr<MetricsBuffer<ClockSource>> _buffer;
-    ClientPtrRef _grpcClient;
+    UniqueGrpcClient _grpcClient;
 };
 
 

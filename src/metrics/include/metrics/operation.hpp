@@ -188,7 +188,7 @@ public:
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     using stream_t = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>;
-    using grpcClientPtrRef =
+    using UniqueGrpcClient =
         std::unique_ptr<internals::v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>>&;
 
     OperationImpl(const ActorId& actorId,
@@ -197,7 +197,7 @@ public:
                   std::string opName,
                   std::optional<genny::PhaseNumber> phase,
                   const boost::filesystem::path& pathPrefix,
-                  grpcClientPtrRef grpcClient,
+                  UniqueGrpcClient grpcClient,
                   const std::optional<std::string>& collector_name = std::nullopt,
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
