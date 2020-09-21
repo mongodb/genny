@@ -52,10 +52,11 @@ namespace internals::v2 {
 
 // There's not a super motivated reason for these values other than running
 // a lot of patches and seeing what worked.
+const int MULTIPLIER = 500;
 const int NUM_CHANNELS = 4;
-const int BUFFER_SIZE = 1000;
-const int CLIENT_THREADS = 3;
-const int GRPC_THREAD_SLEEP_MS = 50;
+const int BUFFER_SIZE = 1000 * MULTIPLIER;
+const int CLIENT_THREADS = 4;
+const int GRPC_THREAD_SLEEP_MS = 50 * MULTIPLIER;
 const double SWAP_BUFFER_PERCENT = .25;
 const int GRPC_BUFFER_SIZE = 67108864;
 
@@ -323,7 +324,10 @@ private:
     void run() {
         while (!_destructing || !_streams.empty()) {
             reapActors();
-            std::this_thread::sleep_for(std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS));
+            const int CHECK_DONE_INTERVAL = 1000; // So we don't take forever to destruct.
+            for (int i = 0; i <= GRPC_THREAD_SLEEP_MS && !_destructing; i += CHECK_DONE_INTERVAL) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_DONE_INTERVAL));
+            }
         }
     }
 
