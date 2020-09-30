@@ -19,9 +19,3 @@ Actors:
       Key: UseMe  # Only load the YAML structure from this top-level key.
       Parameters:
         Repeat: 2
-
-# Metrics output format and location can be specified as ftdc-based for workloads
-# that are expected to collect over 1 million data points.
-# Metrics:
-#   Format: ftdc
-#   Path: build/genny-metrics

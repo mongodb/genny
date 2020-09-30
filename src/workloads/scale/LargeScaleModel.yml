@@ -438,7 +438,3 @@ AutoRun:
   Requires:
     mongodb_setup:
     - standalone
-
-Metrics:
-  Format: ftdc
-  Path: build/genny-metrics

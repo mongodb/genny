@@ -111,7 +111,7 @@ Nanosecond Loops<Task, Args...>::metricsLoop(Args&&... args) {
 template <class Task, class... Args>
 Nanosecond Loops<Task, Args...>::metricsFtdcLoop(Args&&... args) {
     boost::filesystem::path ph =
-            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     auto metricsPath = (ph / "genny-metrics").string();
     auto format = genny::metrics::MetricsFormat("ftdc");
 
@@ -183,7 +183,7 @@ Nanosecond Loops<Task, Args...>::metricsFtdcPhaseLoop(Args&&... args) {
     auto task = Task(std::forward<Args>(args)...);
 
     boost::filesystem::path ph =
-            boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+        boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
     auto metricsPath = (ph / "genny-metrics").string();
     auto format = genny::metrics::MetricsFormat("ftdc");
 
