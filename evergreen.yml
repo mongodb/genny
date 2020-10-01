@@ -111,7 +111,7 @@ buildvariants:
   expansions:
     distro: rhel62
   run_on:
-  - centos6-perf
+  - rhel62-small
   tasks:
   - name: tg_compile_and_benchmark
 
