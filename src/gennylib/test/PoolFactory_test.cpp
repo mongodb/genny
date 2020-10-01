@@ -198,7 +198,7 @@ TEST_CASE("PoolFactory behavior") {
         REQUIRE(getOneMore());
     }
 
-    SECTION("Make a pool with ssl enabled and auth params") {
+    SECTION("Make a pool with tls enabled and auth params") {
         const std::string kProtocol = "mongodb://";
         const std::string kHost = "127.0.0.1";
         constexpr auto kCAFile = "some-random-ca.pem";
@@ -206,11 +206,11 @@ TEST_CASE("PoolFactory behavior") {
         auto sourceUrl = [&]() { return kProtocol + kHost; };
         auto factory = genny::v1::PoolFactory(sourceUrl());
 
-        auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?ssl=true"; };
+        auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?tls=true"; };
         factory.setOptions(OptionType::kAccessOption,
                            {{"Username", "boss"}, {"Password", "pass"}, {"Database", "admin"}});
 
-        factory.setFlag(OptionType::kQueryOption, "ssl");
+        factory.setFlag(OptionType::kQueryOption, "tls");
         factory.setFlag(OptionType::kAccessOption, "AllowInvalidCertificates");
         factory.setOption(OptionType::kAccessOption, "CAFile", kCAFile);
 
@@ -219,11 +219,11 @@ TEST_CASE("PoolFactory behavior") {
 
         auto factoryOpts = factory.makeOptions();
 
-        auto sslOpts = *factoryOpts.client_opts().ssl_opts();
-        auto allowInvalid = *sslOpts.allow_invalid_certificates();
+        auto tlsOpts = *factoryOpts.client_opts().tls_opts();
+        auto allowInvalid = *tlsOpts.allow_invalid_certificates();
         REQUIRE(allowInvalid);
 
-        std::string caFile = sslOpts.ca_file()->terminated().data();
+        std::string caFile = tlsOpts.ca_file()->terminated().data();
         REQUIRE(kCAFile == caFile);
 
         auto pool = factory.makePool();
