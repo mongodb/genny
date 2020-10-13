@@ -41,8 +41,6 @@ public:
         events.push_back(event);
     }
 
-    void finish() {}
-
     // We make this static so we can access it even several private objects deep.
     static std::vector<poplar::EventMetrics> events;
 };

@@ -57,7 +57,7 @@ const int MULTIPLIER = 500;
 const int NUM_CHANNELS = 4;
 const int BUFFER_SIZE = 1000 * MULTIPLIER;
 const int CLIENT_THREADS = 4;
-const int GRPC_THREAD_SLEEP_MS = 50; // 50 * MULTIPLIER;
+const int GRPC_THREAD_SLEEP_MS = 50 * MULTIPLIER;
 const double SWAP_BUFFER_PERCENT = .25;
 const int GRPC_BUFFER_SIZE = 67108864;
 
@@ -159,9 +159,7 @@ public:
         _inFlight = true;
     }
 
-    // Finish the stream. No more writes should be done after calling.
-    void finish() {
-        if (_finished) return;
+    ~StreamInterfaceImpl() {
         if (!_stream) {
             BOOST_LOG_TRIVIAL(error) << "Tried to close gRPC stream for operation name " << _name
                                      << " and actor ID " << _actorId << ", but no stream existed.";
@@ -191,10 +189,7 @@ public:
                 << "Problem closing grpc stream for operation name " << _name << " and actor ID "
                 << _actorId << ": " << _context.debug_error_string();
         }
-        _finished = true;
-    }
 
-    ~StreamInterfaceImpl() {
         shutdownQueue();
     }
 
@@ -233,7 +228,6 @@ private:
     grpc::CompletionQueue _cq;
     void* _grpcTag;
     std::unique_ptr<grpc::ClientAsyncWriterInterface<poplar::EventMetrics>> _stream;
-    bool _finished = false;
 };
 
 
@@ -330,19 +324,12 @@ public:
 
 private:
     void run() {
-        while (!_destructing) {
+        while (!_destructing || !_streams.empty()) {
             reapActors();
             const int CHECK_DONE_INTERVAL = 1000; // So we don't take forever to destruct.
             for (int i = 0; i <= GRPC_THREAD_SLEEP_MS && !_destructing; i += CHECK_DONE_INTERVAL) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_DONE_INTERVAL));
             }
-        }
-
-        // Drain the buffers and finish.
-        const std::lock_guard<std::mutex> lock(_streamsMutex);
-        for (const auto& stream : _streams) {
-            while (sendOne(true)) {} 
-            stream.finish();
         }
     }
 
@@ -352,9 +339,8 @@ private:
             stillReaping = false;
             const std::lock_guard<std::mutex> lock(_streamsMutex);
             for (const auto& stream : _streams) {
-                if (stream->sendOne(false, _assertMetricsBuffer)) {
+                if (stream->sendOne(false, _assertMetricsBuffer))
                     stillReaping = true;
-                }
             }
         } while (stillReaping);
     }
@@ -389,6 +375,16 @@ public:
         _streams.emplace_back(actorId, name, phase);
         _threads[_latest_thread++ % _threads.size()].registerStream(&_streams.back());
         return &_streams.back();
+    }
+
+    ~GrpcClient() {
+        // We'd like to use a ranged-for here but for some reason
+        // we get lvalue-rvalue binding errors.
+        for (int i = 0; i < _streams.size(); i++) {
+            for (int j = 0; j < _threads.size(); j++) {
+                _threads[j].deregisterStream(&_streams[i]);
+            }
+        }
     }
 
 private:
@@ -508,8 +504,8 @@ public:
 
     // Send one event from the draining buffer to the grpc api.
     // Returns true if there are more events to send.
-    bool sendOne(bool finish = false, bool assertMetricsBuffer = true) {
-        auto metricsArgsOptional = _buffer->pop(finish, assertMetricsBuffer);
+    bool sendOne(bool force = false, bool assertMetricsBuffer = true) {
+        auto metricsArgsOptional = _buffer->pop(force, assertMetricsBuffer);
         if (!metricsArgsOptional)
             return false;
         auto metricsArgs = *metricsArgsOptional;
@@ -553,13 +549,19 @@ public:
         return true;
     }
 
-    void finish() {
-        _stream->finish();
-    }
-
     EventStream(const EventStream<ClockSource, StreamInterface>&) = delete;
     EventStream<ClockSource, StreamInterface>& operator=(
         const EventStream<ClockSource, StreamInterface>&) = delete;
+
+    ~EventStream() {
+        try {
+            // Drain the buffer.
+            while (sendOne(true)) {} 
+        } catch (...) {
+            BOOST_LOG_TRIVIAL(error)
+                << "Error while closing gRPC stream for operation name " << _name;
+        }
+    }
 
 private:
 
