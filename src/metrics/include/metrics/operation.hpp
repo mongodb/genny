@@ -208,7 +208,7 @@ public:
           _phase(std::move(phase)),
           _threshold(threshold) {
         if (_useGrpc) {
-            _stream = &grpcClient->createStream(actorId, *collector_name, this->_phase, pathPrefix);
+            _stream = &grpcClient->createStream(actorId, *collector_name, this->_phase);
         }
         if (_useCsv) {
             _events.reset(new EventSeries());

@@ -26,6 +26,7 @@
 #include <set>
 #include <thread>
 #include <vector>
+#include <unordered_map>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -356,25 +357,22 @@ private:
 template <typename ClockSource, typename StreamInterface>
 class GrpcClient {
 public:
+    // Map from "Actor.Operation.Phase" to a Collector.
+    using CollectorsMap = std::unordered_map<std::string, v2::Collector>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
-    using UniqueGrpcClient = std::unique_ptr<GrpcClient<ClockSource, StreamInterface>>&;
+    typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    // TODO: delete
-    typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
-
-    GrpcClient(bool assertMetricsBuffer) {
+    GrpcClient(bool assertMetricsBuffer, const boost::filesystem::path& pathPrefix) : _pathPrefix{pathPrefix} {
         for (int i = 0; i < CLIENT_THREADS; i++) {
             _threads.emplace_back(assertMetricsBuffer);
         }
     }
 
-    typedef EventStream<ClockSource, StreamInterface> Stream;
-
     Stream& createStream(const ActorId& actorId,
                       const std::string& name,
-                      const OptionalPhaseNumber& phase,
-                      const boost::filesystem::path& pathPrefix) {
-        _streams.emplace_back(actorId, name, phase, pathPrefix);
+                      const OptionalPhaseNumber& phase) {
+        _collectors.try_emplace(name, name, _pathPrefix);
+        _streams.emplace_back(actorId, name, phase);
         _threads[_latest_thread++ % _threads.size()].registerStream(&_streams.back());
         return _streams.back();
     }
@@ -390,6 +388,8 @@ public:
     }
 
 private:
+    const boost::filesystem::path _pathPrefix;
+    CollectorsMap _collectors;
     // deque avoid copy-constructor calls
     std::deque<Stream> _streams;
     std::deque<GrpcThread<ClockSource, StreamInterface>> _threads;
@@ -485,8 +485,7 @@ class EventStream {
 public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& name,
-                         const OptionalPhaseNumber& phase,
-                         const boost::filesystem::path& pathPrefix)
+                         const OptionalPhaseNumber& phase)
         : _name{name},
           _stream{name, actorId},
           _phase{phase},

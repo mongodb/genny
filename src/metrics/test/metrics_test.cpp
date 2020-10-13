@@ -563,7 +563,7 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                1, "TestName", 1, "/test/prefix"};
+                1, "TestName", 1};
         REQUIRE_FALSE(stream.sendOne(true));
 
         EventVec expected;
@@ -575,7 +575,7 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                1, "EventName", 9, "/test/prefix"};
+                1, "EventName", 9};
         EventVec expected;
 
 
@@ -722,7 +722,7 @@ TEST_CASE("Events stream to gRPC") {
 
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                3, "LateEventName", 1, "/test/prefix"};
+                3, "LateEventName", 1,};
         EventVec expected;
         {
             OperationEventT<RegistryClockSourceStub> event(
