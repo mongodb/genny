@@ -541,8 +541,6 @@ TEST_CASE("Registry counts the number of workers") {
 TEST_CASE("Events stream to gRPC") {
     using EventVec = std::vector<poplar::EventMetrics>;
 
-    std::unique_ptr<internals::v2::GrpcClient<RegistryClockSourceStub, internals::v2::MockStreamInterface>> emptyGrpcPtr;
-
     auto compareEventsAndClear = [](const EventVec& eventsIn) {
         internals::v2::MockStreamInterface interface("dummyDebugName", 5);
         REQUIRE(eventsIn.size() == interface.events.size());
@@ -565,7 +563,7 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                1, "TestName", 1, "/test/prefix", emptyGrpcPtr};
+                1, "TestName", 1, "/test/prefix"};
         REQUIRE_FALSE(stream.sendOne(true));
 
         EventVec expected;
@@ -577,7 +575,7 @@ TEST_CASE("Events stream to gRPC") {
         RegistryClockSourceStub::reset();
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                1, "EventName", 9, "/test/prefix", emptyGrpcPtr};
+                1, "EventName", 9, "/test/prefix"};
         EventVec expected;
 
 
@@ -724,7 +722,7 @@ TEST_CASE("Events stream to gRPC") {
 
         auto stream =
             internals::v2::EventStream<RegistryClockSourceStub, internals::v2::MockStreamInterface>{
-                3, "LateEventName", 1, "/test/prefix", emptyGrpcPtr};
+                3, "LateEventName", 1, "/test/prefix"};
         EventVec expected;
         {
             OperationEventT<RegistryClockSourceStub> event(

@@ -251,8 +251,8 @@ private:
         return str.str();
     }
 
-    std::unique_ptr<GrpcClient> _grpcClient;
     CollectorsMap _collectors;
+    std::unique_ptr<GrpcClient> _grpcClient;
     OperationsMap _ops;
     MetricsFormat _format;
     boost::filesystem::path _pathPrefix;

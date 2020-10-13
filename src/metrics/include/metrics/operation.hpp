@@ -208,8 +208,7 @@ public:
           _phase(std::move(phase)),
           _threshold(threshold) {
         if (_useGrpc) {
-            _stream.reset(
-                new stream_t(actorId, *collector_name, this->_phase, pathPrefix, grpcClient));
+            _stream = &grpcClient->createStream(actorId, *collector_name, this->_phase, pathPrefix);
         }
         if (_useCsv) {
             _events.reset(new EventSeries());
@@ -277,7 +276,7 @@ private:
     OptionalPhaseNumber _phase;
     OptionalOperationThreshold _threshold;
     std::unique_ptr<EventSeries> _events;
-    std::unique_ptr<stream_t> _stream;
+    stream_t* _stream; // Streams are owned by the grpc client.
 };
 
 /**

@@ -303,6 +303,7 @@ public:
     GrpcThread(bool assertMetricsBuffer) : _assertMetricsBuffer{assertMetricsBuffer},
         _thread{&GrpcThread::run, this} {}
 
+    // Use pointers so that std::set can order them.
     typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
 
     void registerStream(StreamPtr stream) {
@@ -310,7 +311,7 @@ public:
         _streams.insert(stream);
     }
 
-    void closeStream(StreamPtr stream) {
+    void deregisterStream(StreamPtr stream) {
         const std::lock_guard<std::mutex> lock(_streamsMutex);
         _streams.erase(stream);
     }
@@ -351,33 +352,46 @@ private:
 };
 
 // Manages all the grpc threads. Divides the workload evenly between them.
+// Owns / manages streams, through which OperationsImpl can add events.
 template <typename ClockSource, typename StreamInterface>
 class GrpcClient {
 public:
+    using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
+    using UniqueGrpcClient = std::unique_ptr<GrpcClient<ClockSource, StreamInterface>>&;
+
+    // TODO: delete
+    typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
+
     GrpcClient(bool assertMetricsBuffer) {
         for (int i = 0; i < CLIENT_THREADS; i++) {
             _threads.emplace_back(assertMetricsBuffer);
         }
     }
 
-    // EventStream users manage their own memory and should deregister themselves before
-    // destructing, so we (carefully) use naked pointers.
-    typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
+    typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    void registerStream(StreamPtr stream) {
-        _threads[_latest_thread++ % _threads.size()].registerStream(stream);
+    Stream& createStream(const ActorId& actorId,
+                      const std::string& name,
+                      const OptionalPhaseNumber& phase,
+                      const boost::filesystem::path& pathPrefix) {
+        _streams.emplace_back(actorId, name, phase, pathPrefix);
+        _threads[_latest_thread++ % _threads.size()].registerStream(&_streams.back());
+        return _streams.back();
     }
 
-    void closeStream(StreamPtr stream) {
+    ~GrpcClient() {
         // We'd like to use a ranged-for here but for some reason
         // we get lvalue-rvalue binding errors.
-        for (int i = 0; i < _threads.size(); i++) {
-            _threads[i].closeStream(stream);
+        for (int i = 0; i < _streams.size(); i++) {
+            for (int j = 0; j < _threads.size(); j++) {
+                _threads[j].deregisterStream(&_streams[i]);
+            }
         }
     }
 
 private:
     // deque avoid copy-constructor calls
+    std::deque<Stream> _streams;
     std::deque<GrpcThread<ClockSource, StreamInterface>> _threads;
     std::atomic<size_t> _latest_thread = 0;
 };
@@ -467,23 +481,19 @@ class EventStream {
     using duration = typename ClockSource::duration;
     using time_point = typename ClockSource::time_point;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
-    using UniqueGrpcClient = std::unique_ptr<GrpcClient<ClockSource, StreamInterface>>&;
 
 public:
     explicit EventStream(const ActorId& actorId,
                          const std::string& name,
                          const OptionalPhaseNumber& phase,
-                         const boost::filesystem::path& pathPrefix,
-                         UniqueGrpcClient grpcClient)
+                         const boost::filesystem::path& pathPrefix)
         : _name{name},
           _stream{name, actorId},
           _phase{phase},
           _lastFinish{ClockSource::now()},
-          _buffer(std::make_unique<MetricsBuffer<ClockSource>>(BUFFER_SIZE, _name)),
-          _grpcClient(grpcClient) {
+          _buffer(std::make_unique<MetricsBuffer<ClockSource>>(BUFFER_SIZE, _name)) {
         _metrics.set_name(_name);
         _metrics.set_id(actorId);
-        registerSelf();
     }
 
     // Record a metrics event to the loading buffer.
@@ -546,12 +556,8 @@ public:
 
     ~EventStream() {
         try {
-            if (_grpcClient) {
-                _grpcClient->closeStream(this);
-            }
             // Drain the buffer.
-            while (sendOne(true)) {
-            };
+            while (sendOne(true)) {} 
         } catch (...) {
             BOOST_LOG_TRIVIAL(error)
                 << "Error while closing gRPC stream for operation name " << _name;
@@ -559,11 +565,6 @@ public:
     }
 
 private:
-    void registerSelf() {
-        if (_grpcClient) {
-            _grpcClient->registerStream(this);
-        }
-    }
 
     std::string _name;
     StreamInterface _stream;
@@ -571,7 +572,6 @@ private:
     std::optional<genny::PhaseNumber> _phase;
     time_point _lastFinish;
     std::unique_ptr<MetricsBuffer<ClockSource>> _buffer;
-    UniqueGrpcClient _grpcClient;
 };
 
 
