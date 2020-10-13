@@ -368,13 +368,13 @@ public:
         }
     }
 
-    Stream& createStream(const ActorId& actorId,
+    Stream* createStream(const ActorId& actorId,
                       const std::string& name,
                       const OptionalPhaseNumber& phase) {
         _collectors.try_emplace(name, name, _pathPrefix);
         _streams.emplace_back(actorId, name, phase);
         _threads[_latest_thread++ % _threads.size()].registerStream(&_streams.back());
-        return _streams.back();
+        return &_streams.back();
     }
 
     ~GrpcClient() {

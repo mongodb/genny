@@ -187,29 +187,20 @@ public:
 
     using OptionalOperationThreshold = std::optional<OperationThreshold>;
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
-    using stream_t = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>;
-    using UniqueGrpcClient =
-        std::unique_ptr<internals::v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>>&;
+    using StreamPtr = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>*;
 
-    OperationImpl(const ActorId& actorId,
-                  std::string actorName,
+    OperationImpl(std::string actorName,
                   const RegistryT<ClockSource>& registry,
                   std::string opName,
-                  std::optional<genny::PhaseNumber> phase,
-                  const boost::filesystem::path& pathPrefix,
-                  UniqueGrpcClient grpcClient,
-                  const std::optional<std::string>& collector_name = std::nullopt,
+                  StreamPtr stream,
                   std::optional<OperationThreshold> threshold = std::nullopt)
         : _actorName(std::move(actorName)),
           _registry(registry),
           _useGrpc(registry.getFormat().useGrpc()),
           _useCsv(registry.getFormat().useCsv()),
           _opName(std::move(opName)),
-          _phase(std::move(phase)),
+          _stream{stream},
           _threshold(threshold) {
-        if (_useGrpc) {
-            _stream = &grpcClient->createStream(actorId, *collector_name, this->_phase);
-        }
         if (_useCsv) {
             _events.reset(new EventSeries());
         }
@@ -240,7 +231,7 @@ public:
         if (_threshold) {
             _threshold->check(started, finished);
         }
-        if (_useGrpc) {
+        if (_stream) {
             _stream->addAt(
                 finished, std::move(event), _registry.getWorkerCount(_actorName, _opName));
         }
@@ -273,10 +264,9 @@ private:
     const bool _useGrpc;
     const bool _useCsv;
     const std::string _opName;
-    OptionalPhaseNumber _phase;
+    StreamPtr _stream; // Streams are owned by the grpc client.
     OptionalOperationThreshold _threshold;
     std::unique_ptr<EventSeries> _events;
-    stream_t* _stream; // Streams are owned by the grpc client.
 };
 
 /**

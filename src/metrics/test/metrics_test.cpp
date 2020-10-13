@@ -66,10 +66,9 @@ void assertDurationsEqual(RegistryClockSourceStub::duration dur1,
 TEST_CASE("metrics::OperationContext interface") {
     RegistryClockSourceStub::reset();
 
-    std::unique_ptr<internals::v2::GrpcClient<RegistryClockSourceStub, internals::v2::StreamInterfaceImpl>> emptyGrpcPtr;
     auto dummy_metrics = internals::RegistryT<RegistryClockSourceStub>{};
     auto op = internals::OperationImpl<RegistryClockSourceStub>{
-        5, "Actor", dummy_metrics, "Op", std::nullopt, "output", emptyGrpcPtr};
+        "Actor", dummy_metrics, "Op", nullptr};
 
     RegistryClockSourceStub::advance(5ns);
     auto ctx = std::make_optional<internals::OperationContextT<RegistryClockSourceStub>>(&op);

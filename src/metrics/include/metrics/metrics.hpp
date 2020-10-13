@@ -135,6 +135,8 @@ private:
     using OperationsMap = std::unordered_map<std::string, OperationsByType>;
 
     using GrpcClient = v2::GrpcClient<ClockSource, v2::StreamInterfaceImpl>;
+    // The client owns the stream and we only instantiate if using grpc.
+    using StreamPtr = internals::v2::EventStream<ClockSource, v2::StreamInterfaceImpl>*;
 
 public:
     using clock = ClockSource;
@@ -160,22 +162,19 @@ public:
                                       std::string opName,
                                       ActorId actorId,
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
-        std::optional<std::string> name;
+        StreamPtr stream = nullptr;
         if (_format.useGrpc()) {
-            name = createName(actorName, opName, phase);
+            auto name = createName(actorName, opName, phase);
+            stream = _grpcClient->createStream(actorId, name, phase);
         }
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
         auto opIt = opsByThread
                         .try_emplace(actorId,
-                                     actorId,
                                      std::move(actorName),
                                      *this,
                                      std::move(opName),
-                                     std::move(phase),
-                                     _pathPrefix,
-                                     _grpcClient,
-                                     name)
+                                     stream)
                         .first;
         return OperationT{opIt->second};
     }
@@ -188,22 +187,19 @@ public:
                                       std::optional<genny::PhaseNumber> phase = std::nullopt) {
         auto& opsByType = this->_ops[actorName];
         auto& opsByThread = opsByType[opName];
-        std::optional<std::string> name;
+        StreamPtr stream = nullptr;
         if (_format.useGrpc()) {
-            name = createName(actorName, opName, phase);
+            auto name = createName(actorName, opName, phase);
+            stream = _grpcClient->createStream(actorId, name, phase);
         }
         auto opIt =
             opsByThread
                 .try_emplace(
                     actorId,
-                    actorId,
                     std::move(actorName),
                     *this,
                     std::move(opName),
-                    std::move(phase),
-                    _pathPrefix,
-                    _grpcClient,
-                    name,
+                    stream,
                     std::make_optional<typename OperationImpl<ClockSource>::OperationThreshold>(
                         threshold, percentage))
                 .first;
