@@ -56,10 +56,9 @@ namespace internals::v2 {
 const int MULTIPLIER = 500;
 const int NUM_CHANNELS = 4;
 const int BUFFER_SIZE = 1000 * MULTIPLIER;
-const int CLIENT_THREADS = 4;
 const int GRPC_THREAD_SLEEP_MS = 50 * MULTIPLIER;
 const double SWAP_BUFFER_PERCENT = .25;
-const int GRPC_BUFFER_SIZE = 0; //67108864;
+const int GRPC_BUFFER_SIZE = 67108864;
 
 class PoplarRequestError : public std::runtime_error {
 public:
@@ -320,21 +319,10 @@ class EventStream;
 template <typename ClockSource, typename StreamInterface>
 class GrpcThread {
 public:
-    GrpcThread(bool assertMetricsBuffer) : _assertMetricsBuffer{assertMetricsBuffer},
-        _thread{&GrpcThread::run, this} {}
+    typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    // Use pointers so that std::set can order them.
-    typedef EventStream<ClockSource, StreamInterface>* StreamPtr;
-
-    void registerStream(StreamPtr stream) {
-        const std::lock_guard<std::mutex> lock(_streamsMutex);
-        _streams.insert(stream);
-    }
-
-    void deregisterStream(StreamPtr stream) {
-        const std::lock_guard<std::mutex> lock(_streamsMutex);
-        _streams.erase(stream);
-    }
+    GrpcThread(bool assertMetricsBuffer, Stream& stream) : _assertMetricsBuffer{assertMetricsBuffer},
+        _stream{stream}, _thread{&GrpcThread::run, this} {}
 
     void finish() {
         _finishing = true;
@@ -348,37 +336,31 @@ public:
 private:
     void run() {
         while (!_finishing) {
-            reapActors();
+            reapActor();
             const int CHECK_DONE_INTERVAL = 1000; // So we don't take forever to destruct.
             for (int i = 0; i <= GRPC_THREAD_SLEEP_MS && !_finishing; i += CHECK_DONE_INTERVAL) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_DONE_INTERVAL));
             }
         }
 
-        const std::lock_guard<std::mutex> lock(_streamsMutex);
-        for (const auto& stream : _streams) {
-            // Drain buffer and finish.
-            while (stream->sendOne(true, _assertMetricsBuffer)) {}
-            stream->finish();
-        }
+        // Drain buffer and finish.
+        while (_stream.sendOne(true, _assertMetricsBuffer)) {}
+        _stream.finish();
     }
 
-    void reapActors() {
+    void reapActor() {
         bool stillReaping = false;
         do {
             stillReaping = false;
-            const std::lock_guard<std::mutex> lock(_streamsMutex);
-            for (const auto& stream : _streams) {
-                if (stream->sendOne(false, _assertMetricsBuffer))
-                    stillReaping = true;
-            }
+            if (_stream.sendOne(false, _assertMetricsBuffer))
+                stillReaping = true;
         } while (stillReaping);
     }
 
     std::atomic<bool> _finishing = false;
     bool _assertMetricsBuffer;
+    Stream& _stream;
     std::thread _thread;
-    std::set<StreamPtr> _streams;
     std::mutex _streamsMutex;
 };
 
@@ -392,11 +374,7 @@ public:
     using OptionalPhaseNumber = std::optional<genny::PhaseNumber>;
     typedef EventStream<ClockSource, StreamInterface> Stream;
 
-    GrpcClient(bool assertMetricsBuffer, const boost::filesystem::path& pathPrefix) : _pathPrefix{pathPrefix} {
-        for (int i = 0; i < CLIENT_THREADS; i++) {
-            _threads.emplace_back(assertMetricsBuffer);
-        }
-    }
+    GrpcClient(bool assertMetricsBuffer, const boost::filesystem::path& pathPrefix) : _pathPrefix{pathPrefix}, _assertMetricsBuffer{assertMetricsBuffer} {}
 
     Stream* createStream(const ActorId& actorId,
                       const std::string& name,
@@ -404,7 +382,7 @@ public:
         _collectors.try_emplace(name, name, _pathPrefix);
         _collectors.at(name).incStreams();
         _streams.emplace_back(actorId, name, phase);
-        _threads[_latest_thread++ % _threads.size()].registerStream(&_streams.back());
+        _threads.emplace_back(_assertMetricsBuffer, _streams.back());
         return &_streams.back();
     }
 
@@ -416,11 +394,11 @@ public:
 
 private:
     const boost::filesystem::path _pathPrefix;
+    const bool _assertMetricsBuffer;
     CollectorsMap _collectors;
     // deque avoid copy-constructor calls
     std::deque<Stream> _streams;
     std::deque<GrpcThread<ClockSource, StreamInterface>> _threads;
-    std::atomic<size_t> _latest_thread = 0;
 };
 
 template <typename ClockSource>
