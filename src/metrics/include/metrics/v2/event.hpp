@@ -193,6 +193,7 @@ public:
                 << "Problem closing grpc stream for operation name " << _name << " and actor ID "
                 << _actorId << ": " << _context.debug_error_string();
         }
+
     }
 
 private:
@@ -247,11 +248,24 @@ public:
     explicit Collector(const std::string& name, const boost::filesystem::path& pathPrefix)
         : _name{name}, _id{} {
         _id.set_name(_name);
+        _namePb.set_name(_name);
 
         grpc::ClientContext context;
         poplar::PoplarResponse response;
         poplar::CreateOptions options = createOptions(_name, pathPrefix.string());
         auto status = _stub->CreateCollector(&context, options, &response);
+
+        if (!status.ok()) {
+            std::ostringstream os;
+            os << "Collector " << _name << " status not okay: " << status.error_message();
+            BOOST_THROW_EXCEPTION(PoplarRequestError(os.str()));
+        }
+    }
+
+    void incStreams() {
+        grpc::ClientContext context;
+        poplar::PoplarResponse response;
+        auto status = _stub->RegisterStream(&context, _namePb, &response);
 
         if (!status.ok()) {
             std::ostringstream os;
@@ -293,6 +307,7 @@ private:
     }
 
     std::string _name;
+    poplar::CollectorName _namePb;
     poplar::PoplarID _id;
     CollectorStubInterface _stub;
 };
@@ -309,17 +324,21 @@ public:
     GrpcThread(bool assertMetricsBuffer, Stream& stream) : _assertMetricsBuffer{assertMetricsBuffer},
         _stream{stream}, _thread{&GrpcThread::run, this} {}
 
+    void finish() {
+        _finishing = true;
+    }
+
     ~GrpcThread() {
-        _destructing = true;
+        _finishing = true;
         _thread.join();
     }
 
 private:
     void run() {
-        while (!_destructing) {
+        while (!_finishing) {
             reapActor();
             const int CHECK_DONE_INTERVAL = 1000; // So we don't take forever to destruct.
-            for (int i = 0; i <= GRPC_THREAD_SLEEP_MS && !_destructing; i += CHECK_DONE_INTERVAL) {
+            for (int i = 0; i <= GRPC_THREAD_SLEEP_MS && !_finishing; i += CHECK_DONE_INTERVAL) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_DONE_INTERVAL));
             }
         }
@@ -338,7 +357,7 @@ private:
         } while (stillReaping);
     }
 
-    std::atomic<bool> _destructing = false;
+    std::atomic<bool> _finishing = false;
     bool _assertMetricsBuffer;
     Stream& _stream;
     std::thread _thread;
@@ -361,9 +380,16 @@ public:
                       const std::string& name,
                       const OptionalPhaseNumber& phase) {
         _collectors.try_emplace(name, name, _pathPrefix);
+        _collectors.at(name).incStreams();
         _streams.emplace_back(actorId, name, phase);
         _threads.emplace_back(_assertMetricsBuffer, _streams.back());
         return &_streams.back();
+    }
+
+    ~GrpcClient() {
+        for (int i = 0; i < _threads.size(); i++) {
+            _threads[i].finish();
+        }
     }
 
 private:
