@@ -148,12 +148,17 @@ public:
         _numUsers++;
     }
 
+    void addIter() {
+        _iters++;
+    }
+
     /**
      * The rate limiter should be reset to allow one thread to run _burstSize number of times before
      * the start of each phase.
      */
     void resetLastEmptied() noexcept {
         _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
+        _iters = 0;
     }
 
 private:
@@ -163,6 +168,8 @@ private:
     alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _lastEmptiedTimeNS = 0;
     // _burstCount stores the remaining
     alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _burstCount = 0;
+    // number of iterations this phase
+    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _iters = 0;
 
     // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to
     // store the burst size and the rate together, since they're specified together in

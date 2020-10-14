@@ -181,6 +181,7 @@ public:
                 }
                 break;
             }
+            _rateLimiter->addIter();
         }
     }
 
