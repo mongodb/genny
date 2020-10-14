@@ -419,10 +419,8 @@ public:
     explicit MetricsBuffer(size_t size, const std::string& name)
         : size{size},
           name{name},
-          _loading{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()},
-          _draining{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()} {
-        _draining->reserve(size);
-        _loading->reserve(size);
+          _loading{std::make_unique<std::queue<MetricsArgs<ClockSource>>>()},
+          _draining{std::make_unique<std::queue<MetricsArgs<ClockSource>>>()} {
     }
 
     // Thread-safe.
@@ -430,7 +428,7 @@ public:
                OperationEventT<ClockSource> event,
                size_t workerCount) {
         const std::lock_guard<std::mutex> lock(_loadingMutex);
-        _loading->emplace_back(finish, std::move(event), workerCount);
+        _loading->emplace(finish, std::move(event), workerCount);
     }
 
     // Not thread-safe.
@@ -439,8 +437,8 @@ public:
         if (_draining->empty()) {
             return std::nullopt;
         } else {
-            auto ret = std::move(_draining->back());
-            _draining->pop_back();
+            auto ret = std::move(_draining->front());
+            _draining->pop();
             return ret;
         }
     }
@@ -470,8 +468,9 @@ private:
         }
     }
 
-    std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _loading;
-    std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _draining;
+    // TODO: Use a circular buffer?
+    std::unique_ptr<std::queue<MetricsArgs<ClockSource>>> _loading;
+    std::unique_ptr<std::queue<MetricsArgs<ClockSource>>> _draining;
     std::mutex _loadingMutex;
 };
 /**
