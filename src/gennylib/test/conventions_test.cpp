@@ -156,6 +156,37 @@ TEST_CASE("genny::RateSpec conversions") {
     }
 }
 
+TEST_CASE("genny::PercentileRateSpec conversions") {
+    SECTION("Can convert to genny::PercentileRateSpec") {
+        REQUIRE(YAML::Load("GlobalRate: 50%")["GlobalRate"]
+                    .as<PercentileRateSpec>()
+                    .percent == 50);
+        REQUIRE(YAML::Load("GlobalRate: 78%")["GlobalRate"]
+                    .as<PercentileRateSpec>()
+                    .percent == 78);
+        REQUIRE(YAML::Load("GlobalRate: 5%")["GlobalRate"]
+                    .as<PercentileRateSpec>()
+                    .percent == 5);
+    }
+
+    SECTION("Barfs on invalid values") {
+        REQUIRE_THROWS(YAML::Load("-1%").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("2899").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("300 per 2 nanoseconds").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("%").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("%15").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("28.999%").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<RateSpec>());
+    }
+
+    SECTION("Can encode") {
+        YAML::Node n;
+        n["GlobalRate"] = PercentileRateSpec{25};
+        REQUIRE(n["GlobalRate"].as<PercentileRateSpec>().percent == 25);
+    }
+}
+
+
 TEST_CASE("genny::PhaseRangeSpec conversions") {
     SECTION("Can convert to genny::PhaseRangeSpec") {
         auto yaml = YAML::Load("Phase: 0..20");

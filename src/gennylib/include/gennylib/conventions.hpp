@@ -475,6 +475,13 @@ struct convert<genny::PercentileRateSpec> {
         auto percentYaml = Load(strRepr.substr(0, percentPos));
         auto percent = percentYaml.as<genny::IntegerSpec>();
 
+        if (percent.value > 100) {
+            std::stringstream msg;
+            msg << "Invalid value for PercentileRateSpec field, integer cannot be greater than 100."
+                   " Saw: " << percent.value;
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+
         rhs = genny::PercentileRateSpec(percent);
 
         return true;
