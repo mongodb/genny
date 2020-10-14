@@ -558,11 +558,6 @@ public:
     EventStream<ClockSource, StreamInterface>& operator=(
         const EventStream<ClockSource, StreamInterface>&) = delete;
 
-    ~EventStream() {
-        //while (sendOne(true)) {}
-        //finish();
-    }
-
 private:
     std::string _name;
     StreamInterface _stream;
