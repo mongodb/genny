@@ -159,7 +159,8 @@ public:
         _inFlight = true;
     }
 
-    ~StreamInterfaceImpl() {
+    // Finish the stream. Don't write after calling this.
+    void finish() {
         if (!_stream) {
             BOOST_LOG_TRIVIAL(error) << "Tried to close gRPC stream for operation name " << _name
                                      << " and actor ID " << _actorId << ", but no stream existed.";
@@ -177,20 +178,22 @@ public:
                                        << " and actor ID " << _actorId << ".";
         }
 
-        grpc::Status status;
-        _stream->Finish(&status, _grpcTag);
+        _stream->Finish(&_status, _grpcTag);
         if (!finishCall()) {
             BOOST_LOG_TRIVIAL(error) << "Failed to finish writes to stream for operation name "
                                      << _name << " and actor ID " << _actorId << ".";
             return;
         }
-        if (!status.ok()) {
+    }
+
+    ~StreamInterfaceImpl() {
+        shutdownQueue();
+
+        if (!_status.ok()) {
             BOOST_LOG_TRIVIAL(error)
                 << "Problem closing grpc stream for operation name " << _name << " and actor ID "
                 << _actorId << ": " << _context.debug_error_string();
         }
-
-        shutdownQueue();
     }
 
 private:
@@ -226,6 +229,7 @@ private:
     poplar::PoplarResponse _response;
     grpc::ClientContext _context;
     grpc::CompletionQueue _cq;
+    grpc::Status _status;
     void* _grpcTag;
     std::unique_ptr<grpc::ClientAsyncWriterInterface<poplar::EventMetrics>> _stream;
 };
@@ -324,12 +328,19 @@ public:
 
 private:
     void run() {
-        while (!_destructing || !_streams.empty()) {
+        while (!_destructing) {
             reapActors();
             const int CHECK_DONE_INTERVAL = 1000; // So we don't take forever to destruct.
             for (int i = 0; i <= GRPC_THREAD_SLEEP_MS && !_destructing; i += CHECK_DONE_INTERVAL) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_DONE_INTERVAL));
             }
+        }
+
+        const std::lock_guard<std::mutex> lock(_streamsMutex);
+        for (const auto& stream : _streams) {
+            // Drain buffer and finish.
+            while (stream->sendOne(true, _assertMetricsBuffer)) {}
+            stream->finish();
         }
     }
 
@@ -375,16 +386,6 @@ public:
         _streams.emplace_back(actorId, name, phase);
         _threads[_latest_thread++ % _threads.size()].registerStream(&_streams.back());
         return &_streams.back();
-    }
-
-    ~GrpcClient() {
-        // We'd like to use a ranged-for here but for some reason
-        // we get lvalue-rvalue binding errors.
-        for (int i = 0; i < _streams.size(); i++) {
-            for (int j = 0; j < _threads.size(); j++) {
-                _threads[j].deregisterStream(&_streams[i]);
-            }
-        }
     }
 
 private:
@@ -549,22 +550,20 @@ public:
         return true;
     }
 
+    void finish() {
+        _stream.finish();
+    }
+
     EventStream(const EventStream<ClockSource, StreamInterface>&) = delete;
     EventStream<ClockSource, StreamInterface>& operator=(
         const EventStream<ClockSource, StreamInterface>&) = delete;
 
     ~EventStream() {
-        try {
-            // Drain the buffer.
-            while (sendOne(true)) {} 
-        } catch (...) {
-            BOOST_LOG_TRIVIAL(error)
-                << "Error while closing gRPC stream for operation name " << _name;
-        }
+        //while (sendOne(true)) {}
+        //finish();
     }
 
 private:
-
     std::string _name;
     StreamInterface _stream;
     poplar::EventMetrics _metrics;
