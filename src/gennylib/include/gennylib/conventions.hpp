@@ -133,6 +133,24 @@ inline bool operator==(const RateSpec& lhs, const RateSpec& rhs) {
     return (lhs.per == rhs.per) && (lhs.operations == rhs.operations);
 }
 
+/**
+ * PercentileRateSpec defined as X% of max throughput, where X is a whole number.
+ */
+struct PercentileRateSpec {
+    PercentileRateSpec() = default;
+    ~PercentileRateSpec() = default;
+
+    PercentileRateSpec(IntegerSpec i) : percent{i.value} {}
+
+    // Allow construction with integers for testing.
+    PercentileRateSpec(int64_t i) : percent{i} {}
+    int64_t percent;
+};
+
+inline bool operator==(const PercentileRateSpec& lhs, const PercentileRateSpec& rhs) {
+    return (lhs.percent == rhs.percent);
+}
+
 struct PhaseRangeSpec {
     PhaseRangeSpec() = default;
     ~PhaseRangeSpec() = default;
@@ -422,6 +440,47 @@ struct convert<genny::RateSpec> {
         return true;
     }
 };
+
+/**
+ * Convert between YAML and genny::PercentileRateSpec
+ *
+ * The YAML syntax accepts [genny::Integer]%
+ * The syntax is interpreted as a percentage of the max throughput.
+ */
+template <>
+struct convert<genny::PercentileRateSpec> {
+    static Node encode(const genny::PercentileRateSpec& rhs) {
+        std::stringstream msg;
+        msg << rhs.percent << "%";
+        return Node{msg.str()};
+    }
+
+    static bool decode(const Node& node, genny::PercentileRateSpec& rhs) {
+        if (node.IsSequence() || node.IsMap()) {
+            return false;
+        }
+        auto strRepr = node.as<std::string>();
+
+        // Use percent as the delimiter.
+        const std::string delimiter = "%";
+        auto percentPos = strRepr.find(delimiter);
+
+        if (percentPos == std::string::npos) {
+            std::stringstream msg;
+            msg << "Invalid value for PercentileRateSpec field, expected an integer followed by %."
+                   " Saw: " << strRepr;
+            throw genny::InvalidConfigurationException(msg.str());
+        }
+
+        auto percentYaml = Load(strRepr.substr(0, percentPos));
+        auto percent = percentYaml.as<genny::IntegerSpec>();
+
+        rhs = genny::PercentileRateSpec(percent);
+
+        return true;
+    }
+};
+
 
 /**
  * Convert between YAML and genny::Integer
