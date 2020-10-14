@@ -24,6 +24,9 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <variant>
+#include <iostream>
+#include <iomanip>
 
 #include <boost/exception/exception.hpp>
 #include <boost/throw_exception.hpp>
@@ -117,11 +120,24 @@ public:
             throw InvalidConfigurationException(msg.str());
         }
 
-        const auto rateSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
+        std::variant<std::monostate, RateSpec, PercentileRateSpec> rateSpec;
+        // First treat as a RateSpec, then try as a PercentileRateSpec.
+        try {
+            auto optionalSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
+            if (optionalSpec) rateSpec = optionalSpec.value();
+        } catch (InvalidConfigurationException e) {
+            try {
+                auto optionalSpec = phaseContext["GlobalRate"].maybe<PercentileRateSpec>();
+                if (optionalSpec) rateSpec = optionalSpec.value();
+            } catch(InvalidConfigurationException e2) {
+                throw e;
+            }
+        }
+
         const auto rateLimiterName =
             phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter");
 
-        if (rateSpec) {
+        if (rateSpec.index() > 0) {
             std::ostringstream defaultRLName;
             defaultRLName << phaseContext.actor()["Name"] << phaseContext.getPhaseNumber();
             const auto rateLimiterName =
@@ -133,8 +149,10 @@ public:
                     "there's no guarantee the rate limited operation will run in the correct "
                     "phase");
             }
-            _rateLimiter =
-                phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
+            if (auto pval = std::get_if<RateSpec>(&rateSpec)) {
+                _rateLimiter =
+                    phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
+            }
         }
     }
 

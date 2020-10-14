@@ -176,6 +176,7 @@ TEST_CASE("genny::PercentileRateSpec conversions") {
         REQUIRE_THROWS(YAML::Load("%").as<PercentileRateSpec>());
         REQUIRE_THROWS(YAML::Load("%15").as<PercentileRateSpec>());
         REQUIRE_THROWS(YAML::Load("28.999%").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("28.999%").as<RateSpec>());
         REQUIRE_THROWS(YAML::Load("").as<RateSpec>());
     }
 
