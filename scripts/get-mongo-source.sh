@@ -27,7 +27,6 @@ source "$LAMP_VENV_DIR/env.sh"
 
 ROOT_DIR="$(cd "${LAMP_VENV_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
-VENV_DIR="${ROOT_DIR}/build/venv"
 
 export PATH="/opt/mongodbtoolchain/v3/bin:$PATH"
 
@@ -41,4 +40,5 @@ fi
     git checkout a9ad661dc113fe44aecfcac23f6df8c7be087462
 )
 
+source "${LAMP_VENV_DIR}/venv/bin/activate"
 python3 -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"
