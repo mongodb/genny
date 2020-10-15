@@ -89,12 +89,18 @@ public:
     bool consumeIfWithinRate(const typename ClockT::time_point& now) {
 
         // Logic for percentile rates.
-        if (_fullSpeed) {
+        bool curFullSpeed = _fullSpeed.load();
+        if (curFullSpeed) {
             _burstCount++;
             auto _nsSincePhase = ClockT::now().time_since_epoch().count() - _lastEmptiedTimeNS;
 
             // 3 iterations or 1 minute, whichever is longer.
             if (_iters >= _numUsers * 3 && _nsSincePhase >= _nsPerMinute) {
+                const auto success =
+                    _fullSpeed.compare_exchange_weak(curFullSpeed, false);
+                if (!success) {
+                    return true;
+                }
                 // Reconfigure as a "normal" rate limiter running for the first time.
                 _burstSize = _burstCount * _percent.value() / 100;
                 _rateNS = _nsSincePhase;
@@ -204,7 +210,7 @@ private:
     int64_t _burstSize;
     int64_t _rateNS;
     const std::optional<int64_t> _percent;
-    bool _fullSpeed;
+    std::atomic<bool> _fullSpeed;
 
     // Number of threads using this rate limiter.
     int64_t _numUsers = 0;
