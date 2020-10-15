@@ -25,7 +25,7 @@ setup(
         "PyYAML==5.1",
         "requests==2.21.0",
         "yamllint==1.15.0",
-        "shrub.py==0.2.3",
+        "shrub.py==1.1.0",
         "black==19.10b0",
     ],
     setup_requires=["nose==1.3.7"],

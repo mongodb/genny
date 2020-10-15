@@ -108,7 +108,7 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
         # Default mongo directory in Evergreen.
         mongo_dir = os.path.join(workdir, "build", "mongo")
         # Default download location for MongoDB binaries.
-        env["PATH"] += ":" + os.path.join(mongo_dir, "bin") + ":" + mongo_dir
+        env["PATH"] = os.path.join(mongo_dir, "bin") + ":" + mongo_dir + ":" + env["PATH"]
 
     if 'LAMP_VENV_DIR' not in os.environ:
         raise ValueError("The venv directory is required for resmoke and does not exist, "

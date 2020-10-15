@@ -38,7 +38,7 @@ fi
 (
     cd "${SOURCE_DIR}"
     # See comment in evergreen.yml - mongodb_archive_url
-    git checkout 6050e97eafbb6aec02d783f8ec3acea2c612b924
+    git checkout a9ad661dc113fe44aecfcac23f6df8c7be087462
 )
 
 python3 -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"
