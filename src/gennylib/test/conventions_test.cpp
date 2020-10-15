@@ -158,15 +158,9 @@ TEST_CASE("genny::RateSpec conversions") {
 
 TEST_CASE("genny::PercentileRateSpec conversions") {
     SECTION("Can convert to genny::PercentileRateSpec") {
-        REQUIRE(YAML::Load("GlobalRate: 50%")["GlobalRate"]
-                    .as<PercentileRateSpec>()
-                    .percent == 50);
-        REQUIRE(YAML::Load("GlobalRate: 78%")["GlobalRate"]
-                    .as<PercentileRateSpec>()
-                    .percent == 78);
-        REQUIRE(YAML::Load("GlobalRate: 5%")["GlobalRate"]
-                    .as<PercentileRateSpec>()
-                    .percent == 5);
+        REQUIRE(YAML::Load("GlobalRate: 50%")["GlobalRate"].as<PercentileRateSpec>().percent == 50);
+        REQUIRE(YAML::Load("GlobalRate: 78%")["GlobalRate"].as<PercentileRateSpec>().percent == 78);
+        REQUIRE(YAML::Load("GlobalRate: 5%")["GlobalRate"].as<PercentileRateSpec>().percent == 5);
     }
 
     SECTION("Barfs on invalid values") {

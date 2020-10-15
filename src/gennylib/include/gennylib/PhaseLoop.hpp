@@ -25,8 +25,6 @@
 #include <unordered_map>
 #include <utility>
 #include <variant>
-#include <iostream>
-#include <iomanip>
 
 #include <boost/exception/exception.hpp>
 #include <boost/throw_exception.hpp>
@@ -124,12 +122,14 @@ public:
         // First treat as a RateSpec, then try as a PercentileRateSpec.
         try {
             auto optionalSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
-            if (optionalSpec) rateSpec = optionalSpec.value();
+            if (optionalSpec)
+                rateSpec = optionalSpec.value();
         } catch (InvalidConfigurationException e) {
             try {
                 auto optionalSpec = phaseContext["GlobalRate"].maybe<PercentileRateSpec>();
-                if (optionalSpec) rateSpec = optionalSpec.value();
-            } catch(InvalidConfigurationException e2) {
+                if (optionalSpec)
+                    rateSpec = optionalSpec.value();
+            } catch (InvalidConfigurationException e2) {
                 throw e;
             }
         }
@@ -150,11 +150,9 @@ public:
                     "phase");
             }
             if (auto pval = std::get_if<RateSpec>(&rateSpec)) {
-                _rateLimiter =
-                    phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
+                _rateLimiter = phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
             } else if (auto pval = std::get_if<PercentileRateSpec>(&rateSpec)) {
-                _rateLimiter =
-                    phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
+                _rateLimiter = phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
             }
         }
     }

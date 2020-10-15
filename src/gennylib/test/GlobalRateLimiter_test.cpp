@@ -84,7 +84,7 @@ TEST_CASE("Percentile rate limiting") {
     struct DummyTemplateValue {};
     using MyDummyClock = DummyClock<DummyTemplateValue>;
 
-    const int64_t percent = 50; // 50%
+    const int64_t percent = 50;  // 50%
     const PercentileRateSpec rs{percent};
     v1::BaseGlobalRateLimiter<MyDummyClock> grl{rs};
     grl.addUser();
@@ -93,7 +93,8 @@ TEST_CASE("Percentile rate limiting") {
         grl.resetLastEmptied();
         auto now = MyDummyClock::now();
 
-        // consumeIfWithinRate() should succeed because we allow as many ops as desired until limiting.
+        // consumeIfWithinRate() should succeed because we allow as many ops as desired until
+        // limiting.
         for (int i = 0; i < 9; i++) {
             REQUIRE(grl.consumeIfWithinRate(now));
             grl.addIter();

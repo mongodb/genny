@@ -468,7 +468,8 @@ struct convert<genny::PercentileRateSpec> {
         if (percentPos == std::string::npos) {
             std::stringstream msg;
             msg << "Invalid value for PercentileRateSpec field, expected an integer followed by %."
-                   " Saw: " << strRepr;
+                   " Saw: "
+                << strRepr;
             throw genny::InvalidConfigurationException(msg.str());
         }
 
@@ -478,7 +479,8 @@ struct convert<genny::PercentileRateSpec> {
         if (percent.value > 100) {
             std::stringstream msg;
             msg << "Invalid value for PercentileRateSpec field, integer cannot be greater than 100."
-                   " Saw: " << percent.value;
+                   " Saw: "
+                << percent.value;
             throw genny::InvalidConfigurationException(msg.str());
         }
 
