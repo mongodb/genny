@@ -80,6 +80,54 @@ TEST_CASE("Global rate limiter") {
     }
 }
 
+TEST_CASE("Percentile rate limiting") {
+    struct DummyTemplateValue {};
+    using MyDummyClock = DummyClock<DummyTemplateValue>;
+
+    const int64_t percent = 50; // 50%
+    const PercentileRateSpec rs{percent};
+    v1::BaseGlobalRateLimiter<MyDummyClock> grl{rs};
+    grl.addUser();
+
+    SECTION("Limits Rate") {
+        grl.resetLastEmptied();
+        auto now = MyDummyClock::now();
+
+        // consumeIfWithinRate() should succeed because we allow as many ops as desired until limiting.
+        for (int i = 0; i < 9; i++) {
+            REQUIRE(grl.consumeIfWithinRate(now));
+            grl.addIter();
+        }
+
+        // Increment the clock by a minute.
+        MyDummyClock::nowRaw += grl._nsPerMinute;
+        // Tenth call sets the rate limit.
+        REQUIRE(grl.consumeIfWithinRate(now));
+        // Now we should only be able to call exactly half as many times.
+        now = MyDummyClock::now();
+        for (int i = 0; i < 5; i++) {
+            REQUIRE(grl.consumeIfWithinRate(now));
+        }
+        REQUIRE(!grl.consumeIfWithinRate(now));
+
+        // Then it works again a minute later.
+        MyDummyClock::nowRaw += grl._nsPerMinute;
+        now = MyDummyClock::now();
+        for (int i = 0; i < 5; i++) {
+            REQUIRE(grl.consumeIfWithinRate(now));
+        }
+        REQUIRE(!grl.consumeIfWithinRate(now));
+
+        // Then starting a new phase clears the limit.
+        grl.resetLastEmptied();
+        now = MyDummyClock::now();
+        for (int i = 0; i < 10; i++) {
+            REQUIRE(grl.consumeIfWithinRate(now));
+            grl.addIter();
+        }
+    }
+}
+
 
 class IncActor : public Actor {
 public:

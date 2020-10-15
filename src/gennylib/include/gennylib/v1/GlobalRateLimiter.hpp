@@ -67,7 +67,7 @@ public:
         : _burstSize(rs.operations), _rateNS(rs.per.count()), _fullSpeed{false} {};
 
     explicit BaseGlobalRateLimiter(const PercentileRateSpec& rs)
-        : _percent{rs.percent}, _fullSpeed{true} {};
+        : _burstSize{0}, _rateNS{0}, _percent{rs.percent}, _fullSpeed{true} {};
 
     // No copies or moves.
     BaseGlobalRateLimiter(const BaseGlobalRateLimiter& other) = delete;
@@ -92,10 +92,13 @@ public:
         if (_fullSpeed) {
             _burstCount++;
             auto _nsSincePhase = ClockT::now().time_since_epoch().count() - _lastEmptiedTimeNS;
-            if (_iters >= _numUsers * 3 && _nsSincePhase > _nsPerMinute) {
-                // Reconfigure as a "normal" rate limiter.
-                _burstSize = _burstCount * (_percent.value() / 100);
+            
+            // 3 iterations or 1 minute, whichever is longer.
+            if (_iters >= _numUsers * 3 && _nsSincePhase >= _nsPerMinute) {
+                // Reconfigure as a "normal" rate limiter running for the first time.
+                _burstSize = _burstCount * _percent.value() / 100;
                 _rateNS = _nsSincePhase;
+                _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
                 _burstCount = 0;
                 _fullSpeed = false;
             }
@@ -134,6 +137,7 @@ public:
         // `compare_exchange` not comparing equal when it should).
         const auto success =
             _lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime);
+
 
         // Note that incrementing _burstCount is *not* atomic with incrementing _lastEmptiedTimeNS.
         // This may cause some threads to see an outdated _burstCount, causing unnecessary waiting
@@ -182,6 +186,7 @@ public:
         }
     }
 
+    const int64_t _nsPerMinute = 60000000000;
 private:
     // Manually align _lastEmptiedTimeNS and _burstCount here to vastly improve performance.
     // Lazily initialized by the first call to consumeIfWithinRate().
@@ -199,8 +204,7 @@ private:
     int64_t _rateNS;
     const std::optional<int64_t> _percent;
     bool _fullSpeed;
-
-    const int64_t _nsPerMinute = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::minutes()).count();
+    
     // Number of threads using this rate limiter.
     int64_t _numUsers = 0;
 };
