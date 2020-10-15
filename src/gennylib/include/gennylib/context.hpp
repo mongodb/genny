@@ -255,6 +255,9 @@ public:
      */
     v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const RateSpec& spec);
 
+    // Like above, but for percentile rates.
+    v1::GlobalRateLimiter* getRateLimiter(const std::string& name, const PercentileRateSpec& spec);
+
     metrics::Registry& getMetrics() {
         return _registry;
     }

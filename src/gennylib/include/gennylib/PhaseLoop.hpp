@@ -152,6 +152,9 @@ public:
             if (auto pval = std::get_if<RateSpec>(&rateSpec)) {
                 _rateLimiter =
                     phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
+            } else if (auto pval = std::get_if<PercentileRateSpec>(&rateSpec)) {
+                _rateLimiter =
+                    phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
             }
         }
     }

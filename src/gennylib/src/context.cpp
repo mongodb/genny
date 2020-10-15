@@ -119,6 +119,23 @@ v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
     return rl;
 }
 
+v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
+                                                       const PercentileRateSpec& spec) {
+    if (this->isDone()) {
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot create rate-limiters after setup"));
+    }
+    if (_rateLimiters.count(name) == 0) {
+        _rateLimiters.emplace(std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
+    }
+    auto rl = _rateLimiters[name].get();
+    rl->addUser();
+
+    // Reset the rate-limiter at the start of every Phase
+    this->_orchestrator->addPrePhaseStartHook(
+        [rl](const Orchestrator*) { rl->resetLastEmptied(); });
+    return rl;
+}
+
 DefaultRandom& WorkloadContext::getRNGForThread(ActorId id) {
     if (this->isDone()) {
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot create RNGs after setup"));
