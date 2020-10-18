@@ -339,7 +339,7 @@ private:
         while (!_finishing) {
             reapActor();
             std::unique_lock<std::mutex> lk(_cvLock);
-            _cv.wait_for(lk, std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS), [this]{ return _finishing || _stream.sendOne(); });
+            _cv.wait_for(lk, std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS), [this]{ return _finishing || _stream.sendOne(_finishing, _assertMetricsBuffer); });
         }
 
         // Drain buffer and finish.
