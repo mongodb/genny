@@ -27,6 +27,7 @@
 #include <thread>
 #include <vector>
 #include <unordered_map>
+#include <condition_variable>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -326,6 +327,7 @@ public:
 
     void finish() {
         _finishing = true;
+        _cv.notify_all();
     }
 
     ~GrpcThread() {
@@ -336,10 +338,8 @@ private:
     void run() {
         while (!_finishing) {
             reapActor();
-            const int CHECK_DONE_INTERVAL = 1000; // So we don't take forever to destruct.
-            for (int i = 0; i <= GRPC_THREAD_SLEEP_MS && !_finishing; i += CHECK_DONE_INTERVAL) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_DONE_INTERVAL));
-            }
+            std::unique_lock<std::mutex> lk(_cvLock);
+            _cv.wait_for(lk, std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS), [this]{ return _finishing || _stream.sendOne(); });
         }
 
         // Drain buffer and finish.
@@ -361,6 +361,8 @@ private:
     Stream& _stream;
     std::thread _thread;
     std::mutex _streamsMutex;
+    std::mutex _cvLock;
+    std::condition_variable _cv;
 };
 
 // Manages all the grpc threads. Divides the workload evenly between them.
@@ -422,8 +424,10 @@ public:
     explicit MetricsBuffer(size_t size, const std::string& name)
         : size{size},
           name{name},
-          _loading{std::make_unique<std::queue<MetricsArgs<ClockSource>>>()},
-          _draining{std::make_unique<std::queue<MetricsArgs<ClockSource>>>()} {
+          _loading{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()},
+          _draining{std::make_unique<std::vector<MetricsArgs<ClockSource>>>()} {
+              _loading->reserve(size);
+              _draining->reserve(size);
     }
 
     // Thread-safe.
@@ -431,17 +435,18 @@ public:
                OperationEventT<ClockSource> event,
                size_t workerCount) {
         const std::lock_guard<std::mutex> lock(_loadingMutex);
-        _loading->emplace(finish, std::move(event), workerCount);
+        _loading->emplace_back(finish, std::move(event), workerCount);
     }
 
     // Not thread-safe.
     std::optional<MetricsArgs<ClockSource>> pop(bool force, bool assertMetricsBuffer=true) {
         refresh(force, assertMetricsBuffer);
-        if (_draining->empty()) {
+        if (_location >= _draining->size()) {
             return std::nullopt;
         } else {
-            auto ret = std::move(_draining->front());
-            _draining->pop();
+            // Tracking location explicitly lets us create FIFO semantics with a vector.
+            // No STL queue allows us to reserve space.
+            auto ret = std::move(_draining->at(_location++));
             return ret;
         }
     }
@@ -451,9 +456,12 @@ public:
 
 private:
     void refresh(bool force, bool assertMetricsBuffer) {
-        if (!_draining->empty()) {
+        if (_location < _draining->size()) {
             return;
         }
+
+        _draining->clear();
+        _location = 0;
         const std::lock_guard<std::mutex> lock(_loadingMutex);
         if (force || _loading->size() >= size * SWAP_BUFFER_PERCENT) {
             _draining.swap(_loading);
@@ -472,9 +480,10 @@ private:
     }
 
     // TODO: Use a circular buffer?
-    std::unique_ptr<std::queue<MetricsArgs<ClockSource>>> _loading;
-    std::unique_ptr<std::queue<MetricsArgs<ClockSource>>> _draining;
+    std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _loading;
+    std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _draining;
     std::mutex _loadingMutex;
+    size_t _location = 0;
 };
 /**
  * Primary point of interaction between v2 poplar internals and the metrics system.
