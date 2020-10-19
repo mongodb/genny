@@ -72,6 +72,9 @@ struct PoolFactory::Config {
             queryOptions[key] = value;
             i += matches.length();
         }
+
+        // Hardcode Genny appName
+        queryOptions["appName"] = "Genny";
     }
 
     auto makeUri() const {
