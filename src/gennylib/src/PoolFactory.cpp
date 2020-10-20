@@ -74,6 +74,8 @@ struct PoolFactory::Config {
         }
 
         // Hardcode Genny appName
+        // The appName is not strictly a query option and the queryOptions can be renamed if we
+        // intend to continue to use for generic key value pairs in the URI
         queryOptions["appName"] = "Genny";
     }
 
