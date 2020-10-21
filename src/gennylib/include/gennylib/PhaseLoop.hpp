@@ -71,7 +71,7 @@ public:
                      bool isNop,
                      TimeSpec sleepBefore,
                      TimeSpec sleepAfter,
-                     std::optional<RateSpec> rateSpec)
+                     std::optional<BaseRateSpec> rateSpec)
         : _minDuration{minDuration},
           // If it is a nop then should iterate 0 times.
           _minIterations{isNop ? IntegerSpec(0l) : minIterations},
@@ -103,7 +103,7 @@ public:
                            phaseContext.isNop(),
                            phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{}),
-                           phaseContext["GlobalRate"].maybe<RateSpec>()) {
+                           phaseContext["GlobalRate"].maybe<BaseRateSpec>()) {
         if (!phaseContext.isNop() && !phaseContext["Duration"] && !phaseContext["Repeat"] &&
             phaseContext["Blocking"].maybe<std::string>() != "None") {
             std::stringstream msg;
@@ -118,10 +118,10 @@ public:
             throw InvalidConfigurationException(msg.str());
         }
 
-        std::variant<std::monostate, RateSpec, PercentileRateSpec> rateSpec;
-        // First treat as a RateSpec, then try as a PercentileRateSpec.
+        std::variant<std::monostate, BaseRateSpec, PercentileRateSpec> rateSpec;
+        // First treat as a BaseRateSpec, then try as a PercentileRateSpec.
         try {
-            auto optionalSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
+            auto optionalSpec = phaseContext["GlobalRate"].maybe<BaseRateSpec>();
             if (optionalSpec)
                 rateSpec = optionalSpec.value();
         } catch (InvalidConfigurationException e) {
@@ -149,7 +149,7 @@ public:
                     "there's no guarantee the rate limited operation will run in the correct "
                     "phase");
             }
-            if (auto pval = std::get_if<RateSpec>(&rateSpec)) {
+            if (auto pval = std::get_if<BaseRateSpec>(&rateSpec)) {
                 _rateLimiter = phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
             } else if (auto pval = std::get_if<PercentileRateSpec>(&rateSpec)) {
                 _rateLimiter = phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));

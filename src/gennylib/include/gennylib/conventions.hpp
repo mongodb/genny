@@ -115,21 +115,21 @@ inline bool operator==(const TimeSpec& lhs, const TimeSpec& rhs) {
 using Duration = typename TimeSpec::ValueT;
 
 /**
- * RateSpec defined as X operations per Y duration.
+ * BaseRateSpec defined as X operations per Y duration.
  */
-struct RateSpec {
-    RateSpec() = default;
-    ~RateSpec() = default;
+struct BaseRateSpec {
+    BaseRateSpec() = default;
+    ~BaseRateSpec() = default;
 
-    RateSpec(TimeSpec t, IntegerSpec i) : per{t.count()}, operations{i.value} {}
+    BaseRateSpec(TimeSpec t, IntegerSpec i) : per{t.count()}, operations{i.value} {}
 
     // Allow construction with integers for testing.
-    RateSpec(int64_t t, int64_t i) : per{t}, operations{i} {}
+    BaseRateSpec(int64_t t, int64_t i) : per{t}, operations{i} {}
     std::chrono::nanoseconds per;
     int64_t operations;
 };
 
-inline bool operator==(const RateSpec& lhs, const RateSpec& rhs) {
+inline bool operator==(const BaseRateSpec& lhs, const BaseRateSpec& rhs) {
     return (lhs.per == rhs.per) && (lhs.operations == rhs.operations);
 }
 
@@ -403,14 +403,14 @@ struct convert<genny::PhaseRangeSpec> {
  * The syntax is interpreted as operations per unit of time.
  */
 template <>
-struct convert<genny::RateSpec> {
-    static Node encode(const genny::RateSpec& rhs) {
+struct convert<genny::BaseRateSpec> {
+    static Node encode(const genny::BaseRateSpec& rhs) {
         std::stringstream msg;
         msg << rhs.operations << " per " << rhs.per.count() << " nanoseconds";
         return Node{msg.str()};
     }
 
-    static bool decode(const Node& node, genny::RateSpec& rhs) {
+    static bool decode(const Node& node, genny::BaseRateSpec& rhs) {
         if (node.IsSequence() || node.IsMap()) {
             return false;
         }
@@ -435,7 +435,7 @@ struct convert<genny::RateSpec> {
         auto timeUnitYaml = Load(strRepr.substr(spacePos + delimiter.size()));
         auto timeUnit = timeUnitYaml.as<genny::TimeSpec>();
 
-        rhs = genny::RateSpec(timeUnit, opCount);
+        rhs = genny::BaseRateSpec(timeUnit, opCount);
 
         return true;
     }

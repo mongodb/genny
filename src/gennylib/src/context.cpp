@@ -103,7 +103,7 @@ mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t in
 }
 
 v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
-                                                       const RateSpec& spec) {
+                                                       const BaseRateSpec& spec) {
     if (this->isDone()) {
         BOOST_THROW_EXCEPTION(std::logic_error("Cannot create rate-limiters after setup"));
     }

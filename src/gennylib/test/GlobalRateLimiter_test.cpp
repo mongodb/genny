@@ -54,7 +54,7 @@ TEST_CASE("Global rate limiter") {
 
     const int64_t per = 3;
     const int64_t burst = 2;
-    const RateSpec rs{per, burst};  // 2 operations per 3 ticks.
+    const BaseRateSpec rs{per, burst};  // 2 operations per 3 ticks.
     v1::BaseGlobalRateLimiter<MyDummyClock> grl{rs};
 
     SECTION("Limits Rate") {

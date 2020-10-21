@@ -50,7 +50,7 @@ TEST_CASE("Conventions used by PhaseLoop") {
     REQUIRE(*(phaseContext["Repeat"].maybe<IntegerSpec>()) == IntegerSpec{1});
     REQUIRE(phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{33}) == TimeSpec{33});
     REQUIRE(phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{33}) == TimeSpec{33});
-    REQUIRE(phaseContext["Rate"].maybe<RateSpec>() == std::nullopt);
+    REQUIRE(phaseContext["Rate"].maybe<BaseRateSpec>() == std::nullopt);
     REQUIRE(phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter") ==
             "defaultRateLimiter");
 };
@@ -125,34 +125,34 @@ TEST_CASE("genny::IntegerSpec conversions") {
     }
 }
 
-TEST_CASE("genny::RateSpec conversions") {
-    SECTION("Can convert to genny::RateSpec") {
+TEST_CASE("genny::BaseRateSpec conversions") {
+    SECTION("Can convert to genny::BaseRateSpec") {
         REQUIRE(YAML::Load("GlobalRate: 300 per 2 nanoseconds")["GlobalRate"]
-                    .as<RateSpec>()
+                    .as<BaseRateSpec>()
                     .operations == 300);
         REQUIRE(YAML::Load("GlobalRate: 300 per 2 nanoseconds")["GlobalRate"]
-                    .as<RateSpec>()
+                    .as<BaseRateSpec>()
                     .per.count() == 2);
     }
 
     SECTION("Barfs on invalid values") {
-        REQUIRE_THROWS(YAML::Load("-1 per -1 nanosecond").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("-1 per -1 nanosecond").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("1 pe 1000 nanoseconds").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("per").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("nanoseconds per 1").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("1per2second").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("0per").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("xper").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("{foo}").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("-1 per -1 nanosecond").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("-1 per -1 nanosecond").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("1 pe 1000 nanoseconds").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("per").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("nanoseconds per 1").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("1per2second").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("0per").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("xper").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("{foo}").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<BaseRateSpec>());
     }
 
     SECTION("Can encode") {
         YAML::Node n;
-        n["GlobalRate"] = RateSpec{20, 30};
-        REQUIRE(n["GlobalRate"].as<RateSpec>().per.count() == 20);
-        REQUIRE(n["GlobalRate"].as<RateSpec>().operations == 30);
+        n["GlobalRate"] = BaseRateSpec{20, 30};
+        REQUIRE(n["GlobalRate"].as<BaseRateSpec>().per.count() == 20);
+        REQUIRE(n["GlobalRate"].as<BaseRateSpec>().operations == 30);
     }
 }
 
@@ -169,9 +169,9 @@ TEST_CASE("genny::PercentileRateSpec conversions") {
         REQUIRE_THROWS(YAML::Load("300 per 2 nanoseconds").as<PercentileRateSpec>());
         REQUIRE_THROWS(YAML::Load("%").as<PercentileRateSpec>());
         REQUIRE_THROWS(YAML::Load("%15").as<PercentileRateSpec>());
-        REQUIRE_THROWS(YAML::Load("28.999%").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("28.999%").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("28.999%").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("28.999%").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<PercentileRateSpec>());
     }
 
     SECTION("Can encode") {

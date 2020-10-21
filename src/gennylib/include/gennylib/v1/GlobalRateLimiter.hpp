@@ -63,7 +63,7 @@ public:
                   "Clock representation must be nano seconds");
 
 public:
-    explicit BaseGlobalRateLimiter(const RateSpec& rs)
+    explicit BaseGlobalRateLimiter(const BaseRateSpec& rs)
         : _burstSize(rs.operations), _rateNS(rs.per.count()), _fullSpeed{false} {};
 
     explicit BaseGlobalRateLimiter(const PercentileRateSpec& rs)
@@ -206,7 +206,7 @@ private:
 
     // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to
     // store the burst size and the rate together, since they're specified together in
-    // the YAML as RateSpec.
+    // the YAML as BaseRateSpec.
     int64_t _burstSize;
     int64_t _rateNS;
     const std::optional<int64_t> _percent;
