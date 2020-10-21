@@ -213,7 +213,7 @@ private:
 
     // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to
     // store the burst size and the rate together, since they're specified together in
-    // the YAML as BaseRateSpec.
+    // the YAML as RateSpec.
     int64_t _burstSize;
     int64_t _rateNS;
     std::optional<int64_t> _percent;

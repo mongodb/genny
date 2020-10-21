@@ -117,7 +117,7 @@ public:
             throw InvalidConfigurationException(msg.str());
         }
 
-        const auto rateSpec = phaseContext["GlobalRate"].maybe<BaseRateSpec>();
+        const auto rateSpec = phaseContext["GlobalRate"].maybe<RateSpec>();
         const auto rateLimiterName =
             phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter");
 
