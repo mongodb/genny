@@ -99,10 +99,10 @@ public:
         bool curFullSpeed = _fullSpeed.load();
         if (curFullSpeed) {
             _burstCount++;
-            auto _nsSincePhase = ClockT::now().time_since_epoch().count() - _lastEmptiedTimeNS;
+            auto nsSincePhaseStarted = ClockT::now().time_since_epoch().count() - _lastEmptiedTimeNS;
 
             // 3 iterations or 1 minute, whichever is longer.
-            if (_iters >= _numUsers * 3 && _nsSincePhase >= _nsPerMinute) {
+            if (_iters >= _numUsers * 3 && nsSincePhaseStarted >= _nsPerMinute) {
                 const auto success =
                     _fullSpeed.compare_exchange_weak(curFullSpeed, false);
                 if (!success) {
@@ -110,7 +110,7 @@ public:
                 }
                 // Reconfigure as a "normal" rate limiter running for the first time.
                 _burstSize = _burstCount * _percent.value() / 100;
-                _rateNS = _nsSincePhase;
+                _rateNS = nsSincePhaseStarted;
                 _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
                 _burstCount = 0;
                 _fullSpeed = false;
