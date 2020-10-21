@@ -24,7 +24,6 @@
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
-#include <variant>
 
 #include <boost/exception/exception.hpp>
 #include <boost/throw_exception.hpp>
@@ -71,7 +70,7 @@ public:
                      bool isNop,
                      TimeSpec sleepBefore,
                      TimeSpec sleepAfter,
-                     std::optional<BaseRateSpec> rateSpec)
+                     std::optional<RateSpec> rateSpec)
         : _minDuration{minDuration},
           // If it is a nop then should iterate 0 times.
           _minIterations{isNop ? IntegerSpec(0l) : minIterations},
@@ -103,7 +102,7 @@ public:
                            phaseContext.isNop(),
                            phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{}),
                            phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{}),
-                           phaseContext["GlobalRate"].maybe<BaseRateSpec>()) {
+                           phaseContext["GlobalRate"].maybe<RateSpec>()) {
         if (!phaseContext.isNop() && !phaseContext["Duration"] && !phaseContext["Repeat"] &&
             phaseContext["Blocking"].maybe<std::string>() != "None") {
             std::stringstream msg;
@@ -118,26 +117,11 @@ public:
             throw InvalidConfigurationException(msg.str());
         }
 
-        std::variant<std::monostate, BaseRateSpec, PercentileRateSpec> rateSpec;
-        // First treat as a BaseRateSpec, then try as a PercentileRateSpec.
-        try {
-            auto optionalSpec = phaseContext["GlobalRate"].maybe<BaseRateSpec>();
-            if (optionalSpec)
-                rateSpec = optionalSpec.value();
-        } catch (InvalidConfigurationException e) {
-            try {
-                auto optionalSpec = phaseContext["GlobalRate"].maybe<PercentileRateSpec>();
-                if (optionalSpec)
-                    rateSpec = optionalSpec.value();
-            } catch (InvalidConfigurationException e2) {
-                throw e;
-            }
-        }
-
+        const auto rateSpec = phaseContext["GlobalRate"].maybe<BaseRateSpec>();
         const auto rateLimiterName =
             phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter");
 
-        if (rateSpec.index() > 0) {
+        if (rateSpec) {
             std::ostringstream defaultRLName;
             defaultRLName << phaseContext.actor()["Name"] << phaseContext.getPhaseNumber();
             const auto rateLimiterName =
@@ -149,11 +133,7 @@ public:
                     "there's no guarantee the rate limited operation will run in the correct "
                     "phase");
             }
-            if (auto pval = std::get_if<BaseRateSpec>(&rateSpec)) {
-                _rateLimiter = phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
-            } else if (auto pval = std::get_if<PercentileRateSpec>(&rateSpec)) {
-                _rateLimiter = phaseContext.workload().getRateLimiter(rateLimiterName, (*pval));
-            }
+            _rateLimiter = phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
         }
     }
 

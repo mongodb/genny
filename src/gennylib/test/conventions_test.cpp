@@ -207,14 +207,14 @@ TEST_CASE("genny::RateSpec conversions") {
     SECTION("Can encode") {
         auto base = BaseRateSpec{20, 30};
         YAML::Node n1;
-        n["GlobalRate"] = RateSpec{base};
-        REQUIRE(n["GlobalRate"].as<RateSpec>().getBaseSpec()->per.count() == 20);
-        REQUIRE(n["GlobalRate"].as<RateSpec>().getBaseSpec()->operations == 30);
+        n1["GlobalRate"] = RateSpec{base};
+        REQUIRE(n1["GlobalRate"].as<RateSpec>().getBaseSpec()->per.count() == 20);
+        REQUIRE(n1["GlobalRate"].as<RateSpec>().getBaseSpec()->operations == 30);
 
         auto percentile = PercentileRateSpec{75};
         YAML::Node n2;
         n2["GlobalRate"] = RateSpec{percentile};
-        REQUIRE(n["GlobalRate"].as<RateSpec>().getPercentileSpec()->percent == 75);
+        REQUIRE(n2["GlobalRate"].as<RateSpec>().getPercentileSpec()->percent == 75);
     }
 }
 

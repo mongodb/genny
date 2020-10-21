@@ -503,7 +503,7 @@ struct convert<genny::PercentileRateSpec> {
         const std::string delimiter = "%";
         auto percentPos = strRepr.find(delimiter);
 
-        if (percentPos == std::string::npos) {
+        if (percentPos == std::string::npos || percentPos != strRepr.size() - 1) {
             std::stringstream msg;
             msg << "Invalid value for PercentileRateSpec field, expected an integer followed by %."
                    " Saw: "

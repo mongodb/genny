@@ -63,11 +63,18 @@ public:
                   "Clock representation must be nano seconds");
 
 public:
-    explicit BaseGlobalRateLimiter(const BaseRateSpec& rs)
-        : _burstSize(rs.operations), _rateNS(rs.per.count()), _fullSpeed{false} {};
-
-    explicit BaseGlobalRateLimiter(const PercentileRateSpec& rs)
-        : _burstSize{0}, _rateNS{0}, _percent{rs.percent}, _fullSpeed{true} {};
+    explicit BaseGlobalRateLimiter(const RateSpec& rs) {
+            if (auto spec = rs.getBaseSpec()) {
+                _burstSize = spec->operations;
+                _rateNS = spec->per.count();
+                _fullSpeed = false;
+            } else if (auto spec = rs.getPercentileSpec()) {
+                _burstSize = 0;
+                _rateNS = 0;
+                _percent = spec->percent;
+                _fullSpeed = true;
+            }
+    }
 
     // No copies or moves.
     BaseGlobalRateLimiter(const BaseGlobalRateLimiter& other) = delete;
@@ -209,7 +216,7 @@ private:
     // the YAML as BaseRateSpec.
     int64_t _burstSize;
     int64_t _rateNS;
-    const std::optional<int64_t> _percent;
+    std::optional<int64_t> _percent;
     std::atomic<bool> _fullSpeed;
 
     // Number of threads using this rate limiter.
