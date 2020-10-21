@@ -183,7 +183,7 @@ public:
         _numUsers++;
     }
 
-    void addIter() {
+    void notifyOfIteration() {
         _iters++;
     }
 

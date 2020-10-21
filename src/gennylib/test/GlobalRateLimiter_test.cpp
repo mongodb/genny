@@ -97,7 +97,7 @@ TEST_CASE("Percentile rate limiting") {
         // limiting.
         for (int i = 0; i < 9; i++) {
             REQUIRE(grl.consumeIfWithinRate(now));
-            grl.addIter();
+            grl.notifyOfIteration();
         }
 
         // Increment the clock by a minute.
@@ -124,7 +124,7 @@ TEST_CASE("Percentile rate limiting") {
         now = MyDummyClock::now();
         for (int i = 0; i < 10; i++) {
             REQUIRE(grl.consumeIfWithinRate(now));
-            grl.addIter();
+            grl.notifyOfIteration();
         }
     }
 }

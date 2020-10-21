@@ -162,7 +162,7 @@ public:
                 }
                 break;
             }
-            _rateLimiter->addIter();
+            _rateLimiter->notifyOfIteration();
         }
     }
 
