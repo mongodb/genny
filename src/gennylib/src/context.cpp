@@ -105,7 +105,7 @@ mongocxx::pool::entry WorkloadContext::client(const std::string& name, size_t in
 v1::GlobalRateLimiter* WorkloadContext::getRateLimiter(const std::string& name,
                                                        const RateSpec& spec) {
     if (this->isDone()) {
-        BOOST_THROW_EXCEPTION(std::logic_error("Cannot create rate-limiters after setup"));
+        BOOST_THROW_EXCEPTION(std::logic_error("Cannot create rate-limiters after setup. Name tried: " + name));
     }
     if (_rateLimiters.count(name) == 0) {
         _rateLimiters.emplace(std::make_pair(name, std::make_unique<v1::GlobalRateLimiter>(spec)));
