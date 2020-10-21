@@ -95,27 +95,8 @@ public:
      */
     bool consumeIfWithinRate(const typename ClockT::time_point& now) {
 
-        // Logic for percentile rates.
-        bool curFullSpeed = _fullSpeed.load();
-        if (curFullSpeed) {
-            _burstCount++;
-            auto nsSincePhaseStarted = ClockT::now().time_since_epoch().count() - _lastEmptiedTimeNS;
-
-            // 3 iterations or 1 minute, whichever is longer.
-            if (_iters >= _numUsers * 3 && nsSincePhaseStarted >= _nsPerMinute) {
-                const auto success =
-                    _fullSpeed.compare_exchange_weak(curFullSpeed, false);
-                if (!success) {
-                    return true;
-                }
-                // Reconfigure as a "normal" rate limiter running for the first time.
-                _burstSize = _burstCount * _percent.value() / 100;
-                _rateNS = nsSincePhaseStarted;
-                _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
-                _burstCount = 0;
-                _fullSpeed = false;
-            }
-            return true;
+        if (auto breakIn = this->isBreakin()) {
+            return *breakIn;
         }
 
         // This if-block deviates from the "burst" behavior of the default token-bucket
@@ -162,6 +143,7 @@ public:
         return success;
     }
 
+    
     constexpr int64_t getRate() const {
         return _rateNS;
     }
@@ -202,6 +184,38 @@ public:
     const int64_t _nsPerMinute = 60000000000;
 
 private:
+
+    /**
+     * Logic for percentile rates. We "break in" the rate limiter for 1 minutes or 3 iterations, whichever is longer,
+     * to determine the limit to set.
+     */
+    std::optional<bool> isBreakin() {
+        bool curFullSpeed = _fullSpeed.load();
+        if (!curFullSpeed) {
+            return std::nullopt;
+        }
+
+        _burstCount++;
+        auto nsSincePhaseStarted = ClockT::now().time_since_epoch().count() - _lastEmptiedTimeNS;
+
+        // 3 iterations or 1 minute, whichever is longer.
+        if (_iters >= _numUsers * 3 && nsSincePhaseStarted >= _nsPerMinute) {
+            const auto success =
+                _fullSpeed.compare_exchange_weak(curFullSpeed, false);
+            if (!success) {
+                return true;
+            }
+            // Reconfigure as a "normal" rate limiter running for the first time.
+            _burstSize = _burstCount * _percent.value() / 100;
+            _rateNS = nsSincePhaseStarted;
+            _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
+            _burstCount = 0;
+            _fullSpeed = false;
+        }
+        return true;
+    }
+
+
     // Manually align _lastEmptiedTimeNS and _burstCount here to vastly improve performance.
     // Lazily initialized by the first call to consumeIfWithinRate().
     // Note that std::chrono::time_point is not trivially copyable and can't be used here.
