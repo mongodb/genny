@@ -151,6 +151,44 @@ inline bool operator==(const PercentileRateSpec& lhs, const PercentileRateSpec& 
     return (lhs.percent == rhs.percent);
 }
 
+/**
+ * RateSpec defined as either X operations per Y duration or Z% of max throughput each phase.
+ */
+class RateSpec {
+public:
+    RateSpec() = default;
+    ~RateSpec() = default;
+
+    RateSpec(BaseRateSpec s) : _spec{s} {}
+
+    RateSpec(PercentileRateSpec s) : _spec{s} {}
+
+    std::optional<BaseRateSpec> getBaseSpec() const {
+        if (auto pval = std::get_if<BaseRateSpec>(&_spec)) {
+            return *pval;
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    std::optional<PercentileRateSpec> getPercentileSpec() const {
+        if (auto pval = std::get_if<PercentileRateSpec>(&_spec)) {
+                return *pval;
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    inline bool operator==(const RateSpec& rhs) {
+        // Equality is well-behaved for variants if it is for their contents.
+        return _spec == rhs._spec;
+    }
+
+private:
+    std::variant<std::monostate, BaseRateSpec, PercentileRateSpec> _spec;
+};
+
+
 struct PhaseRangeSpec {
     PhaseRangeSpec() = default;
     ~PhaseRangeSpec() = default;
@@ -397,7 +435,7 @@ struct convert<genny::PhaseRangeSpec> {
 };
 
 /**
- * Convert between YAML and genny::RateSpec
+ * Convert between YAML and genny::BaseRateSpec
  *
  * The YAML syntax accepts [genny::Integer] per [genny::Time]
  * The syntax is interpreted as operations per unit of time.
@@ -489,6 +527,63 @@ struct convert<genny::PercentileRateSpec> {
         return true;
     }
 };
+
+/**
+ * Convert between YAML and genny::RateSpec
+ *
+ * The YAML syntax accepts either [genny::Integer] per [genny::Time]
+ * or [genny::Integer]%
+ *
+ * The syntax is interpreted as operations per unit of time or
+ * percentage of max throughput.
+ */
+template <>
+struct convert<genny::RateSpec> {
+    static Node encode(const genny::RateSpec& rhs) {
+        std::stringstream msg;
+
+        if (auto spec = rhs.getBaseSpec()) {
+            msg << spec->operations << " per " << spec->per.count() << " nanoseconds";
+        } else if (auto spec = rhs.getPercentileSpec()) {
+            msg << spec->percent << "%";
+        } else {
+            throw genny::InvalidConfigurationException("Cannot encode empty RateSpec.");
+        }
+
+        return Node{msg.str()};
+    }
+
+    static bool decode(const Node& node, genny::RateSpec& rhs) {
+        if (node.IsSequence() || node.IsMap()) {
+            return false;
+        }
+
+        auto strRepr = node.as<std::string>();
+        auto nodeYaml = Load(strRepr);
+
+        // First treat as a BaseRateSpec, then try as a PercentileRateSpec.
+        try {
+            auto baseSpec = nodeYaml.as<genny::BaseRateSpec>();
+            rhs = genny::RateSpec(baseSpec);
+            return true;
+        } catch (genny::InvalidConfigurationException e) {}
+
+        try {
+            auto percentileSpec = nodeYaml.as<genny::PercentileRateSpec>();
+            rhs = genny::RateSpec(percentileSpec);
+            return true;
+        } catch (genny::InvalidConfigurationException e) {}
+
+        std::stringstream msg;
+        msg << "Invalid value for RateSpec field, expected a space separated integer and time unit,"
+            << " or integer followed by %. Saw: " << strRepr;
+        throw genny::InvalidConfigurationException(msg.str());
+
+        
+
+    }
+};
+
 
 
 /**
