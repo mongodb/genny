@@ -50,7 +50,7 @@ TEST_CASE("Conventions used by PhaseLoop") {
     REQUIRE(*(phaseContext["Repeat"].maybe<IntegerSpec>()) == IntegerSpec{1});
     REQUIRE(phaseContext["SleepBefore"].maybe<TimeSpec>().value_or(TimeSpec{33}) == TimeSpec{33});
     REQUIRE(phaseContext["SleepAfter"].maybe<TimeSpec>().value_or(TimeSpec{33}) == TimeSpec{33});
-    REQUIRE(phaseContext["Rate"].maybe<BaseRateSpec>() == std::nullopt);
+    REQUIRE(phaseContext["Rate"].maybe<RateSpec>() == std::nullopt);
     REQUIRE(phaseContext["RateLimiterName"].maybe<std::string>().value_or("defaultRateLimiter") ==
             "defaultRateLimiter");
 };
@@ -178,6 +178,43 @@ TEST_CASE("genny::PercentileRateSpec conversions") {
         YAML::Node n;
         n["GlobalRate"] = PercentileRateSpec{25};
         REQUIRE(n["GlobalRate"].as<PercentileRateSpec>().percent == 25);
+    }
+}
+
+TEST_CASE("genny::RateSpec conversions") {
+    SECTION("Can convert to genny::RateSpec") {
+        REQUIRE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
+                    .as<RateSpec>().getBaseSpec()->operations == 25);
+        REQUIRE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
+                    .as<RateSpec>().getBaseSpec()->per.count() == 5000000000);
+        REQUIRE_FALSE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
+                    .as<RateSpec>().getPercentileSpec());
+
+        REQUIRE(YAML::Load("GlobalRate: 30%")["GlobalRate"]
+                    .as<RateSpec>().getPercentileSpec()->percent == 30);
+        REQUIRE_FALSE(YAML::Load("GlobalRate: 30%")["GlobalRate"]
+                    .as<RateSpec>().getBaseSpec());
+    }
+
+    SECTION("Barfs on invalid values") {
+        REQUIRE_THROWS(YAML::Load("p%er").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("25 nanoseconds per 1").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("46%28").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("{499}").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<RateSpec>());
+    }
+
+    SECTION("Can encode") {
+        auto base = BaseRateSpec{20, 30};
+        YAML::Node n1;
+        n["GlobalRate"] = RateSpec{base};
+        REQUIRE(n["GlobalRate"].as<RateSpec>().getBaseSpec()->per.count() == 20);
+        REQUIRE(n["GlobalRate"].as<RateSpec>().getBaseSpec()->operations == 30);
+
+        auto percentile = PercentileRateSpec{75};
+        YAML::Node n2;
+        n2["GlobalRate"] = RateSpec{percentile};
+        REQUIRE(n["GlobalRate"].as<RateSpec>().getPercentileSpec()->percent == 75);
     }
 }
 

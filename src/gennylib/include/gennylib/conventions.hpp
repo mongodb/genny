@@ -578,9 +578,6 @@ struct convert<genny::RateSpec> {
         msg << "Invalid value for RateSpec field, expected a space separated integer and time unit,"
             << " or integer followed by %. Saw: " << strRepr;
         throw genny::InvalidConfigurationException(msg.str());
-
-        
-
     }
 };
 
