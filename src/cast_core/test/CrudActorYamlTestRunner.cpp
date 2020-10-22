@@ -98,6 +98,7 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
         REQUIRE(event.command["writeConcern"]["j"].get_bool().value == j.as<bool>());
     }
     if (auto wtimeout = requirements["writeConcern"]["wtimeout"]; wtimeout) {
+        INFO("LALALA: " << wtimeout);
         REQUIRE(event.command["writeConcern"]["wtimeout"].get_int32() == wtimeout.as<int32_t>());
     }
     if (auto ordered = requirements["ordered"]; ordered) {
