@@ -64,16 +64,16 @@ public:
 
 public:
     explicit BaseGlobalRateLimiter(const RateSpec& rs) {
-            if (auto spec = rs.getBaseSpec()) {
-                _burstSize = spec->operations;
-                _rateNS = spec->per.count();
-                _fullSpeed = false;
-            } else if (auto spec = rs.getPercentileSpec()) {
-                _burstSize = 0;
-                _rateNS = 0;
-                _percent = spec->percent;
-                _fullSpeed = true;
-            }
+        if (auto spec = rs.getBaseSpec()) {
+            _burstSize = spec->operations;
+            _rateNS = spec->per.count();
+            _fullSpeed = false;
+        } else if (auto spec = rs.getPercentileSpec()) {
+            _burstSize = 0;
+            _rateNS = 0;
+            _percent = spec->percent;
+            _fullSpeed = true;
+        }
     }
 
     // No copies or moves.
@@ -143,7 +143,7 @@ public:
         return success;
     }
 
-    
+
     constexpr int64_t getRate() const {
         return _rateNS;
     }
@@ -184,10 +184,9 @@ public:
     const int64_t _nsPerMinute = 60000000000;
 
 private:
-
     /**
-     * Logic for percentile rates. We "break in" the rate limiter for 1 minutes or 3 iterations, whichever is longer,
-     * to determine the limit to set.
+     * Logic for percentile rates. We "break in" the rate limiter for 1 minutes or 3 iterations,
+     * whichever is longer, to determine the limit to set.
      */
     std::optional<bool> isBreakin() {
         bool curFullSpeed = _fullSpeed.load();
@@ -200,8 +199,7 @@ private:
 
         // 3 iterations or 1 minute, whichever is longer.
         if (_iters >= _numUsers * 3 && nsSincePhaseStarted >= _nsPerMinute) {
-            const auto success =
-                _fullSpeed.compare_exchange_weak(curFullSpeed, false);
+            const auto success = _fullSpeed.compare_exchange_weak(curFullSpeed, false);
             if (!success) {
                 return true;
             }

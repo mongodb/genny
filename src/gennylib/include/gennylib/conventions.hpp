@@ -173,13 +173,13 @@ public:
 
     std::optional<PercentileRateSpec> getPercentileSpec() const {
         if (auto pval = std::get_if<PercentileRateSpec>(&_spec)) {
-                return *pval;
+            return *pval;
         } else {
             return std::nullopt;
         }
     }
 
-    inline bool operator==(const RateSpec& rhs) {
+    bool operator==(const RateSpec& rhs) {
         // Equality is well-behaved for variants if it is for their contents.
         return _spec == rhs._spec;
     }
@@ -516,7 +516,8 @@ struct convert<genny::PercentileRateSpec> {
 
         if (percent.value > 100) {
             std::stringstream msg;
-            msg << "Invalid value for PercentileRateSpec field, integer cannot be greater than 100."
+            msg << "Invalid value for PercentileRateSpec field, integer must be between 0 and 100, "
+                   "inclusive."
                    " Saw: "
                 << percent.value;
             throw genny::InvalidConfigurationException(msg.str());
@@ -566,13 +567,15 @@ struct convert<genny::RateSpec> {
             auto baseSpec = nodeYaml.as<genny::BaseRateSpec>();
             rhs = genny::RateSpec(baseSpec);
             return true;
-        } catch (genny::InvalidConfigurationException e) {}
+        } catch (genny::InvalidConfigurationException e) {
+        }
 
         try {
             auto percentileSpec = nodeYaml.as<genny::PercentileRateSpec>();
             rhs = genny::RateSpec(percentileSpec);
             return true;
-        } catch (genny::InvalidConfigurationException e) {}
+        } catch (genny::InvalidConfigurationException e) {
+        }
 
         std::stringstream msg;
         msg << "Invalid value for RateSpec field, expected a space separated integer and time unit,"
@@ -580,7 +583,6 @@ struct convert<genny::RateSpec> {
         throw genny::InvalidConfigurationException(msg.str());
     }
 };
-
 
 
 /**

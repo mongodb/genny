@@ -133,7 +133,8 @@ public:
                     "there's no guarantee the rate limited operation will run in the correct "
                     "phase");
             }
-            _rateLimiter = phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
+            _rateLimiter =
+                phaseContext.workload().getRateLimiter(rateLimiterName, rateSpec.value());
         }
     }
 

@@ -184,16 +184,22 @@ TEST_CASE("genny::PercentileRateSpec conversions") {
 TEST_CASE("genny::RateSpec conversions") {
     SECTION("Can convert to genny::RateSpec") {
         REQUIRE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
-                    .as<RateSpec>().getBaseSpec()->operations == 25);
+                    .as<RateSpec>()
+                    .getBaseSpec()
+                    ->operations == 25);
         REQUIRE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
-                    .as<RateSpec>().getBaseSpec()->per.count() == 5000000000);
+                    .as<RateSpec>()
+                    .getBaseSpec()
+                    ->per.count() == 5000000000);
         REQUIRE_FALSE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
-                    .as<RateSpec>().getPercentileSpec());
+                          .as<RateSpec>()
+                          .getPercentileSpec());
 
         REQUIRE(YAML::Load("GlobalRate: 30%")["GlobalRate"]
-                    .as<RateSpec>().getPercentileSpec()->percent == 30);
-        REQUIRE_FALSE(YAML::Load("GlobalRate: 30%")["GlobalRate"]
-                    .as<RateSpec>().getBaseSpec());
+                    .as<RateSpec>()
+                    .getPercentileSpec()
+                    ->percent == 30);
+        REQUIRE_FALSE(YAML::Load("GlobalRate: 30%")["GlobalRate"].as<RateSpec>().getBaseSpec());
     }
 
     SECTION("Barfs on invalid values") {
