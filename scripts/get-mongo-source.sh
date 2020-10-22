@@ -37,7 +37,7 @@ fi
 (
     cd "${SOURCE_DIR}"
     # See comment in evergreen.yml - mongodb_archive_url
-    git checkout a9ad661dc113fe44aecfcac23f6df8c7be087462
+    git checkout 298d4d6bbb9980b74bded06241067fe6771bef68
 )
 
 source "${LAMP_VENV_DIR}/venv/bin/activate"
