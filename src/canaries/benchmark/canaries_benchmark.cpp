@@ -14,9 +14,9 @@
 
 #include <testlib/helpers.hpp>
 
+#include <iostream>
 #include <limits>
 #include <vector>
-#include <iostream>
 
 #include <boost/log/trivial.hpp>
 
@@ -34,7 +34,8 @@ using namespace genny::canaries;
  * programs. The CPU cache benchmarks are sensitive to context switching overhead.
  */
 TEST_CASE("Measure Phaseloop Overhead", "[benchmark]") {
-    std::vector<std::string> loopNames{"simple", "metrics", "phase", "real", "metrics-ftdc", "real-ftdc"};
+    std::vector<std::string> loopNames{
+        "simple", "metrics", "phase", "real", "metrics-ftdc", "real-ftdc"};
 
     auto printRes = [&](std::vector<Nanosecond>& loopTimings, std::string_view name) {
         BOOST_LOG_TRIVIAL(info) << "Total duration for " << name << ":";
@@ -79,7 +80,6 @@ TEST_CASE("Measure Phaseloop Overhead", "[benchmark]") {
         // Compare FTDC loops with metrics/real loops.
         REQUIRE((mf - m) * threshold < mf);
         REQUIRE((rf - r) * threshold < r);
-
     };
 
     SECTION("nop") {

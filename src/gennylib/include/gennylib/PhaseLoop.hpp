@@ -163,6 +163,7 @@ public:
                 }
                 break;
             }
+            _rateLimiter->notifyOfIteration();
         }
     }
 

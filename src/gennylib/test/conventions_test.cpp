@@ -125,36 +125,105 @@ TEST_CASE("genny::IntegerSpec conversions") {
     }
 }
 
-TEST_CASE("genny::RateSpec conversions") {
-    SECTION("Can convert to genny::RateSpec") {
+TEST_CASE("genny::BaseRateSpec conversions") {
+    SECTION("Can convert to genny::BaseRateSpec") {
         REQUIRE(YAML::Load("GlobalRate: 300 per 2 nanoseconds")["GlobalRate"]
-                    .as<RateSpec>()
+                    .as<BaseRateSpec>()
                     .operations == 300);
         REQUIRE(YAML::Load("GlobalRate: 300 per 2 nanoseconds")["GlobalRate"]
-                    .as<RateSpec>()
+                    .as<BaseRateSpec>()
                     .per.count() == 2);
     }
 
     SECTION("Barfs on invalid values") {
-        REQUIRE_THROWS(YAML::Load("-1 per -1 nanosecond").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("-1 per -1 nanosecond").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("1 pe 1000 nanoseconds").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("per").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("nanoseconds per 1").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("1per2second").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("0per").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("xper").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("{foo}").as<RateSpec>());
-        REQUIRE_THROWS(YAML::Load("").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("-1 per -1 nanosecond").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("-1 per -1 nanosecond").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("1 pe 1000 nanoseconds").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("per").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("nanoseconds per 1").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("1per2second").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("0per").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("xper").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("{foo}").as<BaseRateSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<BaseRateSpec>());
     }
 
     SECTION("Can encode") {
         YAML::Node n;
-        n["GlobalRate"] = RateSpec{20, 30};
-        REQUIRE(n["GlobalRate"].as<RateSpec>().per.count() == 20);
-        REQUIRE(n["GlobalRate"].as<RateSpec>().operations == 30);
+        n["GlobalRate"] = BaseRateSpec{20, 30};
+        REQUIRE(n["GlobalRate"].as<BaseRateSpec>().per.count() == 20);
+        REQUIRE(n["GlobalRate"].as<BaseRateSpec>().operations == 30);
     }
 }
+
+TEST_CASE("genny::PercentileRateSpec conversions") {
+    SECTION("Can convert to genny::PercentileRateSpec") {
+        REQUIRE(YAML::Load("GlobalRate: 50%")["GlobalRate"].as<PercentileRateSpec>().percent == 50);
+        REQUIRE(YAML::Load("GlobalRate: 78%")["GlobalRate"].as<PercentileRateSpec>().percent == 78);
+        REQUIRE(YAML::Load("GlobalRate: 5%")["GlobalRate"].as<PercentileRateSpec>().percent == 5);
+    }
+
+    SECTION("Barfs on invalid values") {
+        REQUIRE_THROWS(YAML::Load("-1%").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("2899").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("300 per 2 nanoseconds").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("%").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("%15").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("28.999%").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("28.999%").as<PercentileRateSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<PercentileRateSpec>());
+    }
+
+    SECTION("Can encode") {
+        YAML::Node n;
+        n["GlobalRate"] = PercentileRateSpec{25};
+        REQUIRE(n["GlobalRate"].as<PercentileRateSpec>().percent == 25);
+    }
+}
+
+TEST_CASE("genny::RateSpec conversions") {
+    SECTION("Can convert to genny::RateSpec") {
+        REQUIRE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
+                    .as<RateSpec>()
+                    .getBaseSpec()
+                    ->operations == 25);
+        REQUIRE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
+                    .as<RateSpec>()
+                    .getBaseSpec()
+                    ->per.count() == 5000000000);
+        REQUIRE_FALSE(YAML::Load("GlobalRate: 25 per 5 seconds")["GlobalRate"]
+                          .as<RateSpec>()
+                          .getPercentileSpec());
+
+        REQUIRE(YAML::Load("GlobalRate: 30%")["GlobalRate"]
+                    .as<RateSpec>()
+                    .getPercentileSpec()
+                    ->percent == 30);
+        REQUIRE_FALSE(YAML::Load("GlobalRate: 30%")["GlobalRate"].as<RateSpec>().getBaseSpec());
+    }
+
+    SECTION("Barfs on invalid values") {
+        REQUIRE_THROWS(YAML::Load("p%er").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("25 nanoseconds per 1").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("46%28").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("{499}").as<RateSpec>());
+        REQUIRE_THROWS(YAML::Load("").as<RateSpec>());
+    }
+
+    SECTION("Can encode") {
+        auto base = BaseRateSpec{20, 30};
+        YAML::Node n1;
+        n1["GlobalRate"] = RateSpec{base};
+        REQUIRE(n1["GlobalRate"].as<RateSpec>().getBaseSpec()->per.count() == 20);
+        REQUIRE(n1["GlobalRate"].as<RateSpec>().getBaseSpec()->operations == 30);
+
+        auto percentile = PercentileRateSpec{75};
+        YAML::Node n2;
+        n2["GlobalRate"] = RateSpec{percentile};
+        REQUIRE(n2["GlobalRate"].as<RateSpec>().getPercentileSpec()->percent == 75);
+    }
+}
+
 
 TEST_CASE("genny::PhaseRangeSpec conversions") {
     SECTION("Can convert to genny::PhaseRangeSpec") {
