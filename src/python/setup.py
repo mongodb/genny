@@ -21,7 +21,7 @@ setup(
     install_requires=[
         "nose==1.3.7",
         "yapf==0.24.0",
-        "pymongo==3.7.2",
+        "pymongo>=3.9",
         "PyYAML==5.1",
         "requests==2.21.0",
         "yamllint==1.15.0",
