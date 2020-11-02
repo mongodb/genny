@@ -1,2 +1,7 @@
-# Dependencies are specified in the setup.py file
-.
+nose==1.3.7
+pymongo>=3.9
+PyYAML==5.1
+requests==2.21.0
+yamllint==1.15.0
+shrub.py==0.2.3
+black==19.10b0

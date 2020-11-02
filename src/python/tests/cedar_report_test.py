@@ -37,8 +37,6 @@ class CedarReportTest(unittest.TestCase):
             "execution": "1",
             "is_patch": "true",  # This should get converted to mainline = False in the report.
             "test_name": "my_test_name",
-            "perf_jira_user": "my_username",
-            "perf_jira_pw": "my_password",
             "terraform_key": "my_aws_key",
             "terraform_secret": "my_aws_secret",
         }

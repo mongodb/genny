@@ -67,5 +67,6 @@ def main_genny_runner():
         res = subprocess.run(get_program_args("genny_core"))
         res.check_returncode()
 
+
 if __name__ == "__main__":
     main_genny_runner()

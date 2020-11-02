@@ -40,7 +40,8 @@ TEST_CASE("PoolFactory behavior") {
         auto factory = genny::v1::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
-        REQUIRE(factoryUri == kSourceUri);
+        auto expectedUri = [&]() { return kSourceUri + std::string{"/?appName=Genny"}; };
+        REQUIRE(factoryUri == expectedUri());
 
         auto pool = factory.makePool();
         REQUIRE(pool);
@@ -56,7 +57,7 @@ TEST_CASE("PoolFactory behavior") {
         auto factory = genny::v1::PoolFactory(kSourceUri);
 
         auto factoryUri = factory.makeUri();
-        auto expectedUri = [&]() { return std::string{"mongodb://"} + kSourceUri; };
+        auto expectedUri = [&]() { return std::string{"mongodb://"} + kSourceUri + std::string{"/?appName=Genny"}; };
         REQUIRE(factoryUri == expectedUri());
 
         auto pool = factory.makePool();
@@ -72,7 +73,7 @@ TEST_CASE("PoolFactory behavior") {
 
         SECTION("Validate the original URI") {
             auto factoryUri = factory.makeUri();
-            auto expectedUri = [&]() { return kBaseString + "bigdata?replicaSet=badChoices"; };
+            auto expectedUri = [&]() { return kBaseString + "bigdata?appName=Genny&replicaSet=badChoices"; };
             REQUIRE(factoryUri == expectedUri());
 
             auto pool = factory.makePool();
@@ -80,7 +81,7 @@ TEST_CASE("PoolFactory behavior") {
         }
 
         SECTION("Modify the URI and check that it works") {
-            auto expectedUri = [&]() { return kBaseString + "webscale?replicaSet=threeNode"; };
+            auto expectedUri = [&]() { return kBaseString + "webscale?appName=Genny&replicaSet=threeNode"; };
             factory.setOption(OptionType::kQueryOption, "replicaSet", "threeNode");
             factory.setOption(OptionType::kAccessOption, "Database", "webscale");
 
@@ -100,7 +101,7 @@ TEST_CASE("PoolFactory behavior") {
             auto sourceUri = [&]() { return kBaseString + kOriginalDatabase; };
             auto factory = genny::v1::PoolFactory(sourceUri());
 
-            auto expectedUri = [&]() { return sourceUri() + "?database=test"; };
+            auto expectedUri = [&]() { return sourceUri() + "?appName=Genny&database=test"; };
             factory.setOption(OptionType::kQueryOption, "database", "test");
 
             auto factoryUri = factory.makeUri();
@@ -121,7 +122,7 @@ TEST_CASE("PoolFactory behavior") {
 
 
             SECTION("Use the flag option") {
-                auto expectedUri = [&]() { return kBaseString + "true"; };
+                auto expectedUri = [&]() { return kBaseString + "true?appName=Genny"; };
                 factory.setFlag(OptionType::kAccessOption, "Database");
 
                 auto factoryUri = factory.makeUri();
@@ -129,7 +130,7 @@ TEST_CASE("PoolFactory behavior") {
             }
 
             SECTION("Use the string option to reset the Database") {
-                auto expectedUri = [&]() { return kBaseString + "true"; };
+                auto expectedUri = [&]() { return kBaseString + "true?appName=Genny"; };
                 factory.setFlag(OptionType::kAccessOption, "Database", "true");
 
                 auto factoryUri = factory.makeUri();
@@ -137,7 +138,7 @@ TEST_CASE("PoolFactory behavior") {
             }
 
             SECTION("Use the flag option to flip the Database") {
-                auto expectedUri = [&]() { return kBaseString + "false"; };
+                auto expectedUri = [&]() { return kBaseString + "false?appName=Genny"; };
                 factory.setFlag(OptionType::kAccessOption, "Database", false);
 
                 auto factoryUri = factory.makeUri();
@@ -146,11 +147,11 @@ TEST_CASE("PoolFactory behavior") {
         }
 
         SECTION("Overwrite the replSet option in a variety of ways") {
-            auto sourceUri = [&]() { return kBaseString + "?replSet=red"; };
+            auto sourceUri = [&]() { return kBaseString + "?appName=Genny&replSet=red"; };
             auto factory = genny::v1::PoolFactory(sourceUri());
 
             SECTION("Overwrite with a normal string") {
-                auto expectedUri = [&]() { return kBaseString + "?replSet=blue"; };
+                auto expectedUri = [&]() { return kBaseString + "?appName=Genny&replSet=blue"; };
                 factory.setOption(OptionType::kQueryOption, "replSet", "blue");
 
                 auto factoryUri = factory.makeUri();
@@ -159,7 +160,7 @@ TEST_CASE("PoolFactory behavior") {
 
             SECTION("Overwrite with an empty string") {
                 // An empty string is still a valid option, even if not a valid replset
-                auto expectedUri = [&]() { return kBaseString + "?replSet="; };
+                auto expectedUri = [&]() { return kBaseString + "?appName=Genny&replSet="; };
                 factory.setOption(OptionType::kQueryOption, "replSet", "");
 
                 auto factoryUri = factory.makeUri();
@@ -175,7 +176,7 @@ TEST_CASE("PoolFactory behavior") {
 
         auto factory = genny::v1::PoolFactory(kSourceUri);
 
-        auto expectedUri = [&]() { return kSourceUri + "/?maxPoolSize=2"; };
+        auto expectedUri = [&]() { return kSourceUri + "/?appName=Genny&maxPoolSize=2"; };
         factory.setOptionFromInt(OptionType::kQueryOption, "maxPoolSize", kMaxPoolSize);
 
         auto factoryUri = factory.makeUri();
@@ -206,7 +207,7 @@ TEST_CASE("PoolFactory behavior") {
         auto sourceUrl = [&]() { return kProtocol + kHost; };
         auto factory = genny::v1::PoolFactory(sourceUrl());
 
-        auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?tls=true"; };
+        auto expectedUri = [&]() { return kProtocol + "boss:pass@" + kHost + "/admin?appName=Genny&tls=true"; };
         factory.setOptions(OptionType::kAccessOption,
                            {{"Username", "boss"}, {"Password", "pass"}, {"Database", "admin"}});
 

@@ -124,16 +124,13 @@ python setup.py nosetests
 Python Formatting
 -----------------
 
-Genny uses `yapf` for python formatting.
+Genny uses `black` for python formatting.
 
 ```sh
 pip install virtualenv
 virtualenv venv
 source ./venv/bin/activate
 pip install .
-yapf -i --recursive genny tests
+black src/lamplib src/python
 ```
-
-
-
 

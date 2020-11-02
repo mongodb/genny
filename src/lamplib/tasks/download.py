@@ -38,9 +38,7 @@ class Downloader:
         :return: Whether the operation succeeded.
         """
         if not os.path.exists(self._install_dir):
-            logging.critical(
-                "Please create the parent directory for %s.", self._name
-            )
+            logging.critical("Please create the parent directory for %s.", self._name)
 
             if platform.mac_ver()[0]:
                 release_triplet = platform.mac_ver()[0].split(".")
@@ -49,7 +47,8 @@ class Downloader:
                     logging.info(
                         "On versions of MacOS between 10.12 and 10.14, "
                         "you have to disable System Integrity Protection first. "
-                        "See https://apple.stackexchange.com/a/208481 for instructions")
+                        "See https://apple.stackexchange.com/a/208481 for instructions"
+                    )
                 if minor_ver >= 15:
                     # Instructions derived from https://github.com/NixOS/nix/issues/2925#issuecomment-539570232
                     logging.info(
@@ -57,19 +56,18 @@ class Downloader:
                         "The following instructions assume that disk1 is the synthesized AFPS volume of the primary, "
                         "internal volume your Mac. Verify this assumption with `diskutil list`, substituting the "
                         "appropriate volume name if required. \n\n"
-
                         "echo 'data' | sudo tee -a /etc/synthetic.conf\n"
                         "*Restart your system before continuing*\n\n"
-
                         "sudo diskutil apfs addVolume disk1 APFSX Data -mountpoint /data \\\n"
                         "sudo diskutil enableOwnership /data \\\n"
                         "sudo chflags hidden /data \\\n"
-                        "echo \"LABEL=Data /data apfs rw\" | sudo tee -a /etc/fstab \\\n"
+                        'echo "LABEL=Data /data apfs rw" | sudo tee -a /etc/fstab \\\n'
                         "mkdir /data/mci"
-                        )
+                    )
                     return False
 
-            logging.critical('`sudo mkdir -p "%s"; sudo chown "$USER" "%s"`',
+            logging.critical(
+                '`sudo mkdir -p "%s"; sudo chown "$USER" "%s"`',
                 self._install_dir,
                 self._install_dir,
             )

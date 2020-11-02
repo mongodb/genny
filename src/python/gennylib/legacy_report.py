@@ -115,11 +115,13 @@ def run(args):
         json.dump(result, f)
 
 
-def main__legacy_report(argv=sys.argv[1:]):
+def main__legacy_report(argv=None):
     """
     Entry point to convert cedar csv metrics format into legacy perf.json
     :return: None
     """
+    if argv is None:
+        argv = sys.argv[1:]
     logging.basicConfig(level=logging.INFO)
     parser = build_parser()
     run(parser.parse_args(argv))

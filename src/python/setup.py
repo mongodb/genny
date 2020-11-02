@@ -13,21 +13,20 @@
 # limitations under the License.
 
 from setuptools import setup
+import os
+
+
+def _install_requires():
+    python_dir = os.path.dirname(__file__)
+    reqs_file = os.path.join(python_dir, "requirements.txt")
+    with open(reqs_file) as handle:
+        return handle.readlines()
+
 
 setup(
     name="genny",
     version="1.0",
     packages=["gennylib", "gennylib.parsers", "third_party"],
-    install_requires=[
-        "nose==1.3.7",
-        "yapf==0.24.0",
-        "pymongo>=3.9",
-        "PyYAML==5.1",
-        "requests==2.21.0",
-        "yamllint==1.15.0",
-        "shrub.py==1.1.0",
-        "black==19.10b0",
-    ],
     setup_requires=["nose==1.3.7"],
     entry_points={
         "console_scripts": [
@@ -36,7 +35,7 @@ setup(
             "lint-yaml = gennylib.yaml_linter:main",
             "genny = gennylib.genny_runner:main_genny_runner",
             "genny-canaries = gennylib.canaries_runner:main_canaries_runner",
-            "genny-auto-tasks = gennylib.auto_tasks:main"        
+            "genny-auto-tasks = gennylib.auto_tasks:main",
         ]
     },
 )
