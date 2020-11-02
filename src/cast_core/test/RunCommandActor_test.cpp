@@ -150,7 +150,7 @@ TEST_CASE_METHOD(MongoTestFixture, "InsertActor respects writeConcern.", "[three
         REQUIRE(events.size() > 0);
         auto&& event = events.front();
         REQUIRE(event.command["writeConcern"]);
-        auto writeConcernLevel = event.command["writeConcern"]["w"].get_int32().value;
+        auto writeConcernLevel = event.command["writeConcern"]["w"].get_int64().value;
         REQUIRE(writeConcernLevel == 3);
     }
 
