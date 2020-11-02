@@ -89,7 +89,7 @@ bool isNumeric(YAML::Node node) {
 void requireEvent(ApmEvent& event, YAML::Node requirements) {
     if (auto w = requirements["writeConcern"]["w"]; w) {
         if (isNumeric(w)) {
-            REQUIRE(event.command["writeConcern"]["w"].get_int32() == w.as<int32_t>());
+            REQUIRE(event.command["writeConcern"]["w"].get_int32().value == w.as<int32_t>());
         } else {
             REQUIRE(event.command["writeConcern"]["w"].get_utf8().value == w.as<std::string>());
         }
@@ -98,8 +98,7 @@ void requireEvent(ApmEvent& event, YAML::Node requirements) {
         REQUIRE(event.command["writeConcern"]["j"].get_bool().value == j.as<bool>());
     }
     if (auto wtimeout = requirements["writeConcern"]["wtimeout"]; wtimeout) {
-        INFO("LALALA: " << wtimeout);
-        REQUIRE(event.command["writeConcern"]["wtimeout"].get_int32() == wtimeout.as<int32_t>());
+        REQUIRE(event.command["writeConcern"]["wtimeout"].get_int32().value == wtimeout.as<int32_t>());
     }
     if (auto ordered = requirements["ordered"]; ordered) {
         REQUIRE(event.command["ordered"].get_bool() == ordered.as<bool>());
