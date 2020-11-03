@@ -357,12 +357,13 @@ private:
     }
 
     std::atomic<bool> _finishing = false;
-    bool _assertMetricsBuffer;
-    Stream& _stream;
-    std::thread _thread;
     std::mutex _streamsMutex;
     std::mutex _cvLock;
     std::condition_variable _cv;
+
+    bool _assertMetricsBuffer;
+    Stream& _stream;
+    std::thread _thread;
 };
 
 // Manages all the grpc threads. Divides the workload evenly between them.
@@ -479,7 +480,6 @@ private:
         }
     }
 
-    // TODO: Use a circular buffer?
     std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _loading;
     std::unique_ptr<std::vector<MetricsArgs<ClockSource>>> _draining;
     std::mutex _loadingMutex;
