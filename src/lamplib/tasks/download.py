@@ -177,12 +177,7 @@ class CuratorDownloader(Downloader):
         if self._distro in ("amazon2", "rhel8", "rhel62"):
             self._distro = "rhel70"
 
-        return (
-            "https://s3.amazonaws.com/boxes.10gen.com/build/curator/"
-            "curator-dist-{distro}-{build}.tar.gz".format(
-                distro=self._distro, build=CuratorDownloader.CURATOR_VERSION
-            )
-        )
+        return "https://mciuploads.s3.amazonaws.com/curator/curator_rhel70_patch_979208bd6b979352285b1838a8fc4d335b01a663_5fa309cd9ccd4e5d63602f55_20_11_04_20_06_57-rhel70/curator-dist-979208bd6b979352285b1838a8fc4d335b01a663.tar.gz" 
 
     def _can_ignore(self):
         return os.path.exists(self.result_dir) and (
