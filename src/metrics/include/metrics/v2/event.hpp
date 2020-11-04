@@ -55,11 +55,11 @@ namespace internals::v2 {
 // There's not a super motivated reason for these values other than running
 // a lot of patches and seeing what worked.
 const int MULTIPLIER = 500;
-const int NUM_CHANNELS = 4;
+const int NUM_CHANNELS = 8;
 const int BUFFER_SIZE = 1000 * MULTIPLIER;
-const int GRPC_THREAD_SLEEP_MS = 500 * MULTIPLIER; // Should lower if decreasing thread count.
+const int GRPC_THREAD_SLEEP_MS = 100 * MULTIPLIER; // Should lower if decreasing thread count.
 const double SWAP_BUFFER_PERCENT = .25;
-const int GRPC_BUFFER_SIZE = 0; //Max possible size: 67108864
+const int GRPC_BUFFER_SIZE = 67108864;
 
 class PoplarRequestError : public std::runtime_error {
 public:
