@@ -28,6 +28,7 @@ setup(
     version="1.0",
     packages=["gennylib", "gennylib.parsers", "third_party"],
     setup_requires=["nose==1.3.7"],
+    install_requires=_install_requires(),
     entry_points={
         "console_scripts": [
             "genny-metrics-report = gennylib.cedar_report:main__cedar_report",
