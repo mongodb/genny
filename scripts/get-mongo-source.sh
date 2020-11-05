@@ -27,6 +27,7 @@ source "$LAMP_VENV_DIR/env.sh"
 
 ROOT_DIR="$(cd "${LAMP_VENV_DIR}/.." && pwd)"
 SOURCE_DIR="${ROOT_DIR}/build/mongo"
+VENV_DIR="${ROOT_DIR}/build/venv"
 
 export PATH="/opt/mongodbtoolchain/v3/bin:$PATH"
 
@@ -37,8 +38,7 @@ fi
 (
     cd "${SOURCE_DIR}"
     # See comment in evergreen.yml - mongodb_archive_url
-    git checkout 298d4d6bbb9980b74bded06241067fe6771bef68
+    git checkout 90787b49457d8a4f28b23985d56430a1a174454e
 )
 
-source "${LAMP_VENV_DIR}/venv/bin/activate"
 python3 -m pip install -r "${SOURCE_DIR}/etc/pip/evgtest-requirements.txt"

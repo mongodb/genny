@@ -189,7 +189,7 @@ void comparePerformance(int threads, long iterations, int tolerance) {
 
 TEST_CASE("PhaseLoop performance", "[benchmark]") {
     // low tolerance for added latency with few threads
-    comparePerformance(50, 10000, 10);
+    comparePerformance(50, 10000, 5);
     comparePerformance(10, 100000, 10);
     // higher tolerance for added latency with more threads
     comparePerformance(500, 10000, 100);
