@@ -108,7 +108,7 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
         # Default mongo directory in Evergreen.
         mongo_dir = os.path.join(workdir, "build", "mongo")
         # Default download location for MongoDB binaries.
-        env["PATH"] += ":" + os.path.join(mongo_dir, "bin") + ":" + mongo_dir
+        env["PATH"] = os.path.join(mongo_dir, "bin") + ":" + mongo_dir + ":" + env["PATH"]
 
     if "LAMP_VENV_DIR" not in os.environ:
         raise ValueError(
@@ -138,5 +138,5 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
     )
 
     _run_command_with_sentinel_report(
-        lambda: subprocess.run(";".join(cmds), cwd=workdir, env=env, shell=True), checker_func
+        lambda: subprocess.run(";".join(cmds), cwd=workdir, env=env, shell=True, executable="/bin/bash"), checker_func
     )
