@@ -54,12 +54,13 @@ namespace internals::v2 {
 
 // There's not a super motivated reason for these values other than running
 // a lot of patches and seeing what worked.
-const int MULTIPLIER = 500;
+const int MULTIPLIER = 5000;
 const int NUM_CHANNELS = 8;
 const int BUFFER_SIZE = 1000 * MULTIPLIER;
-const int GRPC_THREAD_SLEEP_MS = 100 * MULTIPLIER; // Should lower if decreasing thread count.
+const int GRPC_THREAD_SLEEP_MS = 100 * MULTIPLIER;
 const double SWAP_BUFFER_PERCENT = .25;
-const int GRPC_BUFFER_SIZE = 67108864;
+const int GRPC_BUFFER_SIZE = 10000; //67108864;
+const int SEND_CHUNK_SIZE = 1000;
 
 class PoplarRequestError : public std::runtime_error {
 public:
@@ -339,21 +340,24 @@ private:
         while (!_finishing) {
             reapActor();
             std::unique_lock<std::mutex> lk(_cvLock);
-            _cv.wait_for(lk, std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS), [this]{ return _finishing || _stream.sendOne(_finishing, _assertMetricsBuffer); });
+            // We sleep for performance reasons, not correctness, so we don't need to
+            // guard against spurious wakeups.
+            _cv.wait_for(lk, std::chrono::milliseconds(GRPC_THREAD_SLEEP_MS));
         }
 
         // Drain buffer and finish.
-        while (_stream.sendOne(true, _assertMetricsBuffer)) {}
+        reapActor();
         _stream.finish();
     }
 
     void reapActor() {
-        bool stillReaping = false;
-        do {
-            stillReaping = false;
-            if (_stream.sendOne(false, _assertMetricsBuffer))
-                stillReaping = true;
-        } while (stillReaping);
+        int counter = 0;
+        while(_stream.sendOne(_finishing, _assertMetricsBuffer)) {
+            counter++;
+            // If finishing and all threads are draining, this helps 
+            // balance the server-side buffers.
+            if (counter >= SEND_CHUNK_SIZE) std::this_thread::yield();
+        }
     }
 
     std::atomic<bool> _finishing = false;
