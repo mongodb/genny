@@ -61,6 +61,11 @@ public:
     explicit HasNode(const Node& node) : _node{node} {}
 
     template <typename... Args>
+    auto& get(Args&&... args) const {
+        return this->_node.operator[](std::forward<Args>(args)...);
+    }
+
+    template <typename... Args>
     auto& operator[](Args&&... args) const {
         return this->_node.operator[](std::forward<Args>(args)...);
     }

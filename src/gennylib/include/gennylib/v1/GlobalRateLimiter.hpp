@@ -63,8 +63,18 @@ public:
                   "Clock representation must be nano seconds");
 
 public:
-    explicit BaseGlobalRateLimiter(const RateSpec& rs)
-        : _burstSize(rs.operations), _rateNS(rs.per.count()){};
+    explicit BaseGlobalRateLimiter(const RateSpec& rs) {
+        if (auto spec = rs.getBaseSpec()) {
+            _burstSize = spec->operations;
+            _rateNS = spec->per.count();
+            _fullSpeed = false;
+        } else if (auto spec = rs.getPercentileSpec()) {
+            _burstSize = 0;
+            _rateNS = 0;
+            _percent = spec->percent;
+            _fullSpeed = true;
+        }
+    }
 
     // No copies or moves.
     BaseGlobalRateLimiter(const BaseGlobalRateLimiter& other) = delete;
@@ -84,6 +94,11 @@ public:
      * appropriate back-off strategy if this function returns false.
      */
     bool consumeIfWithinRate(const typename ClockT::time_point& now) {
+
+        if (auto breakIn = this->isBreakin()) {
+            return *breakIn;
+        }
+
         // This if-block deviates from the "burst" behavior of the default token-bucket
         // algorithm. Instead of having the caller burst, we parallelize the burst
         // behavior by granting one token to each consumer thread across as many threads
@@ -117,6 +132,7 @@ public:
         const auto success =
             _lastEmptiedTimeNS.compare_exchange_weak(curEmptiedTime, newEmptiedTime);
 
+
         // Note that incrementing _burstCount is *not* atomic with incrementing _lastEmptiedTimeNS.
         // This may cause some threads to see an outdated _burstCount, causing unnecessary waiting
         // in the caller. For this reason, the caller should ensure the number of tokens does not
@@ -126,6 +142,7 @@ public:
         }
         return success;
     }
+
 
     constexpr int64_t getRate() const {
         return _rateNS;
@@ -148,27 +165,71 @@ public:
         _numUsers++;
     }
 
+    void notifyOfIteration() {
+        _iters++;
+    }
+
     /**
      * The rate limiter should be reset to allow one thread to run _burstSize number of times before
      * the start of each phase.
      */
     void resetLastEmptied() noexcept {
         _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
+        _iters = 0;
+        if (_percent) {
+            _fullSpeed = true;
+        }
     }
 
+    const int64_t _nsPerMinute = 60000000000;
+
 private:
+    /**
+     * Logic for percentile rates. We "break in" the rate limiter for 1 minutes or 3 iterations,
+     * whichever is longer, to determine the limit to set.
+     */
+    std::optional<bool> isBreakin() {
+        bool curFullSpeed = _fullSpeed.load();
+        if (!curFullSpeed) {
+            return std::nullopt;
+        }
+
+        _burstCount++;
+        auto nsSincePhaseStarted = ClockT::now().time_since_epoch().count() - _lastEmptiedTimeNS;
+
+        // 3 iterations or 1 minute, whichever is longer.
+        if (_iters >= _numUsers * 3 && nsSincePhaseStarted >= _nsPerMinute) {
+            const auto success = _fullSpeed.compare_exchange_weak(curFullSpeed, false);
+            if (!success) {
+                return true;
+            }
+            // Reconfigure as a "normal" rate limiter running for the first time.
+            _burstSize = _burstCount * _percent.value() / 100;
+            _rateNS = nsSincePhaseStarted;
+            _lastEmptiedTimeNS = ClockT::now().time_since_epoch().count() - _rateNS;
+            _burstCount = 0;
+            _fullSpeed = false;
+        }
+        return true;
+    }
+
+
     // Manually align _lastEmptiedTimeNS and _burstCount here to vastly improve performance.
     // Lazily initialized by the first call to consumeIfWithinRate().
     // Note that std::chrono::time_point is not trivially copyable and can't be used here.
     alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _lastEmptiedTimeNS = 0;
     // _burstCount stores the remaining
     alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _burstCount = 0;
+    // number of iterations this phase
+    alignas(BaseGlobalRateLimiter::CacheLineSize) std::atomic_int64_t _iters = 0;
 
     // Note that the rate limiter as-is doesn't use the burst size, but it is cleaner to
     // store the burst size and the rate together, since they're specified together in
     // the YAML as RateSpec.
-    const int64_t _burstSize;
-    const int64_t _rateNS;
+    int64_t _burstSize;
+    int64_t _rateNS;
+    std::optional<int64_t> _percent;
+    std::atomic<bool> _fullSpeed;
 
     // Number of threads using this rate limiter.
     int64_t _numUsers = 0;

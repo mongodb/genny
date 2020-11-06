@@ -110,19 +110,32 @@ def resmoke_test(env, suites, mongo_dir, is_cnats):
         # Default download location for MongoDB binaries.
         env["PATH"] += ":" + os.path.join(mongo_dir, "bin") + ":" + mongo_dir
 
-    if 'LAMP_VENV_DIR' not in os.environ:
-        raise ValueError("The venv directory is required for resmoke and does not exist, "
-                         "please ensure you're not running Genny with the --run-global flag")
+    if "LAMP_VENV_DIR" not in os.environ:
+        raise ValueError(
+            "The venv directory is required for resmoke and does not exist, "
+            "please ensure you're not running Genny with the --run-global flag"
+        )
 
-    evg_venv_dir = os.path.join(os.environ['LAMP_VENV_DIR'], "venv")
+    evg_venv_dir = os.path.join(os.environ["LAMP_VENV_DIR"], "venv")
 
     cmds = []
     if os.path.isdir(evg_venv_dir):
         cmds.append("source " + os.path.join(evg_venv_dir, "bin", "activate"))
 
-    cmds.append(" ".join(["python", os.path.join(mongo_dir, "buildscripts", "resmoke.py"), "run", "--suite", suites,
-                          "--configDir", os.path.join(mongo_dir, "buildscripts", "resmokeconfig"),
-                          "--mongod mongod --mongo mongo --mongos mongos"]))
+    cmds.append(
+        " ".join(
+            [
+                "python",
+                os.path.join(mongo_dir, "buildscripts", "resmoke.py"),
+                "run",
+                "--suite",
+                suites,
+                "--configDir",
+                os.path.join(mongo_dir, "buildscripts", "resmokeconfig"),
+                "--mongod mongod --mongo mongo --mongos mongos",
+            ]
+        )
+    )
 
     _run_command_with_sentinel_report(
         lambda: subprocess.run(";".join(cmds), cwd=workdir, env=env, shell=True), checker_func

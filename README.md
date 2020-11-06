@@ -6,9 +6,11 @@ Genny
 Genny is a workload-generator library and tool. It is implemented using
 C++17.
 
-As of 2019-11-11, Genny is now using the Evergreen Commit-Queue. When
-you have received approval for your PR, simply comment `evergreen merge`
-and your PR will automatically be tested and merged.
+Genny uses the [Evergreen Commit-Queue][cq]. When you have received approval
+for your PR, simply comment `evergreen merge` and your PR will automatically
+be tested and merged.
+
+[cq]: https://github.com/evergreen-ci/evergreen/wiki/Commit-Queue
 
 ## Build and Install
 
@@ -109,6 +111,7 @@ Read more about what parameters you can pass [here][catch2].
 
 [catch2]: https://github.com/catchorg/Catch2/blob/v2.5.0/docs/command-line.md#specifying-which-tests-to-run
 
+
 ### Benchmark Tests
 
 The above `cmake-test` line also runs so-called "benchmark" tests. They
@@ -124,6 +127,7 @@ invoke the test binaries and exclude perf tests:
 ./build/src/gennylib/gennylib_test '~[benchmark]'
 ```
 
+
 #### Actor Integration Tests
 
 The Actor tests use resmoke to set up a real MongoDB cluster and execute
@@ -131,6 +135,7 @@ the test binary. The resmoke yaml config files that define the different
 cluster configurations are defined in `src/resmokeconfig`.
 
 resmoke.py can be run locally as follows:
+
 ```sh
 # Set up virtualenv and install resmoke requirements if needed.
 # From Genny's top-level directory.
@@ -145,12 +150,17 @@ When creating a new Actor, `create-new-actor.sh` will generate a new test case
 template to ensure the new Actor can run against different MongoDB topologies,
 please update the template as needed so it uses the newly-created Actor.
 
+
 ## Patch-Testing and Evergreen
 
 When restarting any of Genny's Evergreen self-tests, make sure you
 restart *all* the tasks not just failed tasks. This is because Genny's
 tasks rely on being run in dependency-order on the same machine.
 Rescheduled tasks don't re-run dependent tasks.
+
+See below section on Patch-Testing Genny Changes with Sys-Perf / DSI
+if you are writing a workload or making changes to more than just this repo.
+
 
 ## Debugging
 
@@ -159,6 +169,7 @@ IDEs can debug Genny if it is built with the `Debug` build type:
 ```sh
 ./scripts/lamp -DCMAKE_BUILD_TYPE=Debug
 ```
+
 
 ## Running Genny Workloads
 
@@ -185,6 +196,7 @@ written to `./build/genny-metrics.csv`.
 Post-processing of metrics data is done by Python scripts in the
 `src/python` directory. See [the README there](./src/python/README.md).
 
+
 ## Creating New Actors
 
 To create a new Actor, run the following:
@@ -192,6 +204,7 @@ To create a new Actor, run the following:
 ```sh
 ./scripts/create-new-actor.sh NameOfYourNewActor
 ```
+
 
 ## Workload YAMLs
 
@@ -219,14 +232,14 @@ For an example external phase config, please see the
 
 A couple of tips on defining external phase configs:
 
-1. Most existing workloads define their options at the `Actor` level, which is one
-level above `Phases`. Because Genny recursively traverses up the YAML to find an
-option, most of the options can be pushed down and defined at the phase level
-instead. The notable exceptions are `Name`, `Type`, and `Threads`,
-which must be defined on `Actor`.
+1.  Most existing workloads define their options at the `Actor` level, which is one
+    level above `Phases`. Because Genny recursively traverses up the YAML to find an
+    option, most of the options can be pushed down and defined at the phase level
+    instead. The notable exceptions are `Name`, `Type`, and `Threads`,
+    which must be defined on `Actor`.
 
-2. `genny evaluate /path/to/your/workload` is your friend. `evaluate` prints out
-the final YAML workload with all external phase definitions inlined.
+2.  `genny evaluate /path/to/your/workload` is your friend. `evaluate` prints out
+    the final YAML workload with all external phase definitions inlined.
 
 
 ## Patch-Testing Genny Changes with Sys-Perf / DSI
@@ -234,7 +247,10 @@ the final YAML workload with all external phase definitions inlined.
 Install the [evergreen command-line client](https://evergreen.mongodb.com/settings) and put it
 in your PATH.
 
-Create a patch build from the mongo repository
+You will create an "empty" patch of the sys-perf project and then modify that patch to use
+your custom version of genny with it.
+
+Create a patch build from the mongo repository:
 
 ```sh
 cd mongo
@@ -288,9 +304,14 @@ workloads on a specific buildvariant.
 Both `genny_patch_tasks` and `genny_auto_tasks` will compile mongodb and then run
 the relevant workloads.
 
-NB: After the task runs you can call `set-module` again with more local changes.
-You can restart the workloads from the Evergreen web UI.
-This lets you skip the 20 minute wait to recompile the server.
+NB:
+
+1.  After the task runs you can call `set-module` again with more local changes from Genny or DSI.
+    This lets you skip the 20 minute wait to recompile the server.
+2.  Alternatively, you can follow the instructions at the top of the `system_perf.yml`
+    file for information on how to skip compile.
+3.  You can restart workloads from the Evergreen Web UI.
+
 
 ## Code Style and Limitations
 
