@@ -21,6 +21,7 @@ namespace poplar {
 static const char* PoplarEventCollector_method_names[] = {
   "/poplar.PoplarEventCollector/CreateCollector",
   "/poplar.PoplarEventCollector/SendEvent",
+  "/poplar.PoplarEventCollector/RegisterStream",
   "/poplar.PoplarEventCollector/StreamEvents",
   "/poplar.PoplarEventCollector/CloseCollector",
 };
@@ -34,8 +35,9 @@ std::unique_ptr< PoplarEventCollector::Stub> PoplarEventCollector::NewStub(const
 PoplarEventCollector::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
   : channel_(channel), rpcmethod_CreateCollector_(PoplarEventCollector_method_names[0], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   , rpcmethod_SendEvent_(PoplarEventCollector_method_names[1], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
-  , rpcmethod_StreamEvents_(PoplarEventCollector_method_names[2], ::grpc::internal::RpcMethod::CLIENT_STREAMING, channel)
-  , rpcmethod_CloseCollector_(PoplarEventCollector_method_names[3], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_RegisterStream_(PoplarEventCollector_method_names[2], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
+  , rpcmethod_StreamEvents_(PoplarEventCollector_method_names[3], ::grpc::internal::RpcMethod::CLIENT_STREAMING, channel)
+  , rpcmethod_CloseCollector_(PoplarEventCollector_method_names[4], ::grpc::internal::RpcMethod::NORMAL_RPC, channel)
   {}
 
 ::grpc::Status PoplarEventCollector::Stub::CreateCollector(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::poplar::PoplarResponse* response) {
@@ -92,6 +94,34 @@ void PoplarEventCollector::Stub::experimental_async::SendEvent(::grpc::ClientCon
 
 ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarEventCollector::Stub::PrepareAsyncSendEventRaw(::grpc::ClientContext* context, const ::poplar::EventMetrics& request, ::grpc::CompletionQueue* cq) {
   return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_SendEvent_, context, request, false);
+}
+
+::grpc::Status PoplarEventCollector::Stub::RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::poplar::PoplarResponse* response) {
+  return ::grpc::internal::BlockingUnaryCall(channel_.get(), rpcmethod_RegisterStream_, context, request, response);
+}
+
+void PoplarEventCollector::Stub::experimental_async::RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_RegisterStream_, context, request, response, std::move(f));
+}
+
+void PoplarEventCollector::Stub::experimental_async::RegisterStream(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)> f) {
+  ::grpc_impl::internal::CallbackUnaryCall(stub_->channel_.get(), stub_->rpcmethod_RegisterStream_, context, request, response, std::move(f));
+}
+
+void PoplarEventCollector::Stub::experimental_async::RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_RegisterStream_, context, request, response, reactor);
+}
+
+void PoplarEventCollector::Stub::experimental_async::RegisterStream(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) {
+  ::grpc_impl::internal::ClientCallbackUnaryFactory::Create(stub_->channel_.get(), stub_->rpcmethod_RegisterStream_, context, request, response, reactor);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarEventCollector::Stub::AsyncRegisterStreamRaw(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_RegisterStream_, context, request, true);
+}
+
+::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PoplarEventCollector::Stub::PrepareAsyncRegisterStreamRaw(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) {
+  return ::grpc_impl::internal::ClientAsyncResponseReaderFactory< ::poplar::PoplarResponse>::Create(channel_.get(), cq, rpcmethod_RegisterStream_, context, request, false);
 }
 
 ::grpc::ClientWriter< ::poplar::EventMetrics>* PoplarEventCollector::Stub::StreamEventsRaw(::grpc::ClientContext* context, ::poplar::PoplarResponse* response) {
@@ -151,11 +181,16 @@ PoplarEventCollector::Service::Service() {
           std::mem_fn(&PoplarEventCollector::Service::SendEvent), this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
       PoplarEventCollector_method_names[2],
+      ::grpc::internal::RpcMethod::NORMAL_RPC,
+      new ::grpc::internal::RpcMethodHandler< PoplarEventCollector::Service, ::poplar::CollectorName, ::poplar::PoplarResponse>(
+          std::mem_fn(&PoplarEventCollector::Service::RegisterStream), this)));
+  AddMethod(new ::grpc::internal::RpcServiceMethod(
+      PoplarEventCollector_method_names[3],
       ::grpc::internal::RpcMethod::CLIENT_STREAMING,
       new ::grpc::internal::ClientStreamingHandler< PoplarEventCollector::Service, ::poplar::EventMetrics, ::poplar::PoplarResponse>(
           std::mem_fn(&PoplarEventCollector::Service::StreamEvents), this)));
   AddMethod(new ::grpc::internal::RpcServiceMethod(
-      PoplarEventCollector_method_names[3],
+      PoplarEventCollector_method_names[4],
       ::grpc::internal::RpcMethod::NORMAL_RPC,
       new ::grpc::internal::RpcMethodHandler< PoplarEventCollector::Service, ::poplar::PoplarID, ::poplar::PoplarResponse>(
           std::mem_fn(&PoplarEventCollector::Service::CloseCollector), this)));
@@ -172,6 +207,13 @@ PoplarEventCollector::Service::~Service() {
 }
 
 ::grpc::Status PoplarEventCollector::Service::SendEvent(::grpc::ServerContext* context, const ::poplar::EventMetrics* request, ::poplar::PoplarResponse* response) {
+  (void) context;
+  (void) request;
+  (void) response;
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+}
+
+::grpc::Status PoplarEventCollector::Service::RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response) {
   (void) context;
   (void) request;
   (void) response;

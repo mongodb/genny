@@ -60,6 +60,13 @@ class PoplarEventCollector final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>> PrepareAsyncSendEvent(::grpc::ClientContext* context, const ::poplar::EventMetrics& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>>(PrepareAsyncSendEventRaw(context, request, cq));
     }
+    virtual ::grpc::Status RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::poplar::PoplarResponse* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>> AsyncRegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>>(AsyncRegisterStreamRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>> PrepareAsyncRegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>>(PrepareAsyncRegisterStreamRaw(context, request, cq));
+    }
     std::unique_ptr< ::grpc::ClientWriterInterface< ::poplar::EventMetrics>> StreamEvents(::grpc::ClientContext* context, ::poplar::PoplarResponse* response) {
       return std::unique_ptr< ::grpc::ClientWriterInterface< ::poplar::EventMetrics>>(StreamEventsRaw(context, response));
     }
@@ -87,6 +94,10 @@ class PoplarEventCollector final {
       virtual void SendEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void SendEvent(::grpc::ClientContext* context, const ::poplar::EventMetrics* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       virtual void SendEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void RegisterStream(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      virtual void RegisterStream(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       virtual void StreamEvents(::grpc::ClientContext* context, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientWriteReactor< ::poplar::EventMetrics>* reactor) = 0;
       virtual void CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
       virtual void CloseCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) = 0;
@@ -99,6 +110,8 @@ class PoplarEventCollector final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>* PrepareAsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>* AsyncSendEventRaw(::grpc::ClientContext* context, const ::poplar::EventMetrics& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>* PrepareAsyncSendEventRaw(::grpc::ClientContext* context, const ::poplar::EventMetrics& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>* AsyncRegisterStreamRaw(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::poplar::PoplarResponse>* PrepareAsyncRegisterStreamRaw(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientWriterInterface< ::poplar::EventMetrics>* StreamEventsRaw(::grpc::ClientContext* context, ::poplar::PoplarResponse* response) = 0;
     virtual ::grpc::ClientAsyncWriterInterface< ::poplar::EventMetrics>* AsyncStreamEventsRaw(::grpc::ClientContext* context, ::poplar::PoplarResponse* response, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncWriterInterface< ::poplar::EventMetrics>* PrepareAsyncStreamEventsRaw(::grpc::ClientContext* context, ::poplar::PoplarResponse* response, ::grpc::CompletionQueue* cq) = 0;
@@ -121,6 +134,13 @@ class PoplarEventCollector final {
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>> PrepareAsyncSendEvent(::grpc::ClientContext* context, const ::poplar::EventMetrics& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>>(PrepareAsyncSendEventRaw(context, request, cq));
+    }
+    ::grpc::Status RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::poplar::PoplarResponse* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>> AsyncRegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>>(AsyncRegisterStreamRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>> PrepareAsyncRegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>>(PrepareAsyncRegisterStreamRaw(context, request, cq));
     }
     std::unique_ptr< ::grpc::ClientWriter< ::poplar::EventMetrics>> StreamEvents(::grpc::ClientContext* context, ::poplar::PoplarResponse* response) {
       return std::unique_ptr< ::grpc::ClientWriter< ::poplar::EventMetrics>>(StreamEventsRaw(context, response));
@@ -149,6 +169,10 @@ class PoplarEventCollector final {
       void SendEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
       void SendEvent(::grpc::ClientContext* context, const ::poplar::EventMetrics* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       void SendEvent(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
+      void RegisterStream(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
+      void RegisterStream(::grpc::ClientContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      void RegisterStream(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       void StreamEvents(::grpc::ClientContext* context, ::poplar::PoplarResponse* response, ::grpc::experimental::ClientWriteReactor< ::poplar::EventMetrics>* reactor) override;
       void CloseCollector(::grpc::ClientContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
       void CloseCollector(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::poplar::PoplarResponse* response, std::function<void(::grpc::Status)>) override;
@@ -169,6 +193,8 @@ class PoplarEventCollector final {
     ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PrepareAsyncCreateCollectorRaw(::grpc::ClientContext* context, const ::poplar::CreateOptions& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* AsyncSendEventRaw(::grpc::ClientContext* context, const ::poplar::EventMetrics& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PrepareAsyncSendEventRaw(::grpc::ClientContext* context, const ::poplar::EventMetrics& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* AsyncRegisterStreamRaw(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PrepareAsyncRegisterStreamRaw(::grpc::ClientContext* context, const ::poplar::CollectorName& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientWriter< ::poplar::EventMetrics>* StreamEventsRaw(::grpc::ClientContext* context, ::poplar::PoplarResponse* response) override;
     ::grpc::ClientAsyncWriter< ::poplar::EventMetrics>* AsyncStreamEventsRaw(::grpc::ClientContext* context, ::poplar::PoplarResponse* response, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncWriter< ::poplar::EventMetrics>* PrepareAsyncStreamEventsRaw(::grpc::ClientContext* context, ::poplar::PoplarResponse* response, ::grpc::CompletionQueue* cq) override;
@@ -176,6 +202,7 @@ class PoplarEventCollector final {
     ::grpc::ClientAsyncResponseReader< ::poplar::PoplarResponse>* PrepareAsyncCloseCollectorRaw(::grpc::ClientContext* context, const ::poplar::PoplarID& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_CreateCollector_;
     const ::grpc::internal::RpcMethod rpcmethod_SendEvent_;
+    const ::grpc::internal::RpcMethod rpcmethod_RegisterStream_;
     const ::grpc::internal::RpcMethod rpcmethod_StreamEvents_;
     const ::grpc::internal::RpcMethod rpcmethod_CloseCollector_;
   };
@@ -187,6 +214,7 @@ class PoplarEventCollector final {
     virtual ~Service();
     virtual ::grpc::Status CreateCollector(::grpc::ServerContext* context, const ::poplar::CreateOptions* request, ::poplar::PoplarResponse* response);
     virtual ::grpc::Status SendEvent(::grpc::ServerContext* context, const ::poplar::EventMetrics* request, ::poplar::PoplarResponse* response);
+    virtual ::grpc::Status RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response);
     virtual ::grpc::Status StreamEvents(::grpc::ServerContext* context, ::grpc::ServerReader< ::poplar::EventMetrics>* reader, ::poplar::PoplarResponse* response);
     virtual ::grpc::Status CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response);
   };
@@ -231,12 +259,32 @@ class PoplarEventCollector final {
     }
   };
   template <class BaseClass>
+  class WithAsyncMethod_RegisterStream : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithAsyncMethod_RegisterStream() {
+      ::grpc::Service::MarkMethodAsync(2);
+    }
+    ~WithAsyncMethod_RegisterStream() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRegisterStream(::grpc::ServerContext* context, ::poplar::CollectorName* request, ::grpc::ServerAsyncResponseWriter< ::poplar::PoplarResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithAsyncMethod_StreamEvents : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_StreamEvents() {
-      ::grpc::Service::MarkMethodAsync(2);
+      ::grpc::Service::MarkMethodAsync(3);
     }
     ~WithAsyncMethod_StreamEvents() override {
       BaseClassMustBeDerivedFromService(this);
@@ -247,7 +295,7 @@ class PoplarEventCollector final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamEvents(::grpc::ServerContext* context, ::grpc::ServerAsyncReader< ::poplar::PoplarResponse, ::poplar::EventMetrics>* reader, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncClientStreaming(2, context, reader, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncClientStreaming(3, context, reader, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -256,7 +304,7 @@ class PoplarEventCollector final {
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithAsyncMethod_CloseCollector() {
-      ::grpc::Service::MarkMethodAsync(3);
+      ::grpc::Service::MarkMethodAsync(4);
     }
     ~WithAsyncMethod_CloseCollector() override {
       BaseClassMustBeDerivedFromService(this);
@@ -267,10 +315,10 @@ class PoplarEventCollector final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestCloseCollector(::grpc::ServerContext* context, ::poplar::PoplarID* request, ::grpc::ServerAsyncResponseWriter< ::poplar::PoplarResponse>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(4, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_CreateCollector<WithAsyncMethod_SendEvent<WithAsyncMethod_StreamEvents<WithAsyncMethod_CloseCollector<Service > > > > AsyncService;
+  typedef WithAsyncMethod_CreateCollector<WithAsyncMethod_SendEvent<WithAsyncMethod_RegisterStream<WithAsyncMethod_StreamEvents<WithAsyncMethod_CloseCollector<Service > > > > > AsyncService;
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_CreateCollector : public BaseClass {
    private:
@@ -334,12 +382,43 @@ class PoplarEventCollector final {
     virtual void SendEvent(::grpc::ServerContext* context, const ::poplar::EventMetrics* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
+  class ExperimentalWithCallbackMethod_RegisterStream : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithCallbackMethod_RegisterStream() {
+      ::grpc::Service::experimental().MarkMethodCallback(2,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::poplar::CollectorName, ::poplar::PoplarResponse>(
+          [this](::grpc::ServerContext* context,
+                 const ::poplar::CollectorName* request,
+                 ::poplar::PoplarResponse* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   return this->RegisterStream(context, request, response, controller);
+                 }));
+    }
+    void SetMessageAllocatorFor_RegisterStream(
+        ::grpc::experimental::MessageAllocator< ::poplar::CollectorName, ::poplar::PoplarResponse>* allocator) {
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::poplar::CollectorName, ::poplar::PoplarResponse>*>(
+          ::grpc::Service::experimental().GetHandler(2))
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_RegisterStream() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
   class ExperimentalWithCallbackMethod_StreamEvents : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_StreamEvents() {
-      ::grpc::Service::experimental().MarkMethodCallback(2,
+      ::grpc::Service::experimental().MarkMethodCallback(3,
         new ::grpc_impl::internal::CallbackClientStreamingHandler< ::poplar::EventMetrics, ::poplar::PoplarResponse>(
           [this] { return this->StreamEvents(); }));
     }
@@ -361,7 +440,7 @@ class PoplarEventCollector final {
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithCallbackMethod_CloseCollector() {
-      ::grpc::Service::experimental().MarkMethodCallback(3,
+      ::grpc::Service::experimental().MarkMethodCallback(4,
         new ::grpc_impl::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(
           [this](::grpc::ServerContext* context,
                  const ::poplar::PoplarID* request,
@@ -373,7 +452,7 @@ class PoplarEventCollector final {
     void SetMessageAllocatorFor_CloseCollector(
         ::grpc::experimental::MessageAllocator< ::poplar::PoplarID, ::poplar::PoplarResponse>* allocator) {
       static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>*>(
-          ::grpc::Service::experimental().GetHandler(3))
+          ::grpc::Service::experimental().GetHandler(4))
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_CloseCollector() override {
@@ -386,7 +465,7 @@ class PoplarEventCollector final {
     }
     virtual void CloseCollector(::grpc::ServerContext* context, const ::poplar::PoplarID* request, ::poplar::PoplarResponse* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
-  typedef ExperimentalWithCallbackMethod_CreateCollector<ExperimentalWithCallbackMethod_SendEvent<ExperimentalWithCallbackMethod_StreamEvents<ExperimentalWithCallbackMethod_CloseCollector<Service > > > > ExperimentalCallbackService;
+  typedef ExperimentalWithCallbackMethod_CreateCollector<ExperimentalWithCallbackMethod_SendEvent<ExperimentalWithCallbackMethod_RegisterStream<ExperimentalWithCallbackMethod_StreamEvents<ExperimentalWithCallbackMethod_CloseCollector<Service > > > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_CreateCollector : public BaseClass {
    private:
@@ -422,12 +501,29 @@ class PoplarEventCollector final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_RegisterStream : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithGenericMethod_RegisterStream() {
+      ::grpc::Service::MarkMethodGeneric(2);
+    }
+    ~WithGenericMethod_RegisterStream() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_StreamEvents : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_StreamEvents() {
-      ::grpc::Service::MarkMethodGeneric(2);
+      ::grpc::Service::MarkMethodGeneric(3);
     }
     ~WithGenericMethod_StreamEvents() override {
       BaseClassMustBeDerivedFromService(this);
@@ -444,7 +540,7 @@ class PoplarEventCollector final {
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithGenericMethod_CloseCollector() {
-      ::grpc::Service::MarkMethodGeneric(3);
+      ::grpc::Service::MarkMethodGeneric(4);
     }
     ~WithGenericMethod_CloseCollector() override {
       BaseClassMustBeDerivedFromService(this);
@@ -496,12 +592,32 @@ class PoplarEventCollector final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_RegisterStream : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithRawMethod_RegisterStream() {
+      ::grpc::Service::MarkMethodRaw(2);
+    }
+    ~WithRawMethod_RegisterStream() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestRegisterStream(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(2, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawMethod_StreamEvents : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_StreamEvents() {
-      ::grpc::Service::MarkMethodRaw(2);
+      ::grpc::Service::MarkMethodRaw(3);
     }
     ~WithRawMethod_StreamEvents() override {
       BaseClassMustBeDerivedFromService(this);
@@ -512,7 +628,7 @@ class PoplarEventCollector final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestStreamEvents(::grpc::ServerContext* context, ::grpc::ServerAsyncReader< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* reader, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncClientStreaming(2, context, reader, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncClientStreaming(3, context, reader, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -521,7 +637,7 @@ class PoplarEventCollector final {
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithRawMethod_CloseCollector() {
-      ::grpc::Service::MarkMethodRaw(3);
+      ::grpc::Service::MarkMethodRaw(4);
     }
     ~WithRawMethod_CloseCollector() override {
       BaseClassMustBeDerivedFromService(this);
@@ -532,7 +648,7 @@ class PoplarEventCollector final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestCloseCollector(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(4, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -586,12 +702,37 @@ class PoplarEventCollector final {
     virtual void SendEvent(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
   };
   template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_RegisterStream : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    ExperimentalWithRawCallbackMethod_RegisterStream() {
+      ::grpc::Service::experimental().MarkMethodRawCallback(2,
+        new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          [this](::grpc::ServerContext* context,
+                 const ::grpc::ByteBuffer* request,
+                 ::grpc::ByteBuffer* response,
+                 ::grpc::experimental::ServerCallbackRpcController* controller) {
+                   this->RegisterStream(context, request, response, controller);
+                 }));
+    }
+    ~ExperimentalWithRawCallbackMethod_RegisterStream() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual void RegisterStream(::grpc::ServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response, ::grpc::experimental::ServerCallbackRpcController* controller) { controller->Finish(::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "")); }
+  };
+  template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_StreamEvents : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_StreamEvents() {
-      ::grpc::Service::experimental().MarkMethodRawCallback(2,
+      ::grpc::Service::experimental().MarkMethodRawCallback(3,
         new ::grpc_impl::internal::CallbackClientStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
           [this] { return this->StreamEvents(); }));
     }
@@ -613,7 +754,7 @@ class PoplarEventCollector final {
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     ExperimentalWithRawCallbackMethod_CloseCollector() {
-      ::grpc::Service::experimental().MarkMethodRawCallback(3,
+      ::grpc::Service::experimental().MarkMethodRawCallback(4,
         new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
           [this](::grpc::ServerContext* context,
                  const ::grpc::ByteBuffer* request,
@@ -673,12 +814,32 @@ class PoplarEventCollector final {
     virtual ::grpc::Status StreamedSendEvent(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::poplar::EventMetrics,::poplar::PoplarResponse>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_RegisterStream : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service *service) {}
+   public:
+    WithStreamedUnaryMethod_RegisterStream() {
+      ::grpc::Service::MarkMethodStreamed(2,
+        new ::grpc::internal::StreamedUnaryHandler< ::poplar::CollectorName, ::poplar::PoplarResponse>(std::bind(&WithStreamedUnaryMethod_RegisterStream<BaseClass>::StreamedRegisterStream, this, std::placeholders::_1, std::placeholders::_2)));
+    }
+    ~WithStreamedUnaryMethod_RegisterStream() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status RegisterStream(::grpc::ServerContext* context, const ::poplar::CollectorName* request, ::poplar::PoplarResponse* response) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedRegisterStream(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::poplar::CollectorName,::poplar::PoplarResponse>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_CloseCollector : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service *service) {}
    public:
     WithStreamedUnaryMethod_CloseCollector() {
-      ::grpc::Service::MarkMethodStreamed(3,
+      ::grpc::Service::MarkMethodStreamed(4,
         new ::grpc::internal::StreamedUnaryHandler< ::poplar::PoplarID, ::poplar::PoplarResponse>(std::bind(&WithStreamedUnaryMethod_CloseCollector<BaseClass>::StreamedCloseCollector, this, std::placeholders::_1, std::placeholders::_2)));
     }
     ~WithStreamedUnaryMethod_CloseCollector() override {
@@ -692,9 +853,9 @@ class PoplarEventCollector final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedCloseCollector(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::poplar::PoplarID,::poplar::PoplarResponse>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_CreateCollector<WithStreamedUnaryMethod_SendEvent<WithStreamedUnaryMethod_CloseCollector<Service > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_CreateCollector<WithStreamedUnaryMethod_SendEvent<WithStreamedUnaryMethod_RegisterStream<WithStreamedUnaryMethod_CloseCollector<Service > > > > StreamedUnaryService;
   typedef Service SplitStreamedService;
-  typedef WithStreamedUnaryMethod_CreateCollector<WithStreamedUnaryMethod_SendEvent<WithStreamedUnaryMethod_CloseCollector<Service > > > StreamedService;
+  typedef WithStreamedUnaryMethod_CreateCollector<WithStreamedUnaryMethod_SendEvent<WithStreamedUnaryMethod_RegisterStream<WithStreamedUnaryMethod_CloseCollector<Service > > > > StreamedService;
 };
 
 }  // namespace poplar

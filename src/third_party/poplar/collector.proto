@@ -7,6 +7,10 @@ import "poplar.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
+message CollectorName {
+  string name = 1;
+}
+
 message EventMetrics {
   string name = 1; 
   google.protobuf.Timestamp time = 2;
@@ -37,6 +41,7 @@ message EventMetricsGauges {
 service PoplarEventCollector {
   rpc CreateCollector(CreateOptions) returns (PoplarResponse);
   rpc SendEvent(EventMetrics) returns (PoplarResponse);
+  rpc RegisterStream(CollectorName) returns (PoplarResponse);
   rpc StreamEvents(stream EventMetrics) returns (PoplarResponse);
   rpc CloseCollector(PoplarID) returns (PoplarResponse);
 }
