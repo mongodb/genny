@@ -161,7 +161,7 @@ class CuratorDownloader(Downloader):
 
     # Note that DSI also downloads Curator, the location is specified in defaults.yml.
     # Please try to keep the two versions consistent.
-    CURATOR_VERSION = "df0b89af5961c4ac47552270643a2d4fb6c6a4c1"
+    CURATOR_VERSION = "8b3ef73c55fdc45ef78383b0dcd4a84335b8eecb"
     CURATOR_ROOT = os.getcwd()
 
     def __init__(self, os_family, distro):
